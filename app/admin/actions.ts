@@ -1,0 +1,1307 @@
+'use server';
+
+import Groq from 'groq-sdk';
+import pdf from 'pdf-parse-fork';
+import { revalidatePath } from 'next/cache';
+import { requireAdminAccess } from '@/lib/auth';
+import { createAdminClient } from '@/lib/supabase-admin';
+import { generateTutorExplanation } from '@/lib/ai-tutor';
+
+export interface ProcessResult {
+  success: boolean;
+  count?: number;
+  message: string;
+}
+
+export interface CleanResult {
+  success: boolean;
+  deletedCount?: number;
+  message: string;
+}
+
+export interface IARankingRow {
+  pregunta_id: string;
+  materia_id: string | null;
+  enunciado: string;
+  veces_fallada: number;
+  explicacion: string | null;
+  provider: string | null;
+  updated_at: string | null;
+}
+
+export interface AdminAnalyticsStats {
+  dau: number;
+  registered: { day: number; week: number; month: number };
+  conversion: {
+    sessions_total: number;
+    reached_explorar: number;
+    reached_carrera: number;
+    reached_materia: number;
+    reached_simulador: number;
+    top_abandon_stage: string;
+    top_login_source: string;
+  };
+  interaction: {
+    avg_minutes_per_session: number;
+    total_hours_last_7d: number;
+  };
+  top_pages: Array<{ path: string; views: number }>;
+  devices: { desktop: number; mobile: number };
+  errors: { total: number; top_paths: Array<{ path: string; count: number }> };
+}
+
+export interface DuplicateCandidate {
+  normalized_name: string;
+  materia_id: string | null;
+  count: number;
+  recursos: Array<{ id: string; nombre: string; url_archivo: string | null; paginas: number | null }>;
+}
+
+export interface QuestionEditorRow {
+  id: string;
+  enunciado: string;
+  opciones: string[];
+  respuesta_correcta: string;
+  parcial: number | null;
+  dificultad: string | null;
+  tasa_acierto: number | null;
+}
+
+export interface FeedbackReviewItem {
+  pregunta_id: string;
+  enunciado: string;
+  voto: number;
+  created_at: string;
+  explicacion: string | null;
+  provider: string | null;
+}
+
+export interface AdminUserItem {
+  id: string;
+  email: string;
+  estado: 'activo' | 'inactivo';
+  plan: 'free' | 'premium';
+  last_sign_in_at: string | null;
+  created_at: string | null;
+}
+
+export interface MonetizacionStats {
+  totalSuscripciones: number;
+  activas: number;
+  canceladas: number;
+  ingresoMensualEstimadoArs: number;
+  planes: Array<{
+    id: string;
+    code: string;
+    name: string;
+    price_ars: number;
+    interval: string;
+    is_active: boolean;
+  }>;
+}
+
+type UserSubscriptionPlanRow = {
+  user_id: string;
+  status: string;
+  started_at: string;
+  plan_id: string;
+};
+
+type UserSubscriptionMonetizationRow = {
+  status: string;
+  amount_ars: number | null;
+  plan_id: string;
+};
+
+type QuestionRecord = {
+  enunciado: string;
+  opciones: string[];
+  respuesta_correcta: string;
+};
+
+function normalizeQuestion(question: string) {
+  return question.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function sanitizeQuestionRecords(rows: unknown): QuestionRecord[] {
+  if (!Array.isArray(rows)) return [];
+
+  return rows
+    .map((row) => {
+      const item = row as Partial<QuestionRecord>;
+      const enunciado = String(item.enunciado ?? '').trim();
+      const opciones = Array.isArray(item.opciones)
+        ? item.opciones.map((value) => String(value).trim()).filter(Boolean)
+        : [];
+      const respuestaCorrecta = String(item.respuesta_correcta ?? '').trim();
+
+      if (!enunciado || opciones.length < 2 || !respuestaCorrecta) return null;
+      return {
+        enunciado,
+        opciones: opciones.slice(0, 6),
+        respuesta_correcta: respuestaCorrecta,
+      };
+    })
+    .filter((row): row is QuestionRecord => Boolean(row));
+}
+
+function tryParseQuestionsFromModel(content: string): QuestionRecord[] {
+  const normalized = content.trim();
+  if (!normalized) return [];
+
+  const tryCandidates = [normalized];
+  const fenced = normalized.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced?.[1]) {
+    tryCandidates.push(fenced[1].trim());
+  }
+
+  for (const candidate of tryCandidates) {
+    try {
+      const parsed = JSON.parse(candidate) as
+        | { preguntas?: unknown; questions?: unknown; items?: unknown }
+        | unknown[];
+
+      if (Array.isArray(parsed)) {
+        const fromArray = sanitizeQuestionRecords(parsed);
+        if (fromArray.length > 0) return fromArray;
+      }
+
+      if (parsed && typeof parsed === 'object') {
+        const parsedObj = parsed as { preguntas?: unknown; questions?: unknown; items?: unknown };
+        const fromPreguntas = sanitizeQuestionRecords(parsedObj.preguntas);
+        if (fromPreguntas.length > 0) return fromPreguntas;
+        const fromQuestions = sanitizeQuestionRecords(parsedObj.questions);
+        if (fromQuestions.length > 0) return fromQuestions;
+        const fromItems = sanitizeQuestionRecords(parsedObj.items);
+        if (fromItems.length > 0) return fromItems;
+      }
+    } catch {
+      // keep trying variants
+    }
+  }
+
+  return [];
+}
+
+function extractQuestionsFallbackFromText(text: string): QuestionRecord[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const results: QuestionRecord[] = [];
+  let current: { enunciado: string; opciones: string[] } | null = null;
+
+  const questionRegex = /^(\d+[\).:-]\s+|pregunta\s+\d+[:.-]?\s*)(.+)$/i;
+  const optionRegex = /^[a-dA-D][\).:-]\s+(.+)$/;
+  const qaBulletRegex = /^[•▪\-]\s*(¿.+?\?)\s*:?\s*(.+)$/;
+
+  for (const line of lines) {
+    const questionMatch = line.match(questionRegex);
+    const optionMatch = line.match(optionRegex);
+    const qaBulletMatch = line.match(qaBulletRegex);
+
+    if (qaBulletMatch) {
+      const q = qaBulletMatch[1].trim();
+      const answer = qaBulletMatch[2].trim();
+      if (q && answer) {
+        results.push({
+          enunciado: q,
+          opciones: [
+            answer,
+            'No se menciona en el material.',
+            'Todas las opciones son correctas.',
+            'Ninguna opcion es correcta.',
+          ],
+          respuesta_correcta: answer,
+        });
+      }
+      continue;
+    }
+
+    if (questionMatch) {
+      if (current && current.opciones.length >= 2) {
+        results.push({
+          enunciado: current.enunciado,
+          opciones: current.opciones.slice(0, 4),
+          respuesta_correcta: current.opciones[0],
+        });
+      }
+      current = { enunciado: questionMatch[2].trim(), opciones: [] };
+      continue;
+    }
+
+    if (optionMatch && current) {
+      current.opciones.push(optionMatch[1].trim());
+      continue;
+    }
+  }
+
+  if (current && current.opciones.length >= 2) {
+    results.push({
+      enunciado: current.enunciado,
+      opciones: current.opciones.slice(0, 4),
+      respuesta_correcta: current.opciones[0],
+    });
+  }
+
+  return results;
+}
+
+async function extractQuestionsFromPdfText(
+  text: string,
+  nombreMateria: string,
+  parcial: number,
+  systemPrompt: string
+) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error('Falta configurar GROQ_API_KEY.');
+  }
+
+  const groq = new Groq({ apiKey });
+  const completion = await groq.chat.completions.create({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      {
+        role: 'user',
+        content: `Analiza el siguiente texto de un preguntero de la materia "${nombreMateria}" (Parcial ${parcial}) y extrae las preguntas en el formato JSON solicitado:\n\n${text.substring(0, 30000)}`,
+      },
+    ],
+    model: 'llama-3.3-70b-versatile',
+    response_format: { type: 'json_object' },
+  });
+
+  const responseContent = completion.choices[0]?.message?.content;
+  if (!responseContent) {
+    throw new Error('No se recibió respuesta de Groq.');
+  }
+
+  const parsedData = JSON.parse(responseContent) as { preguntas: QuestionRecord[] };
+  const parsedFromModel = tryParseQuestionsFromModel(responseContent);
+  if (parsedFromModel.length > 0) {
+    return parsedFromModel;
+  }
+
+  return sanitizeQuestionRecords(parsedData.preguntas);
+}
+
+export async function analizarMaterialConIA(
+  filePath: string,
+  materiaId: string,
+  _tipo: string,
+  parcial: number,
+  universidadId: string,
+  carreraId: string | null,
+  _titulo: string
+): Promise<ProcessResult> {
+  try {
+    const { supabase } = await requireAdminAccess();
+
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('biblioteca')
+      .download(filePath);
+
+    if (downloadError || !fileData) {
+      throw new Error(
+        `Error al descargar el archivo: ${downloadError?.message || 'Archivo no encontrado'}`
+      );
+    }
+
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+    const pdfData = await pdf(buffer);
+    const text = pdfData.text;
+
+    if (!text || text.trim().length < 50) {
+      throw new Error('El PDF no contiene suficiente texto para analizar.');
+    }
+
+    const { data: materiaData } = await supabase
+      .from('materias')
+      .select('nombre, slug')
+      .eq('id', materiaId)
+      .single();
+
+    const nombreMateria = materiaData?.nombre || '';
+    const slugMateria = materiaData?.slug || '';
+    const esGeneral =
+      slugMateria.includes('aprender-21') ||
+      slugMateria.includes('tecnologia-humanidades') ||
+      nombreMateria.toLowerCase().includes('aprender en el siglo 21');
+    const finalCarreraId = esGeneral ? null : carreraId;
+
+    const { data: configData } = await supabase
+      .from('configuracion_ia')
+      .select('prompt_sistema')
+      .eq('id', 'prompt_extraccion')
+      .single();
+
+    const systemPrompt =
+      configData?.prompt_sistema ||
+      'Sos un experto en contenidos universitarios. Extrae preguntas de opción múltiple del texto y devuelve exclusivamente un JSON con la estructura { "preguntas": [{ "enunciado": string, "opciones": [string, string, string, string], "respuesta_correcta": string }] }.';
+
+    let parsedQuestions = await extractQuestionsFromPdfText(text, nombreMateria, parcial, systemPrompt);
+    if (parsedQuestions.length === 0) {
+      parsedQuestions = extractQuestionsFallbackFromText(text);
+    }
+
+    const { data: existingQuestions, error: existingError } = await supabase
+      .from('preguntas_banco')
+      .select('enunciado')
+      .eq('materia_id', materiaId);
+
+    if (existingError) {
+      throw existingError;
+    }
+
+    const existingNormalized = new Set(
+      (existingQuestions ?? []).map((item) => normalizeQuestion(item.enunciado))
+    );
+
+    const questionsToInsert = parsedQuestions
+      .filter((question) => !existingNormalized.has(normalizeQuestion(question.enunciado)))
+      .map((question) => ({
+        materia_id: materiaId,
+        enunciado: question.enunciado,
+        opciones: question.opciones,
+        respuesta_correcta: question.respuesta_correcta,
+        parcial,
+        universidad_id: universidadId,
+        carrera_id: finalCarreraId,
+        es_general: esGeneral,
+      }));
+
+    if (questionsToInsert.length === 0) {
+      return {
+        success: true,
+        count: 0,
+        message:
+          'No se detectaron preguntas nuevas en el PDF. Verifica que el archivo tenga texto seleccionable y formato de preguntas/opciones.',
+      };
+    }
+
+    const { error: insertError } = await supabase.from('preguntas_banco').insert(questionsToInsert);
+    if (insertError) {
+      throw insertError;
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      count: questionsToInsert.length,
+      message: `La IA analizó el material y generó ${questionsToInsert.length} preguntas nuevas.`,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Error procesando el material con la IA.';
+    console.error('Error al analizar material con IA:', error);
+    return {
+      success: false,
+      message,
+    };
+  }
+}
+
+export async function limpiarPreguntasBanco(): Promise<CleanResult> {
+  try {
+    const { supabase } = await requireAdminAccess();
+
+    const { count, error } = await supabase
+      .from('preguntas_banco')
+      .delete({ count: 'exact' })
+      .neq('enunciado', '');
+
+    if (error) {
+      throw error;
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      deletedCount: count ?? 0,
+      message: `Se eliminaron ${count ?? 0} preguntas del banco.`,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Error limpiando el banco de preguntas.';
+    console.error('Error al limpiar preguntas:', error);
+    return {
+      success: false,
+      message,
+    };
+  }
+}
+
+export async function obtenerPromptSistema(): Promise<{
+  success: boolean;
+  data?: string;
+  message?: string;
+}> {
+  try {
+    const { supabase } = await requireAdminAccess();
+
+    const { data, error } = await supabase
+      .from('configuracion_ia')
+      .select('prompt_sistema')
+      .eq('id', 'prompt_extraccion')
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return { success: true, data: '' };
+      }
+
+      throw error;
+    }
+
+    return { success: true, data: data.prompt_sistema ?? '' };
+  } catch (error) {
+    console.error('Error en obtenerPromptSistema:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error al obtener el prompt.',
+    };
+  }
+}
+
+export async function actualizarPromptSistema(
+  nuevoPrompt: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const { supabase } = await requireAdminAccess();
+
+    const { error } = await supabase.from('configuracion_ia').upsert(
+      {
+        id: 'prompt_extraccion',
+        prompt_sistema: nuevoPrompt,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'id' }
+    );
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true, message: 'Prompt actualizado correctamente.' };
+  } catch (error) {
+    console.error('Error en actualizarPromptSistema:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Error al actualizar el prompt.',
+    };
+  }
+}
+
+export async function obtenerRankingErroresIA(
+  limit = 30
+): Promise<{ success: boolean; rows?: IARankingRow[]; message?: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const { data: stats, error: statsError } = await admin
+      .from('rag_question_stats')
+      .select('pregunta_id, materia_id, veces_fallada, updated_at')
+      .order('veces_fallada', { ascending: false })
+      .limit(limit);
+
+    if (statsError) {
+      throw statsError;
+    }
+
+    if (!stats || stats.length === 0) {
+      return { success: true, rows: [] };
+    }
+
+    const questionIds = stats.map((item) => item.pregunta_id);
+    const [{ data: questions }, { data: cache }] = await Promise.all([
+      admin.from('preguntas_banco').select('id, enunciado').in('id', questionIds),
+      admin
+        .from('rag_explanations_cache')
+        .select('pregunta_id, explicacion, provider, updated_at')
+        .in('pregunta_id', questionIds),
+    ]);
+
+    const qMap = new Map((questions ?? []).map((q) => [q.id, q]));
+    const cMap = new Map((cache ?? []).map((c) => [c.pregunta_id, c]));
+
+    const rows: IARankingRow[] = stats.map((stat) => {
+      const q = qMap.get(stat.pregunta_id);
+      const c = cMap.get(stat.pregunta_id);
+      return {
+        pregunta_id: stat.pregunta_id,
+        materia_id: stat.materia_id,
+        enunciado: q?.enunciado ?? '(Pregunta no encontrada)',
+        veces_fallada: stat.veces_fallada ?? 0,
+        explicacion: c?.explicacion ?? null,
+        provider: c?.provider ?? null,
+        updated_at: c?.updated_at ?? stat.updated_at ?? null,
+      };
+    });
+
+    return { success: true, rows };
+  } catch (error) {
+    console.error('Error en obtenerRankingErroresIA:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo obtener el ranking de errores.',
+    };
+  }
+}
+
+export async function regenerarExplicacionIA(
+  preguntaId: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const { data: question, error: questionError } = await admin
+      .from('preguntas_banco')
+      .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+      .eq('id', preguntaId)
+      .maybeSingle();
+
+    if (questionError || !question || !question.materia_id) {
+      throw new Error('No encontramos la pregunta para regenerar la explicacion.');
+    }
+
+    const { data: chunkRows } = await admin
+      .from('rag_document_chunks')
+      .select('chunk_text, source_title')
+      .eq('materia_id', question.materia_id)
+      .limit(120);
+
+    const queryTokens = question.enunciado.toLowerCase().split(/\s+/).filter((t) => t.length >= 4);
+    const context = (chunkRows ?? [])
+      .map((row) => {
+        const text = row.chunk_text ?? '';
+        const lowered = text.toLowerCase();
+        const score = queryTokens.reduce((acc, token) => acc + (lowered.includes(token) ? 1 : 0), 0);
+        return { score, text: `${row.source_title ? `[${row.source_title}] ` : ''}${text}` };
+      })
+      .sort((a, b) => b.score - a.score)
+      .filter((row) => row.score > 0)
+      .slice(0, 4)
+      .map((row) => row.text);
+
+    const options = Array.isArray(question.opciones)
+      ? (question.opciones.filter((item) => typeof item === 'string') as string[])
+      : [];
+
+    const generated = await generateTutorExplanation({
+      question: question.enunciado,
+      options,
+      correctAnswer: question.respuesta_correcta,
+      context,
+    });
+
+    const { error: cacheError } = await admin.from('rag_explanations_cache').upsert(
+      {
+        pregunta_id: question.id,
+        materia_id: question.materia_id,
+        parcial: question.parcial,
+        explicacion: generated.text,
+        provider: generated.provider,
+        source_used: context.length > 0 ? 'supabase-rag' : 'general-academic-fallback',
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'pregunta_id' }
+    );
+
+    if (cacheError) {
+      throw cacheError;
+    }
+
+    await admin.from('rag_generation_logs').insert({
+      pregunta_id: question.id,
+      materia_id: question.materia_id,
+      provider: generated.provider,
+      status: 'ok',
+      metadata: { regenerated_from_admin: true, context_chunks: context.length },
+    });
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      message: `Explicacion regenerada con ${generated.provider}.`,
+    };
+  } catch (error) {
+    console.error('Error en regenerarExplicacionIA:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo regenerar la explicacion.',
+    };
+  }
+}
+
+export async function obtenerEstadisticasAdmin(): Promise<{
+  success: boolean;
+  stats?: AdminAnalyticsStats;
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const now = new Date();
+    const dayStart = new Date(now);
+    dayStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+    const monthStart = new Date(now);
+    monthStart.setDate(now.getDate() - 30);
+
+    const [eventsRes, profilesDay, profilesWeek, profilesMonth] = await Promise.all([
+      admin
+        .from('analytics_events')
+        .select('event_name, user_id, session_key, path, device_type, metadata, created_at')
+        .gte('created_at', monthStart.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(20000),
+      admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', dayStart.toISOString()),
+      admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', weekStart.toISOString()),
+      admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', monthStart.toISOString()),
+    ]);
+
+    if (eventsRes.error) {
+      throw eventsRes.error;
+    }
+
+    const events = eventsRes.data ?? [];
+    const todayIso = dayStart.toISOString();
+    const dauSet = new Set<string>();
+    const sessions = new Map<string, Set<string>>();
+    const topPages = new Map<string, number>();
+    const loginSources = new Map<string, number>();
+    const errorsByPath = new Map<string, number>();
+    const deviceCounters = { desktop: 0, mobile: 0 };
+    let totalEngagementMs = 0;
+
+    for (const event of events) {
+      const createdAt = event.created_at ?? '';
+      const sessionKey = event.session_key ?? 'unknown';
+      const path = event.path ?? '/';
+      const stageSet = sessions.get(sessionKey) ?? new Set<string>();
+
+      if (createdAt >= todayIso) {
+        dauSet.add(event.user_id ?? `session:${sessionKey}`);
+      }
+
+      if (event.event_name === 'page_view') {
+        topPages.set(path, (topPages.get(path) ?? 0) + 1);
+        if (event.device_type === 'mobile') deviceCounters.mobile += 1;
+        else deviceCounters.desktop += 1;
+
+        stageSet.add('landing');
+        if (path.startsWith('/explorar')) stageSet.add('explorar');
+        if (path.startsWith('/universidad/')) stageSet.add('carrera');
+        if (path.includes('/materia/')) stageSet.add('materia');
+        if (path.startsWith('/simulador')) stageSet.add('simulador');
+      }
+
+      if (event.event_name === 'login_success') {
+        const sourcePath =
+          typeof event.metadata === 'object' && event.metadata
+            ? String((event.metadata as Record<string, unknown>).source_path ?? path)
+            : path;
+        loginSources.set(sourcePath, (loginSources.get(sourcePath) ?? 0) + 1);
+      }
+
+      if (event.event_name === 'client_error') {
+        errorsByPath.set(path, (errorsByPath.get(path) ?? 0) + 1);
+      }
+
+      if (event.event_name === 'session_ping') {
+        const engagement =
+          typeof event.metadata === 'object' && event.metadata
+            ? Number((event.metadata as Record<string, unknown>).engagement_ms ?? 0)
+            : 0;
+        totalEngagementMs += Number.isFinite(engagement) ? engagement : 0;
+      }
+
+      sessions.set(sessionKey, stageSet);
+    }
+
+    const sessionStages = Array.from(sessions.values());
+    const sessionsTotal = sessionStages.length;
+    const reachedExplorar = sessionStages.filter((s) => s.has('explorar')).length;
+    const reachedCarrera = sessionStages.filter((s) => s.has('carrera')).length;
+    const reachedMateria = sessionStages.filter((s) => s.has('materia')).length;
+    const reachedSimulador = sessionStages.filter((s) => s.has('simulador')).length;
+
+    const drops = [
+      { stage: 'explorar', drop: Math.max(0, sessionsTotal - reachedExplorar) },
+      { stage: 'carrera', drop: Math.max(0, reachedExplorar - reachedCarrera) },
+      { stage: 'materia', drop: Math.max(0, reachedCarrera - reachedMateria) },
+      { stage: 'simulador', drop: Math.max(0, reachedMateria - reachedSimulador) },
+    ].sort((a, b) => b.drop - a.drop);
+
+    const topPagesArr = Array.from(topPages.entries())
+      .map(([path, views]) => ({ path, views }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 8);
+
+    const topErrorPaths = Array.from(errorsByPath.entries())
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    const topLoginSource =
+      Array.from(loginSources.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'sin datos';
+
+    const avgMinutesPerSession =
+      sessionsTotal > 0 ? Number(((totalEngagementMs / sessionsTotal) / 1000 / 60).toFixed(2)) : 0;
+
+    return {
+      success: true,
+      stats: {
+        dau: dauSet.size,
+        registered: {
+          day: profilesDay.count ?? 0,
+          week: profilesWeek.count ?? 0,
+          month: profilesMonth.count ?? 0,
+        },
+        conversion: {
+          sessions_total: sessionsTotal,
+          reached_explorar: reachedExplorar,
+          reached_carrera: reachedCarrera,
+          reached_materia: reachedMateria,
+          reached_simulador: reachedSimulador,
+          top_abandon_stage: drops[0]?.stage ?? 'sin datos',
+          top_login_source: topLoginSource,
+        },
+        interaction: {
+          avg_minutes_per_session: avgMinutesPerSession,
+          total_hours_last_7d: Number((totalEngagementMs / 1000 / 60 / 60).toFixed(2)),
+        },
+        top_pages: topPagesArr,
+        devices: deviceCounters,
+        errors: {
+          total: Array.from(errorsByPath.values()).reduce((acc, val) => acc + val, 0),
+          top_paths: topErrorPaths,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error en obtenerEstadisticasAdmin:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudieron obtener estadisticas.',
+    };
+  }
+}
+
+export async function obtenerDuplicadosPdfAdmin(): Promise<{
+  success: boolean;
+  rows?: DuplicateCandidate[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('recursos')
+      .select('id, nombre, url_archivo, materia_id, paginas')
+      .order('creado_at', { ascending: false })
+      .limit(6000);
+
+    if (error) throw error;
+
+    const groups = new Map<string, DuplicateCandidate>();
+    for (const row of data ?? []) {
+      const normalized = row.nombre
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '');
+      const key = `${row.materia_id ?? 'sin_materia'}:${normalized}:${row.paginas ?? 'np'}`;
+      const current = groups.get(key) ?? {
+        normalized_name: normalized,
+        materia_id: row.materia_id,
+        count: 0,
+        recursos: [],
+      };
+      current.count += 1;
+      current.recursos.push({
+        id: row.id,
+        nombre: row.nombre,
+        url_archivo: row.url_archivo,
+        paginas: row.paginas,
+      });
+      groups.set(key, current);
+    }
+
+    const rows = Array.from(groups.values())
+      .filter((g) => g.count > 1)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 50);
+    return { success: true, rows };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudieron analizar duplicados.',
+    };
+  }
+}
+
+export async function obtenerPreguntasEditorAdmin(): Promise<{
+  success: boolean;
+  rows?: QuestionEditorRow[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('preguntas_banco')
+      .select('id, enunciado, opciones, respuesta_correcta, parcial, dificultad, tasa_acierto')
+      .eq('es_ia_generada', true)
+      .order('creado_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+
+    const rows = (data ?? []).map((row) => ({
+      id: row.id,
+      enunciado: row.enunciado,
+      opciones: Array.isArray(row.opciones) ? (row.opciones.filter((o) => typeof o === 'string') as string[]) : [],
+      respuesta_correcta: row.respuesta_correcta,
+      parcial: row.parcial,
+      dificultad: row.dificultad,
+      tasa_acierto: row.tasa_acierto,
+    }));
+    return { success: true, rows };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo cargar el editor de preguntas.',
+    };
+  }
+}
+
+export async function actualizarPreguntaEditorAdmin(payload: {
+  id: string;
+  enunciado: string;
+  opciones: string[];
+  respuesta_correcta: string;
+}) {
+  try {
+    const { user } = await requireAdminAccess();
+    const admin = createAdminClient();
+    const { data: before } = await admin
+      .from('preguntas_banco')
+      .select('id, enunciado, opciones, respuesta_correcta')
+      .eq('id', payload.id)
+      .maybeSingle();
+
+    const { error } = await admin
+      .from('preguntas_banco')
+      .update({
+        enunciado: payload.enunciado.trim(),
+        opciones: payload.opciones,
+        respuesta_correcta: payload.respuesta_correcta.trim(),
+      })
+      .eq('id', payload.id);
+    if (error) throw error;
+
+    await admin.from('question_edit_audit').insert({
+      pregunta_id: payload.id,
+      admin_user_id: user.id,
+      before_payload: before,
+      after_payload: payload,
+    });
+    revalidatePath('/admin');
+    return { success: true, message: 'Pregunta actualizada.' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo actualizar la pregunta.',
+    };
+  }
+}
+
+export async function recalcularDificultadPreguntasAdmin() {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const { data: questions } = await admin
+      .from('preguntas_banco')
+      .select('id')
+      .limit(4000);
+
+    for (const question of questions ?? []) {
+      const { data: answers } = await admin
+        .from('historial_respuestas')
+        .select('es_correcta')
+        .eq('pregunta_id', question.id)
+        .limit(1000);
+
+      const total = (answers ?? []).length;
+      if (total === 0) continue;
+      const correct = (answers ?? []).filter((a) => a.es_correcta === true).length;
+      const rate = Number(((correct / total) * 100).toFixed(2));
+      const dificultad = rate >= 70 ? 'facil' : rate >= 40 ? 'media' : 'dificil';
+
+      await admin
+        .from('preguntas_banco')
+        .update({ tasa_acierto: rate, dificultad })
+        .eq('id', question.id);
+    }
+
+    revalidatePath('/admin');
+    return { success: true, message: 'Dificultad y tasa de acierto recalculadas.' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo recalcular la dificultad.',
+    };
+  }
+}
+
+export async function obtenerSaludSistemaAdmin() {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await admin
+      .from('analytics_events')
+      .select('event_name, path, metadata, created_at')
+      .gte('created_at', since)
+      .order('created_at', { ascending: false })
+      .limit(12000);
+    if (error) throw error;
+
+    const errors = (data ?? []).filter((e) => e.event_name === 'client_error');
+    const pings = (data ?? []).filter((e) => e.event_name === 'session_ping');
+    const endpointFail = new Map<string, number>();
+    for (const errorRow of errors) {
+      const p = errorRow.path ?? 'unknown';
+      endpointFail.set(p, (endpointFail.get(p) ?? 0) + 1);
+    }
+    const avgLatencyMs =
+      pings.length > 0
+        ? Math.round(
+            pings.reduce((acc, e) => {
+              const metadata = (e.metadata ?? {}) as Record<string, unknown>;
+              return acc + Number(metadata.engagement_ms ?? 0);
+            }, 0) / pings.length
+          )
+        : 0;
+
+    return {
+      success: true,
+      stats: {
+        total_errors: errors.length,
+        avg_latency_ms: avgLatencyMs,
+        failures_by_path: Array.from(endpointFail.entries())
+          .map(([path, count]) => ({ path, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 8),
+      },
+    };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'No se pudo obtener salud del sistema.' };
+  }
+}
+
+export async function obtenerFeedbackExplicacionesAdmin() {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('rag_explanation_feedback')
+      .select('voto, pregunta_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10000);
+    if (error) throw error;
+
+    const positive = (data ?? []).filter((r) => r.voto === 1).length;
+    const negative = (data ?? []).filter((r) => r.voto === -1).length;
+    return { success: true, stats: { total: (data ?? []).length, positive, negative } };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'No se pudo obtener feedback.' };
+  }
+}
+
+export async function obtenerFeedbackRevisionAdmin(limit = 30): Promise<{
+  success: boolean;
+  rows?: FeedbackReviewItem[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const { data: feedbackRows, error } = await admin
+      .from('rag_explanation_feedback')
+      .select('pregunta_id, voto, created_at')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    if (!feedbackRows || feedbackRows.length === 0) return { success: true, rows: [] };
+
+    const questionIds = Array.from(new Set(feedbackRows.map((row) => row.pregunta_id)));
+    const [{ data: questions }, { data: explanations }] = await Promise.all([
+      admin.from('preguntas_banco').select('id, enunciado').in('id', questionIds),
+      admin
+        .from('rag_explanations_cache')
+        .select('pregunta_id, explicacion, provider')
+        .in('pregunta_id', questionIds),
+    ]);
+
+    const questionMap = new Map((questions ?? []).map((q) => [q.id, q.enunciado]));
+    const explanationMap = new Map(
+      (explanations ?? []).map((e) => [e.pregunta_id, { explicacion: e.explicacion, provider: e.provider }])
+    );
+
+    const rows: FeedbackReviewItem[] = feedbackRows.map((row) => ({
+      pregunta_id: row.pregunta_id,
+      voto: row.voto,
+      created_at: row.created_at,
+      enunciado: questionMap.get(row.pregunta_id) ?? '(Pregunta no encontrada)',
+      explicacion: explanationMap.get(row.pregunta_id)?.explicacion ?? null,
+      provider: explanationMap.get(row.pregunta_id)?.provider ?? null,
+    }));
+
+    return { success: true, rows };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo cargar el feedback para revision.',
+    };
+  }
+}
+
+export async function ejecutarMantenimientoArchivosAdmin() {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const { data: dbResources } = await admin
+      .from('recursos')
+      .select('url_archivo')
+      .not('url_archivo', 'is', null)
+      .limit(10000);
+
+    const dbSet = new Set((dbResources ?? []).map((r) => String(r.url_archivo)));
+    const orphans: string[] = [];
+    let offset = 0;
+    const limit = 100;
+    while (true) {
+      const { data: list, error } = await admin.storage.from('biblioteca').list('', {
+        limit,
+        offset,
+        sortBy: { column: 'name', order: 'asc' },
+      });
+      if (error || !list || list.length === 0) break;
+      for (const item of list) {
+        if (!item.name) continue;
+        if (!dbSet.has(item.name)) orphans.push(item.name);
+      }
+      offset += limit;
+      if (list.length < limit) break;
+    }
+
+    return {
+      success: true,
+      result: { orphan_count: orphans.length, orphan_sample: orphans.slice(0, 20) },
+    };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'No se pudo ejecutar mantenimiento.' };
+  }
+}
+
+export async function verificarAlertasMetricasAdmin() {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await admin
+      .from('analytics_events')
+      .select('event_name, session_key, path')
+      .gte('created_at', since)
+      .limit(20000);
+    if (error) throw error;
+
+    const sessions = new Map<string, Set<string>>();
+    let errorCount = 0;
+    for (const e of data ?? []) {
+      if (e.event_name === 'client_error') errorCount += 1;
+      if (e.event_name === 'page_view') {
+        const set = sessions.get(e.session_key) ?? new Set<string>();
+        const p = e.path ?? '/';
+        if (p.startsWith('/explorar')) set.add('explorar');
+        if (p.includes('/materia/')) set.add('materia');
+        sessions.set(e.session_key, set);
+      }
+    }
+    const totalSessions = sessions.size;
+    const reachedMateria = Array.from(sessions.values()).filter((s) => s.has('materia')).length;
+    const abandonoRate = totalSessions > 0 ? Number((((totalSessions - reachedMateria) / totalSessions) * 100).toFixed(2)) : 0;
+
+    const alerts: Array<{ key: string; severity: string; message: string }> = [];
+    if (abandonoRate > 70) {
+      alerts.push({
+        key: 'abandono_alto',
+        severity: 'high',
+        message: `Abandono alto detectado (${abandonoRate}%) en el embudo explorar -> materia.`,
+      });
+    }
+    if (errorCount > 50) {
+      alerts.push({
+        key: 'errores_altos',
+        severity: 'high',
+        message: `Se detectaron ${errorCount} errores de cliente en las ultimas 24h.`,
+      });
+    }
+
+    for (const alert of alerts) {
+      await admin.from('admin_alert_logs').insert({
+        alert_key: alert.key,
+        severity: alert.severity,
+        message: alert.message,
+      });
+    }
+
+    return { success: true, alerts, abandonoRate, errorCount };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'No se pudieron verificar alertas.' };
+  }
+}
+
+export async function obtenerUsuariosAdmin(limit = 200): Promise<{
+  success: boolean;
+  rows?: AdminUserItem[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const [
+      { data: authUsersData, error: authError },
+      { data: subscriptionsDataRaw, error: subsError },
+      { data: plansRaw, error: plansError },
+    ] =
+      await Promise.all([
+        admin.auth.admin.listUsers({ page: 1, perPage: limit }),
+        admin
+          .from('user_subscriptions')
+          .select('user_id, status, started_at, plan_id')
+          .order('started_at', { ascending: false })
+          .limit(5000),
+        admin.from('subscription_plans').select('id, code'),
+      ]);
+
+    if (authError) throw authError;
+    if (subsError) throw subsError;
+    if (plansError) throw plansError;
+
+    const subscriptionsData = (subscriptionsDataRaw ?? []) as unknown as UserSubscriptionPlanRow[];
+    const planCodeById = new Map(
+      ((plansRaw ?? []) as Array<{ id: string; code: string }>).map((plan) => [plan.id, plan.code])
+    );
+
+    const latestPlanByUser = new Map<string, 'free' | 'premium'>();
+
+    for (const row of subscriptionsData ?? []) {
+      const uid = row.user_id;
+      if (!uid || latestPlanByUser.has(uid)) continue;
+      const code = planCodeById.get(row.plan_id);
+      latestPlanByUser.set(uid, code === 'premium' ? 'premium' : 'free');
+    }
+
+    const rows: AdminUserItem[] = (authUsersData?.users ?? []).map((user) => {
+      const lastSignIn = user.last_sign_in_at ?? null;
+      const isActive =
+        !!lastSignIn &&
+        Date.now() - new Date(lastSignIn).getTime() < 30 * 24 * 60 * 60 * 1000;
+      return {
+        id: user.id,
+        email: user.email ?? '(sin email)',
+        estado: isActive ? 'activo' : 'inactivo',
+        plan: latestPlanByUser.get(user.id) ?? 'free',
+        last_sign_in_at: lastSignIn,
+        created_at: user.created_at ?? null,
+      };
+    });
+
+    return { success: true, rows };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo cargar la lista de usuarios.',
+    };
+  }
+}
+
+export async function obtenerMonetizacionAdmin(): Promise<{
+  success: boolean;
+  data?: MonetizacionStats;
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const [{ data: plans, error: plansError }, { data: subsRaw, error: subsError }] = await Promise.all([
+      admin
+        .from('subscription_plans')
+        .select('id, code, name, price_ars, interval, is_active')
+        .order('price_ars', { ascending: true }),
+      admin
+        .from('user_subscriptions')
+        .select('status, amount_ars, plan_id')
+        .order('created_at', { ascending: false })
+        .limit(5000),
+    ]);
+
+    if (plansError) throw plansError;
+    if (subsError) throw subsError;
+
+    const subs = (subsRaw ?? []) as unknown as UserSubscriptionMonetizationRow[];
+    const planPriceById = new Map((plans ?? []).map((plan) => [plan.id, Number(plan.price_ars ?? 0)]));
+
+    const total = (subs ?? []).length;
+    const activas = (subs ?? []).filter((s) => s.status === 'active').length;
+    const canceladas = (subs ?? []).filter((s) => s.status === 'canceled').length;
+    const ingresoMensualEstimadoArs = Math.round(
+      (subs ?? [])
+        .filter((s) => s.status === 'active')
+        .reduce((acc, s) => {
+          const explicit = Number(s.amount_ars ?? 0);
+          if (explicit > 0) return acc + explicit;
+          const fromPlan = Number(planPriceById.get(s.plan_id) ?? 0);
+          return acc + fromPlan;
+        }, 0)
+    );
+
+    return {
+      success: true,
+      data: {
+        totalSuscripciones: total,
+        activas,
+        canceladas,
+        ingresoMensualEstimadoArs,
+        planes:
+          (plans ?? []).map((p) => ({
+            id: p.id,
+            code: p.code,
+            name: p.name,
+            price_ars: p.price_ars,
+            interval: p.interval,
+            is_active: p.is_active,
+          })) ?? [],
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo cargar la monetizacion.',
+    };
+  }
+}

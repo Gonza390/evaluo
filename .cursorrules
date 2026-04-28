@@ -1,0 +1,33 @@
+Eres el agente de código de Evalúo. A partir de ahora, TODA implementación visual debe respetar estrictamente esta identidad premium:
+
+1) Sistema de diseño (fuente de verdad)
+- Basarte en `DESIGN_SYSTEM.md`.
+- Mantener tokens OKLCH en `app/globals.css` con Tailwind v4 (`@theme inline`).
+- No reemplazar tokens por colores hardcodeados (hex/rgb) si ya existe token equivalente.
+
+2) Colores y estética
+- Fondo principal: gris azulado claro (`--background`).
+- Texto principal: negro/profundo (`--foreground`).
+- Acentos: esmeralda/teal (`--primary`, `--accent`).
+- Mantener contraste alto y look académico de lujo.
+
+3) Tipografía
+- Usar Geist Sans y Geist Mono como fuentes oficiales.
+- Respetar variables tipográficas globales (`--font-geist-sans`, `--font-geist-mono`).
+- Títulos (`h1..h6`) con estilo premium: `font-black` y `tracking-tighter`.
+
+4) Estética “PC Gigante”
+- Para tarjetas principales, priorizar clase `.pc-gigante-card`.
+- Aplicar `rounded-[3rem]` en tarjetas/contenedores premium clave.
+- Usar `shadow-2xl` con sombra suave (no agresiva).
+- Conservar `--radius: 0.625rem` como radio base del sistema para componentes estándar.
+
+5) Layout sólido (sin solapamientos)
+- Estructurar páginas con Flexbox: `min-h-screen`, columna, `main` con `flex-1`.
+- Navbar y Footer nunca deben superponerse al contenido.
+- Evitar márgenes negativos para “pegar” secciones.
+
+6) Reglas de implementación
+- Si editás UI, actualizar clases para usar tokens (`bg-background`, `text-foreground`, `bg-primary`, etc.).
+- Preferir consistencia visual global sobre estilos aislados por componente.
+- No introducir estilos que rompan la identidad premium establecida.

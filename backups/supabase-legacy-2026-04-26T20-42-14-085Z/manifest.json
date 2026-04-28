@@ -1,0 +1,53 @@
+{
+  "createdAt": "2026-04-26T20:42:15.641Z",
+  "tables": [
+    {
+      "table": "career_subjects",
+      "status": "ok",
+      "rows": 2,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\career_subjects.json"
+    },
+    {
+      "table": "careers",
+      "status": "ok",
+      "rows": 1,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\careers.json"
+    },
+    {
+      "table": "subjects",
+      "status": "ok",
+      "rows": 2,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\subjects.json"
+    },
+    {
+      "table": "configuracion",
+      "status": "ok",
+      "rows": 38,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\configuracion.json"
+    },
+    {
+      "table": "configuracion_sistema",
+      "status": "ok",
+      "rows": 1,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\configuracion_sistema.json"
+    },
+    {
+      "table": "contenidos",
+      "status": "ok",
+      "rows": 0,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\contenidos.json"
+    },
+    {
+      "table": "pregunteros_ia",
+      "status": "ok",
+      "rows": 0,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\pregunteros_ia.json"
+    },
+    {
+      "table": "progreso",
+      "status": "ok",
+      "rows": 0,
+      "file": "backups\\supabase-legacy-2026-04-26T20-42-14-085Z\\progreso.json"
+    }
+  ]
+}
