@@ -522,6 +522,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      premium_question_sets: {
+        Row: {
+          id: string;
+          materia_id: string;
+          parcial: number;
+          titulo: string;
+          source_exam_date: string | null;
+          created_by: string | null;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          materia_id: string;
+          parcial: number;
+          titulo: string;
+          source_exam_date?: string | null;
+          created_by?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          materia_id?: string;
+          parcial?: number;
+          titulo?: string;
+          source_exam_date?: string | null;
+          created_by?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      premium_questions: {
+        Row: {
+          id: string;
+          set_id: string;
+          enunciado: string;
+          opciones: Json;
+          respuesta_correcta: string;
+          orden: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          set_id: string;
+          enunciado: string;
+          opciones: Json;
+          respuesta_correcta: string;
+          orden: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          set_id?: string;
+          enunciado?: string;
+          opciones?: Json;
+          respuesta_correcta?: string;
+          orden?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;

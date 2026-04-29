@@ -1,11 +1,5 @@
 import type { AdminAnalyticsStats } from './actions';
 
-export interface AdminResourceFilterItem {
-  universidad_id: string | null;
-  carrera_id: string | null;
-  materia_id: string | null;
-}
-
 export interface AdminChartPoint {
   label: string;
   sesiones: number;
@@ -22,12 +16,12 @@ export interface AdminRetentionPoint {
   value: number;
 }
 
-export function filterAdminResources(
-  resources: AdminResourceFilterItem[],
+export function filterAdminResources<T extends { universidad_id: string | null; carrera_id: string | null; materia_id: string | null }>(
+  resources: T[],
   filterUniId: string,
   filterCarreraId: string,
   filterMateriaId: string
-) {
+): T[] {
   return resources.filter((resource) => {
     const matchesUni = filterUniId === 'all' || resource.universidad_id === filterUniId;
     const matchesCarrera = filterCarreraId === 'all' || resource.carrera_id === filterCarreraId;
