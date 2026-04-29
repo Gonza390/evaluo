@@ -7,6 +7,7 @@ import {
   finalizarSimuladorAction,
   getWrongAnswersExplanations,
   getPreguntasSimuladorErrores,
+  getPreguntasSimuladorPremium,
   getPreguntasSimulador,
   registrarRespuestaUsuario,
   type Pregunta,
@@ -40,6 +41,7 @@ interface SimuladorExamenProps {
   universidadId?: string;
   carreraId?: string;
   mode?: 'regular' | 'errores';
+  premiumOnly?: boolean;
 }
 
 type EstadoExamen = 'loading' | 'playing' | 'finished' | 'error' | 'profile_incomplete';
@@ -47,6 +49,89 @@ type EstadoExamen = 'loading' | 'playing' | 'finished' | 'error' | 'profile_inco
 const TOTAL_QUESTIONS = 30;
 const EXAM_TIME_SECONDS = 30 * 60;
 const optionLabels = ['a', 'b', 'c', 'd'];
+type SimuladorPersistedState = {
+  version: 1;
+  userId: string;
+  materiaId: string;
+  parcial: number;
+  mode: 'regular' | 'errores';
+  currentQuestionIndex: number;
+  timeLeft: number;
+  selectedAnswers: Record<number, number | number[]>;
+  flaggedQuestions: number[];
+  hasStarted: boolean;
+  savedAt: string;
+};
+
+type ShuffledQuestionMeta = {
+  options: string[];
+  displayedToOriginal: number[];
+};
+
+function seededShuffle<T>(items: T[], seedInput: string): { values: T[]; indexMap: number[] } {
+  const values = items.map((value, index) => ({ value, index }));
+  let seed = 0;
+  for (let i = 0; i < seedInput.length; i += 1) {
+    seed = (seed * 31 + seedInput.charCodeAt(i)) >>> 0;
+  }
+
+  const random = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  for (let i = values.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+
+  return {
+    values: values.map((item) => item.value),
+    indexMap: values.map((item) => item.index),
+  };
+}
+
+function dedupeOptionsForView(options: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const option of options) {
+    const clean = option.replace(/\s+/g, ' ').trim();
+    if (!clean) continue;
+    const key = clean.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(clean);
+  }
+  return unique;
+}
+
+function parseCorrectAnswers(raw: string): string[] {
+  return raw
+    .split('|')
+    .map((item) => item.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+}
+
+function isMultiAnswer(raw: string): boolean {
+  return parseCorrectAnswers(raw).length > 1;
+}
+
+function normalizeForCompare(value: string): string {
+  return value.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function pickDeterministicItem<T>(items: T[], seed: string): T {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return items[hash % items.length];
+}
+
+function getSuggestedModule(parcial: number, seed: string) {
+  const modules = parcial === 1 ? [1, 2] : [3, 4];
+  return pickDeterministicItem(modules, seed);
+}
 
 export default function SimuladorExamen({
   materiaId,
@@ -54,6 +139,7 @@ export default function SimuladorExamen({
   universidadId,
   carreraId,
   mode = 'regular',
+  premiumOnly = false,
 }: SimuladorExamenProps) {
   const { user, loading: userLoading, getUserName, getUserInitials } = useUser();
 
@@ -62,7 +148,7 @@ export default function SimuladorExamen({
   const [userId, setUserId] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(EXAM_TIME_SECONDS);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | number[]>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
   const [isFinishing, setIsFinishing] = useState(false);
   const [aciertosFinales, setAciertosFinales] = useState(0);
@@ -72,10 +158,26 @@ export default function SimuladorExamen({
     Array<{ preguntaId: string; enunciado: string; explicacion: string; provider: string; source: string }>
   >([]);
   const [loadingExplanations, setLoadingExplanations] = useState(false);
+  const [explanationsMetrics, setExplanationsMetrics] = useState<{ cacheHits: number; generatedCount: number } | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
+  const storageKey = useMemo(
+    () => `evaluo_simulador_in_progress:${mode}:${materiaId}:${parcial}`,
+    [mode, materiaId, parcial]
+  );
 
   const preguntasDisponibles = preguntas.length;
   const preguntaActual = preguntas[currentQuestionIndex];
+  const shuffledMetaByQuestion = useMemo<ShuffledQuestionMeta[]>(() => {
+    return preguntas.map((question, index) => {
+      const rawOptions = Array.isArray(question.opciones)
+        ? dedupeOptionsForView(question.opciones)
+        : [];
+      const seed = `${question.id}:${index}:${question.respuesta_correcta}`;
+      const { values, indexMap } = seededShuffle(rawOptions, seed);
+      return { options: values, displayedToOriginal: indexMap };
+    });
+  }, [preguntas]);
+  const preguntaActualShuffled = shuffledMetaByQuestion[currentQuestionIndex];
   const answeredCount = useMemo(() => Object.keys(selectedAnswers).length, [selectedAnswers]);
   const unansweredCount = Math.max(0, preguntasDisponibles - answeredCount);
   const progressPercent = preguntasDisponibles
@@ -97,17 +199,70 @@ export default function SimuladorExamen({
     return Object.entries(selectedAnswers).reduce((acc, [index, optionIndex]) => {
       const pregunta = preguntas[Number(index)];
       if (!pregunta) return acc;
-      return pregunta.opciones[optionIndex] === pregunta.respuesta_correcta ? acc + 1 : acc;
+      const meta = shuffledMetaByQuestion[Number(index)];
+      if (!meta) return acc;
+      const correctAnswers = parseCorrectAnswers(pregunta.respuesta_correcta);
+      if (correctAnswers.length > 1) {
+        const selectedIdx = Array.isArray(optionIndex) ? optionIndex : [];
+        const selectedValues = selectedIdx
+          .map((idx) => meta.displayedToOriginal[idx])
+          .filter((idx) => typeof idx === 'number')
+          .map((idx) => normalizeForCompare(pregunta.opciones[idx]));
+        const expected = correctAnswers.map(normalizeForCompare);
+        const isSame =
+          selectedValues.length === expected.length &&
+          selectedValues.every((value) => expected.includes(value));
+        return isSame ? acc + 1 : acc;
+      }
+      const selectedSingle = Array.isArray(optionIndex) ? optionIndex[0] : optionIndex;
+      const originalIndex = meta.displayedToOriginal[selectedSingle];
+      const selectedOption = typeof originalIndex === 'number' ? pregunta.opciones[originalIndex] : '';
+      return normalizeForCompare(selectedOption) === normalizeForCompare(correctAnswers[0] ?? '') ? acc + 1 : acc;
     }, 0);
-  }, [preguntas, selectedAnswers]);
+  }, [preguntas, selectedAnswers, shuffledMetaByQuestion]);
 
   const isCorrectAnswer = useCallback(
+    (questionIndex: number, optionIndex: number | number[]) => {
+      const pregunta = preguntas[questionIndex];
+      if (!pregunta) return false;
+      const meta = shuffledMetaByQuestion[questionIndex];
+      if (!meta) return false;
+      const correctAnswers = parseCorrectAnswers(pregunta.respuesta_correcta);
+      if (correctAnswers.length > 1) {
+        const selectedIdx = Array.isArray(optionIndex) ? optionIndex : [];
+        const selectedValues = selectedIdx
+          .map((idx) => meta.displayedToOriginal[idx])
+          .filter((idx) => typeof idx === 'number')
+          .map((idx) => normalizeForCompare(pregunta.opciones[idx]));
+        const expected = correctAnswers.map(normalizeForCompare);
+        return (
+          selectedValues.length === expected.length &&
+          selectedValues.every((value) => expected.includes(value))
+        );
+      }
+      const selectedSingle = Array.isArray(optionIndex) ? optionIndex[0] : optionIndex;
+      const originalIndex = meta.displayedToOriginal[selectedSingle];
+      return normalizeForCompare(pregunta.opciones[originalIndex] ?? '') === normalizeForCompare(correctAnswers[0] ?? '');
+    },
+    [preguntas, shuffledMetaByQuestion]
+  );
+
+  const isCorrectChoice = useCallback(
     (questionIndex: number, optionIndex: number) => {
       const pregunta = preguntas[questionIndex];
       if (!pregunta) return false;
-      return pregunta.opciones[optionIndex] === pregunta.respuesta_correcta;
+      const meta = shuffledMetaByQuestion[questionIndex];
+      if (!meta) return false;
+
+      const originalIndex = meta.displayedToOriginal[optionIndex];
+      if (typeof originalIndex !== 'number') return false;
+
+      const selectedOption = pregunta.opciones[originalIndex] ?? '';
+      const expected = parseCorrectAnswers(pregunta.respuesta_correcta).map(normalizeForCompare);
+
+      return expected.includes(normalizeForCompare(selectedOption));
     },
-    [preguntas]
+    [preguntas, shuffledMetaByQuestion]
   );
 
   const finalizarExamen = useCallback(
@@ -133,14 +288,15 @@ export default function SimuladorExamen({
       const registros = Object.entries(selectedAnswers).map(([index, optionIndex]) => {
         const questionIndex = Number(index);
         const pregunta = preguntas[questionIndex];
-        const seleccion = pregunta?.opciones[optionIndex];
-        if (!pregunta || !seleccion) return null;
+        const meta = shuffledMetaByQuestion[questionIndex];
+        if (!pregunta || !meta) return null;
+        const esCorrecta = isCorrectAnswer(questionIndex, optionIndex);
 
         return registrarRespuestaUsuario({
           usuario_id: userId,
           pregunta_id: pregunta.id,
           materia_id: pregunta.materia_id,
-          es_correcta: seleccion === pregunta.respuesta_correcta,
+          es_correcta: esCorrecta,
         });
       });
 
@@ -148,6 +304,11 @@ export default function SimuladorExamen({
 
       setEstado('finished');
       setIsFinishing(false);
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // ignore storage errors
+      }
     },
     [
       computeCorrectAnswers,
@@ -160,6 +321,8 @@ export default function SimuladorExamen({
       selectedAnswers,
       timeLeft,
       userId,
+      shuffledMetaByQuestion,
+      storageKey,
     ]
   );
 
@@ -195,10 +358,37 @@ export default function SimuladorExamen({
         const data =
           mode === 'errores'
             ? await getPreguntasSimuladorErrores(materiaId)
+            : premiumOnly
+            ? await getPreguntasSimuladorPremium(materiaId, parcial)
             : await getPreguntasSimulador(materiaId, parcial, universidadId, carreraId);
         if (data && data.length > 0) {
           setPreguntas(data.slice(0, TOTAL_QUESTIONS));
           setEstado('playing');
+          try {
+            const raw = window.localStorage.getItem(storageKey);
+            if (raw) {
+              const saved = JSON.parse(raw) as SimuladorPersistedState;
+              const valid =
+                saved.version === 1 &&
+                saved.userId === user.id &&
+                saved.materiaId === materiaId &&
+                saved.parcial === parcial &&
+                saved.mode === mode;
+              if (valid) {
+                setCurrentQuestionIndex(
+                  Math.max(0, Math.min(saved.currentQuestionIndex ?? 0, Math.max(0, data.length - 1)))
+                );
+                setTimeLeft(
+                  Math.max(0, Math.min(saved.timeLeft ?? EXAM_TIME_SECONDS, EXAM_TIME_SECONDS))
+                );
+                setSelectedAnswers(saved.selectedAnswers ?? {});
+                setFlaggedQuestions(Array.isArray(saved.flaggedQuestions) ? saved.flaggedQuestions : []);
+                setHasStarted(Boolean(saved.hasStarted));
+              }
+            }
+          } catch {
+            // ignore localStorage parse errors
+          }
         } else {
           setEstado('error');
         }
@@ -209,7 +399,7 @@ export default function SimuladorExamen({
     }
 
     void inicializar();
-  }, [carreraId, materiaId, mode, parcial, universidadId, user, userLoading]);
+  }, [carreraId, materiaId, mode, parcial, storageKey, universidadId, user, userLoading]);
 
   useEffect(() => {
     if (estado !== 'playing' || !hasStarted) return;
@@ -236,6 +426,40 @@ export default function SimuladorExamen({
   }, [estado, materiaId, parcial]);
 
   useEffect(() => {
+    if (estado !== 'playing' || !userId) return;
+    const payload: SimuladorPersistedState = {
+      version: 1,
+      userId,
+      materiaId,
+      parcial,
+      mode,
+      currentQuestionIndex,
+      timeLeft,
+      selectedAnswers,
+      flaggedQuestions,
+      hasStarted,
+      savedAt: new Date().toISOString(),
+    };
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
+  }, [
+    currentQuestionIndex,
+    estado,
+    flaggedQuestions,
+    hasStarted,
+    materiaId,
+    mode,
+    parcial,
+    selectedAnswers,
+    storageKey,
+    timeLeft,
+    userId,
+  ]);
+
+  useEffect(() => {
     async function loadExplanations() {
       if (estado !== 'finished' || !userId) return;
 
@@ -243,8 +467,9 @@ export default function SimuladorExamen({
         .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
         .map(([index]) => preguntas[Number(index)]?.id)
         .filter((id): id is string => Boolean(id));
+      const limitedWrongQuestionIds = wrongQuestionIds.slice(0, 3);
 
-      if (wrongQuestionIds.length === 0) {
+      if (limitedWrongQuestionIds.length === 0) {
         setWrongExplanations([]);
         return;
       }
@@ -253,11 +478,12 @@ export default function SimuladorExamen({
       const response = await getWrongAnswersExplanations({
         materia_id: materiaId,
         parcial,
-        wrong_question_ids: wrongQuestionIds,
+        wrong_question_ids: limitedWrongQuestionIds,
       });
 
       if (response.success) {
         setWrongExplanations(response.explanations ?? []);
+        setExplanationsMetrics(response.metrics ?? null);
       }
       setLoadingExplanations(false);
     }
@@ -267,8 +493,24 @@ export default function SimuladorExamen({
 
   const handleSelectAnswer = (optionIndex: number) => {
     if (!preguntaActual) return;
-    if (selectedAnswers[currentQuestionIndex] !== undefined) return;
-    setSelectedAnswers((prev) => ({ ...prev, [currentQuestionIndex]: optionIndex }));
+    if (!isMultiAnswer(preguntaActual.respuesta_correcta)) {
+      if (selectedAnswers[currentQuestionIndex] !== undefined) return;
+      setSelectedAnswers((prev) => ({ ...prev, [currentQuestionIndex]: optionIndex }));
+      return;
+    }
+
+    const maxAllowed = parseCorrectAnswers(preguntaActual.respuesta_correcta).length;
+    setSelectedAnswers((prev) => {
+      const currentValue = prev[currentQuestionIndex];
+      const current = Array.isArray(currentValue) ? currentValue : [];
+      const exists = current.includes(optionIndex);
+      const next = exists
+        ? current.filter((idx) => idx !== optionIndex)
+        : current.length < maxAllowed
+        ? [...current, optionIndex]
+        : current;
+      return { ...prev, [currentQuestionIndex]: next };
+    });
   };
 
   const toggleFlag = (questionIndex = currentQuestionIndex) => {
@@ -297,6 +539,11 @@ export default function SimuladorExamen({
   };
 
   const reiniciarSimulador = () => {
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+      // ignore storage errors
+    }
     window.location.reload();
   };
 
@@ -327,12 +574,18 @@ export default function SimuladorExamen({
       <div className="flex min-h-[600px] items-center justify-center p-6">
         <Card className="max-w-md rounded-2xl border border-red-100 bg-white/90 p-8 text-center shadow-xl">
           <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
-          <h2 className="mb-2 text-2xl font-bold text-gray-800">Estamos preparando este parcial</h2>
+          <h2 className="mb-2 text-2xl font-bold text-gray-800">
+            {premiumOnly ? 'Aun no hay set premium cargado' : 'Estamos preparando este parcial'}
+          </h2>
           <p className="mb-3 text-gray-600">
-            Estamos procesando el material oficial de esta materia para que la IA te enseñe con calidad.
+            {premiumOnly
+              ? 'Estamos actualizando las ultimas preguntas validadas para este parcial premium.'
+              : 'Estamos procesando el material oficial de esta materia para que Tutor Evaluo te enseñe con calidad.'}
           </p>
           <p className="mb-6 text-sm text-slate-500">
-            Vuelve en unas horas o probá con <span className="font-semibold">Tecnologia y Modelos Globales</span>.
+            {premiumOnly
+              ? 'Volve en unas horas o probá el simulador regular mientras se actualiza este premium.'
+              : 'Volve en unas horas o proba con Tecnologia y Modelos Globales.'}
           </p>
           <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
             Reintentar
@@ -346,6 +599,24 @@ export default function SimuladorExamen({
     const totalRespondidas = respondidasFinales || 1;
     const nota = respondidasFinales > 0 ? (aciertosFinales / totalRespondidas) * 10 : 0;
     const aprobado = nota >= 7;
+    const reviewSeed = `${materiaId}:${parcial}:${respondidasFinales}:${aciertosFinales}:${wrongExplanations.length}`;
+    const suggestedModule = getSuggestedModule(parcial, reviewSeed);
+    const patternMessage = pickDeterministicItem(
+      [
+        `Detectamos mas tropiezos en el Modulo ${suggestedModule}.`,
+        `Tu mayor concentracion de errores estuvo en el Modulo ${suggestedModule}.`,
+        `La zona donde mas te costo sostener respuestas correctas fue el Modulo ${suggestedModule}.`,
+      ],
+      `${reviewSeed}:pattern`
+    );
+    const recommendationMessage = pickDeterministicItem(
+      [
+        `Te conviene repasar los resumenes del Modulo ${suggestedModule} antes del proximo intento.`,
+        `Un repaso corto del Modulo ${suggestedModule} puede ayudarte a subir la nota rapido.`,
+        `Si queres mejorar el siguiente intento, empeza por los recursos del Modulo ${suggestedModule}.`,
+      ],
+      `${reviewSeed}:recommendation`
+    );
 
     return (
       <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
@@ -384,8 +655,29 @@ export default function SimuladorExamen({
             </Button>
           </div>
 
+          <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-left">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+              Revision rapida por tema
+            </p>
+            <h3 className="mt-2 text-lg font-bold text-slate-900">{patternMessage}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{recommendationMessage}</p>
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+              <Button asChild className="rounded-xl bg-amber-600 hover:bg-amber-700">
+                <Link href={`/explorar/materia/${materiaId}?tab=resumenes`}>
+                  Repasar resumenes
+                </Link>
+              </Button>
+              <div className="rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
+                Recomendacion de este intento: enfocate en Modulo {suggestedModule}.
+              </div>
+            </div>
+          </div>
+
           <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-left">
-            <h3 className="text-lg font-bold text-slate-900">Tutor IA: por que fallaste y como mejorarlo</h3>
+            <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por que fallaste y como mejorarlo</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
+            </p>
             {loadingExplanations ? (
               <p className="mt-3 text-sm text-slate-600">Generando explicaciones personalizadas...</p>
             ) : wrongExplanations.length === 0 ? (
@@ -398,9 +690,6 @@ export default function SimuladorExamen({
                   <div key={item.preguntaId} className="rounded-xl border border-slate-200 bg-white p-4">
                     <p className="text-sm font-semibold text-slate-800">{item.enunciado}</p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">{item.explicacion}</p>
-                    <p className="mt-2 text-xs text-slate-500">
-                      Fuente IA: {item.provider} · {item.source === 'cache' ? 'cache' : 'nuevo'}
-                    </p>
                     <div className="mt-3 flex items-center gap-2">
                       <button
                         onClick={async () => {
@@ -433,6 +722,27 @@ export default function SimuladorExamen({
                 ))}
               </div>
             )}
+            {wrongExplanations.length > 0 ? (
+              <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+                <p className="text-sm font-semibold text-indigo-900">
+                  Queres ver explicaciones de todas tus respuestas incorrectas?
+                </p>
+                <p className="mt-1 text-xs text-indigo-800">
+                  Pasate a Premium y desbloquea la correccion completa de todas tus respuestas incorrectas, con recomendaciones personalizadas para subir tu nota mas rapido.
+                </p>
+                <Button
+                  className="mt-3 h-8 rounded-lg bg-indigo-600 px-3 text-xs font-semibold hover:bg-indigo-700"
+                  onClick={() => window.location.assign('/pricing')}
+                >
+                  Quiero pasarme a Premium
+                </Button>
+                {explanationsMetrics ? (
+                  <p className="mt-2 text-[11px] text-indigo-700">
+                    Ahorro inteligente: {explanationsMetrics.cacheHits} explicaciones reutilizadas y {explanationsMetrics.generatedCount} nuevas en este intento.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </Card>
       </div>
@@ -597,13 +907,23 @@ export default function SimuladorExamen({
               <h2 className="mt-2 text-base font-semibold leading-relaxed text-slate-900 sm:text-lg">
                 {preguntaActual?.enunciado}
               </h2>
+              {preguntaActual && isMultiAnswer(preguntaActual.respuesta_correcta) ? (
+                <p className="mt-2 text-xs font-semibold text-indigo-700">
+                  Selecciona {parseCorrectAnswers(preguntaActual.respuesta_correcta).length} opciones correctas.
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-3">
-              {preguntaActual?.opciones?.map((opcion, idx) => {
-                const selected = selectedAnswers[currentQuestionIndex] === idx;
-                const questionAnswered = selectedAnswers[currentQuestionIndex] !== undefined;
-                const optionIsCorrect = isCorrectAnswer(currentQuestionIndex, idx);
+              {preguntaActualShuffled?.options?.map((opcion, idx) => {
+                const answerValue = selectedAnswers[currentQuestionIndex];
+                const multi = Boolean(preguntaActual && isMultiAnswer(preguntaActual.respuesta_correcta));
+                const selected = Array.isArray(answerValue) ? answerValue.includes(idx) : answerValue === idx;
+                const questionAnswered = multi
+                  ? Array.isArray(answerValue) &&
+                    answerValue.length === parseCorrectAnswers(preguntaActual?.respuesta_correcta ?? '').length
+                  : answerValue !== undefined;
+                const optionIsCorrect = isCorrectChoice(currentQuestionIndex, idx);
                 const selectedIsWrong = selected && questionAnswered && !optionIsCorrect;
 
                 return (
@@ -616,7 +936,9 @@ export default function SimuladorExamen({
                       !questionAnswered && 'border-slate-200 bg-[#FBFCFF] hover:border-slate-300 hover:bg-white',
                       questionAnswered && 'border-slate-200 bg-white',
                       selected && !questionAnswered && 'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100',
-                      questionAnswered && optionIsCorrect && 'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-100',
+                      questionAnswered &&
+                        optionIsCorrect &&
+                        'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-100',
                       selectedIsWrong && 'border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-100'
                     )}
                   >

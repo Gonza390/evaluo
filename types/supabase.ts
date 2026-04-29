@@ -8,7 +8,7 @@ export type Json =
 
 export type AppRole = 'admin' | 'student';
 
-export interface DashboardSubjectState {
+export interface DashboardMateriaState {
   id: string;
   name: string;
 }
@@ -533,8 +533,8 @@ export type Database = {
           role: AppRole | null;
           last_subject_id: string | null;
           last_subject_name: string | null;
-          active_subjects: DashboardSubjectState[] | null;
-          finished_subjects: DashboardSubjectState[] | null;
+          active_subjects: DashboardMateriaState[] | null;
+          finished_subjects: DashboardMateriaState[] | null;
           dashboard_analytics: DashboardAnalytics | null;
           updated_at: string | null;
         };
@@ -548,8 +548,8 @@ export type Database = {
           role?: AppRole | null;
           last_subject_id?: string | null;
           last_subject_name?: string | null;
-          active_subjects?: DashboardSubjectState[] | null;
-          finished_subjects?: DashboardSubjectState[] | null;
+          active_subjects?: DashboardMateriaState[] | null;
+          finished_subjects?: DashboardMateriaState[] | null;
           dashboard_analytics?: DashboardAnalytics | null;
           updated_at?: string | null;
         };
@@ -563,8 +563,8 @@ export type Database = {
           role?: AppRole | null;
           last_subject_id?: string | null;
           last_subject_name?: string | null;
-          active_subjects?: DashboardSubjectState[] | null;
-          finished_subjects?: DashboardSubjectState[] | null;
+          active_subjects?: DashboardMateriaState[] | null;
+          finished_subjects?: DashboardMateriaState[] | null;
           dashboard_analytics?: DashboardAnalytics | null;
           updated_at?: string | null;
         };
@@ -634,7 +634,6 @@ export type Database = {
         Row: {
           id: string;
           materia_id: string | null;
-          subject_id: string | null;
           module_id: number;
           title: string;
           author_name: string | null;
@@ -645,7 +644,6 @@ export type Database = {
         Insert: {
           id?: string;
           materia_id?: string | null;
-          subject_id?: string | null;
           module_id: number;
           title: string;
           author_name?: string | null;
@@ -656,7 +654,6 @@ export type Database = {
         Update: {
           id?: string;
           materia_id?: string | null;
-          subject_id?: string | null;
           module_id?: number;
           title?: string;
           author_name?: string | null;
@@ -687,7 +684,6 @@ export type Database = {
           user_id: string;
           materia_id: string | null;
           carrera_id: string | null;
-          subject_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -695,7 +691,6 @@ export type Database = {
           user_id: string;
           materia_id?: string | null;
           carrera_id?: string | null;
-          subject_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -703,7 +698,6 @@ export type Database = {
           user_id?: string;
           materia_id?: string | null;
           carrera_id?: string | null;
-          subject_id?: string | null;
           created_at?: string;
         };
         Relationships: [];

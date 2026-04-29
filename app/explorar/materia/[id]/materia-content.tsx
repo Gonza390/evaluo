@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import Link from 'next/link';
@@ -23,6 +23,7 @@ import {
   ThumbsDown,
   Sparkles,
   Trophy,
+  Crown,
   Zap,
   Eye,
   Download,
@@ -30,47 +31,23 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PdfViewer from '@/components/PdfViewer';
-
-interface Resumen {
-  id: string;
-  title: string;
-  author_name: string | null;
-  file_url: string | null;
-  module_id: string | number | null;
-  score: number | null;
-  created_at: string | null;
-  pages?: number | null;
-}
-
-interface RecursoResumenRow {
-  id: string;
-  nombre: string;
-  url_archivo: string | null;
-  creado_at: string | null;
-  etiqueta: string | null;
-  paginas: number | null;
-}
-
-interface Unidad {
-  id: number;
-  nombre: string;
-  descripcion: string;
-  resumenesCount: number;
-}
-
-interface RecursoArchivo {
-  id: string;
-  nombre: string;
-  tipo: string | null;
-  url_archivo: string | null;
-  creado_at: string | null;
-  materia_id: string | null;
-}
-
-interface PreviewDocument {
-  title: string;
-  url: string;
-}
+import {
+  buildResumenKey,
+  getMateriaContextErrorMessage,
+  getMateriaHeroImage,
+  getModuleNumber,
+  getRecursosErrorMessage,
+  getResumenesErrorMessage,
+  getResumenRating,
+  isLongMateriaTitle,
+  type PreviewDocument,
+  type RecursoArchivo,
+  type RecursoResumenRow,
+  type Resumen,
+  scoreResumenCompleteness,
+  unidades,
+} from './materia-content.helpers';
+import { MateriaSectionState } from './materia-section-state';
 
 interface MateriaContentProps {
   materiaId: string;
@@ -81,126 +58,6 @@ interface MateriaContentProps {
   universidadNombre?: string;
 }
 
-const unidades: Unidad[] = [
-  { id: 1, nombre: 'Modulo 1', descripcion: 'Conceptos base y mapa general de la materia.', resumenesCount: 3 },
-  { id: 2, nombre: 'Modulo 2', descripcion: 'Desarrollo teorico y criterios de resolucion.', resumenesCount: 2 },
-  { id: 3, nombre: 'Modulo 3', descripcion: 'Aplicaciones practicas y casos tipicos.', resumenesCount: 4 },
-  { id: 4, nombre: 'Modulo 4', descripcion: 'Integracion y ejercitacion de examen.', resumenesCount: 2 },
-];
-
-function getResumenRating(score: number | null | undefined) {
-  const normalized = Math.max(0, Math.min(5, Math.round((score ?? 0) / 20)));
-  return Array.from({ length: 5 }, (_, index) => index < normalized);
-}
-
-function isLongMateriaTitle(nombre: string) {
-  return nombre.trim().length > 28;
-}
-
-function normalizeLabel(value: string) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-}
-
-function getModuleNumber(value: string) {
-  const normalized = normalizeLabel(value);
-  const match = normalized.match(/modulo\s*(\d+)/);
-  return match ? Number(match[1]) : null;
-}
-
-function buildResumenKey(resumen: Resumen) {
-  const fileKey = resumen.file_url?.trim().toLowerCase();
-  if (fileKey) {
-    return fileKey;
-  }
-
-  return `${normalizeLabel(resumen.title)}::${String(resumen.module_id ?? '')}`;
-}
-
-function scoreResumenCompleteness(resumen: Resumen) {
-  let score = 0;
-
-  if (resumen.pages) score += 2;
-  if (resumen.author_name && resumen.author_name !== 'Biblioteca Evaluo') score += 2;
-  if (resumen.score && resumen.score > 0) score += 1;
-  if (resumen.created_at) score += 1;
-
-  return score;
-}
-
-function normalizeMateriaName(nombre: string) {
-  return nombre
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-}
-
-function getMateriaHeroImage(nombre: string) {
-  const normalized = normalizeMateriaName(nombre);
-
-  const exactImages: Record<string, string> = {
-    matematica: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80',
-    estadistica: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
-    economia: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80',
-    contabilidad: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80',
-    administracion: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80',
-    marketing: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80',
-    psicologia: 'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=1200&q=80',
-    sociologia: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
-    filosofia: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80',
-    historia: 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=1200&q=80',
-    ingles: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80',
-    informatica: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',
-  };
-
-  if (exactImages[normalized]) {
-    return exactImages[normalized];
-  }
-
-  const keywordImages: Array<[string, string]> = [
-    ['matemat', 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80'],
-    ['calculo', 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80'],
-    ['algebra', 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80'],
-    ['estad', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80'],
-    ['econom', 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80'],
-    ['contab', 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80'],
-    ['admin', 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80'],
-    ['marketing', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80'],
-    ['derecho', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80'],
-    ['jurid', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80'],
-    ['penal', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80'],
-    ['constitucional', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80'],
-    ['civil', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80'],
-    ['program', 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80'],
-    ['informat', 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80'],
-    ['sistemas', 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80'],
-    ['ingenier', 'https://images.unsplash.com/photo-1581092921461-eab10380f636?auto=format&fit=crop&w=1200&q=80'],
-    ['fisica', 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=80'],
-    ['quimica', 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?auto=format&fit=crop&w=1200&q=80'],
-    ['biologia', 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?auto=format&fit=crop&w=1200&q=80'],
-    ['medicina', 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80'],
-    ['anatom', 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80'],
-    ['psicolog', 'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=1200&q=80'],
-    ['sociolog', 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80'],
-    ['filosof', 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80'],
-    ['historia', 'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=1200&q=80'],
-    ['ingles', 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80'],
-    ['idioma', 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80'],
-    ['investig', 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80'],
-    ['metodolog', 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80'],
-  ];
-
-  const matchedImage = keywordImages.find(([keyword]) => normalized.includes(keyword));
-  if (matchedImage) {
-    return matchedImage[1];
-  }
-
-  return 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80';
-}
 
 export default function MateriaContent({
   materiaId,
@@ -232,14 +89,18 @@ export default function MateriaContent({
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [contextError, setContextError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [voteLoading, setVoteLoading] = useState<string>('');
   const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
+  const [resumenesError, setResumenesError] = useState<string | null>(null);
+  const [recursosError, setRecursosError] = useState<string | null>(null);
   const isLongTitle = isLongMateriaTitle(nombre);
   const heroImage = getMateriaHeroImage(nombre);
 
-  const loadResumenes = async () => {
+  const loadResumenes = useCallback(async () => {
     setResumenesLoading(true);
+    setResumenesError(null);
     try {
       let query = supabase
         .from('resumenes')
@@ -323,10 +184,11 @@ export default function MateriaContent({
     } catch (error) {
       console.error('Load resumenes error:', error);
       setResumenes([]);
+      setResumenesError(getResumenesErrorMessage());
     } finally {
       setResumenesLoading(false);
     }
-  };
+  }, [activeUnidad, authUser, materiaId, sortBy]);
 
   const loadFavoriteStatus = async () => {
     if (!authUser) return;
@@ -406,8 +268,9 @@ export default function MateriaContent({
     }
   };
 
-  const loadRecursosPdf = async () => {
+  const loadRecursosPdf = useCallback(async () => {
     setRecursosLoading(true);
+    setRecursosError(null);
     try {
       const { data, error } = await supabase
         .from('recursos')
@@ -419,6 +282,7 @@ export default function MateriaContent({
       if (error) {
         console.error('Load recursos error:', error);
         setRecursosPdf([]);
+        setRecursosError(getRecursosErrorMessage());
       } else {
         const resources = data || [];
         if (!authUser) {
@@ -438,13 +302,15 @@ export default function MateriaContent({
     } catch (error) {
       console.error('Load recursos error:', error);
       setRecursosPdf([]);
+      setRecursosError(getRecursosErrorMessage());
     } finally {
       setRecursosLoading(false);
     }
-  };
+  }, [authUser, materiaId]);
 
   useEffect(() => {
     const initData = async () => {
+      setContextError(null);
       if (authUser) {
         setIsUserLogged(true);
         await loadFavoriteStatus();
@@ -453,52 +319,69 @@ export default function MateriaContent({
         setIsFavorite(false);
       }
 
-      if (!materiaNombre) {
-        const { data } = await supabase
-          .from('materias')
-          .select('nombre, carrera_id')
-          .eq('id', materiaId)
-          .single();
+      try {
+        if (!materiaNombre) {
+          const { data: materiaData, error: materiaError } = await supabase
+            .from('materias')
+            .select('nombre, carrera_id')
+            .eq('id', materiaId)
+            .single();
 
-        if (data) {
-          setNombre(data.nombre || 'Materia');
+          if (materiaError) throw materiaError;
 
-          if (!initialCarreraNombre && data.carrera_id) {
-            const { data: carreraData } = await supabase
-              .from('carreras')
-              .select('nombre, universidad_id')
-              .eq('id', data.carrera_id)
-              .single();
+          if (materiaData) {
+            setNombre(materiaData.nombre || 'Materia');
 
-            if (carreraData) {
-              setCarreraNombre(carreraData.nombre || '');
+            const targetCarreraId = carreraId ?? materiaData.carrera_id ?? null;
+            if (!initialCarreraNombre && targetCarreraId) {
+              const { data: carreraData, error: carreraError } = await supabase
+                .from('carreras')
+                .select('nombre, universidad_id')
+                .eq('id', targetCarreraId)
+                .single();
 
-              if (!initialUniversidadNombre && carreraData.universidad_id) {
-                const { data: universidadData } = await supabase
-                  .from('universidades')
-                  .select('nombre')
-                  .eq('id', carreraData.universidad_id)
-                  .single();
+              if (carreraError) throw carreraError;
 
-                if (universidadData?.nombre) {
-                  setUniversidadNombre(universidadData.nombre);
+              if (carreraData) {
+                setCarreraNombre(carreraData.nombre || '');
+
+                const targetUniversidadId = universidadId ?? carreraData.universidad_id ?? null;
+                if (!initialUniversidadNombre && targetUniversidadId) {
+                  const { data: universidadData, error: universidadError } = await supabase
+                    .from('universidades')
+                    .select('nombre')
+                    .eq('id', targetUniversidadId)
+                    .single();
+
+                  if (universidadError) throw universidadError;
+                  if (universidadData?.nombre) {
+                    setUniversidadNombre(universidadData.nombre);
+                  }
                 }
               }
             }
           }
         }
+      } catch (error) {
+        console.error('Init materia context error:', error);
+        setContextError(getMateriaContextErrorMessage());
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     void initData();
-  }, [authUser, initialCarreraNombre, initialUniversidadNombre, materiaId, materiaNombre]);
+  }, [authUser, carreraId, initialCarreraNombre, initialUniversidadNombre, materiaId, materiaNombre, universidadId]);
 
   useEffect(() => {
     const tabFromQuery = searchParams.get('tab');
     if (tabFromQuery === 'resumenes' || tabFromQuery === 'trabajos' || tabFromQuery === 'pregunteros') {
       setActiveTab(tabFromQuery);
+    }
+
+    const moduleFromQuery = searchParams.get('modulo');
+    if (moduleFromQuery && ['1', '2', '3', '4'].includes(moduleFromQuery)) {
+      setActiveUnidad(moduleFromQuery);
     }
   }, [searchParams]);
 
@@ -506,13 +389,13 @@ export default function MateriaContent({
     if (activeTab === 'resumenes') {
       void loadResumenes();
     }
-  }, [activeTab, activeUnidad, sortBy, authUser]);
+  }, [activeTab, loadResumenes]);
 
   useEffect(() => {
     if (activeTab === 'pregunteros') {
       void loadRecursosPdf();
     }
-  }, [activeTab, materiaId, authUser]);
+  }, [activeTab, loadRecursosPdf]);
 
   useEffect(() => {
     async function syncDashboardSubject() {
@@ -549,15 +432,20 @@ export default function MateriaContent({
     void syncDashboardSubject();
   }, [authUser, materiaId, nombre]);
 
-  const resumenesFiltrados = resumenes.filter((resumen) =>
-    resumen.title.toLowerCase().includes(busqueda.toLowerCase())
+  const resumenesFiltrados = useMemo(
+    () => resumenes.filter((resumen) => resumen.title.toLowerCase().includes(busqueda.toLowerCase())),
+    [busqueda, resumenes]
   );
-  const recursosFiltrados = recursosPdf.filter(
-    (recurso) =>
-      recurso.materia_id === materiaId &&
-      Boolean(recurso.url_archivo) &&
-      ((recurso.tipo ?? '').toLowerCase().includes('pdf') ||
-        (recurso.tipo ?? '').toLowerCase().includes('preguntero'))
+  const recursosFiltrados = useMemo(
+    () =>
+      recursosPdf.filter(
+        (recurso) =>
+          recurso.materia_id === materiaId &&
+          Boolean(recurso.url_archivo) &&
+          ((recurso.tipo ?? '').toLowerCase().includes('pdf') ||
+            (recurso.tipo ?? '').toLowerCase().includes('preguntero'))
+      ),
+    [materiaId, recursosPdf]
   );
 
   const getRecursoPublicUrl = (resourcePath: string) => {
@@ -848,6 +736,11 @@ export default function MateriaContent({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+        {contextError ? (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {contextError}
+          </div>
+        ) : null}
         {activeTab === 'resumenes' ? (
           <div className="space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -889,16 +782,23 @@ export default function MateriaContent({
 
             {resumenesLoading ? (
               <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500">
-                Cargando resumenes...
+                Estamos preparando tus resúmenes...
               </div>
+            ) : resumenesError ? (
+              <MateriaSectionState
+                icon={FileText}
+                title="No pudimos cargar este módulo"
+                description={resumenesError}
+                tone="warning"
+                actionLabel="Reintentar carga"
+                onAction={() => void loadResumenes()}
+              />
             ) : resumenesFiltrados.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-                <FileText className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-                <h3 className="text-lg font-semibold text-slate-900">Estamos preparando este contenido</h3>
-                <p className="mt-2 text-sm text-slate-500">
-                  Estamos procesando el material oficial de esta materia para que la IA te enseñe.
-                </p>
-              </div>
+              <MateriaSectionState
+                icon={FileText}
+                title="Todavía no hay resúmenes para este módulo"
+                description="Probá con otro módulo o volvé más tarde cuando terminemos de publicar este contenido."
+              />
             ) : (
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {resumenesFiltrados.map((resumen) => {
@@ -1024,30 +924,57 @@ export default function MateriaContent({
               {[
                 { parcial: 1, titulo: 'Parcial 1', icon: Zap },
                 { parcial: 2, titulo: 'Parcial 2', icon: Trophy },
+                { parcial: 1, titulo: 'Premium Parcial 1 (50 preguntas)', icon: Crown, premium: true },
+                { parcial: 2, titulo: 'Premium Parcial 2 (50 preguntas)', icon: Crown, premium: true },
               ].map((simulador) => {
                 const Icon = simulador.icon;
                 return (
                   <article
-                    key={simulador.parcial}
-                    className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
+                    key={`${simulador.parcial}-${simulador.titulo}`}
+                    className={
+                      simulador.premium
+                        ? 'rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-indigo-50 p-6 shadow-[0_12px_36px_rgba(99,102,241,0.18)]'
+                        : 'rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]'
+                    }
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-sm font-medium text-slate-500">Simulador</p>
                         <h3 className="mt-1 text-2xl font-bold text-slate-900">{simulador.titulo}</h3>
                         <p className="mt-3 text-sm leading-6 text-slate-600">
-                          30 preguntas al azar de la materia actual para entrenar examen real.
+                          {simulador.premium
+                            ? 'Basado en ultimos examenes validados. Acceso exclusivo para usuarios premium.'
+                            : '30 preguntas al azar de la materia actual para entrenar examen real.'}
                         </p>
+                        {simulador.premium ? (
+                          <span className="mt-3 inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                            Solo Premium
+                          </span>
+                        ) : null}
                       </div>
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                      <div
+                        className={
+                          simulador.premium
+                            ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-indigo-100 text-amber-700'
+                            : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600'
+                        }
+                      >
                         <Icon className="h-5 w-5" />
                       </div>
                     </div>
                     <Link
-                      href={`/simulador/${materiaId}/${simulador.parcial}`}
-                      className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
+                      href={
+                        simulador.premium
+                          ? `/simulador/premium/${materiaId}/${simulador.parcial}`
+                          : `/simulador/${materiaId}/${simulador.parcial}`
+                      }
+                      className={
+                        simulador.premium
+                          ? 'mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-indigo-700 hover:to-violet-700'
+                          : 'mt-6 inline-flex items-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0]'
+                      }
                     >
-                      Iniciar Simulador Aleatorio
+                      {simulador.premium ? 'Iniciar Simulador Premium' : 'Iniciar Simulador Aleatorio'}
                     </Link>
                   </article>
                 );
@@ -1059,15 +986,23 @@ export default function MateriaContent({
 
               {recursosLoading ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
-                  Cargando archivos...
+                  Estamos reuniendo los pregunteros disponibles...
                 </div>
+              ) : recursosError ? (
+                <MateriaSectionState
+                  icon={FileText}
+                  title="No pudimos cargar los pregunteros"
+                  description={recursosError}
+                  tone="warning"
+                  actionLabel="Reintentar carga"
+                  onAction={() => void loadRecursosPdf()}
+                />
               ) : recursosFiltrados.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
-                  <FileText className="mx-auto mb-3 h-9 w-9 text-slate-300" />
-                  <p className="text-sm text-slate-600">
-                    Estamos procesando modelos de examen para esta materia.
-                  </p>
-                </div>
+                <MateriaSectionState
+                  icon={FileText}
+                  title="Todavía no hay pregunteros publicados"
+                  description="Cuando publiquemos material nuevo para esta materia, lo vas a ver acá."
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {recursosFiltrados.map((recurso) => {
@@ -1099,10 +1034,15 @@ export default function MateriaContent({
                                 return;
                               }
 
-                              setPreviewDocument({
-                                title: recurso.nombre,
-                                url: viewerUrl,
-                              });
+                              const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+                              if (isMobile) {
+                                window.location.assign(viewerUrl);
+                              } else {
+                                setPreviewDocument({
+                                  title: recurso.nombre,
+                                  url: viewerUrl,
+                                });
+                              }
                               pushRecentResource({
                                 id: recurso.id,
                                 title: recurso.nombre,

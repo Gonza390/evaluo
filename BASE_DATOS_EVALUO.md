@@ -215,7 +215,6 @@ Campos:
 
 - `id`
 - `materia_id`
-- `subject_id`
 - `module_id`
 - `title`
 - `author_name`
@@ -226,7 +225,7 @@ Campos:
 Estado:
 
 - el codigo ya consulta por `materia_id`
-- `subject_id` queda como columna legacy temporal
+- `subject_id` fue eliminado en la limpieza final del 28/04/2026
 
 ### `resumen_votes`
 
@@ -253,13 +252,12 @@ Campos:
 - `id`
 - `user_id`
 - `materia_id`
-- `subject_id`
 - `created_at`
 
 Estado:
 
 - el codigo ya usa `materia_id`
-- `subject_id` queda como compatibilidad temporal
+- `subject_id` fue eliminado en la limpieza final del 28/04/2026
 
 ## Como se conectan las tablas
 
@@ -408,7 +406,7 @@ Backup local:
 
 - `materias.carrera_id` convive con `carrera_materias`
 - `resumenes` sigue siendo un modelo paralelo a `recursos`
-- siguen existiendo columnas legacy `subject_id`
+- `subject_id` ya no existe en `resumenes` ni `user_favorites`
 - falta revisar storage policies del bucket `biblioteca`
 
 ## Siguiente recomendacion tecnica

@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { generateTutorExplanation } from '@/lib/ai-tutor';
 import { revalidatePath } from 'next/cache';
 import pdf from 'pdf-parse-fork';
-import type { DashboardAnalytics, DashboardSubjectState } from '@/types/supabase';
+import type { DashboardAnalytics, DashboardMateriaState } from '@/types/supabase';
+import { requirePremiumUser } from '@/lib/premium';
 
 export interface Pregunta {
   id: string;
@@ -16,9 +17,9 @@ export interface Pregunta {
 }
 
 export interface DashboardState {
-  lastSubject: DashboardSubjectState | null;
-  activeSubjects: DashboardSubjectState[];
-  finishedSubjects: DashboardSubjectState[];
+  lastSubject: DashboardMateriaState | null;
+  activeSubjects: DashboardMateriaState[];
+  finishedSubjects: DashboardMateriaState[];
   analytics: DashboardAnalytics;
 }
 
@@ -139,6 +140,50 @@ export async function getPreguntasSimuladorErrores(materiaId: string): Promise<P
     return shuffled.slice(0, 30) as Pregunta[];
   } catch (error) {
     console.error('Error in getPreguntasSimuladorErrores:', error);
+    return [];
+  }
+}
+
+export async function getPreguntasSimuladorPremium(
+  materiaId: string,
+  parcial: number
+): Promise<Pregunta[]> {
+  try {
+    const premiumCheck = await requirePremiumUser();
+    if (!premiumCheck.ok) return [];
+    const admin = createAdminClient();
+
+    const { data: setRow } = await admin
+      .from('premium_question_sets')
+      .select('id')
+      .eq('materia_id', materiaId)
+      .eq('parcial', parcial)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!setRow?.id) return [];
+
+    const { data: rows } = await admin
+      .from('premium_questions')
+      .select('id, enunciado, opciones, respuesta_correcta')
+      .eq('set_id', setRow.id)
+      .order('orden', { ascending: true })
+      .limit(50);
+
+    return ((rows ?? []) as Array<{ id: string; enunciado: string; opciones: unknown; respuesta_correcta: string }>).map((row) => ({
+      id: row.id,
+      enunciado: row.enunciado,
+      opciones: Array.isArray(row.opciones)
+        ? (row.opciones.filter((o: unknown) => typeof o === 'string') as string[])
+        : [],
+      respuesta_correcta: row.respuesta_correcta,
+      materia_id: materiaId,
+      parcial,
+    }));
+  } catch (error) {
+    console.error('Error in getPreguntasSimuladorPremium:', error);
     return [];
   }
 }
@@ -585,6 +630,8 @@ export async function getWrongAnswersExplanations(data: {
     const missing = wrongIds.filter((id) => !cacheMap.has(id));
 
     const results: WrongAnswerExplanation[] = [];
+    let cacheHits = 0;
+    let generatedCount = 0;
 
     if (cacheRows?.length) {
       const { data: cachedQuestions } = await admin
@@ -606,6 +653,7 @@ export async function getWrongAnswersExplanations(data: {
           provider: row.provider ?? 'cache',
           source: 'cache',
         });
+        cacheHits += 1;
       }
     }
 
@@ -694,10 +742,11 @@ export async function getWrongAnswersExplanations(data: {
           provider: generated.provider,
           source: 'generated',
         });
+        generatedCount += 1;
       }
     }
 
-    return { success: true, explanations: results };
+    return { success: true, explanations: results, metrics: { cacheHits, generatedCount } };
   } catch (error) {
     console.error('Error en getWrongAnswersExplanations:', error);
     return { success: false, message: 'No se pudieron generar las explicaciones.' };

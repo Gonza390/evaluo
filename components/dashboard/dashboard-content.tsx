@@ -44,7 +44,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import type { DashboardSubjectState } from '@/types/supabase';
+import type { DashboardMateriaState } from '@/types/supabase';
 
 type MateriaSummary = {
   id: string;
@@ -53,12 +53,26 @@ type MateriaSummary = {
   carreraNombre: string;
 };
 
-type SubjectDetailsMap = Record<
+type MateriaDetailsMap = Record<
   string,
   {
     careerName: string;
   }
 >;
+
+type SimuladorInProgressSnapshot = {
+  version: 1;
+  userId: string;
+  materiaId: string;
+  parcial: number;
+  mode: 'regular' | 'errores';
+  currentQuestionIndex: number;
+  timeLeft: number;
+  selectedAnswers: Record<number, number>;
+  flaggedQuestions: number[];
+  hasStarted: boolean;
+  savedAt: string;
+};
 
 const STORAGE_KEYS = {
   lastSubject: 'evaluo_last_subject',
@@ -86,12 +100,12 @@ function readLocalState(): DashboardState {
     const activeSubjects = localStorage.getItem(STORAGE_KEYS.activeSubjects);
     const finishedSubjects = localStorage.getItem(STORAGE_KEYS.finishedSubjects);
     const parsedFinishedSubjects = finishedSubjects
-      ? (JSON.parse(finishedSubjects) as DashboardSubjectState[])
+      ? (JSON.parse(finishedSubjects) as DashboardMateriaState[])
       : [];
 
     return {
-      lastSubject: lastSubject ? (JSON.parse(lastSubject) as DashboardSubjectState) : null,
-      activeSubjects: activeSubjects ? (JSON.parse(activeSubjects) as DashboardSubjectState[]) : [],
+      lastSubject: lastSubject ? (JSON.parse(lastSubject) as DashboardMateriaState) : null,
+      activeSubjects: activeSubjects ? (JSON.parse(activeSubjects) as DashboardMateriaState[]) : [],
       finishedSubjects: parsedFinishedSubjects,
       analytics: {
         subjectsCompleted: parsedFinishedSubjects.length,
@@ -122,7 +136,7 @@ function writeLocalState(state: DashboardState) {
   localStorage.setItem(STORAGE_KEYS.finishedSubjects, JSON.stringify(state.finishedSubjects));
 }
 
-function touchSubjectState(state: DashboardState, subject: DashboardSubjectState): DashboardState {
+function touchMateriaState(state: DashboardState, subject: DashboardMateriaState): DashboardState {
   const nextActiveSubjects = [
     subject,
     ...state.activeSubjects.filter((item) => item.id !== subject.id),
@@ -211,12 +225,13 @@ export function DashboardContent() {
   const [exploreQuery, setExploreQuery] = useState('');
   const [recentResources, setRecentResources] = useState<DashboardRecentResource[]>([]);
   const [weeklyProgress, setWeeklyProgress] = useState<Array<{ day: string; count: number }>>([]);
-  const [subjectDetails, setSubjectDetails] = useState<SubjectDetailsMap>({});
-  const [recommendedSubjects, setRecommendedSubjects] = useState<MateriaSummary[]>([]);
-  const [favoriteSubjects, setFavoriteSubjects] = useState<MateriaSummary[]>([]);
+  const [materiaDetails, setMateriaDetails] = useState<MateriaDetailsMap>({});
+  const [recommendedMaterias, setRecommendedMaterias] = useState<MateriaSummary[]>([]);
+  const [favoriteMaterias, setFavoriteMaterias] = useState<MateriaSummary[]>([]);
   const [favoriteSuggestions, setFavoriteSuggestions] = useState<MateriaSummary[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [partialInsights, setPartialInsights] = useState<PartialStudyInsights | null>(null);
+  const [simuladorInProgress, setSimuladorInProgress] = useState<SimuladorInProgressSnapshot | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -266,14 +281,52 @@ export function DashboardContent() {
   }, [user, userLoading]);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !user) {
+      setSimuladorInProgress(null);
+      return;
+    }
+
+    try {
+      const prefix = 'evaluo_simulador_in_progress:';
+      const found: SimuladorInProgressSnapshot[] = [];
+
+      for (let i = 0; i < window.localStorage.length; i += 1) {
+        const key = window.localStorage.key(i);
+        if (!key || !key.startsWith(prefix)) continue;
+        const raw = window.localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw) as SimuladorInProgressSnapshot;
+        if (
+          parsed &&
+          parsed.version === 1 &&
+          parsed.userId === user.id &&
+          parsed.materiaId &&
+          Number(parsed.parcial) > 0
+        ) {
+          found.push(parsed);
+        }
+      }
+
+      found.sort((a, b) => {
+        const aTime = new Date(a.savedAt || 0).getTime();
+        const bTime = new Date(b.savedAt || 0).getTime();
+        return bTime - aTime;
+      });
+      setSimuladorInProgress(found[0] ?? null);
+    } catch {
+      setSimuladorInProgress(null);
+    }
+  }, [user]);
+
+  useEffect(() => {
     let isMounted = true;
 
-    async function loadSubjectDetails() {
+    async function loadMateriaDetails() {
       const subjectIds = dashboardState.activeSubjects.map((subject) => subject.id);
 
       if (subjectIds.length === 0) {
         if (isMounted) {
-          setSubjectDetails({});
+          setMateriaDetails({});
         }
         return;
       }
@@ -284,18 +337,18 @@ export function DashboardContent() {
           return;
         }
 
-        const nextDetails = materias.reduce<SubjectDetailsMap>((acc, materia) => {
+        const nextDetails = materias.reduce<MateriaDetailsMap>((acc, materia) => {
           acc[materia.id] = { careerName: materia.carreraNombre };
           return acc;
         }, {});
 
-        setSubjectDetails(nextDetails);
+        setMateriaDetails(nextDetails);
       } catch (error) {
         console.error('Error loading subject details:', error);
       }
     }
 
-    void loadSubjectDetails();
+    void loadMateriaDetails();
 
     return () => {
       isMounted = false;
@@ -305,10 +358,10 @@ export function DashboardContent() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadRecommendedSubjects() {
+    async function loadRecommendedMaterias() {
       if (!user || dashboardState.activeSubjects.length > 0) {
         if (isMounted) {
-          setRecommendedSubjects([]);
+          setRecommendedMaterias([]);
         }
         return;
       }
@@ -326,7 +379,7 @@ export function DashboardContent() {
 
         if (!profile?.carrera_id) {
           if (isMounted) {
-            setRecommendedSubjects([]);
+            setRecommendedMaterias([]);
           }
           return;
         }
@@ -340,7 +393,7 @@ export function DashboardContent() {
           allMaterias.find((materia) => materia.carreraId === profile.carrera_id)?.carreraNombre ??
           'Carrera';
 
-        setRecommendedSubjects(
+        setRecommendedMaterias(
           materias.slice(0, 3).map((materia) => ({
             id: materia.id,
             nombre: materia.nombre,
@@ -351,12 +404,12 @@ export function DashboardContent() {
       } catch (error) {
         console.error('Error loading recommended subjects:', error);
         if (isMounted) {
-          setRecommendedSubjects([]);
+          setRecommendedMaterias([]);
         }
       }
     }
 
-    void loadRecommendedSubjects();
+    void loadRecommendedMaterias();
 
     return () => {
       isMounted = false;
@@ -410,7 +463,7 @@ export function DashboardContent() {
     async function loadFavoritesAndSuggestions() {
       if (!user) {
         if (isMounted) {
-          setFavoriteSubjects([]);
+          setFavoriteMaterias([]);
           setFavoriteSuggestions([]);
         }
         return;
@@ -475,7 +528,7 @@ export function DashboardContent() {
           }));
 
           if (isMounted) {
-            setFavoriteSubjects(normalizedFavorites);
+            setFavoriteMaterias(normalizedFavorites);
             setFavoriteSuggestions([]);
           }
         } else {
@@ -491,7 +544,7 @@ export function DashboardContent() {
 
           if (!profileData?.carrera_id) {
             if (isMounted) {
-              setFavoriteSubjects([]);
+              setFavoriteMaterias([]);
               setFavoriteSuggestions([]);
             }
             return;
@@ -503,7 +556,7 @@ export function DashboardContent() {
             'Carrera';
 
           if (isMounted) {
-            setFavoriteSubjects([]);
+            setFavoriteMaterias([]);
             setFavoriteSuggestions(
               suggested.slice(0, 4).map((materia) => ({
                 id: materia.id,
@@ -517,7 +570,7 @@ export function DashboardContent() {
       } catch (error) {
         console.error('Error loading favorites dashboard section:', error);
         if (isMounted) {
-          setFavoriteSubjects([]);
+          setFavoriteMaterias([]);
           setFavoriteSuggestions([]);
         }
       } finally {
@@ -579,7 +632,7 @@ export function DashboardContent() {
     }
   };
 
-  const addSubject = (materia: MateriaSummary) => {
+  const addMateria = (materia: MateriaSummary) => {
     if (dashboardState.activeSubjects.length >= 6) {
       toast({
         title: 'Limite alcanzado',
@@ -590,10 +643,10 @@ export function DashboardContent() {
     }
 
     const newSubject = { id: materia.id, name: materia.nombre };
-    const nextState = touchSubjectState(dashboardState, newSubject);
+    const nextState = touchMateriaState(dashboardState, newSubject);
 
     persistDashboardState(nextState);
-    setSubjectDetails((prev) => ({
+    setMateriaDetails((prev) => ({
       ...prev,
       [materia.id]: {
         careerName: materia.carreraNombre,
@@ -606,7 +659,7 @@ export function DashboardContent() {
     });
   };
 
-  const removeSubject = (subjectId: string, subjectName: string) => {
+  const removeMateria = (subjectId: string, subjectName: string) => {
     const nextActiveSubjects = dashboardState.activeSubjects.filter((subject) => subject.id !== subjectId);
     const nextLastSubject =
       dashboardState.lastSubject?.id === subjectId
@@ -629,8 +682,8 @@ export function DashboardContent() {
     });
   };
 
-  const goToSubject = (subject: DashboardSubjectState) => {
-    persistDashboardState(touchSubjectState(dashboardState, subject));
+  const goToMateria = (subject: DashboardMateriaState) => {
+    persistDashboardState(touchMateriaState(dashboardState, subject));
     router.push(getMateriaRoute(subject.id));
   };
 
@@ -743,11 +796,11 @@ export function DashboardContent() {
                         key={subject.id}
                         role="button"
                         tabIndex={0}
-                        onClick={() => goToSubject(subject)}
+                        onClick={() => goToMateria(subject)}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            goToSubject(subject);
+                            goToMateria(subject);
                           }
                         }}
                         className={`rounded-xl border bg-gradient-to-br p-3.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${subjectAccentStyles[index % subjectAccentStyles.length]}`}
@@ -760,7 +813,7 @@ export function DashboardContent() {
                             type="button"
                             onClick={(event) => {
                               event.stopPropagation();
-                              removeSubject(subject.id, subject.name);
+                              removeMateria(subject.id, subject.name);
                             }}
                             className="rounded-lg p-2 text-slate-400 transition hover:bg-white/70 hover:text-slate-700"
                             aria-label={`Eliminar ${subject.name}`}
@@ -772,7 +825,7 @@ export function DashboardContent() {
                           {subject.name}
                         </h3>
                         <p className="mt-1 text-xs text-slate-500">
-                          {subjectDetails[subject.id]?.careerName ?? 'Carrera'}
+                          {materiaDetails[subject.id]?.careerName ?? 'Carrera'}
                         </p>
                         <div className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
                           Abrir materia
@@ -790,17 +843,17 @@ export function DashboardContent() {
                     <p className="mt-2 text-sm text-slate-500">
                       Anade una materia y la dejamos lista para volver rapido desde aca.
                     </p>
-                    {recommendedSubjects.length > 0 ? (
+                    {recommendedMaterias.length > 0 ? (
                       <div className="mt-8">
                         <p className="mb-4 text-left text-sm font-semibold text-slate-900">
                           Materias recomendadas segun tu carrera
                         </p>
                         <div className="grid gap-3 md:grid-cols-3">
-                          {recommendedSubjects.map((materia) => (
+                          {recommendedMaterias.map((materia) => (
                             <button
                               key={materia.id}
                               type="button"
-                              onClick={() => addSubject(materia)}
+                              onClick={() => addMateria(materia)}
                               className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
                             >
                               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
@@ -879,6 +932,25 @@ export function DashboardContent() {
                 </p>
               </CardHeader>
               <CardContent className="pt-4">
+                {simuladorInProgress ? (
+                  <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3">
+                    <p className="text-xs text-blue-700">
+                      Tenes un simulador en curso. Retoma donde lo dejaste.
+                    </p>
+                    <Button
+                      className="mt-2 h-8 rounded-lg bg-blue-600 px-3 text-xs font-semibold hover:bg-blue-700"
+                      onClick={() => {
+                        const href =
+                          simuladorInProgress.mode === 'errores'
+                            ? `/simulador/errores/${simuladorInProgress.materiaId}`
+                            : `/simulador/${simuladorInProgress.materiaId}/${simuladorInProgress.parcial}`;
+                        router.push(href);
+                      }}
+                    >
+                      Continuar simulador en curso
+                    </Button>
+                  </div>
+                ) : null}
                 {partialInsights ? (
                   <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
                     <div className="relative grid h-32 w-32 place-items-center rounded-full" style={partialProgressRingStyle}>
@@ -929,8 +1001,8 @@ export function DashboardContent() {
                       />
                     ))}
                   </div>
-                ) : favoriteSubjects.length > 0 ? (
-                  favoriteSubjects.slice(0, 4).map((materia) => (
+                ) : favoriteMaterias.length > 0 ? (
+                  favoriteMaterias.slice(0, 4).map((materia) => (
                     <button
                       key={materia.id}
                       type="button"
@@ -1103,7 +1175,7 @@ export function DashboardContent() {
                       <button
                         key={materia.id}
                         type="button"
-                        onClick={() => addSubject(materia)}
+                        onClick={() => addMateria(materia)}
                         className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                       >
                         <h3 className="text-base font-semibold text-slate-950">{materia.nombre}</h3>

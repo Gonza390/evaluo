@@ -48,6 +48,11 @@ Hoy el sistema ya esta bastante consolidado como MVP tecnico:
 4. el archivo se registra en `materiales`
 5. se crea el recurso visible en `recursos`
 6. si es preguntero, se procesa con IA y salen preguntas a `preguntas_banco`
+7. el panel tambien expone una capa operativa:
+   - duplicados de PDFs
+   - archivos huérfanos
+   - salud del sistema
+8. desde usuarios se puede promocionar o degradar admins
 
 ## Rutas principales
 
@@ -109,6 +114,8 @@ Un usuario admin se reconoce por:
 
 - `app_metadata.role === 'admin'`
 - o `profiles.role === 'admin'`
+
+La promocion o degradacion de admins se hace desde acciones server-side del panel.
 
 La logica vive en:
 

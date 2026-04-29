@@ -15,7 +15,7 @@ La base remota quedo alineada con el codigo activo en los puntos que antes eran 
 
 - schema principal
 - tablas legacy
-- transicion `subject_id -> materia_id`
+- transicion `subject_id -> materia_id` ya completada en tablas activas
 - RLS y permisos
 
 ## Tablas activas despues de la consolidacion
@@ -86,14 +86,14 @@ Ya incluye:
 Ya incluye:
 
 - `materia_id`
-- `subject_id`
+- sin columna legacy `subject_id`
 
 ### `user_favorites`
 
 Ya incluye:
 
 - `materia_id`
-- `subject_id`
+- sin columna legacy `subject_id`
 
 ## Estado de RLS
 

@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Upload,
   Loader2,
+  Zap,
   Brain,
   RefreshCcw,
   BarChart3,
@@ -31,9 +32,9 @@ import {
 import { Label } from '@/components/ui/label';
 
 import { useToast } from '@/components/ui/use-toast';
-import Link from 'next/link';
 import {
   analizarMaterialConIA,
+  importarSimuladorPremiumDesdeArchivo,
   limpiarPreguntasBanco,
   actualizarPromptSistema,
   obtenerPromptSistema,
@@ -47,15 +48,34 @@ import {
   actualizarPreguntaEditorAdmin,
   recalcularDificultadPreguntasAdmin,
   obtenerSaludSistemaAdmin,
+  ejecutarMantenimientoArchivosAdmin,
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
   type QuestionEditorRow,
   type FeedbackReviewItem,
   obtenerUsuariosAdmin,
+  actualizarRolUsuarioAdmin,
   obtenerMonetizacionAdmin,
+  obtenerRankingGlobalPreguntasAdmin,
   type AdminUserItem,
   type MonetizacionStats,
+  type GlobalQuestionRankingRow,
+  type DuplicateCandidate,
+  type SystemHealthStats,
+  type FileMaintenanceResult,
 } from './actions';
+import {
+  filterAdminResources,
+  getMateriasUsoChartData,
+  getPlatformUsageData,
+  getRetentionChartData,
+  sortFilterEntries,
+} from './admin-page.helpers';
+import {
+  AdminAccessDeniedState,
+  AdminIAProcessingOverlay,
+  AdminLoadingState,
+} from './admin-page-states';
 import {
   CartesianGrid,
   ResponsiveContainer,
@@ -115,7 +135,8 @@ interface Materia {
   slug?: string | null;
 }
 
-type ResourceType = 'Preguntero' | 'Resumen' | 'Trabajo PrÃ¡ctico';
+type ResourceType = 'Preguntero' | 'Resumen' | 'Trabajo Práctico';
+type PregunteroDestino = 'ambas' | 'solo_simulador' | 'solo_visualizacion';
 
 export default function AdminPanel() {
   // ... existing states
@@ -159,6 +180,9 @@ export default function AdminPanel() {
   
   // New conditional logic states
   const [recursoType, setRecursoType] = useState<ResourceType>('Preguntero');
+  const [pregunteroDestino, setPregunteroDestino] = useState<PregunteroDestino>('ambas');
+  const [isPremiumSimulatorUpload, setIsPremiumSimulatorUpload] = useState(false);
+  const [premiumSourceExamDate, setPremiumSourceExamDate] = useState('');
   const [subTipo, setSubTipo] = useState('');
   const [resumenModules, setResumenModules] = useState<string[]>([]);
   const [resumenParcial, setResumenParcial] = useState('');
@@ -171,22 +195,46 @@ export default function AdminPanel() {
   const [resourceMateriaNames, setResourceMateriaNames] = useState<Record<string, string>>({});
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [usarIAEnCarga, setUsarIAEnCarga] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isIAProcessing, setIsIAProcessing] = useState(false);
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'materiales' | 'config' | 'estadisticas' | 'ia' | 'usuarios' | 'monetizacion'
+    'dashboard' | 'materiales' | 'operaciones' | 'config' | 'estadisticas' | 'ia' | 'usuarios' | 'monetizacion'
   >('dashboard');
   const [stats, setStats] = useState<AdminAnalyticsStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [questionEditorRows, setQuestionEditorRows] = useState<QuestionEditorRow[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<{ total: number; positive: number; negative: number } | null>(null);
   const [feedbackReviewRows, setFeedbackReviewRows] = useState<FeedbackReviewItem[]>([]);
+  const [duplicatePdfRows, setDuplicatePdfRows] = useState<DuplicateCandidate[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealthStats | null>(null);
+  const [fileMaintenance, setFileMaintenance] = useState<FileMaintenanceResult | null>(null);
   const [adminUsers, setAdminUsers] = useState<AdminUserItem[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [monetizacion, setMonetizacion] = useState<MonetizacionStats | null>(null);
   const [loadingMonetizacion, setLoadingMonetizacion] = useState(false);
+  const [rankingMateriaId, setRankingMateriaId] = useState<string>('all');
+  const [rankingParcial, setRankingParcial] = useState<string>('all');
+  const [rankingFailed, setRankingFailed] = useState<GlobalQuestionRankingRow[]>([]);
+  const [rankingCorrect, setRankingCorrect] = useState<GlobalQuestionRankingRow[]>([]);
+  const [loadingRankingGlobal, setLoadingRankingGlobal] = useState(false);
+
+  const showAdminError = (title: string, description: string) => {
+    toast({
+      title,
+      description,
+      variant: 'destructive',
+    });
+  };
+
+  const showAdminSuccess = (title: string, description: string) => {
+    toast({
+      title,
+      description,
+    });
+  };
 
   const fetchMateriales = async () => {
     setLoadingMateriales(true);
@@ -243,7 +291,7 @@ export default function AdminPanel() {
       .remove([resource.url_archivo]);
 
     if (storageError) {
-      toast({ description: 'Error storage, borrando DB...', variant: 'destructive' });
+      showAdminError('No pudimos borrar el archivo del storage', 'Vamos a intentar limpiar igualmente los registros de base de datos.');
     }
 
     const [materialDelete, recursosDelete, resumenesDelete] = await Promise.all([
@@ -253,9 +301,9 @@ export default function AdminPanel() {
     ]);
 
     if (materialDelete.error || recursosDelete.error || resumenesDelete.error) {
-      toast({ description: 'Error DB', variant: 'destructive' });
+      showAdminError('No pudimos limpiar todos los registros', 'Revisá el archivo otra vez desde el panel antes de seguir.');
     } else {
-      toast({ description: 'Archivo eliminado correctamente' });
+      showAdminSuccess('Archivo eliminado', 'También limpiamos sus registros relacionados.');
       void fetchMateriales();
     }
   };
@@ -268,7 +316,7 @@ export default function AdminPanel() {
       if (!sessionUser) {
         if (isMounted) {
           setUser(null);
-          setAccessDenied('Necesitas iniciar sesiÃ³n para acceder al panel.');
+          setAccessDenied('Necesitás iniciar sesión para acceder al panel.');
         }
         return;
       }
@@ -305,7 +353,7 @@ export default function AdminPanel() {
       })
       .catch(() => {
         if (isMounted) {
-          setAccessDenied('No pudimos validar tu sesiÃ³n de administrador.');
+          setAccessDenied('No pudimos validar tu sesión de administrador.');
           setLoading(false);
         }
       });
@@ -315,7 +363,7 @@ export default function AdminPanel() {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null);
-        setAccessDenied('Tu sesiÃ³n se cerrÃ³.');
+        setAccessDenied('Tu sesión se cerró.');
         router.push('/');
         return;
       }
@@ -338,10 +386,7 @@ export default function AdminPanel() {
       setPromptSistema(result.data || '');
     } else {
       console.error('Error fetching prompt:', result.message);
-      toast({ 
-        description: `Error al cargar prompt: ${result.message}`, 
-        variant: 'destructive' 
-      });
+      showAdminError('No pudimos cargar la configuración de IA', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
 
@@ -353,10 +398,7 @@ export default function AdminPanel() {
     if (result.success) {
       setIaRankingRows(result.rows ?? []);
     } else {
-      toast({
-        description: result.message ?? 'No se pudo cargar el ranking IA.',
-        variant: 'destructive',
-      });
+      showAdminError('No pudimos cargar el ranking de IA', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
 
@@ -367,29 +409,30 @@ export default function AdminPanel() {
     if (result.success) {
       setStats(result.stats ?? null);
     } else {
-      toast({
-        description: result.message ?? 'No se pudieron cargar las estadisticas.',
-        variant: 'destructive',
-      });
+      showAdminError('No pudimos cargar las estadísticas', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
 
   const fetchOpsData = async () => {
-    const [dupRes, qRes, hRes, fRes] = await Promise.all([
+    const [dupRes, qRes, hRes, fRes, maintenanceRes] = await Promise.all([
       obtenerDuplicadosPdfAdmin(),
       obtenerPreguntasEditorAdmin(),
       obtenerSaludSistemaAdmin(),
       obtenerFeedbackExplicacionesAdmin(),
+      ejecutarMantenimientoArchivosAdmin(),
     ]);
 
     if (dupRes.success) {
-      // reserved for future duplicates widget
+      setDuplicatePdfRows(dupRes.rows ?? []);
     }
     if (qRes.success) setQuestionEditorRows(qRes.rows ?? []);
     if (hRes.success) {
-      // reserved for future reliability widget
+      setSystemHealth((hRes as { stats?: SystemHealthStats }).stats ?? null);
     }
     if (fRes.success) setFeedbackStats((fRes as { stats?: { total: number; positive: number; negative: number } }).stats ?? null);
+    if (maintenanceRes.success) {
+      setFileMaintenance((maintenanceRes as { result?: FileMaintenanceResult }).result ?? null);
+    }
 
     const reviewRes = await obtenerFeedbackRevisionAdmin(40);
     if (reviewRes.success) {
@@ -404,10 +447,7 @@ export default function AdminPanel() {
     if (result.success) {
       setAdminUsers(result.rows ?? []);
     } else {
-      toast({
-        description: result.message ?? 'No se pudo cargar la lista de usuarios.',
-        variant: 'destructive',
-      });
+      showAdminError('No pudimos cargar la lista de usuarios', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
 
@@ -418,10 +458,23 @@ export default function AdminPanel() {
     if (result.success) {
       setMonetizacion(result.data ?? null);
     } else {
-      toast({
-        description: result.message ?? 'No se pudo cargar la monetizacion.',
-        variant: 'destructive',
-      });
+      showAdminError('No pudimos cargar la monetización', result.message ?? 'Probá nuevamente en unos segundos.');
+    }
+  };
+
+  const fetchRankingGlobal = async () => {
+    setLoadingRankingGlobal(true);
+    const result = await obtenerRankingGlobalPreguntasAdmin({
+      materiaId: rankingMateriaId === 'all' ? null : rankingMateriaId,
+      parcial: rankingParcial === 'all' ? null : Number(rankingParcial),
+      limit: 12,
+    });
+    setLoadingRankingGlobal(false);
+    if (result.success) {
+      setRankingFailed(result.mostFailed ?? []);
+      setRankingCorrect(result.mostCorrect ?? []);
+    } else {
+      showAdminError('No pudimos cargar el ranking global', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
 
@@ -432,20 +485,14 @@ export default function AdminPanel() {
       
       setLoadingPrompt(false);
       if (result.success) {
-        toast({ description: 'Prompt guardado correctamente!' });
+        showAdminSuccess('Configuración guardada', 'El prompt de IA ya quedó actualizado.');
       } else {
-        toast({ 
-          description: `Error: ${result.message}`, 
-          variant: 'destructive' 
-        });
+        showAdminError('No pudimos guardar el prompt', result.message ?? 'Probá nuevamente en unos segundos.');
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
       setLoadingPrompt(false);
-      toast({ 
-        description: `Error inesperado: ${message}`, 
-        variant: 'destructive' 
-      });
+      showAdminError('Ocurrió un error inesperado', message);
     }
   };
 
@@ -460,8 +507,15 @@ export default function AdminPanel() {
       fetchOpsData();
       fetchUsuariosAdmin();
       fetchMonetizacionAdmin();
+    } else {
+      setRankingFailed([]);
+      setRankingCorrect([]);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user) void fetchRankingGlobal();
+  }, [rankingMateriaId, rankingParcial, user]);
 
   const fetchUniversidades = async () => {
     const { data, error } = await supabase
@@ -578,6 +632,12 @@ export default function AdminPanel() {
     }
   }, [uploadCarreraId]);
 
+  useEffect(() => {
+    if (selectedFile && /\.(xlsx|xls)$/i.test(selectedFile.name)) {
+      setUsarIAEnCarga(false);
+    }
+  }, [selectedFile]);
+
   const fetchMaterias = async (carreraId: string) => {
     const { data, error } = await supabase
       .from('materias')
@@ -623,7 +683,7 @@ export default function AdminPanel() {
     const hasResumenSelection = resumenModules.length > 0 || Boolean(resumenParcial);
 
     if (!uploadMateriaId || !selectedFile || !uploadUniId || (!isResumen && !subTipo) || (isResumen && !hasResumenSelection)) {
-      toast({ description: 'Por favor completa todos los campos obligatorios', variant: 'destructive' });
+      showAdminError('Faltan datos para subir el material', 'Completá la materia, el archivo y la clasificación antes de continuar.');
       return;
     }
 
@@ -631,6 +691,8 @@ export default function AdminPanel() {
 
     try {
       const isPreguntero = recursoType === 'Preguntero';
+      const shouldExtractQuestions = !isPreguntero || pregunteroDestino !== 'solo_visualizacion';
+      const shouldPublishAsResource = !isPreguntero || pregunteroDestino !== 'solo_simulador';
 
       const materiaSeleccionada = materias.find((m) => m.id === uploadMateriaId);
       const isGeneral =
@@ -639,6 +701,8 @@ export default function AdminPanel() {
         materiaSeleccionada?.nombre.toLowerCase().includes('aprender en el siglo 21');
 
       const finalCarreraId = isGeneral ? null : uploadCarreraId || null;
+      let parcialNum = 1;
+      if (subTipo.includes('2') || subTipo.includes('4') || resumenParcial.includes('2')) parcialNum = 2;
 
       const safeName = selectedFile.name
         .trim()
@@ -650,12 +714,41 @@ export default function AdminPanel() {
       const { error: uploadError } = await supabase.storage.from('biblioteca').upload(filePath, selectedFile);
 
       if (uploadError) {
-        toast({ description: 'Error al subir el archivo', variant: 'destructive' });
+        showAdminError('No pudimos subir el archivo', uploadError.message);
         return;
       }
 
-      let parcialNum = 1;
-      if (subTipo.includes('2') || subTipo.includes('4') || resumenParcial.includes('2')) parcialNum = 2;
+      if (isPreguntero && isPremiumSimulatorUpload) {
+        const premiumResult = await importarSimuladorPremiumDesdeArchivo({
+          filePath,
+          materiaId: uploadMateriaId,
+          parcial: parcialNum,
+          titulo: `Simulador Premium - ${subTipo || `Parcial ${parcialNum}`}`,
+          sourceExamDate: premiumSourceExamDate || null,
+        });
+
+        if (!premiumResult.success) {
+          showAdminError('No pudimos importar el simulador premium', premiumResult.message);
+          return;
+        }
+
+        showAdminSuccess('Simulador premium importado', premiumResult.message);
+
+        setUploadUniId('');
+        setUploadCarreraId('');
+        setUploadMateriaId('');
+        setSelectedFile(null);
+        setUsarIAEnCarga(false);
+        setSubTipo('');
+        setPregunteroDestino('ambas');
+        setResumenModules([]);
+        setResumenParcial('');
+        setEsMateriaGeneral(false);
+        setIsPremiumSimulatorUpload(false);
+        setPremiumSourceExamDate('');
+        void fetchMateriales();
+        return;
+      }
 
       const materialTitle = isResumen
         ? `Resumen - ${[
@@ -673,7 +766,7 @@ export default function AdminPanel() {
       });
 
       if (insertError) {
-        toast({ description: 'Error al guardar el material', variant: 'destructive' });
+        showAdminError('No pudimos guardar el material', insertError.message);
         return;
       }
 
@@ -710,7 +803,6 @@ export default function AdminPanel() {
         if (resumenModules.length > 0) {
           const resumenRows = resumenModules.map((module) => ({
             materia_id: uploadMateriaId,
-            subject_id: uploadMateriaId,
             module_id: Number(module),
             title: `Resumen - Modulo ${module}`,
             file_url: filePath,
@@ -720,17 +812,17 @@ export default function AdminPanel() {
           const { error: resumenError } = await supabase.from('resumenes').insert(resumenRows);
           if (resumenError) {
             console.error('Error al insertar en resumenes:', resumenError);
-            toast({
-              description: 'El archivo se subio, pero no pudimos vincularlo a todos los modulos.',
-              variant: 'destructive',
-            });
+            showAdminError(
+              'El archivo se subió, pero quedó incompleto',
+              'No pudimos vincularlo a todos los módulos. Revisalo desde la biblioteca antes de seguir.'
+            );
           }
         }
-      } else {
+      } else if (shouldPublishAsResource) {
         let tipoRecurso = 'otro';
         if (recursoType === 'Preguntero') {
           tipoRecurso = subTipo.includes('1') ? 'preguntero-p1' : 'preguntero-p2';
-        } else if (recursoType === 'Trabajo PrÃ¡ctico') {
+        } else if (recursoType === 'Trabajo Práctico') {
           tipoRecurso = subTipo.includes('1') || subTipo.includes('2') ? 'tp-p1' : 'tp-p2';
         }
 
@@ -749,9 +841,10 @@ export default function AdminPanel() {
         }
       }
 
-      if (isPreguntero) {
+      if (isPreguntero && shouldExtractQuestions) {
         setIsIAProcessing(true);
         try {
+          const isExcelFile = /\.(xlsx|xls)$/i.test(selectedFile.name);
           const result = await analizarMaterialConIA(
             filePath,
             uploadMateriaId,
@@ -759,151 +852,73 @@ export default function AdminPanel() {
             parcialNum,
             uploadUniId,
             finalCarreraId,
-            `${recursoType} - ${subTipo}`
+            `${recursoType} - ${subTipo}`,
+            !isExcelFile && usarIAEnCarga
           );
           if (result.success) {
-            toast({ title: 'Exito', description: result.message });
+            showAdminSuccess('Procesamiento completado', result.message);
           } else {
-            toast({ title: 'Error en IA', description: result.message, variant: 'destructive' });
+            showAdminError('La IA no pudo terminar el procesamiento', result.message);
           }
         } finally {
           setIsIAProcessing(false);
         }
       } else {
-        toast({ description: 'Material cargado exitosamente' });
+        if (isPreguntero && !shouldPublishAsResource && shouldExtractQuestions) {
+          showAdminSuccess('Archivo cargado', 'Se usará solo para el simulador y no aparecerá en la biblioteca pública.');
+        } else if (isPreguntero && shouldPublishAsResource && !shouldExtractQuestions) {
+          showAdminSuccess('Archivo cargado', 'Se mostrará en la biblioteca, pero no se extraerán preguntas.');
+        } else {
+          showAdminSuccess('Material cargado', 'El archivo ya está disponible en el sistema.');
+        }
       }
 
       setUploadUniId('');
       setUploadCarreraId('');
       setUploadMateriaId('');
       setSelectedFile(null);
+      setUsarIAEnCarga(false);
       setSubTipo('');
+      setPregunteroDestino('ambas');
+      setIsPremiumSimulatorUpload(false);
+      setPremiumSourceExamDate('');
       setResumenModules([]);
       setResumenParcial('');
       setEsMateriaGeneral(false);
       void fetchMateriales();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
-      toast({ description: `Error: ${message}`, variant: 'destructive' });
+      showAdminError('Falló la carga del material', message);
     } finally {
       setUploading(false);
     }
   };
 
-  // Ãšnico retorno condicional - Rules of Hooks cumplidas
+  const filteredResources = useMemo(
+    () => filterAdminResources(adminResources, filterUniId, filterCarreraId, filterMateriaId),
+    [adminResources, filterUniId, filterCarreraId, filterMateriaId]
+  );
+  const filterCarreras = useMemo(() => sortFilterEntries(resourceCarreraNames), [resourceCarreraNames]);
+  const filterMaterias = useMemo(() => sortFilterEntries(resourceMateriaNames), [resourceMateriaNames]);
+  const isExcelSelected = Boolean(selectedFile?.name && /\.(xlsx|xls)$/i.test(selectedFile.name));
+  const filterUniversidades = useMemo(() => sortFilterEntries(resourceUniNames), [resourceUniNames]);
+  const platformUsageData = useMemo(() => getPlatformUsageData(stats), [stats]);
+  const materiasUsoChartData = useMemo(() => getMateriasUsoChartData(stats), [stats]);
+  const retentionChartData = useMemo(() => getRetentionChartData(stats), [stats]);
+
+  // Único retorno condicional - Rules of Hooks cumplidas
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="animate-pulse text-lg text-slate-600">Cargando...</div>
-      </div>
-    );
+    return <AdminLoadingState />;
   }
 
   if (accessDenied) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
-        <Card className="max-w-xl rounded-3xl">
-          <CardHeader>
-            <CardTitle>Acceso restringido</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">{accessDenied}</p>
-            <Button asChild>
-              <Link href="/dashboard">Volver al dashboard</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <AdminAccessDeniedState message={accessDenied} />;
   }
-
-  const filteredResources = adminResources.filter((resource) => {
-    const matchesUni = filterUniId === 'all' || resource.universidad_id === filterUniId;
-    const matchesCarrera = filterCarreraId === 'all' || resource.carrera_id === filterCarreraId;
-    const matchesMateria = filterMateriaId === 'all' || resource.materia_id === filterMateriaId;
-    return matchesUni && matchesCarrera && matchesMateria;
-  });
-
-  const filterCarreras = Object.entries(resourceCarreraNames).sort((a, b) => a[1].localeCompare(b[1]));
-  const filterMaterias = Object.entries(resourceMateriaNames).sort((a, b) => a[1].localeCompare(b[1]));
-  const filterUniversidades = Object.entries(resourceUniNames).sort((a, b) => a[1].localeCompare(b[1]));
-  const platformUsageData = stats
-    ? Array.from({ length: 8 }).map((_, index) => {
-        const factor = 0.55 + index * 0.07;
-        const sesionesBase = Math.max(1, stats.conversion.sessions_total);
-        const usuariosBase = Math.max(1, stats.dau);
-        return {
-          label: `D${index + 1}`,
-          sesiones: Math.round(sesionesBase * factor),
-          usuarios: Math.round(usuariosBase * (0.45 + index * 0.05)),
-        };
-      })
-    : [];
-  const materiasUsoChartData = (stats?.top_pages ?? []).slice(0, 5).map((item, index) => ({
-    name:
-      item.path === '/'
-        ? 'Home'
-        : item.path
-            .split('/')
-            .filter(Boolean)
-            .slice(-1)[0]
-            ?.replace(/[-_]/g, ' ')
-            .slice(0, 18) || `Materia ${index + 1}`,
-    value: item.views,
-  }));
-  const retentionChartData = stats
-    ? [
-        { day: 'Dia 1', value: 100 },
-        { day: 'Dia 7', value: 72 },
-        { day: 'Dia 14', value: 58 },
-        { day: 'Dia 21', value: 49 },
-        {
-          day: 'Dia 30',
-          value:
-            stats.conversion.sessions_total > 0
-              ? Math.max(
-                  20,
-                  Math.min(
-                    95,
-                    Math.round(
-                      (stats.conversion.reached_materia / stats.conversion.sessions_total) * 100
-                    )
-                  )
-                )
-              : 42,
-        },
-      ]
-    : [];
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative overflow-hidden">
       {/* Overlay de Procesamiento IA */}
-      {isIAProcessing && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in duration-500">
-          <div className="flex flex-col items-center gap-6 max-w-md p-12 bg-white rounded-[3rem] shadow-2xl shadow-blue-500/10 border border-slate-100 text-center scale-up-center">
-            <div className="relative">
-              <div className="h-24 w-24 rounded-full border-4 border-slate-50 border-t-blue-600 animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-12 w-12 rounded-full bg-blue-600 animate-pulse flex items-center justify-center">
-                  <span className="text-white font-black text-xl">IA</span>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">Analizando Material</h2>
-              <p className="text-slate-500 font-medium leading-relaxed">
-                Nuestra Inteligencia Artificial estÃ¡ extrayendo preguntas del documento. Por favor, no cierres esta ventana.
-              </p>
-            </div>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-600 animate-progress origin-left"></div>
-            </div>
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] animate-pulse">
-              PROCESANDO CON GROQ Llama 3.3
-            </span>
-          </div>
-        </div>
-      )}
+      {isIAProcessing ? <AdminIAProcessingOverlay /> : null}
 
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 w-52 border-r border-slate-200 bg-white">
@@ -934,6 +949,17 @@ export default function AdminPanel() {
             Gestionar Materiales
           </button>
           <button
+            onClick={() => setActiveTab('operaciones')}
+            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
+              activeTab === 'operaciones'
+                ? 'bg-amber-50 text-amber-700'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <Zap className="h-4 w-4" />
+            Operaciones
+          </button>
+          <button
             onClick={() => setActiveTab('config')}
             className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
               activeTab === 'config'
@@ -942,7 +968,7 @@ export default function AdminPanel() {
             }`}
           >
             <Plus className="h-4 w-4" />
-            ConfiguraciÃ³n
+            Configuración
           </button>
           <button
             onClick={() => setActiveTab('estadisticas')}
@@ -1003,7 +1029,7 @@ export default function AdminPanel() {
             className="h-9 w-full justify-start gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
           >
             <ArrowLeft className="h-4 w-4" />
-            Cerrar SesiÃ³n
+            Cerrar sesión
           </Button>
         </div>
       </aside>
@@ -1041,16 +1067,16 @@ export default function AdminPanel() {
             <div className="space-y-4">
               <div>
                 <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Nueva Carga de Material</h1>
-                <p className="text-slate-500 mt-1">Configura la ubicaciÃ³n y el tipo de recurso antes de subir.</p>
+                <p className="text-slate-500 mt-1">Definí la ubicación y el tipo de recurso antes de subirlo.</p>
               </div>
 
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-                {/* 1. UbicaciÃ³n */}
+                {/* 1. Ubicación */}
                 <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden bg-slate-50/30 hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
                   <CardHeader className="bg-white border-b border-slate-100 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">1</span>
-                      UBICACIÃ“N
+                      UBICACIÓN
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 space-y-4">
@@ -1141,7 +1167,7 @@ export default function AdminPanel() {
                         <SelectContent className="rounded-xl">
                           <SelectItem value="Preguntero">Preguntero</SelectItem>
                           <SelectItem value="Resumen">Resumen</SelectItem>
-                          <SelectItem value="Trabajo PrÃ¡ctico">Trabajo PrÃ¡ctico</SelectItem>
+                          <SelectItem value="Trabajo Práctico">Trabajo Práctico</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1203,7 +1229,7 @@ export default function AdminPanel() {
                                 <SelectItem value="Parcial 2">Parcial 2</SelectItem>
                               </>
                             )}
-                            {recursoType === 'Trabajo PrÃ¡ctico' && (
+                            {recursoType === 'Trabajo Práctico' && (
                               <>
                                 <SelectItem value="TP 1">TP 1</SelectItem>
                                 <SelectItem value="TP 2">TP 2</SelectItem>
@@ -1217,13 +1243,82 @@ export default function AdminPanel() {
                     )}
 
                     {recursoType === 'Preguntero' && (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 ml-1">MODO PREGUNTERO</Label>
+                        <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={isPremiumSimulatorUpload}
+                            onChange={(event) => setIsPremiumSimulatorUpload(event.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300"
+                          />
+                          Importar como Simulador Premium (50 preguntas, solo usuarios premium)
+                        </label>
+                      </div>
+                    )}
+
+                    {recursoType === 'Preguntero' && isPremiumSimulatorUpload && (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 ml-1">FECHA DE EXAMEN (REFERENCIA)</Label>
+                        <Input
+                          type="date"
+                          value={premiumSourceExamDate}
+                          onChange={(event) => setPremiumSourceExamDate(event.target.value)}
+                          className="rounded-xl border-slate-200 bg-white h-11"
+                        />
+                      </div>
+                    )}
+
+                    {recursoType === 'Preguntero' && !isPremiumSimulatorUpload && (
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 ml-1">DESTINO DEL PREGUNTERO</Label>
+                        <Select value={pregunteroDestino} onValueChange={(value) => setPregunteroDestino(value as PregunteroDestino)}>
+                          <SelectTrigger className="rounded-xl border-slate-200 bg-white h-11 focus:ring-blue-500 transition-all">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="ambas">Simulador + visualizacion</SelectItem>
+                            <SelectItem value="solo_simulador">Solo simulador (extraer preguntas)</SelectItem>
+                            <SelectItem value="solo_visualizacion">Solo visualizacion en modelos</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {recursoType === 'Preguntero' && !isPremiumSimulatorUpload && (
                       <div className="rounded-2xl bg-blue-50/50 p-4 flex items-start gap-3 border border-blue-100/50 animate-in fade-in slide-in-from-top-2 duration-500">
                         <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                          <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                          <Brain className="h-4 w-4 text-blue-600" />
                         </div>
-                        <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
-                          Este material serÃ¡ analizado automÃ¡ticamente por la IA para extraer preguntas.
-                        </p>
+                        <div className="w-full space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
+                              Procesamiento opcional con IA (solo PDF).
+                            </p>
+                            <label className="inline-flex items-center gap-2 text-[11px] font-bold text-blue-700">
+                              <input
+                                type="checkbox"
+                                checked={usarIAEnCarga}
+                                disabled={isExcelSelected}
+                                onChange={(event) => setUsarIAEnCarga(event.target.checked)}
+                                className="h-4 w-4 rounded border-blue-300"
+                              />
+                              Usar IA
+                            </label>
+                          </div>
+                          {isExcelSelected ? (
+                            <p className="text-[10px] text-blue-600">
+                              Archivo Excel detectado: se procesa en modo local automático (sin IA).
+                            </p>
+                          ) : null}
+                          <p className="text-[10px] text-blue-600">
+                            {pregunteroDestino === 'solo_simulador'
+                              ? 'Este archivo se usará solo para generar preguntas del simulador.'
+                              : pregunteroDestino === 'solo_visualizacion'
+                              ? 'Este archivo solo se mostrará en modelos de examen, sin extraer preguntas.'
+                              : 'Este archivo se usará en el simulador y también se mostrará en modelos de examen.'}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </CardContent>
@@ -1239,13 +1334,13 @@ export default function AdminPanel() {
                   </CardHeader>
                   <CardContent className="p-6 space-y-6">
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-400 ml-1">ARCHIVO (PDF)</Label>
+                      <Label className="text-xs font-bold text-slate-400 ml-1">ARCHIVO (PDF o EXCEL)</Label>
                       <div className={`relative border-2 border-dashed rounded-[1.5rem] p-8 transition-all duration-300 group ${
                         selectedFile ? 'border-green-200 bg-green-50/50' : 'border-slate-200 hover:border-blue-400 hover:bg-blue-50/30'
                       }`}>
                         <input
                           type="file"
-                          accept=".pdf"
+                          accept=".pdf,.xlsx,.xls"
                           onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                         />
@@ -1257,10 +1352,10 @@ export default function AdminPanel() {
                           </div>
                           <div>
                             <span className={`text-xs font-bold block ${selectedFile ? 'text-green-700' : 'text-slate-600 group-hover:text-blue-700'}`}>
-                              {selectedFile ? selectedFile.name : 'Seleccionar PDF'}
+                              {selectedFile ? selectedFile.name : 'Seleccionar archivo'}
                             </span>
                             <span className="text-[10px] text-slate-400 mt-1 block">
-                              {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'MÃ¡ximo 10MB'}
+                              {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'Máximo 10MB'}
                             </span>
                           </div>
                         </div>
@@ -1279,7 +1374,15 @@ export default function AdminPanel() {
                       {uploading ? (
                         <div className="flex items-center gap-3">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>{recursoType === 'Preguntero' ? 'PROCESANDO IA...' : 'SUBIENDO...'}</span>
+                          <span>
+                            {recursoType === 'Preguntero'
+                              ? isPremiumSimulatorUpload
+                                ? 'IMPORTANDO PREMIUM...'
+                                : usarIAEnCarga && !isExcelSelected
+                                ? 'PROCESANDO CON IA...'
+                                : 'PROCESANDO...'
+                              : 'SUBIENDO...'}
+                          </span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
@@ -1296,10 +1399,22 @@ export default function AdminPanel() {
                         </div>
                         <div className="flex justify-between items-center px-1">
                           <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                            {recursoType === 'Preguntero' ? 'Inteligencia Artificial' : 'Transferencia'}
+                            {recursoType === 'Preguntero'
+                              ? isPremiumSimulatorUpload
+                                ? 'Simulador Premium'
+                                : usarIAEnCarga && !isExcelSelected
+                                ? 'Inteligencia Artificial'
+                                : 'Procesamiento local'
+                              : 'Transferencia'}
                           </span>
                           <span className="text-[10px] font-bold text-slate-400">
-                            {recursoType === 'Preguntero' ? 'Analizando contenido...' : 'Subiendo archivo...'}
+                            {recursoType === 'Preguntero'
+                              ? isPremiumSimulatorUpload
+                                ? 'Preparando set premium...'
+                                : usarIAEnCarga && !isExcelSelected
+                                ? 'Analizando contenido...'
+                                : 'Extrayendo preguntas...'
+                              : 'Subiendo archivo...'}
                           </span>
                         </div>
                       </div>
@@ -1441,12 +1556,12 @@ export default function AdminPanel() {
                 <CardHeader className="py-4">
                   <CardTitle className="text-sm font-black text-red-800 flex items-center gap-3 uppercase tracking-wider">
                     <Trash2Icon className="h-5 w-5" />
-                    Limpieza CrÃ­tica
+                    Limpieza crítica
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-6 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <p className="text-xs font-bold text-red-600/70 uppercase tracking-tight">
-                    Borrar todas las preguntas extraÃ­das por la IA. AcciÃ³n irreversible.
+                    Borra todas las preguntas extraídas por la IA. Esta acción no se puede deshacer.
                   </p>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -1456,9 +1571,9 @@ export default function AdminPanel() {
                     </AlertDialogTrigger>
                     <AlertDialogContent className="rounded-3xl">
                       <AlertDialogHeader>
-                        <AlertDialogTitle className="font-black text-xl">Â¿Confirmar Limpieza?</AlertDialogTitle>
+                        <AlertDialogTitle className="font-black text-xl">¿Confirmar limpieza?</AlertDialogTitle>
                         <AlertDialogDescription className="font-medium">
-                          Se eliminarÃ¡n permanentemente todas las preguntas del banco. Esta acciÃ³n no se puede deshacer.
+                          Se eliminarán permanentemente todas las preguntas del banco. Esta acción no se puede deshacer.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -1470,13 +1585,130 @@ export default function AdminPanel() {
                           }}
                           className="bg-red-600 rounded-xl font-bold"
                         >
-                          SÃ­, borrar todo
+                          Sí, borrar todo
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </CardContent>
               </Card>
+            </div>
+          )}
+
+          {activeTab === 'operaciones' && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-800">Operaciones</h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Salud del sistema, archivos huérfanos y contenido duplicado.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => void fetchOpsData()}>
+                    Actualizar operaciones
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <Card className="rounded-xl border border-slate-200 bg-white">
+                  <CardContent className="p-4">
+                    <p className="text-[11px] text-slate-500">PDFs duplicados</p>
+                    <p className="mt-1 text-2xl font-bold text-slate-900">
+                      {duplicatePdfRows.length.toLocaleString('es-AR')}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">Grupos detectados por materia, nombre y páginas.</p>
+                  </CardContent>
+                </Card>
+                <Card className="rounded-xl border border-slate-200 bg-white">
+                  <CardContent className="p-4">
+                    <p className="text-[11px] text-slate-500">Errores cliente 7d</p>
+                    <p className="mt-1 text-2xl font-bold text-slate-900">
+                      {(systemHealth?.total_errors ?? 0).toLocaleString('es-AR')}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Latencia media: {(systemHealth?.avg_latency_ms ?? 0).toLocaleString('es-AR')} ms
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="rounded-xl border border-slate-200 bg-white">
+                  <CardContent className="p-4">
+                    <p className="text-[11px] text-slate-500">Archivos huérfanos</p>
+                    <p className="mt-1 text-2xl font-bold text-slate-900">
+                      {(fileMaintenance?.orphan_count ?? 0).toLocaleString('es-AR')}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">Objetos en storage sin registro asociado.</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <Card className="rounded-xl border border-slate-200">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Duplicados detectados</CardTitle>
+                  </CardHeader>
+                  <CardContent className="max-h-[440px] space-y-3 overflow-y-auto">
+                    {duplicatePdfRows.length === 0 ? (
+                      <p className="text-sm text-slate-500">No encontramos duplicados en la biblioteca actual.</p>
+                    ) : (
+                      duplicatePdfRows.slice(0, 20).map((row) => (
+                        <div key={`${row.materia_id ?? 'sin-materia'}-${row.normalized_name}`} className="rounded-xl border border-slate-200 p-3">
+                          <p className="text-sm font-semibold text-slate-800">{row.recursos[0]?.nombre ?? 'Archivo sin nombre'}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {row.count} coincidencias · materia {row.materia_id ?? 'sin asignar'}
+                          </p>
+                          <div className="mt-2 space-y-1">
+                            {row.recursos.slice(0, 4).map((resource) => (
+                              <div key={resource.id} className="rounded-lg bg-slate-50 px-2 py-1 text-xs text-slate-600">
+                                {resource.nombre}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-xl border border-slate-200">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Salud y mantenimiento</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rutas con más errores</p>
+                      <div className="mt-2 space-y-2">
+                        {(systemHealth?.failures_by_path ?? []).length === 0 ? (
+                          <p className="text-sm text-slate-500">Sin errores recientes registrados.</p>
+                        ) : (
+                          (systemHealth?.failures_by_path ?? []).map((row) => (
+                            <div key={row.path} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                              <span className="truncate text-slate-700">{row.path}</span>
+                              <span className="font-semibold text-rose-600">{row.count}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Muestra de archivos huérfanos</p>
+                      <div className="mt-2 space-y-2">
+                        {(fileMaintenance?.orphan_sample ?? []).length === 0 ? (
+                          <p className="text-sm text-slate-500">No hay archivos huérfanos detectados.</p>
+                        ) : (
+                          (fileMaintenance?.orphan_sample ?? []).slice(0, 8).map((filePath) => (
+                            <div key={filePath} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                              {filePath}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
 
@@ -1490,14 +1722,14 @@ export default function AdminPanel() {
               {/* Prompt Section */}
               <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden">
                 <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
-                  <CardTitle className="text-sm font-bold text-slate-800 uppercase tracking-wider">Prompt de ExtracciÃ³n IA</CardTitle>
+                  <CardTitle className="text-sm font-bold text-slate-800 uppercase tracking-wider">Prompt de extracción IA</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                   <Textarea
                     value={promptSistema}
                     onChange={(e) => setPromptSistema(e.target.value)}
                     className="min-h-[200px] rounded-2xl font-mono text-sm border-slate-200 focus:ring-blue-500 p-5 bg-slate-50/30"
-                    placeholder="Escribe el prompt del sistema aquÃ­..."
+                    placeholder="Escribí acá el prompt del sistema..."
                   />
                   <Button onClick={savePromptSistema} disabled={loadingPrompt} className="rounded-xl h-11 px-6 font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100">
                     {loadingPrompt ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -1625,7 +1857,7 @@ export default function AdminPanel() {
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold text-slate-800">Resumen general</h2>
                   <div className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600">
-                    Ultimos 30 dias
+                    Últimos 30 días
                   </div>
                 </div>
               </div>
@@ -1633,7 +1865,7 @@ export default function AdminPanel() {
               {!stats ? (
                 <Card className="rounded-2xl border-slate-100">
                   <CardContent className="p-6 text-sm text-slate-500">
-                    {loadingStats ? 'Cargando estadisticas...' : 'Aun no hay datos para mostrar.'}
+                    {loadingStats ? 'Estamos preparando las estadísticas...' : 'Todavía no hay datos para mostrar.'}
                   </CardContent>
                 </Card>
               ) : (
@@ -1720,7 +1952,7 @@ export default function AdminPanel() {
 
                     <Card className="rounded-xl border border-slate-200 bg-white">
                       <CardHeader className="pb-1 pt-3">
-                        <CardTitle className="text-sm">Retencion de usuarios</CardTitle>
+                        <CardTitle className="text-sm">Retención de usuarios</CardTitle>
                       </CardHeader>
                       <CardContent className="h-64 px-3 pb-3">
                         <ResponsiveContainer width="100%" height="100%">
@@ -1733,11 +1965,86 @@ export default function AdminPanel() {
                           </AreaChart>
                         </ResponsiveContainer>
                         <p className="mt-2 text-right text-xs text-slate-500">
-                          Retencion a 30 dias: <span className="font-bold text-violet-700">{retentionChartData[retentionChartData.length - 1]?.value ?? 0}%</span>
+                          Retención a 30 días: <span className="font-bold text-violet-700">{retentionChartData[retentionChartData.length - 1]?.value ?? 0}%</span>
                         </p>
                       </CardContent>
                     </Card>
                   </div>
+
+                  <Card className="rounded-xl border border-slate-200 bg-white">
+                    <CardHeader className="pb-2 pt-3">
+                      <CardTitle className="text-sm">Ranking global de preguntas (materia/parcial)</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4 p-4">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                        <Select value={rankingMateriaId} onValueChange={setRankingMateriaId}>
+                          <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                            <SelectValue placeholder="Materia" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas las materias</SelectItem>
+                            {materias.map((m) => (
+                              <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={rankingParcial} onValueChange={setRankingParcial}>
+                          <SelectTrigger className="h-10 rounded-xl border-slate-200">
+                            <SelectValue placeholder="Parcial" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos los parciales</SelectItem>
+                            <SelectItem value="1">Parcial 1</SelectItem>
+                            <SelectItem value="2">Parcial 2</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="md:col-span-2 flex justify-end">
+                          <Button variant="outline" onClick={() => void fetchRankingGlobal()} disabled={loadingRankingGlobal} className="rounded-xl">
+                            {loadingRankingGlobal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Actualizar ranking global
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                        <div className="rounded-xl border border-rose-100 bg-rose-50/40 p-3">
+                          <p className="text-xs font-bold uppercase tracking-wider text-rose-700">Mas falladas</p>
+                          <div className="mt-2 space-y-2">
+                            {rankingFailed.length === 0 ? (
+                              <p className="text-xs text-slate-500">Sin datos para este filtro.</p>
+                            ) : rankingFailed.map((row) => (
+                              <div key={`f-${row.pregunta_id}`} className="rounded-lg border border-rose-100 bg-white p-2">
+                                <p className="text-xs font-semibold text-slate-800 line-clamp-2">{row.enunciado}</p>
+                                <p className="mt-1 text-[11px] text-slate-500">
+                                  Incorrectas: <span className="font-bold text-rose-700">{row.respuestas_incorrectas}</span> ·
+                                  Totales: <span className="font-bold">{row.respuestas_totales}</span> ·
+                                  Acierto: <span className="font-bold">{row.tasa_acierto}%</span>
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-3">
+                          <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Mas acertadas</p>
+                          <div className="mt-2 space-y-2">
+                            {rankingCorrect.length === 0 ? (
+                              <p className="text-xs text-slate-500">Sin datos para este filtro.</p>
+                            ) : rankingCorrect.map((row) => (
+                              <div key={`c-${row.pregunta_id}`} className="rounded-lg border border-emerald-100 bg-white p-2">
+                                <p className="text-xs font-semibold text-slate-800 line-clamp-2">{row.enunciado}</p>
+                                <p className="mt-1 text-[11px] text-slate-500">
+                                  Correctas: <span className="font-bold text-emerald-700">{row.respuestas_correctas}</span> ·
+                                  Totales: <span className="font-bold">{row.respuestas_totales}</span> ·
+                                  Acierto: <span className="font-bold">{row.tasa_acierto}%</span>
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </>
               )}
             </div>
@@ -1920,9 +2227,9 @@ export default function AdminPanel() {
                 </Card>
                 <Card className="rounded-xl border border-slate-200">
                   <CardContent className="p-4">
-                    <p className="text-[11px] text-slate-500">Premium</p>
+                    <p className="text-[11px] text-slate-500">Administradores</p>
                     <p className="mt-1 text-2xl font-bold text-indigo-700">
-                      {adminUsers.filter((u) => u.plan === 'premium').length.toLocaleString('es-AR')}
+                      {adminUsers.filter((u) => u.role === 'admin').length.toLocaleString('es-AR')}
                     </p>
                   </CardContent>
                 </Card>
@@ -1938,9 +2245,11 @@ export default function AdminPanel() {
                       <tr className="border-b border-slate-200 text-slate-600">
                         <th className="px-4 py-2 font-semibold">Email</th>
                         <th className="px-4 py-2 font-semibold">Estado</th>
+                        <th className="px-4 py-2 font-semibold">Rol</th>
                         <th className="px-4 py-2 font-semibold">Plan</th>
                         <th className="px-4 py-2 font-semibold">Ultimo ingreso</th>
                         <th className="px-4 py-2 font-semibold">Alta</th>
+                        <th className="px-4 py-2 font-semibold">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1961,6 +2270,17 @@ export default function AdminPanel() {
                           <td className="px-4 py-2">
                             <span
                               className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
+                                u.role === 'admin'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-slate-100 text-slate-600'
+                              }`}
+                            >
+                              {u.role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span
+                              className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
                                 u.plan === 'premium'
                                   ? 'bg-indigo-50 text-indigo-700'
                                   : 'bg-slate-100 text-slate-600'
@@ -1974,6 +2294,25 @@ export default function AdminPanel() {
                           </td>
                           <td className="px-4 py-2 text-slate-600">
                             {u.created_at ? new Date(u.created_at).toLocaleDateString('es-AR') : '-'}
+                          </td>
+                          <td className="px-4 py-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const nextRole = u.role === 'admin' ? 'student' : 'admin';
+                                const result = await actualizarRolUsuarioAdmin(u.id, nextRole);
+                                if (result.success) {
+                                  toast({ description: result.message });
+                                  await fetchUsuariosAdmin();
+                                } else {
+                                  toast({ description: result.message, variant: 'destructive' });
+                                }
+                              }}
+                              className="h-8 rounded-lg text-[11px]"
+                            >
+                              {u.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
+                            </Button>
                           </td>
                         </tr>
                       ))}

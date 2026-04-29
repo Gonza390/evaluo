@@ -69,7 +69,7 @@ Se mantienen dos capas distintas:
 Estado actual:
 
 - ya tiene `materia_id`
-- conserva `subject_id` como columna legacy temporal
+- `subject_id` ya fue eliminado del schema activo
 
 Objetivo futuro:
 
@@ -83,7 +83,7 @@ Objetivo futuro:
 Estado actual:
 
 - ya tiene `materia_id`
-- conserva `subject_id` como compatibilidad temporal
+- `subject_id` ya fue eliminado del schema activo
 
 ## Tablas que forman parte del sistema vigente
 
@@ -115,8 +115,7 @@ Estado actual:
 ## Compatibilidades que todavia existen
 
 - `materias.carrera_id`
-- `resumenes.subject_id`
-- `user_favorites.subject_id`
+- naming legacy de dashboard como `last_subject_id`
 
 ## Linea tecnica recomendada para seguir creciendo
 

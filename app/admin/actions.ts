@@ -1,6 +1,5 @@
-'use server';
+﻿'use server';
 
-import Groq from 'groq-sdk';
 import pdf from 'pdf-parse-fork';
 import { revalidatePath } from 'next/cache';
 import { requireAdminAccess } from '@/lib/auth';
@@ -10,6 +9,8 @@ import { generateTutorExplanation } from '@/lib/ai-tutor';
 export interface ProcessResult {
   success: boolean;
   count?: number;
+  duplicates?: number;
+  invalid?: number;
   message: string;
 }
 
@@ -81,8 +82,20 @@ export interface AdminUserItem {
   email: string;
   estado: 'activo' | 'inactivo';
   plan: 'free' | 'premium';
+  role: 'admin' | 'student';
   last_sign_in_at: string | null;
   created_at: string | null;
+}
+
+export interface SystemHealthStats {
+  total_errors: number;
+  avg_latency_ms: number;
+  failures_by_path: Array<{ path: string; count: number }>;
+}
+
+export interface FileMaintenanceResult {
+  orphan_count: number;
+  orphan_sample: string[];
 }
 
 export interface MonetizacionStats {
@@ -98,6 +111,18 @@ export interface MonetizacionStats {
     interval: string;
     is_active: boolean;
   }>;
+}
+
+type AdminSupabaseClient = ReturnType<typeof createAdminClient>;
+
+export interface GlobalQuestionRankingRow {
+  pregunta_id: string;
+  enunciado: string;
+  parcial: number | null;
+  respuestas_totales: number;
+  respuestas_correctas: number;
+  respuestas_incorrectas: number;
+  tasa_acierto: number;
 }
 
 type UserSubscriptionPlanRow = {
@@ -119,68 +144,29 @@ type QuestionRecord = {
   respuesta_correcta: string;
 };
 
+const GENERIC_DISTRACTORS = new Set([
+  'ninguna opciÃ³n es correcta',
+  'todas son correctas',
+  'ninguna de las anteriores',
+  'todas las anteriores',
+]);
+
 function normalizeQuestion(question: string) {
   return question.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
-function sanitizeQuestionRecords(rows: unknown): QuestionRecord[] {
-  if (!Array.isArray(rows)) return [];
-
-  return rows
-    .map((row) => {
-      const item = row as Partial<QuestionRecord>;
-      const enunciado = String(item.enunciado ?? '').trim();
-      const opciones = Array.isArray(item.opciones)
-        ? item.opciones.map((value) => String(value).trim()).filter(Boolean)
-        : [];
-      const respuestaCorrecta = String(item.respuesta_correcta ?? '').trim();
-
-      if (!enunciado || opciones.length < 2 || !respuestaCorrecta) return null;
-      return {
-        enunciado,
-        opciones: opciones.slice(0, 6),
-        respuesta_correcta: respuestaCorrecta,
-      };
-    })
-    .filter((row): row is QuestionRecord => Boolean(row));
-}
-
-function tryParseQuestionsFromModel(content: string): QuestionRecord[] {
-  const normalized = content.trim();
-  if (!normalized) return [];
-
-  const tryCandidates = [normalized];
-  const fenced = normalized.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced?.[1]) {
-    tryCandidates.push(fenced[1].trim());
+function dedupeOptions(options: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const option of options) {
+    const clean = option.replace(/\s+/g, ' ').trim();
+    if (!clean) continue;
+    const key = normalizeQuestion(clean);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(clean);
   }
-
-  for (const candidate of tryCandidates) {
-    try {
-      const parsed = JSON.parse(candidate) as
-        | { preguntas?: unknown; questions?: unknown; items?: unknown }
-        | unknown[];
-
-      if (Array.isArray(parsed)) {
-        const fromArray = sanitizeQuestionRecords(parsed);
-        if (fromArray.length > 0) return fromArray;
-      }
-
-      if (parsed && typeof parsed === 'object') {
-        const parsedObj = parsed as { preguntas?: unknown; questions?: unknown; items?: unknown };
-        const fromPreguntas = sanitizeQuestionRecords(parsedObj.preguntas);
-        if (fromPreguntas.length > 0) return fromPreguntas;
-        const fromQuestions = sanitizeQuestionRecords(parsedObj.questions);
-        if (fromQuestions.length > 0) return fromQuestions;
-        const fromItems = sanitizeQuestionRecords(parsedObj.items);
-        if (fromItems.length > 0) return fromItems;
-      }
-    } catch {
-      // keep trying variants
-    }
-  }
-
-  return [];
+  return unique;
 }
 
 function extractQuestionsFallbackFromText(text: string): QuestionRecord[] {
@@ -207,12 +193,7 @@ function extractQuestionsFallbackFromText(text: string): QuestionRecord[] {
       if (q && answer) {
         results.push({
           enunciado: q,
-          opciones: [
-            answer,
-            'No se menciona en el material.',
-            'Todas las opciones son correctas.',
-            'Ninguna opcion es correcta.',
-          ],
+          opciones: [answer],
           respuesta_correcta: answer,
         });
       }
@@ -248,42 +229,231 @@ function extractQuestionsFallbackFromText(text: string): QuestionRecord[] {
   return results;
 }
 
-async function extractQuestionsFromPdfText(
-  text: string,
-  nombreMateria: string,
-  parcial: number,
-  systemPrompt: string
-) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error('Falta configurar GROQ_API_KEY.');
+function extractOrderedOptionsQuestionsFromText(text: string): QuestionRecord[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  const questions: QuestionRecord[] = [];
+  let i = 0;
+
+  const cleanOptionPrefix = (value: string) =>
+    value
+      .replace(/^[a-dA-D][\).:\-]\s*/, '')
+      .replace(/^\d+[\).:\-]\s*/, '')
+      .replace(/^[•▪\-]\s*/, '')
+      .trim();
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const isQuestion =
+      /^(\d+[\).:\-]\s*)?¿.+\?$/.test(line) ||
+      /^(\d+[\).:\-]\s*)?.+\?$/.test(line) ||
+      /^pregunta\s+\d+[:.\-]?\s*/i.test(line);
+
+    if (!isQuestion) {
+      i += 1;
+      continue;
+    }
+
+    const enunciado = line
+      .replace(/^pregunta\s+\d+[:.\-]?\s*/i, '')
+      .replace(/^\d+[\).:\-]\s*/, '')
+      .trim();
+
+    const opciones: string[] = [];
+    let j = i + 1;
+
+    while (j < lines.length && opciones.length < 4) {
+      const candidate = lines[j];
+      const normalized = cleanOptionPrefix(candidate);
+
+      if (!normalized) {
+        j += 1;
+        continue;
+      }
+
+      const candidateIsQuestion =
+        /^(\d+[\).:\-]\s*)?¿.+\?$/.test(candidate) ||
+        /^(\d+[\).:\-]\s*)?.+\?$/.test(candidate) ||
+        /^pregunta\s+\d+[:.\-]?\s*/i.test(candidate);
+      if (candidateIsQuestion) break;
+
+      opciones.push(normalized);
+      j += 1;
+    }
+
+    if (enunciado && opciones.length >= 2) {
+      const uniqueOptions = dedupeOptions(opciones).slice(0, 4);
+      if (uniqueOptions.length < 2) {
+        i = j;
+        continue;
+      }
+      questions.push({
+        enunciado,
+        opciones: uniqueOptions,
+        respuesta_correcta: uniqueOptions[0],
+      });
+      i = j;
+      continue;
+    }
+
+    i += 1;
   }
 
-  const groq = new Groq({ apiKey });
-  const completion = await groq.chat.completions.create({
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: `Analiza el siguiente texto de un preguntero de la materia "${nombreMateria}" (Parcial ${parcial}) y extrae las preguntas en el formato JSON solicitado:\n\n${text.substring(0, 30000)}`,
-      },
-    ],
-    model: 'llama-3.3-70b-versatile',
-    response_format: { type: 'json_object' },
-  });
+  return questions;
+}
 
-  const responseContent = completion.choices[0]?.message?.content;
-  if (!responseContent) {
-    throw new Error('No se recibió respuesta de Groq.');
+function extractCandidateAnswersFromSource(text: string): string[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const answers: string[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/^[•▪\-]\s*¿.+?\?\s*:?\s*(.+)$/);
+    if (match?.[1]) {
+      answers.push(match[1].trim());
+    }
   }
 
-  const parsedData = JSON.parse(responseContent) as { preguntas: QuestionRecord[] };
-  const parsedFromModel = tryParseQuestionsFromModel(responseContent);
-  if (parsedFromModel.length > 0) {
-    return parsedFromModel;
+  return answers;
+}
+
+function normalizeCellValue(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/\u0000/g, '')
+    .replace(/[\u0001-\u0008\u000B\u000C\u000E-\u001F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parseQuestionsFromXlsxBuffer(buffer: Buffer): QuestionRecord[] {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const xlsx = require('xlsx') as {
+    read: (data: Buffer, options: { type: 'buffer' }) => {
+      SheetNames: string[];
+      Sheets: Record<string, unknown>;
+    };
+    utils: { sheet_to_json: (sheet: unknown, options: { defval: string }) => Array<Record<string, unknown>> };
+  };
+
+  const workbook = xlsx.read(buffer, { type: 'buffer' });
+  const firstSheetName = workbook.SheetNames[0];
+  if (!firstSheetName) return [];
+
+  const sheet = workbook.Sheets[firstSheetName];
+  const rows = xlsx.utils.sheet_to_json(sheet, { defval: '' });
+  const questions: QuestionRecord[] = [];
+
+  for (const row of rows) {
+    const enunciado = normalizeCellValue(row.pregunta);
+    const respuestaCorrecta = normalizeCellValue(row.respuesta_correcta);
+
+    const optionKeys = ['opcion_a', 'opcion_b', 'opcion_c', 'opcion_d', 'opcion_e', 'opcion_f'];
+    let opciones = optionKeys.map((key) => normalizeCellValue(row[key])).filter(Boolean);
+
+    if (opciones.length === 0) {
+      const incorrectasRaw = normalizeCellValue(row.respuestas_incorrectas);
+      const incorrectas = incorrectasRaw
+        ? incorrectasRaw.split('|').map((part) => normalizeCellValue(part)).filter(Boolean)
+        : [];
+      opciones = [respuestaCorrecta, ...incorrectas].filter(Boolean);
+    }
+
+    const opcionesUnicas = dedupeOptions(opciones).slice(0, 6);
+    if (!enunciado || !respuestaCorrecta || opcionesUnicas.length < 2) continue;
+
+    const tieneCorrecta = opcionesUnicas.some(
+      (opt) => normalizeQuestion(opt) === normalizeQuestion(respuestaCorrecta)
+    );
+    const finalOpciones = tieneCorrecta ? opcionesUnicas : [respuestaCorrecta, ...opcionesUnicas].slice(0, 6);
+
+    questions.push({
+      enunciado,
+      opciones: finalOpciones,
+      respuesta_correcta: respuestaCorrecta,
+    });
   }
 
-  return sanitizeQuestionRecords(parsedData.preguntas);
+  return questions;
+}
+
+function buildPlausibleDistractors(correct: string, answerPool: string[]): string[] {
+  const correctNorm = normalizeQuestion(correct);
+  const uniquePool = Array.from(
+    new Set(
+      answerPool
+        .map((value) => value.replace(/\s+/g, ' ').trim())
+        .filter((value) => value.length > 0 && normalizeQuestion(value) !== correctNorm)
+    )
+  );
+
+  const chosen = uniquePool.slice(0, 3);
+  if (chosen.length >= 3) return chosen;
+
+  const parts = correct.split(',').map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    chosen.push(`${parts[0]} y contexto social`);
+    chosen.push(`${parts[0]}, ingresos y empleo`);
+  } else {
+    chosen.push(`Marco teorico relacionado con ${correct}`);
+    chosen.push(`Aplicacion parcial de ${correct}`);
+  }
+  chosen.push(`Interpretacion limitada de ${correct}`);
+
+  return Array.from(
+    new Set(
+      chosen.filter(
+        (value) =>
+          value &&
+          normalizeQuestion(value) !== correctNorm &&
+          !GENERIC_DISTRACTORS.has(value.toLowerCase().trim())
+      )
+    )
+  ).slice(0, 3);
+}
+
+function enrichQuestionsWithSource(questions: QuestionRecord[], sourceText: string): QuestionRecord[] {
+  const answerPool = extractCandidateAnswersFromSource(sourceText);
+
+  return questions.map((question) => {
+    let correct = question.respuesta_correcta.replace(/\s+/g, ' ').trim();
+    let options = question.opciones.map((opt) => opt.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+    if (correct.endsWith(',') || correct.length < 8) {
+      const candidate = answerPool.find((answer) =>
+        normalizeQuestion(answer).startsWith(normalizeQuestion(correct.replace(/[,:;.]+$/, '')))
+      );
+      if (candidate) correct = candidate;
+    }
+
+    options = options.filter((opt) => !GENERIC_DISTRACTORS.has(opt.toLowerCase().trim()));
+
+    if (!options.some((opt) => normalizeQuestion(opt) === normalizeQuestion(correct))) {
+      options.unshift(correct);
+    }
+
+    if (options.length < 4) {
+      const distractors = buildPlausibleDistractors(correct, answerPool);
+      options = [correct, ...options.filter((opt) => normalizeQuestion(opt) !== normalizeQuestion(correct)), ...distractors];
+    }
+
+    const finalOptions = dedupeOptions(options).slice(0, 4);
+
+    if (!finalOptions.some((opt) => normalizeQuestion(opt) === normalizeQuestion(correct))) {
+      finalOptions[0] = correct;
+    }
+
+    return {
+      enunciado: question.enunciado,
+      opciones: finalOptions,
+      respuesta_correcta: correct,
+    };
+  }).filter((question) => question.opciones.length >= 2);
 }
 
 export async function analizarMaterialConIA(
@@ -293,7 +463,8 @@ export async function analizarMaterialConIA(
   parcial: number,
   universidadId: string,
   carreraId: string | null,
-  _titulo: string
+  _titulo: string,
+  _usarIA = false
 ): Promise<ProcessResult> {
   try {
     const { supabase } = await requireAdminAccess();
@@ -309,12 +480,6 @@ export async function analizarMaterialConIA(
     }
 
     const buffer = Buffer.from(await fileData.arrayBuffer());
-    const pdfData = await pdf(buffer);
-    const text = pdfData.text;
-
-    if (!text || text.trim().length < 50) {
-      throw new Error('El PDF no contiene suficiente texto para analizar.');
-    }
 
     const { data: materiaData } = await supabase
       .from('materias')
@@ -330,19 +495,26 @@ export async function analizarMaterialConIA(
       nombreMateria.toLowerCase().includes('aprender en el siglo 21');
     const finalCarreraId = esGeneral ? null : carreraId;
 
-    const { data: configData } = await supabase
-      .from('configuracion_ia')
-      .select('prompt_sistema')
-      .eq('id', 'prompt_extraccion')
-      .single();
+    let parsedQuestions: QuestionRecord[] = [];
+    const isExcelFile = /\.(xlsx|xls)$/i.test(filePath);
 
-    const systemPrompt =
-      configData?.prompt_sistema ||
-      'Sos un experto en contenidos universitarios. Extrae preguntas de opción múltiple del texto y devuelve exclusivamente un JSON con la estructura { "preguntas": [{ "enunciado": string, "opciones": [string, string, string, string], "respuesta_correcta": string }] }.';
+    if (isExcelFile) {
+      parsedQuestions = parseQuestionsFromXlsxBuffer(buffer);
+    } else {
+      const pdfData = await pdf(buffer);
+      const text = pdfData.text;
 
-    let parsedQuestions = await extractQuestionsFromPdfText(text, nombreMateria, parcial, systemPrompt);
-    if (parsedQuestions.length === 0) {
-      parsedQuestions = extractQuestionsFallbackFromText(text);
+      if (!text || text.trim().length < 50) {
+        throw new Error('El PDF no contiene suficiente texto para analizar.');
+      }
+
+      // Prioridad 1: parser local del formato "primera opcion = correcta"
+      parsedQuestions = extractOrderedOptionsQuestionsFromText(text);
+
+      if (parsedQuestions.length === 0) {
+        parsedQuestions = extractQuestionsFallbackFromText(text);
+      }
+      parsedQuestions = enrichQuestionsWithSource(parsedQuestions, text);
     }
 
     const { data: existingQuestions, error: existingError } = await supabase
@@ -358,7 +530,12 @@ export async function analizarMaterialConIA(
       (existingQuestions ?? []).map((item) => normalizeQuestion(item.enunciado))
     );
 
-    const questionsToInsert = parsedQuestions
+    const uniqueParsedQuestions = Array.from(
+      new Map(parsedQuestions.map((q) => [normalizeQuestion(q.enunciado), q])).values()
+    );
+    const invalidQuestions = uniqueParsedQuestions.filter((q) => !q.enunciado || q.opciones.length < 2).length;
+
+    const questionsToInsert = uniqueParsedQuestions
       .filter((question) => !existingNormalized.has(normalizeQuestion(question.enunciado)))
       .map((question) => ({
         materia_id: materiaId,
@@ -371,12 +548,16 @@ export async function analizarMaterialConIA(
         es_general: esGeneral,
       }));
 
+    const duplicates = uniqueParsedQuestions.length - questionsToInsert.length;
+
     if (questionsToInsert.length === 0) {
       return {
         success: true,
         count: 0,
+        duplicates,
+        invalid: invalidQuestions,
         message:
-          'No se detectaron preguntas nuevas en el PDF. Verifica que el archivo tenga texto seleccionable y formato de preguntas/opciones.',
+          'No se detectaron preguntas nuevas para importar. Verifica formato y duplicados.',
       };
     }
 
@@ -390,7 +571,9 @@ export async function analizarMaterialConIA(
     return {
       success: true,
       count: questionsToInsert.length,
-      message: `La IA analizó el material y generó ${questionsToInsert.length} preguntas nuevas.`,
+      duplicates,
+      invalid: invalidQuestions,
+      message: `Importacion completa: ${questionsToInsert.length} nuevas, ${duplicates} duplicadas, ${invalidQuestions} invalidas.`,
     };
   } catch (error) {
     const message =
@@ -516,7 +699,7 @@ export async function obtenerRankingErroresIA(
       return { success: true, rows: [] };
     }
 
-    const questionIds = stats.map((item) => item.pregunta_id);
+    const questionIds = (stats as Array<{ pregunta_id: string }>).map((item) => item.pregunta_id);
     const [{ data: questions }, { data: cache }] = await Promise.all([
       admin.from('preguntas_banco').select('id, enunciado').in('id', questionIds),
       admin
@@ -525,10 +708,10 @@ export async function obtenerRankingErroresIA(
         .in('pregunta_id', questionIds),
     ]);
 
-    const qMap = new Map((questions ?? []).map((q) => [q.id, q]));
-    const cMap = new Map((cache ?? []).map((c) => [c.pregunta_id, c]));
+    const qMap = new Map(((questions ?? []) as Array<{ id: string; enunciado: string }>).map((q) => [q.id, q]));
+    const cMap = new Map(((cache ?? []) as Array<{ pregunta_id: string; explicacion: string | null; provider: string | null; updated_at: string | null }>).map((c) => [c.pregunta_id, c]));
 
-    const rows: IARankingRow[] = stats.map((stat) => {
+    const rows: IARankingRow[] = (stats as Array<{ pregunta_id: string; materia_id: string | null; veces_fallada: number; updated_at: string | null }>).map((stat) => {
       const q = qMap.get(stat.pregunta_id);
       const c = cMap.get(stat.pregunta_id);
       return {
@@ -575,21 +758,21 @@ export async function regenerarExplicacionIA(
       .eq('materia_id', question.materia_id)
       .limit(120);
 
-    const queryTokens = question.enunciado.toLowerCase().split(/\s+/).filter((t) => t.length >= 4);
+    const queryTokens = question.enunciado.toLowerCase().split(/\s+/).filter((t: string) => t.length >= 4);
     const context = (chunkRows ?? [])
-      .map((row) => {
+      .map((row: { chunk_text?: string | null; source_title?: string | null }) => {
         const text = row.chunk_text ?? '';
         const lowered = text.toLowerCase();
-        const score = queryTokens.reduce((acc, token) => acc + (lowered.includes(token) ? 1 : 0), 0);
+        const score = queryTokens.reduce((acc: number, token: string) => acc + (lowered.includes(token) ? 1 : 0), 0);
         return { score, text: `${row.source_title ? `[${row.source_title}] ` : ''}${text}` };
       })
-      .sort((a, b) => b.score - a.score)
-      .filter((row) => row.score > 0)
+      .sort((a: { score: number }, b: { score: number }) => b.score - a.score)
+      .filter((row: { score: number }) => row.score > 0)
       .slice(0, 4)
-      .map((row) => row.text);
+      .map((row: { text: string }) => row.text);
 
     const options = Array.isArray(question.opciones)
-      ? (question.opciones.filter((item) => typeof item === 'string') as string[])
+      ? (question.opciones.filter((item: unknown) => typeof item === 'string') as string[])
       : [];
 
     const generated = await generateTutorExplanation({
@@ -1186,6 +1369,7 @@ export async function obtenerUsuariosAdmin(limit = 200): Promise<{
       { data: authUsersData, error: authError },
       { data: subscriptionsDataRaw, error: subsError },
       { data: plansRaw, error: plansError },
+      { data: profileRows, error: profilesError },
     ] =
       await Promise.all([
         admin.auth.admin.listUsers({ page: 1, perPage: limit }),
@@ -1195,11 +1379,13 @@ export async function obtenerUsuariosAdmin(limit = 200): Promise<{
           .order('started_at', { ascending: false })
           .limit(5000),
         admin.from('subscription_plans').select('id, code'),
+        admin.from('profiles').select('id, role').limit(limit),
       ]);
 
     if (authError) throw authError;
     if (subsError) throw subsError;
     if (plansError) throw plansError;
+    if (profilesError) throw profilesError;
 
     const subscriptionsData = (subscriptionsDataRaw ?? []) as unknown as UserSubscriptionPlanRow[];
     const planCodeById = new Map(
@@ -1207,6 +1393,12 @@ export async function obtenerUsuariosAdmin(limit = 200): Promise<{
     );
 
     const latestPlanByUser = new Map<string, 'free' | 'premium'>();
+    const profileRoleByUser = new Map(
+      ((profileRows ?? []) as Array<{ id: string; role: string | null }>).map((row) => [
+        row.id,
+        row.role === 'admin' ? 'admin' : 'student',
+      ])
+    );
 
     for (const row of subscriptionsData ?? []) {
       const uid = row.user_id;
@@ -1220,11 +1412,17 @@ export async function obtenerUsuariosAdmin(limit = 200): Promise<{
       const isActive =
         !!lastSignIn &&
         Date.now() - new Date(lastSignIn).getTime() < 30 * 24 * 60 * 60 * 1000;
+      const resolvedRole: 'admin' | 'student' =
+        ((user.app_metadata?.role === 'admin' ? 'admin' : null) ??
+          profileRoleByUser.get(user.id) ??
+          'student') as 'admin' | 'student';
+
       return {
         id: user.id,
         email: user.email ?? '(sin email)',
         estado: isActive ? 'activo' : 'inactivo',
         plan: latestPlanByUser.get(user.id) ?? 'free',
+        role: resolvedRole,
         last_sign_in_at: lastSignIn,
         created_at: user.created_at ?? null,
       };
@@ -1235,6 +1433,49 @@ export async function obtenerUsuariosAdmin(limit = 200): Promise<{
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No se pudo cargar la lista de usuarios.',
+    };
+  }
+}
+
+export async function actualizarRolUsuarioAdmin(
+  userId: string,
+  nextRole: 'admin' | 'student'
+): Promise<{ success: boolean; message: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+      app_metadata: { role: nextRole },
+    });
+
+    if (authError) {
+      throw authError;
+    }
+
+    const { error: profileError } = await admin
+      .from('profiles')
+      .update({ role: nextRole, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      message:
+        nextRole === 'admin'
+          ? 'El usuario ahora tiene permisos de administrador.'
+          : 'El usuario volvio a permisos de estudiante.',
+    };
+  } catch (error) {
+    console.error('Error en actualizarRolUsuarioAdmin:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo actualizar el rol del usuario.',
     };
   }
 }
@@ -1305,3 +1546,180 @@ export async function obtenerMonetizacionAdmin(): Promise<{
     };
   }
 }
+
+export async function obtenerRankingGlobalPreguntasAdmin(input: {
+  materiaId?: string | null;
+  parcial?: number | null;
+  limit?: number;
+}): Promise<{
+  success: boolean;
+  mostFailed?: GlobalQuestionRankingRow[];
+  mostCorrect?: GlobalQuestionRankingRow[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const limit = Math.max(5, Math.min(input.limit ?? 15, 50));
+
+    let preguntasQuery = admin
+      .from('preguntas_banco')
+      .select('id, enunciado, parcial, materia_id');
+
+    if (input.materiaId) preguntasQuery = preguntasQuery.eq('materia_id', input.materiaId);
+    if (input.parcial) preguntasQuery = preguntasQuery.eq('parcial', input.parcial);
+
+    const { data: preguntas, error: preguntasError } = await preguntasQuery.limit(4000);
+    if (preguntasError) throw preguntasError;
+
+    const preguntaIds = (preguntas ?? []).map((p) => p.id);
+    if (preguntaIds.length === 0) {
+      return { success: true, mostFailed: [], mostCorrect: [] };
+    }
+
+    const { data: historial, error: historialError } = await admin
+      .from('historial_respuestas')
+      .select('pregunta_id, es_correcta')
+      .in('pregunta_id', preguntaIds);
+    if (historialError) throw historialError;
+
+    const mapPregunta = new Map(
+      (preguntas ?? []).map((p) => [p.id, { enunciado: p.enunciado, parcial: p.parcial }])
+    );
+    const stats = new Map<
+      string,
+      { respuestas_totales: number; respuestas_correctas: number; respuestas_incorrectas: number }
+    >();
+
+    for (const row of historial ?? []) {
+      const pid = row.pregunta_id ?? '';
+      if (!pid || !mapPregunta.has(pid)) continue;
+      const current = stats.get(pid) ?? {
+        respuestas_totales: 0,
+        respuestas_correctas: 0,
+        respuestas_incorrectas: 0,
+      };
+      current.respuestas_totales += 1;
+      if (row.es_correcta) current.respuestas_correctas += 1;
+      else current.respuestas_incorrectas += 1;
+      stats.set(pid, current);
+    }
+
+    const rows: GlobalQuestionRankingRow[] = Array.from(stats.entries()).map(([pregunta_id, value]) => {
+      const base = mapPregunta.get(pregunta_id);
+      const tasa = value.respuestas_totales
+        ? Number(((value.respuestas_correctas / value.respuestas_totales) * 100).toFixed(2))
+        : 0;
+      return {
+        pregunta_id,
+        enunciado: base?.enunciado ?? '(Pregunta sin enunciado)',
+        parcial: base?.parcial ?? null,
+        respuestas_totales: value.respuestas_totales,
+        respuestas_correctas: value.respuestas_correctas,
+        respuestas_incorrectas: value.respuestas_incorrectas,
+        tasa_acierto: tasa,
+      };
+    });
+
+    const mostFailed = [...rows]
+      .sort((a, b) => b.respuestas_incorrectas - a.respuestas_incorrectas)
+      .slice(0, limit);
+    const mostCorrect = [...rows]
+      .sort((a, b) => b.respuestas_correctas - a.respuestas_correctas)
+      .slice(0, limit);
+
+    return { success: true, mostFailed, mostCorrect };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo obtener el ranking global.',
+    };
+  }
+}
+
+export async function importarSimuladorPremiumDesdeArchivo(input: {
+  filePath: string;
+  materiaId: string;
+  parcial: number;
+  titulo: string;
+  sourceExamDate?: string | null;
+}): Promise<ProcessResult> {
+  try {
+    const { user, supabase } = await requireAdminAccess();
+
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('biblioteca')
+      .download(input.filePath);
+
+    if (downloadError || !fileData) {
+      throw new Error(`No se pudo descargar el archivo: ${downloadError?.message ?? 'sin data'}`);
+    }
+
+    const buffer = Buffer.from(await fileData.arrayBuffer());
+    let parsedQuestions: QuestionRecord[] = [];
+
+    if (/\.(xlsx|xls)$/i.test(input.filePath)) {
+      parsedQuestions = parseQuestionsFromXlsxBuffer(buffer);
+    } else {
+      const pdfData = await pdf(buffer);
+      const text = pdfData.text ?? '';
+      parsedQuestions = extractOrderedOptionsQuestionsFromText(text);
+      if (parsedQuestions.length === 0) parsedQuestions = extractQuestionsFallbackFromText(text);
+      parsedQuestions = enrichQuestionsWithSource(parsedQuestions, text);
+    }
+
+    const clean = Array.from(
+      new Map(
+        parsedQuestions
+          .filter((q) => q.enunciado && q.respuesta_correcta && q.opciones.length >= 2)
+          .map((q) => [normalizeQuestion(q.enunciado), q])
+      ).values()
+    ).slice(0, 50);
+
+    if (clean.length === 0) {
+      return { success: false, message: 'No se encontraron preguntas validas para el simulador premium.' };
+    }
+
+    const admin: AdminSupabaseClient = createAdminClient();
+    const { data: setRow, error: setError } = await admin
+      .from('premium_question_sets')
+      .insert({
+        materia_id: input.materiaId,
+        parcial: input.parcial,
+        titulo: input.titulo,
+        source_exam_date: input.sourceExamDate ?? null,
+        created_by: user.id,
+        is_active: true,
+      })
+      .select('id')
+      .single();
+
+    const setId = (setRow as { id?: string } | null)?.id;
+    if (setError || !setId) throw setError ?? new Error('No se pudo crear el set premium.');
+
+    const rows = clean.map((q, index) => ({
+      set_id: setId,
+      enunciado: q.enunciado,
+      opciones: q.opciones,
+      respuesta_correcta: q.respuesta_correcta,
+      orden: index + 1,
+    }));
+
+    const { error: insertError } = await admin.from('premium_questions').insert(rows);
+    if (insertError) throw insertError;
+
+    revalidatePath('/admin');
+    return {
+      success: true,
+      count: rows.length,
+      message: `Simulador premium importado con ${rows.length} preguntas.`,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo importar el simulador premium.',
+    };
+  }
+}
+
+
