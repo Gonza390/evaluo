@@ -161,7 +161,7 @@ export async function getPreguntasSimuladorPremium(
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .maybeSingle<{ id: string }>();
 
     if (!setRow?.id) return [];
 
