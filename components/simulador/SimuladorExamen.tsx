@@ -129,8 +129,14 @@ function pickDeterministicItem<T>(items: T[], seed: string): T {
 }
 
 function getSuggestedModule(parcial: number, seed: string) {
-  const modules = parcial === 1 ? [1, 2] : [3, 4];
+  const normalizedParcial = Number(parcial) === 2 ? 2 : 1;
+  const modules = normalizedParcial === 1 ? [1, 2] : [3, 4];
   return pickDeterministicItem(modules, seed);
+}
+
+function resolveExamParcial(parcial: number, preguntas: Pregunta[]): number {
+  const questionParcial = preguntas.find((pregunta) => pregunta.parcial === 1 || pregunta.parcial === 2)?.parcial;
+  return questionParcial === 2 ? 2 : Number(parcial) === 2 ? 2 : 1;
 }
 
 export default function SimuladorExamen({
@@ -599,8 +605,9 @@ export default function SimuladorExamen({
     const totalRespondidas = respondidasFinales || 1;
     const nota = respondidasFinales > 0 ? (aciertosFinales / totalRespondidas) * 10 : 0;
     const aprobado = nota >= 7;
-    const reviewSeed = `${materiaId}:${parcial}:${respondidasFinales}:${aciertosFinales}:${wrongExplanations.length}`;
-    const suggestedModule = getSuggestedModule(parcial, reviewSeed);
+    const resolvedParcial = resolveExamParcial(parcial, preguntas);
+    const reviewSeed = `${materiaId}:${resolvedParcial}:${respondidasFinales}:${aciertosFinales}:${wrongExplanations.length}`;
+    const suggestedModule = getSuggestedModule(resolvedParcial, reviewSeed);
     const patternMessage = pickDeterministicItem(
       [
         `Detectamos mas tropiezos en el Modulo ${suggestedModule}.`,
@@ -663,7 +670,7 @@ export default function SimuladorExamen({
             <p className="mt-2 text-sm leading-6 text-slate-700">{recommendationMessage}</p>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <Button asChild className="rounded-xl bg-amber-600 hover:bg-amber-700">
-                <Link href={`/explorar/materia/${materiaId}?tab=resumenes`}>
+                <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
                   Repasar resumenes
                 </Link>
               </Button>

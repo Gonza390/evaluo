@@ -35,6 +35,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   analizarMaterialConIA,
   importarSimuladorPremiumDesdeArchivo,
+  importarMateriasDesdeExcelAdmin,
   limpiarPreguntasBanco,
   actualizarPromptSistema,
   obtenerPromptSistema,
@@ -55,6 +56,8 @@ import {
   type FeedbackReviewItem,
   obtenerUsuariosAdmin,
   actualizarRolUsuarioAdmin,
+  crearMateriaCompartidaAdmin,
+  desasignarMateriaDeCarreraAdmin,
   obtenerMonetizacionAdmin,
   obtenerRankingGlobalPreguntasAdmin,
   type AdminUserItem,
@@ -63,10 +66,12 @@ import {
   type DuplicateCandidate,
   type SystemHealthStats,
   type FileMaintenanceResult,
+  type MateriaImportResult,
 } from './actions';
 import {
   filterAdminResources,
   getMateriasUsoChartData,
+  parseMateriasWorkbook,
   getPlatformUsageData,
   getRetentionChartData,
   sortFilterEntries,
@@ -133,6 +138,7 @@ interface Materia {
   nombre: string;
   carrera_id: string | null;
   slug?: string | null;
+  sharedCareerCount?: number;
 }
 
 type ResourceType = 'Preguntero' | 'Resumen' | 'Trabajo Práctico';
@@ -164,7 +170,12 @@ export default function AdminPanel() {
   const [selectedCarreraId, setSelectedCarreraId] = useState<string | null>(null);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [nuevaMateria, setNuevaMateria] = useState('');
+  const [materiaCarreraIds, setMateriaCarreraIds] = useState<string[]>([]);
   const [loadingMateria, setLoadingMateria] = useState(false);
+  const [materiasImportFile, setMateriasImportFile] = useState<File | null>(null);
+  const [loadingMateriasImport, setLoadingMateriasImport] = useState(false);
+  const [materiasImportPreviewCount, setMateriasImportPreviewCount] = useState<number | null>(null);
+  const [materiasImportResult, setMateriasImportResult] = useState<MateriaImportResult | null>(null);
 
   // Prompt config
   const [promptSistema, setPromptSistema] = useState('');
@@ -610,6 +621,16 @@ export default function AdminPanel() {
     }
   }, [selectedCarreraId, user]);
 
+  useEffect(() => {
+    if (selectedCarreraId) {
+      setMateriaCarreraIds((prev) =>
+        prev.includes(selectedCarreraId) ? prev : [selectedCarreraId]
+      );
+    } else {
+      setMateriaCarreraIds([]);
+    }
+  }, [selectedCarreraId]);
+
   // Load carreras for upload modal
   useEffect(() => {
     if (uploadUniId) {
@@ -639,43 +660,167 @@ export default function AdminPanel() {
   }, [selectedFile]);
 
   const fetchMaterias = async (carreraId: string) => {
-    const { data, error } = await supabase
-      .from('materias')
-      .select('*')
-      .or(`carrera_id.eq.${carreraId},slug.in.(aprender-21,tecnologia-humanidades)`);
-    if (error) {
-      console.error('Error materias:', error);
+    const globalSlugs = ['aprender-21', 'tecnologia-humanidades'];
+
+    const [{ data: relationRows, error: relationError }, { data: globalRows, error: globalError }] =
+      await Promise.all([
+        supabase.from('carrera_materias').select('materia_id').eq('carrera_id', carreraId),
+        supabase.from('materias').select('*').in('slug', globalSlugs),
+      ]);
+
+    if (relationError || globalError) {
+      console.error('Error materias:', relationError ?? globalError);
       setMaterias([]);
       return;
     }
 
-    // Order globals first, then alpha by nombre
-    const globalSlugs = ['aprender-21', 'tecnologia-humanidades'];
-    const globals = data.filter((m) => (m.slug ? globalSlugs.includes(m.slug) : false));
-    const others = data.filter((m) => (m.slug ? !globalSlugs.includes(m.slug) : true));
-    const sortedOthers = others.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    setMaterias([...globals, ...sortedOthers]);
+    const relationMateriaIds = Array.from(
+      new Set((relationRows ?? []).map((row) => row.materia_id).filter(Boolean))
+    ) as string[];
+
+    const [{ data: linkedMaterias, error: linkedMateriasError }, { data: allRelations, error: allRelationsError }] =
+      relationMateriaIds.length > 0
+        ? await Promise.all([
+            supabase.from('materias').select('*').in('id', relationMateriaIds),
+            supabase.from('carrera_materias').select('materia_id').in('materia_id', relationMateriaIds),
+          ])
+        : [{ data: [], error: null }, { data: [], error: null }];
+
+    if (linkedMateriasError || allRelationsError) {
+      console.error('Error linked materias:', linkedMateriasError ?? allRelationsError);
+      setMaterias([]);
+      return;
+    }
+
+    const allRows = [...(globalRows ?? []), ...(linkedMaterias ?? [])];
+    const uniqueMaterias = Array.from(
+      new Map(allRows.map((materia) => [materia.id, materia])).values()
+    );
+
+    const relationCountMap = (allRelations ?? []).reduce<Record<string, number>>((acc, relation) => {
+      const materiaId = relation.materia_id;
+      if (!materiaId) return acc;
+      acc[materiaId] = (acc[materiaId] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    const globals = uniqueMaterias.filter((m) => (m.slug ? globalSlugs.includes(m.slug) : false));
+    const others = uniqueMaterias
+      .filter((m) => (m.slug ? !globalSlugs.includes(m.slug) : true))
+      .map((materia) => ({
+        ...materia,
+        sharedCareerCount: relationCountMap[materia.id] ?? 0,
+      }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    setMaterias([
+      ...globals.map((materia) => ({ ...materia, sharedCareerCount: 0 })),
+      ...others,
+    ]);
+  };
+
+  const toggleMateriaCarrera = (carreraId: string) => {
+    setMateriaCarreraIds((prev) =>
+      prev.includes(carreraId) ? prev.filter((id) => id !== carreraId) : [...prev, carreraId]
+    );
+  };
+
+  const handleMateriaImportFile = async (file: File | null) => {
+    setMateriasImportFile(file);
+    setMateriasImportResult(null);
+    setMateriasImportPreviewCount(null);
+
+    if (!file) return;
+
+    try {
+      const parsed = await parseMateriasWorkbook(file);
+      setMateriasImportPreviewCount(parsed.length);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No pudimos leer el archivo.';
+      setMateriasImportFile(null);
+      showAdminError('No pudimos analizar el Excel', message);
+    }
+  };
+
+  const importarMateriasDesdeExcel = async () => {
+    if (!materiasImportFile) return;
+    if (!selectedUniId) {
+      showAdminError(
+        'Selecciona una universidad',
+        'El importador va a crear las carreras faltantes dentro de la universidad activa.'
+      );
+      return;
+    }
+
+    setLoadingMateriasImport(true);
+    setMateriasImportResult(null);
+
+    try {
+      const parsedEntries = await parseMateriasWorkbook(materiasImportFile);
+      if (parsedEntries.length === 0) {
+        showAdminError(
+          'El archivo no tiene materias validas',
+          'Revisá que venga con carreras en la primera fila y materias debajo de cada columna.'
+        );
+        setLoadingMateriasImport(false);
+        return;
+      }
+
+      const result = await importarMateriasDesdeExcelAdmin({
+        universidadId: selectedUniId,
+        entries: parsedEntries,
+      });
+      setMateriasImportResult(result);
+
+      if (!result.success) {
+        showAdminError('No pudimos importar la malla', result.message);
+      } else {
+        showAdminSuccess('Importacion completada', result.message);
+        setMateriasImportFile(null);
+        await fetchCarreras();
+        if (selectedCarreraId) {
+          await fetchMaterias(selectedCarreraId);
+        }
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'No pudimos importar el archivo.';
+      showAdminError('Fallo la importacion masiva', message);
+    }
+
+    setLoadingMateriasImport(false);
   };
 
   const agregarMateria = async () => {
-    if (!nuevaMateria.trim() || !selectedCarreraId) return;
+    if (!nuevaMateria.trim() || materiaCarreraIds.length === 0) return;
     setLoadingMateria(true);
-    const { error } = await supabase
-      .from('materias')
-      .insert({ nombre: nuevaMateria.trim(), carrera_id: selectedCarreraId });
-    if (error) console.error('Error agregar materia:', error);
-    else {
+    const result = await crearMateriaCompartidaAdmin({
+      nombre: nuevaMateria.trim(),
+      carreraIds: materiaCarreraIds,
+    });
+    if (!result.success) {
+      showAdminError('No pudimos crear la materia', result.message);
+    } else {
       setNuevaMateria('');
-      fetchMaterias(selectedCarreraId!);
+      showAdminSuccess('Materia guardada', result.message);
+      if (selectedCarreraId) {
+        await fetchMaterias(selectedCarreraId);
+      }
     }
     setLoadingMateria(false);
   };
 
   const eliminarMateria = async (id: string) => {
-    if (!confirm('Eliminar materia?')) return;
-    const { error } = await supabase.from('materias').delete().eq('id', id);
-    if (error) console.error('Error eliminar materia:', error);
-    else fetchMaterias(selectedCarreraId!);
+    if (!selectedCarreraId || !confirm('Quitar esta materia de la carrera seleccionada?')) return;
+    const result = await desasignarMateriaDeCarreraAdmin({
+      materiaId: id,
+      carreraId: selectedCarreraId,
+    });
+    if (!result.success) {
+      showAdminError('No pudimos quitar la materia', result.message);
+    } else {
+      showAdminSuccess('Materia desasignada', result.message);
+      await fetchMaterias(selectedCarreraId);
+    }
   };
 
   const uploadMaterial = async () => {
@@ -916,16 +1061,17 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="relative flex min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(79,70,229,0.16),transparent_22%),linear-gradient(180deg,#f3f7fd_0%,#f8fbff_100%)]">
       {/* Overlay de Procesamiento IA */}
       {isIAProcessing ? <AdminIAProcessingOverlay /> : null}
 
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-52 border-r border-slate-200 bg-white">
-        <div className="flex h-14 items-center border-b border-slate-200 px-4">
-          <span className="text-lg font-bold text-blue-600">Admin Dashboard</span>
+      <aside className="fixed inset-y-0 left-0 w-56 border-r border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(248,250,252,0.94)_100%)] backdrop-blur">
+        <div className="flex h-16 flex-col justify-center border-b border-slate-200 px-4">
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-500">Evaluo</span>
+          <span className="text-lg font-black tracking-[-0.04em] text-slate-900">Admin Studio</span>
         </div>
-        <nav className="mt-3 space-y-1 px-2">
+        <nav className="mt-4 space-y-1.5 px-3">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
@@ -1035,8 +1181,34 @@ export default function AdminPanel() {
       </aside>
 
       {/* Main Content */}
-      <main className="ml-52 flex-1 p-3">
-        <div className="mx-auto max-w-[1180px] bg-white rounded-xl shadow-sm border border-slate-100 min-h-[calc(100vh-2rem)] p-3 text-[12px] leading-tight">
+      <main className="ml-56 flex-1 p-4">
+        <div className="mx-auto max-w-[1180px] min-h-[calc(100vh-2rem)] rounded-[28px] border border-white/70 bg-white/88 p-4 text-[12px] leading-tight shadow-[0_20px_55px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="mb-4 overflow-hidden rounded-[24px] bg-[linear-gradient(135deg,rgba(15,23,42,0.98)_0%,rgba(30,64,175,0.94)_42%,rgba(79,70,229,0.90)_100%)] px-4 py-4 text-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-200/90">
+                  Operación interna
+                </p>
+                <h1 className="mt-1 text-2xl font-black tracking-[-0.05em] text-white">
+                  Panel de administración de Evaluo
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/78">
+                  Gestioná materiales, contenido, métricas y automatizaciones desde una vista más clara y consistente.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/86">
+                  {adminResources.length} recursos
+                </div>
+                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/86">
+                  {adminUsers.length} usuarios
+                </div>
+                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/86">
+                  {universidades.length} universidades
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="mb-4 flex items-center justify-end">
             <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
@@ -1817,22 +1989,128 @@ export default function AdminPanel() {
                     <CardTitle className="text-sm font-bold uppercase tracking-wider">Materias</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 pt-0 space-y-4">
+                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="space-y-2">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                          Asignar a carreras
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {carreras.map((carrera) => {
+                            const active = materiaCarreraIds.includes(carrera.id);
+                            return (
+                              <button
+                                key={carrera.id}
+                                type="button"
+                                onClick={() => toggleMateriaCarrera(carrera.id)}
+                                className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                                  active
+                                    ? 'border-blue-600 bg-blue-600 text-white'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700'
+                                }`}
+                              >
+                                {carrera.nombre}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {!selectedCarreraId ? (
+                          <p className="text-xs text-slate-400">
+                            Selecciona una carrera y luego marca todas las que deban compartir la materia.
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="space-y-3 rounded-2xl border border-dashed border-slate-300 bg-white p-4">
+                      <div className="space-y-1">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                          Importacion masiva Excel
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Sube la malla con carreras en la primera fila y las materias debajo de cada columna.
+                          Las carreras faltantes se van a crear dentro de la universidad seleccionada.
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <Input
+                          type="file"
+                          accept=".xlsx,.xls"
+                          onChange={(event) => void handleMateriaImportFile(event.target.files?.[0] ?? null)}
+                          className="h-11 rounded-xl border-slate-200 bg-white"
+                        />
+                        <Button
+                          onClick={importarMateriasDesdeExcel}
+                          disabled={!materiasImportFile || loadingMateriasImport}
+                          className="h-11 rounded-xl bg-slate-900 px-5 text-white hover:bg-slate-800"
+                        >
+                          {loadingMateriasImport ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Upload className="mr-2 h-4 w-4" />
+                          )}
+                          Importar malla
+                        </Button>
+                      </div>
+                      {!selectedUniId ? (
+                        <p className="text-xs text-amber-700">
+                          Primero selecciona la universidad donde quieras crear las carreras nuevas.
+                        </p>
+                      ) : null}
+                      {materiasImportFile ? (
+                        <p className="text-xs text-slate-500">
+                          Archivo listo: <span className="font-semibold text-slate-700">{materiasImportFile.name}</span>
+                          {materiasImportPreviewCount !== null
+                            ? ` · ${materiasImportPreviewCount} materias detectadas`
+                            : ''}
+                        </p>
+                      ) : null}
+                      {materiasImportResult ? (
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+                          <p className="font-semibold text-slate-800">{materiasImportResult.message}</p>
+                          <div className="mt-2 flex flex-wrap gap-3">
+                            <span>Carreras nuevas: <strong>{materiasImportResult.carrerasCreated ?? 0}</strong></span>
+                            <span>Filas validas: <strong>{materiasImportResult.filasProcesadas ?? 0}</strong></span>
+                            <span>Materias nuevas: <strong>{materiasImportResult.materiasCreated ?? 0}</strong></span>
+                            <span>Materias reutilizadas: <strong>{materiasImportResult.materiasReused ?? 0}</strong></span>
+                            <span>Asignaciones nuevas: <strong>{materiasImportResult.relacionesCreated ?? 0}</strong></span>
+                          </div>
+                          {materiasImportResult.carrerasNoEncontradas && materiasImportResult.carrerasNoEncontradas.length > 0 ? (
+                            <p className="mt-2 text-amber-700">
+                              Carreras no encontradas: {materiasImportResult.carrerasNoEncontradas.join(', ')}
+                            </p>
+                          ) : null}
+                          {materiasImportResult.materiasSinCarrerasValidas && materiasImportResult.materiasSinCarrerasValidas.length > 0 ? (
+                            <p className="mt-2 text-rose-700">
+                              Materias sin carreras validas: {materiasImportResult.materiasSinCarrerasValidas.join(', ')}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </div>
                     <div className="flex gap-2">
                       <Input
                         placeholder="Nueva Materia"
                         value={nuevaMateria}
                         onChange={(e) => setNuevaMateria(e.target.value)}
-                        disabled={!selectedCarreraId}
+                        disabled={materiaCarreraIds.length === 0}
                         className="rounded-xl h-11 border-slate-200 bg-white"
                       />
-                      <Button size="icon" onClick={agregarMateria} disabled={loadingMateria || !selectedCarreraId} className="rounded-xl h-11 w-11 shrink-0 bg-blue-600">
+                      <Button size="icon" onClick={agregarMateria} disabled={loadingMateria || materiaCarreraIds.length === 0} className="rounded-xl h-11 w-11 shrink-0 bg-blue-600">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="max-h-[300px] overflow-y-auto space-y-2 pr-2 scrollbar-hide">
                       {materias.map((m) => (
                         <div key={m.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-white text-xs font-bold text-slate-600 hover:border-blue-300 hover:bg-blue-50/50 transition-all">
-                          <span className="truncate flex-1 uppercase tracking-tight">{m.nombre}</span>
+                          <div className="min-w-0 flex-1">
+                            <span className="truncate block uppercase tracking-tight">{m.nombre}</span>
+                            <span className="mt-1 block text-[10px] font-medium normal-case tracking-normal text-slate-400">
+                              {m.sharedCareerCount && m.sharedCareerCount > 1
+                                ? `Compartida con ${m.sharedCareerCount} carreras`
+                                : m.slug === 'aprender-21' || m.slug === 'tecnologia-humanidades'
+                                  ? 'Materia global'
+                                  : 'Asignada a esta carrera'}
+                            </span>
+                          </div>
                           <button onClick={() => eliminarMateria(m.id)} className="text-slate-300 hover:text-red-500">
                             <Trash2 className="h-4 w-4" />
                           </button>

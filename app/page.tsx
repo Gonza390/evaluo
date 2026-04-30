@@ -224,18 +224,18 @@ export default function Home() {
             <div className="space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-indigo-600 shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" />
-                IA + Educación
+                IA + Educacion
               </span>
               <h2 className="text-4xl font-bold tracking-tight text-[#0F1B3D] sm:text-5xl lg:text-6xl">
-                Entendé mejor, <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">aprendé más</span>
+                Entende mejor, <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">aprende mas</span>
               </h2>
               <p className="max-w-lg text-lg leading-relaxed text-slate-700">
-                Evaluo no es solo respuestas. Es tu guía personalizada para entender, practicar y mejorar cada día.
+                Evaluo no es solo respuestas. Es tu guia personalizada para entender, practicar y mejorar cada dia.
               </p>
               <ul className="space-y-3">
                 {[
                   { icon: CheckCircle2, text: 'Explicaciones paso a paso' },
-                  { icon: BookOpen, text: 'Ejemplos y resúmenes relevantes' },
+                  { icon: BookOpen, text: 'Ejemplos y resumenes relevantes' },
                   { icon: Zap, text: 'Disponible 24/7' },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-slate-700">
@@ -267,13 +267,13 @@ export default function Home() {
                   </div>
                   <div className="space-y-3">
                     <div className="rounded-2xl rounded-tl-sm bg-slate-100 p-3 text-sm text-slate-700">
-                      No entiendo cómo resolver este ejercicio de física
+                      No entiendo como resolver este ejercicio de fisica
                     </div>
                     <div className="rounded-2xl rounded-tr-sm bg-gradient-to-r from-indigo-50 to-blue-50 p-4 text-sm text-slate-800 shadow-sm">
                       <p className="mb-1 font-semibold text-indigo-600">Te lo explico paso a paso:</p>
                       <ol className="space-y-1 text-xs leading-relaxed">
                         <li>1. Identificamos los datos del problema</li>
-                        <li>2. Aplicamos la fórmula F = m × a</li>
+                        <li>2. Aplicamos la formula F = m x a</li>
                         <li>3. Reemplazamos los valores</li>
                         <li>4. <strong>Resultado: F = 30N</strong></li>
                       </ol>
@@ -298,9 +298,9 @@ export default function Home() {
                   <GraduationCap className="h-7 w-7" />
                 </div>
                 <div>
-                  <h2 className="text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">¿Listo para aprobar?</h2>
+                  <h2 className="text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">Listo para aprobar?</h2>
                   <p className="mt-2 text-base text-white/85">
-                    Sumate a miles de estudiantes que ya estudian más inteligente con Evaluo.
+                    Sumate a miles de estudiantes que ya estudian mas inteligente con Evaluo.
                   </p>
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function Home() {
                   href={primaryHref}
                   className="inline-flex h-14 items-center justify-center rounded-2xl bg-white px-8 text-base font-semibold text-[#0F1B3D] transition hover:bg-slate-100"
                 >
-                  Empezar gratis ahora →
+                  Empezar gratis ahora -&gt;
                 </Link>
               </div>
             </div>

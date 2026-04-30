@@ -672,6 +672,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      resource_votes: {
+        Row: {
+          id: string;
+          user_id: string;
+          resource_id: string;
+          vote_type: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          resource_id: string;
+          vote_type: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          resource_id?: string;
+          vote_type?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       resumen_votes: {
         Row: {
           id: string;

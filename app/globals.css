@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "react-pdf/dist/Page/TextLayer.css";
 
 @custom-variant dark (&:is(.dark *));
 

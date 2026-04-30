@@ -7,13 +7,13 @@ export function FooterHome() {
   return (
     <footer className="bg-[#050B2C] text-white">
       <div className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-3 lg:gap-8">
-          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <Link href="/" className="text-xl font-black tracking-tight">
               Evaluo
             </Link>
             <p className="mt-2 max-w-xs text-xs text-white/60">
-              Te ayudamos a aprobar, te impulsamos a crecer
+              Te ayudamos a aprobar, te impulsamos a crecer.
             </p>
             <div className="mt-4 flex gap-3">
               <a
@@ -45,54 +45,39 @@ export function FooterHome() {
             </div>
           </div>
 
-          <div className="flex flex-col items-center text-center lg:text-left">
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-              Navegación
+              Navegacion
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
-              <a
-                href="#como-funciona"
-                className="text-xs text-white/70 transition hover:text-white"
-              >
-                Cómo funciona
+              <a href="#como-funciona" className="text-xs text-white/70 transition hover:text-white">
+                Como funciona
               </a>
-              <a
-                href="#beneficios"
-                className="text-xs text-white/70 transition hover:text-white"
-              >
+              <a href="#beneficios" className="text-xs text-white/70 transition hover:text-white">
                 Beneficios
               </a>
-              <a
-                href="#cta"
-                className="text-xs text-white/70 transition hover:text-white"
-              >
-                Precios
+              <a href="#cta" className="text-xs text-white/70 transition hover:text-white">
+                Empezar
               </a>
             </nav>
           </div>
 
-          <div className="flex flex-col items-center text-center lg:text-left">
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
               Legal
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
-              <a
-                href="/terminos"
-                className="text-xs text-white/70 transition hover:text-white"
-              >
-                Términos y condiciones
+              <a href="/terminos" className="text-xs text-white/70 transition hover:text-white">
+                Terminos y condiciones
               </a>
-              <a
-                href="/privacidad"
-                className="text-xs text-white/70 transition hover:text-white"
-              >
-                Política de privacidad
+              <a href="/privacidad" className="text-xs text-white/70 transition hover:text-white">
+                Politica de privacidad
               </a>
             </nav>
           </div>
         </div>
 
-        <div className="mt-6 border-t border-white/10 pt-4 text-center">
+        <div className="mt-6 border-t border-white/10 pt-4 text-center md:text-left">
           <p className="text-[10px] text-white/40">
             © {new Date().getFullYear()} Evaluo. Todos los derechos reservados.
           </p>
@@ -101,3 +86,4 @@ export function FooterHome() {
     </footer>
   );
 }
+

@@ -6,9 +6,17 @@ import { supabase } from '@/lib/supabase-client';
 import Link from 'next/link';
 import { useUser } from '@/hooks/useUser';
 import { useToast } from '@/hooks/use-toast';
-import { getCareerRoute, getUniversityRoute } from '@/lib/routes';
+import { getCareerRoute, getResourceRoute, getUniversityRoute } from '@/lib/routes';
 import { getDashboardState, saveDashboardState } from '@/app/actions';
 import { pushActivityHit, pushRecentResource } from '@/lib/dashboard-client';
+import {
+  fetchMateriaRecursos,
+  fetchResourceVoteSummaries,
+  getDefaultResourceVoteSummary,
+  sortResourcesByVotes,
+  upsertResourceVote,
+  type ResourceVoteSummaryMap,
+} from '@/lib/data/resources';
 import {
   ArrowLeft,
   FileText,
@@ -29,8 +37,6 @@ import {
   Download,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import PdfViewer from '@/components/PdfViewer';
 import {
   buildResumenKey,
   getMateriaContextErrorMessage,
@@ -40,7 +46,6 @@ import {
   getResumenesErrorMessage,
   getResumenRating,
   isLongMateriaTitle,
-  type PreviewDocument,
   type RecursoArchivo,
   type RecursoResumenRow,
   type Resumen,
@@ -92,7 +97,8 @@ export default function MateriaContent({
   const [contextError, setContextError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
   const [voteLoading, setVoteLoading] = useState<string>('');
-  const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
+  const [resourceVoteLoading, setResourceVoteLoading] = useState<string>('');
+  const [resourceVotes, setResourceVotes] = useState<ResourceVoteSummaryMap>({});
   const [resumenesError, setResumenesError] = useState<string | null>(null);
   const [recursosError, setRecursosError] = useState<string | null>(null);
   const isLongTitle = isLongMateriaTitle(nombre);
@@ -272,33 +278,24 @@ export default function MateriaContent({
     setRecursosLoading(true);
     setRecursosError(null);
     try {
-      const { data, error } = await supabase
-        .from('recursos')
-        .select('id, nombre, tipo, url_archivo, creado_at, materia_id')
-        .eq('materia_id', materiaId)
-        .or('tipo.ilike.%pdf%,tipo.ilike.%preguntero%')
-        .order('creado_at', { ascending: false });
+      const resources = (await fetchMateriaRecursos(supabase, materiaId)).filter((resource) => {
+        const tipo = (resource.tipo ?? '').toLowerCase();
+        return tipo.includes('pdf') || tipo.includes('preguntero') || tipo.includes('tp');
+      });
 
-      if (error) {
-        console.error('Load recursos error:', error);
-        setRecursosPdf([]);
-        setRecursosError(getRecursosErrorMessage());
-      } else {
-        const resources = data || [];
-        if (!authUser) {
-          setRecursosPdf(resources);
-          return;
-        }
-
-        const checkedResources = await Promise.all(
-          resources.map(async (resource) => ({
-            resource,
-            exists: resource.url_archivo ? await checkResourceExists(resource.url_archivo) : false,
-          }))
-        );
-
-        setRecursosPdf(checkedResources.filter((item) => item.exists).map((item) => item.resource));
+      if (!authUser) {
+        setRecursosPdf(resources);
+        return;
       }
+
+      const checkedResources = await Promise.all(
+        resources.map(async (resource) => ({
+          resource,
+          exists: resource.url_archivo ? await checkResourceExists(resource.url_archivo) : false,
+        }))
+      );
+
+      setRecursosPdf(checkedResources.filter((item) => item.exists).map((item) => item.resource));
     } catch (error) {
       console.error('Load recursos error:', error);
       setRecursosPdf([]);
@@ -307,6 +304,23 @@ export default function MateriaContent({
       setRecursosLoading(false);
     }
   }, [authUser, materiaId]);
+
+  const loadResourceVotes = useCallback(
+    async (resourceIds: string[]) => {
+      if (resourceIds.length === 0) {
+        setResourceVotes({});
+        return;
+      }
+
+      try {
+        const summaries = await fetchResourceVoteSummaries(supabase, resourceIds, authUser?.id);
+        setResourceVotes(summaries);
+      } catch (error) {
+        console.error('Load resource votes error:', error);
+      }
+    },
+    [authUser?.id]
+  );
 
   useEffect(() => {
     const initData = async () => {
@@ -398,6 +412,15 @@ export default function MateriaContent({
   }, [activeTab, loadRecursosPdf]);
 
   useEffect(() => {
+    const resourceResumenIds = resumenes
+      .filter((resumen) => resumen.id.startsWith('recurso-'))
+      .map((resumen) => resumen.id.replace('recurso-', ''));
+    const recursoIds = recursosPdf.map((resource) => resource.id);
+    const allIds = Array.from(new Set([...resourceResumenIds, ...recursoIds]));
+    void loadResourceVotes(allIds);
+  }, [loadResourceVotes, recursosPdf, resumenes]);
+
+  useEffect(() => {
     async function syncDashboardSubject() {
       if (!authUser || !materiaId || !nombre || nombre === 'Cargando...') {
         return;
@@ -433,20 +456,58 @@ export default function MateriaContent({
   }, [authUser, materiaId, nombre]);
 
   const resumenesFiltrados = useMemo(
-    () => resumenes.filter((resumen) => resumen.title.toLowerCase().includes(busqueda.toLowerCase())),
-    [busqueda, resumenes]
+    () =>
+      [...resumenes]
+        .filter((resumen) => resumen.title.toLowerCase().includes(busqueda.toLowerCase()))
+        .sort((a, b) => {
+          const aResourceId = a.id.startsWith('recurso-') ? a.id.replace('recurso-', '') : null;
+          const bResourceId = b.id.startsWith('recurso-') ? b.id.replace('recurso-', '') : null;
+          const aScore = aResourceId ? (resourceVotes[aResourceId]?.score ?? 0) : (a.score ?? 0);
+          const bScore = bResourceId ? (resourceVotes[bResourceId]?.score ?? 0) : (b.score ?? 0);
+          if (bScore !== aScore) return bScore - aScore;
+          return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+        }),
+    [busqueda, resourceVotes, resumenes]
   );
   const recursosFiltrados = useMemo(
     () =>
-      recursosPdf.filter(
-        (recurso) =>
-          recurso.materia_id === materiaId &&
-          Boolean(recurso.url_archivo) &&
-          ((recurso.tipo ?? '').toLowerCase().includes('pdf') ||
-            (recurso.tipo ?? '').toLowerCase().includes('preguntero'))
+      sortResourcesByVotes(
+        recursosPdf.filter(
+          (recurso) =>
+            recurso.materia_id === materiaId &&
+            Boolean(recurso.url_archivo) &&
+            (activeTab === 'trabajos'
+              ? (recurso.tipo ?? '').toLowerCase().includes('tp')
+              : (recurso.tipo ?? '').toLowerCase().includes('preguntero'))
+        ),
+        resourceVotes
       ),
-    [materiaId, recursosPdf]
+    [activeTab, materiaId, recursosPdf, resourceVotes]
   );
+
+  const voteResource = async (resourceId: string, voteType: 1 | -1) => {
+    if (!authUser) return;
+
+    setResourceVoteLoading(resourceId);
+    try {
+      await upsertResourceVote(supabase, {
+        userId: authUser.id,
+        resourceId,
+        voteType,
+      });
+      await loadResourceVotes([resourceId, ...Object.keys(resourceVotes)]);
+    } catch (error) {
+      console.error('Resource vote error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'No pudimos guardar tu voto',
+        description: 'Intentá nuevamente en unos segundos.',
+        duration: 3000,
+      });
+    } finally {
+      setResourceVoteLoading('');
+    }
+  };
 
   const getRecursoPublicUrl = (resourcePath: string) => {
     if (/^https?:\/\//i.test(resourcePath)) {
@@ -491,21 +552,6 @@ export default function MateriaContent({
     }
 
     return sessionData.session;
-  };
-
-  const getPdfViewerUrl = async (resourcePath: string) => {
-    const response = await fetch('/api/pdf-view-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ path: resourcePath }),
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const payload = (await response.json()) as { url?: string };
-    return payload.url ?? null;
   };
 
   const getStorageObjectPath = (resourcePath: string) => {
@@ -580,7 +626,7 @@ export default function MateriaContent({
       title: recurso.nombre,
       subjectId: materiaId,
       subjectName: nombre,
-      type: 'Preguntero',
+      type: (recurso.tipo ?? '').toLowerCase().includes('tp') ? 'TP' : 'Preguntero',
       href: data.signedUrl,
       openedAt: new Date().toISOString(),
     });
@@ -803,6 +849,12 @@ export default function MateriaContent({
               <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 {resumenesFiltrados.map((resumen) => {
                   const resumenUrl = resumen.file_url ? getRecursoPublicUrl(resumen.file_url) : null;
+                  const resourceId = resumen.id.startsWith('recurso-')
+                    ? resumen.id.replace('recurso-', '')
+                    : null;
+                  const resourceVoteSummary = resourceId
+                    ? (resourceVotes[resourceId] ?? getDefaultResourceVoteSummary())
+                    : null;
 
                   return (
                     <article
@@ -846,27 +898,23 @@ export default function MateriaContent({
                         <>
                           <button
                             type="button"
-                            onClick={async () => {
-                              const viewerUrl = await getPdfViewerUrl(resumen.file_url!);
-                              if (!viewerUrl) {
-                                toast({
-                                  variant: 'destructive',
-                                  title: 'No pudimos abrir el visor',
-                                  description: 'Intenta nuevamente en unos segundos.',
-                                  duration: 2800,
-                                });
-                                return;
-                              }
-
-                              setPreviewDocument({
-                                title: resumen.title,
-                                url: viewerUrl,
-                              });
+                            onClick={() => {
+                              const resourceId = resumen.id.startsWith('recurso-')
+                                ? resumen.id.replace('recurso-', '')
+                                : undefined;
+                              const baseRoute = getResourceRoute(
+                                materiaId,
+                                'resumen-modulo',
+                                nombre,
+                                resourceId
+                              );
+                              const separator = baseRoute.includes('?') ? '&' : '?';
+                              router.push(`${baseRoute}${separator}modulo=${activeUnidad}`);
                             }}
                             className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                           >
                             <Eye className="h-4 w-4" />
-                            Ver
+                            Leer
                           </button>
                           <button
                             type="button"
@@ -895,17 +943,35 @@ export default function MateriaContent({
 
                       {isUserLogged ? (
                         <div className="ml-auto flex items-center gap-2">
+                          {resourceVoteSummary ? (
+                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                              {resourceVoteSummary.score >= 0 ? '+' : ''}
+                              {resourceVoteSummary.score} ranking
+                            </span>
+                          ) : null}
                           <button
-                            onClick={() => void voteResumen(resumen.id, 1)}
-                            disabled={voteLoading === resumen.id}
-                            className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-60"
+                            onClick={() =>
+                              resourceId ? void voteResource(resourceId, 1) : void voteResumen(resumen.id, 1)
+                            }
+                            disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
+                            className={`rounded-full border p-2 transition disabled:opacity-60 ${
+                              resourceVoteSummary?.userVote === 1
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                                : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
+                            }`}
                           >
                             <ThumbsUp className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => void voteResumen(resumen.id, -1)}
-                            disabled={voteLoading === resumen.id}
-                            className="rounded-full border border-slate-200 p-2 text-slate-500 transition hover:border-rose-300 hover:text-rose-600 disabled:opacity-60"
+                            onClick={() =>
+                              resourceId ? void voteResource(resourceId, -1) : void voteResumen(resumen.id, -1)
+                            }
+                            disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
+                            className={`rounded-full border p-2 transition disabled:opacity-60 ${
+                              resourceVoteSummary?.userVote === -1
+                                ? 'border-rose-300 bg-rose-50 text-rose-600'
+                                : 'border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600'
+                            }`}
                           >
                             <ThumbsDown className="h-4 w-4" />
                           </button>
@@ -918,71 +984,75 @@ export default function MateriaContent({
               </div>
             )}
           </div>
-        ) : activeTab === 'pregunteros' ? (
+        ) : activeTab === 'pregunteros' || activeTab === 'trabajos' ? (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {[
-                { parcial: 1, titulo: 'Parcial 1', icon: Zap },
-                { parcial: 2, titulo: 'Parcial 2', icon: Trophy },
-                { parcial: 1, titulo: 'Premium Parcial 1 (50 preguntas)', icon: Crown, premium: true },
-                { parcial: 2, titulo: 'Premium Parcial 2 (50 preguntas)', icon: Crown, premium: true },
-              ].map((simulador) => {
-                const Icon = simulador.icon;
-                return (
-                  <article
-                    key={`${simulador.parcial}-${simulador.titulo}`}
-                    className={
-                      simulador.premium
-                        ? 'rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-indigo-50 p-6 shadow-[0_12px_36px_rgba(99,102,241,0.18)]'
-                        : 'rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]'
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-slate-500">Simulador</p>
-                        <h3 className="mt-1 text-2xl font-bold text-slate-900">{simulador.titulo}</h3>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">
-                          {simulador.premium
-                            ? 'Basado en ultimos examenes validados. Acceso exclusivo para usuarios premium.'
-                            : '30 preguntas al azar de la materia actual para entrenar examen real.'}
-                        </p>
-                        {simulador.premium ? (
-                          <span className="mt-3 inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
-                            Solo Premium
-                          </span>
-                        ) : null}
-                      </div>
-                      <div
-                        className={
-                          simulador.premium
-                            ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-indigo-100 text-amber-700'
-                            : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600'
-                        }
-                      >
-                        <Icon className="h-5 w-5" />
-                      </div>
-                    </div>
-                    <Link
-                      href={
-                        simulador.premium
-                          ? `/simulador/premium/${materiaId}/${simulador.parcial}`
-                          : `/simulador/${materiaId}/${simulador.parcial}`
-                      }
+            {activeTab === 'pregunteros' ? (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {[
+                  { parcial: 1, titulo: 'Parcial 1', icon: Zap },
+                  { parcial: 2, titulo: 'Parcial 2', icon: Trophy },
+                  { parcial: 1, titulo: 'Premium Parcial 1 (50 preguntas)', icon: Crown, premium: true },
+                  { parcial: 2, titulo: 'Premium Parcial 2 (50 preguntas)', icon: Crown, premium: true },
+                ].map((simulador) => {
+                  const Icon = simulador.icon;
+                  return (
+                    <article
+                      key={`${simulador.parcial}-${simulador.titulo}`}
                       className={
                         simulador.premium
-                          ? 'mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-indigo-700 hover:to-violet-700'
-                          : 'mt-6 inline-flex items-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0]'
+                          ? 'rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-indigo-50 p-6 shadow-[0_12px_36px_rgba(99,102,241,0.18)]'
+                          : 'rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]'
                       }
                     >
-                      {simulador.premium ? 'Iniciar Simulador Premium' : 'Iniciar Simulador Aleatorio'}
-                    </Link>
-                  </article>
-                );
-              })}
-            </div>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-slate-500">Simulador</p>
+                          <h3 className="mt-1 text-2xl font-bold text-slate-900">{simulador.titulo}</h3>
+                          <p className="mt-3 text-sm leading-6 text-slate-600">
+                            {simulador.premium
+                              ? 'Basado en ultimos examenes validados. Acceso exclusivo para usuarios premium.'
+                              : '30 preguntas al azar de la materia actual para entrenar examen real.'}
+                          </p>
+                          {simulador.premium ? (
+                            <span className="mt-3 inline-flex rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-bold text-indigo-700">
+                              Solo Premium
+                            </span>
+                          ) : null}
+                        </div>
+                        <div
+                          className={
+                            simulador.premium
+                              ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-100 to-indigo-100 text-amber-700'
+                              : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600'
+                          }
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                      </div>
+                      <Link
+                        href={
+                          simulador.premium
+                            ? `/simulador/premium/${materiaId}/${simulador.parcial}`
+                            : `/simulador/${materiaId}/${simulador.parcial}`
+                        }
+                        className={
+                          simulador.premium
+                            ? 'mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-indigo-700 hover:to-violet-700'
+                            : 'mt-6 inline-flex items-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0]'
+                        }
+                      >
+                        {simulador.premium ? 'Iniciar Simulador Premium' : 'Iniciar Simulador Aleatorio'}
+                      </Link>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : null}
 
             <section className="space-y-4">
-              <h2 className="text-2xl font-bold text-slate-900">Modelos de Examen y Pregunteros PDF</h2>
+              <h2 className="text-2xl font-bold text-slate-900">
+                {activeTab === 'trabajos' ? 'Trabajos prácticos PDF' : 'Modelos de examen y pregunteros PDF'}
+              </h2>
 
               {recursosLoading ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
@@ -991,7 +1061,7 @@ export default function MateriaContent({
               ) : recursosError ? (
                 <MateriaSectionState
                   icon={FileText}
-                  title="No pudimos cargar los pregunteros"
+                  title={activeTab === 'trabajos' ? 'No pudimos cargar los trabajos prácticos' : 'No pudimos cargar los pregunteros'}
                   description={recursosError}
                   tone="warning"
                   actionLabel="Reintentar carga"
@@ -1000,12 +1070,17 @@ export default function MateriaContent({
               ) : recursosFiltrados.length === 0 ? (
                 <MateriaSectionState
                   icon={FileText}
-                  title="Todavía no hay pregunteros publicados"
-                  description="Cuando publiquemos material nuevo para esta materia, lo vas a ver acá."
+                  title={activeTab === 'trabajos' ? 'Todavía no hay trabajos prácticos publicados' : 'Todavía no hay pregunteros publicados'}
+                  description={
+                    activeTab === 'trabajos'
+                      ? 'Cuando publiquemos trabajos prácticos para esta materia, los vas a ver acá.'
+                      : 'Cuando publiquemos material nuevo para esta materia, lo vas a ver acá.'
+                  }
                 />
               ) : (
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {recursosFiltrados.map((recurso) => {
+                    const voteSummary = resourceVotes[recurso.id] ?? getDefaultResourceVoteSummary();
                     return (
                       <article
                         key={recurso.id}
@@ -1019,45 +1094,50 @@ export default function MateriaContent({
                         </div>
 
                         <div className="flex shrink-0 items-center gap-2">
+                          <div className="hidden items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 md:inline-flex">
+                            <ThumbsUp className="h-3 w-3" />
+                            <span>{voteSummary.likes}</span>
+                            <ThumbsDown className="ml-1 h-3 w-3" />
+                            <span>{voteSummary.dislikes}</span>
+                          </div>
+                          {isUserLogged ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => void voteResource(recurso.id, 1)}
+                                disabled={resourceVoteLoading === recurso.id}
+                                className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
+                                  voteSummary.userVote === 1
+                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                                    : 'border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600'
+                                }`}
+                              >
+                                <ThumbsUp className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void voteResource(recurso.id, -1)}
+                                disabled={resourceVoteLoading === recurso.id}
+                                className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
+                                  voteSummary.userVote === -1
+                                    ? 'border-rose-300 bg-rose-50 text-rose-600'
+                                    : 'border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-600'
+                                }`}
+                              >
+                                <ThumbsDown className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          ) : null}
                           <button
                             type="button"
-                            onClick={async () => {
-                              if (!recurso.url_archivo) return;
-                              const viewerUrl = await getPdfViewerUrl(recurso.url_archivo);
-                              if (!viewerUrl) {
-                                toast({
-                                  variant: 'destructive',
-                                  title: 'No pudimos abrir el visor',
-                                  description: 'Intenta nuevamente en unos segundos.',
-                                  duration: 2800,
-                                });
-                                return;
-                              }
-
-                              const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-                              if (isMobile) {
-                                window.location.assign(viewerUrl);
-                              } else {
-                                setPreviewDocument({
-                                  title: recurso.nombre,
-                                  url: viewerUrl,
-                                });
-                              }
-                              pushRecentResource({
-                                id: recurso.id,
-                                title: recurso.nombre,
-                                subjectId: materiaId,
-                                subjectName: nombre,
-                                type: 'Preguntero',
-                                href: viewerUrl,
-                                openedAt: new Date().toISOString(),
-                              });
-                              pushActivityHit();
+                            onClick={() => {
+                              const tipoRuta = recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1');
+                              router.push(getResourceRoute(materiaId, tipoRuta, nombre, recurso.id));
                             }}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            Ver
+                            Leer
                           </button>
                           <button
                             type="button"
@@ -1075,40 +1155,8 @@ export default function MateriaContent({
               )}
             </section>
           </div>
-        ) : (
-          <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
-            <BookOpen className="mx-auto mb-4 h-10 w-10 text-slate-300" />
-            <h3 className="text-lg font-semibold text-slate-900">Seccion en construccion</h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Estamos consolidando esta parte del producto para dejar un flujo mas limpio.
-            </p>
-          </div>
-        )}
+        ) : null}
       </div>
-
-      <Dialog open={Boolean(previewDocument)} onOpenChange={(open) => !open && setPreviewDocument(null)}>
-        <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden rounded-3xl p-0">
-          <DialogHeader className="border-b border-slate-200 px-6 py-4">
-            <DialogTitle className="truncate text-xl font-bold text-slate-900">
-              {previewDocument?.title || 'Vista previa del PDF'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="h-[75vh] bg-slate-100">
-            {previewDocument?.url ? (
-              <PdfViewer
-                url={previewDocument.url}
-                title={previewDocument.title}
-                className="h-full rounded-none border-0"
-                heightClassName="h-[75vh]"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                No pudimos cargar la vista previa del documento.
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

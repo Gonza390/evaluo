@@ -21,11 +21,15 @@ export function getDashboardMateriaRoute(materiaId: string) {
   return `/dashboard/materia/${materiaId}`;
 }
 
-export function getResourceRoute(materiaId: string, tipo: string, nombre?: string) {
+export function getResourceRoute(materiaId: string, tipo: string, nombre?: string, resourceId?: string) {
   const params = new URLSearchParams({ tipo });
 
   if (nombre) {
     params.set('nombre', nombre);
+  }
+
+  if (resourceId) {
+    params.set('resource', resourceId);
   }
 
   return `/recursos/${materiaId}?${params.toString()}`;

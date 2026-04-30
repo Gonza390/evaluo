@@ -113,6 +113,35 @@ export interface MonetizacionStats {
   }>;
 }
 
+export interface MateriaImportEntryInput {
+  materia: string;
+  carreras: string[];
+}
+
+export interface MateriaImportResult {
+  success: boolean;
+  message: string;
+  carrerasCreated?: number;
+  materiasCreated?: number;
+  materiasReused?: number;
+  relacionesCreated?: number;
+  filasProcesadas?: number;
+  carrerasNoEncontradas?: string[];
+  materiasSinCarrerasValidas?: string[];
+}
+
+function normalizeAdminText(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[–—]/g, '-')
+    .replace(/\blic\.?\s+en\b/g, 'licenciatura en')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
 type AdminSupabaseClient = ReturnType<typeof createAdminClient>;
 
 export interface GlobalQuestionRankingRow {
@@ -153,6 +182,27 @@ const GENERIC_DISTRACTORS = new Set([
 
 function normalizeQuestion(question: string) {
   return question.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function normalizeOptionValue(value: string) {
+  return normalizeQuestion(
+    value
+      .replace(/^[a-dA-D][\).:\-]\s*/, '')
+      .replace(/^\d+[\).:\-]\s*/, '')
+      .trim()
+  );
+}
+
+function buildQuestionFingerprint(question: QuestionRecord) {
+  const enunciado = normalizeQuestion(question.enunciado);
+  const respuestaCorrecta = normalizeOptionValue(question.respuesta_correcta);
+  const opciones = dedupeOptions(question.opciones)
+    .map((option) => normalizeOptionValue(option))
+    .filter(Boolean)
+    .sort()
+    .join('|');
+
+  return `${enunciado}::${respuestaCorrecta}::${opciones}`;
 }
 
 function dedupeOptions(options: string[]): string[] {
@@ -459,7 +509,7 @@ function enrichQuestionsWithSource(questions: QuestionRecord[], sourceText: stri
 export async function analizarMaterialConIA(
   filePath: string,
   materiaId: string,
-  _tipo: string,
+  tipo: string,
   parcial: number,
   universidadId: string,
   carreraId: string | null,
@@ -519,24 +569,53 @@ export async function analizarMaterialConIA(
 
     const { data: existingQuestions, error: existingError } = await supabase
       .from('preguntas_banco')
-      .select('enunciado')
+      .select('enunciado, respuesta_correcta, opciones')
       .eq('materia_id', materiaId);
 
     if (existingError) {
       throw existingError;
     }
 
+    const dedupeAgainstPregunteros = tipo === 'Preguntero';
+
     const existingNormalized = new Set(
       (existingQuestions ?? []).map((item) => normalizeQuestion(item.enunciado))
     );
-
-    const uniqueParsedQuestions = Array.from(
-      new Map(parsedQuestions.map((q) => [normalizeQuestion(q.enunciado), q])).values()
+    const existingFingerprints = new Set(
+      dedupeAgainstPregunteros
+        ? (existingQuestions ?? []).map((item) =>
+            buildQuestionFingerprint({
+              enunciado: item.enunciado,
+              respuesta_correcta: item.respuesta_correcta,
+              opciones: Array.isArray(item.opciones)
+                ? (item.opciones.filter((option): option is string => typeof option === 'string') as string[])
+                : [],
+            })
+          )
+        : []
     );
+
+    const parsedEntries = new Map<string, QuestionRecord>();
+    for (const question of parsedQuestions) {
+      const key = dedupeAgainstPregunteros
+        ? buildQuestionFingerprint(question)
+        : normalizeQuestion(question.enunciado);
+      if (!parsedEntries.has(key)) {
+        parsedEntries.set(key, question);
+      }
+    }
+
+    const uniqueParsedQuestions = Array.from(parsedEntries.values());
     const invalidQuestions = uniqueParsedQuestions.filter((q) => !q.enunciado || q.opciones.length < 2).length;
 
     const questionsToInsert = uniqueParsedQuestions
-      .filter((question) => !existingNormalized.has(normalizeQuestion(question.enunciado)))
+      .filter((question) => {
+        if (dedupeAgainstPregunteros) {
+          return !existingFingerprints.has(buildQuestionFingerprint(question));
+        }
+
+        return !existingNormalized.has(normalizeQuestion(question.enunciado));
+      })
       .map((question) => ({
         materia_id: materiaId,
         enunciado: question.enunciado,
@@ -674,6 +753,381 @@ export async function actualizarPromptSistema(
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Error al actualizar el prompt.',
+    };
+  }
+}
+
+export async function crearMateriaCompartidaAdmin(input: {
+  nombre: string;
+  carreraIds: string[];
+}): Promise<{ success: boolean; materiaId?: string; message: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const nombre = input.nombre.trim();
+    const carreraIds = Array.from(new Set(input.carreraIds.filter(Boolean)));
+
+    if (!nombre) {
+      return { success: false, message: 'El nombre de la materia es obligatorio.' };
+    }
+
+    if (carreraIds.length === 0) {
+      return { success: false, message: 'Selecciona al menos una carrera.' };
+    }
+
+    const { data: existingMaterias, error: existingError } = await admin
+      .from('materias')
+      .select('id, nombre, carrera_id')
+      .order('nombre');
+
+    if (existingError) throw existingError;
+
+    const normalizedName = normalizeAdminText(nombre);
+    const existingMateria = (existingMaterias ?? []).find(
+      (materia) => normalizeAdminText(materia.nombre) === normalizedName
+    );
+
+    let materiaId = existingMateria?.id ?? null;
+
+    if (!materiaId) {
+      const { data: createdMateria, error: createError } = await admin
+        .from('materias')
+        .insert({
+          nombre,
+          carrera_id: carreraIds[0] ?? null,
+          es_general: false,
+        })
+        .select('id')
+        .single();
+
+      if (createError || !createdMateria?.id) {
+        throw createError ?? new Error('No se pudo crear la materia.');
+      }
+
+      materiaId = createdMateria.id;
+    }
+
+    const { data: existingRelations, error: relationsError } = await admin
+      .from('carrera_materias')
+      .select('carrera_id')
+      .eq('materia_id', materiaId);
+
+    if (relationsError) throw relationsError;
+
+    const existingCareerIds = new Set(
+      (existingRelations ?? []).map((relation) => relation.carrera_id).filter(Boolean)
+    );
+
+    const rowsToInsert = carreraIds
+      .filter((carreraId) => !existingCareerIds.has(carreraId))
+      .map((carreraId) => ({
+        carrera_id: carreraId,
+        materia_id: materiaId,
+      }));
+
+    if (rowsToInsert.length > 0) {
+      const { error: insertRelationsError } = await admin
+        .from('carrera_materias')
+        .insert(rowsToInsert);
+
+      if (insertRelationsError) throw insertRelationsError;
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      materiaId,
+      message:
+        rowsToInsert.length > 0
+          ? 'Materia creada y asignada a las carreras seleccionadas.'
+          : 'La materia ya existia y mantuvimos sus asignaciones actuales.',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : 'No se pudo crear la materia compartida.',
+    };
+  }
+}
+
+export async function desasignarMateriaDeCarreraAdmin(input: {
+  materiaId: string;
+  carreraId: string;
+}): Promise<{ success: boolean; message: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    if (!input.materiaId || !input.carreraId) {
+      return { success: false, message: 'Faltan datos para desasignar la materia.' };
+    }
+
+    const { error: relationError } = await admin
+      .from('carrera_materias')
+      .delete()
+      .eq('materia_id', input.materiaId)
+      .eq('carrera_id', input.carreraId);
+
+    if (relationError) throw relationError;
+
+    const { data: remainingRelations, error: remainingError } = await admin
+      .from('carrera_materias')
+      .select('id', { count: 'exact' })
+      .eq('materia_id', input.materiaId);
+
+    if (remainingError) throw remainingError;
+
+    if ((remainingRelations ?? []).length === 0) {
+      await admin
+        .from('materias')
+        .update({ carrera_id: null })
+        .eq('id', input.materiaId);
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      message: 'La materia ya no aparece en esa carrera.',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : 'No se pudo desasignar la materia de la carrera.',
+    };
+  }
+}
+
+export async function importarMateriasDesdeExcelAdmin(
+  input: {
+    universidadId: string;
+    entries: MateriaImportEntryInput[];
+  }
+): Promise<MateriaImportResult> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const universidadId = input.universidadId?.trim();
+    const entries = input.entries;
+
+    if (!universidadId) {
+      return {
+        success: false,
+        message: 'Selecciona una universidad antes de importar la malla.',
+      };
+    }
+
+    const normalizedEntriesMap = new Map<string, { materia: string; carreras: Set<string> }>();
+
+    for (const rawEntry of entries) {
+      const materia = rawEntry.materia.trim();
+      if (!materia) continue;
+
+      const normalizedMateria = normalizeAdminText(materia);
+      const current =
+        normalizedEntriesMap.get(normalizedMateria) ??
+        { materia, carreras: new Set<string>() };
+
+      for (const carrera of rawEntry.carreras) {
+        const cleanCarrera = carrera.trim();
+        if (cleanCarrera) current.carreras.add(cleanCarrera);
+      }
+
+      normalizedEntriesMap.set(normalizedMateria, current);
+    }
+
+    const normalizedEntries = Array.from(normalizedEntriesMap.values()).map((entry) => ({
+      materia: entry.materia,
+      carreras: Array.from(entry.carreras),
+    }));
+
+    if (normalizedEntries.length === 0) {
+      return {
+        success: false,
+        message: 'El archivo no trajo materias validas para importar.',
+      };
+    }
+
+    const [{ data: carrerasRows, error: carrerasError }, { data: materiasRows, error: materiasError }] =
+      await Promise.all([
+        admin.from('carreras').select('id, nombre').order('nombre'),
+        admin.from('materias').select('id, nombre, carrera_id').order('nombre'),
+      ]);
+
+    if (carrerasError) throw carrerasError;
+    if (materiasError) throw materiasError;
+
+    const careerByNormalizedName = new Map(
+      (carrerasRows ?? []).map((carrera) => [normalizeAdminText(carrera.nombre), carrera])
+    );
+    const materiaByNormalizedName = new Map(
+      (materiasRows ?? []).map((materia) => [normalizeAdminText(materia.nombre), materia])
+    );
+
+    const missingCareerNames = Array.from(
+      new Set(
+        normalizedEntries.flatMap((entry) =>
+          entry.carreras.filter((carreraName) => !careerByNormalizedName.has(normalizeAdminText(carreraName)))
+        )
+      )
+    );
+
+    let carrerasCreated = 0;
+    if (missingCareerNames.length > 0) {
+      const rowsToCreate = missingCareerNames.map((nombre) => ({
+        nombre,
+        universidad_id: universidadId,
+      }));
+
+      const { data: createdCarreras, error: createCarrerasError } = await admin
+        .from('carreras')
+        .insert(rowsToCreate)
+        .select('id, nombre, universidad_id');
+
+      if (createCarrerasError) throw createCarrerasError;
+
+      carrerasCreated = createdCarreras?.length ?? 0;
+      for (const carrera of createdCarreras ?? []) {
+        careerByNormalizedName.set(normalizeAdminText(carrera.nombre), carrera);
+      }
+    }
+
+    const carreraIdsByMateria = new Map<string, Set<string>>();
+    const materiasSinCarrerasValidas: string[] = [];
+
+    for (const entry of normalizedEntries) {
+      const normalizedMateria = normalizeAdminText(entry.materia);
+      const validCareerIds = new Set<string>();
+
+      for (const carreraName of entry.carreras) {
+        const carreraRow = careerByNormalizedName.get(normalizeAdminText(carreraName));
+        if (!carreraRow?.id) {
+          continue;
+        }
+        validCareerIds.add(carreraRow.id);
+      }
+
+      if (validCareerIds.size === 0) {
+        materiasSinCarrerasValidas.push(entry.materia);
+        continue;
+      }
+
+      carreraIdsByMateria.set(normalizedMateria, validCareerIds);
+    }
+
+    const materiasValidas = carreraIdsByMateria.size;
+
+    if (materiasValidas === 0) {
+      return {
+        success: false,
+        message: 'No encontramos carreras validas para asociar en este archivo.',
+        carrerasCreated,
+        materiasCreated: 0,
+        materiasReused: 0,
+        relacionesCreated: 0,
+        filasProcesadas: normalizedEntries.length,
+        carrerasNoEncontradas: [],
+        materiasSinCarrerasValidas,
+      };
+    }
+
+    const materiasToCreate = Array.from(carreraIdsByMateria.entries())
+      .filter(([normalizedMateria]) => !materiaByNormalizedName.has(normalizedMateria))
+      .map(([normalizedMateria, carreraIds]) => {
+        const sourceEntry = normalizedEntries.find(
+          (entry) => normalizeAdminText(entry.materia) === normalizedMateria
+        );
+
+        return {
+          nombre: sourceEntry?.materia ?? normalizedMateria,
+          carrera_id: Array.from(carreraIds)[0] ?? null,
+          es_general: false,
+        };
+      });
+
+    let materiasCreated = 0;
+    if (materiasToCreate.length > 0) {
+      const { data: createdMaterias, error: createError } = await admin
+        .from('materias')
+        .insert(materiasToCreate)
+        .select('id, nombre, carrera_id');
+
+      if (createError) throw createError;
+
+      materiasCreated = createdMaterias?.length ?? 0;
+      for (const materia of createdMaterias ?? []) {
+        materiaByNormalizedName.set(normalizeAdminText(materia.nombre), materia);
+      }
+    }
+
+    const materiaIds = Array.from(new Set(Array.from(carreraIdsByMateria.keys())
+      .map((normalizedMateria) => materiaByNormalizedName.get(normalizedMateria)?.id)
+      .filter((id): id is string => Boolean(id))));
+
+    const existingRelations =
+      materiaIds.length > 0
+        ? await admin
+            .from('carrera_materias')
+            .select('materia_id, carrera_id')
+            .in('materia_id', materiaIds)
+        : { data: [], error: null };
+
+    if (existingRelations.error) throw existingRelations.error;
+
+    const existingRelationKeys = new Set(
+      (existingRelations.data ?? [])
+        .filter((relation) => relation.materia_id && relation.carrera_id)
+        .map((relation) => `${relation.materia_id}::${relation.carrera_id}`)
+    );
+
+    const rowsToInsert: Array<{ materia_id: string; carrera_id: string }> = [];
+
+    for (const [normalizedMateria, carreraIds] of carreraIdsByMateria.entries()) {
+      const materiaRow = materiaByNormalizedName.get(normalizedMateria);
+      if (!materiaRow?.id) continue;
+
+      for (const carreraId of carreraIds) {
+        const relationKey = `${materiaRow.id}::${carreraId}`;
+        if (existingRelationKeys.has(relationKey)) continue;
+
+        existingRelationKeys.add(relationKey);
+        rowsToInsert.push({
+          materia_id: materiaRow.id,
+          carrera_id: carreraId,
+        });
+      }
+    }
+
+    if (rowsToInsert.length > 0) {
+      const { error: insertRelationsError } = await admin
+        .from('carrera_materias')
+        .insert(rowsToInsert);
+
+      if (insertRelationsError) throw insertRelationsError;
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      message: `Importacion completa: ${carrerasCreated} carreras nuevas, ${materiasCreated} materias nuevas y ${rowsToInsert.length} asignaciones creadas.`,
+      carrerasCreated,
+      materiasCreated,
+      materiasReused: materiasValidas - materiasCreated,
+      relacionesCreated: rowsToInsert.length,
+      filasProcesadas: materiasValidas,
+      carrerasNoEncontradas: [],
+      materiasSinCarrerasValidas,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : 'No se pudo importar la malla de materias.',
     };
   }
 }

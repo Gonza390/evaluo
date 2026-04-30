@@ -39,6 +39,13 @@ import {
   readRecentResources,
   type DashboardRecentResource,
 } from '@/lib/dashboard-client';
+import {
+  fetchDashboardMateriaSummaries,
+  mapDashboardMateriaDetails,
+  touchDashboardMateriaState,
+  type DashboardMateriaDetailsMap,
+  type DashboardMateriaSummary,
+} from '@/lib/data/dashboard';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,19 +53,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import type { DashboardMateriaState } from '@/types/supabase';
 
-type MateriaSummary = {
-  id: string;
-  nombre: string;
-  carreraId: string | null;
-  carreraNombre: string;
-};
-
-type MateriaDetailsMap = Record<
-  string,
-  {
-    careerName: string;
-  }
->;
+type MateriaSummary = DashboardMateriaSummary;
+type MateriaDetailsMap = DashboardMateriaDetailsMap;
 
 type SimuladorInProgressSnapshot = {
   version: 1;
@@ -136,23 +132,6 @@ function writeLocalState(state: DashboardState) {
   localStorage.setItem(STORAGE_KEYS.finishedSubjects, JSON.stringify(state.finishedSubjects));
 }
 
-function touchMateriaState(state: DashboardState, subject: DashboardMateriaState): DashboardState {
-  const nextActiveSubjects = [
-    subject,
-    ...state.activeSubjects.filter((item) => item.id !== subject.id),
-  ].slice(0, 6);
-
-  return {
-    ...state,
-    lastSubject: subject,
-    activeSubjects: nextActiveSubjects,
-    analytics: {
-      ...state.analytics,
-      lastUpdatedAt: new Date().toISOString(),
-    },
-  };
-}
-
 function getResourceTypeLabel(type: DashboardRecentResource['type']) {
   if (type === 'TP') {
     return 'Trabajo practico';
@@ -164,49 +143,6 @@ function getResourceTypeLabel(type: DashboardRecentResource['type']) {
 function getWeeklyTotalLabel(series: Array<{ day: string; count: number }>) {
   const total = series.reduce((acc, item) => acc + item.count, 0);
   return `${total} ingresos`;
-}
-
-async function fetchMateriaSummaries(): Promise<MateriaSummary[]> {
-  const { data: materias, error: materiasError } = await supabase
-    .from('materias')
-    .select('id, nombre, carrera_id')
-    .order('nombre');
-
-  if (materiasError) {
-    throw materiasError;
-  }
-
-  const carreraIds = Array.from(
-    new Set(
-      (materias ?? [])
-        .map((materia) => materia.carrera_id)
-        .filter((id): id is string => typeof id === 'string' && id.length > 0)
-    )
-  );
-
-  let carrerasMap = new Map<string, string>();
-
-  if (carreraIds.length > 0) {
-    const { data: carreras, error: carrerasError } = await supabase
-      .from('carreras')
-      .select('id, nombre')
-      .in('id', carreraIds);
-
-    if (carrerasError) {
-      throw carrerasError;
-    }
-
-    carrerasMap = new Map((carreras ?? []).map((carrera) => [carrera.id, carrera.nombre]));
-  }
-
-  return (materias ?? []).map((materia) => ({
-    id: materia.id,
-    nombre: materia.nombre,
-    carreraId: materia.carrera_id,
-    carreraNombre: materia.carrera_id
-      ? carrerasMap.get(materia.carrera_id) ?? 'Carrera'
-      : 'Materia general',
-  }));
 }
 
 export function DashboardContent() {
@@ -231,6 +167,7 @@ export function DashboardContent() {
   const [favoriteSuggestions, setFavoriteSuggestions] = useState<MateriaSummary[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [partialInsights, setPartialInsights] = useState<PartialStudyInsights | null>(null);
+  const [partialInsightMateriaName, setPartialInsightMateriaName] = useState<string | null>(null);
   const [simuladorInProgress, setSimuladorInProgress] = useState<SimuladorInProgressSnapshot | null>(null);
 
   useEffect(() => {
@@ -332,17 +269,11 @@ export function DashboardContent() {
       }
 
       try {
-        const materias = await fetchMateriaSummaries();
+        const materias = await fetchDashboardMateriaSummaries();
         if (!isMounted) {
           return;
         }
-
-        const nextDetails = materias.reduce<MateriaDetailsMap>((acc, materia) => {
-          acc[materia.id] = { careerName: materia.carreraNombre };
-          return acc;
-        }, {});
-
-        setMateriaDetails(nextDetails);
+        setMateriaDetails(mapDashboardMateriaDetails(materias));
       } catch (error) {
         console.error('Error loading subject details:', error);
       }
@@ -421,7 +352,10 @@ export function DashboardContent() {
 
     async function loadPartialInsights() {
       if (!user) {
-        if (isMounted) setPartialInsights(null);
+        if (isMounted) {
+          setPartialInsights(null);
+          setPartialInsightMateriaName(null);
+        }
         return;
       }
 
@@ -440,14 +374,29 @@ export function DashboardContent() {
       }
 
       if (!materiaId) {
-        if (isMounted) setPartialInsights(null);
+        if (isMounted) {
+          setPartialInsights(null);
+          setPartialInsightMateriaName(null);
+        }
         return;
       }
 
-      const insights = await getPartialStudyInsights(materiaId, parcial);
-      if (isMounted) {
-        setPartialInsights(insights);
+      const [insights, materiaResponse] = await Promise.all([
+        getPartialStudyInsights(materiaId, parcial),
+        supabase.from('materias').select('nombre').eq('id', materiaId).maybeSingle(),
+      ]);
+
+      if (!isMounted) {
+        return;
       }
+
+      setPartialInsights(insights);
+      setPartialInsightMateriaName(
+        materiaResponse.data?.nombre ??
+          dashboardState.lastSubject?.name ??
+          allMaterias.find((materia) => materia.id === materiaId)?.nombre ??
+          null
+      );
     }
 
     void loadPartialInsights();
@@ -455,7 +404,7 @@ export function DashboardContent() {
     return () => {
       isMounted = false;
     };
-  }, [dashboardState.lastSubject?.id, user]);
+  }, [allMaterias, dashboardState.lastSubject?.id, dashboardState.lastSubject?.name, user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -618,7 +567,7 @@ export function DashboardContent() {
   const loadAllMaterias = async () => {
     setAllMateriasLoading(true);
     try {
-      const summaries = await fetchMateriaSummaries();
+      const summaries = await fetchDashboardMateriaSummaries();
       setAllMaterias(summaries);
     } catch (error) {
       console.error('Error loading materias:', error);
@@ -643,7 +592,7 @@ export function DashboardContent() {
     }
 
     const newSubject = { id: materia.id, name: materia.nombre };
-    const nextState = touchMateriaState(dashboardState, newSubject);
+    const nextState = touchDashboardMateriaState(dashboardState, newSubject);
 
     persistDashboardState(nextState);
     setMateriaDetails((prev) => ({
@@ -683,7 +632,7 @@ export function DashboardContent() {
   };
 
   const goToMateria = (subject: DashboardMateriaState) => {
-    persistDashboardState(touchMateriaState(dashboardState, subject));
+    persistDashboardState(touchDashboardMateriaState(dashboardState, subject));
     router.push(getMateriaRoute(subject.id));
   };
 
@@ -712,15 +661,15 @@ export function DashboardContent() {
   ];
 
   return (
-    <div className="flex-1 overflow-auto bg-[radial-gradient(circle_at_top_right,rgba(79,93,255,0.14),transparent_38%),radial-gradient(circle_at_18%_18%,rgba(16,185,129,0.10),transparent_30%),#F3F6FB] font-sans">
+    <div className="flex-1 overflow-auto bg-[#f7f9fc] font-sans">
       <div className="w-full p-2 md:p-3">
         <div className="mx-auto max-w-6xl lg:[zoom:0.9]">
-          <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-start xl:justify-between">
+          <div className="mb-4 flex flex-col gap-3 rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm shadow-slate-200/70 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <h1 className="bg-gradient-to-r from-[#0F172A] via-[#1E3A8A] to-[#4F46E5] bg-clip-text text-lg font-bold tracking-[-0.04em] text-transparent md:text-xl">
-                {`¡Hola, ${getUserName()}!`}
+              <h1 className="text-lg font-bold tracking-[-0.04em] text-slate-950 md:text-xl">
+                {`Hola, ${getUserName()}!`}
               </h1>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-sm text-slate-500">
                 Un resumen simple de lo ultimo que tocaste.
               </p>
             </div>
@@ -733,11 +682,11 @@ export function DashboardContent() {
                     value={exploreQuery}
                     onChange={(event) => setExploreQuery(event.target.value)}
                     placeholder="Buscar materias..."
-                    className="h-9 rounded-lg border-slate-200/80 bg-white/90 pl-9 pr-16 text-sm shadow-sm shadow-slate-200/60 backdrop-blur focus-visible:ring-[#4F5DFF]/25"
+                    className="h-9 rounded-lg border-slate-200 bg-white pl-9 pr-16 text-sm shadow-sm focus-visible:ring-[#4F5DFF]/25"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 inline-flex h-6 -translate-y-1/2 items-center rounded-md bg-gradient-to-r from-[#0F172A] to-[#2563EB] px-2 text-[10px] font-semibold text-white transition hover:opacity-95"
+                    className="absolute right-1.5 top-1/2 inline-flex h-6 -translate-y-1/2 items-center rounded-md bg-slate-950 px-2 text-[10px] font-semibold text-white transition hover:bg-slate-800"
                   >
                     Explorar
                   </button>
@@ -754,6 +703,21 @@ export function DashboardContent() {
               {dashboardError}
             </div>
           ) : null}
+
+          <div className="mb-4 grid gap-3 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-4 shadow-sm shadow-slate-200/60 backdrop-blur">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Ultima materia</p>
+              <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-slate-950">
+                {dashboardState.lastSubject?.name ?? 'Todavia no abriste una materia'}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-4 shadow-sm shadow-slate-200/60 backdrop-blur">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Materias finalizadas</p>
+              <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-slate-950">
+                {dashboardState.finishedSubjects.length.toLocaleString('es-AR')}
+              </p>
+            </div>
+          </div>
 
           <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
             <Card
@@ -960,6 +924,12 @@ export function DashboardContent() {
                       </div>
                     </div>
                     <div className="space-y-2 text-sm">
+                      <p className="text-slate-700">
+                        Materia:{' '}
+                        <span className="font-semibold">
+                          {partialInsightMateriaName ?? 'Materia seleccionada'}
+                        </span>
+                      </p>
                       <p className="text-slate-700">
                         Parcial {partialInsights.parcial} · {partialInsights.preguntasRespondidasParcial}/{partialInsights.totalPreguntasParcial} preguntas respondidas
                       </p>
@@ -1200,3 +1170,5 @@ export function DashboardContent() {
     </div>
   );
 }
+
+
