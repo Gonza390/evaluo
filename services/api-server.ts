@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase-client';
+import { createClientServer } from '@/lib/supabase-server';
 
 export interface Carrera {
   id: string;
@@ -6,7 +6,19 @@ export interface Carrera {
   universidad_id?: string | null;
 }
 
+export interface Materia {
+  id: string;
+  nombre: string;
+  carrera_id?: string | null;
+}
+
+export interface Universidad {
+  id: string;
+  nombre: string;
+}
+
 export async function getCarrerasByUni(uniId: string): Promise<Carrera[]> {
+  const supabase = await createClientServer();
   const { data, error } = await supabase
     .from('carreras')
     .select('id, nombre')
@@ -17,13 +29,8 @@ export async function getCarrerasByUni(uniId: string): Promise<Carrera[]> {
   return data || [];
 }
 
-export interface Materia {
-  id: string;
-  nombre: string;
-  carrera_id?: string | null;
-}
-
 export async function getMateriasByCarrera(carreraId: string): Promise<Materia[]> {
+  const supabase = await createClientServer();
   const { data, error } = await supabase
     .from('materias')
     .select('*, carrera_materias!inner(prioridad)')
@@ -49,6 +56,7 @@ export async function getMateriasByCarrera(carreraId: string): Promise<Materia[]
 }
 
 export async function getMateriaById(materiaId: string): Promise<Materia> {
+  const supabase = await createClientServer();
   const { data, error } = await supabase
     .from('materias')
     .select('id, nombre, carrera_id')
@@ -61,6 +69,7 @@ export async function getMateriaById(materiaId: string): Promise<Materia> {
 }
 
 export async function getCarreraById(carreraId: string): Promise<Carrera> {
+  const supabase = await createClientServer();
   const { data, error } = await supabase
     .from('carreras')
     .select('id, nombre, universidad_id')
@@ -72,12 +81,8 @@ export async function getCarreraById(carreraId: string): Promise<Carrera> {
   return data;
 }
 
-export interface Universidad {
-  id: string;
-  nombre: string;
-}
-
 export async function getUniversidadById(uniId: string): Promise<Universidad> {
+  const supabase = await createClientServer();
   const { data, error } = await supabase
     .from('universidades')
     .select('id, nombre')
@@ -90,6 +95,7 @@ export async function getUniversidadById(uniId: string): Promise<Universidad> {
 }
 
 export async function getUniversidades() {
+  const supabase = await createClientServer();
   const { data, error } = await supabase.from('universidades').select('id, nombre').order('nombre');
 
   if (error) throw new Error(error.message);

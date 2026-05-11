@@ -1,5 +1,5 @@
-import { getMateriasByCarrera, getCarreraById, getUniversidadById } from '@/services/api';
-import { Materia } from '@/services/api';
+import { getMateriasByCarrera, getCarreraById, getUniversidadById } from '@/services/api-server';
+import type { Materia } from '@/services/api-server';
 import MateriaList from '@/components/materia-list';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
