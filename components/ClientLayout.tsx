@@ -19,8 +19,8 @@ function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white pb-safe lg:hidden">
-      <div className="grid grid-cols-4 items-stretch gap-1 px-2 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/90 bg-white/96 pb-safe backdrop-blur lg:hidden">
+      <div className="grid grid-cols-4 items-stretch gap-1 px-2 py-2.5">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname.startsWith(item.href);
@@ -31,8 +31,8 @@ function BottomNav() {
               href={item.href}
               className={
                 item.variant === 'cta'
-                  ? 'mx-1 flex flex-col items-center justify-center rounded-2xl bg-gradient-to-r from-[#4F5DFF] to-[#6D5EF8] px-2 py-2 text-white shadow-[0_8px_20px_rgba(79,93,255,0.30)]'
-                  : `flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 ${
+                  ? 'mx-1 flex min-h-[54px] flex-col items-center justify-center rounded-2xl bg-gradient-to-r from-[#4F5DFF] to-[#6D5EF8] px-2 py-2 text-white shadow-[0_8px_20px_rgba(79,93,255,0.30)]'
+                  : `flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 ${
                       isActive ? 'text-[#4F5DFF]' : 'text-slate-500'
                     }`
               }
@@ -73,7 +73,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
                 ? 'bg-[#F5F7FB] p-0'
                 : isLegalRoute
                   ? 'bg-white p-0'
-                : 'bg-[#F5F7FB] p-3 pt-14 pb-28 sm:p-6 sm:pt-20 lg:p-6'
+                : 'bg-[#F5F7FB] p-2.5 pt-14 pb-32 sm:p-6 sm:pt-20 lg:p-6'
           }`}
         >
           {children}

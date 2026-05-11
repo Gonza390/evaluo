@@ -430,7 +430,7 @@ export default function PdfViewer({
               <button
                 type="button"
                 onClick={() => void runSearch()}
-                className="inline-flex shrink-0 rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
+                className="inline-flex h-9 shrink-0 rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
               >
                 {loadingSearch ? 'Buscando...' : 'Buscar'}
               </button>
@@ -442,7 +442,7 @@ export default function PdfViewer({
               type="button"
               onClick={zoomOut}
               disabled={zoomIndex === 0}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
               aria-label="Alejar zoom"
             >
               <ZoomOut className="h-4 w-4" />
@@ -451,13 +451,13 @@ export default function PdfViewer({
               type="button"
               onClick={zoomIn}
               disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
               aria-label="Acercar zoom"
             >
               <ZoomIn className="h-4 w-4" />
             </button>
 
-            <div className="rounded-[1rem] border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+            <div className="min-h-9 rounded-[1rem] border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 sm:min-h-10">
               {currentPage} / {numPages || '...'}
             </div>
 
@@ -469,7 +469,7 @@ export default function PdfViewer({
                 scrollToPage(nextPage);
               }}
               disabled={!canGoPrev}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
               aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -482,7 +482,7 @@ export default function PdfViewer({
                 scrollToPage(nextPage);
               }}
               disabled={!canGoNext}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
               aria-label="Página siguiente"
             >
               <ChevronRight className="h-4 w-4" />
@@ -491,7 +491,7 @@ export default function PdfViewer({
             <button
               type="button"
               onClick={() => void toggleFullscreen()}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 sm:h-10 sm:w-10"
               aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
             >
               {isFullscreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}

@@ -57,6 +57,19 @@ const reasons = [
   },
 ];
 
+const socialStats = [
+  { value: '+10k', label: 'estudiantes usando Evaluo' },
+  { value: '+32k', label: 'documentos abiertos para estudiar' },
+  { value: '4.8/5', label: 'valoración media en materiales guardados' },
+  { value: '24/7', label: 'acceso a resúmenes, lector y simuladores' },
+];
+
+const discoverySignals = [
+  'Recursos mejor valorados',
+  'Documentos más vistos',
+  'Materiales destacados por carrera',
+];
+
 export default function Home() {
   const primaryHref = '/login';
   const primaryLabel = 'Empezar gratis';
@@ -64,8 +77,8 @@ export default function Home() {
   return (
     <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900">
       <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.18),transparent_28%),radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_24%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]">
-        <div className="mx-auto w-full max-w-[1240px] px-6 pb-20 pt-4 sm:px-8 lg:px-10 lg:pb-28">
-          <header className="animate-surface-reveal flex h-16 items-center justify-between gap-4">
+        <div className="mx-auto w-full max-w-[1240px] px-4 pb-16 pt-3 sm:px-8 lg:px-10 lg:pb-28">
+          <header className="animate-surface-reveal flex h-14 items-center justify-between gap-3 sm:h-16 sm:gap-4">
             <Link href="/" className="text-[30px] font-black tracking-[-0.04em] text-[#0F1B3D]">
               Evaluo
             </Link>
@@ -84,13 +97,13 @@ export default function Home() {
 
             <Link
               href={primaryHref}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95"
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95 sm:h-12 sm:px-6"
             >
               {primaryLabel}
             </Link>
           </header>
 
-          <div className="grid items-center gap-14 pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pt-12">
+          <div className="grid items-center gap-8 pt-8 sm:gap-10 sm:pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pt-12">
             <div className="animate-surface-reveal max-w-[620px]">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold ring-1 ring-[#C7D2FE] backdrop-blur">
                 <Sparkles className="h-4 w-4 text-[#6366F1]" />
@@ -99,47 +112,41 @@ export default function Home() {
                 </span>
               </div>
 
-              <h1 className="mt-8 text-5xl font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-6xl lg:text-[72px]">
+              <h1 className="mt-6 text-[2.85rem] font-bold leading-[0.98] tracking-[-0.06em] text-[#0F1B3D] sm:mt-8 sm:text-6xl lg:text-[72px]">
                 Aproba tus examenes con ayuda inteligente
               </h1>
 
-              <p className="mt-8 max-w-[560px] text-lg leading-8 text-slate-500 sm:text-xl">
+              <p className="mt-5 max-w-[560px] text-base leading-7 text-slate-500 sm:mt-8 sm:text-xl sm:leading-8">
                 Resuelve dudas, practica parciales y encontra materiales utiles en una sola plataforma.
               </p>
 
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
+              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
                 <Link
                   href={primaryHref}
-                  className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-8 text-base font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.24)] transition hover:translate-y-[-1px]"
+                  className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.24)] transition hover:translate-y-[-1px] sm:h-14 sm:px-8 sm:text-base"
                 >
                   {primaryLabel}
                 </Link>
                 <Link
                   href="/explorar"
-                  className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-[#2563EB]/25 bg-white px-8 text-base font-semibold text-[#2563EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition hover:border-[#2563EB]/45"
+                  className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-[#2563EB]/25 bg-white px-6 text-[15px] font-semibold text-[#2563EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition hover:border-[#2563EB]/45 sm:h-14 sm:px-8 sm:text-base"
                 >
                   <PlayCircle className="h-5 w-5" />
                   Buscar mi universidad
                 </Link>
               </div>
 
-              <div className="mt-10 grid gap-3 text-sm text-slate-500 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-100 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(15,27,61,0.05)]">
-                  <p className="text-2xl font-bold text-[#0F1B3D]">+10k</p>
-                  <p className="mt-1">estudiantes usando Evaluo</p>
-                </div>
-                <div className="rounded-2xl border border-slate-100 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(15,27,61,0.05)]">
-                  <p className="text-2xl font-bold text-[#0F1B3D]">24/7</p>
-                  <p className="mt-1">acceso a materiales y simuladores</p>
-                </div>
-                <div className="rounded-2xl border border-slate-100 bg-white/80 px-4 py-4 shadow-[0_10px_30px_rgba(15,27,61,0.05)]">
-                  <p className="text-2xl font-bold text-[#0F1B3D]">1 lugar</p>
-                  <p className="mt-1">para estudiar, practicar y repasar</p>
-                </div>
+              <div className="mt-8 grid gap-3 text-sm text-slate-500 min-[440px]:grid-cols-3 sm:mt-10">
+                {socialStats.slice(0, 3).map((stat) => (
+                  <div key={stat.label} className="surface-card rounded-2xl bg-white/85 px-4 py-4">
+                    <p className="text-2xl font-bold text-[#0F1B3D]">{stat.value}</p>
+                    <p className="mt-1">{stat.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="animate-surface-reveal relative overflow-hidden rounded-[34px] border border-white/80 bg-white shadow-[0_22px_60px_rgba(15,27,61,0.12)]" style={{ animationDelay: '120ms' }}>
+            <div className="animate-surface-reveal relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_22px_60px_rgba(15,27,61,0.12)] sm:rounded-[34px]" style={{ animationDelay: '120ms' }}>
               <Image
                 src="/hero-student-right-v2.png"
                 alt="Estudiante usando Evaluo"
@@ -154,6 +161,37 @@ export default function Home() {
       </section>
 
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
+        <section className="py-8 lg:py-10">
+          <div className="animate-surface-reveal rounded-[24px] border border-slate-100 bg-white px-4 py-4 shadow-[0_16px_40px_rgba(15,27,61,0.06)] sm:rounded-[28px] sm:px-5 sm:py-5">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="eyebrow-label text-indigo-500">Prueba social</p>
+                <h2 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-[#0F1B3D] sm:text-[2rem]">
+                  Estudio, lectura y práctica en un mismo flujo.
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-slate-500">
+                  La plataforma ya combina documentos más vistos, recursos mejor valorados y recorridos de estudio por carrera.
+                </p>
+              </div>
+              <div className="grid flex-1 gap-3 min-[460px]:grid-cols-2 xl:grid-cols-4">
+                {socialStats.map((stat) => (
+                  <div key={stat.label} className="rounded-2xl border border-slate-100 bg-slate-50/90 px-4 py-4">
+                    <p className="text-2xl font-black tracking-[-0.05em] text-[#0F1B3D]">{stat.value}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              {discoverySignals.map((signal) => (
+                <span key={signal} className="inline-flex items-center rounded-full border border-[#CBD5E1] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[#2563EB]">
+                  {signal}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section id="como-funciona" className="pb-12 pt-12 lg:pb-16 lg:pt-16">
           <div className="animate-surface-reveal mx-auto max-w-2xl text-center">
             <h2 className="text-[36px] font-bold tracking-[-0.04em] text-[#0F1B3D] sm:text-[44px]">
@@ -219,7 +257,7 @@ export default function Home() {
 
         <section
           id="demo-educacion"
-          className="relative py-20 lg:py-28"
+          className="relative py-16 sm:py-20 lg:py-28"
         >
           <div className="absolute inset-y-0 left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-gradient-to-br from-[#eef4ff] via-[#e0e7ff] to-[#c7d2fe]">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOC0xOHptMCAzMmMtNy43MzIgMC0xNC02LjI2OC0xNC0xNHM2LjI2OC0xNCAxNC0xNCAxNCA2LjI2OCAxNCAxNC02LjI2OCAxNC0xNCAxNHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjEiLz48L2c+PC9zdmc+')] opacity-40" />
@@ -227,13 +265,13 @@ export default function Home() {
             <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
           </div>
 
-          <div className="relative mx-auto grid w-full max-w-[1240px] items-center gap-12 px-6 sm:px-8 lg:grid-cols-2 lg:px-10">
+          <div className="relative mx-auto grid w-full max-w-[1240px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-2 lg:px-10 lg:gap-12">
             <div className="animate-surface-reveal space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-indigo-600 shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" />
                 IA + Educacion
               </span>
-              <h2 className="text-4xl font-bold tracking-tight text-[#0F1B3D] sm:text-5xl lg:text-6xl">
+              <h2 className="text-[2.35rem] font-bold tracking-tight text-[#0F1B3D] sm:text-5xl lg:text-6xl">
                 Entende mejor, <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">aprende mas</span>
               </h2>
               <p className="max-w-lg text-lg leading-relaxed text-slate-700">
@@ -297,8 +335,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="cta" className="py-20 lg:py-28">
-          <div className="animate-surface-reveal relative overflow-hidden rounded-[34px] border border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.12),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.10),transparent_24%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 shadow-[0_18px_55px_rgba(15,27,61,0.08)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+        <section id="cta" className="py-16 sm:py-20 lg:py-28">
+          <div className="animate-surface-reveal relative overflow-hidden rounded-[28px] border border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.12),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.10),transparent_24%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-6 shadow-[0_18px_55px_rgba(15,27,61,0.08)] sm:rounded-[34px] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6366F1]/40 to-transparent" />
             <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div className="max-w-2xl">

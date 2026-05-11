@@ -6,8 +6,8 @@ import { Instagram, Youtube } from 'lucide-react';
 export function FooterHome() {
   return (
     <footer className="bg-[#050B2C] text-white">
-      <div className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <Link href="/" className="text-xl font-black tracking-tight">
               Evaluo
@@ -89,4 +89,3 @@ export function FooterHome() {
     </footer>
   );
 }
-

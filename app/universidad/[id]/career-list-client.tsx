@@ -103,8 +103,8 @@ export default function CareerListClient({
   }, [initialCarreras, searchTerm]);
 
   return (
-    <div className="animate-tab-panel pt-7">
-      <div className="animate-surface-reveal flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="animate-tab-panel pt-6 sm:pt-7">
+      <div className="animate-surface-reveal flex flex-col gap-4 sm:gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="section-title leading-none text-[#10214C]">
             Todas las carreras
@@ -120,12 +120,12 @@ export default function CareerListClient({
             placeholder="Buscar carrera..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-9 w-full rounded-full border border-[#E2E8F0] bg-[#F8FAFC] pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:outline-none focus:ring-2 focus:ring-[#4F5DFF]/20"
+            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-[#F8FAFC] pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:outline-none focus:ring-2 focus:ring-[#4F5DFF]/20 sm:h-10"
           />
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
         {visibleCarreras.length > 0 ? (
           visibleCarreras.map((carrera, index) => {
             const preset = getCareerPreset(carrera.nombre);
@@ -136,7 +136,7 @@ export default function CareerListClient({
               <Link
                 key={carrera.id}
                 href={`/materias?carreraId=${carrera.id}`}
-                className="surface-card group animate-surface-reveal p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)]"
+                className="surface-card group animate-surface-reveal p-5 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
                 style={{ animationDelay: `${index * 90}ms` }}
               >
                 <div className="flex flex-col items-center gap-4">
@@ -147,7 +147,7 @@ export default function CareerListClient({
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-[1.1rem] leading-6 font-semibold tracking-[-0.035em] text-[#152A63]">
+                    <h3 className="text-[1.02rem] leading-6 font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
                       {carrera.nombre}
                     </h3>
                     <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-[#7C879C]">

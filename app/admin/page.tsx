@@ -1505,13 +1505,87 @@ export default function AdminPanel() {
             </div>
           </div>
           {activeTab === 'dashboard' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Nueva Carga de Material</h1>
-                <p className="text-slate-500 mt-1">Definí la ubicación y el tipo de recurso antes de subirlo.</p>
+                <p className="eyebrow-label">Control center</p>
+                <h3 className="section-title mt-2">Tablero editorial y operativo</h3>
+                <p className="section-copy mt-2">Una vista rápida del estado del producto y, debajo, el flujo para subir contenido nuevo.</p>
               </div>
 
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_100%)] px-5 py-5 text-white shadow-[0_24px_40px_rgba(29,78,216,0.18)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-100/80">Usuarios activos</p>
+                  <p className="mt-3 text-3xl font-black tracking-[-0.06em]">{stats?.dau?.toLocaleString('es-AR') ?? adminUsers.length.toLocaleString('es-AR')}</p>
+                  <p className="mt-2 text-xs text-white/72">Base activa que está usando la plataforma hoy.</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-slate-200/80 bg-white px-5 py-5 shadow-[var(--shadow-soft)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Biblioteca total</p>
+                  <p className="mt-3 text-3xl font-black tracking-[-0.06em] text-slate-950">{adminResources.length.toLocaleString('es-AR')}</p>
+                  <p className="mt-2 text-xs text-slate-500">Recursos ya cargados entre PDFs, resúmenes y modelos.</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-slate-200/80 bg-white px-5 py-5 shadow-[var(--shadow-soft)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Activas premium</p>
+                  <p className="mt-3 text-3xl font-black tracking-[-0.06em] text-emerald-700">{(monetizacion?.activas ?? 0).toLocaleString('es-AR')}</p>
+                  <p className="mt-2 text-xs text-slate-500">Suscripciones activas visibles en la operación actual.</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-slate-200/80 bg-white px-5 py-5 shadow-[var(--shadow-soft)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Alertas técnicas</p>
+                  <p className="mt-3 text-3xl font-black tracking-[-0.06em] text-amber-600">
+                    {(duplicatePdfRows.length + (fileMaintenance?.orphan_count ?? 0)).toLocaleString('es-AR')}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-500">Duplicados u objetos huérfanos que merecen revisión.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.25fr_0.85fr]">
+                <div className="rounded-[1.6rem] border border-slate-200/80 bg-white px-4 py-4 shadow-[var(--shadow-soft)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="eyebrow-label">Tendencia</p>
+                      <h4 className="mt-2 text-base font-black tracking-[-0.04em] text-slate-950">Uso de la plataforma</h4>
+                    </div>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">8 días</span>
+                  </div>
+                  <div className="mt-4 h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={platformUsageData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                        <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                        <Line type="monotone" dataKey="sesiones" stroke="#2563eb" strokeWidth={2.5} dot={false} name="Sesiones" />
+                        <Line type="monotone" dataKey="usuarios" stroke="#7c3aed" strokeWidth={2.5} dot={false} name="Usuarios" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+                <div className="rounded-[1.6rem] border border-slate-200/80 bg-white px-4 py-4 shadow-[var(--shadow-soft)]">
+                  <div>
+                    <p className="eyebrow-label">Retención</p>
+                    <h4 className="mt-2 text-base font-black tracking-[-0.04em] text-slate-950">Salud de continuidad</h4>
+                  </div>
+                  <div className="mt-4 h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={retentionChartData}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                        <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: '#64748B' }} axisLine={false} tickLine={false} domain={[0, 100]} />
+                        <Tooltip />
+                        <Area type="monotone" dataKey="value" stroke="#7c3aed" fill="#ede9fe" strokeWidth={2.5} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="eyebrow-label">Carga editorial</p>
+                <h4 className="mt-2 text-xl font-black tracking-[-0.05em] text-slate-950">Nueva carga de material</h4>
+                <p className="mt-2 text-sm text-slate-500">Definí ubicación, tipo y archivo antes de enviarlo al pipeline.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 {/* 1. Ubicación */}
                 <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
                   <CardHeader className="bg-white border-b border-slate-100 py-4">

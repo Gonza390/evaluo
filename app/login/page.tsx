@@ -22,6 +22,12 @@ const benefits = [
   'Simuladores listos para rendir mejor',
 ];
 
+const loginProof = [
+  { value: '+10k', label: 'estudiantes activos' },
+  { value: '+32k', label: 'aperturas de PDFs' },
+  { value: '4.8/5', label: 'valoracion media' },
+];
+
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -130,8 +136,8 @@ export default function Login() {
       </div>
 
       <div className="relative z-10 flex min-h-screen items-center justify-center px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
-        <div className="animate-saas-lift-in grid w-full max-w-[1060px] gap-4 rounded-[36px] border border-white/70 bg-white/55 p-2 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-2xl lg:grid-cols-[1.04fr_0.96fr] lg:p-3">
-          <section className="relative overflow-hidden rounded-[30px] bg-[linear-gradient(155deg,#0f172a_0%,#172554_24%,#1d4ed8_60%,#4f46e5_100%)] p-5 text-white sm:p-6 lg:min-h-[620px] lg:p-8">
+        <div className="animate-saas-lift-in grid w-full max-w-[1060px] gap-3 rounded-[28px] border border-white/70 bg-white/55 p-2 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-2xl sm:gap-4 sm:rounded-[36px] lg:grid-cols-[1.04fr_0.96fr] lg:p-3">
+          <section className="order-2 relative overflow-hidden rounded-[24px] bg-[linear-gradient(155deg,#0f172a_0%,#172554_24%,#1d4ed8_60%,#4f46e5_100%)] p-4 text-white sm:rounded-[30px] sm:p-6 lg:order-1 lg:min-h-[620px] lg:p-8">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom,rgba(56,189,248,0.16),transparent_30%)]" />
             <div className="relative flex h-full flex-col">
               <div className="flex items-center justify-between gap-3">
@@ -148,19 +154,19 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="mt-10 max-w-[430px] sm:mt-12 lg:mt-16">
+              <div className="mt-8 max-w-[430px] sm:mt-12 lg:mt-16">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/65">
                   Plataforma de estudio
                 </p>
-                <h1 className="mt-4 text-[1.9rem] font-black leading-[0.94] tracking-[-0.07em] text-white sm:text-[2.7rem] lg:text-[3.1rem]">
+                <h1 className="mt-4 text-[1.75rem] font-black leading-[0.96] tracking-[-0.07em] text-white sm:text-[2.7rem] lg:text-[3.1rem]">
                   Un acceso claro para volver a estudiar sin ruido.
                 </h1>
-                <p className="mt-4 max-w-[360px] text-sm leading-7 text-white/74 sm:text-[15px]">
-                  Entrá a tus materias, retomá tus PDFs, seguí el simulador y mantené tu avance siempre a mano desde un mismo lugar.
+                <p className="mt-4 max-w-[360px] text-sm leading-6 text-white/74 sm:text-[15px] sm:leading-7">
+                  Entra a tus materias, retoma tus PDFs, sigue el simulador y manten tu avance siempre a mano desde un mismo lugar.
                 </p>
               </div>
 
-              <div className="mt-8 grid gap-3 sm:mt-9 sm:grid-cols-3">
+              <div className="mt-7 grid gap-3 min-[480px]:grid-cols-3 sm:mt-9">
                 {benefits.map((benefit, index) => (
                   <div
                     key={benefit}
@@ -172,10 +178,22 @@ export default function Login() {
                 ))}
               </div>
 
+              <div className="mt-5 grid gap-3 min-[480px]:grid-cols-3 sm:mt-6">
+                {loginProof.map((item, index) => (
+                  <div
+                    key={item.label}
+                    style={{ animationDelay: `${index * 120}ms` }}
+                    className="animate-saas-lift-in rounded-[22px] border border-white/12 bg-white/8 px-3 py-3 backdrop-blur"
+                  >
+                    <p className="text-lg font-black tracking-[-0.04em] text-white">{item.value}</p>
+                    <p className="mt-1 text-[11px] leading-5 text-white/70">{item.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
-          <section className="flex min-h-full items-center rounded-[30px] bg-white/92 p-4 sm:p-5 lg:p-8">
+          <section className="order-1 flex min-h-full items-center rounded-[24px] bg-white/92 p-4 sm:rounded-[30px] sm:p-5 lg:order-2 lg:p-8">
             <div className="mx-auto w-full max-w-[390px]">
               <div className="mb-5 text-center lg:mb-6 lg:text-left">
                 <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1">
@@ -207,7 +225,7 @@ export default function Login() {
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   {isSignUp
                     ? 'En pocos pasos dejas tu espacio listo para estudiar, guardar avance y usar el simulador.'
-                    : 'Volvé a tus materias, abrí tus documentos y seguí estudiando exactamente donde lo dejaste.'}
+                    : 'Volve a tus materias, abri tus documentos y segui estudiando exactamente donde lo dejaste.'}
                 </p>
               </div>
 
@@ -220,22 +238,10 @@ export default function Login() {
                 >
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09c0-.73.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1c-4.3 0-7.99 2.47-9.8 6.17l3.13 2.44c.87-2.6 3.3-4.57 6.1-4.57z"
-                    />
+                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09c0-.73.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1c-4.3 0-7.99 2.47-9.8 6.17l3.13 2.44c.87-2.6 3.3-4.57 6.1-4.57z" />
                   </svg>
                   {loading ? 'Procesando...' : 'Continuar con Google'}
                 </Button>
@@ -275,12 +281,12 @@ export default function Login() {
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        type="password"
-                        placeholder="********"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    <Input
+                      type="password"
+                      placeholder="********"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500"
                       required
                       disabled={loading}
                     />

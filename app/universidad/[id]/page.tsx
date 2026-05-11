@@ -105,7 +105,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      <section className="relative w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl min-h-[320px] sm:min-h-[280px]">
+      <section className="relative w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl min-h-[280px] sm:min-h-[280px]">
         <div 
           className="absolute inset-0 h-full w-full bg-cover bg-center"
           style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80)' }}
@@ -114,7 +114,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_36%,rgba(99,102,241,0.18),transparent_24%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/32 via-transparent to-[#0F172A]/10" />
 
-        <div className="relative mx-auto max-w-7xl px-4 py-6 sm:py-8 lg:px-8">
+        <div className="relative mx-auto max-w-7xl px-4 py-5 sm:py-8 lg:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
             <div className="hidden lg:flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24">
               <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/20 text-center text-[24px] font-bold tracking-[-0.08em] text-white sm:h-[80px] sm:w-[80px] sm:text-[28px]">
@@ -124,7 +124,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[22px] font-bold leading-tight tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
+                <h1 className="text-[20px] font-bold leading-tight tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
                   {universidad.nombre}
                 </h1>
               </div>
@@ -133,7 +133,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 {UNIVERSITY_SUBTITLE}
               </p>
 
-              <div className="mt-6 grid grid-cols-1 gap-4 text-white sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-5 grid grid-cols-1 gap-3 text-white sm:mt-6 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="flex items-start gap-3">
                   <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-white/90" />
                   <div>
@@ -171,8 +171,8 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
         </div>
       </section>
 
-      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-5 px-4 py-6 sm:px-6 lg:px-10">
-        <section className="surface-panel animate-saas-lift-in px-4 py-5 sm:px-6 sm:py-6">
+      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-4 px-4 py-5 sm:gap-5 sm:px-6 sm:py-6 lg:px-10">
+        <section className="surface-panel animate-saas-lift-in px-4 py-4 sm:px-6 sm:py-6">
           <div className="flex items-center justify-between border-b border-[#E8EDF5] pb-3">
             <div className="grid w-full grid-cols-2 gap-2 text-xs font-medium text-[#7C879C] sm:flex sm:gap-6 sm:text-sm">
               <Link

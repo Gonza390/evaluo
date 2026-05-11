@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase-client';
 import Link from 'next/link';
 import { useUser } from '@/hooks/useUser';
 import { useToast } from '@/hooks/use-toast';
-import { getCareerRoute, getResourceRoute, getUniversityRoute } from '@/lib/routes';
+import { getCareerRoute, getMateriaRoute, getResourceRoute, getUniversityRoute } from '@/lib/routes';
 import { getDashboardState, saveDashboardState } from '@/app/actions';
 import { pushActivityHit, pushRecentResource } from '@/lib/dashboard-client';
 import {
@@ -35,6 +35,7 @@ import {
   Zap,
   Eye,
   Download,
+  Share2,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -103,6 +104,15 @@ export default function MateriaContent({
   const [recursosError, setRecursosError] = useState<string | null>(null);
   const isLongTitle = isLongMateriaTitle(nombre);
   const heroImage = getMateriaHeroImage(nombre);
+  const topRatedResource = useMemo(
+    () =>
+      [...recursosPdf].sort(
+        (a, b) =>
+          ((resourceVotes[b.id]?.likes ?? 0) - (resourceVotes[b.id]?.dislikes ?? 0)) -
+          ((resourceVotes[a.id]?.likes ?? 0) - (resourceVotes[a.id]?.dislikes ?? 0))
+      )[0] ?? null,
+    [recursosPdf, resourceVotes]
+  );
 
   const loadResumenes = useCallback(async () => {
     setResumenesLoading(true);
@@ -485,6 +495,224 @@ export default function MateriaContent({
     [activeTab, materiaId, recursosPdf, resourceVotes]
   );
 
+  const renderResumenCards = (className = 'grid gap-4 md:grid-cols-2 xl:grid-cols-3') => (
+    <div className={className}>
+      {resumenesFiltrados.map((resumen) => {
+        const resumenUrl = resumen.file_url ? getRecursoPublicUrl(resumen.file_url) : null;
+        const resourceId = resumen.id.startsWith('recurso-')
+          ? resumen.id.replace('recurso-', '')
+          : null;
+        const resourceVoteSummary = resourceId
+          ? (resourceVotes[resourceId] ?? getDefaultResourceVoteSummary())
+          : null;
+
+        return (
+          <article
+            key={resumen.id}
+            className="surface-card p-6"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold tracking-[-0.035em] text-slate-900">{resumen.title}</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  {resumen.author_name || 'Autor no especificado'}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                {getResumenRating(resumen.score).map((filled, index) => (
+                  <Star
+                    key={index}
+                    className={`h-4 w-4 ${filled ? 'fill-current text-yellow-400' : 'text-slate-200'}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-500">
+              {resumen.pages ? (
+                <div className="flex items-center gap-1.5">
+                  <FileText className="h-4 w-4" />
+                  <span>{resumen.pages} paginas</span>
+                </div>
+              ) : null}
+              {resumen.created_at ? (
+                <div className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4" />
+                  <span>{new Date(resumen.created_at).toLocaleDateString('es-AR')}</span>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {resumenUrl ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nestedResourceId = resumen.id.startsWith('recurso-')
+                        ? resumen.id.replace('recurso-', '')
+                        : undefined;
+                      const baseRoute = getResourceRoute(
+                        materiaId,
+                        'resumen-modulo',
+                        nombre,
+                        nestedResourceId
+                      );
+                      const separator = baseRoute.includes('?') ? '&' : '?';
+                      router.push(`${baseRoute}${separator}modulo=${activeUnidad}`);
+                    }}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Leer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const storagePath = resumen.file_url;
+                      if (!storagePath) {
+                        return;
+                      }
+
+                      await handleSecureDownload({
+                        id: resumen.id,
+                        nombre: resumen.title,
+                        tipo: 'resumen',
+                        url_archivo: storagePath,
+                        creado_at: resumen.created_at,
+                        materia_id: materiaId,
+                      });
+                    }}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[#4F5DFF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
+                  >
+                    <Download className="h-4 w-4" />
+                    Descargar
+                  </button>
+                </>
+              ) : null}
+
+              {isUserLogged ? (
+                <div className="ml-auto flex items-center gap-2">
+                  {resourceVoteSummary ? (
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                      {resourceVoteSummary.score >= 0 ? '+' : ''}
+                      {resourceVoteSummary.score} ranking
+                    </span>
+                  ) : null}
+                  <button
+                    onClick={() =>
+                      resourceId ? void voteResource(resourceId, 1) : void voteResumen(resumen.id, 1)
+                    }
+                    disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
+                    className={`rounded-full border p-2 transition disabled:opacity-60 ${
+                      resourceVoteSummary?.userVote === 1
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                        : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
+                    }`}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() =>
+                      resourceId ? void voteResource(resourceId, -1) : void voteResumen(resumen.id, -1)
+                    }
+                    disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
+                    className={`rounded-full border p-2 transition disabled:opacity-60 ${
+                      resourceVoteSummary?.userVote === -1
+                        ? 'border-rose-300 bg-rose-50 text-rose-600'
+                        : 'border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600'
+                    }`}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+
+  const renderResourceCards = (className = 'grid grid-cols-1 gap-3 md:grid-cols-2') => (
+    <div className={className}>
+      {recursosFiltrados.map((recurso) => {
+        const voteSummary = resourceVotes[recurso.id] ?? getDefaultResourceVoteSummary();
+        return (
+          <article
+            key={recurso.id}
+            className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <FileText className="h-5 w-5 shrink-0 text-rose-600" />
+                <p className="truncate text-sm font-semibold text-slate-900">{recurso.nombre}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
+              <div className="inline-flex items-center justify-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 sm:justify-start">
+                <ThumbsUp className="h-3 w-3" />
+                <span>{voteSummary.likes}</span>
+                <ThumbsDown className="ml-1 h-3 w-3" />
+                <span>{voteSummary.dislikes}</span>
+              </div>
+              {isUserLogged ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void voteResource(recurso.id, 1)}
+                    disabled={resourceVoteLoading === recurso.id}
+                    className={`inline-flex flex-1 items-center justify-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition sm:flex-none ${
+                      voteSummary.userVote === 1
+                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
+                        : 'border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600'
+                    }`}
+                  >
+                    <ThumbsUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void voteResource(recurso.id, -1)}
+                    disabled={resourceVoteLoading === recurso.id}
+                    className={`inline-flex flex-1 items-center justify-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition sm:flex-none ${
+                      voteSummary.userVote === -1
+                        ? 'border-rose-300 bg-rose-50 text-rose-600'
+                        : 'border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-600'
+                    }`}
+                  >
+                    <ThumbsDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : null}
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tipoRuta = recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1');
+                    router.push(getResourceRoute(materiaId, tipoRuta, nombre, recurso.id));
+                  }}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  Leer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleSecureDownload(recurso)}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#4F5DFF] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4050f0]"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Descargar
+                </button>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+
   const voteResource = async (resourceId: string, voteType: 1 | -1) => {
     if (!authUser) return;
 
@@ -506,6 +734,49 @@ export default function MateriaContent({
       });
     } finally {
       setResourceVoteLoading('');
+    }
+  };
+
+  const handleShareMateria = async () => {
+    const sharePath = getMateriaRoute(materiaId, carreraId);
+    const shareUrl =
+      typeof window !== 'undefined' ? new URL(sharePath, window.location.origin).toString() : sharePath;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: nombre,
+          text: `Te comparto esta materia en Evaluo: ${nombre}`,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: 'Link copiado',
+          description: 'Ya puedes compartir esta materia con quien quieras.',
+          duration: 2500,
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: 'Link copiado',
+          description: 'Ya puedes compartir esta materia con quien quieras.',
+          duration: 2500,
+        });
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'No pudimos compartir la materia',
+          description: 'Intentalo nuevamente en unos segundos.',
+          duration: 3000,
+        });
+      }
     }
   };
 
@@ -701,7 +972,7 @@ export default function MateriaContent({
         </div>
       </div>
 
-      <section className="relative min-h-[300px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
+      <section className="relative min-h-[260px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
         <div
           className="absolute inset-0 hidden h-full w-full bg-cover bg-center lg:block"
           style={{ backgroundImage: `url(${heroImage})` }}
@@ -711,10 +982,10 @@ export default function MateriaContent({
         <div className="absolute inset-0 hidden bg-gradient-to-t from-[#0F172A]/32 via-transparent to-[#0F172A]/10 lg:block" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A] via-[#0F172A]/88 to-[#1E293B]/55 lg:hidden" />
 
-        <div className="relative mx-auto flex h-full max-w-7xl items-center px-4 py-6 lg:px-8 lg:py-8">
+        <div className="relative mx-auto flex h-full max-w-7xl items-center px-4 py-5 lg:px-8 lg:py-8">
           <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="mx-auto flex min-w-0 flex-1 items-center justify-center gap-4 sm:gap-6 lg:max-w-3xl">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24">
+            <div className="mx-auto flex min-w-0 flex-1 items-center justify-center gap-3 sm:gap-6 lg:max-w-3xl">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24">
                 <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/20 text-white sm:h-[80px] sm:w-[80px]">
                   <GraduationCap className="h-8 w-8 sm:h-9 sm:w-9" />
                 </div>
@@ -724,13 +995,13 @@ export default function MateriaContent({
                 <p className="text-sm text-white/70">Materia</p>
                 <h1
                   className={`tracking-[-0.05em] text-white drop-shadow-lg ${
-                    isLongTitle ? 'text-[24px] font-bold leading-tight sm:text-[34px]' : 'text-[28px] font-bold leading-tight sm:text-[42px]'
+                    isLongTitle ? 'text-[22px] font-bold leading-tight sm:text-[34px]' : 'text-[25px] font-bold leading-tight sm:text-[42px]'
                   }`}
                 >
                   {nombre}
                 </h1>
 
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-white/80 sm:gap-6 lg:justify-start">
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-[13px] text-white/80 sm:mt-6 sm:gap-6 sm:text-sm lg:justify-start">
                   {carreraNombre ? (
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 shrink-0" />
@@ -745,22 +1016,35 @@ export default function MateriaContent({
                     <Users className="h-4 w-4 shrink-0" />
                     <span>{modalidad}</span>
                   </div>
+                  {topRatedResource ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-white/90">
+                      <Trophy className="h-4 w-4 shrink-0 text-amber-300" />
+                      Material destacado
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
 
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:justify-end">
+              <button
+                onClick={() => void handleShareMateria()}
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15 sm:h-auto sm:w-auto"
+              >
+                <Share2 className="h-4 w-4" />
+                Compartir
+              </button>
               <button
                 onClick={toggleFavorite}
                 disabled={favoritesLoading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15 disabled:opacity-60 sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15 disabled:opacity-60 sm:h-auto sm:w-auto"
               >
                 <Star className={`h-4 w-4 ${isFavorite ? 'fill-current text-yellow-400' : ''}`} />
                 {isFavorite ? 'Guardada' : 'Guardar'}
               </button>
               <Link
                 href={`/explorar/materia/${materiaId}?tab=pregunteros${carreraId ? `&carreraId=${carreraId}` : ''}`}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#4F5DFF] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4050f0] sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#4F5DFF] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4050f0] sm:h-auto sm:w-auto"
               >
                 <Sparkles className="h-4 w-4" />
                 Ir a Pregunteros
@@ -817,13 +1101,13 @@ export default function MateriaContent({
                     value={busqueda}
                     onChange={(event) => setBusqueda(event.target.value)}
                     placeholder="Buscar resumen..."
-                    className="h-10 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:outline-none focus:ring-2 focus:ring-[#4F5DFF]/20 sm:w-72"
+                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:outline-none focus:ring-2 focus:ring-[#4F5DFF]/20 sm:h-10 sm:w-72"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4">
               {unidades.map((unidad) => (
                 <button
                   key={unidad.id}
@@ -839,6 +1123,53 @@ export default function MateriaContent({
               ))}
             </div>
 
+            <div className="space-y-3 sm:hidden">
+              {unidades.map((unidad) => {
+                const isActiveModule = activeUnidad === String(unidad.id);
+
+                return (
+                  <div key={unidad.id} className="space-y-3">
+                    <button
+                      onClick={() => setActiveUnidad(String(unidad.id))}
+                      className={`surface-card w-full rounded-[var(--radius-card)] p-4 text-left transition ${isActiveModule ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
+                      <p className="mt-3 text-xs font-medium text-[#4F5DFF]">
+                        {unidad.resumenesCount} resumenes estimados
+                      </p>
+                    </button>
+
+                    {isActiveModule ? (
+                      resumenesLoading ? (
+                        <div className="surface-panel p-6 text-center text-sm text-slate-500">
+                          Estamos preparando tus resúmenes...
+                        </div>
+                      ) : resumenesError ? (
+                        <MateriaSectionState
+                          icon={FileText}
+                          title="No pudimos cargar este módulo"
+                          description={resumenesError}
+                          tone="warning"
+                          actionLabel="Reintentar carga"
+                          onAction={() => void loadResumenes()}
+                        />
+                      ) : resumenesFiltrados.length === 0 ? (
+                        <MateriaSectionState
+                          icon={FileText}
+                          title="Todavía no hay resúmenes para este módulo"
+                          description="Probá con otro módulo o volvé más tarde cuando terminemos de publicar este contenido."
+                        />
+                      ) : (
+                        renderResumenCards('grid gap-4')
+                      )
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hidden sm:block">
             {resumenesLoading ? (
               <div className="surface-panel p-10 text-center text-slate-500">
                 Estamos preparando tus resúmenes...
@@ -859,148 +1190,14 @@ export default function MateriaContent({
                 description="Probá con otro módulo o volvé más tarde cuando terminemos de publicar este contenido."
               />
             ) : (
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {resumenesFiltrados.map((resumen) => {
-                  const resumenUrl = resumen.file_url ? getRecursoPublicUrl(resumen.file_url) : null;
-                  const resourceId = resumen.id.startsWith('recurso-')
-                    ? resumen.id.replace('recurso-', '')
-                    : null;
-                  const resourceVoteSummary = resourceId
-                    ? (resourceVotes[resourceId] ?? getDefaultResourceVoteSummary())
-                    : null;
-
-                  return (
-                    <article
-                      key={resumen.id}
-                      className="surface-card p-6"
-                    >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3 className="text-lg font-semibold tracking-[-0.035em] text-slate-900">{resumen.title}</h3>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {resumen.author_name || 'Autor no especificado'}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 gap-1">
-                        {getResumenRating(resumen.score).map((filled, index) => (
-                          <Star
-                            key={index}
-                            className={`h-4 w-4 ${filled ? 'fill-current text-yellow-400' : 'text-slate-200'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-                      {resumen.pages ? (
-                        <div className="flex items-center gap-1.5">
-                          <FileText className="h-4 w-4" />
-                          <span>{resumen.pages} paginas</span>
-                        </div>
-                      ) : null}
-                      {resumen.created_at ? (
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="h-4 w-4" />
-                          <span>{new Date(resumen.created_at).toLocaleDateString('es-AR')}</span>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      {resumenUrl ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const resourceId = resumen.id.startsWith('recurso-')
-                                ? resumen.id.replace('recurso-', '')
-                                : undefined;
-                              const baseRoute = getResourceRoute(
-                                materiaId,
-                                'resumen-modulo',
-                                nombre,
-                                resourceId
-                              );
-                              const separator = baseRoute.includes('?') ? '&' : '?';
-                              router.push(`${baseRoute}${separator}modulo=${activeUnidad}`);
-                            }}
-                            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                          >
-                            <Eye className="h-4 w-4" />
-                            Leer
-                          </button>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const storagePath = resumen.file_url;
-                              if (!storagePath) {
-                                return;
-                              }
-
-                              await handleSecureDownload({
-                                id: resumen.id,
-                                nombre: resumen.title,
-                                tipo: 'resumen',
-                                url_archivo: storagePath,
-                                creado_at: resumen.created_at,
-                                materia_id: materiaId,
-                              });
-                            }}
-                            className="inline-flex items-center gap-2 rounded-2xl bg-[#4F5DFF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
-                          >
-                            <Download className="h-4 w-4" />
-                            Descargar
-                          </button>
-                        </>
-                      ) : null}
-
-                      {isUserLogged ? (
-                        <div className="ml-auto flex items-center gap-2">
-                          {resourceVoteSummary ? (
-                            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                              {resourceVoteSummary.score >= 0 ? '+' : ''}
-                              {resourceVoteSummary.score} ranking
-                            </span>
-                          ) : null}
-                          <button
-                            onClick={() =>
-                              resourceId ? void voteResource(resourceId, 1) : void voteResumen(resumen.id, 1)
-                            }
-                            disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
-                            className={`rounded-full border p-2 transition disabled:opacity-60 ${
-                              resourceVoteSummary?.userVote === 1
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-                                : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
-                            }`}
-                          >
-                            <ThumbsUp className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              resourceId ? void voteResource(resourceId, -1) : void voteResumen(resumen.id, -1)
-                            }
-                            disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
-                            className={`rounded-full border p-2 transition disabled:opacity-60 ${
-                              resourceVoteSummary?.userVote === -1
-                                ? 'border-rose-300 bg-rose-50 text-rose-600'
-                                : 'border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600'
-                            }`}
-                          >
-                            <ThumbsDown className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                    </article>
-                  );
-                })}
-              </div>
+              renderResumenCards()
             )}
+            </div>
           </div>
         ) : activeTab === 'pregunteros' || activeTab === 'trabajos' ? (
           <div className="animate-tab-panel space-y-8">
             {activeTab === 'pregunteros' ? (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
                 {[
                   { parcial: 1, titulo: 'Parcial 1', icon: Zap },
                   { parcial: 2, titulo: 'Parcial 2', icon: Trophy },
@@ -1020,7 +1217,7 @@ export default function MateriaContent({
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium text-slate-500">Simulador</p>
-                          <h3 className="mt-1 text-2xl font-bold text-slate-900">{simulador.titulo}</h3>
+                          <h3 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{simulador.titulo}</h3>
                           <p className="mt-3 text-sm leading-6 text-slate-600">
                             {simulador.premium
                               ? 'Basado en ultimos examenes validados. Acceso exclusivo para usuarios premium.'
@@ -1045,13 +1242,13 @@ export default function MateriaContent({
                       <Link
                         href={
                           simulador.premium
-                            ? `/simulador/premium/${materiaId}/${simulador.parcial}`
+                            ? '/pricing'
                             : `/simulador/${materiaId}/${simulador.parcial}`
                         }
                         className={
                           simulador.premium
-                            ? 'mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-indigo-700 hover:to-violet-700'
-                            : 'mt-6 inline-flex items-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0]'
+                            ? 'mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:from-indigo-700 hover:to-violet-700 sm:w-auto'
+                            : 'mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0] sm:w-auto'
                         }
                       >
                         {simulador.premium ? 'Iniciar Simulador Premium' : 'Iniciar Simulador Aleatorio'}
@@ -1091,80 +1288,7 @@ export default function MateriaContent({
                   }
                 />
               ) : (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {recursosFiltrados.map((recurso) => {
-                    const voteSummary = resourceVotes[recurso.id] ?? getDefaultResourceVoteSummary();
-                    return (
-                      <article
-                        key={recurso.id}
-                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between"
-                      >
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-5 w-5 shrink-0 text-rose-600" />
-                            <p className="truncate text-sm font-semibold text-slate-900">{recurso.nombre}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                          <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                            <ThumbsUp className="h-3 w-3" />
-                            <span>{voteSummary.likes}</span>
-                            <ThumbsDown className="ml-1 h-3 w-3" />
-                            <span>{voteSummary.dislikes}</span>
-                          </div>
-                          {isUserLogged ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => void voteResource(recurso.id, 1)}
-                                disabled={resourceVoteLoading === recurso.id}
-                                className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
-                                  voteSummary.userVote === 1
-                                    ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-                                    : 'border-slate-200 text-slate-600 hover:border-emerald-300 hover:text-emerald-600'
-                                }`}
-                              >
-                                <ThumbsUp className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => void voteResource(recurso.id, -1)}
-                                disabled={resourceVoteLoading === recurso.id}
-                                className={`inline-flex items-center gap-1 rounded-xl border px-2.5 py-2 text-xs font-semibold transition ${
-                                  voteSummary.userVote === -1
-                                    ? 'border-rose-300 bg-rose-50 text-rose-600'
-                                    : 'border-slate-200 text-slate-600 hover:border-rose-300 hover:text-rose-600'
-                                }`}
-                              >
-                                <ThumbsDown className="h-3.5 w-3.5" />
-                              </button>
-                            </>
-                          ) : null}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const tipoRuta = recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1');
-                              router.push(getResourceRoute(materiaId, tipoRuta, nombre, recurso.id));
-                            }}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            Leer
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void handleSecureDownload(recurso)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#4F5DFF] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4050f0]"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            Descargar
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                renderResourceCards()
               )}
             </section>
           </div>

@@ -641,16 +641,45 @@ export function DashboardContent() {
     'from-emerald-500/15 to-teal-500/10 border-emerald-200/70',
   ];
 
+  if (dashboardLoading && recentSubjects.length === 0) {
+    return (
+      <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans">
+        <div className="w-full p-2 md:p-3">
+          <div className="mx-auto max-w-6xl lg:[zoom:0.9]">
+            <div className={`${DASHBOARD_PANEL_CLASS} mb-4 px-5 py-5`}>
+              <div className="h-7 w-56 animate-pulse rounded-lg bg-slate-100" />
+              <div className="mt-3 h-4 w-80 animate-pulse rounded-lg bg-slate-100" />
+              <div className="mt-5 h-10 animate-pulse rounded-xl bg-slate-100" />
+            </div>
+            <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="surface-card h-28 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+              ))}
+            </div>
+            <div className="mb-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="surface-card h-80 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+              <div className="surface-card h-80 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+            </div>
+            <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="surface-card h-72 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+              <div className="surface-card h-72 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans">
-      <div className="w-full p-2 md:p-3">
-        <div className="mx-auto max-w-6xl lg:[zoom:0.9]">
-          <div className={`${DASHBOARD_PANEL_CLASS} animate-study-reveal mb-4 flex flex-col gap-3 px-5 py-5 xl:flex-row xl:items-start xl:justify-between`}>
+      <div className="w-full p-2 sm:p-3">
+        <div className="mx-auto max-w-6xl">
+          <div className={`${DASHBOARD_PANEL_CLASS} animate-study-reveal mb-4 flex flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5 xl:flex-row xl:items-start xl:justify-between`}>
             <div>
-              <h1 className="text-lg font-bold tracking-[-0.04em] text-slate-950 md:text-xl">
+              <h1 className="text-[1.05rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-lg md:text-xl">
                 {`Hola, ${getUserName()}!`}
               </h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm leading-6 text-slate-500">
                 Un resumen simple de lo ultimo que tocaste.
               </p>
             </div>
@@ -663,11 +692,11 @@ export function DashboardContent() {
                     value={exploreQuery}
                     onChange={(event) => setExploreQuery(event.target.value)}
                     placeholder="Buscar materias..."
-                    className="h-9 rounded-lg border-slate-200 bg-white pl-9 pr-16 text-sm shadow-sm focus-visible:ring-[#4F5DFF]/25"
+                    className="h-11 rounded-xl border-slate-200 bg-white pl-9 pr-20 text-sm shadow-sm focus-visible:ring-[#4F5DFF]/25 sm:h-10"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 inline-flex h-6 -translate-y-1/2 items-center rounded-md bg-slate-950 px-2 text-[10px] font-semibold text-white transition hover:bg-slate-800"
+                    className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center rounded-lg bg-slate-950 px-3 text-[11px] font-semibold text-white transition hover:bg-slate-800"
                   >
                     Explorar
                   </button>
@@ -688,30 +717,30 @@ export function DashboardContent() {
           <div className="mb-4 grid gap-3 md:grid-cols-2">
             <div className="surface-card rounded-[var(--radius-card)] bg-white/88 px-4 py-4 backdrop-blur">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Ultima materia</p>
-              <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-slate-950">
+              <p className="mt-2 text-base font-bold tracking-[-0.03em] text-slate-950 sm:text-lg">
                 {dashboardState.lastSubject?.name ?? 'Todavia no abriste una materia'}
               </p>
             </div>
             <div className="surface-card rounded-[var(--radius-card)] bg-white/88 px-4 py-4 backdrop-blur">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Materias finalizadas</p>
-              <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-slate-950">
+              <p className="mt-2 text-base font-bold tracking-[-0.03em] text-slate-950 sm:text-lg">
                 {dashboardState.finishedSubjects.length.toLocaleString('es-AR')}
               </p>
             </div>
           </div>
 
           <div className="animate-study-reveal mb-4 rounded-2xl border border-indigo-200/80 bg-[linear-gradient(135deg,rgba(79,93,255,0.08)_0%,rgba(14,165,233,0.05)_100%)] px-4 py-4 shadow-sm shadow-indigo-100/70">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-500">Siguiente paso</p>
-                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-slate-950">
+                <h2 className="mt-1 text-base font-bold tracking-[-0.03em] text-slate-950 sm:text-lg">
                   {nextStudyAction.title}
                 </h2>
-                <p className="mt-1 text-sm text-slate-600">{nextStudyAction.description}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{nextStudyAction.description}</p>
               </div>
               <Button
                 onClick={nextStudyAction.onClick}
-                className="animate-study-focus h-10 rounded-xl bg-slate-950 px-4 text-sm font-semibold hover:bg-slate-800"
+                className="animate-study-focus h-11 w-full rounded-xl bg-slate-950 px-4 text-sm font-semibold hover:bg-slate-800 md:h-10 md:w-auto"
               >
                 {nextStudyAction.cta}
               </Button>
@@ -735,7 +764,7 @@ export function DashboardContent() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-9 w-full rounded-xl border-slate-200 bg-white px-4 text-xs shadow-sm sm:w-auto"
+                  className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 text-xs shadow-sm sm:h-9 sm:w-auto"
                   onClick={() => setShowAddModal(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -767,7 +796,7 @@ export function DashboardContent() {
                           }
                         }}
                         style={{ animationDelay: `${index * 110}ms` }}
-                        className={`animate-study-reveal flex h-full min-h-[188px] cursor-pointer flex-col rounded-2xl border bg-gradient-to-br p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${index === 0 ? 'animate-study-float' : ''} ${subjectAccentStyles[index % subjectAccentStyles.length]}`}
+                        className={`animate-study-reveal flex h-full min-h-[176px] cursor-pointer flex-col rounded-2xl border bg-gradient-to-br p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[188px] ${index === 0 ? 'animate-study-float' : ''} ${subjectAccentStyles[index % subjectAccentStyles.length]}`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 text-slate-700 shadow-sm">
@@ -785,7 +814,7 @@ export function DashboardContent() {
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                        <h3 className="mt-4 line-clamp-2 text-lg font-semibold text-slate-950">
+                        <h3 className="mt-4 line-clamp-2 text-[1.05rem] font-semibold text-slate-950 sm:text-lg">
                           {subject.name}
                         </h3>
                         <p className="mt-1 text-xs text-slate-500">
@@ -812,8 +841,8 @@ export function DashboardContent() {
                         <p className="mb-4 text-left text-sm font-semibold text-slate-900">
                           Materias recomendadas segun tu carrera
                         </p>
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {recommendedMaterias.map((materia) => (
+                    <div className="grid gap-3 md:grid-cols-3">
+                      {recommendedMaterias.map((materia) => (
                             <button
                               key={materia.id}
                               type="button"
@@ -916,15 +945,15 @@ export function DashboardContent() {
                   </div>
                 ) : null}
                 {partialInsights ? (
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-[140px_minmax(0,1fr)] md:items-center">
-                    <div className="relative mx-auto grid h-32 w-32 place-items-center rounded-full animate-saas-glow" style={partialProgressRingStyle}>
-                      <div className="grid h-24 w-24 place-items-center rounded-full bg-white shadow-[0_10px_30px_rgba(79,93,255,0.12)]">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-[140px_minmax(0,1fr)] md:items-center">
+                    <div className="relative mx-auto grid h-28 w-28 place-items-center rounded-full animate-saas-glow sm:h-32 sm:w-32" style={partialProgressRingStyle}>
+                      <div className="grid h-20 w-20 place-items-center rounded-full bg-white shadow-[0_10px_30px_rgba(79,93,255,0.12)] sm:h-24 sm:w-24">
                         <p className="text-2xl font-black text-slate-900">{partialInsights.coberturaPorcentaje}%</p>
                         <p className="text-[10px] text-slate-500">Progreso</p>
                       </div>
                       <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(74,222,128,0.16)]" />
                     </div>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-sm leading-6">
                       <p className="text-slate-700">
                         Materia:{' '}
                         <span className="font-semibold">
@@ -946,7 +975,7 @@ export function DashboardContent() {
                       <div className="flex flex-wrap gap-2 pt-1">
                         <Button
                           size="sm"
-                          className="h-8 rounded-lg bg-slate-950 px-3 text-xs font-semibold hover:bg-slate-800"
+                          className="h-9 rounded-lg bg-slate-950 px-3 text-xs font-semibold hover:bg-slate-800"
                           onClick={() => router.push(`/simulador/${dashboardState.lastSubject?.id ?? simuladorInProgress?.materiaId ?? ''}/${partialInsights.parcial}`)}
                         >
                           Practicar parcial
@@ -954,7 +983,7 @@ export function DashboardContent() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 rounded-lg border-slate-200 bg-white px-3 text-xs font-semibold"
+                          className="h-9 rounded-lg border-slate-200 bg-white px-3 text-xs font-semibold"
                           onClick={() => {
                             const targetMateriaId = dashboardState.lastSubject?.id ?? simuladorInProgress?.materiaId;
                             if (targetMateriaId) {
@@ -1042,7 +1071,7 @@ export function DashboardContent() {
             </Card>
 
             <Card className="animate-saas-lift-in bg-white/90 backdrop-blur xl:col-span-2">
-              <CardHeader className="flex flex-row items-start justify-between pb-2">
+              <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <CardTitle className="text-xl font-semibold text-slate-950">
                     Tu progreso esta semana
@@ -1051,16 +1080,16 @@ export function DashboardContent() {
                     Frecuencia de ingreso durante los ultimos 7 dias.
                   </p>
                 </div>
-                <div className="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
+                <div className="w-fit rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">
                   {getWeeklyTotalLabel(weeklyProgress)}
                 </div>
               </CardHeader>
               <CardContent className="pt-3">
-                <div className="h-[250px] w-full">
+                <div className="h-[220px] w-full sm:h-[250px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={weeklyProgress}
-                      margin={{ top: 18, right: 12, left: -16, bottom: 0 }}
+                      margin={{ top: 18, right: 8, left: -24, bottom: 0 }}
                     >
                       <defs>
                         <linearGradient id="weekly-progress-fill" x1="0" y1="0" x2="0" y2="1">
@@ -1077,14 +1106,14 @@ export function DashboardContent() {
                         dataKey="day"
                         tickLine={false}
                         axisLine={false}
-                        tick={{ fill: '#94A3B8', fontSize: 11 }}
+                        tick={{ fill: '#94A3B8', fontSize: 10 }}
                       />
                       <YAxis
                         allowDecimals={false}
                         tickLine={false}
                         axisLine={false}
-                        tick={{ fill: '#CBD5E1', fontSize: 11 }}
-                        width={26}
+                        tick={{ fill: '#CBD5E1', fontSize: 10 }}
+                        width={22}
                       />
                       <Tooltip
                         cursor={{ stroke: '#CBD5E1', strokeDasharray: '4 4' }}
@@ -1137,7 +1166,7 @@ export function DashboardContent() {
           </div>
 
           <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-            <DialogContent className="max-w-3xl rounded-xl">
+            <DialogContent className="max-w-3xl rounded-xl px-4 sm:px-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                   Agrega una materia
