@@ -667,12 +667,22 @@ export async function analizarMaterialConIA(
 
 export async function limpiarPreguntasBanco(): Promise<CleanResult> {
   try {
-    const { supabase } = await requireAdminAccess();
+    await requireAdminAccess();
+    const admin = createAdminClient();
 
-    const { count, error } = await supabase
+    const { error: unlinkHistoryError } = await admin
+      .from('historial_respuestas')
+      .update({ pregunta_id: null })
+      .not('pregunta_id', 'is', null);
+
+    if (unlinkHistoryError) {
+      throw unlinkHistoryError;
+    }
+
+    const { count, error } = await admin
       .from('preguntas_banco')
       .delete({ count: 'exact' })
-      .neq('enunciado', '');
+      .not('id', 'is', null);
 
     if (error) {
       throw error;

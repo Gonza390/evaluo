@@ -243,6 +243,8 @@ export default function AdminPanel() {
   const [loadingRankingGlobal, setLoadingRankingGlobal] = useState(false);
   const [materialSearch, setMaterialSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [isQuestionBankDialogOpen, setIsQuestionBankDialogOpen] = useState(false);
+  const [cleaningQuestionBank, setCleaningQuestionBank] = useState(false);
 
   const showAdminError = (title: string, description: string) => {
     toast({
@@ -516,6 +518,29 @@ export default function AdminPanel() {
       const message = err instanceof Error ? err.message : 'Error desconocido';
       setLoadingPrompt(false);
       showAdminError('Ocurrió un error inesperado', message);
+    }
+  };
+
+  const handleCleanQuestionBank = async () => {
+    setCleaningQuestionBank(true);
+    try {
+      const result = await limpiarPreguntasBanco();
+      if (result.success) {
+        setQuestionEditorRows([]);
+        setIaRankingRows([]);
+        setRankingFailed([]);
+        setRankingCorrect([]);
+        showAdminSuccess('Banco limpiado', result.message);
+        setIsQuestionBankDialogOpen(false);
+        await Promise.all([fetchOpsData(), fetchIARanking(), fetchRankingGlobal()]);
+      } else {
+        showAdminError('No pudimos borrar el banco', result.message);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      showAdminError('No pudimos borrar el banco', message);
+    } finally {
+      setCleaningQuestionBank(false);
     }
   };
 
@@ -1249,7 +1274,7 @@ export default function AdminPanel() {
       {isIAProcessing ? <AdminIAProcessingOverlay /> : null}
 
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,249,252,0.94)_100%)] px-4 py-5 backdrop-blur-xl lg:block">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,249,252,0.94)_100%)] px-4 py-5 backdrop-blur-xl 2xl:block">
         <div className={`${ADMIN_PANEL_CARD_CLASS} flex h-full flex-col overflow-hidden rounded-[2rem] px-4 py-4`}>
           <div className="border-b border-slate-200/80 pb-4">
             <span className="text-[11px] font-bold uppercase tracking-[0.24em] text-indigo-500">Evaluo</span>
@@ -1335,9 +1360,9 @@ export default function AdminPanel() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-3 lg:ml-72 lg:p-5">
-        <div className={`${ADMIN_PANEL_CARD_CLASS} mx-auto min-h-[calc(100vh-1.5rem)] max-w-[1320px] rounded-[1.6rem] p-4 text-[12px] leading-tight sm:rounded-[1.8rem] sm:p-5 lg:min-h-[calc(100vh-2.5rem)] lg:rounded-[2rem]`}>
-          <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+      <main className="flex-1 p-2 sm:p-3 xl:p-4 2xl:ml-72 2xl:p-5">
+        <div className={`${ADMIN_PANEL_CARD_CLASS} mx-auto min-h-[calc(100vh-1rem)] max-w-[1460px] rounded-[1.45rem] p-3 text-[12px] leading-tight sm:min-h-[calc(100vh-1.5rem)] sm:rounded-[1.8rem] sm:p-5 xl:rounded-[2rem] 2xl:min-h-[calc(100vh-2.5rem)]`}>
+          <div className="mb-5 flex flex-col gap-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
             <div>
               <p className="eyebrow-label text-indigo-500">Operación interna</p>
               <h1 className="mt-2 text-[1.8rem] font-black tracking-[-0.06em] text-slate-950 sm:text-[2rem]">
@@ -1347,9 +1372,9 @@ export default function AdminPanel() {
                 Gestioná cargas, biblioteca, IA, usuarios y métricas desde un backoffice más limpio, consistente y preparado para escalar.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4 2xl:flex 2xl:flex-wrap">
               {adminQuickStats.map((stat) => (
-                <div key={stat.label} className={`${ADMIN_PANEL_SUBCARD_CLASS} min-w-[150px] px-4 py-3`}>
+                <div key={stat.label} className={`${ADMIN_PANEL_SUBCARD_CLASS} min-w-0 px-4 py-3 2xl:min-w-[150px]`}>
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">{stat.label}</p>
                   <p className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">{stat.value}</p>
                 </div>
@@ -1379,7 +1404,7 @@ export default function AdminPanel() {
               </div>
             </div>
           </div>
-          <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+          <div className="mb-5 grid grid-cols-1 gap-4 2xl:grid-cols-[1.45fr_0.95fr]">
             <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-4`}>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
@@ -1399,7 +1424,7 @@ export default function AdminPanel() {
                   Refrescar panel
                 </Button>
               </div>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
                 <button
                   type="button"
                   onClick={() => setActiveTab('dashboard')}
@@ -1475,7 +1500,7 @@ export default function AdminPanel() {
               </div>
             </div>
           </div>
-          <div className="mb-5 lg:hidden">
+          <div className="mb-5 2xl:hidden">
             <div className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-x-auto px-2 py-2`}>
               <div className="flex min-w-max gap-2">
                 {adminTabs.map((tab) => {
@@ -2070,9 +2095,9 @@ export default function AdminPanel() {
                   <p className="text-xs font-bold text-red-600/70 uppercase tracking-tight">
                     Borra todas las preguntas extraídas por la IA. Esta acción no se puede deshacer.
                   </p>
-                  <AlertDialog>
+                  <AlertDialog open={isQuestionBankDialogOpen} onOpenChange={setIsQuestionBankDialogOpen}>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" className="rounded-xl px-6 h-10 font-bold text-xs shadow-lg shadow-red-200">
+                      <Button variant="destructive" className="h-10 rounded-xl px-6 text-xs font-bold shadow-lg shadow-red-200" disabled={cleaningQuestionBank}>
                         BORRAR TODO EL BANCO
                       </Button>
                     </AlertDialogTrigger>
@@ -2086,13 +2111,21 @@ export default function AdminPanel() {
                       <AlertDialogFooter>
                         <AlertDialogCancel className="rounded-xl font-bold">Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={async () => {
-                            const result = await limpiarPreguntasBanco();
-                            if (result.success) toast({ description: result.message });
+                          onClick={(event) => {
+                            event.preventDefault();
+                            void handleCleanQuestionBank();
                           }}
+                          disabled={cleaningQuestionBank}
                           className="bg-red-600 rounded-xl font-bold"
                         >
-                          Sí, borrar todo
+                          {cleaningQuestionBank ? (
+                            <span className="inline-flex items-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Borrando...
+                            </span>
+                          ) : (
+                            'Sí, borrar todo'
+                          )}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
