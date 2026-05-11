@@ -107,7 +107,7 @@ function dedupeOptionsForView(options: string[]): string[] {
 
 function parseCorrectAnswers(raw: string): string[] {
   return raw
-    .split('|')
+    .split(/\s*(?:\||;)\s*/g)
     .map((item) => item.replace(/\s+/g, ' ').trim())
     .filter(Boolean);
 }
@@ -165,6 +165,8 @@ export default function SimuladorExamen({
   >([]);
   const [loadingExplanations, setLoadingExplanations] = useState(false);
   const [explanationsMetrics, setExplanationsMetrics] = useState<{ cacheHits: number; generatedCount: number } | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState<Record<string, 1 | -1 | undefined>>({});
+  const [feedbackVotes, setFeedbackVotes] = useState<Record<string, 1 | -1>>({});
   const [hasStarted, setHasStarted] = useState(false);
   const storageKey = useMemo(
     () => `evaluo_simulador_in_progress:${mode}:${materiaId}:${parcial}`,
@@ -281,15 +283,13 @@ export default function SimuladorExamen({
       const respondidas = Object.keys(selectedAnswers).length;
       setAciertosFinales(correctas);
       setRespondidasFinales(respondidas);
-
-      await finalizarSimuladorAction({
-        usuario_id: userId,
-        materia_id: materiaId,
-        parcial,
-        total_preguntas: preguntasDisponibles,
-        respuestas_correctas: correctas,
-        tiempo_restante: trigger === 'timer' ? 0 : timeLeft,
-      });
+      setEstado('finished');
+      setIsFinishing(false);
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        // ignore storage errors
+      }
 
       const registros = Object.entries(selectedAnswers).map(([index, optionIndex]) => {
         const questionIndex = Number(index);
@@ -306,15 +306,19 @@ export default function SimuladorExamen({
         });
       });
 
-      await Promise.all(registros.filter(Boolean));
-
-      setEstado('finished');
-      setIsFinishing(false);
-      try {
-        window.localStorage.removeItem(storageKey);
-      } catch {
-        // ignore storage errors
-      }
+      void Promise.allSettled([
+        finalizarSimuladorAction({
+          usuario_id: userId,
+          materia_id: materiaId,
+          parcial,
+          total_preguntas: preguntasDisponibles,
+          respuestas_correctas: correctas,
+          tiempo_restante: trigger === 'timer' ? 0 : timeLeft,
+        }),
+        ...registros.filter(Boolean),
+      ]).catch((error) => {
+        console.error('Error registrando resultado del simulador:', error);
+      });
     },
     [
       computeCorrectAnswers,
@@ -496,6 +500,32 @@ export default function SimuladorExamen({
 
     void loadExplanations();
   }, [estado, isCorrectAnswer, materiaId, parcial, preguntas, selectedAnswers, userId]);
+
+  const handleExplanationFeedback = async (preguntaId: string, voto: 1 | -1) => {
+    setFeedbackLoading((prev) => ({ ...prev, [preguntaId]: voto }));
+
+    try {
+      const response = await fetch('/api/explanations/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pregunta_id: preguntaId, voto }),
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo guardar tu feedback.');
+      }
+
+      setFeedbackVotes((prev) => ({ ...prev, [preguntaId]: voto }));
+    } catch (error) {
+      console.error('Explanation feedback error:', error);
+    } finally {
+      setFeedbackLoading((prev) => {
+        const next = { ...prev };
+        delete next[preguntaId];
+        return next;
+      });
+    }
+  };
 
   const handleSelectAnswer = (optionIndex: number) => {
     if (!preguntaActual) return;
@@ -698,32 +728,43 @@ export default function SimuladorExamen({
                     <p className="text-sm font-semibold text-slate-800">{item.enunciado}</p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">{item.explicacion}</p>
                     <div className="mt-3 flex items-center gap-2">
+                      {(() => {
+                        const currentVote = feedbackVotes[item.preguntaId];
+                        const currentLoading = feedbackLoading[item.preguntaId];
+
+                        return (
+                          <>
                       <button
-                        onClick={async () => {
-                          await fetch('/api/explanations/feedback', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ pregunta_id: item.preguntaId, voto: 1 }),
-                          });
-                        }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                        onClick={() => void handleExplanationFeedback(item.preguntaId, 1)}
+                        disabled={Boolean(currentLoading)}
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
+                          currentVote === 1
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                          currentLoading === 1 && 'opacity-70'
+                        )}
                       >
                         <ThumbsUp className="h-3.5 w-3.5" />
                         Me ayudo
                       </button>
                       <button
-                        onClick={async () => {
-                          await fetch('/api/explanations/feedback', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ pregunta_id: item.preguntaId, voto: -1 }),
-                          });
-                        }}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                        onClick={() => void handleExplanationFeedback(item.preguntaId, -1)}
+                        disabled={Boolean(currentLoading)}
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
+                          currentVote === -1
+                            ? 'border-rose-200 bg-rose-50 text-rose-700'
+                            : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                          currentLoading === -1 && 'opacity-70'
+                        )}
                       >
                         <ThumbsDown className="h-3.5 w-3.5" />
                         No me ayudo
                       </button>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}

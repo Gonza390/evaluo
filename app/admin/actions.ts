@@ -91,6 +91,11 @@ export interface SystemHealthStats {
   total_errors: number;
   avg_latency_ms: number;
   failures_by_path: Array<{ path: string; count: number }>;
+  recent_errors: Array<{
+    path: string;
+    message: string;
+    created_at: string | null;
+  }>;
 }
 
 export interface FileMaintenanceResult {
@@ -195,7 +200,12 @@ function normalizeOptionValue(value: string) {
 
 function buildQuestionFingerprint(question: QuestionRecord) {
   const enunciado = normalizeQuestion(question.enunciado);
-  const respuestaCorrecta = normalizeOptionValue(question.respuesta_correcta);
+  const respuestaCorrecta = question.respuesta_correcta
+    .split('|')
+    .map((part) => normalizeOptionValue(part))
+    .filter(Boolean)
+    .sort()
+    .join('|');
   const opciones = dedupeOptions(question.opciones)
     .map((option) => normalizeOptionValue(option))
     .filter(Boolean)
@@ -381,6 +391,16 @@ function normalizeCellValue(value: unknown): string {
     .trim();
 }
 
+function parseCorrectAnswerParts(rawValue: unknown): string[] {
+  const normalized = normalizeCellValue(rawValue);
+  if (!normalized) return [];
+
+  return normalized
+    .split(/\s*(?:\||;|\/{2}|\/|\n)\s*/g)
+    .map((part) => normalizeCellValue(part))
+    .filter(Boolean);
+}
+
 function parseQuestionsFromXlsxBuffer(buffer: Buffer): QuestionRecord[] {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const xlsx = require('xlsx') as {
@@ -401,7 +421,8 @@ function parseQuestionsFromXlsxBuffer(buffer: Buffer): QuestionRecord[] {
 
   for (const row of rows) {
     const enunciado = normalizeCellValue(row.pregunta);
-    const respuestaCorrecta = normalizeCellValue(row.respuesta_correcta);
+    const respuestasCorrectas = parseCorrectAnswerParts(row.respuesta_correcta);
+    const respuestaCorrecta = respuestasCorrectas.join('|');
 
     const optionKeys = ['opcion_a', 'opcion_b', 'opcion_c', 'opcion_d', 'opcion_e', 'opcion_f'];
     let opciones = optionKeys.map((key) => normalizeCellValue(row[key])).filter(Boolean);
@@ -411,16 +432,22 @@ function parseQuestionsFromXlsxBuffer(buffer: Buffer): QuestionRecord[] {
       const incorrectas = incorrectasRaw
         ? incorrectasRaw.split('|').map((part) => normalizeCellValue(part)).filter(Boolean)
         : [];
-      opciones = [respuestaCorrecta, ...incorrectas].filter(Boolean);
+      opciones = [...respuestasCorrectas, ...incorrectas].filter(Boolean);
     }
 
     const opcionesUnicas = dedupeOptions(opciones).slice(0, 6);
     if (!enunciado || !respuestaCorrecta || opcionesUnicas.length < 2) continue;
 
-    const tieneCorrecta = opcionesUnicas.some(
-      (opt) => normalizeQuestion(opt) === normalizeQuestion(respuestaCorrecta)
+    const correctAnswersNormalized = respuestasCorrectas.map((answer) => normalizeQuestion(answer));
+    const faltantesCorrectas = respuestasCorrectas.filter(
+      (answer) => !opcionesUnicas.some((opt) => normalizeQuestion(opt) === normalizeQuestion(answer))
     );
-    const finalOpciones = tieneCorrecta ? opcionesUnicas : [respuestaCorrecta, ...opcionesUnicas].slice(0, 6);
+    const finalOpciones = dedupeOptions([...opcionesUnicas, ...faltantesCorrectas]).slice(0, 6);
+
+    const tieneAlgunaCorrecta = finalOpciones.some((opt) =>
+      correctAnswersNormalized.includes(normalizeQuestion(opt))
+    );
+    if (!tieneAlgunaCorrecta) continue;
 
     questions.push({
       enunciado,
@@ -1647,6 +1674,21 @@ export async function obtenerSaludSistemaAdmin() {
           .map(([path, count]) => ({ path, count }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 8),
+        recent_errors: errors.slice(0, 12).map((row) => {
+          const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+          const rawMessage =
+            metadata.message ??
+            metadata.error ??
+            metadata.reason ??
+            metadata.description ??
+            'Sin detalle adicional';
+
+          return {
+            path: row.path ?? 'unknown',
+            message: String(rawMessage).slice(0, 220),
+            created_at: row.created_at ?? null,
+          };
+        }),
       },
     };
   } catch (error) {

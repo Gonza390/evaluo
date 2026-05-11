@@ -243,6 +243,7 @@ export default function AdminPanel() {
   const [loadingRankingGlobal, setLoadingRankingGlobal] = useState(false);
   const [materialSearch, setMaterialSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [uploadMateriaSearch, setUploadMateriaSearch] = useState('');
   const [isQuestionBankDialogOpen, setIsQuestionBankDialogOpen] = useState(false);
   const [cleaningQuestionBank, setCleaningQuestionBank] = useState(false);
 
@@ -1096,6 +1097,11 @@ export default function AdminPanel() {
   }, [filteredResources, materialSearch, resourceCarreraNames, resourceMateriaNames, resourceUniNames]);
   const filterCarreras = useMemo(() => sortFilterEntries(resourceCarreraNames), [resourceCarreraNames]);
   const filterMaterias = useMemo(() => sortFilterEntries(resourceMateriaNames), [resourceMateriaNames]);
+  const uploadMateriaOptions = useMemo(() => {
+    const search = uploadMateriaSearch.trim().toLowerCase();
+    if (!search) return materias;
+    return materias.filter((materia) => materia.nombre.toLowerCase().includes(search));
+  }, [materias, uploadMateriaSearch]);
   const isExcelSelected = Boolean(selectedFile?.name && /\.(xlsx|xls)$/i.test(selectedFile.name));
   const filterUniversidades = useMemo(() => sortFilterEntries(resourceUniNames), [resourceUniNames]);
   const platformUsageData = useMemo(() => getPlatformUsageData(stats), [stats]);
@@ -1361,7 +1367,7 @@ export default function AdminPanel() {
 
       {/* Main Content */}
       <main className="flex-1 p-2 sm:p-3 xl:p-4 2xl:ml-72 2xl:p-5">
-        <div className={`${ADMIN_PANEL_CARD_CLASS} mx-auto min-h-[calc(100vh-1rem)] max-w-[1460px] rounded-[1.45rem] p-3 text-[12px] leading-tight sm:min-h-[calc(100vh-1.5rem)] sm:rounded-[1.8rem] sm:p-5 xl:rounded-[2rem] 2xl:min-h-[calc(100vh-2.5rem)]`}>
+        <div className="mx-auto min-h-[calc(100vh-1rem)] max-w-[1500px] px-1 text-[12px] leading-tight sm:min-h-[calc(100vh-1.5rem)] sm:px-3 xl:px-4 2xl:min-h-[calc(100vh-2.5rem)]">
           <div className="mb-5 flex flex-col gap-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
             <div>
               <p className="eyebrow-label text-indigo-500">Operación interna</p>
@@ -1405,7 +1411,7 @@ export default function AdminPanel() {
             </div>
           </div>
           <div className="mb-5 grid grid-cols-1 gap-4 2xl:grid-cols-[1.45fr_0.95fr]">
-            <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-4`}>
+            <div className="rounded-[1.6rem] border border-slate-200/80 bg-white/88 p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="eyebrow-label">Quick actions</p>
@@ -1467,7 +1473,7 @@ export default function AdminPanel() {
                 </button>
               </div>
             </div>
-            <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-4`}>
+            <div className="rounded-[1.6rem] border border-slate-200/80 bg-white/88 p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="eyebrow-label">Activity feed</p>
@@ -1501,8 +1507,8 @@ export default function AdminPanel() {
             </div>
           </div>
           <div className="mb-5 2xl:hidden">
-            <div className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-x-auto px-2 py-2`}>
-              <div className="flex min-w-max gap-2">
+            <div className="rounded-[1.45rem] border border-slate-200/80 bg-white/88 px-2 py-2 shadow-[var(--shadow-soft)] backdrop-blur-sm">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                 {adminTabs.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.key;
@@ -1522,7 +1528,7 @@ export default function AdminPanel() {
                       >
                         <Icon className="h-4 w-4" />
                       </span>
-                      <span className="whitespace-nowrap text-xs font-semibold">{tab.label}</span>
+                      <span className="truncate text-xs font-semibold">{tab.label}</span>
                     </button>
                   );
                 })}
@@ -1610,16 +1616,16 @@ export default function AdminPanel() {
                 <p className="mt-2 text-sm text-slate-500">Definí ubicación, tipo y archivo antes de enviarlo al pipeline.</p>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.05fr_1.05fr_0.9fr]">
                 {/* 1. Ubicación */}
-                <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
-                  <CardHeader className="bg-white border-b border-slate-100 py-4">
+                <section className="overflow-hidden rounded-[1.65rem] border border-slate-200/80 bg-white/92 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]">
+                  <div className="border-b border-slate-100 bg-white px-6 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">1</span>
                       UBICACIÓN
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-4">
+                  </div>
+                  <div className="space-y-4 p-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-slate-400 ml-1">UNIVERSIDAD</Label>
                       <Select value={uploadUniId} onValueChange={setUploadUniId}>
@@ -1654,45 +1660,70 @@ export default function AdminPanel() {
 
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-slate-400 ml-1">MATERIA</Label>
-                      <Select 
-                        value={uploadMateriaId} 
-                        onValueChange={(v) => {
-                          setUploadMateriaId(v);
-                          const m = materias.find(m => m.id === v);
-                          const isGeneral = m?.slug?.includes('aprender-21') || 
-                                          m?.slug?.includes('tecnologia-humanidades') ||
-                                          m?.nombre.toLowerCase().includes('aprender en el siglo 21');
-                          setEsMateriaGeneral(!!isGeneral);
-                          if (isGeneral) setUploadCarreraId('');
-                        }}
-                      >
-                        <SelectTrigger className="rounded-xl border-slate-200 bg-white h-11 focus:ring-blue-500 transition-all">
-                          <SelectValue placeholder="Seleccionar Materia" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                          {materias.map((m) => (
-                            <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        value={uploadMateriaSearch}
+                        onChange={(event) => setUploadMateriaSearch(event.target.value)}
+                        placeholder="Buscar materia para seleccionar"
+                        className="h-11 rounded-xl border-slate-200 bg-white"
+                      />
+                      <div className="max-h-64 overflow-y-auto rounded-[1.25rem] border border-slate-200 bg-slate-50/70 p-2">
+                        <div className="space-y-1.5">
+                          {uploadMateriaOptions.length === 0 ? (
+                            <div className="rounded-xl px-3 py-4 text-xs text-slate-500">
+                              No encontramos materias para esa búsqueda.
+                            </div>
+                          ) : (
+                            uploadMateriaOptions.map((m) => {
+                              const isSelected = uploadMateriaId === m.id;
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setUploadMateriaId(m.id);
+                                    const isGeneral =
+                                      m.slug?.includes('aprender-21') ||
+                                      m.slug?.includes('tecnologia-humanidades') ||
+                                      m.nombre.toLowerCase().includes('aprender en el siglo 21');
+                                    setEsMateriaGeneral(!!isGeneral);
+                                    if (isGeneral) setUploadCarreraId('');
+                                  }}
+                                  className={`flex w-full items-start justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition ${
+                                    isSelected
+                                      ? 'bg-blue-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)]'
+                                      : 'bg-white text-slate-700 hover:bg-blue-50 hover:text-blue-700'
+                                  }`}
+                                >
+                                  <span className="text-sm font-semibold leading-5">{m.nombre}</span>
+                                  {m.sharedCareerCount ? (
+                                    <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${isSelected ? 'bg-white/15 text-white/85' : 'bg-slate-100 text-slate-500'}`}>
+                                      {m.sharedCareerCount} carreras
+                                    </span>
+                                  ) : null}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
                       {esMateriaGeneral && (
                         <p className="text-[10px] text-amber-600 font-bold ml-1 animate-pulse">
                           âœ¨ MATERIA GENERAL DETECTADA
                         </p>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </section>
 
                 {/* 2. Tipo de Material */}
-                <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
-                  <CardHeader className="bg-white border-b border-slate-100 py-4">
+                <section className="overflow-hidden rounded-[1.65rem] border border-slate-200/80 bg-white/92 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]">
+                  <div className="border-b border-slate-100 bg-white px-6 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">2</span>
                       TIPO DE MATERIAL
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-4">
+                  </div>
+                  <div className="space-y-4 p-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-slate-400 ml-1">TIPO DE RECURSO</Label>
                       <Select value={recursoType} onValueChange={(value: ResourceType) => {
@@ -1861,18 +1892,18 @@ export default function AdminPanel() {
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </section>
 
                 {/* 3. Carga de Archivo */}
-                <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
-                  <CardHeader className="bg-white border-b border-slate-100 py-4">
+                <section className="overflow-hidden rounded-[1.65rem] border border-slate-200/80 bg-white/92 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]">
+                  <div className="border-b border-slate-100 bg-white px-6 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">3</span>
                       CARGA DE ARCHIVO
                     </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-6">
+                  </div>
+                  <div className="space-y-6 p-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-bold text-slate-400 ml-1">ARCHIVO (PDF o EXCEL)</Label>
                       <div className={`relative border-2 border-dashed rounded-[1.5rem] p-8 transition-all duration-300 group ${
@@ -1945,8 +1976,8 @@ export default function AdminPanel() {
                         </div>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+                </section>
               </div>
             </div>
           )}
@@ -2223,6 +2254,9 @@ export default function AdminPanel() {
                   <CardContent className="space-y-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rutas con más errores</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Acá ves los endpoints o pantallas donde más se repitieron errores cliente en los últimos 7 días.
+                      </p>
                       <div className="mt-2 space-y-2">
                         {(systemHealth?.failures_by_path ?? []).length === 0 ? (
                           <p className="text-sm text-slate-500">Sin errores recientes registrados.</p>
@@ -2238,7 +2272,31 @@ export default function AdminPanel() {
                     </div>
 
                     <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Detalle de errores recientes</p>
+                      <div className="mt-2 space-y-2">
+                        {(systemHealth?.recent_errors ?? []).length === 0 ? (
+                          <p className="text-sm text-slate-500">No hay trazas recientes para mostrar.</p>
+                        ) : (
+                          (systemHealth?.recent_errors ?? []).map((row, index) => (
+                            <div key={`${row.path}-${row.created_at ?? index}`} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <span className="text-xs font-semibold text-slate-800">{row.path}</span>
+                                <span className="text-[11px] text-slate-500">
+                                  {row.created_at ? new Date(row.created_at).toLocaleString('es-AR') : 'Fecha no disponible'}
+                                </span>
+                              </div>
+                              <p className="mt-2 text-xs leading-5 text-slate-600">{row.message}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Muestra de archivos huérfanos</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Son archivos que siguen existiendo en Storage pero ya no tienen registro asociado en la base. Suelen aparecer cuando un upload quedó incompleto o cuando se borró el registro pero no el archivo.
+                      </p>
                       <div className="mt-2 space-y-2">
                         {(fileMaintenance?.orphan_sample ?? []).length === 0 ? (
                           <p className="text-sm text-slate-500">No hay archivos huérfanos detectados.</p>
@@ -2249,6 +2307,14 @@ export default function AdminPanel() {
                             </div>
                           ))
                         )}
+                      </div>
+                      <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Cómo resolverlo</p>
+                        <ul className="mt-2 space-y-1 text-xs leading-5 text-amber-900">
+                          <li>1. Si el archivo sí debería existir, recreá su registro en `recursos`, `materiales` o `resumenes`.</li>
+                          <li>2. Si quedó de una carga rota o ya no se usa, eliminá el objeto del bucket `biblioteca`.</li>
+                          <li>3. Si ves muchos casos del mismo prefijo, revisá el flujo de carga de esa materia o carrera.</li>
+                        </ul>
                       </div>
                     </div>
                   </CardContent>
