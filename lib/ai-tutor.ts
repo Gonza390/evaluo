@@ -6,6 +6,25 @@ type ExplainInput = {
 };
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+const AI_REQUEST_TIMEOUT_MS = 15_000;
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs = AI_REQUEST_TIMEOUT_MS
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 function buildPrompt(input: ExplainInput) {
   const contextText = input.context.length
@@ -35,7 +54,7 @@ async function callGemini(prompt: string) {
 
   const url =
     'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-  const response = await fetch(`${url}?key=${encodeURIComponent(apiKey)}`, {
+  const response = await fetchWithTimeout(`${url}?key=${encodeURIComponent(apiKey)}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -65,7 +84,7 @@ async function callGroq(prompt: string) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return null;
 
-  const response = await fetch(GROQ_ENDPOINT, {
+  const response = await fetchWithTimeout(GROQ_ENDPOINT, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

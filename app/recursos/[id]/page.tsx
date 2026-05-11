@@ -24,10 +24,13 @@ import { useToast } from '@/hooks/use-toast';
 import { getSimulatorRoute } from '@/lib/routes';
 import {
   fetchMateriaRecursos,
+  fetchResourceViewCounts,
   fetchResourceVoteSummaries,
   getDefaultResourceVoteSummary,
+  registerResourceView,
   sortResourcesByVotes,
   upsertResourceVote,
+  type ResourceViewCountMap,
   type ResourceVoteSummaryMap,
 } from '@/lib/data/resources';
 
@@ -96,12 +99,36 @@ function RecursoContent() {
   const [loading, setLoading] = useState(true);
   const [viewerLoading, setViewerLoading] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewerIsPreview, setViewerIsPreview] = useState(false);
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [readerError, setReaderError] = useState<string | null>(null);
   const [resourceVotes, setResourceVotes] = useState<ResourceVoteSummaryMap>({});
+  const [resourceViews, setResourceViews] = useState<ResourceViewCountMap>({});
   const [voteLoading, setVoteLoading] = useState<string>('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    void supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (mounted) {
+          setCurrentUserId(data.user?.id ?? null);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setCurrentUserId(null);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchRecursos() {
@@ -141,15 +168,20 @@ function RecursoContent() {
     const resourceIds = recursos.map((resource) => resource.id);
     if (resourceIds.length === 0) {
       setResourceVotes({});
+      setResourceViews({});
       return;
     }
 
-    void supabase.auth
-      .getUser()
-      .then(({ data }) => fetchResourceVoteSummaries(supabase, resourceIds, data.user?.id))
-      .then((summaries) => setResourceVotes(summaries))
+    void Promise.all([
+      fetchResourceVoteSummaries(supabase, resourceIds, currentUserId ?? undefined),
+      fetchResourceViewCounts(supabase, resourceIds),
+    ])
+      .then(([summaries, views]) => {
+        setResourceVotes(summaries);
+        setResourceViews(views);
+      })
       .catch((error) => console.error('Error fetching resource vote summaries:', error));
-  }, [recursos]);
+  }, [currentUserId, recursos]);
 
   const sortedRecursos = useMemo(
     () => sortResourcesByVotes(recursos, resourceVotes),
@@ -165,6 +197,7 @@ function RecursoContent() {
     async function hydrateViewer() {
       if (!selectedResource?.url_archivo) {
         setViewerUrl(null);
+        setViewerIsPreview(false);
         return;
       }
 
@@ -179,16 +212,48 @@ function RecursoContent() {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            setViewerUrl(null);
+            setReaderError('Inicia sesion para acceder al documento completo.');
+            return;
+          }
+
           setViewerUrl(null);
           setReaderError('No pudimos preparar la vista del documento.');
           return;
         }
 
-        const payload = (await response.json()) as { url?: string };
+        const payload = (await response.json()) as { url?: string; preview?: boolean };
         const signedViewerUrl = payload.url ?? null;
         setViewerUrl(signedViewerUrl);
+        setViewerIsPreview(Boolean(payload.preview));
 
         if (signedViewerUrl) {
+          let sessionKey = '';
+
+          try {
+            sessionKey =
+              window.sessionStorage.getItem('evaluo_pdf_view_session') ??
+              `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            window.sessionStorage.setItem('evaluo_pdf_view_session', sessionKey);
+
+            const viewKey = `evaluo_resource_viewed:${selectedResource.id}`;
+            if (!window.sessionStorage.getItem(viewKey)) {
+              await registerResourceView(supabase, {
+                resourceId: selectedResource.id,
+                userId: currentUserId,
+                sessionKey,
+              });
+              window.sessionStorage.setItem(viewKey, '1');
+              setResourceViews((prev) => ({
+                ...prev,
+                [selectedResource.id]: (prev[selectedResource.id] ?? 0) + 1,
+              }));
+            }
+          } catch (error) {
+            console.error('Error registering resource view:', error);
+          }
+
           pushRecentResource({
             id: selectedResource.id,
             title: selectedResource.nombre,
@@ -203,6 +268,7 @@ function RecursoContent() {
       } catch (error) {
         console.error('Error hydrating viewer:', error);
         setViewerUrl(null);
+        setViewerIsPreview(false);
         setReaderError('No pudimos abrir la vista del documento.');
       } finally {
         setViewerLoading(false);
@@ -210,7 +276,7 @@ function RecursoContent() {
     }
 
     void hydrateViewer();
-  }, [materiaId, nombreMateria, selectedResource, tipo]);
+  }, [currentUserId, materiaId, nombreMateria, selectedResource, tipo]);
 
   const selectedIndex = sortedRecursos.findIndex((resource) => resource.id === selectedResourceId);
   const canGoPrev = selectedIndex > 0;
@@ -301,6 +367,35 @@ function RecursoContent() {
       ? recurso.nombre
       : `${recurso.nombre}.pdf`;
 
+    const response = await fetch('/api/pdf-download-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: objectPath, downloadName }),
+    });
+
+    if (!response.ok) {
+      toast({
+        variant: 'destructive',
+        title: 'No pudimos generar la descarga segura',
+        description: 'Intenta nuevamente en unos segundos.',
+        duration: 3000,
+      });
+      return;
+    }
+
+    const payload = (await response.json()) as { url?: string };
+    if (!payload.url) {
+      toast({
+        variant: 'destructive',
+        title: 'No pudimos generar la descarga segura',
+        description: 'Intenta nuevamente en unos segundos.',
+        duration: 3000,
+      });
+      return;
+    }
+
+    window.open(payload.url, '_blank', 'noopener,noreferrer');
+    /*
     const { data, error } = await supabase.storage
       .from('biblioteca')
       .createSignedUrl(objectPath, 60, { download: downloadName });
@@ -316,6 +411,7 @@ function RecursoContent() {
     }
 
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    */
   };
 
   const goToResource = (direction: 'prev' | 'next') => {
@@ -328,7 +424,7 @@ function RecursoContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f6fb]">
+    <div className="animate-page-enter min-h-screen bg-[#f3f6fb]">
       <div className="mx-auto max-w-[1520px] px-4 py-5 lg:px-6">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <button
@@ -346,7 +442,7 @@ function RecursoContent() {
           </div>
         </div>
 
-        <section className="mb-4 rounded-[1.35rem] border border-slate-200 bg-white px-5 py-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)]">
+        <section className="surface-panel animate-saas-lift-in mb-4 px-5 py-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{nombreMateria}</p>
@@ -359,24 +455,26 @@ function RecursoContent() {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[420px]">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Colección</p>
                 <p className="mt-2 text-sm font-semibold text-slate-900">{getSectionTitle(tipo)}</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Documentos</p>
                 <p className="mt-2 text-2xl font-black text-slate-900">{sortedRecursos.length}</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Tipo</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{getReaderLabel(tipo)}</p>
+              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Vistas</p>
+                <p className="mt-2 text-2xl font-black text-slate-900">
+                  {selectedResource ? (resourceViews[selectedResource.id] ?? 0) : 0}
+                </p>
               </div>
             </div>
           </div>
         </section>
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-[0_14px_50px_rgba(15,23,42,0.08)]">
+          <section className="surface-panel overflow-hidden">
             <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -432,6 +530,8 @@ function RecursoContent() {
                 {selectedResource ? (
                   <>
                     <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600">
+                      <Eye className="h-3.5 w-3.5 text-sky-600" />
+                      <span>{selectedResource ? (resourceViews[selectedResource.id] ?? 0) : 0}</span>
                       <ThumbsUp className="h-3.5 w-3.5 text-emerald-600" />
                       <span>{(resourceVotes[selectedResource.id] ?? getDefaultResourceVoteSummary()).likes}</span>
                       <ThumbsDown className="ml-1 h-3.5 w-3.5 text-rose-600" />
@@ -468,7 +568,7 @@ function RecursoContent() {
 
             <div className="bg-[#f3f6fb] p-2">
               {loading || viewerLoading ? (
-                <div className="flex h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white text-slate-500">
+                <div className="flex h-[74vh] sm:h-[80vh] lg:h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white text-slate-500">
                   <Loader2 className="h-8 w-8 animate-spin" />
                   <div className="text-center">
                     <p className="text-sm font-semibold text-slate-700">Estamos preparando el visor</p>
@@ -476,7 +576,7 @@ function RecursoContent() {
                   </div>
                 </div>
               ) : readerError ? (
-                <div className="flex h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white px-6 text-center">
+                <div className="flex h-[74vh] sm:h-[80vh] lg:h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white px-6 text-center">
                   <FileText className="h-10 w-10 text-slate-300" />
                   <div>
                     <p className="text-base font-semibold text-slate-900">No pudimos abrir este documento</p>
@@ -487,11 +587,12 @@ function RecursoContent() {
                 <PdfViewer
                   url={viewerUrl}
                   title={selectedResource?.nombre || 'Documento Evaluo'}
-                    className="border-0 shadow-none"
-                    heightClassName="h-[86vh]"
-                  />
+                  className="animate-saas-lift-in border-0 shadow-none"
+                  heightClassName="h-[74vh] sm:h-[80vh] lg:h-[86vh]"
+                  forcePreviewLock={viewerIsPreview}
+                />
                 ) : (
-                <div className="flex h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white px-6 text-center">
+                <div className="flex h-[74vh] sm:h-[80vh] lg:h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white px-6 text-center">
                   <FileText className="h-10 w-10 text-slate-300" />
                   <div>
                     <p className="text-base font-semibold text-slate-900">Todavía no hay documento listo para leer</p>
@@ -534,7 +635,7 @@ function RecursoContent() {
                         key={recurso.id}
                         type="button"
                         onClick={() => setSelectedResourceId(recurso.id)}
-                        className={`w-full rounded-2xl border p-4 text-left transition ${
+                        className={`animate-saas-lift-in w-full rounded-2xl border p-4 text-left transition ${
                           active
                             ? 'border-indigo-300 bg-indigo-50 shadow-[0_10px_30px_rgba(79,93,255,0.12)]'
                             : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
@@ -551,6 +652,8 @@ function RecursoContent() {
                                 {recurso.creado_at ? new Date(recurso.creado_at).toLocaleDateString('es-AR') : 'Sin fecha'}
                               </p>
                               <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                                <Eye className="h-3 w-3 text-sky-600" />
+                                <span>{resourceViews[recurso.id] ?? 0}</span>
                                 <ThumbsUp className="h-3 w-3 text-emerald-600" />
                                 <span>{voteSummary.likes}</span>
                                 <ThumbsDown className="h-3 w-3 text-rose-600" />

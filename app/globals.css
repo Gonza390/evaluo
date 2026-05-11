@@ -24,9 +24,14 @@
   --border: oklch(0.9 0.01 210);
   --input: oklch(0.92 0.01 210);
   --ring: oklch(0.65 0.17 165);
-  --radius: 0.625rem;
-  --radius-3xl: 3rem;
-  --pc-gigante-shadow: 0 25px 50px -12px oklch(0.15 0.01 230 / 0.08);
+  --radius: 0.875rem;
+  --radius-card: 1.6rem;
+  --radius-panel: 2rem;
+  --radius-hero: 2.25rem;
+  --shadow-soft: 0 8px 24px -12px oklch(0.15 0.01 230 / 0.08);
+  --shadow-card: 0 18px 44px -18px oklch(0.15 0.01 230 / 0.1);
+  --shadow-panel: 0 24px 60px -22px oklch(0.15 0.01 230 / 0.12);
+  --pc-gigante-shadow: var(--shadow-panel);
 }
 
 .dark {
@@ -89,6 +94,9 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  p {
+    @apply text-[0.96rem] leading-7 text-slate-600;
+  }
 
   h1,
   h2,
@@ -96,7 +104,22 @@
   h4,
   h5,
   h6 {
-    @apply font-black tracking-tighter text-foreground;
+    @apply text-foreground tracking-[-0.045em];
+  }
+
+  h1 {
+    @apply font-black;
+  }
+
+  h2 {
+    @apply font-bold;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold;
   }
 
   [class*="lucide-"] {
@@ -105,8 +128,8 @@
 }
 
 @layer components {
-.pc-gigante-card {
-    @apply rounded-[3rem] shadow-2xl;
+  .pc-gigante-card {
+    @apply rounded-[var(--radius-hero)];
     background-color: var(--card);
     border: 1px solid color-mix(in oklch, var(--border) 65%, transparent);
     box-shadow: var(--pc-gigante-shadow);
@@ -115,11 +138,35 @@
   }
 
   .component-loader {
-    @apply flex min-h-[260px] items-center justify-center rounded-3xl border border-slate-200/80 bg-white shadow-sm;
+    @apply flex min-h-[260px] items-center justify-center rounded-[var(--radius-panel)] border border-slate-200/80 bg-white;
+    box-shadow: var(--shadow-soft);
   }
 
   .loader-card {
-    @apply rounded-3xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-[var(--radius-panel)] border border-slate-200 bg-white;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .surface-card {
+    @apply rounded-[var(--radius-card)] border border-slate-200/85 bg-white;
+    box-shadow: var(--shadow-card);
+  }
+
+  .surface-panel {
+    @apply rounded-[var(--radius-panel)] border border-slate-200/85 bg-white;
+    box-shadow: var(--shadow-panel);
+  }
+
+  .eyebrow-label {
+    @apply text-[0.68rem] font-bold uppercase tracking-[0.22em] text-slate-400;
+  }
+
+  .section-title {
+    @apply text-[2rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.4rem];
+  }
+
+  .section-copy {
+    @apply text-[0.98rem] leading-7 text-slate-500 sm:text-[1.02rem];
   }
 }
 
@@ -136,5 +183,134 @@
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+@keyframes studyCardFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes studyReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes studyPulseRing {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 93, 255, 0.14);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(79, 93, 255, 0);
+  }
+}
+
+@keyframes saasLiftIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes saasGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
+  }
+}
+
+@keyframes studyOrbDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes pageEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progressSheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+@layer utilities {
+  .animate-study-float {
+    animation: studyCardFloat 4.6s ease-in-out infinite;
+  }
+
+  .animate-study-reveal {
+    animation: studyReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-study-focus {
+    animation: studyPulseRing 2.8s ease-in-out infinite;
+  }
+
+  .animate-saas-lift-in {
+    animation: saasLiftIn 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-saas-glow {
+    animation: saasGlow 3.2s ease-in-out infinite;
+  }
+
+  .animate-study-orb {
+    animation: studyOrbDrift 6.2s ease-in-out infinite;
+  }
+
+  .animate-page-enter {
+    animation: pageEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-tab-panel {
+    animation: saasLiftIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-surface-reveal {
+    animation: saasLiftIn 0.58s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-progress-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 48%, transparent 100%);
+    transform: translateX(-120%);
+    animation: progressSheen 2.8s ease-in-out infinite;
   }
 }

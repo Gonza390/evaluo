@@ -103,13 +103,13 @@ export default function CareerListClient({
   }, [initialCarreras, searchTerm]);
 
   return (
-    <div className="pt-7">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="animate-tab-panel pt-7">
+      <div className="animate-surface-reveal flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="text-[28px] leading-none font-bold tracking-[-0.05em] text-[#10214C]">
+          <h2 className="section-title leading-none text-[#10214C]">
             Todas las carreras
           </h2>
-          <p className="mt-2 text-sm text-[#7C879C]">
+          <p className="section-copy mt-2 text-[#7C879C]">
             Explora las carreras que ofrece esta universidad.
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function CareerListClient({
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {visibleCarreras.length > 0 ? (
-          visibleCarreras.map((carrera) => {
+          visibleCarreras.map((carrera, index) => {
             const preset = getCareerPreset(carrera.nombre);
             const Icon = preset.icon;
             const materiasCount = materiaCountByCarrera.get(carrera.id) ?? 0;
@@ -136,9 +136,10 @@ export default function CareerListClient({
               <Link
                 key={carrera.id}
                 href={`/materias?carreraId=${carrera.id}`}
-                className="group rounded-2xl border border-[#E9EDF5] bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-md"
+                className="surface-card group animate-surface-reveal p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)]"
+                style={{ animationDelay: `${index * 90}ms` }}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col items-center gap-4">
                   <div
                     className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${preset.iconBg}`}
                   >
@@ -146,10 +147,10 @@ export default function CareerListClient({
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="text-[19px] leading-6 font-semibold tracking-[-0.03em] text-[#152A63]">
+                    <h3 className="text-[1.1rem] leading-6 font-semibold tracking-[-0.035em] text-[#152A63]">
                       {carrera.nombre}
                     </h3>
-                    <p className="mt-3 max-w-[220px] text-sm leading-6 text-[#7C879C]">
+                    <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-[#7C879C]">
                       {preset.description}
                     </p>
                     <span className="mt-4 inline-flex rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-semibold text-[#5867FF]">
@@ -161,8 +162,8 @@ export default function CareerListClient({
             );
           })
         ) : (
-          <div className="col-span-full rounded-2xl border border-dashed border-[#D7DFEC] bg-[#FAFBFE] px-6 py-14 text-center">
-            <p className="text-base font-semibold text-[#10214C]">
+          <div className="surface-card col-span-full border-dashed bg-[#FAFBFE] px-6 py-14 text-center shadow-none">
+            <p className="text-base font-semibold tracking-[-0.03em] text-[#10214C]">
               No encontramos carreras para mostrar.
             </p>
             <p className="mt-2 text-sm text-[#7C879C]">

@@ -14,6 +14,8 @@ export default tseslint.config(
       'seed.cjs',
       'tailwind.config.js',
       'tailwind.config.cjs',
+      'public/pdf.worker.min.mjs',
+      'public/react-pdf-worker-5.4.296.min.mjs',
     ],
   },
   ...tseslint.configs.recommended,

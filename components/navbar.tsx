@@ -46,7 +46,7 @@ export function Navbar() {
     <div className="flex h-full flex-col px-3 py-3">
       <Link href="/" className="px-2 py-1.5">
         <div className="text-lg font-black tracking-tight text-slate-900">Evaluo</div>
-        <p className="mt-0.5 text-[10px] text-slate-500">Tu espacio académico</p>
+        <p className="mt-0.5 text-[10px] text-slate-500">Tu espacio academico</p>
       </Link>
 
       <nav className="mt-4 flex flex-1 flex-col gap-0.5">
@@ -58,13 +58,13 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+              className={`group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
                 isActive
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF]'
+                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <Icon className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
               <span>{item.label}</span>
             </Link>
           );
@@ -84,13 +84,13 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+              className={`group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
                 isActive
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF]'
+                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
               }`}
             >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <Icon className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
               <span>{item.label}</span>
             </Link>
           );
@@ -99,13 +99,13 @@ export function Navbar() {
         {isAdmin ? (
           <Link
             href="/admin"
-            className={`mt-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors ${
+            className={`group mt-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
               pathname.startsWith('/admin')
-                ? 'bg-[#EEF2FF] text-[#4F5DFF]'
+                ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
-            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+            <BookOpen className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
             <span>Admin</span>
           </Link>
         ) : null}
@@ -116,18 +116,22 @@ export function Navbar() {
           <Crown className="h-4 w-4 text-[#5D5FEF]" />
           <h4 className="mt-1.5 text-[10px] font-bold text-slate-900">Potencia tu estudio</h4>
           <p className="mt-0.5 text-[9px] leading-tight text-slate-500">
-            Obtén respuestas ilimitadas, explicaciones avanzadas y más.
+            Obten respuestas ilimitadas, explicaciones avanzadas y mas.
           </p>
-          <Button className="mt-2 w-full rounded-xl bg-[#5D5FEF] py-1 text-[10px] font-semibold text-white hover:bg-[#4F4FDF]">
-            Mejorar plan
+          <Button
+            asChild
+            className="mt-2 w-full rounded-xl bg-[#5D5FEF] py-1 text-[10px] font-semibold text-white hover:bg-[#4F4FDF]"
+          >
+            <Link href={user ? '/pricing' : '/login'}>{user ? 'Mejorar plan' : 'Ver planes'}</Link>
           </Button>
           {!user ? (
-            <Link
-              href="/login"
-              className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-[#5D5FEF]/30 bg-white py-1 text-[10px] font-semibold text-[#4F5DFF] transition hover:bg-[#EEF2FF]"
+            <Button
+              asChild
+              variant="outline"
+              className="mt-2 h-auto w-full rounded-xl border-[#5D5FEF]/30 bg-white py-1 text-[10px] font-semibold text-[#4F5DFF] hover:bg-[#EEF2FF] hover:text-[#4F5DFF]"
             >
-              Iniciar sesion
-            </Link>
+              <Link href="/login">Iniciar sesion</Link>
+            </Button>
           ) : null}
         </div>
       </div>
@@ -139,7 +143,9 @@ export function Navbar() {
               <AvatarFallback className="bg-emerald-100 text-xs font-bold text-emerald-800">
                 {getUserInitials()}
               </AvatarFallback>
-              {user.user_metadata?.avatar_url ? <AvatarImage src={user.user_metadata.avatar_url} /> : null}
+              {user.user_metadata?.avatar_url ? (
+                <AvatarImage src={user.user_metadata.avatar_url} />
+              ) : null}
             </Avatar>
             <div className="min-w-0 flex-1 overflow-hidden">
               <p className="truncate text-xs font-semibold text-slate-900">{getUserName()}</p>
@@ -157,7 +163,7 @@ export function Navbar() {
             {isAdmin ? (
               <DropdownMenuItem asChild>
                 <Link href="/admin" className="w-full text-sm">
-                  Panel de administración
+                  Panel de administracion
                 </Link>
               </DropdownMenuItem>
             ) : null}
@@ -172,7 +178,7 @@ export function Navbar() {
               }}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Cerrar sesión
+              Cerrar sesion
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

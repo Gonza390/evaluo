@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function AdminLoadingState() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_26%),linear-gradient(180deg,#f5f8fd_0%,#f8fbff_100%)] px-6">
       <div className="text-center">
-        <div className="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-slate-100 border-t-blue-600 animate-spin"></div>
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[1.5rem] border border-white/80 bg-white shadow-[var(--shadow-card)]">
+          <div className="h-10 w-10 rounded-full border-[3px] border-slate-100 border-t-blue-600 animate-spin"></div>
+        </div>
         <p className="text-sm font-semibold text-slate-700">Estamos preparando el panel de administración...</p>
         <p className="mt-1 text-xs text-slate-500">Validamos tu sesión y cargamos los datos iniciales.</p>
       </div>
@@ -20,8 +22,8 @@ interface AdminAccessDeniedStateProps {
 
 export function AdminAccessDeniedState({ message }: AdminAccessDeniedStateProps) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
-      <Card className="max-w-xl rounded-3xl">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_26%),linear-gradient(180deg,#f5f8fd_0%,#f8fbff_100%)] px-6">
+      <Card className="surface-panel max-w-xl rounded-[2rem] border-white/80 bg-white/94 shadow-[var(--shadow-panel)]">
         <CardHeader>
           <CardTitle>Acceso restringido</CardTitle>
         </CardHeader>
@@ -39,7 +41,7 @@ export function AdminAccessDeniedState({ message }: AdminAccessDeniedStateProps)
 export function AdminIAProcessingOverlay() {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-md animate-in fade-in duration-500">
-      <div className="flex max-w-md scale-100 flex-col items-center gap-6 rounded-[3rem] border border-slate-100 bg-white p-12 text-center shadow-2xl shadow-blue-500/10">
+      <div className="surface-panel flex max-w-md scale-100 flex-col items-center gap-6 rounded-[2rem] border-white/80 bg-white/96 p-12 text-center shadow-[var(--shadow-panel)]">
         <div className="relative">
           <div className="h-24 w-24 rounded-full border-4 border-slate-50 border-t-blue-600 animate-spin"></div>
           <div className="absolute inset-0 flex items-center justify-center">
@@ -58,7 +60,7 @@ export function AdminIAProcessingOverlay() {
           <div className="h-full origin-left animate-progress bg-blue-600"></div>
         </div>
         <span className="animate-pulse text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">
-          PROCESANDO CON GROQ Llama 3.3
+          Procesando con Groq Llama 3.3
         </span>
       </div>
     </div>

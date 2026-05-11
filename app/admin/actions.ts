@@ -909,8 +909,7 @@ export async function importarMateriasDesdeExcelAdmin(
   }
 ): Promise<MateriaImportResult> {
   try {
-    await requireAdminAccess();
-    const admin = createAdminClient();
+    const { supabase: admin } = await requireAdminAccess();
     const universidadId = input.universidadId?.trim();
     const entries = input.entries;
 

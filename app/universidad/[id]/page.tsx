@@ -13,6 +13,7 @@ import CareerListClient from './career-list-client';
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ tab?: string }>;
 };
 
 type CarreraRow = {
@@ -31,11 +32,13 @@ function getUniversityInitials(name: string) {
     .join('');
 }
 
-export default async function UniversidadPage({ params }: Props) {
-  const [{ id }, supabase] = await Promise.all([
+export default async function UniversidadPage({ params, searchParams }: Props) {
+  const [{ id }, resolvedSearchParams, supabase] = await Promise.all([
     params,
+    searchParams ?? Promise.resolve<{ tab?: string }>({}),
     createClientServer(),
   ]);
+  const activeTab = resolvedSearchParams?.tab === 'informacion' ? 'informacion' : 'carreras';
 
   const { data: sessionData } = await supabase.auth.getSession();
   const user = sessionData?.session?.user;
@@ -74,7 +77,7 @@ export default async function UniversidadPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC]">
+    <main className="animate-page-enter min-h-screen bg-[#F8FAFC]">
       <div className="w-full border-b border-[#E8EDF5] bg-[#F8FAFC]">
         <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
           <Link
@@ -169,21 +172,133 @@ export default async function UniversidadPage({ params }: Props) {
       </section>
 
       <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-5 px-4 py-6 sm:px-6 lg:px-10">
-        <section className="rounded-[28px] bg-white px-4 py-5 shadow-evaluo-shadow sm:px-6 sm:py-6">
+        <section className="surface-panel animate-saas-lift-in px-4 py-5 sm:px-6 sm:py-6">
           <div className="flex items-center justify-between border-b border-[#E8EDF5] pb-3">
             <div className="grid w-full grid-cols-2 gap-2 text-xs font-medium text-[#7C879C] sm:flex sm:gap-6 sm:text-sm">
-              <span className="rounded-lg bg-slate-50 px-3 py-2 text-center sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0">Informacion</span>
-              <span className="relative rounded-lg bg-[#EEF2FF] px-3 py-2 text-center text-[#4F5DFF] sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0">
+              <Link
+                href={`/universidad/${id}?tab=informacion`}
+                className={`relative rounded-xl px-3 py-2.5 text-center transition-all duration-300 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 ${
+                  activeTab === 'informacion'
+                    ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none'
+                    : 'bg-slate-50 text-[#7C879C] hover:bg-slate-100 hover:text-[#475569] sm:bg-transparent'
+                }`}
+              >
+                Informacion
+                {activeTab === 'informacion' ? (
+                  <span className="absolute inset-x-0 bottom-[-10px] hidden h-0.5 rounded-full bg-[#4F5DFF] sm:block" />
+                ) : null}
+              </Link>
+              <Link
+                href={`/universidad/${id}?tab=carreras`}
+                className={`relative rounded-xl px-3 py-2.5 text-center transition-all duration-300 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 ${
+                  activeTab === 'carreras'
+                    ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none'
+                    : 'bg-slate-50 text-[#7C879C] hover:bg-slate-100 hover:text-[#475569] sm:bg-transparent'
+                }`}
+              >
                 Carreras
-                <span className="absolute inset-x-0 bottom-[-10px] hidden h-0.5 rounded-full bg-[#4F5DFF] sm:block" />
-              </span>
+                {activeTab === 'carreras' ? (
+                  <span className="absolute inset-x-0 bottom-[-10px] hidden h-0.5 rounded-full bg-[#4F5DFF] sm:block" />
+                ) : null}
+              </Link>
             </div>
           </div>
 
-          <CareerListClient
-            initialCarreras={allCarreras}
-            materiaCountEntries={Array.from(materiaCountByCarrera.entries())}
-          />
+          {activeTab === 'informacion' ? (
+            <div className="animate-tab-panel space-y-5 pt-6">
+              <div className="surface-panel overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(79,93,255,0.18),transparent_32%),linear-gradient(135deg,#FFFFFF_0%,#F8FAFF_56%,#F3F6FD_100%)]">
+                <div className="grid gap-6 p-6 lg:grid-cols-[1.3fr_0.9fr] lg:p-8">
+                  <div className="space-y-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="rounded-full border border-[#C7D2FE] bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#4F5DFF]">
+                        Universidad
+                      </span>
+                      <span className="rounded-full border border-[#E2E8F0] bg-white/90 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#64748B]">
+                        {allCarreras.length} carreras activas
+                      </span>
+                    </div>
+
+                    <div>
+                      <h2 className="section-title text-[#0F172A] sm:text-[34px]">
+                        Sobre {universidad.nombre}
+                      </h2>
+                      <p className="section-copy mt-3 max-w-3xl text-[#475569] sm:text-[15px]">
+                        {universidad.nombre} reune una propuesta academica pensada para avanzar
+                        con orden, criterio practico y una experiencia de estudio mas simple.
+                        En Evaluo puedes entrar directo a cada carrera, encontrar sus materias y
+                        estudiar desde un mismo lugar sin perder continuidad.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                          Ubicacion
+                        </p>
+                        <p className="mt-2 text-base font-semibold text-[#0F172A]">
+                          Cordoba, Argentina
+                        </p>
+                      </div>
+                      <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                          Fundacion
+                        </p>
+                        <p className="mt-2 text-base font-semibold text-[#0F172A]">1995</p>
+                      </div>
+                      <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                          Experiencia
+                        </p>
+                        <p className="mt-2 text-base font-semibold text-[#0F172A]">
+                          Modalidad flexible
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="surface-card rounded-[var(--radius-panel)] border-white/80 bg-white/88 p-5 backdrop-blur">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                        Datos rapidos
+                      </p>
+                      <div className="mt-4 space-y-3">
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
+                          <span className="text-[#64748B]">Carreras visibles</span>
+                          <span className="font-semibold text-[#0F172A]">{allCarreras.length}</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
+                          <span className="text-[#64748B]">Modelo academico</span>
+                          <span className="font-semibold text-[#0F172A]">Organizado por carreras</span>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
+                          <span className="text-[#64748B]">Estudio en Evaluo</span>
+                          <span className="font-semibold text-[#0F172A]">Materias compartidas</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-[28px] border border-[#D9E2FF] bg-[linear-gradient(135deg,#EEF2FF_0%,#FFFFFF_100%)] p-5">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#4F5DFF]">
+                        En Evaluo
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-[#475569]">
+                        El contenido se organiza por materia y se comparte entre carreras cuando
+                        corresponde. Eso evita duplicaciones y te deja una experiencia mas clara,
+                        rapida y consistente al estudiar.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="animate-tab-panel pt-6">
+              <CareerListClient
+                initialCarreras={allCarreras}
+                materiaCountEntries={Array.from(materiaCountByCarrera.entries())}
+              />
+            </div>
+          )}
         </section>
       </div>
     </main>

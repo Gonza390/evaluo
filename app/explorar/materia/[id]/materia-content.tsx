@@ -607,11 +607,24 @@ export default function MateriaContent({
       ? recurso.nombre
       : `${recurso.nombre}.pdf`;
 
-    const { data, error } = await supabase.storage
-      .from('biblioteca')
-      .createSignedUrl(objectPath, 60, { download: downloadName });
+    const response = await fetch('/api/pdf-download-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: objectPath, downloadName }),
+    });
 
-    if (error || !data?.signedUrl) {
+    if (!response.ok) {
+      toast({
+        variant: 'destructive',
+        title: 'No pudimos generar la descarga segura',
+        description: 'Intenta nuevamente en unos segundos.',
+        duration: 3000,
+      });
+      return;
+    }
+
+    const payload = (await response.json()) as { url?: string };
+    if (!payload.url) {
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
@@ -627,12 +640,12 @@ export default function MateriaContent({
       subjectId: materiaId,
       subjectName: nombre,
       type: (recurso.tipo ?? '').toLowerCase().includes('tp') ? 'TP' : 'Preguntero',
-      href: data.signedUrl,
+      href: payload.url,
       openedAt: new Date().toISOString(),
     });
     pushActivityHit();
 
-    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    window.open(payload.url, '_blank', 'noopener,noreferrer');
   };
 
   if (loading) {
@@ -700,14 +713,14 @@ export default function MateriaContent({
 
         <div className="relative mx-auto flex h-full max-w-7xl items-center px-4 py-6 lg:px-8 lg:py-8">
           <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 flex-1 items-center gap-4 sm:gap-6">
+            <div className="mx-auto flex min-w-0 flex-1 items-center justify-center gap-4 sm:gap-6 lg:max-w-3xl">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24">
                 <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/20 text-white sm:h-[80px] sm:w-[80px]">
                   <GraduationCap className="h-8 w-8 sm:h-9 sm:w-9" />
                 </div>
               </div>
 
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0 flex-1 text-center lg:text-left">
                 <p className="text-sm text-white/70">Materia</p>
                 <h1
                   className={`tracking-[-0.05em] text-white drop-shadow-lg ${
@@ -717,7 +730,7 @@ export default function MateriaContent({
                   {nombre}
                 </h1>
 
-                <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-white/80 sm:gap-6">
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-white/80 sm:gap-6 lg:justify-start">
                   {carreraNombre ? (
                     <div className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4 shrink-0" />
@@ -768,10 +781,10 @@ export default function MateriaContent({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`relative rounded-lg px-2 py-2 text-xs font-medium transition-colors sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
+                className={`relative rounded-xl px-2 py-2.5 text-xs font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
                   activeTab === tab.id
-                    ? 'bg-[#EEF2FF] text-[#4F5DFF] sm:bg-transparent sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
                 }`}
               >
                 {tab.label}
@@ -783,16 +796,16 @@ export default function MateriaContent({
 
       <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         {contextError ? (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <div className="surface-card mb-6 rounded-[var(--radius-card)] border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-none">
             {contextError}
           </div>
         ) : null}
         {activeTab === 'resumenes' ? (
-          <div className="space-y-6">
+          <div className="animate-tab-panel space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Biblioteca de resumenes</h2>
-                <p className="mt-1 text-sm text-slate-500">
+                <h2 className="section-title text-slate-900 sm:text-[2rem]">Biblioteca de resumenes</h2>
+                <p className="section-copy mt-1 text-slate-500">
                   Material curado por modulo para estudiar con mas claridad.
                 </p>
               </div>
@@ -815,7 +828,7 @@ export default function MateriaContent({
                 <button
                   key={unidad.id}
                   onClick={() => setActiveUnidad(String(unidad.id))}
-                  className={`rounded-2xl border p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#4F5DFF] bg-[#EEF2FF]' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                  className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
                 >
                   <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
                   <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
@@ -827,7 +840,7 @@ export default function MateriaContent({
             </div>
 
             {resumenesLoading ? (
-              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+              <div className="surface-panel p-10 text-center text-slate-500">
                 Estamos preparando tus resúmenes...
               </div>
             ) : resumenesError ? (
@@ -859,11 +872,11 @@ export default function MateriaContent({
                   return (
                     <article
                       key={resumen.id}
-                      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)]"
+                      className="surface-card p-6"
                     >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold text-slate-900">{resumen.title}</h3>
+                        <h3 className="text-lg font-semibold tracking-[-0.035em] text-slate-900">{resumen.title}</h3>
                         <p className="mt-1 text-sm text-slate-500">
                           {resumen.author_name || 'Autor no especificado'}
                         </p>
@@ -985,7 +998,7 @@ export default function MateriaContent({
             )}
           </div>
         ) : activeTab === 'pregunteros' || activeTab === 'trabajos' ? (
-          <div className="space-y-8">
+          <div className="animate-tab-panel space-y-8">
             {activeTab === 'pregunteros' ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {[
@@ -1084,7 +1097,7 @@ export default function MateriaContent({
                     return (
                       <article
                         key={recurso.id}
-                        className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4"
+                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
@@ -1093,8 +1106,8 @@ export default function MateriaContent({
                           </div>
                         </div>
 
-                        <div className="flex shrink-0 items-center gap-2">
-                          <div className="hidden items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600 md:inline-flex">
+                        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                          <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                             <ThumbsUp className="h-3 w-3" />
                             <span>{voteSummary.likes}</span>
                             <ThumbsDown className="ml-1 h-3 w-3" />

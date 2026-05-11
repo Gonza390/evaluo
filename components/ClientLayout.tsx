@@ -54,9 +54,13 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const isHomePage = pathname === '/';
   const isLoginPage = pathname === '/login';
   const isSimuladorRoute = pathname.startsWith('/simulador');
+  const isLegalRoute =
+    pathname === '/copyright' || pathname === '/terminos' || pathname === '/privacidad';
   const isPublicRoute = isHomePage || isLoginPage;
-  const showSidebar = !pathname.startsWith('/admin') && !isPublicRoute && !isSimuladorRoute;
-  const showBottomNav = !pathname.startsWith('/admin') && !isPublicRoute && !isSimuladorRoute;
+  const showSidebar =
+    !pathname.startsWith('/admin') && !isPublicRoute && !isSimuladorRoute && !isLegalRoute;
+  const showBottomNav =
+    !pathname.startsWith('/admin') && !isPublicRoute && !isSimuladorRoute && !isLegalRoute;
   const shell = (
     <div className="flex min-h-screen bg-white">
       {showSidebar ? <Navbar /> : null}
@@ -67,13 +71,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
               ? 'bg-white p-0'
               : isSimuladorRoute
                 ? 'bg-[#F5F7FB] p-0'
+                : isLegalRoute
+                  ? 'bg-white p-0'
                 : 'bg-[#F5F7FB] p-3 pt-14 pb-28 sm:p-6 sm:pt-20 lg:p-6'
           }`}
         >
           {children}
         </main>
         {showBottomNav ? <BottomNav /> : null}
-        {!isPublicRoute && !isHomePage && <Footer />}
+        {!isPublicRoute && !isHomePage && !isLegalRoute && <Footer />}
       </div>
     </div>
   );

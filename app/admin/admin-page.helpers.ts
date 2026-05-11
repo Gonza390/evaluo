@@ -21,6 +21,77 @@ export interface MateriaImportEntryInput {
   carreras: string[];
 }
 
+export function getAdminUserBadgeLabel(
+  user: { email?: string | null; user_metadata?: { full_name?: string | null } } | null
+) {
+  const fullName = String(user?.user_metadata?.full_name ?? '').trim();
+  if (fullName) {
+    const initials = fullName
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+
+    return initials || 'AD';
+  }
+
+  const email = String(user?.email ?? '');
+  return email.slice(0, 2).toUpperCase() || 'AD';
+}
+
+export function getAdminUserDisplayName(
+  user: { email?: string | null; user_metadata?: { full_name?: string | null } } | null
+) {
+  return String(user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Administrador');
+}
+
+export function getUploadActionLabel(input: {
+  recursoType: 'Preguntero' | 'Resumen' | 'Trabajo Práctico';
+  isPremiumSimulatorUpload: boolean;
+  usarIAEnCarga: boolean;
+  isExcelSelected: boolean;
+  uploading: boolean;
+}) {
+  if (!input.uploading) {
+    return 'INICIAR CARGA';
+  }
+
+  if (input.recursoType !== 'Preguntero') {
+    return 'SUBIENDO...';
+  }
+
+  if (input.isPremiumSimulatorUpload) {
+    return 'IMPORTANDO PREMIUM...';
+  }
+
+  if (input.usarIAEnCarga && !input.isExcelSelected) {
+    return 'PROCESANDO CON IA...';
+  }
+
+  return 'PROCESANDO...';
+}
+
+export function getUploadModeLabel(input: {
+  recursoType: 'Preguntero' | 'Resumen' | 'Trabajo Práctico';
+  isPremiumSimulatorUpload: boolean;
+  usarIAEnCarga: boolean;
+  isExcelSelected: boolean;
+}) {
+  if (input.recursoType !== 'Preguntero') {
+    return 'Transferencia';
+  }
+
+  if (input.isPremiumSimulatorUpload) {
+    return 'Simulador Premium';
+  }
+
+  if (input.usarIAEnCarga && !input.isExcelSelected) {
+    return 'Inteligencia Artificial';
+  }
+
+  return 'Procesamiento local';
+}
+
 function normalizeImportText(value: string) {
   return value
     .trim()

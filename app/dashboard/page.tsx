@@ -39,7 +39,7 @@ export default function DashboardPage() {
   }, [loading, user]);
 
   return (
-    <div className="from-background/95 min-h-screen bg-gradient-to-br via-white/80 to-emerald-50/20">
+    <div className="animate-page-enter from-background/95 min-h-screen bg-gradient-to-br via-white/80 to-emerald-50/20">
       <div className="flex flex-1">
         <DashboardContent />
       </div>

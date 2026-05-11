@@ -40,6 +40,10 @@ import {
   type DashboardRecentResource,
 } from '@/lib/dashboard-client';
 import {
+  fetchDashboardMateriaDetailsByIds,
+  fetchDashboardFavoriteMateriaIds,
+  fetchDashboardMateriasByIds,
+  fetchDashboardProfileCarreraId,
   fetchDashboardMateriaSummaries,
   mapDashboardMateriaDetails,
   touchDashboardMateriaState,
@@ -144,6 +148,8 @@ function getWeeklyTotalLabel(series: Array<{ day: string; count: number }>) {
   const total = series.reduce((acc, item) => acc + item.count, 0);
   return `${total} ingresos`;
 }
+
+const DASHBOARD_PANEL_CLASS = 'surface-panel';
 
 export function DashboardContent() {
   const { user, loading: userLoading, getUserName } = useUser();
@@ -269,7 +275,7 @@ export function DashboardContent() {
       }
 
       try {
-        const materias = await fetchDashboardMateriaSummaries();
+        const materias = await fetchDashboardMateriaDetailsByIds(subjectIds);
         if (!isMounted) {
           return;
         }
@@ -298,37 +304,29 @@ export function DashboardContent() {
       }
 
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('carrera_id')
-          .eq('id', user.id)
-          .maybeSingle();
+        const carreraId = await fetchDashboardProfileCarreraId(user.id);
 
-        if (profileError) {
-          throw profileError;
-        }
-
-        if (!profile?.carrera_id) {
+        if (!carreraId) {
           if (isMounted) {
             setRecommendedMaterias([]);
           }
           return;
         }
 
-        const materias = await getMateriasByCarrera(profile.carrera_id);
+        const materias = await getMateriasByCarrera(carreraId);
         if (!isMounted) {
           return;
         }
 
         const carreraNombre =
-          allMaterias.find((materia) => materia.carreraId === profile.carrera_id)?.carreraNombre ??
+          allMaterias.find((materia) => materia.carreraId === carreraId)?.carreraNombre ??
           'Carrera';
 
         setRecommendedMaterias(
           materias.slice(0, 3).map((materia) => ({
             id: materia.id,
             nombre: materia.nombre,
-            carreraId: materia.carrera_id ?? profile.carrera_id,
+            carreraId: materia.carrera_id ?? carreraId,
             carreraNombre,
           }))
         );
@@ -421,77 +419,19 @@ export function DashboardContent() {
       setFavoritesLoading(true);
 
       try {
-        const { data: favoritesData, error: favoritesError } = await supabase
-          .from('user_favorites')
-          .select('materia_id')
-          .eq('user_id', user.id)
-          .not('materia_id', 'is', null);
-
-        if (favoritesError) {
-          throw favoritesError;
-        }
-
-        const favoriteIds = Array.from(
-          new Set((favoritesData ?? []).map((item) => item.materia_id).filter(Boolean))
-        ) as string[];
+        const favoriteIds = await fetchDashboardFavoriteMateriaIds(user.id);
 
         if (favoriteIds.length > 0) {
-          const { data: materiasData, error: materiasError } = await supabase
-            .from('materias')
-            .select('id, nombre, carrera_id')
-            .in('id', favoriteIds);
-
-          if (materiasError) {
-            throw materiasError;
-          }
-
-          const carreraIds = Array.from(
-            new Set(
-              (materiasData ?? [])
-                .map((materia) => materia.carrera_id)
-                .filter((id): id is string => typeof id === 'string' && id.length > 0)
-            )
-          );
-
-          let carrerasMap = new Map<string, string>();
-          if (carreraIds.length > 0) {
-            const { data: carrerasData, error: carrerasError } = await supabase
-              .from('carreras')
-              .select('id, nombre')
-              .in('id', carreraIds);
-
-            if (carrerasError) {
-              throw carrerasError;
-            }
-
-            carrerasMap = new Map((carrerasData ?? []).map((carrera) => [carrera.id, carrera.nombre]));
-          }
-
-          const normalizedFavorites = (materiasData ?? []).map((materia) => ({
-            id: materia.id,
-            nombre: materia.nombre,
-            carreraId: materia.carrera_id,
-            carreraNombre: materia.carrera_id
-              ? carrerasMap.get(materia.carrera_id) ?? 'Carrera'
-              : 'Materia general',
-          }));
+          const normalizedFavorites = await fetchDashboardMateriasByIds(favoriteIds);
 
           if (isMounted) {
             setFavoriteMaterias(normalizedFavorites);
             setFavoriteSuggestions([]);
           }
         } else {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('carrera_id')
-            .eq('id', user.id)
-            .maybeSingle();
+          const carreraId = await fetchDashboardProfileCarreraId(user.id);
 
-          if (profileError) {
-            throw profileError;
-          }
-
-          if (!profileData?.carrera_id) {
+          if (!carreraId) {
             if (isMounted) {
               setFavoriteMaterias([]);
               setFavoriteSuggestions([]);
@@ -499,9 +439,9 @@ export function DashboardContent() {
             return;
           }
 
-          const suggested = await getMateriasByCarrera(profileData.carrera_id);
+          const suggested = await getMateriasByCarrera(carreraId);
           const carreraNombre =
-            allMaterias.find((materia) => materia.carreraId === profileData.carrera_id)?.carreraNombre ??
+            allMaterias.find((materia) => materia.carreraId === carreraId)?.carreraNombre ??
             'Carrera';
 
           if (isMounted) {
@@ -510,7 +450,7 @@ export function DashboardContent() {
               suggested.slice(0, 4).map((materia) => ({
                 id: materia.id,
                 nombre: materia.nombre,
-                carreraId: materia.carrera_id ?? profileData.carrera_id,
+                carreraId: materia.carrera_id ?? carreraId,
                 carreraNombre,
               }))
             );
@@ -651,6 +591,47 @@ export function DashboardContent() {
   );
 
   const recentSubjects = dashboardState.activeSubjects.slice(0, 3);
+  const nextStudyAction = useMemo(() => {
+    if (simuladorInProgress) {
+      const href =
+        simuladorInProgress.mode === 'errores'
+          ? `/simulador/errores/${simuladorInProgress.materiaId}`
+          : `/simulador/${simuladorInProgress.materiaId}/${simuladorInProgress.parcial}`;
+
+      return {
+        title: 'Retoma tu simulador',
+        description: 'Tienes un intento en curso. Vuelve exactamente donde lo dejaste.',
+        cta: 'Continuar simulador',
+        onClick: () => router.push(href),
+      };
+    }
+
+    if (dashboardState.lastSubject) {
+      return {
+        title: 'Sigue con tu ultima materia',
+        description: `Vuelve a ${dashboardState.lastSubject.name} y continua leyendo o practicando.`,
+        cta: 'Abrir materia',
+        onClick: () => goToMateria(dashboardState.lastSubject as DashboardMateriaState),
+      };
+    }
+
+    if (recommendedMaterias[0]) {
+      return {
+        title: 'Empieza por una materia recomendada',
+        description: `Te sugerimos arrancar con ${recommendedMaterias[0].nombre} para activar tu recorrido.`,
+        cta: 'Anadir recomendada',
+        onClick: () => addMateria(recommendedMaterias[0]),
+      };
+    }
+
+    return {
+      title: 'Explora tu plan de estudio',
+      description: 'Busca una materia y arma tu espacio para volver rapido a lo importante.',
+      cta: 'Ir a explorar',
+      onClick: () => router.push('/explorar'),
+    };
+  }, [dashboardState.lastSubject, recommendedMaterias, router, simuladorInProgress]);
+
   const partialProgressRingStyle = {
     background: `conic-gradient(#4F5DFF ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg, #E6EAF2 ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg)`,
   };
@@ -661,10 +642,10 @@ export function DashboardContent() {
   ];
 
   return (
-    <div className="flex-1 overflow-auto bg-[#f7f9fc] font-sans">
+    <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans">
       <div className="w-full p-2 md:p-3">
         <div className="mx-auto max-w-6xl lg:[zoom:0.9]">
-          <div className="mb-4 flex flex-col gap-3 rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm shadow-slate-200/70 xl:flex-row xl:items-start xl:justify-between">
+          <div className={`${DASHBOARD_PANEL_CLASS} animate-study-reveal mb-4 flex flex-col gap-3 px-5 py-5 xl:flex-row xl:items-start xl:justify-between`}>
             <div>
               <h1 className="text-lg font-bold tracking-[-0.04em] text-slate-950 md:text-xl">
                 {`Hola, ${getUserName()}!`}
@@ -705,13 +686,13 @@ export function DashboardContent() {
           ) : null}
 
           <div className="mb-4 grid gap-3 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-4 shadow-sm shadow-slate-200/60 backdrop-blur">
+            <div className="surface-card rounded-[var(--radius-card)] bg-white/88 px-4 py-4 backdrop-blur">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Ultima materia</p>
               <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-slate-950">
                 {dashboardState.lastSubject?.name ?? 'Todavia no abriste una materia'}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200/80 bg-white/88 px-4 py-4 shadow-sm shadow-slate-200/60 backdrop-blur">
+            <div className="surface-card rounded-[var(--radius-card)] bg-white/88 px-4 py-4 backdrop-blur">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Materias finalizadas</p>
               <p className="mt-2 text-lg font-bold tracking-[-0.03em] text-slate-950">
                 {dashboardState.finishedSubjects.length.toLocaleString('es-AR')}
@@ -719,12 +700,30 @@ export function DashboardContent() {
             </div>
           </div>
 
+          <div className="animate-study-reveal mb-4 rounded-2xl border border-indigo-200/80 bg-[linear-gradient(135deg,rgba(79,93,255,0.08)_0%,rgba(14,165,233,0.05)_100%)] px-4 py-4 shadow-sm shadow-indigo-100/70">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-500">Siguiente paso</p>
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-slate-950">
+                  {nextStudyAction.title}
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">{nextStudyAction.description}</p>
+              </div>
+              <Button
+                onClick={nextStudyAction.onClick}
+                className="animate-study-focus h-10 rounded-xl bg-slate-950 px-4 text-sm font-semibold hover:bg-slate-800"
+              >
+                {nextStudyAction.cta}
+              </Button>
+            </div>
+          </div>
+
           <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
             <Card
               id="materias-favoritas"
-              className="rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/60 backdrop-blur"
+              className="surface-card rounded-[var(--radius-card)] bg-white/90 backdrop-blur"
             >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                 <div>
                   <CardTitle className="text-xl font-semibold text-slate-950">
                     Mis materias
@@ -736,7 +735,7 @@ export function DashboardContent() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-9 rounded-xl border-slate-200 bg-white px-4 text-xs shadow-sm"
+                  className="h-9 w-full rounded-xl border-slate-200 bg-white px-4 text-xs shadow-sm sm:w-auto"
                   onClick={() => setShowAddModal(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -754,7 +753,7 @@ export function DashboardContent() {
                     ))}
                   </div>
                 ) : recentSubjects.length > 0 ? (
-                  <div className="grid gap-3 md:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                     {recentSubjects.map((subject, index) => (
                       <div
                         key={subject.id}
@@ -767,7 +766,8 @@ export function DashboardContent() {
                             goToMateria(subject);
                           }
                         }}
-                        className={`rounded-xl border bg-gradient-to-br p-3.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${subjectAccentStyles[index % subjectAccentStyles.length]}`}
+                        style={{ animationDelay: `${index * 110}ms` }}
+                        className={`animate-study-reveal flex h-full min-h-[188px] cursor-pointer flex-col rounded-2xl border bg-gradient-to-br p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${index === 0 ? 'animate-study-float' : ''} ${subjectAccentStyles[index % subjectAccentStyles.length]}`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 text-slate-700 shadow-sm">
@@ -791,7 +791,7 @@ export function DashboardContent() {
                         <p className="mt-1 text-xs text-slate-500">
                           {materiaDetails[subject.id]?.careerName ?? 'Carrera'}
                         </p>
-                        <div className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
+                        <div className="mt-auto pt-5 inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
                           Abrir materia
                           <ArrowUpRight className="h-4 w-4" />
                         </div>
@@ -841,7 +841,7 @@ export function DashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/60 backdrop-blur">
+            <Card className="animate-saas-lift-in bg-white/90 backdrop-blur">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-semibold text-slate-950">
                   Continua estudiando
@@ -858,7 +858,7 @@ export function DashboardContent() {
                       href={resource.href ?? getDashboardMateriaRoute(resource.subjectId)}
                       target={resource.href ? '_blank' : undefined}
                       rel={resource.href ? 'noreferrer' : undefined}
-                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300"
+                      className="animate-study-reveal flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
                         <FileText className="h-4 w-4" />
@@ -886,7 +886,7 @@ export function DashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/60 backdrop-blur">
+            <Card className="bg-white/90 backdrop-blur">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-semibold text-slate-950">
                   Radar de confianza
@@ -916,12 +916,13 @@ export function DashboardContent() {
                   </div>
                 ) : null}
                 {partialInsights ? (
-                  <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                    <div className="relative grid h-32 w-32 place-items-center rounded-full" style={partialProgressRingStyle}>
-                      <div className="grid h-24 w-24 place-items-center rounded-full bg-white">
+                  <div className="grid grid-cols-1 gap-5 md:grid-cols-[140px_minmax(0,1fr)] md:items-center">
+                    <div className="relative mx-auto grid h-32 w-32 place-items-center rounded-full animate-saas-glow" style={partialProgressRingStyle}>
+                      <div className="grid h-24 w-24 place-items-center rounded-full bg-white shadow-[0_10px_30px_rgba(79,93,255,0.12)]">
                         <p className="text-2xl font-black text-slate-900">{partialInsights.coberturaPorcentaje}%</p>
                         <p className="text-[10px] text-slate-500">Progreso</p>
                       </div>
+                      <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(74,222,128,0.16)]" />
                     </div>
                     <div className="space-y-2 text-sm">
                       <p className="text-slate-700">
@@ -939,8 +940,30 @@ export function DashboardContent() {
                       <p className="text-slate-700">
                         Promedio de acierto: <span className="font-semibold">{partialInsights.promedioAciertoPorcentaje}%</span>
                       </p>
-                      <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800">
+                      <div className="relative overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-800 animate-progress-sheen">
                         Posibilidad de aprobar: <span className="font-bold">{partialInsights.probabilidadAprobar}%</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <Button
+                          size="sm"
+                          className="h-8 rounded-lg bg-slate-950 px-3 text-xs font-semibold hover:bg-slate-800"
+                          onClick={() => router.push(`/simulador/${dashboardState.lastSubject?.id ?? simuladorInProgress?.materiaId ?? ''}/${partialInsights.parcial}`)}
+                        >
+                          Practicar parcial
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 rounded-lg border-slate-200 bg-white px-3 text-xs font-semibold"
+                          onClick={() => {
+                            const targetMateriaId = dashboardState.lastSubject?.id ?? simuladorInProgress?.materiaId;
+                            if (targetMateriaId) {
+                              router.push(`${getMateriaRoute(targetMateriaId)}?tab=resumenes`);
+                            }
+                          }}
+                        >
+                          Repasar resúmenes
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -952,7 +975,7 @@ export function DashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/60 backdrop-blur">
+            <Card className="bg-white/90 backdrop-blur">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-semibold text-slate-950">
                   Materias favoritas
@@ -1018,7 +1041,7 @@ export function DashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-slate-200/80 bg-white/90 shadow-sm shadow-slate-200/60 backdrop-blur xl:col-span-2">
+            <Card className="animate-saas-lift-in bg-white/90 backdrop-blur xl:col-span-2">
               <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
                   <CardTitle className="text-xl font-semibold text-slate-950">

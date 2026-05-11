@@ -70,10 +70,14 @@ import {
 } from './actions';
 import {
   filterAdminResources,
+  getAdminUserBadgeLabel,
+  getAdminUserDisplayName,
   getMateriasUsoChartData,
   parseMateriasWorkbook,
   getPlatformUsageData,
   getRetentionChartData,
+  getUploadActionLabel,
+  getUploadModeLabel,
   sortFilterEntries,
 } from './admin-page.helpers';
 import {
@@ -143,6 +147,12 @@ interface Materia {
 
 type ResourceType = 'Preguntero' | 'Resumen' | 'Trabajo Práctico';
 type PregunteroDestino = 'ambas' | 'solo_simulador' | 'solo_visualizacion';
+
+const ADMIN_PANEL_CARD_CLASS =
+  'surface-panel rounded-[1.75rem] border border-white/80 bg-white/92 shadow-[var(--shadow-card)]';
+
+const ADMIN_PANEL_SUBCARD_CLASS =
+  'surface-card rounded-[1.35rem] border border-slate-200/80 bg-white/96 shadow-[var(--shadow-soft)]';
 
 export default function AdminPanel() {
   // ... existing states
@@ -231,6 +241,8 @@ export default function AdminPanel() {
   const [rankingFailed, setRankingFailed] = useState<GlobalQuestionRankingRow[]>([]);
   const [rankingCorrect, setRankingCorrect] = useState<GlobalQuestionRankingRow[]>([]);
   const [loadingRankingGlobal, setLoadingRankingGlobal] = useState(false);
+  const [materialSearch, setMaterialSearch] = useState('');
+  const [userSearch, setUserSearch] = useState('');
 
   const showAdminError = (title: string, description: string) => {
     toast({
@@ -1043,6 +1055,20 @@ export default function AdminPanel() {
     () => filterAdminResources(adminResources, filterUniId, filterCarreraId, filterMateriaId),
     [adminResources, filterUniId, filterCarreraId, filterMateriaId]
   );
+  const visibleResources = useMemo(() => {
+    const search = materialSearch.trim().toLowerCase();
+    if (!search) return filteredResources;
+
+    return filteredResources.filter((resource) => {
+      const materiaName = resourceMateriaNames[resource.materia_id ?? ''] ?? '';
+      const carreraName = resourceCarreraNames[resource.carrera_id ?? ''] ?? '';
+      const uniName = resourceUniNames[resource.universidad_id ?? ''] ?? '';
+      return [resource.nombre, resource.tipo ?? '', materiaName, carreraName, uniName]
+        .join(' ')
+        .toLowerCase()
+        .includes(search);
+    });
+  }, [filteredResources, materialSearch, resourceCarreraNames, resourceMateriaNames, resourceUniNames]);
   const filterCarreras = useMemo(() => sortFilterEntries(resourceCarreraNames), [resourceCarreraNames]);
   const filterMaterias = useMemo(() => sortFilterEntries(resourceMateriaNames), [resourceMateriaNames]);
   const isExcelSelected = Boolean(selectedFile?.name && /\.(xlsx|xls)$/i.test(selectedFile.name));
@@ -1050,6 +1076,163 @@ export default function AdminPanel() {
   const platformUsageData = useMemo(() => getPlatformUsageData(stats), [stats]);
   const materiasUsoChartData = useMemo(() => getMateriasUsoChartData(stats), [stats]);
   const retentionChartData = useMemo(() => getRetentionChartData(stats), [stats]);
+  const adminBadgeLabel = useMemo(() => getAdminUserBadgeLabel(user), [user]);
+  const adminDisplayName = useMemo(() => getAdminUserDisplayName(user), [user]);
+  const uploadActionLabel = useMemo(
+    () =>
+      getUploadActionLabel({
+        recursoType,
+        isPremiumSimulatorUpload,
+        usarIAEnCarga,
+        isExcelSelected,
+        uploading,
+      }),
+    [isExcelSelected, isPremiumSimulatorUpload, recursoType, uploading, usarIAEnCarga]
+  );
+  const uploadModeLabel = useMemo(
+    () =>
+      getUploadModeLabel({
+        recursoType,
+        isPremiumSimulatorUpload,
+        usarIAEnCarga,
+        isExcelSelected,
+      }),
+    [isExcelSelected, isPremiumSimulatorUpload, recursoType, usarIAEnCarga]
+  );
+
+  const adminTabs = useMemo(
+    () => [
+      {
+        key: 'dashboard' as const,
+        label: 'Cargas',
+        description: 'Subidas y procesamiento',
+        icon: Upload,
+        activeClass: 'bg-slate-900 text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)]',
+        idleClass: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+      },
+      {
+        key: 'materiales' as const,
+        label: 'Biblioteca',
+        description: 'Archivos y limpieza',
+        icon: Plus,
+        activeClass: 'bg-blue-600 text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-blue-50 hover:text-blue-700',
+      },
+      {
+        key: 'operaciones' as const,
+        label: 'Operaciones',
+        description: 'Salud y mantenimiento',
+        icon: Zap,
+        activeClass: 'bg-amber-500 text-white shadow-[0_14px_30px_rgba(245,158,11,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-amber-50 hover:text-amber-700',
+      },
+      {
+        key: 'config' as const,
+        label: 'Estructura',
+        description: 'Universidades y materias',
+        icon: RefreshCcw,
+        activeClass: 'bg-cyan-600 text-white shadow-[0_14px_30px_rgba(8,145,178,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-cyan-50 hover:text-cyan-700',
+      },
+      {
+        key: 'estadisticas' as const,
+        label: 'Analítica',
+        description: 'Uso y rendimiento',
+        icon: BarChart3,
+        activeClass: 'bg-violet-600 text-white shadow-[0_14px_30px_rgba(124,58,237,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-violet-50 hover:text-violet-700',
+      },
+      {
+        key: 'ia' as const,
+        label: 'IA',
+        description: 'Banco y feedback',
+        icon: Brain,
+        activeClass: 'bg-indigo-600 text-white shadow-[0_14px_30px_rgba(79,70,229,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-indigo-50 hover:text-indigo-700',
+      },
+      {
+        key: 'usuarios' as const,
+        label: 'Usuarios',
+        description: 'Roles y accesos',
+        icon: Users,
+        activeClass: 'bg-emerald-600 text-white shadow-[0_14px_30px_rgba(5,150,105,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700',
+      },
+      {
+        key: 'monetizacion' as const,
+        label: 'Monetización',
+        description: 'Ingresos y premium',
+        icon: DollarSign,
+        activeClass: 'bg-fuchsia-600 text-white shadow-[0_14px_30px_rgba(192,38,211,0.22)]',
+        idleClass: 'text-slate-600 hover:bg-fuchsia-50 hover:text-fuchsia-700',
+      },
+    ],
+    []
+  );
+
+  const activeTabMeta = useMemo(
+    () => adminTabs.find((tab) => tab.key === activeTab) ?? adminTabs[0],
+    [activeTab, adminTabs]
+  );
+
+  const adminQuickStats = useMemo(
+    () => [
+      { label: 'Recursos activos', value: adminResources.length.toLocaleString('es-AR') },
+      { label: 'Usuarios auditados', value: adminUsers.length.toLocaleString('es-AR') },
+      { label: 'Universidades cargadas', value: universidades.length.toLocaleString('es-AR') },
+    ],
+    [adminResources.length, adminUsers.length, universidades.length]
+  );
+  const visibleUsers = useMemo(() => {
+    const search = userSearch.trim().toLowerCase();
+    if (!search) return adminUsers;
+
+    return adminUsers.filter((userRow) =>
+      [userRow.email, userRow.estado, userRow.role, userRow.plan].join(' ').toLowerCase().includes(search)
+    );
+  }, [adminUsers, userSearch]);
+
+  const adminActivityFeed = useMemo(
+    () =>
+      [
+        selectedFile
+          ? {
+              title: 'Archivo listo para carga',
+              detail: selectedFile.name,
+              accent: 'text-blue-700 bg-blue-50',
+            }
+          : null,
+        materiasImportResult
+          ? {
+              title: 'Importación académica reciente',
+              detail: materiasImportResult.message,
+              accent: 'text-cyan-700 bg-cyan-50',
+            }
+          : null,
+        duplicatePdfRows[0]
+          ? {
+              title: 'Duplicado detectado',
+              detail: `${duplicatePdfRows[0].recursos[0]?.nombre ?? 'Archivo'} · ${duplicatePdfRows[0].count} coincidencias`,
+              accent: 'text-amber-700 bg-amber-50',
+            }
+          : null,
+        feedbackReviewRows[0]
+          ? {
+              title: 'Feedback IA pendiente',
+              detail: feedbackReviewRows[0].enunciado,
+              accent: 'text-rose-700 bg-rose-50',
+            }
+          : null,
+        adminUsers[0]
+          ? {
+              title: 'Último usuario visible',
+              detail: `${adminUsers[0].email} · ${adminUsers[0].plan}`,
+              accent: 'text-emerald-700 bg-emerald-50',
+            }
+          : null,
+      ].filter(Boolean) as { title: string; detail: string; accent: string }[],
+    [adminUsers, duplicatePdfRows, feedbackReviewRows, materiasImportResult, selectedFile]
+  );
 
   // Único retorno condicional - Rules of Hooks cumplidas
   if (loading) {
@@ -1061,178 +1244,264 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(79,70,229,0.16),transparent_22%),linear-gradient(180deg,#f3f7fd_0%,#f8fbff_100%)]">
+    <div className="relative flex min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.1),transparent_26%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.12),transparent_24%),linear-gradient(180deg,#f5f8fd_0%,#f8fbff_100%)]">
       {/* Overlay de Procesamiento IA */}
       {isIAProcessing ? <AdminIAProcessingOverlay /> : null}
 
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-56 border-r border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(248,250,252,0.94)_100%)] backdrop-blur">
-        <div className="flex h-16 flex-col justify-center border-b border-slate-200 px-4">
-          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-500">Evaluo</span>
-          <span className="text-lg font-black tracking-[-0.04em] text-slate-900">Admin Studio</span>
-        </div>
-        <nav className="mt-4 space-y-1.5 px-3">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'dashboard'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Upload className="h-4 w-4" />
-            Cargar Material
-          </button>
-          <button
-            onClick={() => setActiveTab('materiales')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'materiales'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Plus className="h-4 w-4" />
-            Gestionar Materiales
-          </button>
-          <button
-            onClick={() => setActiveTab('operaciones')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'operaciones'
-                ? 'bg-amber-50 text-amber-700'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Zap className="h-4 w-4" />
-            Operaciones
-          </button>
-          <button
-            onClick={() => setActiveTab('config')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'config'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Plus className="h-4 w-4" />
-            Configuración
-          </button>
-          <button
-            onClick={() => setActiveTab('estadisticas')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'estadisticas'
-                ? 'bg-blue-50 text-blue-600'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Brain className="h-4 w-4" />
-            Estadisticas
-          </button>
-          <button
-            onClick={() => setActiveTab('ia')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'ia'
-                ? 'bg-indigo-50 text-indigo-700'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <BarChart3 className="h-4 w-4" />
-            IA
-          </button>
-          <button
-            onClick={() => setActiveTab('usuarios')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'usuarios'
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            Usuarios
-          </button>
-          <button
-            onClick={() => setActiveTab('monetizacion')}
-            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-colors ${
-              activeTab === 'monetizacion'
-                ? 'bg-emerald-50 text-emerald-700'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <DollarSign className="h-4 w-4" />
-            Monetizacion
-          </button>
-        </nav>
-
-        <div className="absolute bottom-0 w-full border-t border-slate-200 p-2.5">
-          <div className="mb-2 flex flex-col gap-1 px-1">
-            <span className="text-[11px] font-medium text-slate-500 truncate">{user?.email ?? 'Administrador'}</span>
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(246,249,252,0.94)_100%)] px-4 py-5 backdrop-blur-xl lg:block">
+        <div className={`${ADMIN_PANEL_CARD_CLASS} flex h-full flex-col overflow-hidden rounded-[2rem] px-4 py-4`}>
+          <div className="border-b border-slate-200/80 pb-4">
+            <span className="text-[11px] font-bold uppercase tracking-[0.24em] text-indigo-500">Evaluo</span>
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <div>
+                <span className="block text-xl font-black tracking-[-0.05em] text-slate-950">Admin Studio</span>
+                <span className="mt-1 block text-xs text-slate-500">Backoffice editorial y operativo</span>
+              </div>
+              <div className="flex h-11 w-11 items-center justify-center rounded-[1.2rem] bg-slate-900 text-sm font-black text-white shadow-[0_14px_24px_rgba(15,23,42,0.2)]">
+                {adminBadgeLabel}
+              </div>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              router.push('/');
-            }}
-            className="h-9 w-full justify-start gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Cerrar sesión
-          </Button>
+
+          <div className="mt-5 rounded-[1.5rem] border border-slate-200/80 bg-slate-50/90 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Sesión activa</p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{adminDisplayName}</p>
+            <p className="mt-1 truncate text-xs text-slate-500">{user?.email ?? 'Administrador'}</p>
+          </div>
+
+          <div className="mt-5 flex-1 overflow-y-auto pr-1">
+            <div className="mb-3 px-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Áreas</p>
+            </div>
+            <nav className="space-y-2">
+              {adminTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.key;
+
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`flex w-full items-center gap-3 rounded-[1.2rem] px-3 py-3 text-left transition-all duration-200 ${
+                      isActive ? tab.activeClass : tab.idleClass
+                    }`}
+                  >
+                    <span
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border text-current ${
+                        isActive ? 'border-white/15 bg-white/10' : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{tab.label}</span>
+                      <span className={`block text-[11px] ${isActive ? 'text-white/72' : 'text-slate-400'}`}>
+                        {tab.description}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="mt-4 rounded-[1.5rem] border border-slate-200/80 bg-white p-3 shadow-[var(--shadow-soft)]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Estado</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {adminQuickStats.map((stat) => (
+                <div key={stat.label} className="rounded-[1rem] bg-slate-50 px-2 py-2">
+                  <p className="text-[11px] font-bold text-slate-900">{stat.value}</p>
+                  <p className="mt-1 text-[10px] leading-tight text-slate-500">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 border-t border-slate-200/80 pt-4">
+            <Button
+              variant="ghost"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                router.push('/');
+              }}
+              className="h-11 w-full justify-start gap-2 rounded-[1rem] text-red-600 hover:bg-red-50 hover:text-red-700"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Cerrar sesión
+            </Button>
+          </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="ml-56 flex-1 p-4">
-        <div className="mx-auto max-w-[1180px] min-h-[calc(100vh-2rem)] rounded-[28px] border border-white/70 bg-white/88 p-4 text-[12px] leading-tight shadow-[0_20px_55px_rgba(15,23,42,0.08)] backdrop-blur">
-          <div className="mb-4 overflow-hidden rounded-[24px] bg-[linear-gradient(135deg,rgba(15,23,42,0.98)_0%,rgba(30,64,175,0.94)_42%,rgba(79,70,229,0.90)_100%)] px-4 py-4 text-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-200/90">
-                  Operación interna
-                </p>
-                <h1 className="mt-1 text-2xl font-black tracking-[-0.05em] text-white">
-                  Panel de administración de Evaluo
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/78">
-                  Gestioná materiales, contenido, métricas y automatizaciones desde una vista más clara y consistente.
+      <main className="flex-1 p-3 lg:ml-72 lg:p-5">
+        <div className={`${ADMIN_PANEL_CARD_CLASS} mx-auto min-h-[calc(100vh-1.5rem)] max-w-[1320px] rounded-[1.6rem] p-4 text-[12px] leading-tight sm:rounded-[1.8rem] sm:p-5 lg:min-h-[calc(100vh-2.5rem)] lg:rounded-[2rem]`}>
+          <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p className="eyebrow-label text-indigo-500">Operación interna</p>
+              <h1 className="mt-2 text-[1.8rem] font-black tracking-[-0.06em] text-slate-950 sm:text-[2rem]">
+                Panel de administración de Evaluo
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+                Gestioná cargas, biblioteca, IA, usuarios y métricas desde un backoffice más limpio, consistente y preparado para escalar.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {adminQuickStats.map((stat) => (
+                <div key={stat.label} className={`${ADMIN_PANEL_SUBCARD_CLASS} min-w-[150px] px-4 py-3`}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">{stat.label}</p>
+                  <p className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">{stat.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mb-5 overflow-hidden rounded-[1.75rem] bg-[linear-gradient(135deg,rgba(15,23,42,0.98)_0%,rgba(30,64,175,0.95)_45%,rgba(79,70,229,0.9)_100%)] px-5 py-5 text-white shadow-[0_24px_48px_rgba(15,23,42,0.12)]">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-200/90">{activeTabMeta.label}</p>
+                <h2 className="mt-2 text-xl font-black tracking-[-0.05em] text-white sm:text-2xl">
+                  {activeTabMeta.description}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-white/74">
+                  Trabajá sobre esta sección con el mismo criterio visual y operativo del resto del panel.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/86">
-                  {adminResources.length} recursos
+              <div className="hidden items-center gap-3 self-start rounded-[1.2rem] border border-white/15 bg-white/10 px-4 py-3 lg:inline-flex">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/14 text-sm font-black text-white">
+                  {adminBadgeLabel}
                 </div>
-                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/86">
-                  {adminUsers.length} usuarios
+                <div className="leading-tight">
+                  <p className="text-sm font-semibold text-white">{adminDisplayName}</p>
+                  <p className="text-[11px] text-white/68">Administrador activo</p>
                 </div>
-                <div className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/86">
-                  {universidades.length} universidades
-                </div>
+                <ChevronDown className="h-4 w-4 text-white/68" />
               </div>
             </div>
           </div>
-          <div className="mb-4 flex items-center justify-end">
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-xs font-bold text-white">
-                {(() => {
-                  const fullName = String(user?.user_metadata?.full_name ?? '').trim();
-                  if (fullName) {
-                    const initials = fullName
-                      .split(/\s+/)
-                      .slice(0, 2)
-                      .map((part) => part[0]?.toUpperCase() ?? '')
-                      .join('');
-                    return initials || 'AD';
-                  }
-                  const email = String(user?.email ?? '');
-                  return (email.slice(0, 2).toUpperCase() || 'AD');
-                })()}
+          <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[1.45fr_0.95fr]">
+            <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-4`}>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="eyebrow-label">Quick actions</p>
+                  <h3 className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">Centro de operaciones</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                    Atajos para las acciones que más vas a repetir en el día a día del backoffice.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void Promise.all([fetchAdminStats(), fetchOpsData(), fetchUsuariosAdmin(), fetchMonetizacionAdmin()])}
+                  className="rounded-[1rem] border-slate-200"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Refrescar panel
+                </Button>
               </div>
-              <div className="leading-tight">
-                <p className="text-[12px] font-semibold text-slate-800">
-                  {String(user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'Administrador')}
-                </p>
-                <p className="text-[10px] text-slate-500">Administrador</p>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('dashboard')}
+                  className="rounded-[1.2rem] border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[var(--shadow-soft)]"
+                >
+                  <p className="text-sm font-semibold text-slate-900">Nueva carga</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Subir un PDF o una importación masiva.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('config')}
+                  className="rounded-[1.2rem] border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[var(--shadow-soft)]"
+                >
+                  <p className="text-sm font-semibold text-slate-900">Importar malla</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Universidades, carreras y materias compartidas.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const result = await recalcularDificultadPreguntasAdmin();
+                    if (result.success) {
+                      toast({ description: result.message });
+                      await fetchOpsData();
+                    } else {
+                      toast({ description: result.message, variant: 'destructive' });
+                    }
+                  }}
+                  className="rounded-[1.2rem] border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[var(--shadow-soft)]"
+                >
+                  <p className="text-sm font-semibold text-slate-900">Recalcular dificultad</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Actualiza métricas del banco de preguntas.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ia')}
+                  className="rounded-[1.2rem] border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[var(--shadow-soft)]"
+                >
+                  <p className="text-sm font-semibold text-slate-900">Revisar feedback IA</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Entrar directo al banco y los pulgares abajo.</p>
+                </button>
               </div>
-              <ChevronDown className="h-4 w-4 text-slate-500" />
+            </div>
+            <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-4`}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="eyebrow-label">Activity feed</p>
+                  <h3 className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">Señales recientes</h3>
+                </div>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  {adminActivityFeed.length} items
+                </span>
+              </div>
+              <div className="mt-4 space-y-3">
+                {adminActivityFeed.length === 0 ? (
+                  <div className="rounded-[1.2rem] border border-dashed border-slate-200 bg-slate-50/70 px-4 py-5 text-sm text-slate-500">
+                    Todavía no hay eventos recientes en esta sesión.
+                  </div>
+                ) : (
+                  adminActivityFeed.map((item) => (
+                    <div key={`${item.title}-${item.detail}`} className="rounded-[1.15rem] border border-slate-200/80 bg-white px-4 py-3 shadow-[var(--shadow-soft)]">
+                      <div className="flex items-start gap-3">
+                        <span className={`mt-0.5 inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${item.accent}`}>
+                          Nuevo
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">{item.detail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="mb-5 lg:hidden">
+            <div className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-x-auto px-2 py-2`}>
+              <div className="flex min-w-max gap-2">
+                {adminTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.key;
+
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveTab(tab.key)}
+                      className={`flex items-center gap-2 rounded-[1rem] px-3 py-2 text-left transition-all duration-200 ${
+                        isActive ? tab.activeClass : tab.idleClass
+                      }`}
+                    >
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.9rem] border text-current ${
+                          isActive ? 'border-white/15 bg-white/10' : 'border-slate-200 bg-white'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="whitespace-nowrap text-xs font-semibold">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
           {activeTab === 'dashboard' && (
@@ -1244,7 +1513,7 @@ export default function AdminPanel() {
 
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {/* 1. Ubicación */}
-                <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden bg-slate-50/30 hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
+                <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
                   <CardHeader className="bg-white border-b border-slate-100 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">1</span>
@@ -1317,7 +1586,7 @@ export default function AdminPanel() {
                 </Card>
 
                 {/* 2. Tipo de Material */}
-                <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden bg-slate-50/30 hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
+                <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
                   <CardHeader className="bg-white border-b border-slate-100 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">2</span>
@@ -1497,7 +1766,7 @@ export default function AdminPanel() {
                 </Card>
 
                 {/* 3. Carga de Archivo */}
-                <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden bg-slate-50/30 hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
+                <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-panel)]`}>
                   <CardHeader className="bg-white border-b border-slate-100 py-4">
                     <CardTitle className="text-sm font-bold flex items-center gap-3 text-slate-800">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white font-black shadow-lg shadow-blue-200">3</span>
@@ -1546,20 +1815,12 @@ export default function AdminPanel() {
                       {uploading ? (
                         <div className="flex items-center gap-3">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>
-                            {recursoType === 'Preguntero'
-                              ? isPremiumSimulatorUpload
-                                ? 'IMPORTANDO PREMIUM...'
-                                : usarIAEnCarga && !isExcelSelected
-                                ? 'PROCESANDO CON IA...'
-                                : 'PROCESANDO...'
-                              : 'SUBIENDO...'}
-                          </span>
+                          <span>{uploadActionLabel}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
                           <Upload className="h-4 w-4" />
-                          <span>INICIAR CARGA</span>
+                          <span>{uploadActionLabel}</span>
                         </div>
                       )}
                     </Button>
@@ -1571,13 +1832,7 @@ export default function AdminPanel() {
                         </div>
                         <div className="flex justify-between items-center px-1">
                           <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">
-                            {recursoType === 'Preguntero'
-                              ? isPremiumSimulatorUpload
-                                ? 'Simulador Premium'
-                                : usarIAEnCarga && !isExcelSelected
-                                ? 'Inteligencia Artificial'
-                                : 'Procesamiento local'
-                              : 'Transferencia'}
+                            {uploadModeLabel}
                           </span>
                           <span className="text-[10px] font-bold text-slate-400">
                             {recursoType === 'Preguntero'
@@ -1609,8 +1864,14 @@ export default function AdminPanel() {
                 </Button>
               </div>
 
-              <Card className="shadow-none border-slate-100 rounded-3xl">
-                <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
+              <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-4">
+                  <Input
+                    value={materialSearch}
+                    onChange={(event) => setMaterialSearch(event.target.value)}
+                    placeholder="Buscar por archivo, materia o carrera"
+                    className="h-10 rounded-xl border-slate-200 bg-white"
+                  />
                   <Select
                     value={filterUniId}
                     onValueChange={(value) => {
@@ -1668,7 +1929,7 @@ export default function AdminPanel() {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden">
+              <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden`}>
                 <CardContent className="p-0">
                   {loadingMateriales ? (
                     <div className="flex flex-col items-center justify-center py-24 gap-4">
@@ -1677,7 +1938,7 @@ export default function AdminPanel() {
                       </div>
                       <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Cargando biblioteca...</span>
                     </div>
-                  ) : filteredResources.length === 0 ? (
+                  ) : visibleResources.length === 0 ? (
                     <div className="py-24 text-center">
                       <div className="h-16 w-16 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
                         <Upload className="h-8 w-8 text-slate-300" />
@@ -1686,7 +1947,7 @@ export default function AdminPanel() {
                     </div>
                   ) : (
                     <div className="divide-y divide-slate-50">
-                      {filteredResources.map((resource) => (
+                      {visibleResources.map((resource) => (
                         <div
                           key={resource.id}
                           className="flex items-center justify-between p-5 hover:bg-slate-50/50 transition-colors group"
@@ -1724,7 +1985,7 @@ export default function AdminPanel() {
               </Card>
 
               {/* LIMPIEZA TOTAL SECTION */}
-              <Card className="border-red-100 bg-red-50/20 rounded-3xl overflow-hidden mt-8">
+              <Card className="mt-8 overflow-hidden rounded-[1.5rem] border border-red-100 bg-red-50/25 shadow-[var(--shadow-soft)]">
                 <CardHeader className="py-4">
                   <CardTitle className="text-sm font-black text-red-800 flex items-center gap-3 uppercase tracking-wider">
                     <Trash2Icon className="h-5 w-5" />
@@ -1768,8 +2029,13 @@ export default function AdminPanel() {
           )}
 
           {activeTab === 'operaciones' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+            <div className="space-y-5">
+              <div>
+                <p className="eyebrow-label">Supervisión técnica</p>
+                <h3 className="section-title mt-2">Operaciones y mantenimiento</h3>
+                <p className="section-copy mt-2">Seguimiento de salud, duplicados y objetos huérfanos con una vista mucho más clara.</p>
+              </div>
+              <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-3`}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <h2 className="text-sm font-semibold text-slate-800">Operaciones</h2>
@@ -1784,7 +2050,7 @@ export default function AdminPanel() {
               </div>
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <Card className="rounded-xl border border-slate-200 bg-white">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">PDFs duplicados</p>
                     <p className="mt-1 text-2xl font-bold text-slate-900">
@@ -1793,7 +2059,7 @@ export default function AdminPanel() {
                     <p className="mt-1 text-xs text-slate-500">Grupos detectados por materia, nombre y páginas.</p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200 bg-white">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Errores cliente 7d</p>
                     <p className="mt-1 text-2xl font-bold text-slate-900">
@@ -1804,7 +2070,7 @@ export default function AdminPanel() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200 bg-white">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Archivos huérfanos</p>
                     <p className="mt-1 text-2xl font-bold text-slate-900">
@@ -1816,7 +2082,7 @@ export default function AdminPanel() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Duplicados detectados</CardTitle>
                   </CardHeader>
@@ -1843,7 +2109,7 @@ export default function AdminPanel() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Salud y mantenimiento</CardTitle>
                   </CardHeader>
@@ -1887,12 +2153,13 @@ export default function AdminPanel() {
           {activeTab === 'config' && (
             <div className="space-y-10">
               <div>
-                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Configuración</h1>
-                <p className="text-slate-500 mt-1">Gestiona las entidades base y la inteligencia artificial.</p>
+                <p className="eyebrow-label">Estructura académica</p>
+                <h3 className="section-title mt-2">Configuración del catálogo</h3>
+                <p className="section-copy mt-2">Gestioná universidades, carreras, materias compartidas e importaciones masivas desde una sola sección.</p>
               </div>
 
               {/* Prompt Section */}
-              <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden">
+              <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden`}>
                 <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
                   <CardTitle className="text-sm font-bold text-slate-800 uppercase tracking-wider">Prompt de extracción IA</CardTitle>
                 </CardHeader>
@@ -1911,9 +2178,9 @@ export default function AdminPanel() {
               </Card>
 
               {/* Universidades, Carreras, Materias */}
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
                 {/* Universidades */}
-                <Card className="rounded-3xl border-slate-100 shadow-none bg-slate-50/30">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="py-4">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider">Universidades</CardTitle>
                   </CardHeader>
@@ -1945,7 +2212,7 @@ export default function AdminPanel() {
                 </Card>
 
                 {/* Carreras */}
-                <Card className="rounded-3xl border-slate-100 shadow-none bg-slate-50/30">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="py-4">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider">Carreras</CardTitle>
                   </CardHeader>
@@ -1984,7 +2251,7 @@ export default function AdminPanel() {
                 </Card>
 
                 {/* Materias */}
-                <Card className="rounded-3xl border-slate-100 shadow-none bg-slate-50/30">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="py-4">
                     <CardTitle className="text-sm font-bold uppercase tracking-wider">Materias</CardTitle>
                   </CardHeader>
@@ -2130,8 +2397,13 @@ export default function AdminPanel() {
           )}
 
           {activeTab === 'estadisticas' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+            <div className="space-y-5">
+              <div>
+                <p className="eyebrow-label">Analítica del producto</p>
+                <h3 className="section-title mt-2">Estadísticas y comportamiento</h3>
+                <p className="section-copy mt-2">Métricas clave, tendencias y ranking de preguntas bajo una presentación más propia de una SaaS.</p>
+              </div>
+              <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-3`}>
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold text-slate-800">Resumen general</h2>
                   <div className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600">
@@ -2149,28 +2421,28 @@ export default function AdminPanel() {
               ) : (
                 <>
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <Card className="rounded-xl border border-slate-200 bg-white">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
                         <p className="text-[11px] text-slate-500">Usuarios activos</p>
                         <p className="mt-1 text-2xl font-bold text-slate-900">{stats.dau.toLocaleString('es-AR')}</p>
                         <p className="mt-1 text-xs text-emerald-600">+ {Math.max(1, Math.round(stats.dau * 0.18))}%</p>
                       </CardContent>
                     </Card>
-                    <Card className="rounded-xl border border-slate-200 bg-white">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
                         <p className="text-[11px] text-slate-500">Nuevos registros</p>
                         <p className="mt-1 text-2xl font-bold text-slate-900">{stats.registered.month.toLocaleString('es-AR')}</p>
                         <p className="mt-1 text-xs text-emerald-600">+ {Math.max(1, Math.round(stats.registered.week * 0.2))}%</p>
                       </CardContent>
                     </Card>
-                    <Card className="rounded-xl border border-slate-200 bg-white">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
                         <p className="text-[11px] text-slate-500">Sesiones diarias promedio</p>
                         <p className="mt-1 text-2xl font-bold text-slate-900">{stats.interaction.avg_minutes_per_session.toLocaleString('es-AR')}</p>
                         <p className="mt-1 text-xs text-emerald-600">+ 15.3%</p>
                       </CardContent>
                     </Card>
-                    <Card className="rounded-xl border border-slate-200 bg-white">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
                         <p className="text-[11px] text-slate-500">Preguntas generadas (IA)</p>
                         <p className="mt-1 text-2xl font-bold text-slate-900">{questionEditorRows.length.toLocaleString('es-AR')}</p>
@@ -2180,7 +2452,7 @@ export default function AdminPanel() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-                    <Card className="rounded-xl border border-slate-200 bg-white xl:col-span-1">
+                    <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} xl:col-span-1`}>
                       <CardHeader className="pb-1 pt-3">
                         <CardTitle className="text-sm">Uso de la plataforma</CardTitle>
                       </CardHeader>
@@ -2199,7 +2471,7 @@ export default function AdminPanel() {
                       </CardContent>
                     </Card>
 
-                    <Card className="rounded-xl border border-slate-200 bg-white">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardHeader className="pb-1 pt-3">
                         <CardTitle className="text-sm">Materias mas utilizadas</CardTitle>
                       </CardHeader>
@@ -2228,7 +2500,7 @@ export default function AdminPanel() {
                       </CardContent>
                     </Card>
 
-                    <Card className="rounded-xl border border-slate-200 bg-white">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardHeader className="pb-1 pt-3">
                         <CardTitle className="text-sm">Retención de usuarios</CardTitle>
                       </CardHeader>
@@ -2249,7 +2521,7 @@ export default function AdminPanel() {
                     </Card>
                   </div>
 
-                  <Card className="rounded-xl border border-slate-200 bg-white">
+                  <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                     <CardHeader className="pb-2 pt-3">
                       <CardTitle className="text-sm">Ranking global de preguntas (materia/parcial)</CardTitle>
                     </CardHeader>
@@ -2329,13 +2601,14 @@ export default function AdminPanel() {
           )}
 
           {activeTab === 'ia' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl bg-gradient-to-r from-indigo-700 via-violet-700 to-blue-700 p-3 text-white shadow-lg">
-                <h1 className="text-xl font-black tracking-tight">Panel de IA</h1>
-                <p className="mt-1 text-xs text-indigo-100">Rendimiento de explicaciones, banco IA y ajustes operativos.</p>
+            <div className="space-y-5">
+              <div>
+                <p className="eyebrow-label">Inteligencia aplicada</p>
+                <h3 className="section-title mt-2">Panel de IA</h3>
+                <p className="section-copy mt-2">Rendimiento de explicaciones, edición del banco y revisión de feedback desde un workspace más ordenado.</p>
               </div>
 
-              <Card className="shadow-none border-slate-100 rounded-3xl overflow-hidden">
+              <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden`}>
                 <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
                   <CardTitle className="flex items-center gap-2 text-sm font-bold text-slate-800 uppercase tracking-wider">
                     <Brain className="h-4 w-4 text-blue-600" />
@@ -2350,7 +2623,7 @@ export default function AdminPanel() {
                     </Button>
                   </div>
                   {iaRankingRows.map((row) => (
-                    <div key={row.pregunta_id} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <div key={row.pregunta_id} className="rounded-[1rem] border border-slate-200/80 bg-white p-3 shadow-[var(--shadow-soft)]">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                           <p className="text-sm font-semibold text-slate-800">{row.enunciado}</p>
@@ -2386,7 +2659,7 @@ export default function AdminPanel() {
               </Card>
 
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <Card className="rounded-xl border-slate-100">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="pb-1 pt-4"><CardTitle className="text-sm">Feedback de explicaciones IA</CardTitle></CardHeader>
                   <CardContent className="h-48 px-2.5 pb-2.5">
                     {feedbackStats ? (
@@ -2405,7 +2678,7 @@ export default function AdminPanel() {
                     )}
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border-slate-100">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Editor de preguntas IA + dificultad</CardTitle>
                     <Button
@@ -2447,7 +2720,7 @@ export default function AdminPanel() {
                 </Card>
               </div>
 
-              <Card className="rounded-xl border-slate-100">
+              <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                 <CardHeader className="pb-1 pt-4">
                   <CardTitle className="text-sm">Revision de feedback de IA (pulgar abajo)</CardTitle>
                 </CardHeader>
@@ -2477,25 +2750,38 @@ export default function AdminPanel() {
           )}
 
           {activeTab === 'usuarios' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+            <div className="space-y-5">
+              <div>
+                <p className="eyebrow-label">Gestión de acceso</p>
+                <h3 className="section-title mt-2">Usuarios y roles</h3>
+                <p className="section-copy mt-2">Controlá altas, actividad, planes y permisos desde una tabla mucho más consistente con el resto del backoffice.</p>
+              </div>
+              <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-3`}>
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold text-slate-800">Usuarios</h2>
-                  <Button variant="outline" size="sm" onClick={() => void fetchUsuariosAdmin()} disabled={loadingUsers}>
-                    {loadingUsers ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Actualizar
-                  </Button>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={userSearch}
+                      onChange={(event) => setUserSearch(event.target.value)}
+                      placeholder="Buscar email, rol o plan"
+                      className="h-9 w-full rounded-xl border-slate-200 bg-white sm:w-[220px]"
+                    />
+                    <Button variant="outline" size="sm" onClick={() => void fetchUsuariosAdmin()} disabled={loadingUsers}>
+                      {loadingUsers ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Actualizar
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Usuarios totales</p>
-                    <p className="mt-1 text-2xl font-bold text-slate-900">{adminUsers.length.toLocaleString('es-AR')}</p>
+                    <p className="mt-1 text-2xl font-bold text-slate-900">{visibleUsers.length.toLocaleString('es-AR')}</p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Activos</p>
                     <p className="mt-1 text-2xl font-bold text-emerald-700">
@@ -2503,7 +2789,7 @@ export default function AdminPanel() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Administradores</p>
                     <p className="mt-1 text-2xl font-bold text-indigo-700">
@@ -2513,7 +2799,7 @@ export default function AdminPanel() {
                 </Card>
               </div>
 
-              <Card className="rounded-xl border border-slate-200">
+              <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden`}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Lista completa</CardTitle>
                 </CardHeader>
@@ -2531,7 +2817,7 @@ export default function AdminPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {adminUsers.map((u) => (
+                      {visibleUsers.map((u) => (
                         <tr key={u.id} className="border-b border-slate-100">
                           <td className="px-4 py-2 text-slate-700">{u.email}</td>
                           <td className="px-4 py-2">
@@ -2596,7 +2882,7 @@ export default function AdminPanel() {
                       ))}
                     </tbody>
                   </table>
-                  {!loadingUsers && adminUsers.length === 0 ? (
+                  {!loadingUsers && visibleUsers.length === 0 ? (
                     <p className="p-4 text-sm text-slate-500">No hay usuarios para mostrar.</p>
                   ) : null}
                 </CardContent>
@@ -2605,8 +2891,13 @@ export default function AdminPanel() {
           )}
 
           {activeTab === 'monetizacion' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-3">
+            <div className="space-y-5">
+              <div>
+                <p className="eyebrow-label">Negocio y premium</p>
+                <h3 className="section-title mt-2">Monetización</h3>
+                <p className="section-copy mt-2">Visualizá suscripciones, estado de planes e ingresos estimados con una lectura más ejecutiva.</p>
+              </div>
+              <div className={`${ADMIN_PANEL_SUBCARD_CLASS} p-3`}>
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold text-slate-800">Monetizacion</h2>
                   <Button variant="outline" size="sm" onClick={() => void fetchMonetizacionAdmin()} disabled={loadingMonetizacion}>
@@ -2617,7 +2908,7 @@ export default function AdminPanel() {
               </div>
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Suscripciones</p>
                     <p className="mt-1 text-2xl font-bold text-slate-900">
@@ -2625,7 +2916,7 @@ export default function AdminPanel() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Activas</p>
                     <p className="mt-1 text-2xl font-bold text-emerald-700">
@@ -2633,7 +2924,7 @@ export default function AdminPanel() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Canceladas</p>
                     <p className="mt-1 text-2xl font-bold text-rose-700">
@@ -2641,7 +2932,7 @@ export default function AdminPanel() {
                     </p>
                   </CardContent>
                 </Card>
-                <Card className="rounded-xl border border-slate-200">
+                <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                   <CardContent className="p-4">
                     <p className="text-[11px] text-slate-500">Ingreso mensual estimado (ARS)</p>
                     <p className="mt-1 text-2xl font-bold text-indigo-700">
@@ -2651,7 +2942,7 @@ export default function AdminPanel() {
                 </Card>
               </div>
 
-              <Card className="rounded-xl border border-slate-200">
+              <Card className={`${ADMIN_PANEL_SUBCARD_CLASS} overflow-hidden`}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm">Planes / Pagos / Precios / Estado</CardTitle>
                 </CardHeader>

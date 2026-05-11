@@ -73,6 +73,9 @@ export function FooterHome() {
               <a href="/privacidad" className="text-xs text-white/70 transition hover:text-white">
                 Politica de privacidad
               </a>
+              <a href="/copyright" className="text-xs text-white/70 transition hover:text-white">
+                Copyright
+              </a>
             </nav>
           </div>
         </div>

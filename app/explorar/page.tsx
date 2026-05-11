@@ -122,8 +122,8 @@ function ExplorarContent() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-12">
+    <div className="animate-page-enter container mx-auto px-4 py-12">
+      <div className="animate-surface-reveal mb-12">
         <h1 className="text-4xl font-black tracking-tight text-slate-950 md:text-5xl">
           Explora universidades
         </h1>
@@ -133,7 +133,7 @@ function ExplorarContent() {
         </p>
       </div>
 
-      <div className="mb-8 max-w-sm">
+      <div className="animate-surface-reveal mb-8 max-w-sm" style={{ animationDelay: '80ms' }}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
@@ -155,19 +155,22 @@ function ExplorarContent() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filteredUniversidades.map((universidad) => (
+          {filteredUniversidades.map((universidad, index) => (
             <Link key={universidad.id} href={getUniversityRoute(universidad.id)} className="block">
-              <Card className="h-full rounded-3xl border border-slate-200/70 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-2xl">
-                <CardHeader className="pb-3">
+              <Card
+                className="animate-surface-reveal h-full rounded-3xl border border-slate-200/70 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-emerald-300 hover:shadow-2xl"
+                style={{ animationDelay: `${index * 90}ms` }}
+              >
+                <CardHeader className="items-center pb-3 text-center">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
                     <Building2 className="h-7 w-7" />
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-center">
                   <CardTitle className="text-2xl font-black tracking-tight text-slate-950">
                     {universidad.nombre}
                   </CardTitle>
-                  <div className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                  <div className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-emerald-700">
                     Ver carreras
                     <ArrowRight className="h-4 w-4" />
                   </div>

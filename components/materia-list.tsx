@@ -10,7 +10,6 @@ import {
   ChevronRight,
   ArrowLeft,
   Users,
-  FileText,
   Zap,
   BarChart3,
   Play,
@@ -300,7 +299,7 @@ export default function MateriaList({
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F7FB]">
+    <div className="animate-page-enter min-h-screen bg-[#F5F7FB]">
       <div className="w-full border-b border-[#E8EDF5] bg-[#F8FAFC]">
         <div className="mx-auto flex min-h-16 max-w-7xl items-center px-4 py-3 lg:px-8">
           <nav className="flex flex-wrap items-center gap-1.5 text-sm leading-6">
@@ -399,40 +398,40 @@ export default function MateriaList({
           <div className="grid grid-cols-2 gap-2 py-3 sm:flex sm:gap-6 sm:py-0">
             <button
               onClick={() => setActiveTab('plan')}
-              className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:rounded-none sm:px-0 sm:py-4 ${
+              className={`relative rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 ${
                 activeTab === 'plan'
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF] sm:bg-transparent sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
               }`}
             >
               Plan de estudios
             </button>
             <button
               onClick={() => setActiveTab('informacion')}
-              className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:rounded-none sm:px-0 sm:py-4 ${
+              className={`relative rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 ${
                 activeTab === 'informacion'
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF] sm:bg-transparent sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
               }`}
             >
               Informacion
             </button>
             <button
               onClick={() => setActiveTab('recursos')}
-              className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:rounded-none sm:px-0 sm:py-4 ${
+              className={`relative rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 ${
                 activeTab === 'recursos'
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF] sm:bg-transparent sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
               }`}
             >
               Recursos
             </button>
             <button
               onClick={() => setActiveTab('comunidad')}
-              className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-colors sm:rounded-none sm:px-0 sm:py-4 ${
+              className={`relative rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 sm:rounded-none sm:px-0 sm:py-4 ${
                 activeTab === 'comunidad'
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF] sm:bg-transparent sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
-                  : 'text-slate-500 hover:text-slate-700'
+                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#4F5DFF] sm:after:content-[""]'
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
               }`}
             >
               Comunidad
@@ -443,11 +442,11 @@ export default function MateriaList({
 
       <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
         {activeTab === 'plan' && (
-          <div>
+          <div className="animate-tab-panel">
             <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Plan de estudios</h2>
-                <p className="mt-1 text-slate-600">Explora todas las materias de la carrera</p>
+                <h2 className="section-title text-slate-900 sm:text-3xl">Plan de estudios</h2>
+                <p className="section-copy mt-1 text-slate-600">Explora todas las materias de la carrera</p>
               </div>
               <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -472,11 +471,11 @@ export default function MateriaList({
                 return (
                   <Card
                     key={materia.id}
-                    className="min-h-[220px] overflow-hidden rounded-2xl border border-[#E9EDF5] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-md"
+                    className="surface-card animate-saas-lift-in min-h-[220px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)]"
                   >
-                    <CardContent className="flex h-full flex-col p-5">
+                    <CardContent className="flex h-full flex-col p-5 text-left">
                       <div className="mb-4 flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-start gap-4">
+                        <div className="flex min-w-0 flex-1 flex-col gap-4">
                           <div className={`mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${icono.bg}`}>
                             <IconComponent className={`h-5 w-5 ${icono.color}`} />
                           </div>
@@ -490,7 +489,7 @@ export default function MateriaList({
                             >
                               {materia.nombre}
                             </h3>
-                            <p className="mt-2 line-clamp-2 max-w-full text-[13px] leading-5 text-[#7C879C]">
+                            <p className="mt-2 line-clamp-3 max-w-full text-[13px] leading-5 text-[#7C879C]">
                               {materia.descripcion || getDescripcionMateria(materia.nombre)}
                             </p>
                           </div>
@@ -518,7 +517,7 @@ export default function MateriaList({
                           )}
                         </button>
                       </div>
-                      <div className="mt-auto pt-3">
+                      <div className="mt-auto pt-5">
                         <Link href={getMateriaRoute(materia.id, carreraId)}>
                           <button className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#E8EDF5] bg-white px-4 py-3 text-sm font-semibold text-[#4F5DFF] transition-colors duration-200 hover:border-[#C7D2FE] hover:bg-[#F8FAFF]">
                             <Play className="h-3.5 w-3.5" />
@@ -543,17 +542,37 @@ export default function MateriaList({
         )}
 
         {activeTab === 'informacion' && (
-          <div className="py-20 text-center">
-            <FileText className="mx-auto mb-6 h-16 w-16 text-slate-300" />
-            <h2 className="mb-4 text-2xl font-bold text-slate-800">Informacion de la carrera</h2>
-            <p className="mx-auto max-w-md text-slate-600">
-              {carreraData?.descripcion || 'Detalles completos del plan de estudios y requisitos academicos proximamente.'}
-            </p>
+          <div className="animate-tab-panel py-20 text-center">
+            <div className="mx-auto max-w-3xl rounded-3xl border border-[#E8EDF5] bg-white p-8 text-left shadow-sm">
+              <h2 className="section-title mb-4 text-slate-800 sm:text-[2rem]">Informacion de la carrera</h2>
+              <p className="text-sm leading-7 text-slate-600">
+                {carreraData?.descripcion ||
+                  `${carreraNombre || 'Esta carrera'} ofrece un recorrido academico orientado a construir bases solidas, desarrollar criterio practico y avanzar materia por materia dentro de un plan claro.`}
+              </p>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <span className="block text-xs uppercase tracking-wide text-slate-400">Duracion</span>
+                  <span className="mt-1 block font-semibold">{carreraData?.carga_horaria || '5 anos'}</span>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <span className="block text-xs uppercase tracking-wide text-slate-400">Modalidad</span>
+                  <span className="mt-1 block font-semibold">{carreraData?.modalidad || 'Presencial'}</span>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <span className="block text-xs uppercase tracking-wide text-slate-400">Nivel</span>
+                  <span className="mt-1 block font-semibold">{carreraData?.nivel || 'Grado'}</span>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  <span className="block text-xs uppercase tracking-wide text-slate-400">Materias visibles</span>
+                  <span className="mt-1 block font-semibold">{materias.length}</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
         {activeTab === 'recursos' && (
-          <div className="py-20 text-center">
+          <div className="animate-tab-panel py-20 text-center">
             <BarChart3 className="mx-auto mb-6 h-16 w-16 text-slate-300" />
             <h2 className="mb-4 text-2xl font-bold text-slate-800">Recursos disponibles</h2>
             <p className="mx-auto max-w-md text-slate-600">
@@ -563,7 +582,7 @@ export default function MateriaList({
         )}
 
         {activeTab === 'comunidad' && (
-          <div className="py-20 text-center">
+          <div className="animate-tab-panel py-20 text-center">
             <Users className="mx-auto mb-6 h-16 w-16 text-slate-300" />
             <h2 className="mb-4 text-2xl font-bold text-slate-800">Comunidad</h2>
             <p className="mx-auto max-w-md text-slate-600">

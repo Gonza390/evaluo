@@ -11,6 +11,7 @@ export type ResourceVoteSummary = {
 };
 
 export type ResourceVoteSummaryMap = Record<string, ResourceVoteSummary>;
+export type ResourceViewCountMap = Record<string, number>;
 
 const DEFAULT_VOTE_SUMMARY: ResourceVoteSummary = {
   score: 0,
@@ -21,6 +22,56 @@ const DEFAULT_VOTE_SUMMARY: ResourceVoteSummary = {
 
 export function getDefaultResourceVoteSummary(): ResourceVoteSummary {
   return DEFAULT_VOTE_SUMMARY;
+}
+
+export async function fetchResourceViewCounts(
+  supabase: AppSupabaseClient,
+  resourceIds: string[]
+): Promise<ResourceViewCountMap> {
+  if (resourceIds.length === 0) {
+    return {};
+  }
+
+  const { data, error } = await supabase
+    .from('resource_views')
+    .select('resource_id')
+    .in('resource_id', resourceIds);
+
+  if (error) {
+    throw error;
+  }
+
+  const counts: ResourceViewCountMap = {};
+
+  for (const resourceId of resourceIds) {
+    counts[resourceId] = 0;
+  }
+
+  for (const row of data ?? []) {
+    if (!row.resource_id) continue;
+    counts[row.resource_id] = (counts[row.resource_id] ?? 0) + 1;
+  }
+
+  return counts;
+}
+
+export async function registerResourceView(
+  supabase: AppSupabaseClient,
+  input: {
+    resourceId: string;
+    userId?: string | null;
+    sessionKey?: string | null;
+  }
+) {
+  const { error } = await supabase.from('resource_views').insert({
+    resource_id: input.resourceId,
+    user_id: input.userId ?? null,
+    session_key: input.sessionKey ?? null,
+  });
+
+  if (error) {
+    throw error;
+  }
 }
 
 export async function fetchResourceVoteSummaries(

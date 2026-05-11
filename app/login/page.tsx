@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,9 +17,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const benefits = [
-  'Los mejores materiales',
-  'Simuladores y practica guiada',
-  'Tu progreso siempre guardado',
+  'Lectura y practica en un solo lugar',
+  'Progreso guardado por materia',
+  'Simuladores listos para rendir mejor',
 ];
 
 export default function Login() {
@@ -54,7 +53,7 @@ export default function Login() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
-      setError(`No pudimos iniciar sesión con Google: ${message}`);
+      setError(`No pudimos iniciar sesion con Google: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -94,7 +93,7 @@ export default function Login() {
           }
         }
 
-        setError('Registro exitoso. Revisá tu email para confirmar la cuenta y volver a entrar.');
+        setError('Registro exitoso. Revisa tu email para confirmar la cuenta y volver a entrar.');
       } else {
         const { error: loginError } = await supabase.auth.signInWithPassword({
           email,
@@ -111,7 +110,7 @@ export default function Login() {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
-      setError(`Ocurrió un problema inesperado: ${message}`);
+      setError(`Ocurrio un problema inesperado: ${message}`);
     } finally {
       setLoading(false);
     }
@@ -120,73 +119,65 @@ export default function Login() {
   const isSuccessMessage = error.toLowerCase().includes('registro exitoso');
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.18),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.22),transparent_30%),linear-gradient(180deg,#eef4ff_0%,#f7fbff_48%,#eef3ff_100%)]">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute left-[8%] top-[10%] h-44 w-44 rounded-full bg-cyan-300/25 blur-3xl" />
-        <div className="absolute bottom-[8%] right-[8%] h-56 w-56 rounded-full bg-indigo-300/30 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_24%),linear-gradient(180deg,#f4f8ff_0%,#fbfdff_48%,#eef3ff_100%)]">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="animate-study-orb absolute left-[9%] top-[10%] h-44 w-44 rounded-full bg-sky-300/18 blur-3xl" />
+        <div
+          className="animate-study-orb absolute bottom-[8%] right-[10%] h-56 w-56 rounded-full bg-indigo-300/16 blur-3xl"
+          style={{ animationDelay: '450ms' }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.4)_0%,transparent_36%,transparent_64%,rgba(255,255,255,0.25)_100%)]" />
       </div>
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-6 lg:px-8">
-        <div className="grid w-full max-w-[980px] overflow-hidden rounded-[30px] border border-white/70 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl lg:grid-cols-[0.96fr_0.9fr]">
-          <section className="relative overflow-hidden bg-[linear-gradient(160deg,#1d4ed8_0%,#2563eb_28%,#4f46e5_100%)] p-5 text-white sm:p-7 lg:min-h-[620px] lg:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.25),transparent_36%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.22),transparent_30%)]" />
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-3 py-4 sm:px-5 sm:py-6 lg:px-8">
+        <div className="animate-saas-lift-in grid w-full max-w-[1060px] gap-4 rounded-[36px] border border-white/70 bg-white/55 p-2 shadow-[0_30px_90px_rgba(15,23,42,0.12)] backdrop-blur-2xl lg:grid-cols-[1.04fr_0.96fr] lg:p-3">
+          <section className="relative overflow-hidden rounded-[30px] bg-[linear-gradient(155deg,#0f172a_0%,#172554_24%,#1d4ed8_60%,#4f46e5_100%)] p-5 text-white sm:p-6 lg:min-h-[620px] lg:p-8">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_30%),radial-gradient(circle_at_bottom,rgba(56,189,248,0.16),transparent_30%)]" />
             <div className="relative flex h-full flex-col">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/15"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white/90 backdrop-blur transition hover:bg-white/15"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Volver
                 </Link>
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/90">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-white/90">
                   <Sparkles className="h-3.5 w-3.5" />
                   Evaluo
                 </div>
               </div>
 
-              <div className="mt-8 max-w-[380px]">
-                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-white/70">
+              <div className="mt-10 max-w-[430px] sm:mt-12 lg:mt-16">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/65">
                   Plataforma de estudio
                 </p>
-                <h1 className="mt-4 text-3xl font-black leading-[1.02] tracking-[-0.05em] sm:text-4xl">
-                  Continuá tu camino al éxito con una experiencia más clara y rápida.
+                <h1 className="mt-4 text-[1.9rem] font-black leading-[0.94] tracking-[-0.07em] text-white sm:text-[2.7rem] lg:text-[3.1rem]">
+                  Un acceso claro para volver a estudiar sin ruido.
                 </h1>
-                <p className="mt-4 max-w-[340px] text-sm leading-6 text-white/78 sm:text-base">
-                  Entrá, estudiá y retomá tus materiales sin perder el contexto de la materia ni tu avance.
+                <p className="mt-4 max-w-[360px] text-sm leading-7 text-white/74 sm:text-[15px]">
+                  Entrá a tus materias, retomá tus PDFs, seguí el simulador y mantené tu avance siempre a mano desde un mismo lugar.
                 </p>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {benefits.map((benefit) => (
+              <div className="mt-8 grid gap-3 sm:mt-9 sm:grid-cols-3">
+                {benefits.map((benefit, index) => (
                   <div
                     key={benefit}
-                    className="rounded-[20px] border border-white/20 bg-white/10 px-3 py-3 text-xs font-semibold leading-5 text-white/92 backdrop-blur sm:text-sm"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                    className="animate-saas-lift-in rounded-[22px] border border-white/15 bg-white/10 px-3 py-3 text-left text-xs font-semibold leading-5 text-white/90 backdrop-blur"
                   >
                     {benefit}
                   </div>
                 ))}
               </div>
 
-              <div className="relative mt-auto pt-6">
-                <div className="pointer-events-none absolute -bottom-10 left-1/2 h-44 w-44 -translate-x-1/2 rounded-full bg-cyan-300/20 blur-3xl" />
-                <div className="relative mx-auto max-w-[320px]">
-                  <Image
-                    src="/hero-student-right-v2.png"
-                    alt="Estudiante usando Evaluo"
-                    width={916}
-                    height={1024}
-                    priority
-                    className="h-auto w-full object-contain drop-shadow-[0_24px_50px_rgba(15,23,42,0.35)]"
-                  />
-                </div>
-              </div>
             </div>
           </section>
 
-          <section className="flex min-h-full items-center bg-white/88 p-4 sm:p-6 lg:p-8">
+          <section className="flex min-h-full items-center rounded-[30px] bg-white/92 p-4 sm:p-5 lg:p-8">
             <div className="mx-auto w-full max-w-[390px]">
-              <div className="mb-6 text-center lg:text-left">
+              <div className="mb-5 text-center lg:mb-6 lg:text-left">
                 <div className="inline-flex rounded-full border border-slate-200 bg-slate-50 p-1">
                   <button
                     type="button"
@@ -196,7 +187,7 @@ export default function Login() {
                     }`}
                     disabled={loading}
                   >
-                    Iniciar sesión
+                    Iniciar sesion
                   </button>
                   <button
                     type="button"
@@ -210,13 +201,13 @@ export default function Login() {
                   </button>
                 </div>
 
-                <h2 className="mt-4 text-2xl font-black tracking-[-0.04em] text-slate-950 sm:text-[30px]">
-                  {isSignUp ? 'Creá tu cuenta' : 'Bienvenido de nuevo'}
+                <h2 className="mt-5 text-[1.9rem] font-black tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
+                  {isSignUp ? 'Crea tu cuenta' : 'Bienvenido de nuevo'}
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">
                   {isSignUp
-                    ? 'Guardá tu progreso, sumá tus materias y empezá a estudiar en minutos.'
-                    : 'Retomá tus materias, simuladores y PDFs exactamente donde los dejaste.'}
+                    ? 'En pocos pasos dejas tu espacio listo para estudiar, guardar avance y usar el simulador.'
+                    : 'Volvé a tus materias, abrí tus documentos y seguí estudiando exactamente donde lo dejaste.'}
                 </p>
               </div>
 
@@ -225,9 +216,9 @@ export default function Login() {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 sm:text-base"
+                  className="flex h-12 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                 >
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       fill="currentColor"
@@ -249,18 +240,18 @@ export default function Login() {
                   {loading ? 'Procesando...' : 'Continuar con Google'}
                 </Button>
 
-                <div className="flex items-center gap-4 py-2">
+                <div className="flex items-center gap-4 py-1">
                   <div className="h-px flex-1 bg-slate-200" />
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    o seguí con tu correo
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    o sigue con tu correo
                   </span>
                   <div className="h-px flex-1 bg-slate-200" />
                 </div>
               </div>
 
-              <form onSubmit={handleEmailAuth} className="mt-4 space-y-4">
+              <form onSubmit={handleEmailAuth} className="mt-5 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Correo electrónico</label>
+                  <label className="text-sm font-semibold text-slate-700">Correo electronico</label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <Input
@@ -268,7 +259,7 @@ export default function Login() {
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500 sm:text-base"
+                      className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500"
                       required
                       disabled={loading}
                     />
@@ -277,19 +268,19 @@ export default function Login() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <label className="text-sm font-semibold text-slate-700">Contraseña</label>
+                    <label className="text-sm font-semibold text-slate-700">Contrasena</label>
                     {!isSignUp ? (
-                      <span className="text-xs font-medium text-indigo-600">Recordala para volver rápido</span>
+                      <span className="text-xs font-medium text-indigo-600">Guardala para volver rapido</span>
                     ) : null}
                   </div>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      type="password"
-                      placeholder="********"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500 sm:text-base"
+                      <Input
+                        type="password"
+                        placeholder="********"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500"
                       required
                       disabled={loading}
                     />
@@ -306,7 +297,7 @@ export default function Login() {
                         placeholder="+54 9 11 ..."
                         value={whatsapp}
                         onChange={(event) => setWhatsapp(event.target.value)}
-                        className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500 sm:text-base"
+                        className="h-12 rounded-2xl border-slate-200 bg-white pl-11 text-sm shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500"
                         required
                         disabled={loading}
                       />
@@ -329,48 +320,48 @@ export default function Login() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="h-12 w-full rounded-2xl bg-gradient-to-r from-[#2563eb] via-[#4f46e5] to-[#7c3aed] text-sm font-bold text-white shadow-[0_14px_34px_rgba(79,70,229,0.28)] transition hover:translate-y-[-1px] hover:opacity-95 sm:text-base"
+                  className="animate-saas-glow h-12 w-full rounded-2xl bg-gradient-to-r from-[#2563eb] via-[#4f46e5] to-[#7c3aed] text-sm font-bold text-white shadow-[0_14px_34px_rgba(79,70,229,0.24)] transition hover:translate-y-[-1px] hover:opacity-95"
                 >
                   {loading ? (
                     <span className="inline-flex items-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       Procesando...
                     </span>
                   ) : isSignUp ? (
                     'Crear cuenta'
                   ) : (
-                    'Iniciar sesión'
+                    'Iniciar sesion'
                   )}
                 </Button>
               </form>
 
-              <div className="mt-5 rounded-[22px] border border-slate-200 bg-slate-50/90 p-4 text-sm text-slate-600">
+              <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50/90 p-4 text-sm text-slate-600">
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
                     <GraduationCap className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="font-semibold text-slate-900">
-                      {isSignUp ? 'Tu perfil se termina de completar dentro de la app' : 'Entrás y retomás al instante'}
+                      {isSignUp ? 'Terminas de completar tu perfil dentro de la app' : 'Entras y retomas al instante'}
                     </p>
                     <p className="mt-1 leading-6 text-slate-500">
                       {isSignUp
-                        ? 'Después del registro te guiamos para elegir carrera, completar datos y empezar con tus materias.'
-                        : 'Tus resúmenes, simuladores y documentos abiertos quedan más a mano desde el dashboard.'}
+                        ? 'Despues del registro te guiamos para elegir carrera, completar datos y empezar con tus materias.'
+                        : 'Tus resumenes, simuladores y documentos abiertos quedan ordenados para volver sin perder tiempo.'}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-5 text-center text-sm text-slate-500 lg:text-left">
-                {isSignUp ? '¿Ya tenés cuenta?' : '¿Todavía no tenés cuenta?'}{' '}
+                {isSignUp ? 'Ya tienes cuenta?' : 'Todavia no tienes cuenta?'}{' '}
                 <button
                   type="button"
                   onClick={() => setIsSignUp((prev) => !prev)}
                   disabled={loading}
                   className="font-semibold text-indigo-600 transition hover:text-indigo-700 hover:underline disabled:opacity-60"
                 >
-                  {isSignUp ? 'Iniciá sesión' : 'Registrate acá'}
+                  {isSignUp ? 'Inicia sesion' : 'Registrate aca'}
                 </button>
               </div>
             </div>

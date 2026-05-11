@@ -15,6 +15,20 @@ export type DashboardMateriaDetailsMap = Record<
   }
 >;
 
+export async function fetchDashboardProfileCarreraId(userId: string) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('carrera_id')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return profile?.carrera_id ?? null;
+}
+
 export async function fetchDashboardMateriaSummaries(): Promise<DashboardMateriaSummary[]> {
   const { data: materias, error: materiasError } = await supabase
     .from('materias')
@@ -56,6 +70,80 @@ export async function fetchDashboardMateriaSummaries(): Promise<DashboardMateria
       ? carrerasMap.get(materia.carrera_id) ?? 'Carrera'
       : 'Materia general',
   }));
+}
+
+export async function fetchDashboardMateriaDetailsByIds(
+  materiaIds: string[]
+): Promise<DashboardMateriaSummary[]> {
+  const normalizedIds = Array.from(
+    new Set(materiaIds.filter((id): id is string => typeof id === 'string' && id.length > 0))
+  );
+
+  if (normalizedIds.length === 0) {
+    return [];
+  }
+
+  const { data: materias, error: materiasError } = await supabase
+    .from('materias')
+    .select('id, nombre, carrera_id')
+    .in('id', normalizedIds)
+    .order('nombre');
+
+  if (materiasError) {
+    throw materiasError;
+  }
+
+  const carreraIds = Array.from(
+    new Set(
+      (materias ?? [])
+        .map((materia) => materia.carrera_id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0)
+    )
+  );
+
+  let carrerasMap = new Map<string, string>();
+
+  if (carreraIds.length > 0) {
+    const { data: carreras, error: carrerasError } = await supabase
+      .from('carreras')
+      .select('id, nombre')
+      .in('id', carreraIds);
+
+    if (carrerasError) {
+      throw carrerasError;
+    }
+
+    carrerasMap = new Map((carreras ?? []).map((carrera) => [carrera.id, carrera.nombre]));
+  }
+
+  return (materias ?? []).map((materia) => ({
+    id: materia.id,
+    nombre: materia.nombre,
+    carreraId: materia.carrera_id,
+    carreraNombre: materia.carrera_id
+      ? carrerasMap.get(materia.carrera_id) ?? 'Carrera'
+      : 'Materia general',
+  }));
+}
+
+export async function fetchDashboardMateriasByIds(
+  materiaIds: string[]
+): Promise<DashboardMateriaSummary[]> {
+  return fetchDashboardMateriaDetailsByIds(materiaIds);
+}
+
+export async function fetchDashboardFavoriteMateriaIds(userId: string) {
+  const { data, error } = await supabase
+    .from('user_favorites')
+    .select('materia_id')
+    .eq('user_id', userId)
+    .not('materia_id', 'is', null);
+
+  if (error) {
+    throw error;
+  }
+
+  return Array.from(new Set((data ?? []).map((item) => item.materia_id).filter(Boolean))) as string[];
 }
 
 export function mapDashboardMateriaDetails(

@@ -21,6 +21,7 @@ interface PdfViewerProps {
   title?: string;
   className?: string;
   heightClassName?: string;
+  forcePreviewLock?: boolean;
 }
 
 interface SearchResult {
@@ -52,14 +53,20 @@ interface ReactPdfModule {
   };
 }
 
+interface PdfFileData {
+  data: Uint8Array;
+}
+
 const ZOOM_LEVELS = [0.75, 0.9, 1, 1.15, 1.3, 1.5, 1.75] as const;
 const PREVIEW_PAGE_LIMIT = 3;
+const MOBILE_VIEWER_HEIGHT = 'h-[72vh] sm:h-[78vh] lg:h-[84vh]';
 
 export default function PdfViewer({
   url,
   title = 'Vista de PDF',
   className,
-  heightClassName = 'h-[84vh]',
+  heightClassName = MOBILE_VIEWER_HEIGHT,
+  forcePreviewLock = false,
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -75,7 +82,7 @@ export default function PdfViewer({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [pdfDocument, setPdfDocument] = useState<LoadedPdfDocument | null>(null);
-  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
+  const [documentBytes, setDocumentBytes] = useState<Uint8Array | null>(null);
   const [documentError, setDocumentError] = useState<string | null>(null);
   const [documentLoading, setDocumentLoading] = useState(true);
   const [viewerRuntimeError, setViewerRuntimeError] = useState<string | null>(null);
@@ -125,8 +132,7 @@ export default function PdfViewer({
     const loadReactPdf = async () => {
       try {
         const mod = (await import('react-pdf')) as unknown as ReactPdfModule;
-        const workerVersion = mod.pdfjs.version ?? '5.4.296';
-        mod.pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${workerVersion}/build/pdf.worker.min.mjs`;
+        mod.pdfjs.GlobalWorkerOptions.workerSrc = '/react-pdf-worker-5.4.296.min.mjs';
 
         if (active) {
           setReactPdf(mod);
@@ -175,15 +181,15 @@ export default function PdfViewer({
     setSearchQuery('');
     setSearchResults([]);
     setPdfDocument(null);
+    setDocumentBytes(null);
     setShowPreviewGate(false);
     pageRefs.current = {};
   }, [url]);
 
   useEffect(() => {
     let active = true;
-    let objectUrl: string | null = null;
 
-    const loadPdfBlob = async () => {
+    const loadPdfBinary = async () => {
       setDocumentLoading(true);
       setDocumentError(null);
 
@@ -198,13 +204,13 @@ export default function PdfViewer({
           throw new Error('El archivo no tiene formato PDF.');
         }
 
-        objectUrl = URL.createObjectURL(blob);
+        const arrayBuffer = await blob.arrayBuffer();
         if (!active) return;
-        setDocumentUrl(objectUrl);
+        setDocumentBytes(new Uint8Array(arrayBuffer));
       } catch (error) {
         console.error('PdfViewer load error:', error);
         if (!active) return;
-        setDocumentUrl(null);
+        setDocumentBytes(null);
         setDocumentError('No pudimos preparar el archivo PDF para mostrarlo.');
       } finally {
         if (active) {
@@ -213,13 +219,10 @@ export default function PdfViewer({
       }
     };
 
-    void loadPdfBlob();
+    void loadPdfBinary();
 
     return () => {
       active = false;
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
     };
   }, [url]);
 
@@ -260,14 +263,25 @@ export default function PdfViewer({
     if (numPages <= PREVIEW_PAGE_LIMIT) return numPages;
     return PREVIEW_PAGE_LIMIT;
   }, [numPages]);
-  const visiblePageLimit = hasSession ? numPages : previewPageLimit;
-  const isPreviewLocked = !sessionLoading && !hasSession && numPages > previewPageLimit;
+  const visiblePageLimit = forcePreviewLock ? numPages : hasSession ? numPages : previewPageLimit;
+  const isPreviewLocked =
+    forcePreviewLock || (!sessionLoading && !hasSession && numPages > previewPageLimit);
   const canGoNext = currentPage < visiblePageLimit;
 
   const currentSearchResult = useMemo(
     () => searchResults.find((result) => result.pageNumber === currentPage) ?? null,
     [currentPage, searchResults]
   );
+
+  const mainDocumentFile = useMemo<PdfFileData | null>(() => {
+    if (!documentBytes) return null;
+    return { data: documentBytes.slice() };
+  }, [documentBytes]);
+
+  const sidebarDocumentFile = useMemo<PdfFileData | null>(() => {
+    if (!documentBytes) return null;
+    return { data: documentBytes.slice() };
+  }, [documentBytes]);
 
   const handleDocumentLoad = (documentProxy: unknown) => {
     const doc = documentProxy as LoadedPdfDocument;
@@ -296,7 +310,7 @@ export default function PdfViewer({
     const viewport = pageViewportRef.current;
     if (!viewport) return;
 
-    if (hasSession || sessionLoading || numPages <= previewPageLimit) {
+    if ((hasSession && !forcePreviewLock) || sessionLoading || (!forcePreviewLock && numPages <= previewPageLimit)) {
       setShowPreviewGate(false);
       return;
     }
@@ -380,10 +394,7 @@ export default function PdfViewer({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        'overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)]',
-        className
-      )}
+      className={cn('surface-panel overflow-hidden', className)}
     >
       <div className="border-b border-slate-200 bg-white px-3 py-3 md:px-4">
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
@@ -393,7 +404,7 @@ export default function PdfViewer({
               <p className="mt-1 text-xs text-slate-500">Lector avanzado de Evaluo</p>
             </div>
 
-            <div className="flex min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+            <div className="flex min-w-0 items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
               <Search className="h-4 w-4 shrink-0" />
               <input
                 value={searchQuery}
@@ -431,7 +442,7 @@ export default function PdfViewer({
               type="button"
               onClick={zoomOut}
               disabled={zoomIndex === 0}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Alejar zoom"
             >
               <ZoomOut className="h-4 w-4" />
@@ -440,13 +451,13 @@ export default function PdfViewer({
               type="button"
               onClick={zoomIn}
               disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Acercar zoom"
             >
               <ZoomIn className="h-4 w-4" />
             </button>
 
-            <div className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700">
+            <div className="rounded-[1rem] border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
               {currentPage} / {numPages || '...'}
             </div>
 
@@ -458,7 +469,7 @@ export default function PdfViewer({
                 scrollToPage(nextPage);
               }}
               disabled={!canGoPrev}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Página anterior"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -471,7 +482,7 @@ export default function PdfViewer({
                 scrollToPage(nextPage);
               }}
               disabled={!canGoNext}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Página siguiente"
             >
               <ChevronRight className="h-4 w-4" />
@@ -480,7 +491,7 @@ export default function PdfViewer({
             <button
               type="button"
               onClick={() => void toggleFullscreen()}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50"
               aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
             >
               {isFullscreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
@@ -492,8 +503,8 @@ export default function PdfViewer({
       <div className="grid gap-0 lg:grid-cols-[170px_minmax(0,1fr)]">
         <aside className="hidden border-r border-slate-200 bg-[#f8fafc] lg:block">
           <div className="max-h-[84vh] space-y-3 overflow-y-auto p-3">
-            {DocumentComponent && PageComponent && documentUrl && numPages > 0 ? (
-              <DocumentComponent file={documentUrl}>
+            {DocumentComponent && PageComponent && sidebarDocumentFile && numPages > 0 ? (
+              <DocumentComponent file={sidebarDocumentFile}>
                 {Array.from({ length: visiblePageLimit }, (_, index) => {
                   const pageNumber = index + 1;
                   const active = pageNumber === currentPage;
@@ -531,7 +542,7 @@ export default function PdfViewer({
           </div>
         </aside>
 
-        <div className="bg-[#eef2f7] p-2 md:p-3">
+        <div className="bg-[#eef2f7] p-2 sm:p-3">
           {searchResults.length > 0 ? (
             <div className="mb-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
               <p className="font-semibold">
@@ -548,7 +559,7 @@ export default function PdfViewer({
           <div
             ref={pageViewportRef}
             className={cn(
-              'overflow-auto rounded-[1.15rem] bg-white p-3',
+              'overflow-auto rounded-[1rem] bg-white p-2 sm:rounded-[1.15rem] sm:p-3',
               heightClassName
             )}
           >
@@ -560,7 +571,7 @@ export default function PdfViewer({
               <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
                 Cargando documento...
               </div>
-            ) : documentError || !documentUrl ? (
+            ) : documentError || !mainDocumentFile ? (
               <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
                 {documentError || 'No pudimos preparar el PDF.'}
               </div>
@@ -570,7 +581,7 @@ export default function PdfViewer({
               </div>
             ) : (
               <DocumentComponent
-                file={documentUrl}
+                file={mainDocumentFile}
                 onLoadSuccess={handleDocumentLoad}
                 loading={
                   <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
@@ -594,7 +605,7 @@ export default function PdfViewer({
                           pageRefs.current[pageNumber] = node;
                         }}
                         data-page={pageNumber}
-                        className="mx-auto w-fit rounded-[1rem] border border-slate-100 bg-white shadow-sm"
+                        className="mx-auto w-fit max-w-full rounded-[0.95rem] border border-slate-100 bg-white shadow-sm"
                       >
                         <PageComponent
                           pageNumber={pageNumber}
@@ -607,26 +618,33 @@ export default function PdfViewer({
                   })}
 
                   {isPreviewLocked && showPreviewGate ? (
-                    <div className="sticky bottom-4 z-10 mx-auto mt-2 flex w-full max-w-2xl justify-center px-3">
-                      <div className="w-full rounded-[1.75rem] border border-blue-200 bg-white/95 p-6 text-center shadow-[0_24px_60px_rgba(37,99,235,0.18)] backdrop-blur">
-                        <p className="text-3xl font-black tracking-[-0.04em] text-slate-950">
+                    <div className="sticky bottom-3 z-10 mx-auto mt-6 flex w-full max-w-2xl justify-center px-1 sm:bottom-4 sm:px-3">
+                      <div className="absolute inset-x-5 -top-10 h-14 rounded-full bg-gradient-to-t from-white via-white/80 to-transparent blur-2xl" />
+                      <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-indigo-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
+                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700">
+                          Preview disponible
+                          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-indigo-600">
+                            {previewPageLimit} paginas
+                          </span>
+                        </div>
+                        <p className="mt-4 text-2xl font-black tracking-[-0.04em] text-slate-950 sm:text-3xl">
                           Accede al material completo
                         </p>
-                        <p className="mt-3 text-sm leading-7 text-slate-500">
-                          Ya viste una parte del documento. Inicia sesion para seguir leyendo el PDF completo dentro de Evaluo.
+                        <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
+                          Ya viste una parte del documento. Inicia sesion para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
                         </p>
                         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
                           <Link
                             href="/login"
                             className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F46E5] px-6 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)] transition hover:opacity-95"
                           >
-                            Soy estudiante
+                            Continuar para leer completo
                           </Link>
                           <Link
                             href="/login"
                             className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                           >
-                            Inicia sesion
+                            Iniciar sesion
                           </Link>
                         </div>
                       </div>

@@ -29,8 +29,8 @@ export async function POST(request: Request) {
   try {
     const clientKey = getRequestClientKey(request);
     const rateLimit = enforceRateLimit({
-      key: `pdf-view:${clientKey}`,
-      limit: 30,
+      key: `pdf-download:${clientKey}`,
+      limit: 20,
       windowMs: 60_000,
     });
 
@@ -38,24 +38,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
     }
 
-    const body = (await request.json()) as { path?: string };
+    const body = (await request.json()) as { path?: string; downloadName?: string };
     const path = body.path?.trim();
+    const downloadName = body.downloadName?.trim();
 
     if (!path || path.length > 500) {
       return NextResponse.json({ error: 'Missing path' }, { status: 400 });
-    }
-
-    if (/^https?:\/\//i.test(path) && !path.includes('/storage/v1/object/')) {
-      return NextResponse.json({ error: 'Invalid storage path' }, { status: 400 });
-    }
-
-    const objectPath = getStorageObjectPath(path);
-    if (!objectPath) {
-      return NextResponse.json({ error: 'Invalid storage path' }, { status: 400 });
-    }
-
-    if (!objectPath.toLowerCase().endsWith('.pdf')) {
-      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 
     const supabase = await createClientServer();
@@ -65,7 +53,20 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.warn('pdf-view-url session validation warning:', userError.message);
+      return NextResponse.json({ error: 'Unable to validate session' }, { status: 500 });
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    const objectPath = getStorageObjectPath(path);
+    if (!objectPath) {
+      return NextResponse.json({ error: 'Invalid storage path' }, { status: 400 });
+    }
+
+    if (!objectPath.toLowerCase().endsWith('.pdf')) {
+      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 
     const supabaseAdmin = createAdminClient();
@@ -89,14 +90,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
-    if (!user || userError) {
-      const previewUrl = `/api/pdf-preview?path=${encodeURIComponent(objectPath)}`;
-      return NextResponse.json({ url: previewUrl, preview: true });
-    }
+    const safeDownloadName =
+      downloadName && downloadName.length <= 180
+        ? downloadName
+        : objectPath.split('/').pop() ?? 'documento.pdf';
 
     const { data, error } = await supabaseAdmin.storage
       .from('biblioteca')
-      .createSignedUrl(objectPath, 90);
+      .createSignedUrl(objectPath, 60, { download: safeDownloadName });
 
     if (error || !data?.signedUrl) {
       return NextResponse.json({ error: 'Unable to sign url' }, { status: 500 });
