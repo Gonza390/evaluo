@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   checkProfileStatus,
   finalizarSimuladorAction,
@@ -67,6 +68,28 @@ type SimuladorPersistedState = {
 type ShuffledQuestionMeta = {
   options: string[];
   displayedToOriginal: number[];
+};
+
+type ExamSummaryCard =
+  | {
+      label: string;
+      title: string;
+      description: string;
+      cta: string;
+      href: string;
+    }
+  | {
+      label: string;
+      title: string;
+      description: string;
+      cta: string;
+      onClick: () => void;
+    };
+
+type ErrorFocusInsight = {
+  title: string;
+  description: string;
+  recommendation: string;
 };
 
 function seededShuffle<T>(items: T[], seedInput: string): { values: T[]; indexMap: number[] } {
@@ -135,6 +158,64 @@ function getSuggestedModule(parcial: number, seed: string) {
   return pickDeterministicItem(modules, seed);
 }
 
+function inferErrorFocus(preguntasErradas: Pregunta[], suggestedModule: number): ErrorFocusInsight {
+  if (preguntasErradas.length === 0) {
+    return {
+      title: `Buen dominio del Modulo ${suggestedModule}`,
+      description: 'No detectamos un patron fuerte de error en este intento.',
+      recommendation: `Si queres consolidarlo mas, repasa una vez el Modulo ${suggestedModule} y vuelve a intentar.`,
+    };
+  }
+
+  const theoryKeywords = [
+    'concepto',
+    'defina',
+    'definir',
+    'segun',
+    'indique',
+    'mencione',
+    'verdadero',
+    'falso',
+    'afirmacion',
+    'caracteristica',
+  ];
+  const appliedKeywords = [
+    'caso',
+    'situacion',
+    'aplique',
+    'resolver',
+    'resuelva',
+    'calcule',
+    'procedimiento',
+    'paciente',
+    'empresa',
+    'ejemplo',
+  ];
+
+  let theoryCount = 0;
+  let appliedCount = 0;
+
+  for (const pregunta of preguntasErradas) {
+    const normalized = normalizeForCompare(pregunta.enunciado);
+    if (theoryKeywords.some((keyword) => normalized.includes(keyword))) theoryCount += 1;
+    if (appliedKeywords.some((keyword) => normalized.includes(keyword))) appliedCount += 1;
+  }
+
+  if (appliedCount > theoryCount) {
+    return {
+      title: `Te costaron mas las preguntas de aplicacion del Modulo ${suggestedModule}`,
+      description: 'Tus errores aparecen mas en consignas donde hay que aplicar criterios a casos o situaciones concretas.',
+      recommendation: `Repasa ejemplos resueltos y luego vuelve a practicar el Modulo ${suggestedModule} con foco en aplicacion practica.`,
+    };
+  }
+
+  return {
+    title: `Fallaste mas en preguntas teoricas del Modulo ${suggestedModule}`,
+    description: 'Tus errores se concentran mas en definiciones, criterios base y preguntas de marco conceptual.',
+    recommendation: `Te conviene reforzar primero los conceptos clave del Modulo ${suggestedModule} antes del proximo intento.`,
+  };
+}
+
 function resolveExamParcial(parcial: number, preguntas: Pregunta[]): number {
   const questionParcial = preguntas.find((pregunta) => pregunta.parcial === 1 || pregunta.parcial === 2)?.parcial;
   return questionParcial === 2 ? 2 : Number(parcial) === 2 ? 2 : 1;
@@ -168,6 +249,8 @@ export default function SimuladorExamen({
   const [explanationsMetrics, setExplanationsMetrics] = useState<{ cacheHits: number; generatedCount: number } | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState<Record<string, 1 | -1 | undefined>>({});
   const [feedbackVotes, setFeedbackVotes] = useState<Record<string, 1 | -1>>({});
+  const [showResultsFace, setShowResultsFace] = useState(false);
+  const [isMobileResults, setIsMobileResults] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [resumeSnapshot, setResumeSnapshot] = useState<SimuladorPersistedState | null>(null);
   const storageKey = useMemo(
@@ -297,6 +380,7 @@ export default function SimuladorExamen({
       const respondidas = Object.keys(selectedAnswers).length;
       setAciertosFinales(correctas);
       setRespondidasFinales(respondidas);
+      setShowResultsFace(false);
       setEstado('finished');
       setIsFinishing(false);
       try {
@@ -378,6 +462,15 @@ export default function SimuladorExamen({
     setEstado('error');
     return false;
   }, [carreraId, materiaId, mode, parcial, premiumOnly, storageKey, universidadId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(max-width: 767px)');
+    const syncViewport = () => setIsMobileResults(media.matches);
+    syncViewport();
+    media.addEventListener('change', syncViewport);
+    return () => media.removeEventListener('change', syncViewport);
+  }, []);
 
   useEffect(() => {
     async function inicializar() {
@@ -618,6 +711,7 @@ export default function SimuladorExamen({
   };
 
   const reiniciarSimulador = () => {
+    setShowResultsFace(false);
     try {
       window.localStorage.removeItem(storageKey);
     } catch {
@@ -713,164 +807,312 @@ export default function SimuladorExamen({
     const totalRespondidas = respondidasFinales || 1;
     const nota = respondidasFinales > 0 ? (aciertosFinales / totalRespondidas) * 10 : 0;
     const aprobado = nota >= 7;
+    const porcentaje = respondidasFinales > 0 ? Math.round((aciertosFinales / totalRespondidas) * 100) : 0;
+    const needsMotivation = porcentaje < 60;
+    const wrongQuestions = Object.entries(selectedAnswers)
+      .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
+      .map(([index]) => preguntas[Number(index)])
+      .filter((pregunta): pregunta is Pregunta => Boolean(pregunta));
     const resolvedParcial = resolveExamParcial(parcial, preguntas);
     const reviewSeed = `${materiaId}:${resolvedParcial}:${respondidasFinales}:${aciertosFinales}:${wrongExplanations.length}`;
     const suggestedModule = getSuggestedModule(resolvedParcial, reviewSeed);
-    const patternMessage = pickDeterministicItem(
-      [
-        `Detectamos mas tropiezos en el Modulo ${suggestedModule}.`,
-        `Tu mayor concentracion de errores estuvo en el Modulo ${suggestedModule}.`,
-        `La zona donde mas te costo sostener respuestas correctas fue el Modulo ${suggestedModule}.`,
-      ],
-      `${reviewSeed}:pattern`
-    );
-    const recommendationMessage = pickDeterministicItem(
-      [
-        `Te conviene repasar los resumenes del Modulo ${suggestedModule} antes del proximo intento.`,
-        `Un repaso corto del Modulo ${suggestedModule} puede ayudarte a subir la nota rapido.`,
-        `Si queres mejorar el siguiente intento, empeza por los recursos del Modulo ${suggestedModule}.`,
-      ],
-      `${reviewSeed}:recommendation`
-    );
+    const errorFocus = inferErrorFocus(wrongQuestions, suggestedModule);
+    const patternMessage = errorFocus.title;
+    const recommendationMessage = errorFocus.recommendation;
+    const erroresPendientes = Math.max(0, respondidasFinales - aciertosFinales);
+    const frontTitle = porcentaje >= 85 ? '¡Excelente trabajo!' : porcentaje >= 60 ? 'Buen trabajo' : 'Segui, vas a poder';
+    const frontMessage = `Completaste el simulacro de ${materiaNombre || `Materia ${materiaId}`} con un ${porcentaje}%`;
+    const examSummaryCards: ExamSummaryCard[] = [
+      {
+        label: 'Ahora',
+        title: `Repasa el Modulo ${suggestedModule}`,
+        description: recommendationMessage,
+        href: `/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`,
+        cta: 'Abrir resumenes',
+      },
+      {
+        label: 'Despues',
+        title: 'Practica tus errores',
+        description:
+          erroresPendientes > 0
+            ? `Tenes ${erroresPendientes} respuestas para revisar y convertir en puntos rapidos.`
+            : 'Aunque aprobaste, repasar tus errores te ayuda a fijar mejor el parcial.',
+        href: `/simulador/errores/${materiaId}`,
+        cta: 'Practicar errores',
+      },
+      {
+        label: 'Luego',
+        title: 'Vuelve a rendir desde cero',
+        description:
+          aprobado
+            ? 'Haz un nuevo intento cuando quieras medir si ya podes sostener el resultado.'
+            : 'Despues del repaso, toma un nuevo modelo y compara si subiste la nota.',
+        onClick: reiniciarSimulador,
+        cta: 'Intentar de nuevo',
+      },
+    ];
 
     return (
-      <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
-        <Card className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-xl">
-          <div className="absolute left-0 top-0 h-1.5 w-full bg-gradient-to-r from-blue-600 to-sky-400" />
-          <Trophy className={cn('mx-auto mb-5 h-20 w-20', aprobado ? 'text-amber-500' : 'text-slate-400')} />
-          <h2 className="text-3xl font-bold text-slate-900">Simulador finalizado</h2>
-          <p className="mt-2 text-slate-600">Revisa tu resultado y vuelve a intentarlo cuando quieras.</p>
-
-          <div className="mt-8 grid grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Aciertos</p>
-              <p className="mt-1 text-3xl font-black text-slate-900">
-                {aciertosFinales}
-                <span className="text-base font-semibold text-slate-500"> / {respondidasFinales}</span>
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nota</p>
-              <p className={cn('mt-1 text-3xl font-black', aprobado ? 'text-emerald-600' : 'text-orange-600')}>
-                {nota.toFixed(1)}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 px-7 py-5 hover:bg-indigo-700">
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Intentar de nuevo
-            </Button>
-            <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-7 py-5">
-              Volver a la materia
-            </Button>
-            <Button asChild variant="outline" className="rounded-xl px-7 py-5">
-              <Link href={`/simulador/errores/${materiaId}`}>Practicar mis errores</Link>
-            </Button>
-          </div>
-
-          <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-left">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-              Revision rapida por tema
-            </p>
-            <h3 className="mt-2 text-lg font-bold text-slate-900">{patternMessage}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{recommendationMessage}</p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <Button asChild className="rounded-xl bg-amber-600 hover:bg-amber-700">
-                <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
-                  Repasar resumenes
-                </Link>
-              </Button>
-              <div className="rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
-                Recomendacion de este intento: enfocate en Modulo {suggestedModule}.
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-left">
-            <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por que fallaste y como mejorarlo</h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
-            </p>
-            {loadingExplanations ? (
-              <p className="mt-3 text-sm text-slate-600">Generando explicaciones personalizadas...</p>
-            ) : wrongExplanations.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-600">
-                No hay respuestas incorrectas para explicar. Excelente trabajo.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-4">
-                {wrongExplanations.map((item) => (
-                  <div key={item.preguntaId} className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="text-sm font-semibold text-slate-800">{item.enunciado}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">{item.explicacion}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      {(() => {
-                        const currentVote = feedbackVotes[item.preguntaId];
-                        const currentLoading = feedbackLoading[item.preguntaId];
-
-                        return (
-                          <>
-                      <button
-                        onClick={() => void handleExplanationFeedback(item.preguntaId, 1)}
-                        disabled={Boolean(currentLoading)}
-                        className={cn(
-                          'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
-                          currentVote === 1
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50',
-                          currentLoading === 1 && 'opacity-70'
-                        )}
-                      >
-                        <ThumbsUp className="h-3.5 w-3.5" />
-                        Me ayudo
-                      </button>
-                      <button
-                        onClick={() => void handleExplanationFeedback(item.preguntaId, -1)}
-                        disabled={Boolean(currentLoading)}
-                        className={cn(
-                          'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
-                          currentVote === -1
-                            ? 'border-rose-200 bg-rose-50 text-rose-700'
-                            : 'border-slate-200 text-slate-600 hover:bg-slate-50',
-                          currentLoading === -1 && 'opacity-70'
-                        )}
-                      >
-                        <ThumbsDown className="h-3.5 w-3.5" />
-                        No me ayudo
-                      </button>
-                          </>
-                        );
-                      })()}
-                    </div>
-                  </div>
+      <div className="flex min-h-[700px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6">
+        <div className="w-full max-w-6xl [perspective:2200px]">
+          <div
+            className={cn(
+              'relative',
+              isMobileResults ? 'min-h-[1080px]' : 'transition-transform duration-700 [transform-style:preserve-3d]'
+            )}
+            style={isMobileResults ? undefined : { transform: showResultsFace ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
+          >
+            <Card className={cn(
+              'relative w-full overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]',
+              isMobileResults
+                ? showResultsFace
+                  ? 'pointer-events-none translate-y-6 opacity-0 transition-all duration-500'
+                  : 'translate-y-0 opacity-100 transition-all duration-500'
+                : 'min-h-[620px] [backface-visibility:hidden]'
+            )}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.10),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_22%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6366F1]/50 to-transparent" />
+              <div className="absolute inset-0 overflow-hidden">
+                {['left-12 top-24 bg-[#5B5FEF]', 'left-40 top-12 bg-[#F97316]', 'left-64 top-36 bg-[#FBBF24]', 'right-16 top-20 bg-[#7C3AED]', 'right-36 top-36 bg-[#60A5FA]', 'right-60 top-10 bg-[#F97316]', 'left-80 top-20 bg-[#93C5FD]'].map((item) => (
+                  <span
+                    key={item}
+                    className={cn('absolute h-4 w-1.5 rotate-12 rounded-full opacity-80', item)}
+                  />
                 ))}
               </div>
-            )}
-            {wrongExplanations.length > 0 ? (
-              <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
-                <p className="text-sm font-semibold text-indigo-900">
-                  Queres ver explicaciones de todas tus respuestas incorrectas?
-                </p>
-                <p className="mt-1 text-xs text-indigo-800">
-                  Pasate a Premium y desbloquea la correccion completa de todas tus respuestas incorrectas, con recomendaciones personalizadas para subir tu nota mas rapido.
-                </p>
-                <Button
-                  className="mt-3 h-8 rounded-lg bg-indigo-600 px-3 text-xs font-semibold hover:bg-indigo-700"
-                  onClick={() => window.location.assign('/pricing')}
-                >
-                  Quiero pasarme a Premium
-                </Button>
-                {explanationsMetrics ? (
-                  <p className="mt-2 text-[11px] text-indigo-700">
-                    Ahorro inteligente: {explanationsMetrics.cacheHits} explicaciones reutilizadas y {explanationsMetrics.generatedCount} nuevas en este intento.
+
+              <div className="relative grid min-h-[540px] gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:min-h-[620px] lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-14 lg:py-12">
+                <div className="max-w-[430px]">
+                  <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm', needsMotivation ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF]')}>
+                    {needsMotivation ? <Star className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}
+                    {needsMotivation ? 'Todavia podes levantarlo' : 'Resultado del simulador'}
+                  </div>
+                  <h2 className="mt-6 text-[2.1rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[3rem]">
+                    {frontTitle}
+                  </h2>
+                  <p className="mt-4 max-w-[360px] text-lg leading-8 text-slate-600 sm:text-[24px] sm:leading-9">
+                    {frontMessage}
                   </p>
-                ) : null}
+                  <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
+                    <span className={cn('text-[3.1rem] font-black leading-none tracking-[-0.07em]', porcentaje >= 85 ? 'text-[#4F46E5]' : porcentaje >= 60 ? 'text-[#2563EB]' : 'text-rose-600')}>
+                      {porcentaje}%
+                    </span>
+                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      resultado
+                    </span>
+                  </div>
+                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <Button
+                      onClick={() => setShowResultsFace(true)}
+                      className="h-12 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-base font-semibold shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95"
+                    >
+                      Ver resultados
+                    </Button>
+                    <Button variant="ghost" onClick={() => window.history.back()} className="h-12 rounded-xl px-4 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] hover:text-[#4C55E6]">
+                      Volver a la materia
+                    </Button>
+                  </div>
+                  <div className="mt-6 grid max-w-[360px] grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
+                      <p className="mt-2 text-2xl font-black text-slate-900">
+                        {aciertosFinales}
+                        <span className="text-sm font-semibold text-slate-500"> / {respondidasFinales}</span>
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota</p>
+                      <p className={cn('mt-2 text-2xl font-black', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
+                        {nota.toFixed(1)}
+                      </p>
+                    </div>
+                  </div>
+                  {needsMotivation ? (
+                    <p className="mt-6 max-w-[390px] text-sm leading-7 text-slate-600">
+                      No aprobaste esta vez, pero ya identificamos por donde empezar. Con un repaso enfocado en el Modulo {suggestedModule} y otro intento, esta nota puede subir rapido.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="relative flex justify-center lg:justify-end">
+                  <Image
+                    src={needsMotivation ? '/simulador-resultado-motivacional.webp' : '/simulador-resultado.webp'}
+                    alt={needsMotivation ? 'Resultado motivacional del simulador' : 'Resultado final del simulador'}
+                    width={1024}
+                    height={1536}
+                    priority
+                    className="h-auto w-full max-w-[560px] object-contain"
+                  />
+                </div>
               </div>
-            ) : null}
+            </Card>
+
+            <Card className={cn(
+              'overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]',
+              isMobileResults
+                ? showResultsFace
+                  ? 'relative mt-4 translate-y-0 opacity-100 transition-all duration-500'
+                  : 'pointer-events-none absolute inset-0 -translate-y-6 opacity-0 transition-all duration-500'
+                : 'absolute inset-0 min-h-[620px] w-full [backface-visibility:hidden] [transform:rotateY(180deg)]'
+            )}>
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
+              <div className="relative h-full overflow-y-auto px-6 py-8 sm:px-10 sm:py-10">
+                <div className="mx-auto max-w-5xl">
+                  <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
+                      <h3 className="mt-1 text-3xl font-bold tracking-[-0.04em] text-slate-900">Tu revision completa</h3>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                        Revisa donde fallaste, que tema te conviene reforzar y como encarar el proximo intento.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <Button variant="outline" onClick={() => setShowResultsFace(false)} className="rounded-xl px-5">
+                        Volver a la tarjeta
+                      </Button>
+                      <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-5">
+                        Volver a la materia
+                      </Button>
+                      <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700">
+                        <RefreshCcw className="mr-2 h-4 w-4" />
+                        Intentar de nuevo
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 grid gap-4 md:grid-cols-3">
+                    {examSummaryCards.map((card) => (
+                      <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          {card.label}
+                        </p>
+                        <h3 className="mt-2 text-base font-semibold text-slate-900">{card.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
+                        {'href' in card ? (
+                          <Link href={card.href} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+                            {card.cta}
+                            <ChevronRight className="h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <button type="button" onClick={card.onClick} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+                            {card.cta}
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={cn('mt-8 rounded-2xl p-6 text-left', needsMotivation ? 'border border-rose-200 bg-rose-50' : 'border border-amber-200 bg-amber-50')}>
+                    <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700' : 'text-amber-700')}>
+                      Revision rapida por tema
+                    </p>
+                    <h3 className="mt-2 text-lg font-bold text-slate-900">{patternMessage}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                      {needsMotivation
+                        ? `Todavia no alcanzaste el 60%, pero ya tenes una ruta clara: ${recommendationMessage}`
+                        : recommendationMessage}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">{errorFocus.description}</p>
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <Button asChild className={cn('rounded-xl', needsMotivation ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-600 hover:bg-amber-700')}>
+                        <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
+                          Repasar resumenes
+                        </Link>
+                      </Button>
+                      <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm', needsMotivation ? 'border-rose-200 text-rose-800' : 'border-amber-200 text-amber-800')}>
+                        Recomendacion de este intento: enfocate en Modulo {suggestedModule}.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-left">
+                    <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por que fallaste y como mejorarlo</h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
+                    </p>
+                    {loadingExplanations ? (
+                      <p className="mt-3 text-sm text-slate-600">Generando explicaciones personalizadas...</p>
+                    ) : wrongExplanations.length === 0 ? (
+                      <p className="mt-3 text-sm text-slate-600">
+                        No hay respuestas incorrectas para explicar. Excelente trabajo.
+                      </p>
+                    ) : (
+                      <div className="mt-4 space-y-4">
+                        {wrongExplanations.map((item) => (
+                          <div key={item.preguntaId} className="rounded-xl border border-slate-200 bg-white p-4">
+                            <p className="text-sm font-semibold text-slate-800">{item.enunciado}</p>
+                            <p className="mt-2 text-sm leading-6 text-slate-700">{item.explicacion}</p>
+                            <div className="mt-3 flex items-center gap-2">
+                              {(() => {
+                                const currentVote = feedbackVotes[item.preguntaId];
+                                const currentLoading = feedbackLoading[item.preguntaId];
+
+                                return (
+                                  <>
+                                    <button
+                                      onClick={() => void handleExplanationFeedback(item.preguntaId, 1)}
+                                      disabled={Boolean(currentLoading)}
+                                      className={cn(
+                                        'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
+                                        currentVote === 1
+                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                          : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        currentLoading === 1 && 'opacity-70'
+                                      )}
+                                    >
+                                      <ThumbsUp className="h-3.5 w-3.5" />
+                                      Me ayudo
+                                    </button>
+                                    <button
+                                      onClick={() => void handleExplanationFeedback(item.preguntaId, -1)}
+                                      disabled={Boolean(currentLoading)}
+                                      className={cn(
+                                        'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
+                                        currentVote === -1
+                                          ? 'border-rose-200 bg-rose-50 text-rose-700'
+                                          : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                        currentLoading === -1 && 'opacity-70'
+                                      )}
+                                    >
+                                      <ThumbsDown className="h-3.5 w-3.5" />
+                                      No me ayudo
+                                    </button>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {wrongExplanations.length > 0 ? (
+                      <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
+                        <p className="text-sm font-semibold text-indigo-900">
+                          Queres ver explicaciones de todas tus respuestas incorrectas?
+                        </p>
+                        <p className="mt-1 text-xs text-indigo-800">
+                          Pasate a Premium y desbloquea la correccion completa de todas tus respuestas incorrectas, con recomendaciones personalizadas para subir tu nota mas rapido.
+                        </p>
+                        <Button
+                          className="mt-3 h-8 rounded-lg bg-indigo-600 px-3 text-xs font-semibold hover:bg-indigo-700"
+                          onClick={() => window.location.assign('/pricing')}
+                        >
+                          Quiero pasarme a Premium
+                        </Button>
+                        {explanationsMetrics ? (
+                          <p className="mt-2 text-[11px] text-indigo-700">
+                            Ahorro inteligente: {explanationsMetrics.cacheHits} explicaciones reutilizadas y {explanationsMetrics.generatedCount} nuevas en este intento.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }

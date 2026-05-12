@@ -7,7 +7,9 @@ import {
   Bot,
   Brain,
   CheckCircle2,
+  FileText,
   GraduationCap,
+  BarChart3,
   PlayCircle,
   Sparkles,
   Target,
@@ -19,18 +21,24 @@ import { FooterHome } from '@/components/footer-home';
 const steps = [
   {
     icon: UploadCloud,
-    title: 'Subis tu duda',
-    description: 'Escribi tu pregunta o subi una foto de tu ejercicio o material.',
+    title: 'Subis tu material',
+    description: 'Carga tus resumenes, apuntes o PDFs y nuestra IA los organiza por vos.',
+    image: '/como-funciona-1.webp',
+    imageAlt: 'Estudiante subiendo material de estudio',
   },
   {
     icon: Bot,
-    title: 'Recibis ayuda',
-    description: 'Evaluo te responde al instante con una explicacion clara y ordenada.',
+    title: 'Practicas con preguntas',
+    description: 'Miles de preguntas por tema con explicaciones detalladas.',
+    image: '/como-funciona-2.webp',
+    imageAlt: 'Estudiante practicando con preguntas',
   },
   {
     icon: CheckCircle2,
-    title: 'Practicas y aprobas',
-    description: 'Preparas parciales y finales con contenido enfocado en rendir mejor.',
+    title: 'Simulas tu examen',
+    description: 'Hace simulacros cronometrados y medi tu progreso real.',
+    image: '/como-funciona-3.webp',
+    imageAlt: 'Estudiante simulando un examen en notebook',
   },
 ];
 
@@ -60,15 +68,31 @@ const reasons = [
 const socialStats = [
   { value: '+10k', label: 'estudiantes usando Evaluo' },
   { value: '+32k', label: 'documentos abiertos para estudiar' },
-  { value: '4.8/5', label: 'valoración media en materiales guardados' },
-  { value: '24/7', label: 'acceso a resúmenes, lector y simuladores' },
+  { value: '4.8/5', label: 'valoracion media en materiales guardados' },
+  { value: '24/7', label: 'acceso a resumenes, lector y simuladores' },
 ];
 
-const discoverySignals = [
-  'Recursos mejor valorados',
-  'Documentos más vistos',
-  'Materiales destacados por carrera',
+const heroHighlights = [
+  {
+    title: 'Resumenes',
+    description: 'claros y completos',
+    icon: FileText,
+    className: 'left-0 top-8 sm:left-6 lg:left-2 lg:top-10',
+  },
+  {
+    title: 'Miles de preguntas',
+    description: 'para practicar',
+    icon: Bot,
+    className: 'left-0 top-[12.8rem] sm:left-0 lg:left-[-2rem] lg:top-[15.5rem]',
+  },
+  {
+    title: 'Simuladores',
+    description: 'como el del examen',
+    icon: BarChart3,
+    className: 'right-6 top-[26rem] sm:right-8 lg:right-4 lg:top-[25rem]',
+  },
 ];
+
 
 export default function Home() {
   const primaryHref = '/login';
@@ -146,82 +170,102 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="animate-surface-reveal relative overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_22px_60px_rgba(15,27,61,0.12)] sm:rounded-[34px]" style={{ animationDelay: '120ms' }}>
-              <Image
-                src="/hero-student-right-v2.png"
-                alt="Estudiante usando Evaluo"
-                width={916}
-                height={1024}
-                className="h-auto w-full object-cover"
-                priority
-              />
+            <div className="animate-surface-reveal relative min-h-[440px] sm:min-h-[560px] lg:min-h-[640px]" style={{ animationDelay: '120ms' }}>
+              <div className="absolute inset-x-10 bottom-0 h-20 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18),rgba(99,102,241,0))] blur-3xl" />
+              {heroHighlights.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <div
+                    key={item.title}
+                    className={`absolute z-20 hidden w-[230px] rounded-[28px] border border-white/90 bg-white/92 px-5 py-4 shadow-[0_18px_45px_rgba(15,23,42,0.10)] backdrop-blur md:block ${item.className}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#5C62F4] to-[#2563EB] text-white shadow-[0_14px_30px_rgba(92,98,244,0.30)]">
+                        <Icon className="h-7 w-7" />
+                      </div>
+                      <div>
+                        <p className="text-[15px] font-bold text-[#0F1B3D]">{item.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{item.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="relative z-10 mx-auto w-full max-w-[780px]">
+                <Image
+                  src="/hero-home-estudiante.webp"
+                  alt="Estudiante usando Evaluo"
+                  width={1536}
+                  height={1024}
+                  className="h-auto w-full object-contain"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-        <section className="py-8 lg:py-10">
-          <div className="animate-surface-reveal rounded-[24px] border border-slate-100 bg-white px-4 py-4 shadow-[0_16px_40px_rgba(15,27,61,0.06)] sm:rounded-[28px] sm:px-5 sm:py-5">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <p className="eyebrow-label text-indigo-500">Prueba social</p>
-                <h2 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-[#0F1B3D] sm:text-[2rem]">
-                  Estudio, lectura y práctica en un mismo flujo.
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-slate-500">
-                  La plataforma ya combina documentos más vistos, recursos mejor valorados y recorridos de estudio por carrera.
-                </p>
+
+        <section id="como-funciona" className="pb-14 pt-12 lg:pb-20 lg:pt-16">
+          <div className="animate-surface-reveal overflow-hidden rounded-[34px] border border-[#E8EAFB] bg-[linear-gradient(180deg,#FFFFFF_0%,#FCFCFF_100%)] px-5 py-8 shadow-[0_24px_70px_rgba(100,116,139,0.10)] sm:px-8 sm:py-10 lg:rounded-[40px] lg:px-12 lg:py-14">
+            <div className="mx-auto max-w-3xl text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF]">
+                <Sparkles className="h-4 w-4" />
+                Asi de simple
               </div>
-              <div className="grid flex-1 gap-3 min-[460px]:grid-cols-2 xl:grid-cols-4">
-                {socialStats.map((stat) => (
-                  <div key={stat.label} className="rounded-2xl border border-slate-100 bg-slate-50/90 px-4 py-4">
-                    <p className="text-2xl font-black tracking-[-0.05em] text-[#0F1B3D]">{stat.value}</p>
-                    <p className="mt-2 text-xs leading-5 text-slate-500">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
+              <h2 className="mt-4 text-[30px] font-bold tracking-[-0.05em] text-[#0F1B3D] sm:text-[40px] lg:text-[48px]">
+                {'\u00BF'}Como funciona Evaluo?
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-[#5F6C8D] sm:text-[21px] sm:leading-8">
+                Todo lo que necesitas para aprobar, en 3 pasos.
+              </p>
             </div>
-            <div className="mt-5 flex flex-wrap gap-3">
-              {discoverySignals.map((signal) => (
-                <span key={signal} className="inline-flex items-center rounded-full border border-[#CBD5E1] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[#2563EB]">
-                  {signal}
-                </span>
-              ))}
+
+            <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-3 lg:gap-10">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+
+                return (
+                  <article
+                    key={step.title}
+                    style={{ animationDelay: `${index * 110}ms` }}
+                    className="animate-surface-reveal flex h-full flex-col items-center text-center"
+                  >
+                    <div className="relative flex h-[230px] w-full max-w-[300px] items-end justify-center overflow-hidden sm:h-[255px] lg:h-[290px]">
+                      <Image
+                        src={step.image}
+                        alt={step.imageAlt}
+                        width={1024}
+                        height={1536}
+                        sizes="(max-width: 639px) 250px, (max-width: 1023px) 280px, 300px"
+                        className="h-full w-auto object-contain"
+                        priority
+                      />
+                    </div>
+
+                    <div className="mb-4 hidden h-[2px] w-16 rounded-full bg-gradient-to-r from-[#8A83FF] to-[#6F65F8] lg:block" />
+
+                    <div className="mt-2 flex w-full items-start justify-center gap-2.5 text-left">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#5D65F6] to-[#6366F1] text-sm font-bold text-white shadow-[0_12px_30px_rgba(99,102,241,0.28)] sm:h-10 sm:w-10">
+                        {index + 1}
+                      </div>
+                      <div className="max-w-[300px]">
+                        <h3 className="text-[20px] font-bold leading-[1.15] tracking-[-0.03em] text-[#0F1B3D] sm:text-[21px] lg:text-[22px]">
+                          {step.title}
+                        </h3>
+                        <p className="mt-2 max-w-[300px] text-[13px] leading-6 text-[#5F6C8D] sm:text-[14px] sm:leading-6">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-          </div>
-        </section>
-
-        <section id="como-funciona" className="pb-12 pt-12 lg:pb-16 lg:pt-16">
-          <div className="animate-surface-reveal mx-auto max-w-2xl text-center">
-            <h2 className="text-[36px] font-bold tracking-[-0.04em] text-[#0F1B3D] sm:text-[44px]">
-              Como funciona
-            </h2>
-            <div className="mx-auto mt-4 h-1 w-20 rounded-full bg-gradient-to-r from-[#2563EB] to-[#6366F1]" />
-          </div>
-
-          <div className="mt-16 grid gap-8 lg:grid-cols-3 lg:gap-10">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-
-              return (
-                <article
-                  key={step.title}
-                  style={{ animationDelay: `${index * 110}ms` }}
-                  className="animate-surface-reveal rounded-2xl border border-slate-100 bg-white px-6 pb-7 pt-8 shadow-[0_10px_30px_rgba(0,0,0,0.05)]"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#6366F1] text-white shadow-lg">
-                      <Icon className="h-7 w-7" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-semibold text-[#0F1B3D]">{step.title}</h3>
-                      <p className="mt-3 text-sm leading-6 text-slate-500">{step.description}</p>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
           </div>
         </section>
 
@@ -354,21 +398,11 @@ export default function Home() {
                       Todo listo para que empieces a estudiar mejor.
                     </h2>
                     <p className="mt-3 max-w-xl text-base leading-8 text-slate-500">
-                      Centraliza tus materias, encuentra materiales útiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.
+                      Centraliza tus materias, encuentra materiales ÃƒÂºtiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-7 flex flex-wrap gap-3">
-                  {['Acceso simple', 'Materiales en un solo lugar', 'Simuladores listos'].map((item) => (
-                    <span
-                      key={item}
-                      className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 shadow-[0_8px_20px_rgba(15,27,61,0.04)]"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               <div className="flex flex-col gap-4 lg:items-end">

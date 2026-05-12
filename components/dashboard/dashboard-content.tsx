@@ -632,6 +632,51 @@ export function DashboardContent() {
     };
   }, [dashboardState.lastSubject, recommendedMaterias, router, simuladorInProgress]);
 
+  const nextStudyMoments = useMemo(() => {
+    const summaryTargetId = dashboardState.lastSubject?.id ?? recommendedMaterias[0]?.id ?? null;
+    const summaryHref = summaryTargetId ? `${getMateriaRoute(summaryTargetId)}?tab=resumenes` : '/explorar';
+    const partialTargetId = dashboardState.lastSubject?.id ?? simuladorInProgress?.materiaId ?? null;
+    const partialHref =
+      partialInsights && partialTargetId
+        ? `/simulador/${partialTargetId}/${partialInsights.parcial}`
+        : summaryHref;
+
+    return [
+      {
+        step: 'Ahora',
+        title: nextStudyAction.title,
+        description: nextStudyAction.description,
+        cta: nextStudyAction.cta,
+        onClick: nextStudyAction.onClick,
+      },
+      {
+        step: 'Despues',
+        title: summaryTargetId ? 'Repasa tus resumenes clave' : 'Explora una materia para empezar',
+        description: summaryTargetId
+          ? `Abre los resumenes de ${dashboardState.lastSubject?.name ?? recommendedMaterias[0]?.nombre ?? 'tu materia'} y fijate en lo esencial antes de practicar.`
+          : 'Busca una materia y arma tu punto de partida para estudiar con mas continuidad.',
+        cta: summaryTargetId ? 'Abrir resumenes' : 'Ir a explorar',
+        onClick: () => router.push(summaryHref),
+      },
+      {
+        step: 'Luego',
+        title: partialInsights ? 'Cierra con practica de parcial' : 'Activa tu radar con un simulador',
+        description: partialInsights
+          ? `Tu progreso actual te deja bien parado para volver al parcial ${partialInsights.parcial} y medir mejora real.`
+          : 'Cuando termines de leer, rinde un simulador para saber donde estas flojo y que revisar despues.',
+        cta: partialInsights ? 'Practicar parcial' : 'Preparar simulador',
+        onClick: () => router.push(partialHref),
+      },
+    ];
+  }, [
+    dashboardState.lastSubject,
+    nextStudyAction,
+    partialInsights,
+    recommendedMaterias,
+    router,
+    simuladorInProgress?.materiaId,
+  ]);
+
   const partialProgressRingStyle = {
     background: `conic-gradient(#4F5DFF ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg, #E6EAF2 ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg)`,
   };
@@ -744,6 +789,28 @@ export function DashboardContent() {
               >
                 {nextStudyAction.cta}
               </Button>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {nextStudyMoments.map((moment) => (
+                <div
+                  key={moment.step}
+                  className="rounded-2xl border border-white/70 bg-white/75 p-3 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-400">
+                    {moment.step}
+                  </p>
+                  <h3 className="mt-2 text-sm font-semibold text-slate-950">{moment.title}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{moment.description}</p>
+                  <button
+                    type="button"
+                    onClick={moment.onClick}
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-slate-800 transition hover:text-indigo-600"
+                  >
+                    {moment.cta}
+                    <ArrowUpRight className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 
