@@ -325,7 +325,7 @@ export default function MateriaList({
         </div>
       </div>
 
-      <section className="relative min-h-[300px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
+      <section className="relative min-h-[280px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
         <div
           className="absolute inset-0 hidden h-full w-full bg-cover bg-center lg:block"
           style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80)' }}
@@ -334,7 +334,7 @@ export default function MateriaList({
         <div className="absolute inset-0 hidden bg-[radial-gradient(circle_at_78%_36%,rgba(99,102,241,0.18),transparent_24%)] lg:block" />
         <div className="absolute inset-0 hidden bg-gradient-to-t from-[#0F172A]/32 via-transparent to-[#0F172A]/10 lg:block" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A] via-[#0F172A]/88 to-[#1E293B]/55 lg:hidden" />
-        <div className="relative mx-auto flex h-full max-w-7xl items-center px-4 py-6 lg:px-8 lg:py-8">
+        <div className="relative mx-auto flex h-full max-w-7xl items-center px-4 py-5 lg:px-8 lg:py-8">
           <div className="flex w-full flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24">
               <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/20 text-white sm:h-[80px] sm:w-[80px]">

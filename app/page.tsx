@@ -227,8 +227,6 @@ export default function Home() {
 
             <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-3 lg:gap-10">
               {steps.map((step, index) => {
-                const Icon = step.icon;
-
                 return (
                   <article
                     key={step.title}

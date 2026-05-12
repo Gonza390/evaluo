@@ -55,24 +55,6 @@ import {
 } from './materia-content.helpers';
 import { MateriaSectionState } from './materia-section-state';
 
-type StudyRouteStep =
-  | {
-      step: string;
-      label: string;
-      title: string;
-      description: string;
-      cta: string;
-      onClick: () => void;
-    }
-  | {
-      step: string;
-      label: string;
-      title: string;
-      description: string;
-      cta: string;
-      href: string;
-    };
-
 interface MateriaContentProps {
   materiaId: string;
   materiaNombre?: string;
@@ -131,46 +113,6 @@ export default function MateriaContent({
       )[0] ?? null,
     [recursosPdf, resourceVotes]
   );
-  const suggestedParcial = Number(activeUnidad) <= 2 ? 1 : 2;
-  const studyRouteSteps = useMemo<StudyRouteStep[]>(
-    () => [
-      {
-        step: '1',
-        label: 'Entender',
-        title: `Empieza por ${unidades.find((unidad) => String(unidad.id) === activeUnidad)?.nombre ?? `Modulo ${activeUnidad}`}`,
-        description:
-          activeTab === 'resumenes'
-            ? 'Estas en el mejor punto para fijar conceptos antes de practicar.'
-            : 'Volve a resúmenes para construir base antes de resolver o rendir.',
-        cta: activeTab === 'resumenes' ? 'Seguir en resumenes' : 'Ir a resumenes',
-        onClick: () => setActiveTab('resumenes'),
-      },
-      {
-        step: '2',
-        label: 'Practicar',
-        title: 'Baja a material aplicado',
-        description:
-          activeTab === 'trabajos' || activeTab === 'pregunteros'
-            ? 'Ya estas practicando. Aprovecha este bloque para afianzar lo que leiste.'
-            : 'Despues del repaso, usa pregunteros o trabajos para convertir teoria en respuesta.',
-        cta: activeTab === 'trabajos' ? 'Ver trabajos practicos' : 'Ir a practicar',
-        onClick: () => setActiveTab(activeTab === 'trabajos' ? 'trabajos' : 'pregunteros'),
-      },
-      {
-        step: '3',
-        label: 'Medir',
-        title: `Cierra con el simulador del parcial ${suggestedParcial}`,
-        description:
-          suggestedParcial === 1
-            ? 'Cuando termines este modulo, rinde parcial 1 para saber si ya podes avanzar con confianza.'
-            : 'Ya estas en contenido mas avanzado. El parcial 2 te sirve para medir si el repaso alcanzo.',
-        cta: 'Ir al simulador',
-        href: `/simulador/${materiaId}/${suggestedParcial}`,
-      },
-    ],
-    [activeTab, activeUnidad, materiaId, suggestedParcial]
-  );
-
   const loadResumenes = useCallback(async () => {
     setResumenesLoading(true);
     setResumenesError(null);
@@ -1029,7 +971,7 @@ export default function MateriaContent({
         </div>
       </div>
 
-      <section className="relative min-h-[260px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
+      <section className="relative min-h-[280px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
         <div
           className="absolute inset-0 hidden h-full w-full bg-cover bg-center lg:block"
           style={{ backgroundImage: `url(${heroImage})` }}
@@ -1141,57 +1083,6 @@ export default function MateriaContent({
             {contextError}
           </div>
         ) : null}
-        <section className="surface-panel mb-6 px-4 py-4 sm:px-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="eyebrow-label text-indigo-500">Ruta sugerida</p>
-              <h2 className="section-title mt-2 text-slate-950">Que estudiar ahora y que hacer despues</h2>
-              <p className="section-copy mt-1 max-w-3xl text-slate-500">
-                Te ordenamos esta materia en una secuencia simple para que avances sin perder tiempo decidiendo el siguiente paso.
-              </p>
-            </div>
-            <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-500">
-              Modulo activo: {activeUnidad}
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            {studyRouteSteps.map((step) => (
-              <div
-                key={step.step}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-sm font-bold text-indigo-600">
-                    {step.step}
-                  </span>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    {step.label}
-                  </p>
-                </div>
-                <h3 className="mt-3 text-base font-semibold text-slate-950">{step.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>
-                {'href' in step ? (
-                  <Link
-                    href={step.href}
-                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
-                  >
-                    {step.cta}
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={step.onClick}
-                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
-                  >
-                    {step.cta}
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
         {activeTab === 'resumenes' ? (
           <div className="animate-tab-panel space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

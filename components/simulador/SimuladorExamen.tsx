@@ -760,9 +760,14 @@ export default function SimuladorExamen({
               ? 'Volve en unas horas o probá el simulador regular mientras se actualiza este premium.'
               : 'Volve en unas horas o proba con Tecnologia y Modelos Globales.'}
           </p>
-          <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
-            Reintentar
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
+              Reintentar
+            </Button>
+            <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl">
+              Volver a la materia
+            </Button>
+          </div>
         </Card>
       </div>
     );
@@ -804,10 +809,10 @@ export default function SimuladorExamen({
   }
 
   if (estado === 'finished') {
-    const totalRespondidas = respondidasFinales || 1;
-    const nota = respondidasFinales > 0 ? (aciertosFinales / totalRespondidas) * 10 : 0;
+    const totalPreguntasExamen = Math.max(1, preguntasDisponibles || TOTAL_QUESTIONS);
+    const nota = (aciertosFinales / totalPreguntasExamen) * 10;
     const aprobado = nota >= 7;
-    const porcentaje = respondidasFinales > 0 ? Math.round((aciertosFinales / totalRespondidas) * 100) : 0;
+    const porcentaje = Math.round((aciertosFinales / totalPreguntasExamen) * 100);
     const needsMotivation = porcentaje < 60;
     const wrongQuestions = Object.entries(selectedAnswers)
       .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
@@ -917,7 +922,7 @@ export default function SimuladorExamen({
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
                       <p className="mt-2 text-2xl font-black text-slate-900">
                         {aciertosFinales}
-                        <span className="text-sm font-semibold text-slate-500"> / {respondidasFinales}</span>
+                        <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
@@ -956,38 +961,45 @@ export default function SimuladorExamen({
                 : 'absolute inset-0 min-h-[620px] w-full [backface-visibility:hidden] [transform:rotateY(180deg)]'
             )}>
               <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
-              <div className="relative h-full overflow-y-auto px-6 py-8 sm:px-10 sm:py-10">
+              <div className="relative h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
                 <div className="mx-auto max-w-5xl">
-                  <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
-                      <h3 className="mt-1 text-3xl font-bold tracking-[-0.04em] text-slate-900">Tu revision completa</h3>
-                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  <div className="rounded-[28px] border border-slate-200 bg-white/90 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:px-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="max-w-2xl">
+                        <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
+                        <h3 className="mt-1 text-[2rem] font-bold tracking-[-0.04em] text-slate-900 sm:text-[2.35rem]">
+                          Tu revision completa
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-[15px]">
+                          {materiaNombre || `Materia ${materiaId}`} · Parcial {resolvedParcial}
+                        </p>
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
                         Revisa donde fallaste, que tema te conviene reforzar y como encarar el proximo intento.
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      <Button variant="outline" onClick={() => setShowResultsFace(false)} className="rounded-xl px-5">
-                        Volver a la tarjeta
-                      </Button>
-                      <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-5">
-                        Volver a la materia
-                      </Button>
-                      <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700">
-                        <RefreshCcw className="mr-2 h-4 w-4" />
-                        Intentar de nuevo
-                      </Button>
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
+                        <Button variant="outline" onClick={() => setShowResultsFace(false)} className="rounded-xl px-5">
+                          Volver a la tarjeta
+                        </Button>
+                        <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-5">
+                          Volver a la materia
+                        </Button>
+                        <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700">
+                          <RefreshCcw className="mr-2 h-4 w-4" />
+                          Intentar de nuevo
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 grid gap-4 md:grid-cols-3">
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {examSummaryCards.map((card) => (
-                      <div key={card.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div key={card.label} className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                           {card.label}
                         </p>
-                        <h3 className="mt-2 text-base font-semibold text-slate-900">{card.title}</h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
+                        <h3 className="mt-2 text-[17px] font-semibold text-slate-900">{card.title}</h3>
+                        <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-600">{card.description}</p>
                         {'href' in card ? (
                           <Link href={card.href} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
                             {card.cta}
@@ -1003,30 +1015,30 @@ export default function SimuladorExamen({
                     ))}
                   </div>
 
-                  <div className={cn('mt-8 rounded-2xl p-6 text-left', needsMotivation ? 'border border-rose-200 bg-rose-50' : 'border border-amber-200 bg-amber-50')}>
-                    <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700' : 'text-amber-700')}>
+                  <div className={cn('mt-6 rounded-[28px] p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]', needsMotivation ? 'border border-rose-200 bg-rose-50' : 'border border-indigo-200 bg-indigo-50/70')}>
+                    <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700' : 'text-indigo-700')}>
                       Revision rapida por tema
                     </p>
-                    <h3 className="mt-2 text-lg font-bold text-slate-900">{patternMessage}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                    <h3 className="mt-2 text-xl font-bold text-slate-900">{patternMessage}</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-700">
                       {needsMotivation
                         ? `Todavia no alcanzaste el 60%, pero ya tenes una ruta clara: ${recommendationMessage}`
                         : recommendationMessage}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">{errorFocus.description}</p>
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                      <Button asChild className={cn('rounded-xl', needsMotivation ? 'bg-rose-600 hover:bg-rose-700' : 'bg-amber-600 hover:bg-amber-700')}>
+                    <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
+                      <Button asChild className={cn('rounded-xl', needsMotivation ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700')}>
                         <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
                           Repasar resumenes
                         </Link>
                       </Button>
-                      <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm', needsMotivation ? 'border-rose-200 text-rose-800' : 'border-amber-200 text-amber-800')}>
+                      <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm', needsMotivation ? 'border-rose-200 text-rose-800' : 'border-indigo-200 text-indigo-800')}>
                         Recomendacion de este intento: enfocate en Modulo {suggestedModule}.
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-10 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-left">
+                  <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
                     <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por que fallaste y como mejorarlo</h3>
                     <p className="mt-1 text-xs text-slate-500">
                       Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
@@ -1034,9 +1046,12 @@ export default function SimuladorExamen({
                     {loadingExplanations ? (
                       <p className="mt-3 text-sm text-slate-600">Generando explicaciones personalizadas...</p>
                     ) : wrongExplanations.length === 0 ? (
-                      <p className="mt-3 text-sm text-slate-600">
-                        No hay respuestas incorrectas para explicar. Excelente trabajo.
-                      </p>
+                      <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+                        <p className="text-sm font-semibold text-emerald-900">No hubo errores para revisar.</p>
+                        <p className="mt-1 text-sm text-emerald-800">
+                          Excelente trabajo. Si queres consolidarlo todavia mas, intenta otro modelo o repasa el modulo sugerido.
+                        </p>
+                      </div>
                     ) : (
                       <div className="mt-4 space-y-4">
                         {wrongExplanations.map((item) => (
