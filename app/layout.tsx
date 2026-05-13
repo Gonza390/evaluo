@@ -9,8 +9,39 @@ import '@fontsource/inter/800.css';
 import '@fontsource/inter/900.css';
 
 export const metadata: Metadata = {
-  title: 'Evaluo',
-  description: 'Simulador de examenes universitarios.',
+  metadataBase: new URL('https://evaluo.com.ar'),
+  title: {
+    default: 'Evaluo | Simulador de exámenes y materiales universitarios',
+    template: '%s | Evaluo',
+  },
+  description:
+    'Estudia con resúmenes, preguntas y simuladores universitarios en un solo lugar. Organiza tus materiales y mejora tu rendimiento con Evaluo.',
+  keywords: [
+    'evaluo',
+    'simulador de exámenes',
+    'resúmenes universitarios',
+    'preguntas de parcial',
+    'estudio universitario',
+    'materiales de estudio',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://evaluo.com.ar',
+    siteName: 'Evaluo',
+    title: 'Evaluo | Simulador de exámenes y materiales universitarios',
+    description:
+      'Resúmenes, preguntas, simuladores y seguimiento de progreso para estudiar mejor en la universidad.',
+    locale: 'es_AR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Evaluo | Simulador de exámenes y materiales universitarios',
+    description:
+      'Resúmenes, preguntas y simuladores para preparar tus parciales desde un solo lugar.',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

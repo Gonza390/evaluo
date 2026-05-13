@@ -7,7 +7,6 @@ import {
   Building2,
   ChevronDown,
   Crown,
-  GraduationCap,
   Heart,
   House,
   LayoutDashboard,
@@ -34,7 +33,6 @@ const mainNavItems = [
 
 const exploreNavItems = [
   { label: 'Universidades', href: '/explorar', icon: Building2 },
-  { label: 'Carreras', href: '/materias', icon: GraduationCap },
 ];
 
 export function Navbar() {

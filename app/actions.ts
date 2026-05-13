@@ -28,6 +28,7 @@ export interface PartialStudyInsights {
   parcial: number;
   totalPreguntasParcial: number;
   preguntasRespondidasParcial: number;
+  preguntasAcertadasParcial: number;
   coberturaPorcentaje: number;
   modelosEstimadosRealizados: number;
   promedioAciertoPorcentaje: number;
@@ -189,11 +190,11 @@ export async function getPreguntasSimuladorPremium(
 }
 
 /**
- * Actualiza el perfil del usuario con WhatsApp y carrera.
+ * Actualiza el perfil del usuario con universidad y carrera.
  */
 export async function updateProfile(
   userId: string,
-  data: { whatsapp: string; carrera_id: string }
+  data: { universidad_id: string; carrera_id: string }
 ) {
   try {
     const supabase = await createClientServer();
@@ -205,16 +206,16 @@ export async function updateProfile(
       throw new Error('No se encontro una sesion valida para actualizar el perfil.');
     }
 
-    const whatsappValue = String(data.whatsapp ?? '').trim();
+    const universidadIdValue = String(data.universidad_id ?? '').trim();
     const carreraIdValue = String(data.carrera_id ?? '').trim();
 
-    if (!whatsappValue || !carreraIdValue) {
-      throw new Error('WhatsApp y carrera son obligatorios.');
+    if (!universidadIdValue || !carreraIdValue) {
+      throw new Error('Universidad y carrera son obligatorias.');
     }
 
     const { error } = await supabase.from('profiles').upsert({
       id: userId,
-      whatsapp: whatsappValue,
+      universidad_id: universidadIdValue,
       carrera_id: carreraIdValue,
       updated_at: new Date().toISOString(),
     });
@@ -250,7 +251,7 @@ export async function checkProfileStatus(userId: string) {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('whatsapp, carrera_id')
+      .select('universidad_id, carrera_id')
       .eq('id', userId)
       .maybeSingle();
 
@@ -259,10 +260,10 @@ export async function checkProfileStatus(userId: string) {
       return { isComplete: false };
     }
 
-    const whatsappValue = String(data?.whatsapp ?? '').trim();
+    const universidadIdValue = String(data?.universidad_id ?? '').trim();
     const carreraIdValue = String(data?.carrera_id ?? '').trim();
 
-    if (!data || !whatsappValue || !carreraIdValue) {
+    if (!data || !universidadIdValue || !carreraIdValue) {
       return { isComplete: false };
     }
 
@@ -314,7 +315,10 @@ export async function finalizarSimuladorAction(data: {
   parcial: number;
   total_preguntas: number;
   respuestas_correctas: number;
+  answered_questions: number;
   tiempo_restante: number;
+  premium_only?: boolean;
+  wrong_question_ids?: string[];
 }) {
   try {
     const supabase = await createClientServer();
@@ -326,20 +330,121 @@ export async function finalizarSimuladorAction(data: {
       return { success: false, message: 'Sesion no valida.' };
     }
 
+    const wrongQuestionIds = Array.from(new Set((data.wrong_question_ids ?? []).filter(Boolean)));
+
+    const { data: attemptRow, error: attemptError } = await supabase
+      .from('simulator_attempts')
+      .insert({
+        user_id: data.usuario_id,
+        materia_id: data.materia_id,
+        parcial: data.parcial,
+        total_questions: data.total_preguntas,
+        correct_answers: data.respuestas_correctas,
+        wrong_answers: wrongQuestionIds.length,
+        answered_questions: data.answered_questions,
+        premium_only: Boolean(data.premium_only),
+      })
+      .select('id')
+      .single();
+
+    if (attemptError) {
+      throw attemptError;
+    }
+
+    if (attemptRow?.id && wrongQuestionIds.length > 0) {
+      const wrongRows = wrongQuestionIds.map((preguntaId) => ({
+        attempt_id: attemptRow.id,
+        user_id: data.usuario_id,
+        materia_id: data.materia_id,
+        parcial: data.parcial,
+        pregunta_id: preguntaId,
+      }));
+
+      const { error: wrongInsertError } = await supabase
+        .from('simulator_attempt_wrong_questions')
+        .insert(wrongRows);
+
+      if (wrongInsertError) {
+        throw wrongInsertError;
+      }
+    }
+
     return {
       success: true,
       finishedAt: new Date().toISOString(),
+      attemptId: attemptRow?.id ?? null,
       summary: {
         materia_id: data.materia_id,
         parcial: data.parcial,
         total_preguntas: data.total_preguntas,
         respuestas_correctas: data.respuestas_correctas,
+        answered_questions: data.answered_questions,
         tiempo_restante: data.tiempo_restante,
       },
     };
   } catch (error) {
     console.error('Error al finalizar simulador:', error);
     return { success: false, message: 'No se pudo finalizar el simulador.' };
+  }
+}
+
+export async function getPreguntasSimuladorUltimoIntentoPremium(
+  materiaId: string,
+  parcial: number
+): Promise<Pregunta[]> {
+  try {
+    const premiumCheck = await requirePremiumUser();
+    if (!premiumCheck.ok || !premiumCheck.user?.id) return [];
+
+    const supabase = await createClientServer();
+    const userId = premiumCheck.user.id;
+
+    const { data: latestAttempt, error: attemptError } = await supabase
+      .from('simulator_attempts')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('materia_id', materiaId)
+      .eq('parcial', parcial)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (attemptError || !latestAttempt?.id) {
+      return [];
+    }
+
+    const { data: wrongRows, error: wrongError } = await supabase
+      .from('simulator_attempt_wrong_questions')
+      .select('pregunta_id')
+      .eq('attempt_id', latestAttempt.id)
+      .order('created_at', { ascending: true });
+
+    if (wrongError || !wrongRows || wrongRows.length === 0) {
+      return [];
+    }
+
+    const wrongIds = Array.from(new Set(wrongRows.map((row) => row.pregunta_id).filter(Boolean)));
+    if (wrongIds.length === 0) return [];
+
+    const { data: questions, error: questionError } = await supabase
+      .from('preguntas_banco')
+      .select('*')
+      .in('id', wrongIds)
+      .eq('materia_id', materiaId)
+      .eq('parcial', parcial);
+
+    if (questionError || !questions || questions.length === 0) {
+      return [];
+    }
+
+    const byId = new Map(questions.map((question) => [question.id, question as Pregunta]));
+    return wrongIds
+      .map((id) => byId.get(id))
+      .filter((question): question is Pregunta => Boolean(question))
+      .slice(0, 30);
+  } catch (error) {
+    console.error('Error in getPreguntasSimuladorUltimoIntentoPremium:', error);
+    return [];
   }
 }
 
@@ -488,6 +593,7 @@ export async function getPartialStudyInsights(
       parcial,
       totalPreguntasParcial: total,
       preguntasRespondidasParcial: preguntasParcialRespondidas,
+      preguntasAcertadasParcial: respuestasParcialCorrectas,
       coberturaPorcentaje,
       modelosEstimadosRealizados,
       promedioAciertoPorcentaje,

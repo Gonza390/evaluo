@@ -51,7 +51,7 @@ export function FooterHome() {
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
               <a href="#como-funciona" className="text-xs text-white/70 transition hover:text-white">
-                Como funciona
+                Cómo funciona
               </a>
               <a href="#beneficios" className="text-xs text-white/70 transition hover:text-white">
                 Beneficios
@@ -68,7 +68,7 @@ export function FooterHome() {
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
               <a href="/terminos" className="text-xs text-white/70 transition hover:text-white">
-                Terminos y condiciones
+                Términos y condiciones
               </a>
               <a href="/privacidad" className="text-xs text-white/70 transition hover:text-white">
                 Politica de privacidad
@@ -82,7 +82,7 @@ export function FooterHome() {
 
         <div className="mt-6 border-t border-white/10 pt-4 text-center md:text-left">
           <p className="text-[10px] text-white/40">
-            © {new Date().getFullYear()} Evaluo. Todos los derechos reservados.
+            Copyright <span suppressHydrationWarning>{new Date().getFullYear()}</span> Evaluo. Todos los derechos reservados.
           </p>
         </div>
       </div>

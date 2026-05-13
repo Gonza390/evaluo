@@ -576,7 +576,7 @@ export default function MateriaList({
             <BarChart3 className="mx-auto mb-6 h-16 w-16 text-slate-300" />
             <h2 className="mb-4 text-2xl font-bold text-slate-800">Recursos disponibles</h2>
             <p className="mx-auto max-w-md text-slate-600">
-              Resumenes, simuladores y materiales de apoyo para aprobar todas las materias.
+              Resúmenes, simuladores y materiales de apoyo para aprobar todas las materias.
             </p>
           </div>
         )}

@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 import { useToast } from '@/components/ui/use-toast';
 import {
@@ -50,6 +51,7 @@ import {
   recalcularDificultadPreguntasAdmin,
   obtenerSaludSistemaAdmin,
   ejecutarMantenimientoArchivosAdmin,
+  eliminarArchivosHuerfanosAdmin,
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
   type QuestionEditorRow,
@@ -179,6 +181,7 @@ export default function AdminPanel() {
   // Materias states
   const [selectedCarreraId, setSelectedCarreraId] = useState<string | null>(null);
   const [materias, setMaterias] = useState<Materia[]>([]);
+  const [allMateriasCatalog, setAllMateriasCatalog] = useState<Materia[]>([]);
   const [nuevaMateria, setNuevaMateria] = useState('');
   const [materiaCarreraIds, setMateriaCarreraIds] = useState<string[]>([]);
   const [loadingMateria, setLoadingMateria] = useState(false);
@@ -197,6 +200,8 @@ export default function AdminPanel() {
   const [uploadUniId, setUploadUniId] = useState<string>('');
   const [uploadCarreraId, setUploadCarreraId] = useState('');
   const [uploadMateriaId, setUploadMateriaId] = useState('');
+  const [uploadCarreras, setUploadCarreras] = useState<Carrera[]>([]);
+  const [uploadMaterias, setUploadMaterias] = useState<Materia[]>([]);
   const [esMateriaGeneral, setEsMateriaGeneral] = useState(false);
   
   // New conditional logic states
@@ -232,10 +237,12 @@ export default function AdminPanel() {
   const [duplicatePdfRows, setDuplicatePdfRows] = useState<DuplicateCandidate[]>([]);
   const [systemHealth, setSystemHealth] = useState<SystemHealthStats | null>(null);
   const [fileMaintenance, setFileMaintenance] = useState<FileMaintenanceResult | null>(null);
+  const [cleaningOrphans, setCleaningOrphans] = useState(false);
   const [adminUsers, setAdminUsers] = useState<AdminUserItem[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [monetizacion, setMonetizacion] = useState<MonetizacionStats | null>(null);
   const [loadingMonetizacion, setLoadingMonetizacion] = useState(false);
+  const [showAllSharedMaterias, setShowAllSharedMaterias] = useState(false);
   const [rankingMateriaId, setRankingMateriaId] = useState<string>('all');
   const [rankingParcial, setRankingParcial] = useState<string>('all');
   const [rankingFailed, setRankingFailed] = useState<GlobalQuestionRankingRow[]>([]);
@@ -435,6 +442,7 @@ export default function AdminPanel() {
     if (result.success) {
       setStats(result.stats ?? null);
     } else {
+      setStats((prev) => prev ?? null);
       showAdminError('No pudimos cargar las estadísticas', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
@@ -447,22 +455,68 @@ export default function AdminPanel() {
       obtenerFeedbackExplicacionesAdmin(),
       ejecutarMantenimientoArchivosAdmin(),
     ]);
+    const opsErrors: string[] = [];
 
     if (dupRes.success) {
       setDuplicatePdfRows(dupRes.rows ?? []);
+    } else {
+      setDuplicatePdfRows([]);
+      opsErrors.push('duplicados PDF');
     }
     if (qRes.success) setQuestionEditorRows(qRes.rows ?? []);
+    else {
+      setQuestionEditorRows([]);
+      opsErrors.push('editor de preguntas');
+    }
     if (hRes.success) {
       setSystemHealth((hRes as { stats?: SystemHealthStats }).stats ?? null);
+    } else {
+      setSystemHealth(null);
+      opsErrors.push('salud del sistema');
     }
     if (fRes.success) setFeedbackStats((fRes as { stats?: { total: number; positive: number; negative: number } }).stats ?? null);
+    else {
+      setFeedbackStats(null);
+      opsErrors.push('feedback de IA');
+    }
     if (maintenanceRes.success) {
       setFileMaintenance((maintenanceRes as { result?: FileMaintenanceResult }).result ?? null);
+    } else {
+      setFileMaintenance(null);
+      opsErrors.push('mantenimiento de archivos');
     }
 
     const reviewRes = await obtenerFeedbackRevisionAdmin(40);
     if (reviewRes.success) {
       setFeedbackReviewRows(reviewRes.rows ?? []);
+    } else {
+      setFeedbackReviewRows([]);
+      opsErrors.push('revisión de feedback');
+    }
+
+    if (opsErrors.length > 0) {
+      showAdminError(
+        'Algunos bloques de Operaciones no se pudieron actualizar',
+        `Revisá: ${opsErrors.join(', ')}.`
+      );
+    }
+  };
+
+  const handleDeleteOrphans = async () => {
+    if (!confirm('Esto va a eliminar del bucket los archivos huérfanos detectados. ¿Querés continuar?')) return;
+
+    setCleaningOrphans(true);
+    const result = await eliminarArchivosHuerfanosAdmin();
+    setCleaningOrphans(false);
+
+    if (result.success) {
+      showAdminSuccess(
+        'Archivos huérfanos eliminados',
+        `Se borraron ${result.result?.deleted_count?.toLocaleString('es-AR') ?? 0} archivos del storage.`
+      );
+      await fetchOpsData();
+    } else {
+      showAdminError('No pudimos eliminar los huérfanos', result.message ?? 'Probá nuevamente en unos segundos.');
     }
   };
 
@@ -549,6 +603,7 @@ export default function AdminPanel() {
   useEffect(() => {
     if (user) {
       fetchUniversidades();
+      fetchAllMateriasCatalog();
       fetchPromptSistema();
       fetchMateriales();
       fetchIARanking();
@@ -573,6 +628,12 @@ export default function AdminPanel() {
       .order('nombre');
     if (error) console.error('Error universidades:', error);
     else setUniversidades(data || []);
+  };
+
+  const fetchAllMateriasCatalog = async () => {
+    const { data, error } = await supabase.from('materias').select('id, nombre, carrera_id').order('nombre');
+    if (error) console.error('Error catalogo materias:', error);
+    else setAllMateriasCatalog(data || []);
   };
 
   const agregarUniversidad = async () => {
@@ -678,16 +739,24 @@ export default function AdminPanel() {
           .select('id, nombre, universidad_id')
           .eq('universidad_id', uploadUniId)
           .order('nombre');
-        setCarreras(data || []);
+        setUploadCarreras(data || []);
       };
       fetchCarrerasForUpload();
+    } else {
+      setUploadCarreras([]);
+      setUploadCarreraId('');
+      setUploadMateriaId('');
+      setUploadMaterias([]);
     }
   }, [uploadUniId]);
 
   // Dynamic materias load for upload modal
   useEffect(() => {
     if (uploadCarreraId) {
-      fetchMaterias(uploadCarreraId);
+      fetchUploadMaterias(uploadCarreraId);
+    } else {
+      setUploadMateriaId('');
+      setUploadMaterias([]);
     }
   }, [uploadCarreraId]);
 
@@ -697,7 +766,7 @@ export default function AdminPanel() {
     }
   }, [selectedFile]);
 
-  const fetchMaterias = async (carreraId: string) => {
+  const loadMateriasForCarrera = async (carreraId: string): Promise<Materia[]> => {
     const globalSlugs = ['aprender-21', 'tecnologia-humanidades'];
 
     const [{ data: relationRows, error: relationError }, { data: globalRows, error: globalError }] =
@@ -708,8 +777,7 @@ export default function AdminPanel() {
 
     if (relationError || globalError) {
       console.error('Error materias:', relationError ?? globalError);
-      setMaterias([]);
-      return;
+      return [];
     }
 
     const relationMateriaIds = Array.from(
@@ -726,8 +794,7 @@ export default function AdminPanel() {
 
     if (linkedMateriasError || allRelationsError) {
       console.error('Error linked materias:', linkedMateriasError ?? allRelationsError);
-      setMaterias([]);
-      return;
+      return [];
     }
 
     const allRows = [...(globalRows ?? []), ...(linkedMaterias ?? [])];
@@ -751,10 +818,20 @@ export default function AdminPanel() {
       }))
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    setMaterias([
+    return [
       ...globals.map((materia) => ({ ...materia, sharedCareerCount: 0 })),
       ...others,
-    ]);
+    ];
+  };
+
+  const fetchMaterias = async (carreraId: string) => {
+    const nextMaterias = await loadMateriasForCarrera(carreraId);
+    setMaterias(nextMaterias);
+  };
+
+  const fetchUploadMaterias = async (carreraId: string) => {
+    const nextMaterias = await loadMateriasForCarrera(carreraId);
+    setUploadMaterias(nextMaterias);
   };
 
   const toggleMateriaCarrera = (carreraId: string) => {
@@ -877,7 +954,7 @@ export default function AdminPanel() {
       const shouldExtractQuestions = !isPreguntero || pregunteroDestino !== 'solo_visualizacion';
       const shouldPublishAsResource = !isPreguntero || pregunteroDestino !== 'solo_simulador';
 
-      const materiaSeleccionada = materias.find((m) => m.id === uploadMateriaId);
+      const materiaSeleccionada = uploadMaterias.find((m) => m.id === uploadMateriaId);
       const isGeneral =
         materiaSeleccionada?.slug?.includes('aprender-21') ||
         materiaSeleccionada?.slug?.includes('tecnologia-humanidades') ||
@@ -1099,14 +1176,29 @@ export default function AdminPanel() {
   const filterMaterias = useMemo(() => sortFilterEntries(resourceMateriaNames), [resourceMateriaNames]);
   const uploadMateriaOptions = useMemo(() => {
     const search = uploadMateriaSearch.trim().toLowerCase();
-    if (!search) return materias;
-    return materias.filter((materia) => materia.nombre.toLowerCase().includes(search));
-  }, [materias, uploadMateriaSearch]);
+    if (!search) return uploadMaterias;
+    return uploadMaterias.filter((materia) => materia.nombre.toLowerCase().includes(search));
+  }, [uploadMaterias, uploadMateriaSearch]);
   const isExcelSelected = Boolean(selectedFile?.name && /\.(xlsx|xls)$/i.test(selectedFile.name));
   const filterUniversidades = useMemo(() => sortFilterEntries(resourceUniNames), [resourceUniNames]);
   const platformUsageData = useMemo(() => getPlatformUsageData(stats), [stats]);
   const materiasUsoChartData = useMemo(() => getMateriasUsoChartData(stats), [stats]);
+  const sharedMateriasTop = useMemo(
+    () => (stats?.shared_materias_by_careers ?? []).slice(0, 10),
+    [stats]
+  );
   const retentionChartData = useMemo(() => getRetentionChartData(stats), [stats]);
+  const deviceDistributionData = useMemo(
+    () =>
+      stats
+        ? [
+            { name: 'Móvil', value: stats.devices.mobile, color: '#4f46e5' },
+            { name: 'Escritorio', value: stats.devices.desktop, color: '#60a5fa' },
+            { name: 'Tablet', value: stats.devices.tablet, color: '#dbeafe' },
+          ].filter((item) => item.value > 0)
+        : [],
+    [stats]
+  );
   const adminBadgeLabel = useMemo(() => getAdminUserBadgeLabel(user), [user]);
   const adminDisplayName = useMemo(() => getAdminUserDisplayName(user), [user]);
   const uploadActionLabel = useMemo(
@@ -1651,7 +1743,7 @@ export default function AdminPanel() {
                           <SelectValue placeholder={esMateriaGeneral ? "No aplica (General)" : "Seleccionar Carrera"} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
-                          {carreras.map((c) => (
+                          {uploadCarreras.map((c) => (
                             <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>
                           ))}
                         </SelectContent>
@@ -2181,9 +2273,19 @@ export default function AdminPanel() {
                       Salud del sistema, archivos huérfanos y contenido duplicado.
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => void fetchOpsData()}>
-                    Actualizar operaciones
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => void handleDeleteOrphans()}
+                      disabled={cleaningOrphans || (fileMaintenance?.orphan_count ?? 0) === 0}
+                    >
+                      {cleaningOrphans ? 'Borrando huérfanos...' : 'Borrar huérfanos'}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => void fetchOpsData()}>
+                      Actualizar operaciones
+                    </Button>
+                  </div>
                 </div>
               </div>
 
@@ -2596,30 +2698,47 @@ export default function AdminPanel() {
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
-                        <p className="text-[11px] text-slate-500">Usuarios activos</p>
+                        <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600 w-fit">
+                          <Users className="h-4 w-4" />
+                        </div>
+                        <p className="mt-3 text-[11px] font-medium text-slate-500">Usuarios activos</p>
                         <p className="mt-1 text-2xl font-bold text-slate-900">{stats.dau.toLocaleString('es-AR')}</p>
-                        <p className="mt-1 text-xs text-emerald-600">+ {Math.max(1, Math.round(stats.dau * 0.18))}%</p>
+                        <p className="mt-1 text-xs text-emerald-600">
+                          {stats.users.total.toLocaleString('es-AR')} totales
+                        </p>
                       </CardContent>
                     </Card>
                     <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
-                        <p className="text-[11px] text-slate-500">Nuevos registros</p>
-                        <p className="mt-1 text-2xl font-bold text-slate-900">{stats.registered.month.toLocaleString('es-AR')}</p>
-                        <p className="mt-1 text-xs text-emerald-600">+ {Math.max(1, Math.round(stats.registered.week * 0.2))}%</p>
+                        <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600 w-fit">
+                          <BarChart3 className="h-4 w-4" />
+                        </div>
+                        <p className="mt-3 text-[11px] font-medium text-slate-500">Nuevos usuarios</p>
+                        <p className="mt-1 text-2xl font-bold text-slate-900">{stats.users.new_last_7d.toLocaleString('es-AR')}</p>
+                        <p className={`mt-1 text-xs ${stats.users.growth_pct_vs_previous_7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {stats.users.growth_pct_vs_previous_7d >= 0 ? '+' : ''}
+                          {stats.users.growth_pct_vs_previous_7d}% vs 7d previos
+                        </p>
                       </CardContent>
                     </Card>
                     <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
-                        <p className="text-[11px] text-slate-500">Sesiones diarias promedio</p>
-                        <p className="mt-1 text-2xl font-bold text-slate-900">{stats.interaction.avg_minutes_per_session.toLocaleString('es-AR')}</p>
-                        <p className="mt-1 text-xs text-emerald-600">+ 15.3%</p>
+                        <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600 w-fit">
+                          <Zap className="h-4 w-4" />
+                        </div>
+                        <p className="mt-3 text-[11px] font-medium text-slate-500">Simuladores realizados</p>
+                        <p className="mt-1 text-2xl font-bold text-slate-900">{stats.activity.simulator_attempts_total.toLocaleString('es-AR')}</p>
+                        <p className="mt-1 text-xs text-slate-500">Intentos guardados en la plataforma</p>
                       </CardContent>
                     </Card>
                     <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                       <CardContent className="p-4">
-                        <p className="text-[11px] text-slate-500">Preguntas generadas (IA)</p>
-                        <p className="mt-1 text-2xl font-bold text-slate-900">{questionEditorRows.length.toLocaleString('es-AR')}</p>
-                        <p className="mt-1 text-xs text-emerald-600">+ 31.2%</p>
+                        <div className="rounded-xl bg-indigo-50 p-2 text-indigo-600 w-fit">
+                          <Brain className="h-4 w-4" />
+                        </div>
+                        <p className="mt-3 text-[11px] font-medium text-slate-500">Preguntas respondidas</p>
+                        <p className="mt-1 text-2xl font-bold text-slate-900">{stats.activity.answers_total.toLocaleString('es-AR')}</p>
+                        <p className="mt-1 text-xs text-slate-500">Respuestas registradas en historial</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -2630,17 +2749,24 @@ export default function AdminPanel() {
                         <CardTitle className="text-sm">Uso de la plataforma</CardTitle>
                       </CardHeader>
                       <CardContent className="h-64 px-3 pb-3">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={platformUsageData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="label" tick={{ fontSize: 11 }} />
-                            <YAxis tick={{ fontSize: 11 }} />
-                            <Tooltip />
-                            <Legend wrapperStyle={{ fontSize: '11px' }} />
-                            <Line type="monotone" dataKey="sesiones" stroke="#2563eb" strokeWidth={2.3} dot={false} name="Sesiones" />
-                            <Line type="monotone" dataKey="usuarios" stroke="#a78bfa" strokeWidth={2.3} dot={false} name="Usuarios" />
-                          </LineChart>
-                        </ResponsiveContainer>
+                        {stats ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={platformUsageData}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                              <YAxis tick={{ fontSize: 11 }} />
+                              <Tooltip />
+                              <Legend wrapperStyle={{ fontSize: '11px' }} />
+                              <Line type="monotone" dataKey="sesiones" stroke="#2563eb" strokeWidth={2.3} dot={false} name="Sesiones" />
+                              <Line type="monotone" dataKey="usuarios" stroke="#a78bfa" strokeWidth={2.3} dot={false} name="Usuarios" />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="flex h-full flex-col items-center justify-center text-center text-sm text-slate-500">
+                            <p>No hay estadísticas cargadas todavía.</p>
+                            <p className="mt-2 text-xs text-slate-400">Refresca el panel o revisa la conexión con analytics.</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
 
@@ -2678,21 +2804,206 @@ export default function AdminPanel() {
                         <CardTitle className="text-sm">Retención de usuarios</CardTitle>
                       </CardHeader>
                       <CardContent className="h-64 px-3 pb-3">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={retentionChartData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                            <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
-                            <Tooltip />
-                            <Area type="monotone" dataKey="value" stroke="#7c3aed" fill="#ede9fe" strokeWidth={2.3} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                        <p className="mt-2 text-right text-xs text-slate-500">
-                          Retención a 30 días: <span className="font-bold text-violet-700">{retentionChartData[retentionChartData.length - 1]?.value ?? 0}%</span>
-                        </p>
+                        {stats ? (
+                          <>
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={retentionChartData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                                <Tooltip />
+                                <Area type="monotone" dataKey="value" stroke="#7c3aed" fill="#ede9fe" strokeWidth={2.3} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                            <p className="mt-2 text-right text-xs text-slate-500">
+                              Retención a 30 días: <span className="font-bold text-violet-700">{retentionChartData[retentionChartData.length - 1]?.value ?? 0}%</span>
+                            </p>
+                          </>
+                        ) : (
+                          <div className="flex h-full flex-col items-center justify-center text-center text-sm text-slate-500">
+                            <p>La retención aparecerá cuando tengamos datos procesados.</p>
+                            <p className="mt-2 text-xs text-slate-400">Por ahora no pudimos cargar esa serie.</p>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </div>
+
+                  <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                    <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2 pt-3">
+                      <div>
+                        <CardTitle className="text-sm">Top 10 materias más compartidas por carreras</CardTitle>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Materias asociadas a más carreras dentro de la plataforma.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl"
+                        onClick={() => setShowAllSharedMaterias(true)}
+                        disabled={!stats || (stats.shared_materias_by_careers?.length ?? 0) === 0}
+                      >
+                        Ver más
+                      </Button>
+                    </CardHeader>
+                    <CardContent className="space-y-2 p-4">
+                      {sharedMateriasTop.length === 0 ? (
+                        <p className="text-sm text-slate-500">
+                          Todavía no hay materias compartidas entre carreras para mostrar.
+                        </p>
+                      ) : (
+                        sharedMateriasTop.map((item, index) => (
+                          <div
+                            key={item.materia_id}
+                            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                                #{index + 1}
+                              </p>
+                              <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                            </div>
+                            <span className="ml-3 shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                              {item.career_count} carreras
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="pb-2 pt-3">
+                        <CardTitle className="text-sm">Embudo de conversión</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 p-4">
+                        {[
+                          { label: 'Sesiones', value: stats.conversion.sessions_total },
+                          { label: 'Explorar', value: stats.conversion.reached_explorar },
+                          { label: 'Carrera', value: stats.conversion.reached_carrera },
+                          { label: 'Materia', value: stats.conversion.reached_materia },
+                          { label: 'Simulador', value: stats.conversion.reached_simulador },
+                        ].map((item) => (
+                          <div key={item.label}>
+                            <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
+                              <span>{item.label}</span>
+                              <span className="font-semibold text-slate-700">{item.value.toLocaleString('es-AR')}</span>
+                            </div>
+                            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                              <div
+                                className="h-full rounded-full bg-indigo-500"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    stats.conversion.sessions_total > 0
+                                      ? (item.value / stats.conversion.sessions_total) * 100
+                                      : 0
+                                  )}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-600">
+                          Mayor abandono detectado en: <span className="font-semibold text-slate-900">{stats.conversion.top_abandon_stage}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="pb-2 pt-3">
+                        <CardTitle className="text-sm">Distribución por dispositivo</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4 p-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-[180px_minmax(0,1fr)] md:items-center">
+                          <div className="h-40">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={deviceDistributionData}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  innerRadius={42}
+                                  outerRadius={64}
+                                  stroke="none"
+                                  paddingAngle={2}
+                                >
+                                  {deviceDistributionData.map((item) => (
+                                    <Cell key={item.name} fill={item.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <div className="space-y-3">
+                            {deviceDistributionData.length === 0 ? (
+                              <p className="text-sm text-slate-500">Todavía no hay eventos de dispositivos para mostrar.</p>
+                            ) : (
+                              deviceDistributionData.map((item) => {
+                                const total =
+                                  stats.devices.desktop + stats.devices.mobile + stats.devices.tablet;
+                                const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : '0.0';
+                                return (
+                                  <div key={item.name} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                                    <div className="flex items-center gap-3">
+                                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                                      <span className="text-sm font-medium text-slate-700">{item.name}</span>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-sm font-semibold text-slate-900">{pct}%</p>
+                                      <p className="text-xs text-slate-500">{item.value.toLocaleString('es-AR')}</p>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                    <CardHeader className="pb-2 pt-3">
+                      <CardTitle className="text-sm">Top páginas</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 p-4">
+                      {stats.top_pages.length === 0 ? (
+                        <p className="text-sm text-slate-500">Todavía no hay páginas destacadas para mostrar.</p>
+                      ) : (
+                        stats.top_pages.slice(0, 6).map((page) => (
+                          <div key={page.path} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <p className="truncate pr-3 text-sm text-slate-700">{page.path}</p>
+                            <span className="shrink-0 text-xs font-semibold text-slate-500">{page.views} vistas</span>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                    <CardHeader className="pb-2 pt-3">
+                      <CardTitle className="text-sm">Errores y señales técnicas</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 p-4">
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        Total de errores detectados: <span className="font-bold">{stats.errors.total.toLocaleString('es-AR')}</span>
+                      </div>
+                      {stats.errors.top_paths.length === 0 ? (
+                        <p className="text-sm text-slate-500">No hay rutas con errores para mostrar.</p>
+                      ) : (
+                        stats.errors.top_paths.map((item) => (
+                          <div key={item.path} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <p className="truncate pr-3 text-sm text-slate-700">{item.path}</p>
+                            <span className="shrink-0 text-xs font-semibold text-rose-600">{item.count} errores</span>
+                          </div>
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
 
                   <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                     <CardHeader className="pb-2 pt-3">
@@ -2706,7 +3017,7 @@ export default function AdminPanel() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Todas las materias</SelectItem>
-                            {materias.map((m) => (
+                            {allMateriasCatalog.map((m) => (
                               <SelectItem key={m.id} value={m.id}>{m.nombre}</SelectItem>
                             ))}
                           </SelectContent>
@@ -3160,6 +3471,45 @@ export default function AdminPanel() {
             </div>
           )}
         </div>
+
+        <Dialog open={showAllSharedMaterias} onOpenChange={setShowAllSharedMaterias}>
+          <DialogContent className="max-w-3xl rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl">
+            <DialogHeader className="border-b border-slate-100 px-6 py-5">
+              <DialogTitle className="text-lg font-bold text-slate-950">
+                Materias compartidas por carreras
+              </DialogTitle>
+              <p className="mt-1 text-sm text-slate-500">
+                Listado completo de materias y la cantidad de carreras a las que pertenecen.
+              </p>
+            </DialogHeader>
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+              {stats?.shared_materias_by_careers?.length ? (
+                <div className="space-y-2">
+                  {stats.shared_materias_by_careers.map((item, index) => (
+                    <div
+                      key={item.materia_id}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          #{index + 1}
+                        </p>
+                        <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+                        {item.career_count} carreras
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  No hay materias compartidas para mostrar todavía.
+                </p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
 
       <style jsx global>{`

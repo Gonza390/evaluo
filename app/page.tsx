@@ -21,22 +21,22 @@ import { FooterHome } from '@/components/footer-home';
 const steps = [
   {
     icon: UploadCloud,
-    title: 'Subis tu material',
-    description: 'Carga tus resumenes, apuntes o PDFs y nuestra IA los organiza por vos.',
+    title: 'Subís tu material',
+    description: 'Carga tus resúmenes, apuntes o PDFs y nuestra IA los organiza por vos.',
     image: '/como-funciona-1.webp',
     imageAlt: 'Estudiante subiendo material de estudio',
   },
   {
     icon: Bot,
-    title: 'Practicas con preguntas',
+    title: 'Practicás con preguntas',
     description: 'Miles de preguntas por tema con explicaciones detalladas.',
     image: '/como-funciona-2.webp',
     imageAlt: 'Estudiante practicando con preguntas',
   },
   {
     icon: CheckCircle2,
-    title: 'Simulas tu examen',
-    description: 'Hace simulacros cronometrados y medi tu progreso real.',
+    title: 'Simulás tu examen',
+    description: 'Haz simulacros cronometrados y mide tu progreso real.',
     image: '/como-funciona-3.webp',
     imageAlt: 'Estudiante simulando un examen en notebook',
   },
@@ -45,13 +45,13 @@ const steps = [
 const reasons = [
   {
     icon: Target,
-    title: 'Enfocado en examenes',
-    description: 'Todo el contenido esta pensado para que avances con criterio y apruebes.',
+    title: 'Enfocado en exámenes',
+    description: 'Todo el contenido está pensado para que avances con criterio y apruebes.',
   },
   {
     icon: Zap,
-    title: 'Respuestas rapidas',
-    description: 'Encontras ayuda justo cuando la necesitas, sin perder tiempo buscando.',
+    title: 'Respuestas rápidas',
+    description: 'Encontrás ayuda justo cuando la necesitas, sin perder tiempo buscando.',
   },
   {
     icon: BookOpen,
@@ -60,21 +60,21 @@ const reasons = [
   },
   {
     icon: Brain,
-    title: 'Aprendes de verdad',
-    description: 'No es solo resolver. Tambien te ayuda a entender y mejorar tu base.',
+    title: 'Aprendés de verdad',
+    description: 'No es solo resolver. También te ayuda a entender y mejorar tu base.',
   },
 ];
 
 const socialStats = [
   { value: '+10k', label: 'estudiantes usando Evaluo' },
   { value: '+32k', label: 'documentos abiertos para estudiar' },
-  { value: '4.8/5', label: 'valoracion media en materiales guardados' },
-  { value: '24/7', label: 'acceso a resumenes, lector y simuladores' },
+  { value: '4.8/5', label: 'valoración media en materiales guardados' },
+  { value: '24/7', label: 'acceso a resúmenes, lector y simuladores' },
 ];
 
 const heroHighlights = [
   {
-    title: 'Resumenes',
+    title: 'Resúmenes',
     description: 'claros y completos',
     icon: FileText,
     className: 'left-0 top-8 sm:left-6 lg:left-2 lg:top-10',
@@ -109,7 +109,7 @@ export default function Home() {
 
             <nav className="hidden items-center gap-8 text-sm font-medium text-slate-500 lg:flex">
               <a href="#como-funciona" className="transition hover:text-[#0F1B3D]">
-                Como funciona
+                Cómo funciona
               </a>
               <a href="#beneficios" className="transition hover:text-[#0F1B3D]">
                 Beneficios
@@ -132,16 +132,16 @@ export default function Home() {
               <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold ring-1 ring-[#C7D2FE] backdrop-blur">
                 <Sparkles className="h-4 w-4 text-[#6366F1]" />
                 <span className="bg-gradient-to-r from-[#2563EB] to-[#6366F1] bg-clip-text text-transparent">
-                  Tu companero de estudio inteligente
+                  Tu compañero de estudio inteligente
                 </span>
               </div>
 
               <h1 className="mt-6 text-[2.85rem] font-bold leading-[0.98] tracking-[-0.06em] text-[#0F1B3D] sm:mt-8 sm:text-6xl lg:text-[72px]">
-                Aproba tus examenes con ayuda inteligente
+                Aprobá tus exámenes con ayuda inteligente
               </h1>
 
               <p className="mt-5 max-w-[560px] text-base leading-7 text-slate-500 sm:mt-8 sm:text-xl sm:leading-8">
-                Resuelve dudas, practica parciales y encontra materiales utiles en una sola plataforma.
+                Resuelve dudas, practica parciales y encontrá materiales útiles en una sola plataforma.
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
@@ -170,7 +170,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="animate-surface-reveal relative min-h-[440px] sm:min-h-[560px] lg:min-h-[640px]" style={{ animationDelay: '120ms' }}>
+            <div className="animate-surface-reveal relative min-h-[340px] sm:min-h-[460px] lg:min-h-[640px]" style={{ animationDelay: '120ms' }}>
               <div className="absolute inset-x-10 bottom-0 h-20 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18),rgba(99,102,241,0))] blur-3xl" />
               {heroHighlights.map((item) => {
                 const Icon = item.icon;
@@ -193,12 +193,13 @@ export default function Home() {
                 );
               })}
 
-              <div className="relative z-10 mx-auto w-full max-w-[780px]">
+              <div className="relative z-10 mx-auto w-full max-w-[680px] sm:max-w-[740px] lg:max-w-[780px]">
                 <Image
                   src="/hero-home-estudiante.webp"
                   alt="Estudiante usando Evaluo"
                   width={1536}
                   height={1024}
+                  sizes="(max-width: 1023px) 100vw, 48vw"
                   className="h-auto w-full object-contain"
                   priority
                 />
@@ -215,17 +216,17 @@ export default function Home() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF]">
                 <Sparkles className="h-4 w-4" />
-                Asi de simple
+                Así de simple
               </div>
               <h2 className="mt-4 text-[30px] font-bold tracking-[-0.05em] text-[#0F1B3D] sm:text-[40px] lg:text-[48px]">
-                {'\u00BF'}Como funciona Evaluo?
+                {'\u00BFCómo funciona Evaluo?'}
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-[#5F6C8D] sm:text-[21px] sm:leading-8">
                 Todo lo que necesitas para aprobar, en 3 pasos.
               </p>
             </div>
 
-            <div className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-3 lg:gap-10">
+            <div className="mt-8 grid gap-10 lg:mt-10 lg:grid-cols-3 lg:gap-10">
               {steps.map((step, index) => {
                 return (
                   <article
@@ -233,7 +234,7 @@ export default function Home() {
                     style={{ animationDelay: `${index * 110}ms` }}
                     className="animate-surface-reveal flex h-full flex-col items-center text-center"
                   >
-                    <div className="relative flex h-[230px] w-full max-w-[300px] items-end justify-center overflow-hidden sm:h-[255px] lg:h-[290px]">
+                    <div className="relative flex h-[210px] w-full max-w-[280px] items-end justify-center overflow-hidden sm:h-[240px] sm:max-w-[290px] lg:h-[290px] lg:max-w-[300px]">
                       <Image
                         src={step.image}
                         alt={step.imageAlt}
@@ -241,7 +242,6 @@ export default function Home() {
                         height={1536}
                         sizes="(max-width: 639px) 250px, (max-width: 1023px) 280px, 300px"
                         className="h-full w-auto object-contain"
-                        priority
                       />
                     </div>
 
@@ -270,7 +270,7 @@ export default function Home() {
         <section id="beneficios" className="pb-12 pt-12 lg:pb-16 lg:pt-16">
           <div className="animate-surface-reveal mx-auto max-w-3xl text-center">
             <h2 className="text-[32px] font-bold tracking-[-0.04em] text-[#0F1B3D] sm:text-[40px]">
-              Por que elegir Evaluo
+              Por qué elegir Evaluo
             </h2>
             <p className="mt-4 text-lg text-slate-500">
               Una experiencia enfocada en estudiar mejor, no en perder tiempo saltando entre herramientas.
@@ -311,18 +311,18 @@ export default function Home() {
             <div className="animate-surface-reveal space-y-6">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-indigo-600 shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" />
-                IA + Educacion
+                IA + Educación
               </span>
               <h2 className="text-[2.35rem] font-bold tracking-tight text-[#0F1B3D] sm:text-5xl lg:text-6xl">
-                Entende mejor, <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">aprende mas</span>
+                Entendé mejor, <span className="bg-gradient-to-r from-indigo-600 to-blue-500 bg-clip-text text-transparent">aprendé más</span>
               </h2>
               <p className="max-w-lg text-lg leading-relaxed text-slate-700">
-                Evaluo no es solo respuestas. Es tu guia personalizada para entender, practicar y mejorar cada dia.
+                Evaluo no es solo respuestas. Es tu guía personalizada para entender, practicar y mejorar cada día.
               </p>
               <ul className="space-y-3">
                 {[
                   { icon: CheckCircle2, text: 'Explicaciones paso a paso' },
-                  { icon: BookOpen, text: 'Ejemplos y resumenes relevantes' },
+                  { icon: BookOpen, text: 'Ejemplos y resúmenes relevantes' },
                   { icon: Zap, text: 'Disponible 24/7' },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-slate-700">
@@ -396,7 +396,7 @@ export default function Home() {
                       Todo listo para que empieces a estudiar mejor.
                     </h2>
                     <p className="mt-3 max-w-xl text-base leading-8 text-slate-500">
-                      Centraliza tus materias, encuentra materiales ÃƒÂºtiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.
+                      {'Centraliza tus materias, encuentra materiales \u00FAtiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.'}
                     </p>
                   </div>
                 </div>

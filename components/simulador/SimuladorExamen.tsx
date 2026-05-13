@@ -8,6 +8,7 @@ import {
   finalizarSimuladorAction,
   getWrongAnswersExplanations,
   getPreguntasSimuladorErrores,
+  getPreguntasSimuladorUltimoIntentoPremium,
   getPreguntasSimuladorPremium,
   getPreguntasSimulador,
   registrarRespuestaUsuario,
@@ -41,7 +42,7 @@ interface SimuladorExamenProps {
   parcial: number;
   universidadId?: string;
   carreraId?: string;
-  mode?: 'regular' | 'errores';
+  mode?: 'regular' | 'errores' | 'ultimo_intento';
   premiumOnly?: boolean;
 }
 
@@ -55,7 +56,7 @@ type SimuladorPersistedState = {
   userId: string;
   materiaId: string;
   parcial: number;
-  mode: 'regular' | 'errores';
+  mode: 'regular' | 'errores' | 'ultimo_intento';
   preguntas: Pregunta[];
   currentQuestionIndex: number;
   timeLeft: number;
@@ -161,9 +162,9 @@ function getSuggestedModule(parcial: number, seed: string) {
 function inferErrorFocus(preguntasErradas: Pregunta[], suggestedModule: number): ErrorFocusInsight {
   if (preguntasErradas.length === 0) {
     return {
-      title: `Buen dominio del Modulo ${suggestedModule}`,
-      description: 'No detectamos un patron fuerte de error en este intento.',
-      recommendation: `Si queres consolidarlo mas, repasa una vez el Modulo ${suggestedModule} y vuelve a intentar.`,
+      title: `Buen dominio del Módulo ${suggestedModule}`,
+      description: 'No detectamos un patrón fuerte de error en este intento.',
+      recommendation: `Si quieres consolidarlo más, repasa una vez el Módulo ${suggestedModule} y vuelve a intentar.`,
     };
   }
 
@@ -203,16 +204,16 @@ function inferErrorFocus(preguntasErradas: Pregunta[], suggestedModule: number):
 
   if (appliedCount > theoryCount) {
     return {
-      title: `Te costaron mas las preguntas de aplicacion del Modulo ${suggestedModule}`,
-      description: 'Tus errores aparecen mas en consignas donde hay que aplicar criterios a casos o situaciones concretas.',
-      recommendation: `Repasa ejemplos resueltos y luego vuelve a practicar el Modulo ${suggestedModule} con foco en aplicacion practica.`,
+      title: `Te costaron más las preguntas de aplicación del Módulo ${suggestedModule}`,
+      description: 'Tus errores aparecen más en consignas donde hay que aplicar criterios a casos o situaciones concretas.',
+      recommendation: `Repasa ejemplos resueltos y luego vuelve a practicar el Módulo ${suggestedModule} con foco en aplicación práctica.`,
     };
   }
 
   return {
-    title: `Fallaste mas en preguntas teoricas del Modulo ${suggestedModule}`,
-    description: 'Tus errores se concentran mas en definiciones, criterios base y preguntas de marco conceptual.',
-    recommendation: `Te conviene reforzar primero los conceptos clave del Modulo ${suggestedModule} antes del proximo intento.`,
+    title: `Fallaste más en preguntas teóricas del Módulo ${suggestedModule}`,
+    description: 'Tus errores se concentran más en definiciones, criterios base y preguntas de marco conceptual.',
+    recommendation: `Te conviene reforzar primero los conceptos clave del Módulo ${suggestedModule} antes del próximo intento.`,
   };
 }
 
@@ -404,6 +405,11 @@ export default function SimuladorExamen({
         });
       });
 
+      const wrongQuestionIds = Object.entries(selectedAnswers)
+        .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
+        .map(([index]) => preguntas[Number(index)]?.id)
+        .filter((id): id is string => Boolean(id));
+
       void Promise.allSettled([
         finalizarSimuladorAction({
           usuario_id: userId,
@@ -411,7 +417,10 @@ export default function SimuladorExamen({
           parcial,
           total_preguntas: preguntasDisponibles,
           respuestas_correctas: correctas,
+          answered_questions: respondidas,
           tiempo_restante: trigger === 'timer' ? 0 : timeLeft,
+          premium_only: premiumOnly,
+          wrong_question_ids: wrongQuestionIds,
         }),
         ...registros.filter(Boolean),
       ]).catch((error) => {
@@ -438,6 +447,8 @@ export default function SimuladorExamen({
     const data =
       mode === 'errores'
         ? await getPreguntasSimuladorErrores(materiaId)
+        : mode === 'ultimo_intento'
+        ? await getPreguntasSimuladorUltimoIntentoPremium(materiaId, parcial)
         : premiumOnly
         ? await getPreguntasSimuladorPremium(materiaId, parcial)
         : await getPreguntasSimulador(materiaId, parcial, universidadId, carreraId);
@@ -743,22 +754,31 @@ export default function SimuladorExamen({
   }
 
   if (estado === 'error') {
+    const isLastAttemptMode = mode === 'ultimo_intento';
     return (
       <div className="flex min-h-[600px] items-center justify-center p-6">
         <Card className="max-w-md rounded-2xl border border-red-100 bg-white/90 p-8 text-center shadow-xl">
           <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
           <h2 className="mb-2 text-2xl font-bold text-gray-800">
-            {premiumOnly ? 'Aun no hay set premium cargado' : 'Estamos preparando este parcial'}
+            {isLastAttemptMode
+              ? 'Todavía no tienes errores guardados de tu último intento'
+              : premiumOnly
+              ? 'Aún no hay set premium cargado'
+              : 'Estamos preparando este parcial'}
           </h2>
           <p className="mb-3 text-gray-600">
-            {premiumOnly
-              ? 'Estamos actualizando las ultimas preguntas validadas para este parcial premium.'
+            {isLastAttemptMode
+              ? 'Termina un simulador, guarda tus errores y luego podrás practicar solo esas preguntas en este modo premium.'
+              : premiumOnly
+              ? 'Estamos actualizando las últimas preguntas validadas para este parcial premium.'
               : 'Estamos procesando el material oficial de esta materia para que Tutor Evaluo te enseñe con calidad.'}
           </p>
           <p className="mb-6 text-sm text-slate-500">
-            {premiumOnly
-              ? 'Volve en unas horas o probá el simulador regular mientras se actualiza este premium.'
-              : 'Volve en unas horas o proba con Tecnologia y Modelos Globales.'}
+            {isLastAttemptMode
+              ? 'Cuando falles preguntas en un intento, este acceso te armará un simulador con ese set exacto.'
+              : premiumOnly
+              ? 'Vuelve en unas horas o prueba el simulador regular mientras se actualiza este premium.'
+              : 'Vuelve en unas horas o prueba con Tecnología y Modelos Globales.'}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
@@ -825,33 +845,44 @@ export default function SimuladorExamen({
     const patternMessage = errorFocus.title;
     const recommendationMessage = errorFocus.recommendation;
     const erroresPendientes = Math.max(0, respondidasFinales - aciertosFinales);
-    const frontTitle = porcentaje >= 85 ? '¡Excelente trabajo!' : porcentaje >= 60 ? 'Buen trabajo' : 'Segui, vas a poder';
+    const frontTitle = porcentaje >= 85 ? '¡Excelente trabajo!' : porcentaje >= 60 ? 'Buen trabajo' : 'Seguí, vas a poder';
     const frontMessage = `Completaste el simulacro de ${materiaNombre || `Materia ${materiaId}`} con un ${porcentaje}%`;
     const examSummaryCards: ExamSummaryCard[] = [
       {
         label: 'Ahora',
-        title: `Repasa el Modulo ${suggestedModule}`,
+        title: `Repasa el Módulo ${suggestedModule}`,
         description: recommendationMessage,
         href: `/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`,
-        cta: 'Abrir resumenes',
+        cta: 'Abrir resúmenes',
       },
       {
-        label: 'Despues',
+        label: 'Después',
         title: 'Practica tus errores',
         description:
           erroresPendientes > 0
-            ? `Tenes ${erroresPendientes} respuestas para revisar y convertir en puntos rapidos.`
+            ? `Tienes ${erroresPendientes} respuestas para revisar y convertir en puntos rápidos.`
             : 'Aunque aprobaste, repasar tus errores te ayuda a fijar mejor el parcial.',
         href: `/simulador/errores/${materiaId}`,
         cta: 'Practicar errores',
       },
+      ...(erroresPendientes > 0
+        ? [
+            {
+              label: 'Premium',
+              title: 'Simula solo este intento',
+              description: 'Genera un simulador premium únicamente con las preguntas que fallaste en este examen.',
+              href: `/simulador/ultimo-intento/${materiaId}/${resolvedParcial}`,
+              cta: 'Simular mis errores',
+            } satisfies ExamSummaryCard,
+          ]
+        : []),
       {
         label: 'Luego',
         title: 'Vuelve a rendir desde cero',
         description:
           aprobado
-            ? 'Haz un nuevo intento cuando quieras medir si ya podes sostener el resultado.'
-            : 'Despues del repaso, toma un nuevo modelo y compara si subiste la nota.',
+            ? 'Haz un nuevo intento cuando quieras medir si ya puedes sostener el resultado.'
+            : 'Después del repaso, toma un nuevo modelo y compara si subiste la nota.',
         onClick: reiniciarSimulador,
         cta: 'Intentar de nuevo',
       },
@@ -890,7 +921,7 @@ export default function SimuladorExamen({
                 <div className="max-w-[430px]">
                   <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm', needsMotivation ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF]')}>
                     {needsMotivation ? <Star className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}
-                    {needsMotivation ? 'Todavia podes levantarlo' : 'Resultado del simulador'}
+                    {needsMotivation ? 'Todavía puedes levantarlo' : 'Resultado del simulador'}
                   </div>
                   <h2 className="mt-6 text-[2.1rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[3rem]">
                     {frontTitle}
@@ -934,7 +965,7 @@ export default function SimuladorExamen({
                   </div>
                   {needsMotivation ? (
                     <p className="mt-6 max-w-[390px] text-sm leading-7 text-slate-600">
-                      No aprobaste esta vez, pero ya identificamos por donde empezar. Con un repaso enfocado en el Modulo {suggestedModule} y otro intento, esta nota puede subir rapido.
+                      No aprobaste esta vez, pero ya identificamos por dónde empezar. Con un repaso enfocado en el Módulo {suggestedModule} y otro intento, esta nota puede subir rápido.
                     </p>
                   ) : null}
                 </div>
@@ -974,7 +1005,7 @@ export default function SimuladorExamen({
                           {materiaNombre || `Materia ${materiaId}`} · Parcial {resolvedParcial}
                         </p>
                         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                        Revisa donde fallaste, que tema te conviene reforzar y como encarar el proximo intento.
+                        Revisa dónde fallaste, qué tema te conviene reforzar y cómo encarar el próximo intento.
                         </p>
                       </div>
                       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
@@ -1017,29 +1048,29 @@ export default function SimuladorExamen({
 
                   <div className={cn('mt-6 rounded-[28px] p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]', needsMotivation ? 'border border-rose-200 bg-rose-50' : 'border border-indigo-200 bg-indigo-50/70')}>
                     <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700' : 'text-indigo-700')}>
-                      Revision rapida por tema
+                      Revisión rápida por tema
                     </p>
                     <h3 className="mt-2 text-xl font-bold text-slate-900">{patternMessage}</h3>
                     <p className="mt-3 text-sm leading-6 text-slate-700">
                       {needsMotivation
-                        ? `Todavia no alcanzaste el 60%, pero ya tenes una ruta clara: ${recommendationMessage}`
+                        ? `Todavía no alcanzaste el 60%, pero ya tienes una ruta clara: ${recommendationMessage}`
                         : recommendationMessage}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">{errorFocus.description}</p>
                     <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
                       <Button asChild className={cn('rounded-xl', needsMotivation ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700')}>
                         <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
-                          Repasar resumenes
+                          Repasar resúmenes
                         </Link>
                       </Button>
                       <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm', needsMotivation ? 'border-rose-200 text-rose-800' : 'border-indigo-200 text-indigo-800')}>
-                        Recomendacion de este intento: enfocate en Modulo {suggestedModule}.
+                        Recomendación de este intento: enfócate en Módulo {suggestedModule}.
                       </div>
                     </div>
                   </div>
 
                   <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
-                    <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por que fallaste y como mejorarlo</h3>
+                    <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por qué fallaste y cómo mejorarlo</h3>
                     <p className="mt-1 text-xs text-slate-500">
                       Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
                     </p>
@@ -1049,7 +1080,7 @@ export default function SimuladorExamen({
                       <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
                         <p className="text-sm font-semibold text-emerald-900">No hubo errores para revisar.</p>
                         <p className="mt-1 text-sm text-emerald-800">
-                          Excelente trabajo. Si queres consolidarlo todavia mas, intenta otro modelo o repasa el modulo sugerido.
+                          Excelente trabajo. Si quieres consolidarlo todavía más, intenta otro modelo o repasa el módulo sugerido.
                         </p>
                       </div>
                     ) : (

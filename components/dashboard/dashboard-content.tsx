@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   ArrowUpRight,
   BookOpen,
@@ -149,6 +150,13 @@ function getWeeklyTotalLabel(series: Array<{ day: string; count: number }>) {
   return `${total} ingresos`;
 }
 
+function normalizeHeroTitle(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return 'Tu materia';
+  const lower = trimmed.toLocaleLowerCase('es-AR');
+  return lower.replace(/\b\p{L}/gu, (char) => char.toLocaleUpperCase('es-AR'));
+}
+
 const DASHBOARD_PANEL_CLASS = 'surface-panel';
 
 export function DashboardContent() {
@@ -157,7 +165,7 @@ export function DashboardContent() {
   const { toast } = useToast();
   const [isSaving, startSaving] = useTransition();
 
-  const [dashboardState, setDashboardState] = useState<DashboardState>(() => readLocalState());
+  const [dashboardState, setDashboardState] = useState<DashboardState>(DEFAULT_STATE);
   const [allMaterias, setAllMaterias] = useState<MateriaSummary[]>([]);
   const [allMateriasLoading, setAllMateriasLoading] = useState(false);
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -609,7 +617,7 @@ export function DashboardContent() {
     if (dashboardState.lastSubject) {
       return {
         title: 'Sigue con tu ultima materia',
-        description: `Vuelve a ${dashboardState.lastSubject.name} y continua leyendo o practicando.`,
+        description: `Vuelve a ${dashboardState.lastSubject.name} y continúa leyendo o practicando.`,
         cta: 'Abrir materia',
         onClick: () => goToMateria(dashboardState.lastSubject as DashboardMateriaState),
       };
@@ -619,67 +627,37 @@ export function DashboardContent() {
       return {
         title: 'Empieza por una materia recomendada',
         description: `Te sugerimos arrancar con ${recommendedMaterias[0].nombre} para activar tu recorrido.`,
-        cta: 'Anadir recomendada',
+        cta: 'Añadir recomendada',
         onClick: () => addMateria(recommendedMaterias[0]),
       };
     }
 
     return {
       title: 'Explora tu plan de estudio',
-      description: 'Busca una materia y arma tu espacio para volver rapido a lo importante.',
+      description: 'Busca una materia y arma tu espacio para volver rápido a lo importante.',
       cta: 'Ir a explorar',
       onClick: () => router.push('/explorar'),
     };
   }, [dashboardState.lastSubject, recommendedMaterias, router, simuladorInProgress]);
 
-  const nextStudyMoments = useMemo(() => {
-    const summaryTargetId = dashboardState.lastSubject?.id ?? recommendedMaterias[0]?.id ?? null;
-    const summaryHref = summaryTargetId ? `${getMateriaRoute(summaryTargetId)}?tab=resumenes` : '/explorar';
-    const partialTargetId = dashboardState.lastSubject?.id ?? simuladorInProgress?.materiaId ?? null;
-    const partialHref =
-      partialInsights && partialTargetId
-        ? `/simulador/${partialTargetId}/${partialInsights.parcial}`
-        : summaryHref;
-
-    return [
-      {
-        step: 'Ahora',
-        title: nextStudyAction.title,
-        description: nextStudyAction.description,
-        cta: nextStudyAction.cta,
-        onClick: nextStudyAction.onClick,
-      },
-      {
-        step: 'Despues',
-        title: summaryTargetId ? 'Repasa tus resumenes clave' : 'Explora una materia para empezar',
-        description: summaryTargetId
-          ? `Abre los resumenes de ${dashboardState.lastSubject?.name ?? recommendedMaterias[0]?.nombre ?? 'tu materia'} y fijate en lo esencial antes de practicar.`
-          : 'Busca una materia y arma tu punto de partida para estudiar con mas continuidad.',
-        cta: summaryTargetId ? 'Abrir resumenes' : 'Ir a explorar',
-        onClick: () => router.push(summaryHref),
-      },
-      {
-        step: 'Luego',
-        title: partialInsights ? 'Cierra con practica de parcial' : 'Activa tu radar con un simulador',
-        description: partialInsights
-          ? `Tu progreso actual te deja bien parado para volver al parcial ${partialInsights.parcial} y medir mejora real.`
-          : 'Cuando termines de leer, rinde un simulador para saber donde estas flojo y que revisar despues.',
-        cta: partialInsights ? 'Practicar parcial' : 'Preparar simulador',
-        onClick: () => router.push(partialHref),
-      },
-    ];
-  }, [
-    dashboardState.lastSubject,
-    nextStudyAction,
-    partialInsights,
-    recommendedMaterias,
-    router,
-    simuladorInProgress?.materiaId,
-  ]);
-
   const partialProgressRingStyle = {
     background: `conic-gradient(#4F5DFF ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg, #E6EAF2 ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg)`,
   };
+  const heroSubjectName = normalizeHeroTitle(
+    partialInsightMateriaName ??
+      dashboardState.lastSubject?.name ??
+      recommendedMaterias[0]?.nombre ??
+      'Tu materia'
+  );
+  const heroCoverage = Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0));
+  const heroProgressLabel =
+    partialInsights && partialInsights.totalPreguntasParcial > 0
+      ? `${partialInsights.preguntasRespondidasParcial} de ${partialInsights.totalPreguntasParcial} preguntas trabajadas`
+      : 'Todavía no hay respuestas suficientes para medir tu progreso.';
+  const heroPrimaryAction = partialInsights
+    ? () => router.push(`/simulador/${partialInsights.materiaId}/${partialInsights.parcial}`)
+    : nextStudyAction.onClick;
+  const heroPrimaryLabel = partialInsights ? 'Continuar con el simulador' : nextStudyAction.cta;
   const subjectAccentStyles = [
     'from-blue-500/15 to-cyan-500/10 border-blue-200/70',
     'from-indigo-500/15 to-violet-500/10 border-indigo-200/70',
@@ -719,98 +697,132 @@ export function DashboardContent() {
     <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans">
       <div className="w-full p-2 sm:p-3">
         <div className="mx-auto max-w-6xl">
-          <div className={`${DASHBOARD_PANEL_CLASS} animate-study-reveal mb-4 flex flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5 xl:flex-row xl:items-start xl:justify-between`}>
-            <div>
-              <h1 className="text-[1.05rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-lg md:text-xl">
-                {`Hola, ${getUserName()}!`}
+          <div className="animate-study-reveal mb-4 grid gap-4 px-1 py-1 sm:px-0 sm:py-0 xl:grid-cols-[1fr_minmax(320px,460px)] xl:items-start">
+            <div className="min-w-0">
+              <h1 className="text-[1.7rem] font-black tracking-[-0.06em] text-[#0F1B3D] sm:text-[2rem]">
+                {`\u00A1Hola, ${getUserName()}!`}
+                <span className="ml-2 inline-block" aria-hidden="true">{'\uD83D\uDC4B'}</span>
               </h1>
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                Un resumen simple de lo ultimo que tocaste.
+              <p className="mt-1 text-base font-medium text-slate-500 sm:text-[17px]">
+                {'\u00BFQu\u00E9 vas a estudiar hoy?'}
               </p>
             </div>
 
-            <div className="flex w-full flex-col gap-2 xl:max-w-xl xl:items-end">
+            <div className="flex w-full flex-col gap-2">
               <form onSubmit={handleExploreSubmit} className="w-full">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+                <div className="group relative overflow-hidden rounded-2xl border border-[#E5EAF5] bg-white shadow-[0_14px_35px_rgba(148,163,184,0.10)] transition focus-within:border-[#C7D2FE] focus-within:shadow-[0_18px_40px_rgba(79,93,255,0.14)]">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition group-focus-within:text-[#4F5DFF]" />
                   <Input
                     value={exploreQuery}
                     onChange={(event) => setExploreQuery(event.target.value)}
-                    placeholder="Buscar materias..."
-                    className="h-11 rounded-xl border-slate-200 bg-white pl-9 pr-20 text-sm shadow-sm focus-visible:ring-[#4F5DFF]/25 sm:h-10"
+                    placeholder="Buscar en Evaluo..."
+                    className="h-12 border-0 bg-transparent pl-11 pr-28 text-sm text-slate-700 shadow-none focus-visible:ring-0 sm:h-14 sm:text-[15px]"
                   />
                   <button
                     type="submit"
-                    className="absolute right-1.5 top-1/2 inline-flex h-8 -translate-y-1/2 items-center rounded-lg bg-slate-950 px-3 text-[11px] font-semibold text-white transition hover:bg-slate-800"
+                    className="absolute right-2 top-1/2 inline-flex h-9 -translate-y-1/2 items-center rounded-xl bg-gradient-to-r from-[#4F5DFF] to-[#5E6BFF] px-4 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(79,93,255,0.26)] transition hover:opacity-95 sm:h-10 sm:text-sm"
                   >
-                    Explorar
+                    Buscar
                   </button>
                 </div>
               </form>
               {isSaving ? (
-                <span className="text-xs text-slate-400">Sincronizando cambios...</span>
+                <span className="pl-1 text-xs text-slate-400">Sincronizando cambios...</span>
               ) : null}
             </div>
           </div>
-
           {dashboardError ? (
             <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               {dashboardError}
             </div>
           ) : null}
 
-          <div className="mb-4 grid gap-3 md:grid-cols-2">
-            <div className="surface-card rounded-[var(--radius-card)] bg-white/88 px-4 py-4 backdrop-blur">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Ultima materia</p>
-              <p className="mt-2 text-base font-bold tracking-[-0.03em] text-slate-950 sm:text-lg">
-                {dashboardState.lastSubject?.name ?? 'Todavia no abriste una materia'}
-              </p>
-            </div>
-            <div className="surface-card rounded-[var(--radius-card)] bg-white/88 px-4 py-4 backdrop-blur">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Materias finalizadas</p>
-              <p className="mt-2 text-base font-bold tracking-[-0.03em] text-slate-950 sm:text-lg">
-                {dashboardState.finishedSubjects.length.toLocaleString('es-AR')}
-              </p>
-            </div>
-          </div>
-
-          <div className="animate-study-reveal mb-4 rounded-2xl border border-indigo-200/80 bg-[linear-gradient(135deg,rgba(79,93,255,0.08)_0%,rgba(14,165,233,0.05)_100%)] px-4 py-4 shadow-sm shadow-indigo-100/70">
-            <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-500">Siguiente paso</p>
-                <h2 className="mt-1 text-base font-bold tracking-[-0.03em] text-slate-950 sm:text-lg">
-                  {nextStudyAction.title}
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{nextStudyAction.description}</p>
-              </div>
-              <Button
-                onClick={nextStudyAction.onClick}
-                className="animate-study-focus h-11 w-full rounded-xl bg-slate-950 px-4 text-sm font-semibold hover:bg-slate-800 md:h-10 md:w-auto"
-              >
-                {nextStudyAction.cta}
-              </Button>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
-              {nextStudyMoments.map((moment) => (
-                <div
-                  key={moment.step}
-                  className="rounded-2xl border border-white/70 bg-white/75 p-3 shadow-[0_10px_30px_rgba(99,102,241,0.08)] backdrop-blur"
-                >
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-400">
-                    {moment.step}
+          <div className="animate-study-reveal mb-4 overflow-hidden rounded-[28px] bg-[linear-gradient(135deg,#4356FF_0%,#3E4AF1_34%,#305CFF_100%)] px-5 py-3 text-white shadow-[0_22px_50px_rgba(67,86,255,0.22)] sm:px-6 sm:py-4">
+            <div className="mx-auto grid max-w-[1000px] gap-4 xl:grid-cols-[1.18fr_0.82fr] xl:items-center">
+              <div className="grid gap-3 lg:grid-cols-[0.52fr_0.95fr] lg:items-center">
+                <div className="min-w-0 max-w-[520px]">
+                  <h2 className="max-w-[210px] text-[1.42rem] font-bold leading-[1.06] tracking-[-0.05em] text-white sm:max-w-[230px] sm:text-[1.62rem]">
+                    {'Segu\u00ED as\u00ED, vas por muy buen camino \uD83D\uDCAA'}
+                  </h2>
+                  <p className="mt-3.5 max-w-[210px] text-[0.88rem] font-medium leading-6 text-white/82 sm:max-w-[230px]">
+                    {'Cada minuto que estudias, te acerca a tu pr\u00F3xima meta.'}
                   </p>
-                  <h3 className="mt-2 text-sm font-semibold text-slate-950">{moment.title}</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">{moment.description}</p>
-                  <button
-                    type="button"
-                    onClick={moment.onClick}
-                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-slate-800 transition hover:text-indigo-600"
+                  <Button
+                    onClick={heroPrimaryAction}
+                    className="mt-5 h-9 rounded-xl bg-white px-4.5 text-[12.5px] font-semibold text-[#3042E8] shadow-[0_12px_24px_rgba(17,24,39,0.14)] hover:bg-white/95"
                   >
-                    {moment.cta}
-                    <ArrowUpRight className="h-4 w-4" />
-                  </button>
+                    {heroPrimaryLabel}
+                  </Button>
                 </div>
-              ))}
+                <div className="min-w-0 pl-2 sm:pl-4 lg:pl-6">
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex h-[88px] w-[88px] shrink-0 items-center justify-center">
+                      <div
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: `conic-gradient(#FFFFFF 0deg ${heroCoverage * 3.6}deg, rgba(255,255,255,0.2) ${heroCoverage * 3.6}deg 360deg)`,
+                        }}
+                      />
+                      <div className="relative flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#4356FF]">
+                        <p className="text-[24px] font-black leading-none text-white">{heroCoverage}%</p>
+                      </div>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="max-w-[300px] text-[12px] font-semibold uppercase leading-5 tracking-[0.01em] text-white/90 sm:max-w-[330px]">{heroSubjectName}</p>
+                      <div className="mt-2 rounded-full bg-white/10 p-[3px] shadow-inner shadow-black/10">
+                        <div className="h-[9px] overflow-hidden rounded-full bg-white/15">
+                          <div
+                            className="h-full rounded-full bg-[linear-gradient(90deg,#FFFFFF_0%,#D7DEFF_50%,#93C5FD_100%)] transition-all"
+                            style={{ width: `${heroCoverage}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-5 text-white/78">
+                        <span>{'\u00A1Vas muy bien!'}</span>
+                        {partialInsights ? (
+                          <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/88">
+                            Parcial {partialInsights.parcial}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 grid max-w-[430px] gap-2 min-[480px]:grid-cols-2">
+                    <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2 text-center backdrop-blur">
+                      <p className="text-[17px] font-black text-white">
+                        {partialInsights?.preguntasRespondidasParcial?.toLocaleString('es-AR') ?? 0}
+                      </p>
+                      <p className="mt-1 text-[10px] leading-4 text-white/68">
+                        Preguntas practicadas
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2 text-center backdrop-blur">
+                      <p className="text-[17px] font-black text-white">
+                        {partialInsights?.preguntasAcertadasParcial?.toLocaleString('es-AR') ?? 0}
+                      </p>
+                      <p className="mt-1 text-[10px] leading-4 text-white/68">
+                        Preguntas acertadas
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="mt-3 max-w-[430px] text-[11px] leading-5 text-white/74">{heroProgressLabel}</p>
+                </div>
+              </div>
+
+              <div className="relative flex items-center justify-center xl:justify-end">
+                <div className="absolute inset-x-10 bottom-1 h-8 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18),rgba(255,255,255,0))] blur-2xl" />
+                <Image
+                  src="/imagentarjetadashboard.png"
+                  alt="Estudiante usando Evaluo"
+                  width={1024}
+                  height={1536}
+                  sizes="(max-width: 1279px) 180px, 18vw"
+                  className="relative z-10 h-auto w-full max-w-[180px] object-contain sm:max-w-[200px] xl:max-w-[220px]"
+                />
+              </div>
             </div>
           </div>
 
@@ -825,7 +837,7 @@ export function DashboardContent() {
                     Mis materias
                   </CardTitle>
                   <p className="mt-1 text-xs text-slate-500">
-                    Ultimas 3 materias en las que entraste.
+                    Últimas 3 materias en las que entraste.
                   </p>
                 </div>
                 <Button
@@ -835,7 +847,7 @@ export function DashboardContent() {
                   onClick={() => setShowAddModal(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Anadir
+                  Añadir
                 </Button>
               </CardHeader>
               <CardContent className="pt-4">
@@ -898,15 +910,15 @@ export function DashboardContent() {
                   <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-8 text-center">
                     <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
                     <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                      Todavia no tienes materias recientes
+                      Todavía no tienes materias recientes
                     </h3>
                     <p className="mt-2 text-sm text-slate-500">
-                      Anade una materia y la dejamos lista para volver rapido desde aca.
+                      Añade una materia y la dejamos lista para volver rápido desde acá.
                     </p>
                     {recommendedMaterias.length > 0 ? (
                       <div className="mt-8">
                         <p className="mb-4 text-left text-sm font-semibold text-slate-900">
-                          Materias recomendadas segun tu carrera
+                          Materias recomendadas según tu carrera
                         </p>
                     <div className="grid gap-3 md:grid-cols-3">
                       {recommendedMaterias.map((materia) => (
@@ -924,14 +936,22 @@ export function DashboardContent() {
                               </h4>
                               <p className="mt-1 text-sm text-slate-500">{materia.carreraNombre}</p>
                               <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-slate-700">
-                                Anadir materia
+                                Añadir materia
                                 <ArrowUpRight className="h-4 w-4" />
                               </span>
                             </button>
                           ))}
                         </div>
                       </div>
-                    ) : null}
+                    ) : (
+                      <Button
+                        variant="outline"
+                        className="mt-5 rounded-xl border-slate-200 bg-white"
+                        onClick={() => router.push('/explorar')}
+                      >
+                        Explorar materias
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -940,10 +960,10 @@ export function DashboardContent() {
             <Card className="animate-saas-lift-in bg-white/90 backdrop-blur">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-semibold text-slate-950">
-                  Continua estudiando
+                  Continúa estudiando
                 </CardTitle>
                 <p className="mt-1 text-xs text-slate-500">
-                  Los ultimos archivos que abriste.
+                  Los últimos archivos que abriste.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
@@ -972,10 +992,10 @@ export function DashboardContent() {
                   <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-8 text-center">
                     <FileText className="mx-auto h-10 w-10 text-slate-300" />
                     <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                      Aun no abriste archivos
+                      Aún no abriste archivos
                     </h3>
                     <p className="mt-2 text-sm text-slate-500">
-                      Cuando abras resumenes o recursos, apareceran aca.
+                      Cuando abras resúmenes o recursos, aparecerán acá.
                     </p>
                   </div>
                 )}
@@ -995,7 +1015,7 @@ export function DashboardContent() {
                 {simuladorInProgress ? (
                   <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-3 py-3">
                     <p className="text-xs text-blue-700">
-                      Tenes un simulador en curso. Retoma donde lo dejaste.
+                      Tenés un simulador en curso. Retomá donde lo dejaste.
                     </p>
                     <Button
                       className="mt-2 h-8 rounded-lg bg-blue-600 px-3 text-xs font-semibold hover:bg-blue-700"
@@ -1028,7 +1048,7 @@ export function DashboardContent() {
                         </span>
                       </p>
                       <p className="text-slate-700">
-                        Parcial {partialInsights.parcial} · {partialInsights.preguntasRespondidasParcial}/{partialInsights.totalPreguntasParcial} preguntas respondidas
+                        Parcial {partialInsights.parcial} ? {partialInsights.preguntasRespondidasParcial}/{partialInsights.totalPreguntasParcial} preguntas respondidas
                       </p>
                       <p className="text-slate-700">
                         Modelos realizados: <span className="font-semibold">{partialInsights.modelosEstimadosRealizados}</span>
@@ -1065,7 +1085,14 @@ export function DashboardContent() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                    Inicia un simulador para activar el radar de confianza de tu parcial.
+                    <p>Inicia un simulador para activar el radar de confianza de tu parcial.</p>
+                    <Button
+                      variant="outline"
+                      className="mt-4 rounded-xl border-slate-200 bg-white"
+                      onClick={() => router.push('/explorar')}
+                    >
+                      Buscar una materia
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -1077,7 +1104,7 @@ export function DashboardContent() {
                   Materias favoritas
                 </CardTitle>
                 <p className="mt-1 text-xs text-slate-500">
-                  Tus accesos directos guardados para entrar mas rapido.
+                  Tus accesos directos guardados para entrar más rápido.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
@@ -1112,10 +1139,10 @@ export function DashboardContent() {
                   <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center">
                     <Heart className="mx-auto h-8 w-8 text-slate-300" />
                     <h3 className="mt-3 text-base font-semibold text-slate-900">
-                      Aun no tienes materias favoritas
+                      {'A\u00FAn no tienes materias favoritas'}
                     </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      Te sugerimos estas materias segun la carrera que mas usas.
+                      {'Te sugerimos estas materias seg\u00FAn la carrera que m\u00E1s usas.'}
                     </p>
                     {favoriteSuggestions.length > 0 ? (
                       <div className="mt-5 grid gap-2">
@@ -1144,7 +1171,7 @@ export function DashboardContent() {
                     Tu progreso esta semana
                   </CardTitle>
                   <p className="mt-1 text-xs text-slate-500">
-                    Frecuencia de ingreso durante los ultimos 7 dias.
+                    Frecuencia de ingreso durante los ?ltimos 7 d?as.
                   </p>
                 </div>
                 <div className="w-fit rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">

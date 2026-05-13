@@ -216,6 +216,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      simulator_attempts: {
+        Row: {
+          id: string;
+          user_id: string;
+          materia_id: string;
+          parcial: number;
+          total_questions: number;
+          correct_answers: number;
+          wrong_answers: number;
+          answered_questions: number;
+          premium_only: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          materia_id: string;
+          parcial: number;
+          total_questions?: number;
+          correct_answers?: number;
+          wrong_answers?: number;
+          answered_questions?: number;
+          premium_only?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          materia_id?: string;
+          parcial?: number;
+          total_questions?: number;
+          correct_answers?: number;
+          wrong_answers?: number;
+          answered_questions?: number;
+          premium_only?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      simulator_attempt_wrong_questions: {
+        Row: {
+          id: string;
+          attempt_id: string;
+          user_id: string;
+          materia_id: string;
+          parcial: number;
+          pregunta_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          attempt_id: string;
+          user_id: string;
+          materia_id: string;
+          parcial: number;
+          pregunta_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          attempt_id?: string;
+          user_id?: string;
+          materia_id?: string;
+          parcial?: number;
+          pregunta_id?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       materiales: {
         Row: {
           id: string;

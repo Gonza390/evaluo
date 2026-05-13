@@ -1,9 +1,50 @@
 import { createClientServer } from '@/lib/supabase-server';
 import MateriaContent from './materia-content';
+import type { Metadata } from 'next';
 
 interface PageProps {
   params: Promise<{ id: string }>;
   searchParams?: Promise<{ carreraId?: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const supabase = await createClientServer();
+
+  try {
+    const { data: materia } = await supabase
+      .from('materias')
+      .select('id, nombre')
+      .eq('id', resolvedParams.id)
+      .maybeSingle();
+
+    if (!materia) {
+      return {
+        title: 'Materia',
+        robots: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
+
+    return {
+      title: `${materia.nombre} | Materia`,
+      description: `Estudia ${materia.nombre} con resúmenes, preguntas y simuladores en Evaluo.`,
+      alternates: {
+        canonical: `/explorar/materia/${materia.id}`,
+      },
+      openGraph: {
+        title: `${materia.nombre} | Evaluo`,
+        description: `Accede a materiales, preguntas y simuladores para ${materia.nombre}.`,
+        url: `https://evaluo.com.ar/explorar/materia/${materia.id}`,
+      },
+    };
+  } catch {
+    return {
+      title: 'Materia',
+    };
+  }
 }
 
 export default async function MateriaPage({ params, searchParams }: PageProps) {

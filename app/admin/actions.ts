@@ -32,6 +32,12 @@ export interface IARankingRow {
 
 export interface AdminAnalyticsStats {
   dau: number;
+  users: {
+    total: number;
+    new_last_7d: number;
+    new_previous_7d: number;
+    growth_pct_vs_previous_7d: number;
+  };
   registered: { day: number; week: number; month: number };
   conversion: {
     sessions_total: number;
@@ -45,9 +51,19 @@ export interface AdminAnalyticsStats {
   interaction: {
     avg_minutes_per_session: number;
     total_hours_last_7d: number;
+    avg_minutes_per_session_previous_7d: number;
+    avg_minutes_trend_pct_vs_previous_7d: number;
   };
+  activity: {
+    simulator_attempts_total: number;
+    answers_total: number;
+  };
+  daily_usage: Array<{ label: string; sesiones: number; usuarios: number }>;
+  retention_series: Array<{ day: string; value: number }>;
   top_pages: Array<{ path: string; views: number }>;
-  devices: { desktop: number; mobile: number };
+  top_materias: Array<{ materia_id: string; name: string; views: number }>;
+  shared_materias_by_careers: Array<{ materia_id: string; name: string; career_count: number }>;
+  devices: { desktop: number; mobile: number; tablet: number };
   errors: { total: number; top_paths: Array<{ path: string; count: number }> };
 }
 
@@ -101,6 +117,10 @@ export interface SystemHealthStats {
 export interface FileMaintenanceResult {
   orphan_count: number;
   orphan_sample: string[];
+}
+
+export interface FileMaintenanceCleanupResult extends FileMaintenanceResult {
+  deleted_count: number;
 }
 
 export interface MonetizacionStats {
@@ -171,6 +191,46 @@ type UserSubscriptionMonetizationRow = {
   amount_ars: number | null;
   plan_id: string;
 };
+
+async function listStoragePathsRecursively(
+  admin: AdminSupabaseClient,
+  bucket: string,
+  prefix = ''
+): Promise<string[]> {
+  const paths: string[] = [];
+  let offset = 0;
+  const limit = 100;
+
+  while (true) {
+    const { data: list, error } = await admin.storage.from(bucket).list(prefix, {
+      limit,
+      offset,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+
+    if (error) throw error;
+    if (!list || list.length === 0) break;
+
+    for (const item of list) {
+      if (!item.name) continue;
+      const fullPath = prefix ? `${prefix}/${item.name}` : item.name;
+      const metadata = (item as { metadata?: Record<string, unknown> | null }).metadata;
+      const isFolder = !metadata || !('size' in metadata);
+
+      if (isFolder) {
+        const nested = await listStoragePathsRecursively(admin, bucket, fullPath);
+        paths.push(...nested);
+      } else {
+        paths.push(fullPath);
+      }
+    }
+
+    offset += limit;
+    if (list.length < limit) break;
+  }
+
+  return paths;
+}
 
 type QuestionRecord = {
   enunciado: string;
@@ -1326,18 +1386,26 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     dayStart.setHours(0, 0, 0, 0);
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - 7);
+    const previousWeekStart = new Date(now);
+    previousWeekStart.setDate(now.getDate() - 14);
     const monthStart = new Date(now);
     monthStart.setDate(now.getDate() - 30);
 
-    const [eventsRes, profilesDay, profilesWeek, profilesMonth] = await Promise.all([
+    const [eventsRes, profilesTotal, profilesDay, profilesWeek, profilesPreviousWeek, profilesMonth] = await Promise.all([
       admin
         .from('analytics_events')
         .select('event_name, user_id, session_key, path, device_type, metadata, created_at')
         .gte('created_at', monthStart.toISOString())
         .order('created_at', { ascending: false })
         .limit(20000),
+      admin.from('profiles').select('id', { count: 'exact', head: true }),
       admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', dayStart.toISOString()),
       admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', weekStart.toISOString()),
+      admin
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .gte('creado_at', previousWeekStart.toISOString())
+        .lt('creado_at', weekStart.toISOString()),
       admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', monthStart.toISOString()),
     ]);
 
@@ -1347,13 +1415,30 @@ export async function obtenerEstadisticasAdmin(): Promise<{
 
     const events = eventsRes.data ?? [];
     const todayIso = dayStart.toISOString();
+    const weekIso = weekStart.toISOString();
+    const previousWeekIso = previousWeekStart.toISOString();
+    const monthIso = monthStart.toISOString();
     const dauSet = new Set<string>();
     const sessions = new Map<string, Set<string>>();
     const topPages = new Map<string, number>();
+    const topMateriaViews = new Map<string, number>();
     const loginSources = new Map<string, number>();
     const errorsByPath = new Map<string, number>();
-    const deviceCounters = { desktop: 0, mobile: 0 };
+    const deviceCounters = { desktop: 0, mobile: 0, tablet: 0 };
+    const dailyUsageMap = new Map<string, { sesiones: Set<string>; usuarios: Set<string> }>();
+    const activeUsers30d = new Set<string>();
+    const activeUsersByWindow = new Map<string, Set<string>>([
+      ['Dia 1', new Set<string>()],
+      ['Dia 7', new Set<string>()],
+      ['Dia 14', new Set<string>()],
+      ['Dia 21', new Set<string>()],
+      ['Dia 30', new Set<string>()],
+    ]);
     let totalEngagementMs = 0;
+    let currentWeekEngagementMs = 0;
+    let previousWeekEngagementMs = 0;
+    const currentWeekSessions = new Set<string>();
+    const previousWeekSessions = new Set<string>();
 
     for (const event of events) {
       const createdAt = event.created_at ?? '';
@@ -1368,7 +1453,37 @@ export async function obtenerEstadisticasAdmin(): Promise<{
       if (event.event_name === 'page_view') {
         topPages.set(path, (topPages.get(path) ?? 0) + 1);
         if (event.device_type === 'mobile') deviceCounters.mobile += 1;
+        else if (event.device_type === 'tablet') deviceCounters.tablet += 1;
         else deviceCounters.desktop += 1;
+
+        const materiaMatch = path.match(/\/explorar\/materia\/([^/?#]+)/);
+        if (materiaMatch?.[1]) {
+          topMateriaViews.set(materiaMatch[1], (topMateriaViews.get(materiaMatch[1]) ?? 0) + 1);
+        }
+
+        const dayLabel = new Date(createdAt || now).toLocaleDateString('es-AR', {
+          day: '2-digit',
+          month: '2-digit',
+        });
+        const usageForDay = dailyUsageMap.get(dayLabel) ?? {
+          sesiones: new Set<string>(),
+          usuarios: new Set<string>(),
+        };
+        usageForDay.sesiones.add(sessionKey);
+        usageForDay.usuarios.add(event.user_id ?? `session:${sessionKey}`);
+        dailyUsageMap.set(dayLabel, usageForDay);
+
+        const actorId = event.user_id ?? `session:${sessionKey}`;
+        if (createdAt >= monthIso) activeUsers30d.add(actorId);
+        if (createdAt >= todayIso) activeUsersByWindow.get('Dia 1')?.add(actorId);
+        if (createdAt >= weekIso) activeUsersByWindow.get('Dia 7')?.add(actorId);
+        if (createdAt >= new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString()) {
+          activeUsersByWindow.get('Dia 14')?.add(actorId);
+        }
+        if (createdAt >= new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000).toISOString()) {
+          activeUsersByWindow.get('Dia 21')?.add(actorId);
+        }
+        if (createdAt >= monthIso) activeUsersByWindow.get('Dia 30')?.add(actorId);
 
         stageSet.add('landing');
         if (path.startsWith('/explorar')) stageSet.add('explorar');
@@ -1394,10 +1509,95 @@ export async function obtenerEstadisticasAdmin(): Promise<{
           typeof event.metadata === 'object' && event.metadata
             ? Number((event.metadata as Record<string, unknown>).engagement_ms ?? 0)
             : 0;
-        totalEngagementMs += Number.isFinite(engagement) ? engagement : 0;
+        const safeEngagement = Number.isFinite(engagement) ? engagement : 0;
+        totalEngagementMs += safeEngagement;
+
+        if (createdAt >= weekIso) {
+          currentWeekEngagementMs += safeEngagement;
+          currentWeekSessions.add(sessionKey);
+        } else if (createdAt >= previousWeekIso && createdAt < weekIso) {
+          previousWeekEngagementMs += safeEngagement;
+          previousWeekSessions.add(sessionKey);
+        }
       }
 
       sessions.set(sessionKey, stageSet);
+    }
+
+    const materiaNameById = new Map<string, string>();
+    let sharedMateriasByCareers: AdminAnalyticsStats['shared_materias_by_careers'] = [];
+
+    try {
+      const topMateriaIds = Array.from(topMateriaViews.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([materiaId]) => materiaId);
+      const { data: materiasRows, error: materiasError } = topMateriaIds.length
+        ? await admin.from('materias').select('id, nombre').in('id', topMateriaIds)
+        : { data: [], error: null };
+
+      if (materiasError) {
+        console.error('Error cargando top_materias para admin analytics:', materiasError);
+      } else {
+        for (const row of materiasRows ?? []) {
+          materiaNameById.set(row.id, row.nombre);
+        }
+      }
+    } catch (error) {
+      console.error('Error no bloqueante armando top_materias:', error);
+    }
+
+    try {
+      const [{ data: carreraMateriasRows, error: carreraMateriasError }, { data: materiasCatalogRows, error: materiasCatalogError }] =
+        await Promise.all([
+          admin
+            .from('carrera_materias')
+            .select('materia_id, carrera_id')
+            .not('materia_id', 'is', null)
+            .not('carrera_id', 'is', null),
+          admin.from('materias').select('id, nombre, carrera_id'),
+        ]);
+
+      if (carreraMateriasError) {
+        console.error('Error cargando shared_materias_by_careers:', carreraMateriasError);
+      } else if (materiasCatalogError) {
+        console.error('Error cargando catálogo de materias para shared_materias_by_careers:', materiasCatalogError);
+      } else {
+        const sharedCareerMap = new Map<string, Set<string>>();
+        const sharedMateriaNameById = new Map<string, string>();
+
+        for (const materia of materiasCatalogRows ?? []) {
+          sharedMateriaNameById.set(materia.id, materia.nombre);
+          if (materia.carrera_id) {
+            const current = sharedCareerMap.get(materia.id) ?? new Set<string>();
+            current.add(materia.carrera_id);
+            sharedCareerMap.set(materia.id, current);
+          }
+        }
+
+        for (const relation of carreraMateriasRows ?? []) {
+          const materiaId = relation.materia_id;
+          const carreraId = relation.carrera_id;
+          if (!materiaId || !carreraId) continue;
+          const current = sharedCareerMap.get(materiaId) ?? new Set<string>();
+          current.add(carreraId);
+          sharedCareerMap.set(materiaId, current);
+        }
+
+        sharedMateriasByCareers = Array.from(sharedCareerMap.entries())
+          .map(([materia_id, carreras]) => ({
+            materia_id,
+            name: sharedMateriaNameById.get(materia_id) ?? `Materia ${materia_id.slice(0, 8)}`,
+            career_count: carreras.size,
+          }))
+          .filter((item) => item.career_count > 1)
+          .sort((a, b) => {
+            if (b.career_count !== a.career_count) return b.career_count - a.career_count;
+            return a.name.localeCompare(b.name, 'es');
+          });
+      }
+    } catch (error) {
+      console.error('Error no bloqueante armando shared_materias_by_careers:', error);
     }
 
     const sessionStages = Array.from(sessions.values());
@@ -1429,11 +1629,68 @@ export async function obtenerEstadisticasAdmin(): Promise<{
 
     const avgMinutesPerSession =
       sessionsTotal > 0 ? Number(((totalEngagementMs / sessionsTotal) / 1000 / 60).toFixed(2)) : 0;
+    const avgMinutesPerSessionPreviousWeek =
+      previousWeekSessions.size > 0
+        ? Number(((previousWeekEngagementMs / previousWeekSessions.size) / 1000 / 60).toFixed(2))
+        : 0;
+    const avgMinutesPerSessionCurrentWeek =
+      currentWeekSessions.size > 0
+        ? Number(((currentWeekEngagementMs / currentWeekSessions.size) / 1000 / 60).toFixed(2))
+        : 0;
+    const previousWeekUsers = profilesPreviousWeek.count ?? 0;
+    const currentWeekUsers = profilesWeek.count ?? 0;
+    const userGrowthPct =
+      previousWeekUsers > 0
+        ? Number(((((currentWeekUsers - previousWeekUsers) / previousWeekUsers) * 100)).toFixed(1))
+        : currentWeekUsers > 0
+          ? 100
+          : 0;
+    const avgMinutesTrendPct =
+      avgMinutesPerSessionPreviousWeek > 0
+        ? Number(((((avgMinutesPerSessionCurrentWeek - avgMinutesPerSessionPreviousWeek) / avgMinutesPerSessionPreviousWeek) * 100)).toFixed(1))
+        : avgMinutesPerSessionCurrentWeek > 0
+          ? 100
+          : 0;
+    const sortedDailyUsage = Array.from(dailyUsageMap.entries())
+      .map(([label, value]) => ({
+        label,
+        sesiones: value.sesiones.size,
+        usuarios: value.usuarios.size,
+      }))
+      .slice(-8);
+    const retentionSeries = [
+      { day: 'Dia 1', value: activeUsers30d.size > 0 ? Math.round((activeUsersByWindow.get('Dia 1')?.size ?? 0) / activeUsers30d.size * 100) : 0 },
+      { day: 'Dia 7', value: activeUsers30d.size > 0 ? Math.round((activeUsersByWindow.get('Dia 7')?.size ?? 0) / activeUsers30d.size * 100) : 0 },
+      { day: 'Dia 14', value: activeUsers30d.size > 0 ? Math.round((activeUsersByWindow.get('Dia 14')?.size ?? 0) / activeUsers30d.size * 100) : 0 },
+      { day: 'Dia 21', value: activeUsers30d.size > 0 ? Math.round((activeUsersByWindow.get('Dia 21')?.size ?? 0) / activeUsers30d.size * 100) : 0 },
+      { day: 'Dia 30', value: 100 },
+    ];
+
+    let simulatorAttemptsTotal = 0;
+    let answersTotal = 0;
+    try {
+      const [attemptsRes, answersRes] = await Promise.all([
+        admin.from('simulator_attempts').select('id', { count: 'exact', head: true }),
+        admin.from('historial_respuestas').select('id', { count: 'exact', head: true }),
+      ]);
+      if (!attemptsRes.error) simulatorAttemptsTotal = attemptsRes.count ?? 0;
+      else console.error('Error cargando cantidad de simuladores realizados:', attemptsRes.error);
+      if (!answersRes.error) answersTotal = answersRes.count ?? 0;
+      else console.error('Error cargando cantidad de respuestas:', answersRes.error);
+    } catch (error) {
+      console.error('Error no bloqueante cargando métricas de actividad:', error);
+    }
 
     return {
       success: true,
       stats: {
         dau: dauSet.size,
+        users: {
+          total: profilesTotal.count ?? 0,
+          new_last_7d: currentWeekUsers,
+          new_previous_7d: previousWeekUsers,
+          growth_pct_vs_previous_7d: userGrowthPct,
+        },
         registered: {
           day: profilesDay.count ?? 0,
           week: profilesWeek.count ?? 0,
@@ -1450,9 +1707,26 @@ export async function obtenerEstadisticasAdmin(): Promise<{
         },
         interaction: {
           avg_minutes_per_session: avgMinutesPerSession,
-          total_hours_last_7d: Number((totalEngagementMs / 1000 / 60 / 60).toFixed(2)),
+          total_hours_last_7d: Number((currentWeekEngagementMs / 1000 / 60 / 60).toFixed(2)),
+          avg_minutes_per_session_previous_7d: avgMinutesPerSessionPreviousWeek,
+          avg_minutes_trend_pct_vs_previous_7d: avgMinutesTrendPct,
         },
+        activity: {
+          simulator_attempts_total: simulatorAttemptsTotal,
+          answers_total: answersTotal,
+        },
+        daily_usage: sortedDailyUsage,
+        retention_series: retentionSeries,
         top_pages: topPagesArr,
+        top_materias: Array.from(topMateriaViews.entries())
+          .map(([materia_id, views]) => ({
+            materia_id,
+            name: materiaNameById.get(materia_id) ?? `Materia ${materia_id.slice(0, 8)}`,
+            views,
+          }))
+          .sort((a, b) => b.views - a.views)
+          .slice(0, 5),
+        shared_materias_by_careers: sharedMateriasByCareers,
         devices: deviceCounters,
         errors: {
           total: Array.from(errorsByPath.values()).reduce((acc, val) => acc + val, 0),
@@ -1776,23 +2050,8 @@ export async function ejecutarMantenimientoArchivosAdmin() {
       .limit(10000);
 
     const dbSet = new Set((dbResources ?? []).map((r) => String(r.url_archivo)));
-    const orphans: string[] = [];
-    let offset = 0;
-    const limit = 100;
-    while (true) {
-      const { data: list, error } = await admin.storage.from('biblioteca').list('', {
-        limit,
-        offset,
-        sortBy: { column: 'name', order: 'asc' },
-      });
-      if (error || !list || list.length === 0) break;
-      for (const item of list) {
-        if (!item.name) continue;
-        if (!dbSet.has(item.name)) orphans.push(item.name);
-      }
-      offset += limit;
-      if (list.length < limit) break;
-    }
+    const storagePaths = await listStoragePathsRecursively(admin, 'biblioteca');
+    const orphans = storagePaths.filter((path) => !dbSet.has(path));
 
     return {
       success: true,
@@ -1800,6 +2059,49 @@ export async function ejecutarMantenimientoArchivosAdmin() {
     };
   } catch (error) {
     return { success: false, message: error instanceof Error ? error.message : 'No se pudo ejecutar mantenimiento.' };
+  }
+}
+
+export async function eliminarArchivosHuerfanosAdmin(): Promise<{
+  success: boolean;
+  result?: FileMaintenanceCleanupResult;
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+
+    const { data: dbResources } = await admin
+      .from('recursos')
+      .select('url_archivo')
+      .not('url_archivo', 'is', null)
+      .limit(10000);
+
+    const dbSet = new Set((dbResources ?? []).map((r) => String(r.url_archivo)));
+    const storagePaths = await listStoragePathsRecursively(admin, 'biblioteca');
+    const orphans = storagePaths.filter((path) => !dbSet.has(path));
+
+    let deletedCount = 0;
+    for (let i = 0; i < orphans.length; i += 100) {
+      const chunk = orphans.slice(i, i + 100);
+      if (chunk.length === 0) continue;
+      const { error } = await admin.storage.from('biblioteca').remove(chunk);
+      if (error) throw error;
+      deletedCount += chunk.length;
+    }
+
+    revalidatePath('/admin');
+
+    return {
+      success: true,
+      result: {
+        orphan_count: Math.max(0, orphans.length - deletedCount),
+        orphan_sample: [],
+        deleted_count: deletedCount,
+      },
+    };
+  } catch (error) {
+    return { success: false, message: error instanceof Error ? error.message : 'No se pudieron eliminar los archivos huerfanos.' };
   }
 }
 
