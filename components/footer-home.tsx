@@ -47,7 +47,7 @@ export function FooterHome() {
 
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
-              Navegacion
+              Navegación
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
               <a href="#como-funciona" className="text-xs text-white/70 transition hover:text-white">
@@ -71,7 +71,7 @@ export function FooterHome() {
                 Términos y condiciones
               </a>
               <a href="/privacidad" className="text-xs text-white/70 transition hover:text-white">
-                Politica de privacidad
+                Política de privacidad
               </a>
               <a href="/copyright" className="text-xs text-white/70 transition hover:text-white">
                 Copyright
