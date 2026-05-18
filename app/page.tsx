@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const steps = [
   {
@@ -121,6 +122,13 @@ export default function Home() {
 
             <Link
               href={primaryHref}
+              onClick={() =>
+                trackMarketingEvent('cta_click', {
+                  location: 'home_header',
+                  cta_name: 'empezar_gratis',
+                  destination: primaryHref,
+                })
+              }
               className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95 sm:h-12 sm:px-6"
             >
               {primaryLabel}
@@ -147,12 +155,26 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
                 <Link
                   href={primaryHref}
+                  onClick={() =>
+                    trackMarketingEvent('cta_click', {
+                      location: 'home_hero',
+                      cta_name: 'empezar_gratis',
+                      destination: primaryHref,
+                    })
+                  }
                   className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.24)] transition hover:translate-y-[-1px] sm:h-14 sm:px-8 sm:text-base"
                 >
                   {primaryLabel}
                 </Link>
                 <Link
                   href="/explorar"
+                  onClick={() =>
+                    trackMarketingEvent('cta_click', {
+                      location: 'home_hero',
+                      cta_name: 'buscar_universidad',
+                      destination: '/explorar',
+                    })
+                  }
                   className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-[#2563EB]/25 bg-white px-6 text-[15px] font-semibold text-[#2563EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition hover:border-[#2563EB]/45 sm:h-14 sm:px-8 sm:text-base"
                 >
                   <PlayCircle className="h-5 w-5" />
@@ -396,7 +418,7 @@ export default function Home() {
                       Todo listo para que empieces a estudiar mejor.
                     </h2>
                     <p className="mt-3 max-w-xl text-base leading-8 text-slate-500">
-                      {'Centraliza tus materias, encuentra materiales \u00FAtiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.'}
+                      {'Centraliza tus materias, encuentra materiales útiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.'}
                     </p>
                   </div>
                 </div>
@@ -413,12 +435,26 @@ export default function Home() {
                   <div className="mt-5 flex flex-col gap-3">
                     <Link
                       href={primaryHref}
+                      onClick={() =>
+                        trackMarketingEvent('cta_click', {
+                          location: 'home_final_cta',
+                          cta_name: 'crear_cuenta_gratis',
+                          destination: primaryHref,
+                        })
+                      }
                       className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-8 text-base font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:opacity-95"
                     >
                       Crear cuenta gratis
                     </Link>
                     <Link
                       href="/explorar"
+                      onClick={() =>
+                        trackMarketingEvent('cta_click', {
+                          location: 'home_final_cta',
+                          cta_name: 'ver_universidades',
+                          destination: '/explorar',
+                        })
+                      }
                       className="inline-flex h-14 items-center justify-center rounded-2xl border border-[#2563EB]/18 bg-[#F8FBFF] px-8 text-base font-semibold text-[#2563EB] transition hover:border-[#2563EB]/35 hover:bg-white"
                     >
                       Ver universidades
@@ -435,3 +471,4 @@ export default function Home() {
     </div>
   );
 }
+

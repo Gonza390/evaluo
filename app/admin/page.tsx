@@ -101,6 +101,8 @@ import {
   AreaChart,
   Area,
   Legend,
+  BarChart,
+  Bar,
 } from 'recharts';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -243,6 +245,8 @@ export default function AdminPanel() {
   const [monetizacion, setMonetizacion] = useState<MonetizacionStats | null>(null);
   const [loadingMonetizacion, setLoadingMonetizacion] = useState(false);
   const [showAllSharedMaterias, setShowAllSharedMaterias] = useState(false);
+  const [showAllMateriaActivity, setShowAllMateriaActivity] = useState(false);
+  const [showAllLibraryCoverage, setShowAllLibraryCoverage] = useState(false);
   const [rankingMateriaId, setRankingMateriaId] = useState<string>('all');
   const [rankingParcial, setRankingParcial] = useState<string>('all');
   const [rankingFailed, setRankingFailed] = useState<GlobalQuestionRankingRow[]>([]);
@@ -1188,6 +1192,40 @@ export default function AdminPanel() {
     [stats]
   );
   const retentionChartData = useMemo(() => getRetentionChartData(stats), [stats]);
+  const topMateriaActivity = useMemo(() => (stats?.materia_question_stats ?? []).slice(0, 3), [stats]);
+  const avgGradeChartData = useMemo(
+    () =>
+      (stats?.avg_grade_by_materia_parcial ?? []).slice(0, 8).map((item) => ({
+        name: `${item.name} · P${item.parcial}`,
+        nota: item.avg_grade,
+        intentos: item.attempts,
+      })),
+    [stats]
+  );
+  const abandonmentChartData = useMemo(
+    () => stats?.simulator.abandonment_buckets ?? [],
+    [stats]
+  );
+  const libraryCoverageRows = useMemo(() => stats?.materia_library_coverage ?? [], [stats]);
+  const libraryPriorityRows = useMemo(() => libraryCoverageRows.slice(0, 8), [libraryCoverageRows]);
+  const libraryCoverageByMateriaId = useMemo(
+    () => new Map(libraryCoverageRows.map((row) => [row.materia_id, row])),
+    [libraryCoverageRows]
+  );
+  const libraryCareerCoverage = useMemo(() => stats?.career_library_coverage ?? [], [stats]);
+  const strongestCareerCoverage = useMemo(
+    () => [...libraryCareerCoverage].sort((a, b) => b.avg_coverage_score - a.avg_coverage_score).slice(0, 3),
+    [libraryCareerCoverage]
+  );
+  const weakestCareerCoverage = useMemo(() => libraryCareerCoverage.slice(0, 3), [libraryCareerCoverage]);
+  const libraryCoverageSummary = useMemo(() => {
+    const total = libraryCoverageRows.length;
+    const complete = libraryCoverageRows.filter((row) => row.status === 'Completa').length;
+    const critical = libraryCoverageRows.filter((row) => row.status === 'Crítica' || row.status === 'Sin contenido').length;
+    const incomplete = libraryCoverageRows.filter((row) => row.status === 'Falta contenido').length;
+    const withoutContent = libraryCoverageRows.filter((row) => row.status === 'Sin contenido').length;
+    return { total, complete, critical, incomplete, withoutContent };
+  }, [libraryCoverageRows]);
   const deviceDistributionData = useMemo(
     () =>
       stats
@@ -1800,7 +1838,7 @@ export default function AdminPanel() {
                       </div>
                       {esMateriaGeneral && (
                         <p className="text-[10px] text-amber-600 font-bold ml-1 animate-pulse">
-                          âœ¨ MATERIA GENERAL DETECTADA
+                          ✨ MATERIA GENERAL DETECTADA
                         </p>
                       )}
                     </div>
@@ -2085,6 +2123,253 @@ export default function AdminPanel() {
                   ACTUALIZAR
                 </Button>
               </div>
+
+              <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="eyebrow-label">Cobertura editorial</p>
+                      <CardTitle className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">
+                        Prioridad por materia
+                      </CardTitle>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                        Esta vista toma la materia como unidad principal y cruza recursos, parciales cargados, uso e impacto en carreras para mostrarte dónde falta contenido de verdad.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllLibraryCoverage(true)}
+                      className="rounded-xl border-slate-200"
+                    >
+                      Ver todas
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 p-4">
+                  <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">Materias</p>
+                      <p className="mt-2 text-2xl font-black tracking-[-0.05em] text-slate-950">{libraryCoverageSummary.total}</p>
+                    </div>
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600">Completas</p>
+                      <p className="mt-2 text-2xl font-black tracking-[-0.05em] text-emerald-700">{libraryCoverageSummary.complete}</p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50/60 px-4 py-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-600">Con faltantes</p>
+                      <p className="mt-2 text-2xl font-black tracking-[-0.05em] text-amber-700">{libraryCoverageSummary.incomplete}</p>
+                    </div>
+                    <div className="rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600">Críticas</p>
+                      <p className="mt-2 text-2xl font-black tracking-[-0.05em] text-rose-700">{libraryCoverageSummary.critical}</p>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Sin contenido</p>
+                      <p className="mt-2 text-2xl font-black tracking-[-0.05em] text-slate-900">{libraryCoverageSummary.withoutContent}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_0.9fr]">
+                    <div className="rounded-2xl border border-slate-200 bg-white">
+                      <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Dónde atacar primero</p>
+                          <p className="mt-1 text-sm font-semibold text-slate-900">Materias prioritarias</p>
+                        </div>
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                          Top {libraryPriorityRows.length}
+                        </span>
+                      </div>
+                      <div className="divide-y divide-slate-100">
+                        {libraryPriorityRows.length === 0 ? (
+                          <div className="px-4 py-6 text-sm text-slate-500">
+                            Todavía no hay datos suficientes para priorizar materias.
+                          </div>
+                        ) : (
+                          libraryPriorityRows.map((item) => (
+                            <div key={item.materia_id} className="grid gap-3 px-4 py-4 md:grid-cols-[1.3fr_0.9fr_0.8fr] md:items-center">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                                  <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-600">
+                                    {item.career_count} carreras
+                                  </span>
+                                </div>
+                                <p className="mt-1 text-xs leading-5 text-slate-500">
+                                  {item.total_resources} recursos · P1 {item.parcial_1_questions} preguntas · P2 {item.parcial_2_questions} preguntas
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {item.missing.length === 0 ? (
+                                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+                                      Sin faltantes críticos
+                                    </span>
+                                  ) : (
+                                    item.missing.slice(0, 3).map((missing) => (
+                                      <span key={missing} className="rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700">
+                                        {missing}
+                                      </span>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Cobertura</p>
+                                <div className="mt-2 h-2 rounded-full bg-slate-100">
+                                  <div
+                                    className={`h-2 rounded-full ${
+                                      item.coverage_score >= 85
+                                        ? 'bg-emerald-500'
+                                        : item.coverage_score >= 50
+                                          ? 'bg-amber-500'
+                                          : 'bg-rose-500'
+                                    }`}
+                                    style={{ width: `${Math.max(item.coverage_score, 4)}%` }}
+                                  />
+                                </div>
+                                <div className="mt-2 flex items-center justify-between text-xs">
+                                  <span className="font-semibold text-slate-900">{item.coverage_score}%</span>
+                                  <span className="text-slate-500">{item.status}</span>
+                                </div>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Prioridad</p>
+                                <p className="mt-1 text-xl font-black tracking-[-0.04em] text-slate-950">{item.priority_score}</p>
+                                <p className="mt-1 text-[11px] leading-4 text-slate-500">
+                                  {item.views} vistas · {item.simulator_attempts_total} intentos
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Carreras mejor cubiertas</p>
+                        <div className="mt-3 space-y-3">
+                          {strongestCareerCoverage.length === 0 ? (
+                            <p className="text-sm text-slate-500">Todavía no hay carreras para comparar.</p>
+                          ) : (
+                            strongestCareerCoverage.map((item) => (
+                              <div key={item.carrera_id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                                  <p className="mt-1 text-[11px] text-slate-500">
+                                    {item.materia_count} materias · {item.complete_count} completas
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-sm font-black text-emerald-700">{item.avg_coverage_score}%</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Carreras con más faltantes</p>
+                        <div className="mt-3 space-y-3">
+                          {weakestCareerCoverage.length === 0 ? (
+                            <p className="text-sm text-slate-500">Todavía no hay carreras para comparar.</p>
+                          ) : (
+                            weakestCareerCoverage.map((item) => (
+                              <div key={item.carrera_id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 px-3 py-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                                  <p className="mt-1 text-[11px] text-slate-500">
+                                    {item.critical_count} críticas · {item.incomplete_count} con faltantes
+                                  </p>
+                                </div>
+                                <span className="shrink-0 text-sm font-black text-rose-700">{item.avg_coverage_score}%</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="eyebrow-label">Cobertura de simuladores</p>
+                      <CardTitle className="mt-2 text-lg font-black tracking-[-0.04em] text-slate-950">
+                        Preguntas por materia y parcial
+                      </CardTitle>
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                        Para cada materia te mostramos cuántas preguntas tiene cargadas el simulador en Parcial 1 y Parcial 2, junto con el total disponible.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAllMateriaActivity(true)}
+                      disabled={!stats || (stats.materia_question_stats?.length ?? 0) === 0}
+                      className="rounded-xl border-slate-200"
+                    >
+                      Ver más
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 p-4">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    {topMateriaActivity.length === 0 ? (
+                      <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
+                        Todavía no hay preguntas cargadas para mostrar en el simulador.
+                      </div>
+                    ) : (
+                      topMateriaActivity.map((item) => {
+                        const coverageMeta = libraryCoverageByMateriaId.get(item.materia_id);
+                        return (
+                        <div key={item.materia_id} className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                                {coverageMeta ? (
+                                  <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-600">
+                                    {coverageMeta.career_count} carreras
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="mt-1 text-[11px] text-slate-500">
+                                {item.total_questions.toLocaleString('es-AR')} preguntas totales
+                              </p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">
+                              {item.total_questions}
+                            </span>
+                          </div>
+
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Parcial 1</p>
+                              <p className="mt-1 text-xl font-black tracking-[-0.04em] text-slate-950">
+                                {item.parcial_1_questions}
+                              </p>
+                              <p className="mt-1 text-[11px] text-slate-500">
+                                {item.parcial_1_attempts} intentos registrados
+                              </p>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-3 py-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Parcial 2</p>
+                              <p className="mt-1 text-xl font-black tracking-[-0.04em] text-slate-950">
+                                {item.parcial_2_questions}
+                              </p>
+                              <p className="mt-1 text-[11px] text-slate-500">
+                                {item.parcial_2_attempts} intentos registrados
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )})
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
               <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                 <CardContent className="grid grid-cols-1 gap-3 p-4 md:grid-cols-4">
@@ -2984,6 +3269,178 @@ export default function AdminPanel() {
                     </CardContent>
                   </Card>
 
+                  <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="pb-2 pt-3">
+                        <CardTitle className="text-sm">Embudo del simulador</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 p-4">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+                            <p className="text-[11px] text-slate-500">Inician</p>
+                            <p className="mt-1 text-xl font-bold text-slate-900">{stats.simulator.starts_total.toLocaleString('es-AR')}</p>
+                          </div>
+                          <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-3">
+                            <p className="text-[11px] text-emerald-700">Terminan</p>
+                            <p className="mt-1 text-xl font-bold text-emerald-800">{stats.simulator.finishes_total.toLocaleString('es-AR')}</p>
+                          </div>
+                          <div className="rounded-xl border border-rose-100 bg-rose-50/60 px-3 py-3">
+                            <p className="text-[11px] text-rose-700">Abandonan</p>
+                            <p className="mt-1 text-xl font-bold text-rose-800">{stats.simulator.abandons_total.toLocaleString('es-AR')}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                            <p className="text-[11px] text-slate-500">Finalización</p>
+                            <p className="mt-1 text-lg font-bold text-slate-900">{stats.simulator.completion_rate_pct}%</p>
+                          </div>
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                            <p className="text-[11px] text-slate-500">Abandono</p>
+                            <p className="mt-1 text-lg font-bold text-slate-900">{stats.simulator.abandonment_rate_pct}%</p>
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-600">
+                          Abandonan en promedio en la pregunta <span className="font-semibold text-slate-900">{stats.simulator.avg_abandon_question}</span> y con <span className="font-semibold text-slate-900">{stats.simulator.avg_abandon_progress_pct}%</span> de avance.
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="pb-2 pt-3">
+                        <CardTitle className="text-sm">Momento de abandono</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-64 px-3 pb-3">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={abandonmentChartData}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                            <YAxis tick={{ fontSize: 11 }} />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#6366F1" radius={[8, 8, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="pb-2 pt-3">
+                        <CardTitle className="text-sm">Qué hacen después</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4 p-4">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Tras abandonar</p>
+                          <div className="mt-2 space-y-2">
+                            {stats.simulator.next_after_abandon.length === 0 ? (
+                              <p className="text-xs text-slate-500">Todavía no hay salidas registradas.</p>
+                            ) : (
+                              stats.simulator.next_after_abandon.map((item) => (
+                                <div key={`a-${item.path}`} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                                  <p className="truncate pr-3 text-xs text-slate-700">{item.path}</p>
+                                  <span className="text-xs font-semibold text-slate-500">{item.count}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Tras terminar</p>
+                          <div className="mt-2 space-y-2">
+                            {stats.simulator.next_after_finish.length === 0 ? (
+                              <p className="text-xs text-slate-500">Todavía no hay salidas registradas.</p>
+                            ) : (
+                              stats.simulator.next_after_finish.map((item) => (
+                                <div key={`f-${item.path}`} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                                  <p className="truncate pr-3 text-xs text-slate-700">{item.path}</p>
+                                  <span className="text-xs font-semibold text-slate-500">{item.count}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 xl:grid-cols-[1.1fr_1fr]">
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="flex flex-row items-center justify-between gap-3 pb-2 pt-3">
+                        <div>
+                          <CardTitle className="text-sm">Top materias con más preguntas</CardTitle>
+                          <p className="mt-1 text-xs text-slate-500">Inventario por parcial y rendimiento promedio reciente del simulador.</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-xl"
+                          onClick={() => setShowAllMateriaActivity(true)}
+                          disabled={!stats || (stats.materia_question_stats?.length ?? 0) === 0}
+                        >
+                          Ver más
+                        </Button>
+                      </CardHeader>
+                      <CardContent className="space-y-2 p-4">
+                        {topMateriaActivity.length === 0 ? (
+                          <p className="text-sm text-slate-500">Todavía no hay inventario suficiente por materia.</p>
+                        ) : (
+                          topMateriaActivity.map((item, index) => (
+                            <div key={item.materia_id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">#{index + 1}</p>
+                                  <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                                </div>
+                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                                  {item.total_questions} preguntas
+                                </span>
+                              </div>
+                              <div className="mt-3 grid grid-cols-1 gap-2 text-xs md:grid-cols-2">
+                                <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Parcial 1</p>
+                                  <p className="mt-1 font-bold text-slate-900">{item.parcial_1_questions} preguntas</p>
+                                  <p className="mt-2 text-slate-600">Nota prom.: <span className="font-semibold text-slate-900">{item.parcial_1_avg_grade.toFixed(1)}</span></p>
+                                  <p className="text-slate-600">Bien prom.: <span className="font-semibold text-slate-900">{item.parcial_1_avg_correct.toFixed(1)}</span></p>
+                                  <p className="text-slate-600">Mal prom.: <span className="font-semibold text-slate-900">{item.parcial_1_avg_wrong.toFixed(1)}</span></p>
+                                  <p className="text-slate-600">Respondidas prom.: <span className="font-semibold text-slate-900">{item.parcial_1_avg_answered.toFixed(1)} / {item.parcial_1_questions || 0}</span></p>
+                                </div>
+                                <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-3">
+                                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Parcial 2</p>
+                                  <p className="mt-1 font-bold text-slate-900">{item.parcial_2_questions} preguntas</p>
+                                  <p className="mt-2 text-slate-600">Nota prom.: <span className="font-semibold text-slate-900">{item.parcial_2_avg_grade.toFixed(1)}</span></p>
+                                  <p className="text-slate-600">Bien prom.: <span className="font-semibold text-slate-900">{item.parcial_2_avg_correct.toFixed(1)}</span></p>
+                                  <p className="text-slate-600">Mal prom.: <span className="font-semibold text-slate-900">{item.parcial_2_avg_wrong.toFixed(1)}</span></p>
+                                  <p className="text-slate-600">Respondidas prom.: <span className="font-semibold text-slate-900">{item.parcial_2_avg_answered.toFixed(1)} / {item.parcial_2_questions || 0}</span></p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
+                      <CardHeader className="pb-2 pt-3">
+                        <CardTitle className="text-sm">Promedio de nota por parcial</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-80 px-3 pb-3">
+                        {avgGradeChartData.length === 0 ? (
+                          <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                            Todavía no hay intentos suficientes para calcular promedios.
+                          </div>
+                        ) : (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={avgGradeChartData} layout="vertical" margin={{ left: 8, right: 8 }}>
+                              <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                              <XAxis type="number" domain={[0, 10]} tick={{ fontSize: 11 }} />
+                              <YAxis type="category" dataKey="name" width={170} tick={{ fontSize: 11 }} />
+                              <Tooltip />
+                              <Bar dataKey="nota" fill="#4F46E5" radius={[0, 8, 8, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
                   <Card className={ADMIN_PANEL_SUBCARD_CLASS}>
                     <CardHeader className="pb-2 pt-3">
                       <CardTitle className="text-sm">Errores y señales técnicas</CardTitle>
@@ -3506,6 +3963,174 @@ export default function AdminPanel() {
                 <p className="text-sm text-slate-500">
                   No hay materias compartidas para mostrar todavía.
                 </p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAllMateriaActivity} onOpenChange={setShowAllMateriaActivity}>
+          <DialogContent className="max-w-4xl rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl">
+            <DialogHeader className="border-b border-slate-100 px-6 py-5">
+              <DialogTitle className="text-lg font-bold text-slate-950">
+                Materias con más actividad de simulador
+              </DialogTitle>
+              <p className="mt-1 text-sm text-slate-500">
+                Ranking completo de materias con simuladores terminados, preguntas respondidas y promedio de nota.
+              </p>
+            </DialogHeader>
+            <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+              <div className="space-y-6">
+              {stats?.materia_question_stats?.length ? (
+                <div className="space-y-2">
+                  {stats.materia_question_stats.map((item, index) => {
+                    const coverageMeta = libraryCoverageByMateriaId.get(item.materia_id);
+                    return (
+                    <div
+                      key={item.materia_id}
+                      className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                            #{index + 1}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                            {coverageMeta ? (
+                              <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-600">
+                                {coverageMeta.career_count} carreras
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-indigo-700">{item.total_questions.toLocaleString('es-AR')} preguntas</p>
+                      </div>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Parcial 1</p>
+                          <p className="mt-1 text-sm font-bold text-slate-900">{item.parcial_1_questions} preguntas</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                            <p>Nota: <span className="font-semibold text-slate-900">{item.parcial_1_avg_grade.toFixed(1)}</span></p>
+                            <p>Bien: <span className="font-semibold text-slate-900">{item.parcial_1_avg_correct.toFixed(1)}</span></p>
+                            <p>Mal: <span className="font-semibold text-slate-900">{item.parcial_1_avg_wrong.toFixed(1)}</span></p>
+                            <p>Respondidas: <span className="font-semibold text-slate-900">{item.parcial_1_avg_answered.toFixed(1)} / {item.parcial_1_questions || 0}</span></p>
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Parcial 2</p>
+                          <p className="mt-1 text-sm font-bold text-slate-900">{item.parcial_2_questions} preguntas</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-slate-600">
+                            <p>Nota: <span className="font-semibold text-slate-900">{item.parcial_2_avg_grade.toFixed(1)}</span></p>
+                            <p>Bien: <span className="font-semibold text-slate-900">{item.parcial_2_avg_correct.toFixed(1)}</span></p>
+                            <p>Mal: <span className="font-semibold text-slate-900">{item.parcial_2_avg_wrong.toFixed(1)}</span></p>
+                            <p>Respondidas: <span className="font-semibold text-slate-900">{item.parcial_2_avg_answered.toFixed(1)} / {item.parcial_2_questions || 0}</span></p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )})}
+                </div>
+              ) : (
+                  <p className="text-sm text-slate-500">
+                    No hay actividad suficiente para mostrar todavía.
+                  </p>
+                )}
+
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Promedio por materia y parcial</p>
+                  <div className="mt-3 space-y-2">
+                    {(stats?.avg_grade_by_materia_parcial ?? []).length === 0 ? (
+                      <p className="text-sm text-slate-500">Todavía no hay intentos suficientes para calcular promedios.</p>
+                    ) : (
+                      stats?.avg_grade_by_materia_parcial.map((item) => (
+                        <div
+                          key={`${item.materia_id}-${item.parcial}`}
+                          className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 md:grid-cols-[minmax(0,1fr)_90px_110px_90px_90px_90px_130px]"
+                        >
+                          <p className="truncate text-sm font-semibold text-slate-900">{item.name}</p>
+                          <p className="text-sm text-slate-600">Parcial {item.parcial}</p>
+                          <p className="text-sm font-bold text-slate-900">{item.attempts.toLocaleString('es-AR')} intentos</p>
+                          <p className="text-sm font-bold text-indigo-700">{item.avg_grade.toFixed(1)}</p>
+                          <p className="text-sm font-bold text-emerald-700">{item.avg_correct.toFixed(1)} bien</p>
+                          <p className="text-sm font-bold text-rose-700">{item.avg_wrong.toFixed(1)} mal</p>
+                          <p className="text-sm font-bold text-slate-700">{item.avg_answered.toFixed(1)} respondidas</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showAllLibraryCoverage} onOpenChange={setShowAllLibraryCoverage}>
+          <DialogContent className="max-w-6xl rounded-3xl border border-slate-200 bg-white p-0 shadow-2xl">
+            <DialogHeader className="border-b border-slate-100 px-6 py-5">
+              <DialogTitle className="text-lg font-bold text-slate-950">
+                Cobertura completa por materia
+              </DialogTitle>
+              <p className="mt-1 text-sm text-slate-500">
+                Vista global de recursos, parciales, impacto por carreras y prioridad editorial para decidir dónde cargar contenido primero.
+              </p>
+            </DialogHeader>
+            <div className="max-h-[72vh] overflow-y-auto px-6 py-5">
+              {libraryCoverageRows.length === 0 ? (
+                <p className="text-sm text-slate-500">Todavía no hay datos suficientes para mostrar cobertura.</p>
+              ) : (
+                <div className="space-y-3">
+                  {libraryCoverageRows.map((item, index) => (
+                    <div key={item.materia_id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">#{index + 1}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                            <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-600">
+                              {item.career_count} carreras
+                            </span>
+                            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
+                              {item.status}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid gap-2 text-xs text-slate-600 sm:grid-cols-2 lg:min-w-[420px]">
+                          <p>Recursos: <span className="font-semibold text-slate-900">{item.total_resources}</span></p>
+                          <p>Resúmenes: <span className="font-semibold text-slate-900">{item.resumen_count}</span></p>
+                          <p>Preguntas P1: <span className="font-semibold text-slate-900">{item.parcial_1_questions}</span></p>
+                          <p>Preguntas P2: <span className="font-semibold text-slate-900">{item.parcial_2_questions}</span></p>
+                          <p>Vistas: <span className="font-semibold text-slate-900">{item.views}</span></p>
+                          <p>Prioridad: <span className="font-semibold text-slate-900">{item.priority_score}</span></p>
+                        </div>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-white">
+                        <div
+                          className={`h-2 rounded-full ${
+                            item.coverage_score >= 85 ? 'bg-emerald-500' : item.coverage_score >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                          }`}
+                          style={{ width: `${Math.max(item.coverage_score, 4)}%` }}
+                        />
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-900">Cobertura {item.coverage_score}%</span>
+                        <span className="text-slate-500">{item.simulator_attempts_total} intentos de simulador</span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {item.missing.length === 0 ? (
+                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+                            Sin faltantes críticos
+                          </span>
+                        ) : (
+                          item.missing.map((missing) => (
+                            <span key={missing} className="rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-rose-700">
+                              {missing}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </DialogContent>

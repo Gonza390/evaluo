@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ClientLayout from '@/components/ClientLayout';
+import { ThirdPartyAnalytics } from '@/components/ThirdPartyAnalytics';
 import './globals.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         suppressHydrationWarning
         className="bg-background text-foreground min-h-screen font-sans text-[0.92rem]"
       >
+        <ThirdPartyAnalytics />
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

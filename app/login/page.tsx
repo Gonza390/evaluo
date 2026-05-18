@@ -2,11 +2,12 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import { ArrowLeft, Eye, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 type AuthMode = 'login' | 'signup';
 
@@ -16,12 +17,25 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const requestedMode = new URLSearchParams(window.location.search).get('mode');
+    if (requestedMode === 'signup' || requestedMode === 'login') {
+      setMode(requestedMode);
+    }
+  }, []);
 
   const isSignUp = mode === 'signup';
 
   const handleGoogleAuth = async () => {
     setLoading(true);
     setError('');
+    trackMarketingEvent('auth_click', {
+      location: 'login',
+      auth_mode: mode,
+      provider: 'google',
+    });
 
     try {
       const redirectTo = new URL('/auth/callback', window.location.origin).toString();
@@ -50,6 +64,11 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError('');
+    trackMarketingEvent('auth_submit', {
+      location: 'login',
+      auth_mode: mode,
+      provider: 'email',
+    });
 
     try {
       if (isSignUp) {
@@ -135,7 +154,7 @@ export default function LoginPage() {
                   <label className="text-sm font-medium text-slate-600">Contraseña</label>
                   <div className="relative">
                     <Input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       placeholder="••••••••"
@@ -143,7 +162,14 @@ export default function LoginPage() {
                       required
                       disabled={loading}
                     />
-                    <Eye className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-300" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-slate-400 transition hover:text-slate-600"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
 
@@ -212,7 +238,15 @@ export default function LoginPage() {
                 {isSignUp ? '¿Ya tienes cuenta?' : '¿Todavía no tienes cuenta?'}{' '}
                 <button
                   type="button"
-                  onClick={() => setMode(isSignUp ? 'login' : 'signup')}
+                  onClick={() => {
+                    const nextMode = isSignUp ? 'login' : 'signup';
+                    trackMarketingEvent('auth_mode_switch', {
+                      location: 'login',
+                      current_mode: mode,
+                      next_mode: nextMode,
+                    });
+                    setMode(nextMode);
+                  }}
                   disabled={loading}
                   className="font-semibold text-indigo-600 transition hover:text-indigo-700 hover:underline disabled:opacity-60"
                 >

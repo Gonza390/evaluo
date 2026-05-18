@@ -58,11 +58,80 @@ export interface AdminAnalyticsStats {
     simulator_attempts_total: number;
     answers_total: number;
   };
+  simulator: {
+    starts_total: number;
+    finishes_total: number;
+    abandons_total: number;
+    completion_rate_pct: number;
+    abandonment_rate_pct: number;
+    avg_abandon_question: number;
+    avg_abandon_answered: number;
+    avg_abandon_progress_pct: number;
+    abandonment_buckets: Array<{ label: string; value: number }>;
+    next_after_abandon: Array<{ path: string; count: number }>;
+    next_after_finish: Array<{ path: string; count: number }>;
+  };
+  materia_question_stats: Array<{
+    materia_id: string;
+    name: string;
+    total_questions: number;
+    parcial_1_questions: number;
+    parcial_2_questions: number;
+    parcial_1_avg_grade: number;
+    parcial_2_avg_grade: number;
+    parcial_1_avg_correct: number;
+    parcial_2_avg_correct: number;
+    parcial_1_avg_wrong: number;
+    parcial_2_avg_wrong: number;
+    parcial_1_avg_answered: number;
+    parcial_2_avg_answered: number;
+    parcial_1_avg_answered_pct: number;
+    parcial_2_avg_answered_pct: number;
+    parcial_1_attempts: number;
+    parcial_2_attempts: number;
+  }>;
+  avg_grade_by_materia_parcial: Array<{
+    materia_id: string;
+    name: string;
+    parcial: number;
+    avg_grade: number;
+    attempts: number;
+    avg_correct: number;
+    avg_wrong: number;
+    avg_answered: number;
+  }>;
   daily_usage: Array<{ label: string; sesiones: number; usuarios: number }>;
   retention_series: Array<{ day: string; value: number }>;
   top_pages: Array<{ path: string; views: number }>;
   top_materias: Array<{ materia_id: string; name: string; views: number }>;
   shared_materias_by_careers: Array<{ materia_id: string; name: string; career_count: number }>;
+  materia_library_coverage: Array<{
+    materia_id: string;
+    name: string;
+    career_count: number;
+    total_resources: number;
+    resumen_count: number;
+    preguntero_count: number;
+    trabajo_practico_count: number;
+    total_questions: number;
+    parcial_1_questions: number;
+    parcial_2_questions: number;
+    simulator_attempts_total: number;
+    views: number;
+    coverage_score: number;
+    priority_score: number;
+    status: 'Sin contenido' | 'Crítica' | 'Falta contenido' | 'Completa';
+    missing: string[];
+  }>;
+  career_library_coverage: Array<{
+    carrera_id: string;
+    name: string;
+    materia_count: number;
+    avg_coverage_score: number;
+    complete_count: number;
+    incomplete_count: number;
+    critical_count: number;
+  }>;
   devices: { desktop: number; mobile: number; tablet: number };
   errors: { total: number; top_paths: Array<{ path: string; count: number }> };
 }
@@ -239,7 +308,7 @@ type QuestionRecord = {
 };
 
 const GENERIC_DISTRACTORS = new Set([
-  'ninguna opciÃ³n es correcta',
+  'ninguna opción es correcta',
   'todas son correctas',
   'ninguna de las anteriores',
   'todas las anteriores',
@@ -273,6 +342,43 @@ function buildQuestionFingerprint(question: QuestionRecord) {
     .join('|');
 
   return `${enunciado}::${respuestaCorrecta}::${opciones}`;
+}
+
+async function getExistingQuestionDedupIndex(
+  admin: AdminSupabaseClient
+): Promise<{
+  normalizedQuestions: Set<string>;
+  fingerprints: Set<string>;
+}> {
+  const [bankRows, premiumRows] = await Promise.all([
+    admin.from('preguntas_banco').select('enunciado, respuesta_correcta, opciones').limit(50000),
+    admin.from('premium_questions').select('enunciado, respuesta_correcta, opciones').limit(50000),
+  ]);
+
+  if (bankRows.error) throw bankRows.error;
+  if (premiumRows.error) throw premiumRows.error;
+
+  const normalizedQuestions = new Set<string>();
+  const fingerprints = new Set<string>();
+
+  const sourceRows = [...(bankRows.data ?? []), ...(premiumRows.data ?? [])];
+  for (const row of sourceRows) {
+    const enunciado = normalizeCellValue(row.enunciado);
+    if (!enunciado) continue;
+
+    normalizedQuestions.add(normalizeQuestion(enunciado));
+    fingerprints.add(
+      buildQuestionFingerprint({
+        enunciado,
+        respuesta_correcta: normalizeCellValue(row.respuesta_correcta),
+        opciones: Array.isArray(row.opciones)
+          ? row.opciones.filter((option): option is string => typeof option === 'string')
+          : [],
+      })
+    );
+  }
+
+  return { normalizedQuestions, fingerprints };
 }
 
 function dedupeOptions(options: string[]): string[] {
@@ -451,6 +557,33 @@ function normalizeCellValue(value: unknown): string {
     .trim();
 }
 
+function normalizeSpreadsheetKey(value: unknown): string {
+  return normalizeCellValue(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function getSpreadsheetValue(
+  row: Record<string, unknown>,
+  aliases: string[]
+): unknown {
+  const normalizedEntries = Object.entries(row).map(([key, value]) => [
+    normalizeSpreadsheetKey(key),
+    value,
+  ] as const);
+
+  for (const alias of aliases) {
+    const normalizedAlias = normalizeSpreadsheetKey(alias);
+    const match = normalizedEntries.find(([key]) => key === normalizedAlias);
+    if (match) return match[1];
+  }
+
+  return undefined;
+}
+
 function parseCorrectAnswerParts(rawValue: unknown): string[] {
   const normalized = normalizeCellValue(rawValue);
   if (!normalized) return [];
@@ -480,17 +613,35 @@ function parseQuestionsFromXlsxBuffer(buffer: Buffer): QuestionRecord[] {
   const questions: QuestionRecord[] = [];
 
   for (const row of rows) {
-    const enunciado = normalizeCellValue(row.pregunta);
-    const respuestasCorrectas = parseCorrectAnswerParts(row.respuesta_correcta);
+    const enunciado = normalizeCellValue(
+      getSpreadsheetValue(row, ['pregunta', 'enunciado', 'question', 'pregunta_enunciado'])
+    );
+    const respuestasCorrectas = parseCorrectAnswerParts(
+      getSpreadsheetValue(row, ['respuesta_correcta', 'correcta', 'correct_answer', 'respuesta'])
+    );
     const respuestaCorrecta = respuestasCorrectas.join('|');
 
-    const optionKeys = ['opcion_a', 'opcion_b', 'opcion_c', 'opcion_d', 'opcion_e', 'opcion_f'];
-    let opciones = optionKeys.map((key) => normalizeCellValue(row[key])).filter(Boolean);
+    const optionKeys = [
+      ['opcion_a', 'respuesta_a', 'a'],
+      ['opcion_b', 'respuesta_b', 'b'],
+      ['opcion_c', 'respuesta_c', 'c'],
+      ['opcion_d', 'respuesta_d', 'd'],
+      ['opcion_e', 'respuesta_e', 'e'],
+      ['opcion_f', 'respuesta_f', 'f'],
+    ];
+    let opciones = optionKeys
+      .map((aliases) => normalizeCellValue(getSpreadsheetValue(row, aliases)))
+      .filter(Boolean);
 
     if (opciones.length === 0) {
-      const incorrectasRaw = normalizeCellValue(row.respuestas_incorrectas);
+      const incorrectasRaw = normalizeCellValue(
+        getSpreadsheetValue(row, ['respuestas_incorrectas', 'incorrectas', 'wrong_answers', 'distractores'])
+      );
       const incorrectas = incorrectasRaw
-        ? incorrectasRaw.split('|').map((part) => normalizeCellValue(part)).filter(Boolean)
+        ? incorrectasRaw
+            .split(/\s*(?:\||;|,{2,}|\/{2}|\/|\n)\s*/g)
+            .map((part) => normalizeCellValue(part))
+            .filter(Boolean)
         : [];
       opciones = [...respuestasCorrectas, ...incorrectas].filter(Boolean);
     }
@@ -654,33 +805,9 @@ export async function analizarMaterialConIA(
       parsedQuestions = enrichQuestionsWithSource(parsedQuestions, text);
     }
 
-    const { data: existingQuestions, error: existingError } = await supabase
-      .from('preguntas_banco')
-      .select('enunciado, respuesta_correcta, opciones')
-      .eq('materia_id', materiaId);
-
-    if (existingError) {
-      throw existingError;
-    }
-
+    const { normalizedQuestions: existingNormalized, fingerprints: existingFingerprints } =
+      await getExistingQuestionDedupIndex(supabase);
     const dedupeAgainstPregunteros = tipo === 'Preguntero';
-
-    const existingNormalized = new Set(
-      (existingQuestions ?? []).map((item) => normalizeQuestion(item.enunciado))
-    );
-    const existingFingerprints = new Set(
-      dedupeAgainstPregunteros
-        ? (existingQuestions ?? []).map((item) =>
-            buildQuestionFingerprint({
-              enunciado: item.enunciado,
-              respuesta_correcta: item.respuesta_correcta,
-              opciones: Array.isArray(item.opciones)
-                ? (item.opciones.filter((option): option is string => typeof option === 'string') as string[])
-                : [],
-            })
-          )
-        : []
-    );
 
     const parsedEntries = new Map<string, QuestionRecord>();
     for (const question of parsedQuestions) {
@@ -693,6 +820,7 @@ export async function analizarMaterialConIA(
     }
 
     const uniqueParsedQuestions = Array.from(parsedEntries.values());
+    const duplicatesInsideFile = Math.max(0, parsedQuestions.length - uniqueParsedQuestions.length);
     const invalidQuestions = uniqueParsedQuestions.filter((q) => !q.enunciado || q.opciones.length < 2).length;
 
     const questionsToInsert = uniqueParsedQuestions
@@ -714,7 +842,8 @@ export async function analizarMaterialConIA(
         es_general: esGeneral,
       }));
 
-    const duplicates = uniqueParsedQuestions.length - questionsToInsert.length;
+    const duplicatesAgainstDatabase = uniqueParsedQuestions.length - questionsToInsert.length;
+    const duplicates = duplicatesInsideFile + duplicatesAgainstDatabase;
 
     if (questionsToInsert.length === 0) {
       return {
@@ -735,12 +864,12 @@ export async function analizarMaterialConIA(
     revalidatePath('/admin');
 
     return {
-      success: true,
-      count: questionsToInsert.length,
-      duplicates,
-      invalid: invalidQuestions,
-      message: `Importacion completa: ${questionsToInsert.length} nuevas, ${duplicates} duplicadas, ${invalidQuestions} invalidas.`,
-    };
+        success: true,
+        count: questionsToInsert.length,
+        duplicates,
+        invalid: invalidQuestions,
+        message: `Importacion completa: ${questionsToInsert.length} nuevas, ${duplicates} duplicadas, ${invalidQuestions} invalidas.`,
+      };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Error procesando el material con la IA.';
@@ -1391,7 +1520,7 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     const monthStart = new Date(now);
     monthStart.setDate(now.getDate() - 30);
 
-    const [eventsRes, profilesTotal, profilesDay, profilesWeek, profilesPreviousWeek, profilesMonth] = await Promise.all([
+    const [eventsRes, profilesTotal, profilesDay, profilesWeek, profilesPreviousWeek, profilesMonth, simulatorAttemptsMonthlyRes] = await Promise.all([
       admin
         .from('analytics_events')
         .select('event_name, user_id, session_key, path, device_type, metadata, created_at')
@@ -1407,10 +1536,19 @@ export async function obtenerEstadisticasAdmin(): Promise<{
         .gte('creado_at', previousWeekStart.toISOString())
         .lt('creado_at', weekStart.toISOString()),
       admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', monthStart.toISOString()),
+      admin
+        .from('simulator_attempts')
+        .select('id, materia_id, parcial, total_questions, correct_answers, answered_questions, created_at')
+        .gte('created_at', monthStart.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(20000),
     ]);
 
     if (eventsRes.error) {
       throw eventsRes.error;
+    }
+    if (simulatorAttemptsMonthlyRes.error) {
+      console.error('Error cargando intentos mensuales de simulador:', simulatorAttemptsMonthlyRes.error);
     }
 
     const events = eventsRes.data ?? [];
@@ -1424,6 +1562,8 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     const topMateriaViews = new Map<string, number>();
     const loginSources = new Map<string, number>();
     const errorsByPath = new Map<string, number>();
+    const nextAfterAbandon = new Map<string, number>();
+    const nextAfterFinish = new Map<string, number>();
     const deviceCounters = { desktop: 0, mobile: 0, tablet: 0 };
     const dailyUsageMap = new Map<string, { sesiones: Set<string>; usuarios: Set<string> }>();
     const activeUsers30d = new Set<string>();
@@ -1439,6 +1579,22 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     let previousWeekEngagementMs = 0;
     const currentWeekSessions = new Set<string>();
     const previousWeekSessions = new Set<string>();
+    const simulatorStarts = new Set<string>();
+    let simulatorFinishes = 0;
+    let simulatorAbandons = 0;
+    let totalAbandonQuestion = 0;
+    let totalAbandonAnswered = 0;
+    let totalAbandonProgressPct = 0;
+    const abandonmentBuckets = new Map<string, number>([
+      ['0-25%', 0],
+      ['26-50%', 0],
+      ['51-75%', 0],
+      ['76-100%', 0],
+    ]);
+    const eventsAscending = [...events].sort(
+      (a, b) =>
+        new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime()
+    );
 
     for (const event of events) {
       const createdAt = event.created_at ?? '';
@@ -1521,17 +1677,99 @@ export async function obtenerEstadisticasAdmin(): Promise<{
         }
       }
 
+      if (event.event_name === 'simulator_started') {
+        simulatorStarts.add(`${sessionKey}:${path}`);
+      }
+
+      if (event.event_name === 'simulator_finished') {
+        simulatorFinishes += 1;
+      }
+
+      if (event.event_name === 'simulator_abandoned') {
+        simulatorAbandons += 1;
+        const metadata =
+          typeof event.metadata === 'object' && event.metadata
+            ? (event.metadata as Record<string, unknown>)
+            : {};
+        const questionIndex = Number(metadata.question_index ?? 0);
+        const answeredCount = Number(metadata.answered_count ?? 0);
+        const progressPct = Number(metadata.progress_pct ?? 0);
+
+        totalAbandonQuestion += Number.isFinite(questionIndex) ? questionIndex : 0;
+        totalAbandonAnswered += Number.isFinite(answeredCount) ? answeredCount : 0;
+        totalAbandonProgressPct += Number.isFinite(progressPct) ? progressPct : 0;
+
+        const safeProgress = Number.isFinite(progressPct) ? progressPct : 0;
+        const bucketLabel =
+          safeProgress <= 25 ? '0-25%' : safeProgress <= 50 ? '26-50%' : safeProgress <= 75 ? '51-75%' : '76-100%';
+        abandonmentBuckets.set(bucketLabel, (abandonmentBuckets.get(bucketLabel) ?? 0) + 1);
+      }
+
       sessions.set(sessionKey, stageSet);
     }
 
+    const sessionTimeline = new Map<
+      string,
+      Array<{ event_name: string; path: string | null; created_at: string | null }>
+    >();
+    for (const event of eventsAscending) {
+      const sessionKey = event.session_key ?? 'unknown';
+      const timeline = sessionTimeline.get(sessionKey) ?? [];
+      timeline.push({
+        event_name: event.event_name,
+        path: event.path ?? null,
+        created_at: event.created_at ?? null,
+      });
+      sessionTimeline.set(sessionKey, timeline);
+    }
+
+    for (const [, timeline] of sessionTimeline) {
+      for (let index = 0; index < timeline.length; index += 1) {
+        const item = timeline[index];
+        if (item.event_name !== 'simulator_abandoned' && item.event_name !== 'simulator_finished') continue;
+
+        const nextPageView = timeline
+          .slice(index + 1)
+          .find((entry) => entry.event_name === 'page_view' && entry.path && !entry.path.startsWith('/simulador'));
+        if (!nextPageView?.path) continue;
+
+        const targetMap = item.event_name === 'simulator_abandoned' ? nextAfterAbandon : nextAfterFinish;
+        targetMap.set(nextPageView.path, (targetMap.get(nextPageView.path) ?? 0) + 1);
+      }
+    }
+
     const materiaNameById = new Map<string, string>();
+    const careerNameById = new Map<string, string>();
+    const matterCareerCountMap = new Map<string, number>();
+    const matterCareerIdsMap = new Map<string, Set<string>>();
+    const resourceCoverageMap = new Map<
+      string,
+      { total_resources: number; resumen_count: number; preguntero_count: number; trabajo_practico_count: number }
+    >();
+    let allMateriasCatalogRows: Array<{ id: string; nombre: string; carrera_id: string | null }> = [];
     let sharedMateriasByCareers: AdminAnalyticsStats['shared_materias_by_careers'] = [];
+    const simulatorAttemptsRows = simulatorAttemptsMonthlyRes.data ?? [];
+    const questionInventoryMap = new Map<string, { parcial_1_questions: number; parcial_2_questions: number }>();
+    const avgGradeByMateriaParcialMap = new Map<
+      string,
+      {
+        materia_id: string;
+        parcial: number;
+        grade_sum: number;
+        attempts: number;
+        correct_sum: number;
+        wrong_sum: number;
+        answered_sum: number;
+      }
+    >();
 
     try {
-      const topMateriaIds = Array.from(topMateriaViews.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([materiaId]) => materiaId);
+      const topMateriaIds = Array.from(
+        new Set([
+          ...Array.from(topMateriaViews.keys()),
+          ...simulatorAttemptsRows.map((row) => row.materia_id).filter(Boolean),
+        ])
+      );
       const { data: materiasRows, error: materiasError } = topMateriaIds.length
         ? await admin.from('materias').select('id, nombre').in('id', topMateriaIds)
         : { data: [], error: null };
@@ -1548,7 +1786,12 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     }
 
     try {
-      const [{ data: carreraMateriasRows, error: carreraMateriasError }, { data: materiasCatalogRows, error: materiasCatalogError }] =
+      const [
+        { data: carreraMateriasRows, error: carreraMateriasError },
+        { data: materiasCatalogRows, error: materiasCatalogError },
+        { data: carrerasCatalogRows, error: carrerasCatalogError },
+        { data: recursosRows, error: recursosError },
+      ] =
         await Promise.all([
           admin
             .from('carrera_materias')
@@ -1556,15 +1799,26 @@ export async function obtenerEstadisticasAdmin(): Promise<{
             .not('materia_id', 'is', null)
             .not('carrera_id', 'is', null),
           admin.from('materias').select('id, nombre, carrera_id'),
+          admin.from('carreras').select('id, nombre'),
+          admin.from('recursos').select('materia_id, tipo').not('materia_id', 'is', null),
         ]);
 
       if (carreraMateriasError) {
         console.error('Error cargando shared_materias_by_careers:', carreraMateriasError);
       } else if (materiasCatalogError) {
         console.error('Error cargando catálogo de materias para shared_materias_by_careers:', materiasCatalogError);
+      } else if (carrerasCatalogError) {
+        console.error('Error cargando catálogo de carreras para cobertura de biblioteca:', carrerasCatalogError);
+      } else if (recursosError) {
+        console.error('Error cargando recursos para cobertura por materia:', recursosError);
       } else {
+        allMateriasCatalogRows = materiasCatalogRows ?? [];
         const sharedCareerMap = new Map<string, Set<string>>();
         const sharedMateriaNameById = new Map<string, string>();
+
+        for (const carrera of carrerasCatalogRows ?? []) {
+          careerNameById.set(carrera.id, carrera.nombre);
+        }
 
         for (const materia of materiasCatalogRows ?? []) {
           sharedMateriaNameById.set(materia.id, materia.nombre);
@@ -1595,9 +1849,81 @@ export async function obtenerEstadisticasAdmin(): Promise<{
             if (b.career_count !== a.career_count) return b.career_count - a.career_count;
             return a.name.localeCompare(b.name, 'es');
           });
+
+        for (const [materiaId, carreras] of sharedCareerMap.entries()) {
+          matterCareerCountMap.set(materiaId, carreras.size);
+          matterCareerIdsMap.set(materiaId, carreras);
+        }
+
+        for (const row of (recursosRows ?? []) as Array<{ materia_id: string | null; tipo: string | null }>) {
+          if (!row.materia_id) continue;
+          const current = resourceCoverageMap.get(row.materia_id) ?? {
+            total_resources: 0,
+            resumen_count: 0,
+            preguntero_count: 0,
+            trabajo_practico_count: 0,
+          };
+          current.total_resources += 1;
+          if (row.tipo === 'Resumen') current.resumen_count += 1;
+          else if (row.tipo === 'Preguntero') current.preguntero_count += 1;
+          else if (row.tipo === 'Trabajo Práctico') current.trabajo_practico_count += 1;
+          resourceCoverageMap.set(row.materia_id, current);
+        }
       }
     } catch (error) {
       console.error('Error no bloqueante armando shared_materias_by_careers:', error);
+    }
+
+    try {
+      const { data: inventoryRows, error: inventoryError } = await admin
+        .from('preguntas_banco')
+        .select('materia_id, parcial')
+        .not('materia_id', 'is', null);
+
+      if (inventoryError) {
+        console.error('Error cargando inventario de preguntas por materia:', inventoryError);
+      } else {
+        for (const row of inventoryRows ?? []) {
+          if (!row.materia_id) continue;
+          const parcial = Number(row.parcial ?? 1) === 2 ? 2 : 1;
+          const current = questionInventoryMap.get(row.materia_id) ?? {
+            parcial_1_questions: 0,
+            parcial_2_questions: 0,
+          };
+          if (parcial === 2) current.parcial_2_questions += 1;
+          else current.parcial_1_questions += 1;
+          questionInventoryMap.set(row.materia_id, current);
+        }
+      }
+    } catch (error) {
+      console.error('Error no bloqueante armando inventario de preguntas por materia:', error);
+    }
+
+    for (const attempt of simulatorAttemptsRows) {
+      if (!attempt.materia_id) continue;
+      const totalQuestions = Number(attempt.total_questions ?? 0);
+      const correctAnswers = Number(attempt.correct_answers ?? 0);
+      const answeredQuestions = Number(attempt.answered_questions ?? 0);
+      const grade = totalQuestions > 0 ? Number((((correctAnswers / totalQuestions) * 10)).toFixed(2)) : 0;
+      const wrongAnswered = Math.max(0, answeredQuestions - correctAnswers);
+
+      const parcial = Number(attempt.parcial ?? 1) === 2 ? 2 : 1;
+      const avgGradeKey = `${attempt.materia_id}:${parcial}`;
+      const gradeBucket = avgGradeByMateriaParcialMap.get(avgGradeKey) ?? {
+        materia_id: attempt.materia_id,
+        parcial,
+        grade_sum: 0,
+        attempts: 0,
+        correct_sum: 0,
+        wrong_sum: 0,
+        answered_sum: 0,
+      };
+      gradeBucket.grade_sum += grade;
+      gradeBucket.attempts += 1;
+      gradeBucket.correct_sum += correctAnswers;
+      gradeBucket.wrong_sum += wrongAnswered;
+      gradeBucket.answered_sum += answeredQuestions;
+      avgGradeByMateriaParcialMap.set(avgGradeKey, gradeBucket);
     }
 
     const sessionStages = Array.from(sessions.values());
@@ -1658,6 +1984,169 @@ export async function obtenerEstadisticasAdmin(): Promise<{
         usuarios: value.usuarios.size,
       }))
       .slice(-8);
+    const avgGradeByMateriaParcialRows = Array.from(avgGradeByMateriaParcialMap.values())
+      .map((item) => ({
+        materia_id: item.materia_id,
+        name: materiaNameById.get(item.materia_id) ?? `Materia ${item.materia_id.slice(0, 8)}`,
+        parcial: item.parcial,
+        avg_grade: item.attempts > 0 ? Number((item.grade_sum / item.attempts).toFixed(2)) : 0,
+        attempts: item.attempts,
+        avg_correct: item.attempts > 0 ? Number((item.correct_sum / item.attempts).toFixed(2)) : 0,
+        avg_wrong: item.attempts > 0 ? Number((item.wrong_sum / item.attempts).toFixed(2)) : 0,
+        avg_answered: item.attempts > 0 ? Number((item.answered_sum / item.attempts).toFixed(2)) : 0,
+      }))
+      .sort((a, b) => {
+        if (a.name !== b.name) return a.name.localeCompare(b.name, 'es');
+        return a.parcial - b.parcial;
+      });
+    const matterIdsForQuestionStats = new Set<string>([
+      ...Array.from(questionInventoryMap.keys()),
+      ...Array.from(avgGradeByMateriaParcialMap.values()).map((item) => item.materia_id),
+    ]);
+    const materiaQuestionStatsRows = Array.from(matterIdsForQuestionStats)
+      .map((materia_id) => {
+        const inventory = questionInventoryMap.get(materia_id) ?? {
+          parcial_1_questions: 0,
+          parcial_2_questions: 0,
+        };
+        const parcial1 = avgGradeByMateriaParcialMap.get(`${materia_id}:1`);
+        const parcial2 = avgGradeByMateriaParcialMap.get(`${materia_id}:2`);
+        const parcial1AnsweredAvg = parcial1?.attempts ? parcial1.answered_sum / parcial1.attempts : 0;
+        const parcial2AnsweredAvg = parcial2?.attempts ? parcial2.answered_sum / parcial2.attempts : 0;
+
+        return {
+          materia_id,
+          name: materiaNameById.get(materia_id) ?? `Materia ${materia_id.slice(0, 8)}`,
+          total_questions: inventory.parcial_1_questions + inventory.parcial_2_questions,
+          parcial_1_questions: inventory.parcial_1_questions,
+          parcial_2_questions: inventory.parcial_2_questions,
+          parcial_1_avg_grade: parcial1?.attempts ? Number((parcial1.grade_sum / parcial1.attempts).toFixed(2)) : 0,
+          parcial_2_avg_grade: parcial2?.attempts ? Number((parcial2.grade_sum / parcial2.attempts).toFixed(2)) : 0,
+          parcial_1_avg_correct: parcial1?.attempts ? Number((parcial1.correct_sum / parcial1.attempts).toFixed(2)) : 0,
+          parcial_2_avg_correct: parcial2?.attempts ? Number((parcial2.correct_sum / parcial2.attempts).toFixed(2)) : 0,
+          parcial_1_avg_wrong: parcial1?.attempts ? Number((parcial1.wrong_sum / parcial1.attempts).toFixed(2)) : 0,
+          parcial_2_avg_wrong: parcial2?.attempts ? Number((parcial2.wrong_sum / parcial2.attempts).toFixed(2)) : 0,
+          parcial_1_avg_answered: parcial1?.attempts ? Number(parcial1AnsweredAvg.toFixed(2)) : 0,
+          parcial_2_avg_answered: parcial2?.attempts ? Number(parcial2AnsweredAvg.toFixed(2)) : 0,
+          parcial_1_avg_answered_pct:
+            inventory.parcial_1_questions > 0
+              ? Number(((parcial1AnsweredAvg / inventory.parcial_1_questions) * 100).toFixed(1))
+              : 0,
+          parcial_2_avg_answered_pct:
+            inventory.parcial_2_questions > 0
+              ? Number(((parcial2AnsweredAvg / inventory.parcial_2_questions) * 100).toFixed(1))
+              : 0,
+          parcial_1_attempts: parcial1?.attempts ?? 0,
+          parcial_2_attempts: parcial2?.attempts ?? 0,
+        };
+      })
+      .sort((a, b) => {
+        if (b.total_questions !== a.total_questions) return b.total_questions - a.total_questions;
+        return a.name.localeCompare(b.name, 'es');
+      });
+    const materiaLibraryCoverageRows = allMateriasCatalogRows
+      .map((materia) => {
+        const inventory = questionInventoryMap.get(materia.id) ?? {
+          parcial_1_questions: 0,
+          parcial_2_questions: 0,
+        };
+        const resources = resourceCoverageMap.get(materia.id) ?? {
+          total_resources: 0,
+          resumen_count: 0,
+          preguntero_count: 0,
+          trabajo_practico_count: 0,
+        };
+        const parcial1 = avgGradeByMateriaParcialMap.get(`${materia.id}:1`);
+        const parcial2 = avgGradeByMateriaParcialMap.get(`${materia.id}:2`);
+        const careerCount = Math.max(matterCareerCountMap.get(materia.id) ?? 0, materia.carrera_id ? 1 : 0);
+        const views = topMateriaViews.get(materia.id) ?? 0;
+        const simulatorAttemptsTotal = (parcial1?.attempts ?? 0) + (parcial2?.attempts ?? 0);
+        const missing: string[] = [];
+
+        if (resources.total_resources === 0) missing.push('Sin recursos');
+        if (resources.resumen_count === 0) missing.push('Sin resumen');
+        if (inventory.parcial_1_questions === 0) missing.push('Sin Parcial 1');
+        if (inventory.parcial_2_questions === 0) missing.push('Sin Parcial 2');
+
+        const coverageScore = Math.min(
+          100,
+          (resources.total_resources > 0 ? 25 : 0) +
+            (resources.resumen_count > 0 ? 15 : 0) +
+            (resources.preguntero_count > 0 || inventory.parcial_1_questions + inventory.parcial_2_questions > 0 ? 10 : 0) +
+            (inventory.parcial_1_questions > 0 ? 25 : 0) +
+            (inventory.parcial_2_questions > 0 ? 25 : 0)
+        );
+
+        const status: 'Sin contenido' | 'Crítica' | 'Falta contenido' | 'Completa' =
+          coverageScore === 0
+            ? 'Sin contenido'
+            : coverageScore < 50
+              ? 'Crítica'
+              : coverageScore < 85
+                ? 'Falta contenido'
+                : 'Completa';
+
+        const priorityScore = Number(
+          (
+            (100 - coverageScore) * 0.55 +
+            Math.min(careerCount * 8, 24) +
+            Math.min(views * 2, 20) +
+            (inventory.parcial_1_questions + inventory.parcial_2_questions === 0 ? 8 : 0)
+          ).toFixed(1)
+        );
+
+        return {
+          materia_id: materia.id,
+          name: materia.nombre,
+          career_count: careerCount,
+          total_resources: resources.total_resources,
+          resumen_count: resources.resumen_count,
+          preguntero_count: resources.preguntero_count,
+          trabajo_practico_count: resources.trabajo_practico_count,
+          total_questions: inventory.parcial_1_questions + inventory.parcial_2_questions,
+          parcial_1_questions: inventory.parcial_1_questions,
+          parcial_2_questions: inventory.parcial_2_questions,
+          simulator_attempts_total: simulatorAttemptsTotal,
+          views,
+          coverage_score: coverageScore,
+          priority_score: priorityScore,
+          status,
+          missing,
+        };
+      })
+      .sort((a, b) => {
+        if (b.priority_score !== a.priority_score) return b.priority_score - a.priority_score;
+        if (a.coverage_score !== b.coverage_score) return a.coverage_score - b.coverage_score;
+        return a.name.localeCompare(b.name, 'es');
+      });
+
+    const careerLibraryCoverageRows = Array.from(careerNameById.entries())
+      .map(([carrera_id, name]) => {
+        const rows = materiaLibraryCoverageRows.filter((row) =>
+          (matterCareerIdsMap.get(row.materia_id) ?? new Set<string>()).has(carrera_id)
+        );
+        const materiaCount = rows.length;
+        const avgCoverageScore =
+          materiaCount > 0 ? Number((rows.reduce((acc, row) => acc + row.coverage_score, 0) / materiaCount).toFixed(1)) : 0;
+        const completeCount = rows.filter((row) => row.status === 'Completa').length;
+        const criticalCount = rows.filter((row) => row.status === 'Crítica' || row.status === 'Sin contenido').length;
+        const incompleteCount = rows.filter((row) => row.status === 'Falta contenido').length;
+
+        return {
+          carrera_id,
+          name,
+          materia_count: materiaCount,
+          avg_coverage_score: avgCoverageScore,
+          complete_count: completeCount,
+          incomplete_count: incompleteCount,
+          critical_count: criticalCount,
+        };
+      })
+      .filter((row) => row.materia_count > 0)
+      .sort((a, b) => {
+        if (a.avg_coverage_score !== b.avg_coverage_score) return a.avg_coverage_score - b.avg_coverage_score;
+        return b.critical_count - a.critical_count;
+      });
     const retentionSeries = [
       { day: 'Dia 1', value: activeUsers30d.size > 0 ? Math.round((activeUsersByWindow.get('Dia 1')?.size ?? 0) / activeUsers30d.size * 100) : 0 },
       { day: 'Dia 7', value: activeUsers30d.size > 0 ? Math.round((activeUsersByWindow.get('Dia 7')?.size ?? 0) / activeUsers30d.size * 100) : 0 },
@@ -1680,6 +2169,20 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     } catch (error) {
       console.error('Error no bloqueante cargando métricas de actividad:', error);
     }
+
+    const simulatorStartsTotal = simulatorStarts.size;
+    const completionRatePct =
+      simulatorStartsTotal > 0 ? Number(((simulatorFinishes / simulatorStartsTotal) * 100).toFixed(1)) : 0;
+    const abandonmentRatePct =
+      simulatorStartsTotal > 0 ? Number(((simulatorAbandons / simulatorStartsTotal) * 100).toFixed(1)) : 0;
+    const nextAfterAbandonRows = Array.from(nextAfterAbandon.entries())
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+    const nextAfterFinishRows = Array.from(nextAfterFinish.entries())
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
 
     return {
       success: true,
@@ -1715,6 +2218,21 @@ export async function obtenerEstadisticasAdmin(): Promise<{
           simulator_attempts_total: simulatorAttemptsTotal,
           answers_total: answersTotal,
         },
+        simulator: {
+          starts_total: simulatorStartsTotal,
+          finishes_total: simulatorFinishes,
+          abandons_total: simulatorAbandons,
+          completion_rate_pct: completionRatePct,
+          abandonment_rate_pct: abandonmentRatePct,
+          avg_abandon_question: simulatorAbandons > 0 ? Number((totalAbandonQuestion / simulatorAbandons).toFixed(1)) : 0,
+          avg_abandon_answered: simulatorAbandons > 0 ? Number((totalAbandonAnswered / simulatorAbandons).toFixed(1)) : 0,
+          avg_abandon_progress_pct: simulatorAbandons > 0 ? Number((totalAbandonProgressPct / simulatorAbandons).toFixed(1)) : 0,
+          abandonment_buckets: Array.from(abandonmentBuckets.entries()).map(([label, value]) => ({ label, value })),
+          next_after_abandon: nextAfterAbandonRows,
+          next_after_finish: nextAfterFinishRows,
+        },
+        materia_question_stats: materiaQuestionStatsRows,
+        avg_grade_by_materia_parcial: avgGradeByMateriaParcialRows,
         daily_usage: sortedDailyUsage,
         retention_series: retentionSeries,
         top_pages: topPagesArr,
@@ -1727,6 +2245,8 @@ export async function obtenerEstadisticasAdmin(): Promise<{
           .sort((a, b) => b.views - a.views)
           .slice(0, 5),
         shared_materias_by_careers: sharedMateriasByCareers,
+        materia_library_coverage: materiaLibraryCoverageRows,
+        career_library_coverage: careerLibraryCoverageRows,
         devices: deviceCounters,
         errors: {
           total: Array.from(errorsByPath.values()).reduce((acc, val) => acc + val, 0),
@@ -2481,13 +3001,36 @@ export async function importarSimuladorPremiumDesdeArchivo(input: {
           .filter((q) => q.enunciado && q.respuesta_correcta && q.opciones.length >= 2)
           .map((q) => [normalizeQuestion(q.enunciado), q])
       ).values()
-    ).slice(0, 50);
+    );
+
+    const duplicatesInsideFile = Math.max(0, parsedQuestions.length - clean.length);
 
     if (clean.length === 0) {
       return { success: false, message: 'No se encontraron preguntas validas para el simulador premium.' };
     }
 
     const admin: AdminSupabaseClient = createAdminClient();
+    const { normalizedQuestions: existingNormalized, fingerprints: existingFingerprints } =
+      await getExistingQuestionDedupIndex(admin);
+    const questionsToInsert = clean
+      .filter((question) => {
+        const fingerprint = buildQuestionFingerprint(question);
+        if (existingFingerprints.has(fingerprint)) return false;
+        return !existingNormalized.has(normalizeQuestion(question.enunciado));
+      })
+      .slice(0, 50);
+
+    const duplicatesAgainstDatabase = Math.max(0, clean.length - questionsToInsert.length);
+
+    if (questionsToInsert.length === 0) {
+      return {
+        success: true,
+        count: 0,
+        duplicates: duplicatesInsideFile + duplicatesAgainstDatabase,
+        message: 'No se encontraron preguntas nuevas para este simulador premium. Todas ya existían o estaban duplicadas.',
+      };
+    }
+
     const { data: setRow, error: setError } = await admin
       .from('premium_question_sets')
       .insert({
@@ -2504,7 +3047,7 @@ export async function importarSimuladorPremiumDesdeArchivo(input: {
     const setId = (setRow as { id?: string } | null)?.id;
     if (setError || !setId) throw setError ?? new Error('No se pudo crear el set premium.');
 
-    const rows = clean.map((q, index) => ({
+    const rows = questionsToInsert.map((q, index) => ({
       set_id: setId,
       enunciado: q.enunciado,
       opciones: q.opciones,
@@ -2519,7 +3062,8 @@ export async function importarSimuladorPremiumDesdeArchivo(input: {
     return {
       success: true,
       count: rows.length,
-      message: `Simulador premium importado con ${rows.length} preguntas.`,
+      duplicates: duplicatesInsideFile + duplicatesAgainstDatabase,
+      message: `Simulador premium importado con ${rows.length} preguntas. Omitimos ${duplicatesInsideFile + duplicatesAgainstDatabase} duplicadas.`,
     };
   } catch (error) {
     return {

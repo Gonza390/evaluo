@@ -1,7 +1,17 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { Clock3, Sparkles } from 'lucide-react';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 export default function PricingPage() {
+  useEffect(() => {
+    trackMarketingEvent('pricing_view', {
+      location: 'pricing_page',
+    });
+  }, []);
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(79,93,255,0.12),transparent_24%),linear-gradient(180deg,#f8fbff_0%,#ffffff_48%,#f6f8fc_100%)] px-4 py-10 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-4xl">
@@ -15,8 +25,8 @@ export default function PricingPage() {
               Estamos trabajando para ofrecer una experiencia premium realmente fuerte.
             </h1>
             <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-              Preferimos abrir estas funciones cuando esten a la altura de la plataforma. Muy pronto
-              vas a tener simuladores premium, explicaciones avanzadas y seguimiento mas fino.
+              Preferimos abrir estas funciones cuando estén a la altura de la plataforma. Muy pronto
+              vas a tener simuladores premium, explicaciones avanzadas y seguimiento más fino.
             </p>
           </div>
 
@@ -27,7 +37,7 @@ export default function PricingPage() {
               </div>
               <h2 className="mt-4 text-base font-bold text-slate-900">Simuladores premium</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Sets mas curados, mas largos y mejor adaptados al examen real.
+                Sets más curados, más largos y mejor adaptados al examen real.
               </p>
             </section>
             <section className="surface-card rounded-[var(--radius-card)] bg-white/94 p-5 shadow-none">
@@ -36,7 +46,7 @@ export default function PricingPage() {
               </div>
               <h2 className="mt-4 text-base font-bold text-slate-900">Explicaciones avanzadas</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Mas contexto, mas correccion y mejores recomendaciones para subir tu nota.
+                Más contexto, más corrección y mejores recomendaciones para subir tu nota.
               </p>
             </section>
             <section className="surface-card rounded-[var(--radius-card)] bg-white/94 p-5 shadow-none">
@@ -45,7 +55,7 @@ export default function PricingPage() {
               </div>
               <h2 className="mt-4 text-base font-bold text-slate-900">Seguimiento inteligente</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                Un progreso mucho mas claro para saber que reforzar antes de rendir.
+                Un progreso mucho más claro para saber qué reforzar antes de rendir.
               </p>
             </section>
           </div>
@@ -53,12 +63,26 @@ export default function PricingPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/dashboard"
+              onClick={() =>
+                trackMarketingEvent('pricing_cta_click', {
+                  location: 'pricing_page',
+                  cta_name: 'volver_dashboard',
+                  destination: '/dashboard',
+                })
+              }
               className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Volver al dashboard
             </Link>
             <Link
               href="/explorar"
+              onClick={() =>
+                trackMarketingEvent('pricing_cta_click', {
+                  location: 'pricing_page',
+                  cta_name: 'seguir_explorando',
+                  destination: '/explorar',
+                })
+              }
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Seguir explorando

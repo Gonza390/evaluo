@@ -1,4 +1,4 @@
-export interface Resumen {
+﻿export interface Resumen {
   id: string;
   title: string;
   author_name: string | null;
@@ -171,3 +171,4 @@ export function getResumenesErrorMessage() {
 export function getRecursosErrorMessage() {
   return 'No pudimos cargar los pregunteros por ahora. Intentá nuevamente en unos segundos.';
 }
+

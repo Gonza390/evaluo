@@ -27,19 +27,30 @@ export async function proxy(request: NextRequest) {
   const supabase = createClient(request, response);
   const pathname = request.nextUrl.pathname;
 
+  const isRegularSimulatorRoute =
+    pathname === '/simulador' || /^\/simulador\/[^/]+\/\d+$/.test(pathname);
+  const isProtectedSimulatorRoute =
+    pathname.startsWith('/simulador/premium') ||
+    pathname.startsWith('/simulador/errores') ||
+    pathname.startsWith('/simulador/ultimo-intento');
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const isProtectedRoute =
     pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/simulador') ||
+    isProtectedSimulatorRoute ||
     pathname.startsWith('/admin');
 
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (isRegularSimulatorRoute && !user) {
+    return response;
   }
 
   if (pathname.startsWith('/login') && user) {

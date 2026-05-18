@@ -92,6 +92,48 @@ export async function getPreguntasSimulador(
   }
 }
 
+export async function getPreguntasSimuladorDemo(
+  materiaId: string,
+  parcial: number,
+  universidadId?: string,
+  carreraId?: string
+): Promise<Pregunta[]> {
+  try {
+    const admin = createAdminClient();
+
+    let query = admin
+      .from('preguntas_banco')
+      .select('*')
+      .eq('materia_id', materiaId)
+      .eq('parcial', parcial);
+
+    if (universidadId) {
+      query = query.eq('universidad_id', universidadId);
+    }
+
+    if (carreraId) {
+      query = query.eq('carrera_id', carreraId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching preguntas demo:', error);
+      throw new Error('No se pudieron obtener las preguntas de muestra.');
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    const shuffled = [...data].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 30) as Pregunta[];
+  } catch (error) {
+    console.error('Error in getPreguntasSimuladorDemo:', error);
+    return [];
+  }
+}
+
 export async function getPreguntasSimuladorErrores(materiaId: string): Promise<Pregunta[]> {
   try {
     const supabase = await createClientServer();
