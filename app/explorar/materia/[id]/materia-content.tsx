@@ -225,7 +225,7 @@ export default function MateriaContent({
 
     if (!authUser) {
       toast({
-        title: 'Inicia sesion para guardar favoritos',
+        title: 'Inicia sesión para guardar favoritos',
         description: 'Te llevamos al login para guardar esta materia.',
         duration: 2500,
       });
@@ -803,7 +803,7 @@ export default function MateriaContent({
     if (sessionError) {
       toast({
         variant: 'destructive',
-        title: 'No pudimos validar tu sesion',
+        title: 'No pudimos validar tu sesión',
         description: 'Intenta nuevamente en unos segundos.',
         duration: 3000,
       });
@@ -813,7 +813,7 @@ export default function MateriaContent({
     if (!sessionData.session) {
       toast({
         variant: 'destructive',
-        title: 'Debes iniciar sesion para descargar este material',
+        title: 'Debes iniciar sesión para descargar este material',
         description: 'Te redirigimos para continuar.',
         duration: 2800,
       });
@@ -1219,7 +1219,7 @@ export default function MateriaContent({
                           <h3 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{simulador.titulo}</h3>
                           <p className="mt-3 text-sm leading-6 text-slate-600">
                             {simulador.premium
-                              ? 'Basado en ultimos examenes validados. Acceso exclusivo para usuarios premium.'
+                              ? 'Basado en últimos exámenes validados. Acceso exclusivo para usuarios premium.'
                               : '30 preguntas al azar de la materia actual para entrenar examen real.'}
                           </p>
                           {simulador.premium ? (

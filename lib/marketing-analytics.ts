@@ -1,5 +1,7 @@
 'use client';
 
+import { getAttributionSnapshot } from '@/lib/attribution';
+
 type MarketingPayload = Record<string, string | number | boolean | null | undefined>;
 
 declare global {
@@ -11,10 +13,12 @@ declare global {
 export function trackMarketingEvent(event: string, payload: MarketingPayload = {}) {
   if (typeof window === 'undefined') return;
 
+  const attribution = getAttributionSnapshot();
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({
     event,
     app_name: 'Evaluo',
+    ...attribution,
     ...payload,
   });
 }

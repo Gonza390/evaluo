@@ -20,6 +20,7 @@ import {
   Users,
   DollarSign,
   ChevronDown,
+  Sparkles,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -229,7 +230,7 @@ export default function AdminPanel() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'materiales' | 'operaciones' | 'config' | 'estadisticas' | 'ia' | 'usuarios' | 'monetizacion'
+    'dashboard' | 'materiales' | 'operaciones' | 'config' | 'estadisticas' | 'marketing' | 'ia' | 'usuarios' | 'monetizacion'
   >('dashboard');
   const [stats, setStats] = useState<AdminAnalyticsStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
@@ -1304,6 +1305,14 @@ export default function AdminPanel() {
         idleClass: 'text-slate-600 hover:bg-violet-50 hover:text-violet-700',
       },
       {
+        key: 'marketing' as const,
+        label: 'Marketing',
+        description: 'Campañas y atribución',
+        icon: Sparkles,
+        activeClass: 'bg-[linear-gradient(135deg,#0f172a_0%,#0f766e_45%,#14b8a6_100%)] text-white shadow-[0_16px_34px_rgba(20,184,166,0.24)]',
+        idleClass: 'text-slate-600 hover:bg-teal-50 hover:text-teal-700',
+      },
+      {
         key: 'ia' as const,
         label: 'IA',
         description: 'Banco y feedback',
@@ -1677,7 +1686,13 @@ export default function AdminPanel() {
                 <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_100%)] px-5 py-5 text-white shadow-[0_24px_40px_rgba(29,78,216,0.18)]">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-100/80">Usuarios activos</p>
                   <p className="mt-3 text-3xl font-black tracking-[-0.06em]">{stats?.dau?.toLocaleString('es-AR') ?? adminUsers.length.toLocaleString('es-AR')}</p>
-                  <p className="mt-2 text-xs text-white/72">Base activa que está usando la plataforma hoy.</p>
+                  <p className="mt-2 text-xs text-white/72">
+                    {`Usuarios registrados con actividad hoy. ${
+                      (stats?.anonymous_today ?? 0) > 0
+                        ? `${stats?.anonymous_today?.toLocaleString('es-AR')} visitas anónimas aparte.`
+                        : ''
+                    }`}
+                  </p>
                 </div>
                 <div className="rounded-[1.5rem] border border-slate-200/80 bg-white px-5 py-5 shadow-[var(--shadow-soft)]">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Biblioteca total</p>
@@ -3541,6 +3556,209 @@ export default function AdminPanel() {
             </div>
           )}
 
+          {activeTab === 'marketing' && (
+            <div className="relative overflow-hidden px-2 py-4 text-white sm:px-4">
+              <div className="pointer-events-none absolute inset-0 opacity-90">
+                <div className="absolute -left-16 top-10 h-56 w-56 rounded-full bg-cyan-400/12 blur-3xl" />
+                <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-teal-400/10 blur-3xl" />
+                <div className="absolute bottom-12 left-1/3 h-64 w-64 rounded-full bg-fuchsia-500/10 blur-3xl" />
+                <div className="absolute inset-x-0 top-24 h-px bg-gradient-to-r from-transparent via-cyan-300/35 to-transparent" />
+              </div>
+
+              <div className="relative">
+                <div className="grid gap-10 xl:grid-cols-[1.1fr_0.9fr] xl:items-end">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-cyan-300/80">
+                      Marketing intelligence
+                    </p>
+                    <h3 className="mt-4 max-w-4xl text-[2.5rem] font-black leading-[0.95] tracking-[-0.08em] text-slate-950 sm:text-[3.6rem]">
+                      Campañas, activación y
+                      <span className="bg-[linear-gradient(90deg,#0f172a_0%,#0891b2_35%,#14b8a6_68%,#7c3aed_100%)] bg-clip-text text-transparent">
+                        {' '}crecimiento viral
+                      </span>
+                    </h3>
+                    <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">
+                      Un workspace libre para leer performance real: qué campaña trae usuarios que
+                      se registran, cuáles activan el simulador y cuántos nuevos alumnos llegan por compartidos.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-6 sm:grid-cols-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Campañas</p>
+                      <p className="mt-2 text-4xl font-black tracking-[-0.07em] text-slate-950">
+                        {(stats?.campaigns.length ?? 0).toLocaleString('es-AR')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Usuarios atribuidos</p>
+                      <p className="mt-2 text-4xl font-black tracking-[-0.07em] text-slate-950">
+                        {(stats?.campaigns.reduce((acc, item) => acc + item.attributed_users, 0) ?? 0).toLocaleString('es-AR')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">Referidos</p>
+                      <p className="mt-2 text-4xl font-black tracking-[-0.07em] text-slate-950">
+                        {(stats?.campaigns.reduce((acc, item) => acc + item.referred_users, 0) ?? 0).toLocaleString('es-AR')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
+
+                {!stats ? (
+                  <div className="py-12 text-sm text-slate-500">
+                    {loadingStats
+                      ? 'Estamos preparando las métricas de marketing...'
+                      : 'Todavía no hay campañas atribuidas para mostrar.'}
+                  </div>
+                ) : (
+                  <div className="mt-10 grid gap-12 xl:grid-cols-[1.2fr_0.8fr]">
+                    <section>
+                      <div className="mb-6 flex items-end justify-between gap-4">
+                        <div>
+                          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                            Leaderboard
+                          </p>
+                          <h4 className="mt-2 text-2xl font-black tracking-[-0.06em] text-slate-950">
+                            Las campañas que mejor convierten
+                          </h4>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          Ordenado por usuarios atribuidos y finalizaciones reales.
+                        </p>
+                      </div>
+
+                      {stats.campaigns.length === 0 ? (
+                        <p className="text-sm text-slate-500">
+                          Cuando entren usuarios con UTMs, acá vas a ver qué campaña trae registros reales
+                          y cuáles activan el simulador.
+                        </p>
+                      ) : (
+                        <div className="space-y-7">
+                          {stats.campaigns.slice(0, 6).map((campaign, index) => (
+                            <div key={`${campaign.source}-${campaign.medium}-${campaign.campaign}`} className="grid gap-4 border-b border-slate-200/70 pb-7 last:border-b-0">
+                              <div className="grid gap-4 lg:grid-cols-[80px_minmax(0,1fr)_minmax(260px,360px)] lg:items-end">
+                                <div>
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-cyan-600">
+                                    Top {index + 1}
+                                  </p>
+                                  <p className="mt-2 text-3xl font-black tracking-[-0.06em] text-slate-950">
+                                    {campaign.completion_rate_pct}%
+                                  </p>
+                                </div>
+
+                                <div className="min-w-0">
+                                  <p className="truncate text-xl font-bold tracking-[-0.04em] text-slate-950">
+                                    {campaign.campaign}
+                                  </p>
+                                  <p className="mt-1 text-sm text-slate-500">
+                                    {campaign.source} / {campaign.medium} · landing {campaign.landing_path}
+                                  </p>
+                                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+                                    <div
+                                      className="h-full rounded-full bg-[linear-gradient(90deg,#06b6d4_0%,#14b8a6_55%,#7c3aed_100%)]"
+                                      style={{ width: `${Math.min(100, campaign.completion_rate_pct)}%` }}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Usuarios</p>
+                                    <p className="mt-1 font-semibold text-slate-950">{campaign.attributed_users}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Inician</p>
+                                    <p className="mt-1 font-semibold text-slate-950">{campaign.simulator_starts}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Terminan</p>
+                                    <p className="mt-1 font-semibold text-slate-950">{campaign.simulator_finishes}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Referidos</p>
+                                    <p className="mt-1 font-semibold text-slate-950">{campaign.referred_users}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-500">
+                                <span>
+                                  Promedio de simuladores terminados por usuario:{' '}
+                                  <span className="font-semibold text-slate-950">{campaign.avg_finishes_per_user}</span>
+                                </span>
+                                <span>
+                                  Compartidos hechos desde resultados:{' '}
+                                  <span className="font-semibold text-slate-950">{campaign.shares_total}</span>
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+
+                    <aside className="space-y-12">
+                      <section>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                          Embudo de activación
+                        </p>
+                        <h4 className="mt-2 text-2xl font-black tracking-[-0.06em] text-slate-950">
+                          Qué campañas realmente activan el producto
+                        </h4>
+                        <div className="mt-6 space-y-5">
+                          {stats.campaigns.slice(0, 4).map((campaign) => (
+                            <div key={`funnel-${campaign.source}-${campaign.medium}-${campaign.campaign}`}>
+                              <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+                                <span className="truncate font-medium text-slate-700">{campaign.campaign}</span>
+                                <span className="font-bold text-slate-950">{campaign.completion_rate_pct}%</span>
+                              </div>
+                              <div className="h-2 overflow-hidden rounded-full bg-slate-200">
+                                <div
+                                  className="h-full rounded-full bg-[linear-gradient(90deg,#0f172a_0%,#0891b2_50%,#14b8a6_100%)]"
+                                  style={{ width: `${Math.min(100, campaign.completion_rate_pct)}%` }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                          Efecto viral
+                        </p>
+                        <h4 className="mt-2 text-2xl font-black tracking-[-0.06em] text-slate-950">
+                          Qué parte del crecimiento viene de compartidos
+                        </h4>
+                        <div className="mt-6 grid grid-cols-2 gap-6">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Referidos</p>
+                            <p className="mt-2 text-4xl font-black tracking-[-0.07em] text-slate-950">
+                              {stats.campaigns.reduce((acc, item) => acc + item.referred_users, 0).toLocaleString('es-AR')}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Compartidos</p>
+                            <p className="mt-2 text-4xl font-black tracking-[-0.07em] text-slate-950">
+                              {stats.campaigns.reduce((acc, item) => acc + item.shares_total, 0).toLocaleString('es-AR')}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-5 text-sm leading-7 text-slate-600">
+                          Medimos nuevos usuarios que llegaron desde resultados compartidos y cuántos
+                          compartidos reales generó cada campaña, sin depender de la plataforma de mailing.
+                        </p>
+                      </section>
+                    </aside>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'ia' && (
             <div className="space-y-5">
               <div>
@@ -3592,7 +3810,7 @@ export default function AdminPanel() {
                       </div>
                       <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Explicacion guardada</p>
-                        <p className="mt-1 text-sm text-slate-700">{row.explicacion ?? 'Esta pregunta todavia no tiene explicacion cacheada.'}</p>
+                        <p className="mt-1 text-sm text-slate-700">{row.explicacion ?? 'Esta pregunta todavía no tiene explicación cacheada.'}</p>
                       </div>
                     </div>
                   ))}
@@ -3615,7 +3833,7 @@ export default function AdminPanel() {
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <p className="text-sm text-slate-500">Sin feedback todavia.</p>
+                      <p className="text-sm text-slate-500">Sin feedback todavía.</p>
                     )}
                   </CardContent>
                 </Card>
@@ -3666,8 +3884,8 @@ export default function AdminPanel() {
                   <CardTitle className="text-sm">Revision de feedback de IA (pulgar abajo)</CardTitle>
                 </CardHeader>
                 <CardContent className="max-h-[420px] space-y-3 overflow-y-auto">
-                  {feedbackReviewRows.filter((row) => row.voto === -1).length === 0 ? (
-                    <p className="text-sm text-slate-500">Todavia no hay feedback negativo para revisar.</p>
+                    {feedbackReviewRows.filter((row) => row.voto === -1).length === 0 ? (
+                      <p className="text-sm text-slate-500">Todavía no hay feedback negativo para revisar.</p>
                   ) : (
                     feedbackReviewRows
                       .filter((row) => row.voto === -1)
@@ -3920,8 +4138,8 @@ export default function AdminPanel() {
                       ))}
                     </tbody>
                   </table>
-                  {!loadingMonetizacion && (monetizacion?.planes?.length ?? 0) === 0 ? (
-                    <p className="p-4 text-sm text-slate-500">No hay planes cargados todavia.</p>
+                    {!loadingMonetizacion && (monetizacion?.planes?.length ?? 0) === 0 ? (
+                      <p className="p-4 text-sm text-slate-500">No hay planes cargados todavía.</p>
                   ) : null}
                 </CardContent>
               </Card>

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
+import { captureAttributionFromLocation, getAttributionSnapshot } from '@/lib/attribution';
 
 function getSessionKey() {
   const key = 'evaluo_session_key';
@@ -43,6 +44,8 @@ export default function AnalyticsTracker() {
     const sessionKey = getSessionKey();
     const deviceType = getDeviceType();
     let userId: string | null = null;
+    captureAttributionFromLocation(window.location.search, window.location.pathname);
+    const attribution = getAttributionSnapshot();
 
     void supabase.auth.getUser().then(({ data }) => {
       userId = data.user?.id ?? null;
@@ -51,6 +54,7 @@ export default function AnalyticsTracker() {
         path: pathname,
         device_type: deviceType,
         user_id: userId,
+        metadata: attribution ? { attribution } : undefined,
       });
     });
   }, [pathname]);
@@ -58,6 +62,7 @@ export default function AnalyticsTracker() {
   useEffect(() => {
     const sessionKey = getSessionKey();
     const deviceType = getDeviceType();
+    const attribution = getAttributionSnapshot();
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -70,7 +75,7 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { engagement_ms: engagementMs },
+        metadata: { engagement_ms: engagementMs, attribution },
       });
     };
 
@@ -79,7 +84,12 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { message: event.message, source: event.filename, line: event.lineno },
+        metadata: {
+          message: event.message,
+          source: event.filename,
+          line: event.lineno,
+          attribution,
+        },
       });
     };
 
@@ -93,6 +103,7 @@ export default function AnalyticsTracker() {
             typeof event.reason === 'string'
               ? event.reason
               : (event.reason?.message ?? 'unhandled_rejection'),
+          attribution,
         },
       });
     };
@@ -104,7 +115,7 @@ export default function AnalyticsTracker() {
           user_id: session.user.id,
           path: pathname,
           device_type: deviceType,
-          metadata: { source_path: pathname },
+          metadata: { source_path: pathname, attribution },
         });
       }
     });
@@ -119,7 +130,7 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { engagement_ms: engagementMs },
+        metadata: { engagement_ms: engagementMs, attribution },
       });
 
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -131,4 +142,3 @@ export default function AnalyticsTracker() {
 
   return null;
 }
-

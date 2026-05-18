@@ -17,11 +17,13 @@ import {
 } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 import { ProfileCompletionModal } from '@/components/profile-completion-modal';
 import { ElegantLoader } from '@/components/ui/elegant-loader';
 import { Spinner } from '@/components/ui/spinner';
 import { useUser } from '@/hooks/useUser';
 import { trackSimulatorMarketingEvent } from '@/lib/marketing-analytics';
+import { buildShareReferralUrl, getAttributionSnapshot } from '@/lib/attribution';
 import { supabase } from '@/lib/supabase-client';
 import { cn } from '@/lib/utils';
 import {
@@ -261,6 +263,7 @@ export default function SimuladorExamen({
   demoMode = false,
 }: SimuladorExamenProps) {
   const { user, loading: userLoading, getUserName, getUserInitials } = useUser();
+  const { toast } = useToast();
   const resolvedDemoMode = demoMode && !user;
 
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
@@ -339,6 +342,7 @@ export default function SimuladorExamen({
         user_id: userId,
         path: window.location.pathname,
         metadata: {
+          attribution: getAttributionSnapshot(),
           materia_id: materiaId,
           parcial,
           mode,
@@ -1125,6 +1129,49 @@ export default function SimuladorExamen({
     const erroresPendientes = Math.max(0, respondidasFinales - aciertosFinales);
     const frontTitle = porcentaje >= 85 ? '¡Excelente trabajo!' : porcentaje >= 60 ? 'Buen trabajo' : 'Seguí, vas a poder';
     const frontMessage = `Completaste el simulacro de ${materiaNombre || `Materia ${materiaId}`} con un ${porcentaje}%`;
+    const shareSimulatorResult = async () => {
+      if (!userId || typeof window === 'undefined') return;
+
+      const shareUrl = buildShareReferralUrl(`/simulador/${materiaId}/${resolvedParcial}`, userId);
+      const shareText = `Hice mi simulador de ${materiaNombre || `Materia ${materiaId}`} en Evaluo. Probalo vos también.`;
+
+      await trackSimulatorAnalytics('simulator_result_shared', {
+        session_key: getAnalyticsSessionKey(),
+        user_id: userId,
+        path: window.location.pathname,
+        metadata: {
+          attribution: getAttributionSnapshot(),
+          materia_id: materiaId,
+          parcial: resolvedParcial,
+          result_pct: porcentaje,
+          share_url: shareUrl,
+        },
+      });
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Mi resultado en Evaluo',
+            text: shareText,
+            url: shareUrl,
+          });
+        } else {
+          await navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: 'Link copiado',
+            description: 'Ya puedes compartir tu resultado con un compañero.',
+          });
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        console.error('Error sharing simulator result:', error);
+        toast({
+          title: 'No pudimos compartir el resultado',
+          description: 'Intenta nuevamente en unos segundos.',
+          variant: 'destructive',
+        });
+      }
+    };
     const examSummaryCards: ExamSummaryCard[] = [
       {
         label: 'Ahora',
@@ -1285,6 +1332,15 @@ export default function SimuladorExamen({
                     >
                       Ver resultados
                     </Button>
+                    {userId ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => void shareSimulatorResult()}
+                        className="h-12 rounded-xl border-slate-200 px-4 text-base font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        Compartir mi resultado
+                      </Button>
+                    ) : null}
                     <Button variant="ghost" onClick={() => window.history.back()} className="h-12 rounded-xl px-4 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] hover:text-[#4C55E6]">
                       Volver a la materia
                     </Button>
@@ -1353,6 +1409,11 @@ export default function SimuladorExamen({
                         <Button variant="outline" onClick={() => setShowResultsFace(false)} className="rounded-xl px-5">
                           Volver a la tarjeta
                         </Button>
+                        {userId ? (
+                          <Button variant="outline" onClick={() => void shareSimulatorResult()} className="rounded-xl px-5">
+                            Compartir mi resultado
+                          </Button>
+                        ) : null}
                         <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-5">
                           Volver a la materia
                         </Button>
@@ -1476,10 +1537,10 @@ export default function SimuladorExamen({
                     {wrongExplanations.length > 0 ? (
                       <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
                         <p className="text-sm font-semibold text-indigo-900">
-                          Queres ver explicaciones de todas tus respuestas incorrectas?
+                          ¿Quieres ver explicaciones de todas tus respuestas incorrectas?
                         </p>
                         <p className="mt-1 text-xs text-indigo-800">
-                          Pasate a Premium y desbloquea la correccion completa de todas tus respuestas incorrectas, con recomendaciones personalizadas para subir tu nota mas rapido.
+                          Pásate a Premium y desbloquea la corrección completa de todas tus respuestas incorrectas, con recomendaciones personalizadas para subir tu nota más rápido.
                         </p>
                         <Button
                           className="mt-3 h-8 rounded-lg bg-indigo-600 px-3 text-xs font-semibold hover:bg-indigo-700"

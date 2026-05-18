@@ -99,7 +99,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
               href="/login"
               className="rounded-full border border-[#CBD5E1] px-4 py-2 text-sm font-medium text-[#475569] transition hover:border-[#4F5DFF] hover:text-[#4F5DFF]"
             >
-              Iniciar sesion
+              Iniciar sesión
             </Link>
           )}
         </div>

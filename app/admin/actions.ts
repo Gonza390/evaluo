@@ -32,6 +32,7 @@ export interface IARankingRow {
 
 export interface AdminAnalyticsStats {
   dau: number;
+  anonymous_today: number;
   users: {
     total: number;
     new_last_7d: number;
@@ -131,6 +132,19 @@ export interface AdminAnalyticsStats {
     complete_count: number;
     incomplete_count: number;
     critical_count: number;
+  }>;
+  campaigns: Array<{
+    source: string;
+    medium: string;
+    campaign: string;
+    landing_path: string;
+    attributed_users: number;
+    simulator_starts: number;
+    simulator_finishes: number;
+    avg_finishes_per_user: number;
+    completion_rate_pct: number;
+    referred_users: number;
+    shares_total: number;
   }>;
   devices: { desktop: number; mobile: number; tablet: number };
   errors: { total: number; top_paths: Array<{ path: string; count: number }> };
@@ -237,6 +251,42 @@ function normalizeAdminText(value: string) {
 }
 
 type AdminSupabaseClient = ReturnType<typeof createAdminClient>;
+
+type EventAttribution = {
+  source: string;
+  medium: string;
+  campaign: string;
+  refUserId: string | null;
+  landingPath: string | null;
+};
+
+function readMetadataObject(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function extractAttributionFromMetadata(value: unknown): EventAttribution | null {
+  const metadata = readMetadataObject(value);
+  const attribution = readMetadataObject(metadata?.attribution);
+  if (!attribution) return null;
+
+  const source = String(attribution.utm_source ?? '').trim();
+  const medium = String(attribution.utm_medium ?? '').trim();
+  const campaign = String(attribution.utm_campaign ?? '').trim();
+  const refUserId = String(attribution.ref_user ?? attribution.latest_ref_user ?? '').trim() || null;
+  const landingPath = String(attribution.landing_path ?? '').trim() || null;
+
+  if (!source && !medium && !campaign && !refUserId) return null;
+
+  return {
+    source: source || 'direct',
+    medium: medium || 'none',
+    campaign: campaign || 'sin_campana',
+    refUserId,
+    landingPath,
+  };
+}
 
 export interface GlobalQuestionRankingRow {
   pregunta_id: string;
@@ -1557,6 +1607,7 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     const previousWeekIso = previousWeekStart.toISOString();
     const monthIso = monthStart.toISOString();
     const dauSet = new Set<string>();
+    const anonymousTodaySet = new Set<string>();
     const sessions = new Map<string, Set<string>>();
     const topPages = new Map<string, number>();
     const topMateriaViews = new Map<string, number>();
@@ -1567,6 +1618,9 @@ export async function obtenerEstadisticasAdmin(): Promise<{
     const deviceCounters = { desktop: 0, mobile: 0, tablet: 0 };
     const dailyUsageMap = new Map<string, { sesiones: Set<string>; usuarios: Set<string> }>();
     const activeUsers30d = new Set<string>();
+    const sessionAttributionMap = new Map<string, EventAttribution>();
+    const userAttributionMap = new Map<string, EventAttribution>();
+    const campaignShareCounts = new Map<string, number>();
     const activeUsersByWindow = new Map<string, Set<string>>([
       ['Dia 1', new Set<string>()],
       ['Dia 7', new Set<string>()],
@@ -1601,9 +1655,21 @@ export async function obtenerEstadisticasAdmin(): Promise<{
       const sessionKey = event.session_key ?? 'unknown';
       const path = event.path ?? '/';
       const stageSet = sessions.get(sessionKey) ?? new Set<string>();
+      const eventAttribution = extractAttributionFromMetadata(event.metadata);
+
+      if (eventAttribution) {
+        sessionAttributionMap.set(sessionKey, eventAttribution);
+        if (event.user_id) {
+          userAttributionMap.set(event.user_id, eventAttribution);
+        }
+      }
 
       if (createdAt >= todayIso) {
-        dauSet.add(event.user_id ?? `session:${sessionKey}`);
+        if (event.user_id) {
+          dauSet.add(event.user_id);
+        } else {
+          anonymousTodaySet.add(`session:${sessionKey}`);
+        }
       }
 
       if (event.event_name === 'page_view') {
@@ -1654,10 +1720,24 @@ export async function obtenerEstadisticasAdmin(): Promise<{
             ? String((event.metadata as Record<string, unknown>).source_path ?? path)
             : path;
         loginSources.set(sourcePath, (loginSources.get(sourcePath) ?? 0) + 1);
+        if (event.user_id) {
+          const resolvedAttribution = eventAttribution ?? sessionAttributionMap.get(sessionKey) ?? null;
+          if (resolvedAttribution) {
+            userAttributionMap.set(event.user_id, resolvedAttribution);
+          }
+        }
       }
 
       if (event.event_name === 'client_error') {
         errorsByPath.set(path, (errorsByPath.get(path) ?? 0) + 1);
+      }
+
+      if (event.event_name === 'simulator_result_shared') {
+        const shareAttribution = eventAttribution ?? sessionAttributionMap.get(sessionKey);
+        if (shareAttribution) {
+          const campaignKey = `${shareAttribution.source}::${shareAttribution.medium}::${shareAttribution.campaign}`;
+          campaignShareCounts.set(campaignKey, (campaignShareCounts.get(campaignKey) ?? 0) + 1);
+        }
       }
 
       if (event.event_name === 'session_ping') {
@@ -2183,11 +2263,91 @@ export async function obtenerEstadisticasAdmin(): Promise<{
       .map(([path, count]) => ({ path, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
+    const campaignMetricsMap = new Map<
+      string,
+      {
+        source: string;
+        medium: string;
+        campaign: string;
+        landingPath: string;
+        users: Set<string>;
+        referredUsers: Set<string>;
+        simulatorStarts: number;
+        simulatorFinishes: number;
+        sharesTotal: number;
+      }
+    >();
+
+    const ensureCampaignMetric = (attribution: EventAttribution) => {
+      const campaignKey = `${attribution.source}::${attribution.medium}::${attribution.campaign}`;
+      const existing =
+        campaignMetricsMap.get(campaignKey) ??
+        {
+          source: attribution.source,
+          medium: attribution.medium,
+          campaign: attribution.campaign,
+          landingPath: attribution.landingPath ?? '/',
+          users: new Set<string>(),
+          referredUsers: new Set<string>(),
+          simulatorStarts: 0,
+          simulatorFinishes: 0,
+          sharesTotal: campaignShareCounts.get(campaignKey) ?? 0,
+        };
+      campaignMetricsMap.set(campaignKey, existing);
+      return existing;
+    };
+
+    for (const [userId, attribution] of userAttributionMap.entries()) {
+      const metric = ensureCampaignMetric(attribution);
+      metric.users.add(userId);
+      if (attribution.refUserId) {
+        metric.referredUsers.add(userId);
+      }
+    }
+
+    for (const event of events) {
+      const userId = event.user_id ?? null;
+      if (!userId) continue;
+      const attribution = userAttributionMap.get(userId) ?? extractAttributionFromMetadata(event.metadata);
+      if (!attribution) continue;
+
+      const metric = ensureCampaignMetric(attribution);
+      if (event.event_name === 'simulator_started') {
+        metric.simulatorStarts += 1;
+      }
+      if (event.event_name === 'simulator_finished') {
+        metric.simulatorFinishes += 1;
+      }
+    }
+
+    const campaignRows = Array.from(campaignMetricsMap.values())
+      .map((item) => ({
+        source: item.source,
+        medium: item.medium,
+        campaign: item.campaign,
+        landing_path: item.landingPath,
+        attributed_users: item.users.size,
+        simulator_starts: item.simulatorStarts,
+        simulator_finishes: item.simulatorFinishes,
+        avg_finishes_per_user:
+          item.users.size > 0 ? Number((item.simulatorFinishes / item.users.size).toFixed(2)) : 0,
+        completion_rate_pct:
+          item.simulatorStarts > 0
+            ? Number(((item.simulatorFinishes / item.simulatorStarts) * 100).toFixed(1))
+            : 0,
+        referred_users: item.referredUsers.size,
+        shares_total: item.sharesTotal,
+      }))
+      .sort((a, b) => {
+        if (b.attributed_users !== a.attributed_users) return b.attributed_users - a.attributed_users;
+        return b.simulator_finishes - a.simulator_finishes;
+      });
 
     return {
       success: true,
       stats: {
         dau: dauSet.size,
+        anonymous_today: anonymousTodaySet.size,
         users: {
           total: profilesTotal.count ?? 0,
           new_last_7d: currentWeekUsers,
@@ -2247,6 +2407,7 @@ export async function obtenerEstadisticasAdmin(): Promise<{
         shared_materias_by_careers: sharedMateriasByCareers,
         materia_library_coverage: materiaLibraryCoverageRows,
         career_library_coverage: careerLibraryCoverageRows,
+        campaigns: campaignRows,
         devices: deviceCounters,
         errors: {
           total: Array.from(errorsByPath.values()).reduce((acc, val) => acc + val, 0),

@@ -214,7 +214,7 @@ function RecursoContent() {
         if (!response.ok) {
           if (response.status === 401) {
             setViewerUrl(null);
-            setReaderError('Inicia sesion para acceder al documento completo.');
+            setReaderError('Inicia sesión para acceder al documento completo.');
             return;
           }
 

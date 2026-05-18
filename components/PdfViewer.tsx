@@ -631,7 +631,7 @@ export default function PdfViewer({
                           Accede al material completo
                         </p>
                         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
-                          Ya viste una parte del documento. Inicia sesion para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
+                          Ya viste una parte del documento. Inicia sesión para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
                         </p>
                         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
                           <Link
@@ -644,7 +644,7 @@ export default function PdfViewer({
                             href="/login"
                             className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                           >
-                            Iniciar sesion
+                            Iniciar sesión
                           </Link>
                         </div>
                       </div>

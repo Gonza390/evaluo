@@ -128,7 +128,7 @@ export function Navbar() {
               variant="outline"
               className="mt-2 h-auto w-full rounded-xl border-[#5D5FEF]/30 bg-white py-1 text-[10px] font-semibold text-[#4F5DFF] hover:bg-[#EEF2FF] hover:text-[#4F5DFF]"
             >
-              <Link href="/login">Iniciar sesion</Link>
+              <Link href="/login">Iniciar sesión</Link>
             </Button>
           ) : null}
         </div>
@@ -176,7 +176,7 @@ export function Navbar() {
               }}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Cerrar sesion
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

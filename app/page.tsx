@@ -1,5 +1,3 @@
-﻿'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -17,7 +15,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
-import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { TrackedLink } from '@/components/marketing/tracked-link';
 
 const steps = [
   {
@@ -94,7 +92,6 @@ const heroHighlights = [
   },
 ];
 
-
 export default function Home() {
   const primaryHref = '/login';
   const primaryLabel = 'Empezar gratis';
@@ -120,19 +117,18 @@ export default function Home() {
               </a>
             </nav>
 
-            <Link
+            <TrackedLink
               href={primaryHref}
-              onClick={() =>
-                trackMarketingEvent('cta_click', {
-                  location: 'home_header',
-                  cta_name: 'empezar_gratis',
-                  destination: primaryHref,
-                })
-              }
+              eventName="cta_click"
+              payload={{
+                location: 'home_header',
+                cta_name: 'empezar_gratis',
+                destination: primaryHref,
+              }}
               className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95 sm:h-12 sm:px-6"
             >
               {primaryLabel}
-            </Link>
+            </TrackedLink>
           </header>
 
           <div className="grid items-center gap-8 pt-8 sm:gap-10 sm:pt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pt-12">
@@ -153,33 +149,31 @@ export default function Home() {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
-                <Link
+                <TrackedLink
                   href={primaryHref}
-                  onClick={() =>
-                    trackMarketingEvent('cta_click', {
-                      location: 'home_hero',
-                      cta_name: 'empezar_gratis',
-                      destination: primaryHref,
-                    })
-                  }
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_hero',
+                    cta_name: 'empezar_gratis',
+                    destination: primaryHref,
+                  }}
                   className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.24)] transition hover:translate-y-[-1px] sm:h-14 sm:px-8 sm:text-base"
                 >
                   {primaryLabel}
-                </Link>
-                <Link
+                </TrackedLink>
+                <TrackedLink
                   href="/explorar"
-                  onClick={() =>
-                    trackMarketingEvent('cta_click', {
-                      location: 'home_hero',
-                      cta_name: 'buscar_universidad',
-                      destination: '/explorar',
-                    })
-                  }
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_hero',
+                    cta_name: 'buscar_universidad',
+                    destination: '/explorar',
+                  }}
                   className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-[#2563EB]/25 bg-white px-6 text-[15px] font-semibold text-[#2563EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition hover:border-[#2563EB]/45 sm:h-14 sm:px-8 sm:text-base"
                 >
                   <PlayCircle className="h-5 w-5" />
                   Buscar mi universidad
-                </Link>
+                </TrackedLink>
               </div>
 
               <div className="mt-8 grid gap-3 text-sm text-slate-500 min-[440px]:grid-cols-3 sm:mt-10">
@@ -232,7 +226,6 @@ export default function Home() {
       </section>
 
       <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-
         <section id="como-funciona" className="pb-14 pt-12 lg:pb-20 lg:pt-16">
           <div className="animate-surface-reveal overflow-hidden rounded-[34px] border border-[#E8EAFB] bg-[linear-gradient(180deg,#FFFFFF_0%,#FCFCFF_100%)] px-5 py-8 shadow-[0_24px_70px_rgba(100,116,139,0.10)] sm:px-8 sm:py-10 lg:rounded-[40px] lg:px-12 lg:py-14">
             <div className="mx-auto max-w-3xl text-center">
@@ -319,10 +312,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section
-          id="demo-educacion"
-          className="relative py-16 sm:py-20 lg:py-28"
-        >
+        <section id="demo-educacion" className="relative py-16 sm:py-20 lg:py-28">
           <div className="absolute inset-y-0 left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-gradient-to-br from-[#eef4ff] via-[#e0e7ff] to-[#c7d2fe]">
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOC0xOHptMCAzMmMtNy43MzIgMC0xNC02LjI2OC0xNC0xNHM2LjI2OC0xNCAxNC0xNCAxNCA2LjI2OCAxNCAxNC02LjI2OCAxNC0xNCAxNHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjEiLz48L2c+PC9zdmc+')] opacity-40" />
             <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl" />
@@ -376,13 +366,13 @@ export default function Home() {
                   </div>
                   <div className="space-y-3">
                     <div className="rounded-2xl rounded-tl-sm bg-slate-100 p-3 text-sm text-slate-700">
-                      No entiendo como resolver este ejercicio de fisica
+                      No entiendo como resolver este ejercicio de física
                     </div>
                     <div className="rounded-2xl rounded-tr-sm bg-gradient-to-r from-indigo-50 to-blue-50 p-4 text-sm text-slate-800 shadow-sm">
                       <p className="mb-1 font-semibold text-indigo-600">Te lo explico paso a paso:</p>
                       <ol className="space-y-1 text-xs leading-relaxed">
                         <li>1. Identificamos los datos del problema</li>
-                        <li>2. Aplicamos la formula F = m x a</li>
+                        <li>2. Aplicamos la fórmula F = m x a</li>
                         <li>3. Reemplazamos los valores</li>
                         <li>4. <strong>Resultado: F = 30N</strong></li>
                       </ol>
@@ -418,11 +408,10 @@ export default function Home() {
                       Todo listo para que empieces a estudiar mejor.
                     </h2>
                     <p className="mt-3 max-w-xl text-base leading-8 text-slate-500">
-                      {'Centraliza tus materias, encuentra materiales útiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.'}
+                      Centraliza tus materias, encuentra materiales útiles y practica con una experiencia simple, ordenada y pensada para rendir mejor.
                     </p>
                   </div>
                 </div>
-
               </div>
 
               <div className="flex flex-col gap-4 lg:items-end">
@@ -433,32 +422,30 @@ export default function Home() {
                   </p>
 
                   <div className="mt-5 flex flex-col gap-3">
-                    <Link
+                    <TrackedLink
                       href={primaryHref}
-                      onClick={() =>
-                        trackMarketingEvent('cta_click', {
-                          location: 'home_final_cta',
-                          cta_name: 'crear_cuenta_gratis',
-                          destination: primaryHref,
-                        })
-                      }
+                      eventName="cta_click"
+                      payload={{
+                        location: 'home_final_cta',
+                        cta_name: 'crear_cuenta_gratis',
+                        destination: primaryHref,
+                      }}
                       className="inline-flex h-14 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-8 text-base font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:opacity-95"
                     >
                       Crear cuenta gratis
-                    </Link>
-                    <Link
+                    </TrackedLink>
+                    <TrackedLink
                       href="/explorar"
-                      onClick={() =>
-                        trackMarketingEvent('cta_click', {
-                          location: 'home_final_cta',
-                          cta_name: 'ver_universidades',
-                          destination: '/explorar',
-                        })
-                      }
+                      eventName="cta_click"
+                      payload={{
+                        location: 'home_final_cta',
+                        cta_name: 'ver_universidades',
+                        destination: '/explorar',
+                      }}
                       className="inline-flex h-14 items-center justify-center rounded-2xl border border-[#2563EB]/18 bg-[#F8FBFF] px-8 text-base font-semibold text-[#2563EB] transition hover:border-[#2563EB]/35 hover:bg-white"
                     >
                       Ver universidades
-                    </Link>
+                    </TrackedLink>
                   </div>
                 </div>
               </div>
@@ -471,4 +458,3 @@ export default function Home() {
     </div>
   );
 }
-

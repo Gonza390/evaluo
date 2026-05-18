@@ -272,7 +272,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex h-full min-h-[640px] items-end justify-center px-8 pb-0 pt-10">
               <Image
-                src="/imagentarjetadashboard.png"
+                src="/imagentarjetadashboard.webp"
                 alt="Estudiante usando Evaluo"
                 width={980}
                 height={980}

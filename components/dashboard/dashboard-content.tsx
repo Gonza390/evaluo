@@ -41,13 +41,14 @@ import {
   type DashboardRecentResource,
 } from '@/lib/dashboard-client';
 import {
+  fetchDashboardAcademicProfile,
   fetchDashboardMateriaDetailsByIds,
   fetchDashboardFavoriteMateriaIds,
   fetchDashboardMateriasByIds,
-  fetchDashboardProfileCarreraId,
   fetchDashboardMateriaSummaries,
   mapDashboardMateriaDetails,
   touchDashboardMateriaState,
+  type DashboardAcademicProfile,
   type DashboardMateriaDetailsMap,
   type DashboardMateriaSummary,
 } from '@/lib/data/dashboard';
@@ -179,6 +180,7 @@ export function DashboardContent() {
   const [recommendedMaterias, setRecommendedMaterias] = useState<MateriaSummary[]>([]);
   const [favoriteMaterias, setFavoriteMaterias] = useState<MateriaSummary[]>([]);
   const [favoriteSuggestions, setFavoriteSuggestions] = useState<MateriaSummary[]>([]);
+  const [academicProfile, setAcademicProfile] = useState<DashboardAcademicProfile | null>(null);
   const [favoritesLoading, setFavoritesLoading] = useState(false);
   const [partialInsights, setPartialInsights] = useState<PartialStudyInsights | null>(null);
   const [partialInsightMateriaName, setPartialInsightMateriaName] = useState<string | null>(null);
@@ -303,6 +305,37 @@ export function DashboardContent() {
   useEffect(() => {
     let isMounted = true;
 
+    async function loadAcademicProfile() {
+      if (!user) {
+        if (isMounted) {
+          setAcademicProfile(null);
+        }
+        return;
+      }
+
+      try {
+        const profile = await fetchDashboardAcademicProfile(user.id);
+        if (isMounted) {
+          setAcademicProfile(profile);
+        }
+      } catch (error) {
+        console.error('Error loading dashboard academic profile:', error);
+        if (isMounted) {
+          setAcademicProfile(null);
+        }
+      }
+    }
+
+    void loadAcademicProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    let isMounted = true;
+
     async function loadRecommendedMaterias() {
       if (!user || dashboardState.activeSubjects.length > 0) {
         if (isMounted) {
@@ -312,7 +345,7 @@ export function DashboardContent() {
       }
 
       try {
-        const carreraId = await fetchDashboardProfileCarreraId(user.id);
+        const carreraId = academicProfile?.carreraId ?? null;
 
         if (!carreraId) {
           if (isMounted) {
@@ -351,7 +384,7 @@ export function DashboardContent() {
     return () => {
       isMounted = false;
     };
-  }, [allMaterias, dashboardState.activeSubjects.length, user]);
+  }, [academicProfile?.carreraId, allMaterias, dashboardState.activeSubjects.length, user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -437,7 +470,7 @@ export function DashboardContent() {
             setFavoriteSuggestions([]);
           }
         } else {
-          const carreraId = await fetchDashboardProfileCarreraId(user.id);
+          const carreraId = academicProfile?.carreraId ?? null;
 
           if (!carreraId) {
             if (isMounted) {
@@ -482,7 +515,7 @@ export function DashboardContent() {
     return () => {
       isMounted = false;
     };
-  }, [allMaterias, user]);
+  }, [academicProfile?.carreraId, allMaterias, user]);
 
   useEffect(() => {
     if (!showAddModal || allMateriasLoading || allMaterias.length > 0) {
@@ -599,6 +632,11 @@ export function DashboardContent() {
   );
 
   const recentSubjects = dashboardState.activeSubjects.slice(0, 3);
+  const recommendedContextLabel = academicProfile?.carreraNombre
+    ? academicProfile.universidadNombre
+      ? `${academicProfile.carreraNombre} en ${academicProfile.universidadNombre}`
+      : academicProfile.carreraNombre
+    : 'tu perfil académico';
   const nextStudyAction = useMemo(() => {
     if (simuladorInProgress) {
       const href =
@@ -815,7 +853,7 @@ export function DashboardContent() {
               <div className="relative flex items-center justify-center xl:justify-end">
                 <div className="absolute inset-x-10 bottom-1 h-8 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18),rgba(255,255,255,0))] blur-2xl" />
                 <Image
-                  src="/imagentarjetadashboard.png"
+                  src="/imagentarjetadashboard.webp"
                   alt="Estudiante usando Evaluo"
                   width={1024}
                   height={1536}
@@ -919,6 +957,9 @@ export function DashboardContent() {
                       <div className="mt-8">
                         <p className="mb-4 text-left text-sm font-semibold text-slate-900">
                           Materias recomendadas según tu carrera
+                        </p>
+                        <p className="mb-4 text-left text-sm text-slate-500">
+                          {`Te sugerimos estas materias de ${recommendedContextLabel} para que empieces con contenido alineado a lo que cursás.`}
                         </p>
                     <div className="grid gap-3 md:grid-cols-3">
                       {recommendedMaterias.map((materia) => (

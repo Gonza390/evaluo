@@ -15,11 +15,11 @@ export async function requireAdminAccess() {
   } = await supabase.auth.getUser();
 
   if (userError) {
-    throw new Error('No pudimos validar tu sesion de usuario.');
+    throw new Error('No pudimos validar tu sesión de usuario.');
   }
 
   if (!user) {
-    throw new Error('Necesitas iniciar sesion para acceder al panel de administracion.');
+    throw new Error('Necesitas iniciar sesión para acceder al panel de administración.');
   }
 
   if (isAdminUserSession(user)) {

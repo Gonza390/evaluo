@@ -33,7 +33,7 @@ export async function requirePremiumUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, user: null, message: 'Debes iniciar sesion.' };
+  if (!user) return { ok: false as const, user: null, message: 'Debes iniciar sesión.' };
 
   const premium = await hasPremiumAccess(user.id);
   if (!premium) {

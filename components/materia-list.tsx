@@ -212,7 +212,7 @@ export default function MateriaList({
   const toggleFavorite = async (materiaId: string) => {
     if (!user) {
       toast({
-        title: 'Inicia sesion para guardar favoritos',
+        title: 'Inicia sesión para guardar favoritos',
         description: 'Te llevamos al login para guardar esta materia.',
         duration: 2500,
       });
@@ -264,7 +264,7 @@ export default function MateriaList({
 
     if (!user) {
       toast({
-        title: 'Inicia sesion para guardar favoritos',
+        title: 'Inicia sesión para guardar favoritos',
         description: 'Te llevamos al login para guardar esta carrera.',
         duration: 2500,
       });
@@ -503,7 +503,7 @@ export default function MateriaList({
                                 : 'border-slate-200 bg-white text-slate-400 hover:-translate-y-0.5 hover:border-slate-300 hover:text-amber-500 hover:shadow-md'
                           }`}
                           aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          title={user ? (isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos') : 'Inicia sesion para guardar favoritos'}
+                          title={user ? (isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos') : 'Inicia sesión para guardar favoritos'}
                           disabled={isFavoriteLoading}
                         >
                           {isFavoriteLoading ? (

@@ -245,7 +245,7 @@ export async function updateProfile(
     } = await supabase.auth.getUser();
 
     if (!user?.id || user.id !== userId) {
-      throw new Error('No se encontro una sesion valida para actualizar el perfil.');
+      throw new Error('No se encontró una sesión válida para actualizar el perfil.');
     }
 
     const universidadIdValue = String(data.universidad_id ?? '').trim();
@@ -538,7 +538,7 @@ export async function saveDashboardState(payload: DashboardState) {
 
     const userId = session?.user?.id;
     if (!userId) {
-      throw new Error('No se encontro una sesion activa.');
+      throw new Error('No se encontró una sesión activa.');
     }
 
     const { error } = await supabase.from('profiles').upsert({
@@ -752,7 +752,7 @@ export async function getWrongAnswersExplanations(data: {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { success: false, message: 'Debes iniciar sesion para ver explicaciones premium.' };
+      return { success: false, message: 'Debes iniciar sesión para ver explicaciones premium.' };
     }
 
     const materiaId = data.materia_id;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import { updateProfile } from '@/app/actions';
@@ -56,11 +56,13 @@ export function ProfileCompletionModal({
   useEffect(() => {
     async function fetchAcademicData() {
       try {
-        const [{ data: universidadesData, error: universidadesError }, { data: carrerasData, error: carrerasError }] =
-          await Promise.all([
-            supabase.from('universidades').select('id, nombre').order('nombre'),
-            supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-          ]);
+        const [
+          { data: universidadesData, error: universidadesError },
+          { data: carrerasData, error: carrerasError },
+        ] = await Promise.all([
+          supabase.from('universidades').select('id, nombre').order('nombre'),
+          supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+        ]);
 
         if (universidadesError) throw universidadesError;
         if (carrerasError) throw carrerasError;
@@ -95,7 +97,9 @@ export function ProfileCompletionModal({
   const carrerasFiltradas = useMemo(() => {
     const query = carreraSearch.trim().toLowerCase();
     if (!query) return carrerasDisponibles;
-    return carrerasDisponibles.filter((carrera) => carrera.nombre.toLowerCase().includes(query));
+    return carrerasDisponibles.filter((carrera) =>
+      carrera.nombre.toLowerCase().includes(query)
+    );
   }, [carreraSearch, carrerasDisponibles]);
 
   const universidadSeleccionada = useMemo(
@@ -109,19 +113,22 @@ export function ProfileCompletionModal({
 
     setLoading(true);
     try {
-      const result = await updateProfile(userId, { universidad_id: universidadId, carrera_id: carreraId });
+      const result = await updateProfile(userId, {
+        universidad_id: universidadId,
+        carrera_id: carreraId,
+      });
 
-      if (result.success) {
-        toast({
-          title: 'Perfil actualizado',
-          description: 'Ya podemos personalizar mejor tu experiencia en Evaluo.',
-        });
-
-        router.refresh();
-        onComplete();
-      } else {
+      if (!result.success) {
         throw new Error('Error al actualizar el perfil');
       }
+
+      toast({
+        title: 'Perfil actualizado',
+        description: 'Ya podemos personalizar mejor tu experiencia en Evaluo.',
+      });
+
+      router.refresh();
+      onComplete();
     } catch (error) {
       console.error('Error saving profile:', error);
       toast({
@@ -154,7 +161,8 @@ export function ProfileCompletionModal({
             Contanos dónde estudias
           </DialogTitle>
           <DialogDescription className="text-center text-base text-slate-600">
-            Danos esta información breve para personalizar mejor tu experiencia dentro de la plataforma.
+            Danos esta información breve para personalizar mejor tu experiencia dentro de la
+            plataforma.
           </DialogDescription>
         </DialogHeader>
 
@@ -167,7 +175,7 @@ export function ProfileCompletionModal({
               <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
               <Input
                 id="universidad-search"
-                placeholder="Busca tu universidad"
+                placeholder="Buscá tu universidad"
                 className="h-11 rounded-xl border-slate-200 pl-10 focus:border-emerald-500 focus:ring-emerald-500"
                 value={universidadSearch}
                 onChange={(e) => setUniversidadSearch(e.target.value)}
@@ -179,7 +187,9 @@ export function ProfileCompletionModal({
                   <Spinner size="sm" />
                 </div>
               ) : filteredUniversidades.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-slate-500">No encontramos esa universidad.</div>
+                <div className="px-3 py-3 text-sm text-slate-500">
+                  No encontramos esa universidad.
+                </div>
               ) : (
                 filteredUniversidades.slice(0, 8).map((universidad) => (
                   <button
@@ -192,11 +202,15 @@ export function ProfileCompletionModal({
                       setCarreraSearch('');
                     }}
                     className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition hover:bg-emerald-50 ${
-                      universidadId === universidad.id ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700'
+                      universidadId === universidad.id
+                        ? 'bg-emerald-50 text-emerald-700'
+                        : 'text-slate-700'
                     }`}
                   >
                     <span>{universidad.nombre}</span>
-                    {universidadId === universidad.id ? <span className="text-xs font-semibold">Seleccionada</span> : null}
+                    {universidadId === universidad.id ? (
+                      <span className="text-xs font-semibold">Seleccionada</span>
+                    ) : null}
                   </button>
                 ))
               )}
@@ -213,8 +227,8 @@ export function ProfileCompletionModal({
                 id="carrera"
                 placeholder={
                   universidadSeleccionada
-                    ? `Busca tu carrera en ${universidadSeleccionada.nombre}`
-                    : 'Primero elige una universidad'
+                    ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
+                    : 'Primero elegí una universidad'
                 }
                 className="h-11 rounded-xl border-slate-200 pl-10 focus:border-emerald-500 focus:ring-emerald-500"
                 value={carreraSearch}
@@ -228,9 +242,13 @@ export function ProfileCompletionModal({
                   <Spinner size="sm" />
                 </div>
               ) : !universidadId ? (
-                <div className="px-3 py-3 text-sm text-slate-500">Primero selecciona una universidad.</div>
+                <div className="px-3 py-3 text-sm text-slate-500">
+                  Primero seleccioná una universidad.
+                </div>
               ) : carrerasFiltradas.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-slate-500">No encontramos esa carrera dentro de la universidad seleccionada.</div>
+                <div className="px-3 py-3 text-sm text-slate-500">
+                  No encontramos esa carrera dentro de la universidad seleccionada.
+                </div>
               ) : (
                 carrerasFiltradas.slice(0, 10).map((carrera) => (
                   <button
@@ -245,7 +263,9 @@ export function ProfileCompletionModal({
                     }`}
                   >
                     <span>{carrera.nombre}</span>
-                    {carreraId === carrera.id ? <span className="text-xs font-semibold">Seleccionada</span> : null}
+                    {carreraId === carrera.id ? (
+                      <span className="text-xs font-semibold">Seleccionada</span>
+                    ) : null}
                   </button>
                 ))
               )}
@@ -258,14 +278,15 @@ export function ProfileCompletionModal({
             ) : null}
           </div>
 
-          <Button
-            type="submit"
-            className="h-12 w-full rounded-xl bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-200 transition-all hover:bg-emerald-700 disabled:opacity-50 disabled:shadow-none"
-            disabled={!isFormValid || loading}
-          >
-            {loading ? <Spinner size="sm" className="mr-2" /> : null}
-            Entrar a mi dashboard
-          </Button>
+          <div className="flex flex-col gap-3 pt-2">
+            <Button
+              type="submit"
+              disabled={!isFormValid || loading}
+              className="h-11 rounded-xl bg-emerald-600 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              {loading ? 'Guardando...' : 'Guardar y continuar'}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

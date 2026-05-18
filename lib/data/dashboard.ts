@@ -15,10 +15,19 @@ export type DashboardMateriaDetailsMap = Record<
   }
 >;
 
-export async function fetchDashboardProfileCarreraId(userId: string) {
+export type DashboardAcademicProfile = {
+  universidadId: string | null;
+  universidadNombre: string | null;
+  carreraId: string | null;
+  carreraNombre: string | null;
+};
+
+export async function fetchDashboardAcademicProfile(
+  userId: string
+): Promise<DashboardAcademicProfile> {
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('carrera_id')
+    .select('universidad_id, carrera_id')
     .eq('id', userId)
     .maybeSingle();
 
@@ -26,7 +35,37 @@ export async function fetchDashboardProfileCarreraId(userId: string) {
     throw error;
   }
 
-  return profile?.carrera_id ?? null;
+  const universidadId = profile?.universidad_id ?? null;
+  const carreraId = profile?.carrera_id ?? null;
+
+  const [universidadResponse, carreraResponse] = await Promise.all([
+    universidadId
+      ? supabase.from('universidades').select('nombre').eq('id', universidadId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    carreraId
+      ? supabase.from('carreras').select('nombre').eq('id', carreraId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  if (universidadResponse.error) {
+    throw universidadResponse.error;
+  }
+
+  if (carreraResponse.error) {
+    throw carreraResponse.error;
+  }
+
+  return {
+    universidadId,
+    universidadNombre: universidadResponse.data?.nombre ?? null,
+    carreraId,
+    carreraNombre: carreraResponse.data?.nombre ?? null,
+  };
+}
+
+export async function fetchDashboardProfileCarreraId(userId: string) {
+  const profile = await fetchDashboardAcademicProfile(userId);
+  return profile.carreraId;
 }
 
 export async function fetchDashboardMateriaSummaries(): Promise<DashboardMateriaSummary[]> {
