@@ -96,9 +96,9 @@ export function Navbar() {
 
         {isAdmin ? (
           <Link
-            href="/admin"
+            href="/administrador"
             className={`group mt-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
-              pathname.startsWith('/admin')
+              pathname.startsWith('/administrador')
                 ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
@@ -160,7 +160,7 @@ export function Navbar() {
             </DropdownMenuItem>
             {isAdmin ? (
               <DropdownMenuItem asChild>
-                <Link href="/admin" className="w-full text-sm">
+                <Link href="/administrador" className="w-full text-sm">
                   Panel de administracion
                 </Link>
               </DropdownMenuItem>

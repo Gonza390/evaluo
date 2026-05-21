@@ -3,6 +3,13 @@ import { createAdminClient } from '@/lib/supabase-admin';
 
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'approved']);
 
+function isSubscriptionCurrentlyValid(expiresAt: string | null) {
+  if (!expiresAt) return true;
+  const expiresAtMs = new Date(expiresAt).getTime();
+  if (Number.isNaN(expiresAtMs)) return false;
+  return expiresAtMs > Date.now();
+}
+
 export async function hasPremiumAccess(userId: string): Promise<boolean> {
   if (!userId) return false;
   const admin = createAdminClient();
@@ -11,7 +18,7 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
     admin.from('subscription_plans').select('id, code'),
     admin
       .from('user_subscriptions')
-      .select('plan_id, status, started_at')
+      .select('plan_id, status, started_at, expires_at')
       .eq('user_id', userId)
       .order('started_at', { ascending: false })
       .limit(5),
@@ -23,8 +30,11 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
       .map((p) => p.id)
   );
 
-  return ((subs ?? []) as Array<{ plan_id: string; status: string | null }>).some(
-    (s) => premiumPlanIds.has(s.plan_id) && ACTIVE_STATUSES.has((s.status ?? '').toLowerCase())
+  return ((subs ?? []) as Array<{ plan_id: string; status: string | null; expires_at: string | null }>).some(
+    (s) =>
+      premiumPlanIds.has(s.plan_id) &&
+      ACTIVE_STATUSES.has((s.status ?? '').toLowerCase()) &&
+      isSubscriptionCurrentlyValid(s.expires_at)
   );
 }
 

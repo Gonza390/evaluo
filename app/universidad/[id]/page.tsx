@@ -22,6 +22,36 @@ type CarreraRow = {
 };
 
 const UNIVERSITY_SUBTITLE = 'Excelencia academica, compromiso social e innovacion.';
+const RELATIONS_PAGE_SIZE = 1000;
+
+async function fetchAllCarreraMateriaRelations(
+  supabase: Awaited<ReturnType<typeof createClientServer>>,
+  carreraIds: string[]
+) {
+  const allRows: Array<{ carrera_id: string | null }> = [];
+
+  for (let from = 0; ; from += RELATIONS_PAGE_SIZE) {
+    const to = from + RELATIONS_PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from('carrera_materias')
+      .select('carrera_id')
+      .in('carrera_id', carreraIds)
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = data ?? [];
+    allRows.push(...rows);
+
+    if (rows.length < RELATIONS_PAGE_SIZE) {
+      break;
+    }
+  }
+
+  return allRows;
+}
 
 function getUniversityInitials(name: string) {
   return name
@@ -64,12 +94,9 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
   let materiaCountByCarrera = new Map<string, number>();
 
   if (carreraIds.length > 0) {
-    const { data: carreraMaterias } = await supabase
-      .from('carrera_materias')
-      .select('carrera_id')
-      .in('carrera_id', carreraIds);
+    const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
 
-    materiaCountByCarrera = (carreraMaterias ?? []).reduce((acc, item) => {
+    materiaCountByCarrera = carreraMaterias.reduce((acc, item) => {
       if (!item.carrera_id) return acc;
       acc.set(item.carrera_id, (acc.get(item.carrera_id) ?? 0) + 1);
       return acc;

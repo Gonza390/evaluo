@@ -1,13 +1,25 @@
 import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { enforceRateLimit, getRequestClientKey } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
+    const clientKey = getRequestClientKey(request);
+    const rateLimit = enforceRateLimit({
+      key: `rag-feedback:${clientKey}`,
+      limit: 20,
+      windowMs: 60_000,
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+    }
+
     const body = (await request.json()) as { pregunta_id?: string; voto?: number };
     const preguntaId = (body.pregunta_id ?? '').trim();
     const voto = Number(body.voto);
-    if (!preguntaId || ![-1, 1].includes(voto)) {
+    if (!preguntaId || preguntaId.length > 120 || ![-1, 1].includes(voto)) {
       return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
     }
 
@@ -39,4 +51,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'unexpected_error' }, { status: 500 });
   }
 }
-

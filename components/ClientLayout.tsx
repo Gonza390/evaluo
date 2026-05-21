@@ -1,22 +1,31 @@
 'use client';
 
+import { Suspense } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, Search, BookOpen, Crown } from 'lucide-react';
+import { Home, Search, GraduationCap, Crown, LogIn } from 'lucide-react';
 import { Footer } from './footer';
 import { Navbar } from './navbar';
 import { UserProvider } from '@/hooks/useUser';
+import { useUser } from '@/hooks/useUser';
 import AnalyticsTracker from '@/components/AnalyticsTracker';
-
-const bottomNavItems = [
-  { label: 'Inicio', href: '/dashboard', icon: Home },
-  { label: 'Explorar', href: '/explorar', icon: Search },
-  { label: 'Materias', href: '/materias', icon: BookOpen },
-  { label: 'Potencia', href: '/login', icon: Crown, variant: 'cta' as const },
-];
+import { Toaster } from '@/components/ui/toaster';
 
 function BottomNav() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const bottomNavItems = [
+    { label: 'Inicio', href: '/dashboard', icon: Home },
+    { label: 'Explorar', href: '/explorar', icon: Search },
+    {
+      label: 'Carreras',
+      href: '/explorar?universidad=Universidad%20Siglo%2021',
+      icon: GraduationCap,
+    },
+    user
+      ? { label: 'Potencia', href: '/pricing', icon: Crown, variant: 'cta' as const }
+      : { label: 'Ingresar', href: '/login', icon: LogIn, variant: 'cta' as const },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200/90 bg-white/96 pb-safe backdrop-blur lg:hidden">
@@ -57,10 +66,17 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const isLegalRoute =
     pathname === '/copyright' || pathname === '/terminos' || pathname === '/privacidad';
   const isPublicRoute = isHomePage || isLoginPage;
+  const isAdministradorRoute = pathname.startsWith('/administrador');
   const showSidebar =
-    !pathname.startsWith('/admin') && !isPublicRoute && !isSimuladorRoute && !isLegalRoute;
+    !isAdministradorRoute &&
+    !isPublicRoute &&
+    !isSimuladorRoute &&
+    !isLegalRoute;
   const showBottomNav =
-    !pathname.startsWith('/admin') && !isPublicRoute && !isSimuladorRoute && !isLegalRoute;
+    !isAdministradorRoute &&
+    !isPublicRoute &&
+    !isSimuladorRoute &&
+    !isLegalRoute;
   const shell = (
     <div className="flex min-h-screen bg-white">
       {showSidebar ? <Navbar /> : null}
@@ -79,15 +95,27 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           {children}
         </main>
         {showBottomNav ? <BottomNav /> : null}
-        {!isPublicRoute && !isHomePage && !isLegalRoute && <Footer />}
+        {!isPublicRoute && !isHomePage && !isLegalRoute && !isAdministradorRoute && <Footer />}
       </div>
     </div>
   );
 
+  if (isAdministradorRoute) {
+    return (
+      <>
+        {shell}
+        <Toaster />
+      </>
+    );
+  }
+
   return (
     <UserProvider>
-      <AnalyticsTracker />
+      <Suspense fallback={null}>
+        <AnalyticsTracker />
+      </Suspense>
       {shell}
+      <Toaster />
     </UserProvider>
   );
 }

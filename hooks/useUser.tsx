@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase-client';
 interface UserContextType {
   user: User | null;
   loading: boolean;
+  isAuthenticated: boolean;
   getUserName: () => string;
   getUserInitials: () => string;
 }
@@ -70,6 +71,7 @@ export function UserProvider({ children }: UserProviderProps) {
   const value: UserContextType = {
     user,
     loading,
+    isAuthenticated: Boolean(user),
     getUserName,
     getUserInitials,
   };

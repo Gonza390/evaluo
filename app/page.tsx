@@ -186,7 +186,10 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="animate-surface-reveal relative min-h-[340px] sm:min-h-[460px] lg:min-h-[640px]" style={{ animationDelay: '120ms' }}>
+            <div
+              className="animate-surface-reveal relative hidden min-h-[340px] sm:min-h-[460px] lg:block lg:min-h-[640px]"
+              style={{ animationDelay: '120ms' }}
+            >
               <div className="absolute inset-x-10 bottom-0 h-20 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18),rgba(99,102,241,0))] blur-3xl" />
               {heroHighlights.map((item) => {
                 const Icon = item.icon;

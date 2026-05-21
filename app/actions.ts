@@ -1,6 +1,7 @@
 'use server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { isAdminActor } from '@/lib/admin-users';
 import { generateTutorExplanation } from '@/lib/ai-tutor';
 import { revalidatePath } from 'next/cache';
 import pdf from 'pdf-parse-fork';
@@ -35,6 +36,15 @@ export interface PartialStudyInsights {
   probabilidadAprobar: number;
 }
 
+export interface SimulatorRatingSummary {
+  parcial: number;
+  likes: number;
+  dislikes: number;
+  total: number;
+  approvalPercent: number;
+  averageScore: number;
+}
+
 const defaultDashboardAnalytics: DashboardAnalytics = {
   subjectsCompleted: 0,
   lastUpdatedAt: null,
@@ -46,6 +56,106 @@ const defaultDashboardState: DashboardState = {
   finishedSubjects: [],
   analytics: defaultDashboardAnalytics,
 };
+
+function shuffleArray<T>(items: T[]) {
+  const next = [...items];
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+  }
+  return next;
+}
+
+async function selectDiverseSimulatorQuestions(
+  supabase: Awaited<ReturnType<typeof createClientServer>>,
+  pool: Pregunta[],
+  materiaId: string,
+  parcial: number,
+  limit: number
+) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return shuffleArray(pool).slice(0, limit);
+  }
+
+  const poolIds = pool.map((question) => question.id).filter(Boolean);
+  if (poolIds.length === 0) {
+    return [];
+  }
+
+  const { data: seenRows, error: seenError } = await supabase
+    .from('historial_respuestas')
+    .select('pregunta_id, fecha_respuesta')
+    .eq('usuario_id', user.id)
+    .eq('materia_id', materiaId)
+    .in('pregunta_id', poolIds)
+    .order('fecha_respuesta', { ascending: false })
+    .limit(5000);
+
+  if (seenError) {
+    console.error('Error fetching previous simulator questions:', seenError);
+    return shuffleArray(pool).slice(0, limit);
+  }
+
+  const seenQuestionIds = new Set(
+    (seenRows ?? [])
+      .map((row) => row.pregunta_id)
+      .filter((value): value is string => Boolean(value))
+  );
+
+  const unseen = pool.filter((question) => !seenQuestionIds.has(question.id));
+  const seen = pool.filter((question) => seenQuestionIds.has(question.id));
+
+  const unseenTarget = Math.min(
+    unseen.length,
+    limit,
+    limit >= 30 ? 20 : Math.max(limit - 10, 0)
+  );
+  const seenTarget = Math.max(0, limit - unseenTarget);
+
+  const selected = [
+    ...shuffleArray(unseen).slice(0, unseenTarget),
+    ...shuffleArray(seen).slice(0, seenTarget),
+  ];
+
+  if (selected.length < Math.min(limit, pool.length)) {
+    const selectedIds = new Set(selected.map((question) => question.id));
+    const remainder = shuffleArray(pool.filter((question) => !selectedIds.has(question.id)));
+    selected.push(...remainder.slice(0, Math.min(limit, pool.length) - selected.length));
+  }
+
+  return shuffleArray(selected).slice(0, limit);
+}
+
+function buildPreguntasBancoQuery(
+  client: Awaited<ReturnType<typeof createClientServer>> | ReturnType<typeof createAdminClient>,
+  materiaId: string,
+  parcial: number,
+  universidadId: string | undefined,
+  carreraId: string | undefined,
+  scope: 'strict' | 'university' | 'shared'
+) {
+  let query = client.from('preguntas_banco').select('*').eq('materia_id', materiaId);
+
+  if (parcial === 3) {
+    query = query.in('parcial', [1, 2]);
+  } else {
+    query = query.eq('parcial', parcial);
+  }
+
+  if (scope !== 'shared' && universidadId) {
+    query = query.eq('universidad_id', universidadId);
+  }
+
+  if (scope === 'strict' && carreraId) {
+    query = query.eq('carrera_id', carreraId);
+  }
+
+  return query;
+}
 
 /**
  * Obtiene 30 preguntas aleatorias de la base de datos para una materia y parcial específicos.
@@ -59,21 +169,18 @@ export async function getPreguntasSimulador(
   try {
     const supabase = await createClientServer();
 
-    let query = supabase
-      .from('preguntas_banco')
-      .select('*')
-      .eq('materia_id', materiaId)
-      .eq('parcial', parcial);
+    const runQuery = async (scope: 'strict' | 'university' | 'shared') =>
+      buildPreguntasBancoQuery(supabase, materiaId, parcial, universidadId, carreraId, scope);
 
-    if (universidadId) {
-      query = query.eq('universidad_id', universidadId);
+    let { data, error } = await runQuery('strict');
+
+    if ((!data || data.length === 0) && !error && universidadId && carreraId) {
+      ({ data, error } = await runQuery('university'));
     }
 
-    if (carreraId) {
-      query = query.eq('carrera_id', carreraId);
+    if ((!data || data.length === 0) && !error) {
+      ({ data, error } = await runQuery('shared'));
     }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching preguntas:', error);
@@ -84,8 +191,15 @@ export async function getPreguntasSimulador(
       return [];
     }
 
-    const shuffled = [...data].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 30) as Pregunta[];
+    const questionLimit = parcial === 3 ? 50 : 30;
+    const diversified = await selectDiverseSimulatorQuestions(
+      supabase,
+      data as Pregunta[],
+      materiaId,
+      parcial,
+      questionLimit
+    );
+    return diversified as Pregunta[];
   } catch (error) {
     console.error('Error in getPreguntasSimulador:', error);
     return [];
@@ -101,21 +215,18 @@ export async function getPreguntasSimuladorDemo(
   try {
     const admin = createAdminClient();
 
-    let query = admin
-      .from('preguntas_banco')
-      .select('*')
-      .eq('materia_id', materiaId)
-      .eq('parcial', parcial);
+    const runQuery = async (scope: 'strict' | 'university' | 'shared') =>
+      buildPreguntasBancoQuery(admin, materiaId, parcial, universidadId, carreraId, scope);
 
-    if (universidadId) {
-      query = query.eq('universidad_id', universidadId);
+    let { data, error } = await runQuery('strict');
+
+    if ((!data || data.length === 0) && !error && universidadId && carreraId) {
+      ({ data, error } = await runQuery('university'));
     }
 
-    if (carreraId) {
-      query = query.eq('carrera_id', carreraId);
+    if ((!data || data.length === 0) && !error) {
+      ({ data, error } = await runQuery('shared'));
     }
-
-    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching preguntas demo:', error);
@@ -126,8 +237,9 @@ export async function getPreguntasSimuladorDemo(
       return [];
     }
 
-    const shuffled = [...data].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 30) as Pregunta[];
+    const shuffled = shuffleArray(data as Pregunta[]);
+    const questionLimit = parcial === 3 ? 50 : 30;
+    return shuffled.slice(0, questionLimit) as Pregunta[];
   } catch (error) {
     console.error('Error in getPreguntasSimuladorDemo:', error);
     return [];
@@ -179,7 +291,7 @@ export async function getPreguntasSimuladorErrores(materiaId: string): Promise<P
       return [];
     }
 
-    const shuffled = [...questions].sort(() => 0.5 - Math.random());
+    const shuffled = shuffleArray(questions as Pregunta[]);
     return shuffled.slice(0, 30) as Pregunta[];
   } catch (error) {
     console.error('Error in getPreguntasSimuladorErrores:', error);
@@ -430,6 +542,119 @@ export async function finalizarSimuladorAction(data: {
   }
 }
 
+export async function submitSimulatorRatingAction(data: {
+  materia_id: string;
+  parcial: number;
+  vote_type: 1 | -1;
+}) {
+  try {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.id) {
+      return { success: false, message: 'Debes iniciar sesión para valorar el simulador.' };
+    }
+
+    if (await isAdminActor(user)) {
+      return { success: true };
+    }
+
+    const { error } = await supabase.from('analytics_events').insert({
+      event_name: 'simulator_rating',
+      user_id: user.id,
+      session_key: `simulator_rating:${user.id}`,
+      path: `/simulador/${data.materia_id}/${data.parcial}`,
+      device_type: null,
+      metadata: {
+        materia_id: data.materia_id,
+        parcial: data.parcial,
+        vote_type: data.vote_type,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error al guardar valoración del simulador:', error);
+    return { success: false, message: 'No se pudo guardar tu valoración.' };
+  }
+}
+
+export async function getSimulatorRatingsSummaryByMateria(
+  materiaId: string
+): Promise<SimulatorRatingSummary[]> {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from('analytics_events')
+      .select('user_id, created_at, metadata')
+      .eq('event_name', 'simulator_rating')
+      .contains('metadata', { materia_id: materiaId })
+      .order('created_at', { ascending: false })
+      .limit(5000);
+
+    if (error) {
+      throw error;
+    }
+
+    const latestByUserAndParcial = new Map<string, { parcial: number; vote: 1 | -1 }>();
+
+    for (const row of data ?? []) {
+      const metadata =
+        row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+          ? (row.metadata as Record<string, unknown>)
+          : null;
+      const parcial = Number(metadata?.parcial);
+      const vote = Number(metadata?.vote_type) === -1 ? -1 : Number(metadata?.vote_type) === 1 ? 1 : null;
+      const metadataMateriaId = typeof metadata?.materia_id === 'string' ? metadata.materia_id : null;
+      const userId = row.user_id;
+
+      if (!userId || !metadataMateriaId || metadataMateriaId !== materiaId || ![1, 2, 3].includes(parcial) || !vote) {
+        continue;
+      }
+
+      const key = `${userId}:${parcial}`;
+      if (!latestByUserAndParcial.has(key)) {
+        latestByUserAndParcial.set(key, { parcial, vote });
+      }
+    }
+
+    const summaryMap = new Map<number, { likes: number; dislikes: number }>();
+    for (const { parcial, vote } of latestByUserAndParcial.values()) {
+      const current = summaryMap.get(parcial) ?? { likes: 0, dislikes: 0 };
+      if (vote === 1) current.likes += 1;
+      if (vote === -1) current.dislikes += 1;
+      summaryMap.set(parcial, current);
+    }
+
+    return [1, 2, 3].map((parcial) => {
+      const likes = summaryMap.get(parcial)?.likes ?? 0;
+      const dislikes = summaryMap.get(parcial)?.dislikes ?? 0;
+      const total = likes + dislikes;
+      return {
+        parcial,
+        likes,
+        dislikes,
+        total,
+        approvalPercent: total > 0 ? Math.round((likes / total) * 100) : 0,
+        averageScore: total > 0 ? (likes - dislikes) / total : 0,
+      };
+    });
+  } catch (error) {
+    console.error('Error al obtener valoración del simulador:', error);
+    return [
+      { parcial: 1, likes: 0, dislikes: 0, total: 0, approvalPercent: 0, averageScore: 0 },
+      { parcial: 2, likes: 0, dislikes: 0, total: 0, approvalPercent: 0, averageScore: 0 },
+      { parcial: 3, likes: 0, dislikes: 0, total: 0, approvalPercent: 0, averageScore: 0 },
+    ];
+  }
+}
+
 export async function getPreguntasSimuladorUltimoIntentoPremium(
   materiaId: string,
   parcial: number
@@ -468,18 +693,31 @@ export async function getPreguntasSimuladorUltimoIntentoPremium(
     const wrongIds = Array.from(new Set(wrongRows.map((row) => row.pregunta_id).filter(Boolean)));
     if (wrongIds.length === 0) return [];
 
-    const { data: questions, error: questionError } = await supabase
-      .from('preguntas_banco')
-      .select('*')
-      .in('id', wrongIds)
-      .eq('materia_id', materiaId)
-      .eq('parcial', parcial);
+    const admin = createAdminClient();
+    const { data: questions, error: questionError } = await admin
+      .from('premium_questions')
+      .select('id, enunciado, opciones, respuesta_correcta')
+      .in('id', wrongIds);
 
     if (questionError || !questions || questions.length === 0) {
       return [];
     }
 
-    const byId = new Map(questions.map((question) => [question.id, question as Pregunta]));
+    const byId = new Map(
+      questions.map((question) => [
+        question.id,
+        {
+          id: question.id,
+          enunciado: question.enunciado,
+          opciones: Array.isArray(question.opciones)
+            ? (question.opciones.filter((o: unknown) => typeof o === 'string') as string[])
+            : [],
+          respuesta_correcta: question.respuesta_correcta,
+          materia_id: materiaId,
+          parcial,
+        } as Pregunta,
+      ])
+    );
     return wrongIds
       .map((id) => byId.get(id))
       .filter((question): question is Pregunta => Boolean(question))

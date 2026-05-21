@@ -16,8 +16,11 @@ export function isAdminRole(role: AppRole | null | undefined) {
   return normalizeRole(role) === ADMIN_ROLE;
 }
 
-export function isAdminUserSession(user: User | null | undefined) {
+export function getTrustedSessionRole(user: User | null | undefined): AppRole | null {
   const appMetadataRole = normalizeRole(user?.app_metadata?.role);
-  const userMetadataRole = normalizeRole(user?.user_metadata?.role);
-  return appMetadataRole === ADMIN_ROLE || userMetadataRole === ADMIN_ROLE;
+  return appMetadataRole === ADMIN_ROLE ? ADMIN_ROLE : null;
+}
+
+export function isAdminUserSession(user: User | null | undefined) {
+  return getTrustedSessionRole(user) === ADMIN_ROLE;
 }

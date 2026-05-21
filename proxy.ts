@@ -24,7 +24,6 @@ function createClient(request: NextRequest, response: NextResponse) {
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
-  const supabase = createClient(request, response);
   const pathname = request.nextUrl.pathname;
 
   const isRegularSimulatorRoute =
@@ -34,14 +33,21 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/simulador/errores') ||
     pathname.startsWith('/simulador/ultimo-intento');
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   const isProtectedRoute =
     pathname.startsWith('/dashboard') ||
     isProtectedSimulatorRoute ||
-    pathname.startsWith('/admin');
+    pathname.startsWith('/administrador');
+
+  const isLoginRoute = pathname.startsWith('/login');
+
+  if (!isProtectedRoute && !isLoginRoute) {
+    return response;
+  }
+
+  const supabase = createClient(request, response);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
@@ -53,7 +59,7 @@ export async function proxy(request: NextRequest) {
     return response;
   }
 
-  if (pathname.startsWith('/login') && user) {
+  if (isLoginRoute && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

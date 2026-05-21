@@ -13,6 +13,7 @@ import {
   getPreguntasSimuladorPremium,
   getPreguntasSimulador,
   registrarRespuestaUsuario,
+  submitSimulatorRatingAction,
   type Pregunta,
 } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,7 @@ interface SimuladorExamenProps {
 type EstadoExamen = 'loading' | 'resume_choice' | 'playing' | 'demo_gate' | 'finished' | 'error' | 'profile_incomplete';
 
 const TOTAL_QUESTIONS = 30;
+const MIXED_TOTAL_QUESTIONS = 50;
 const DEMO_TOTAL_QUESTIONS = 10;
 const EXAM_TIME_SECONDS = 30 * 60;
 const optionLabels = ['a', 'b', 'c', 'd'];
@@ -228,6 +230,18 @@ function resolveExamParcial(parcial: number, preguntas: Pregunta[]): number {
   return questionParcial === 2 ? 2 : Number(parcial) === 2 ? 2 : 1;
 }
 
+function getQuestionLimit(parcial: number) {
+  return Number(parcial) === 3 ? MIXED_TOTAL_QUESTIONS : TOTAL_QUESTIONS;
+}
+
+function getExamDurationSeconds(parcial: number) {
+  return Number(parcial) === 3 ? 50 * 60 : EXAM_TIME_SECONDS;
+}
+
+function getParcialLabel(parcial: number) {
+  return Number(parcial) === 3 ? 'Mixto (Parcial 1 + 2)' : `Parcial ${parcial}`;
+}
+
 function getAnalyticsSessionKey() {
   const key = 'evaluo_session_key';
   const existing = window.localStorage.getItem(key);
@@ -270,7 +284,9 @@ export default function SimuladorExamen({
   const [estado, setEstado] = useState<EstadoExamen>('loading');
   const [userId, setUserId] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(EXAM_TIME_SECONDS);
+  const examDurationSeconds = getExamDurationSeconds(parcial);
+  const questionLimit = getQuestionLimit(parcial);
+  const [timeLeft, setTimeLeft] = useState(examDurationSeconds);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | number[]>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -284,9 +300,10 @@ export default function SimuladorExamen({
   const [explanationsMetrics, setExplanationsMetrics] = useState<{ cacheHits: number; generatedCount: number } | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState<Record<string, 1 | -1 | undefined>>({});
   const [feedbackVotes, setFeedbackVotes] = useState<Record<string, 1 | -1>>({});
+  const [simulatorVote, setSimulatorVote] = useState<1 | -1 | null>(null);
+  const [simulatorVoteLoading, setSimulatorVoteLoading] = useState(false);
   const [showResultsFace, setShowResultsFace] = useState(false);
   const [isMobileResults, setIsMobileResults] = useState(false);
-  const questionLimit = TOTAL_QUESTIONS;
   const [hasStarted, setHasStarted] = useState(false);
   const [resumeSnapshot, setResumeSnapshot] = useState<SimuladorPersistedState | null>(null);
   const simulatorLifecycleRef = useRef({
@@ -295,7 +312,7 @@ export default function SimuladorExamen({
     currentQuestionIndex: 0,
     answeredCount: 0,
     preguntasDisponibles: 0,
-    timeLeft: EXAM_TIME_SECONDS,
+    timeLeft: examDurationSeconds,
     userId: null as string | null,
     outcomeTracked: false,
   });
@@ -345,6 +362,8 @@ export default function SimuladorExamen({
           attribution: getAttributionSnapshot(),
           materia_id: materiaId,
           parcial,
+          carrera_id: carreraId,
+          universidad_id: universidadId,
           mode,
           premium_only: premiumOnly,
           question_index: overrides?.questionIndex ?? currentQuestionIndex + 1,
@@ -367,7 +386,7 @@ export default function SimuladorExamen({
         });
       }
     },
-    [answeredCount, currentQuestionIndex, materiaId, mode, parcial, premiumOnly, progressPercent, timeLeft, userId]
+    [answeredCount, carreraId, currentQuestionIndex, materiaId, mode, parcial, premiumOnly, progressPercent, timeLeft, universidadId, userId]
   );
 
   useEffect(() => {
@@ -400,7 +419,7 @@ export default function SimuladorExamen({
     setCurrentQuestionIndex(
       Math.max(0, Math.min(saved.currentQuestionIndex ?? 0, Math.max(0, limitedQuestions.length - 1)))
     );
-    setTimeLeft(Math.max(0, Math.min(saved.timeLeft ?? EXAM_TIME_SECONDS, EXAM_TIME_SECONDS)));
+      setTimeLeft(Math.max(0, Math.min(saved.timeLeft ?? examDurationSeconds, examDurationSeconds)));
     setSelectedAnswers(saved.selectedAnswers ?? {});
     setFlaggedQuestions(Array.isArray(saved.flaggedQuestions) ? saved.flaggedQuestions : []);
     setHasStarted(Boolean(saved.hasStarted));
@@ -582,7 +601,7 @@ export default function SimuladorExamen({
       simulatorLifecycleRef.current.outcomeTracked = false;
       setPreguntas(data.slice(0, questionLimit));
       setCurrentQuestionIndex(0);
-      setTimeLeft(EXAM_TIME_SECONDS);
+      setTimeLeft(examDurationSeconds);
       setSelectedAnswers({});
       setFlaggedQuestions([]);
       setHasStarted(false);
@@ -674,7 +693,7 @@ export default function SimuladorExamen({
     }
 
     void inicializar();
-  }, [resolvedDemoMode, hydrateSavedExam, loadFreshQuestions, materiaId, mode, parcial, storageKey, user, userLoading]);
+  }, [examDurationSeconds, resolvedDemoMode, hydrateSavedExam, loadFreshQuestions, materiaId, mode, parcial, storageKey, user, userLoading]);
 
   useEffect(() => {
     if (estado !== 'playing' || !hasStarted) return;
@@ -716,6 +735,8 @@ export default function SimuladorExamen({
         metadata: {
           materia_id: materiaId,
           parcial,
+          carrera_id: carreraId,
+          universidad_id: universidadId,
           mode,
           premium_only: premiumOnly,
           question_index: snapshot.currentQuestionIndex + 1,
@@ -747,7 +768,7 @@ export default function SimuladorExamen({
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       emitAbandonIfNeeded('unmount');
     };
-  }, [materiaId, mode, parcial, premiumOnly]);
+  }, [carreraId, materiaId, mode, parcial, premiumOnly, universidadId]);
 
   useEffect(() => {
     if (estado !== 'playing' || !userId) return;
@@ -840,6 +861,47 @@ export default function SimuladorExamen({
         delete next[preguntaId];
         return next;
       });
+    }
+  };
+
+  const handleSimulatorVote = async (voteType: 1 | -1) => {
+    if (!user) {
+      toast({
+        title: 'Inicia sesión para valorar el simulador',
+        description: 'Te llevamos al login para guardar tu opinión.',
+      });
+      window.location.assign('/login');
+      return;
+    }
+
+    setSimulatorVote(voteType);
+    setSimulatorVoteLoading(true);
+
+    try {
+      const response = await submitSimulatorRatingAction({
+        materia_id: materiaId,
+        parcial,
+        vote_type: voteType,
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || 'No se pudo guardar tu valoración.');
+      }
+
+      toast({
+        title: voteType === 1 ? 'Gracias por tu like' : 'Gracias por tu feedback',
+        description: 'Tu valoración nos ayuda a mejorar este simulador.',
+      });
+    } catch (error) {
+      console.error('Simulator vote error:', error);
+      setSimulatorVote(null);
+      toast({
+        title: 'No pudimos guardar tu valoración',
+        description: 'Inténtalo nuevamente en unos segundos.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSimulatorVoteLoading(false);
     }
   };
 
@@ -1031,7 +1093,7 @@ export default function SimuladorExamen({
                 Ya respondiste las primeras 10 preguntas
               </h2>
               <p className="mt-4 max-w-[460px] text-lg leading-8 text-slate-600">
-                Para seguir con el resto del parcial, guardar tu progreso y recibir la devolución completa, inicia sesión o crea tu cuenta.
+                Para seguir con el resto del simulador, guardar tu progreso y recibir la devolución completa, inicia sesión o crea tu cuenta.
               </p>
               <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
                 <span className="text-[3rem] font-black leading-none tracking-[-0.07em] text-[#4F46E5]">
@@ -1065,7 +1127,7 @@ export default function SimuladorExamen({
               <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Qué desbloqueas al continuar</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Acceso al parcial completo de 30 preguntas, guardado del intento, resultados finales y correcciones inteligentes de tus errores.
+                  Acceso al simulador completo de {questionLimit} preguntas, guardado del intento, resultados finales y correcciones inteligentes de tus errores.
                 </p>
               </div>
             </div>
@@ -1090,7 +1152,7 @@ export default function SimuladorExamen({
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
               <p className="text-xs text-slate-500">Tiempo restante</p>
-              <p className="font-bold text-slate-900">{formatTime(resumeSnapshot?.timeLeft ?? EXAM_TIME_SECONDS)}</p>
+              <p className="font-bold text-slate-900">{formatTime(resumeSnapshot?.timeLeft ?? examDurationSeconds)}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
               <p className="text-xs text-slate-500">Preguntas</p>
@@ -1143,6 +1205,8 @@ export default function SimuladorExamen({
           attribution: getAttributionSnapshot(),
           materia_id: materiaId,
           parcial: resolvedParcial,
+          carrera_id: carreraId,
+          universidad_id: universidadId,
           result_pct: porcentaje,
           share_url: shareUrl,
         },
@@ -1266,7 +1330,7 @@ export default function SimuladorExamen({
                 <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Siguiente paso</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Regístrate para continuar con el simulador completo de 30 preguntas, ver tus errores y practicar con más material de la materia.
+                      Regístrate para continuar con el simulador completo de {questionLimit} preguntas, ver tus errores y practicar con más material de la materia.
                     </p>
                   </div>
                 </div>
@@ -1345,6 +1409,37 @@ export default function SimuladorExamen({
                       Volver a la materia
                     </Button>
                   </div>
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <p className="text-sm font-medium text-slate-600">¿Te sirvió este simulador?</p>
+                    <button
+                      type="button"
+                      onClick={() => void handleSimulatorVote(1)}
+                      disabled={simulatorVoteLoading}
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
+                        simulatorVote === 1
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      )}
+                    >
+                      <ThumbsUp className="h-4 w-4" />
+                      Me gustó
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleSimulatorVote(-1)}
+                      disabled={simulatorVoteLoading}
+                      className={cn(
+                        'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
+                        simulatorVote === -1
+                          ? 'border-rose-200 bg-rose-50 text-rose-700'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      )}
+                    >
+                      <ThumbsDown className="h-4 w-4" />
+                      No me gustó
+                    </button>
+                  </div>
                   <div className="mt-6 grid max-w-[360px] grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
@@ -1399,7 +1494,7 @@ export default function SimuladorExamen({
                           Tu revision completa
                         </h3>
                         <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-[15px]">
-                          {materiaNombre || `Materia ${materiaId}`} · Parcial {resolvedParcial}
+                          {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
                         </p>
                         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
                         Revisa dónde fallaste, qué tema te conviene reforzar y cómo encarar el próximo intento.
@@ -1577,9 +1672,12 @@ export default function SimuladorExamen({
     return (
       <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
         <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <h2 className="text-2xl font-extrabold text-slate-900">Antes de comenzar</h2>
+          <h2 className="text-2xl font-extrabold text-slate-900">
+            {`Antes de comenzar el Preguntero de ${materiaNombre || `Materia ${materiaId}`}`}
+          </h2>
           <p className="mt-3 text-slate-600">
-            Contamos con más de 30 modelos de examen para practicar. No todos son iguales: cada intento mezcla preguntas distintas para entrenarte de forma real.
+            Contamos con múltiples modelos de examen para practicar. No todos son iguales:
+            cada intento mezcla los diferentes modelos que tiene la universidad para que puedas entender cada modelo de examen.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
@@ -1588,11 +1686,11 @@ export default function SimuladorExamen({
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
               <p className="text-xs text-slate-500">Tiempo</p>
-              <p className="font-bold text-slate-900">{formatTime(EXAM_TIME_SECONDS)}</p>
+              <p className="font-bold text-slate-900">{formatTime(examDurationSeconds)}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
               <p className="text-xs text-slate-500">Parcial</p>
-              <p className="font-bold text-slate-900">{parcial}</p>
+              <p className="font-bold text-slate-900">{getParcialLabel(parcial)}</p>
             </div>
           </div>
             <Button
@@ -1604,7 +1702,7 @@ export default function SimuladorExamen({
                     questionIndex: 1,
                     answered: 0,
                     progress: 0,
-                    timeLeft: EXAM_TIME_SECONDS,
+                    timeLeft: examDurationSeconds,
                   });
                 }
               }}
@@ -1629,7 +1727,7 @@ export default function SimuladorExamen({
             <div>
               <p className="text-2xl font-semibold text-slate-900">Simulador de Examen</p>
               <p className="text-sm text-slate-500">
-                {materiaNombre || `Materia ${materiaId}`} · Parcial {parcial}
+                {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
               </p>
             </div>
           </div>
@@ -1843,10 +1941,10 @@ export default function SimuladorExamen({
               <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className="h-full rounded-full bg-blue-600 transition-all"
-                  style={{ width: `${Math.max(0, Math.min(100, (timeLeft / EXAM_TIME_SECONDS) * 100))}%` }}
+                  style={{ width: `${Math.max(0, Math.min(100, (timeLeft / examDurationSeconds) * 100))}%` }}
                 />
               </div>
-              <p className="mt-2 text-[11px] text-slate-500">de {formatTime(EXAM_TIME_SECONDS)}</p>
+              <p className="mt-2 text-[11px] text-slate-500">de {formatTime(examDurationSeconds)}</p>
             </Card>
 
             <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

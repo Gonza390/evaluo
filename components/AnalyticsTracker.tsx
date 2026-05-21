@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
-import { supabase } from '@/lib/supabase-client';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { captureAttributionFromLocation, getAttributionSnapshot } from '@/lib/attribution';
+import { useUser } from '@/hooks/useUser';
 
 function getSessionKey() {
   const key = 'evaluo_session_key';
@@ -18,6 +18,19 @@ function getDeviceType() {
   const ua = navigator.userAgent.toLowerCase();
   if (/mobile|android|iphone|ipad|ipod/.test(ua)) return 'mobile';
   return 'desktop';
+}
+
+function getRouteContext() {
+  const params = new URLSearchParams(window.location.search);
+  const carreraId = params.get('carreraId') ?? params.get('carrera_id');
+  const universidadId = params.get('universidadId') ?? params.get('universidad_id');
+  const tab = params.get('tab');
+
+  return {
+    ...(carreraId ? { carrera_id: carreraId } : {}),
+    ...(universidadId ? { universidad_id: universidadId } : {}),
+    ...(tab ? { tab } : {}),
+  };
 }
 
 async function track(eventName: string, payload: Record<string, unknown>) {
@@ -38,26 +51,60 @@ async function track(eventName: string, payload: Record<string, unknown>) {
 
 export default function AnalyticsTracker() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { user, loading } = useUser();
   const visibleSinceRef = useRef<number>(Date.now());
+  const previousUserIdRef = useRef<string | null | undefined>(undefined);
+  const queryString = searchParams.toString();
 
   useEffect(() => {
+    if (loading) {
+      return;
+    }
+
     const sessionKey = getSessionKey();
     const deviceType = getDeviceType();
-    let userId: string | null = null;
     captureAttributionFromLocation(window.location.search, window.location.pathname);
     const attribution = getAttributionSnapshot();
+    const routeContext = getRouteContext();
 
-    void supabase.auth.getUser().then(({ data }) => {
-      userId = data.user?.id ?? null;
-      void track('page_view', {
+    void track('page_view', {
+      session_key: sessionKey,
+      path: pathname,
+      device_type: deviceType,
+      user_id: user?.id ?? null,
+      metadata: attribution || Object.keys(routeContext).length > 0 ? { attribution, ...routeContext } : undefined,
+    });
+  }, [loading, pathname, queryString, user?.id]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    const currentUserId = user?.id ?? null;
+
+    if (previousUserIdRef.current === undefined) {
+      previousUserIdRef.current = currentUserId;
+      return;
+    }
+
+    if (!previousUserIdRef.current && currentUserId) {
+      const sessionKey = getSessionKey();
+      const deviceType = getDeviceType();
+      const attribution = getAttributionSnapshot();
+
+      void track('login_success', {
         session_key: sessionKey,
+        user_id: currentUserId,
         path: pathname,
         device_type: deviceType,
-        user_id: userId,
-        metadata: attribution ? { attribution } : undefined,
+        metadata: { source_path: pathname, attribution },
       });
-    });
-  }, [pathname]);
+    }
+
+    previousUserIdRef.current = currentUserId;
+  }, [loading, pathname, user?.id]);
 
   useEffect(() => {
     const sessionKey = getSessionKey();
@@ -108,18 +155,6 @@ export default function AnalyticsTracker() {
       });
     };
 
-    const { data: authSubscription } = supabase.auth.onAuthStateChange((evt, session) => {
-      if (evt === 'SIGNED_IN' && session?.user?.id) {
-        void track('login_success', {
-          session_key: sessionKey,
-          user_id: session.user.id,
-          path: pathname,
-          device_type: deviceType,
-          metadata: { source_path: pathname, attribution },
-        });
-      }
-    });
-
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
@@ -136,7 +171,6 @@ export default function AnalyticsTracker() {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('error', handleError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-      authSubscription.subscription.unsubscribe();
     };
   }, [pathname]);
 

@@ -20,6 +20,7 @@ import {
 import PdfViewer from '@/components/PdfViewer';
 import { supabase } from '@/lib/supabase';
 import { pushActivityHit, pushRecentResource } from '@/lib/dashboard-client';
+import { useUser } from '@/hooks/useUser';
 import { useToast } from '@/hooks/use-toast';
 import { getSimulatorRoute } from '@/lib/routes';
 import {
@@ -88,6 +89,7 @@ function RecursoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { user: authUser, loading: authLoading, isAuthenticated } = useUser();
 
   const materiaId = params.id as string;
   const tipo = searchParams.get('tipo') || 'primer-parcial';
@@ -105,30 +107,8 @@ function RecursoContent() {
   const [resourceVotes, setResourceVotes] = useState<ResourceVoteSummaryMap>({});
   const [resourceViews, setResourceViews] = useState<ResourceViewCountMap>({});
   const [voteLoading, setVoteLoading] = useState<string>('');
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    void supabase.auth
-      .getUser()
-      .then(({ data }) => {
-        if (mounted) {
-          setCurrentUserId(data.user?.id ?? null);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setCurrentUserId(null);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     async function fetchRecursos() {
@@ -173,7 +153,7 @@ function RecursoContent() {
     }
 
     void Promise.all([
-      fetchResourceVoteSummaries(supabase, resourceIds, currentUserId ?? undefined),
+      fetchResourceVoteSummaries(supabase, resourceIds, authUser?.id),
       fetchResourceViewCounts(supabase, resourceIds),
     ])
       .then(([summaries, views]) => {
@@ -181,7 +161,7 @@ function RecursoContent() {
         setResourceViews(views);
       })
       .catch((error) => console.error('Error fetching resource vote summaries:', error));
-  }, [currentUserId, recursos]);
+  }, [authUser?.id, recursos]);
 
   const sortedRecursos = useMemo(
     () => sortResourcesByVotes(recursos, resourceVotes),
@@ -241,7 +221,7 @@ function RecursoContent() {
             if (!window.sessionStorage.getItem(viewKey)) {
               await registerResourceView(supabase, {
                 resourceId: selectedResource.id,
-                userId: currentUserId,
+                userId: authUser?.id ?? null,
                 sessionKey,
               });
               window.sessionStorage.setItem(viewKey, '1');
@@ -276,7 +256,7 @@ function RecursoContent() {
     }
 
     void hydrateViewer();
-  }, [currentUserId, materiaId, nombreMateria, selectedResource, tipo]);
+  }, [authUser?.id, materiaId, nombreMateria, selectedResource, tipo]);
 
   const selectedIndex = sortedRecursos.findIndex((resource) => resource.id === selectedResourceId);
   const canGoPrev = selectedIndex > 0;
@@ -297,8 +277,7 @@ function RecursoContent() {
   );
 
   const voteResource = async (resourceId: string, voteType: 1 | -1) => {
-    const { data: auth } = await supabase.auth.getUser();
-    const userId = auth.user?.id;
+    const userId = authUser?.id;
 
     if (!userId) {
       toast({
@@ -334,18 +313,16 @@ function RecursoContent() {
   };
 
   const requireDownloadSession = async () => {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
+    if (authLoading) {
       toast({
-        variant: 'destructive',
-        title: 'No pudimos validar tu sesión',
-        description: 'Intentá nuevamente en unos segundos.',
-        duration: 3000,
+        title: 'Validando sesión',
+        description: 'Espera un segundo e intenta nuevamente.',
+        duration: 2200,
       });
       return null;
     }
 
-    if (!sessionData.session) {
+    if (!isAuthenticated) {
       toast({
         variant: 'destructive',
         title: 'Necesitás iniciar sesión para descargar este material',
@@ -356,7 +333,7 @@ function RecursoContent() {
       return null;
     }
 
-    return sessionData.session;
+    return authUser;
   };
 
   const handleSecureDownload = async (recurso: Recurso) => {
@@ -727,3 +704,4 @@ export default function Page() {
     </Suspense>
   );
 }
+

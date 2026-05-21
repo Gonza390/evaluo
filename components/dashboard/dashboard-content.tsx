@@ -827,20 +827,20 @@ export function DashboardContent() {
                     </div>
                   </div>
 
-                  <div className="mt-3 grid max-w-[430px] gap-2 min-[480px]:grid-cols-2">
-                    <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2 text-center backdrop-blur">
-                      <p className="text-[17px] font-black text-white">
+                  <div className="mt-3 grid max-w-[360px] gap-1.5 min-[480px]:max-w-[430px] min-[480px]:grid-cols-2 sm:gap-2">
+                    <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
+                      <p className="text-[15px] font-black text-white sm:text-[17px]">
                         {partialInsights?.preguntasRespondidasParcial?.toLocaleString('es-AR') ?? 0}
                       </p>
-                      <p className="mt-1 text-[10px] leading-4 text-white/68">
+                      <p className="mt-0.5 text-[9px] leading-3.5 text-white/68 sm:mt-1 sm:text-[10px] sm:leading-4">
                         Preguntas practicadas
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-white/12 bg-white/8 px-3 py-2 text-center backdrop-blur">
-                      <p className="text-[17px] font-black text-white">
+                    <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
+                      <p className="text-[15px] font-black text-white sm:text-[17px]">
                         {partialInsights?.preguntasAcertadasParcial?.toLocaleString('es-AR') ?? 0}
                       </p>
-                      <p className="mt-1 text-[10px] leading-4 text-white/68">
+                      <p className="mt-0.5 text-[9px] leading-3.5 text-white/68 sm:mt-1 sm:text-[10px] sm:leading-4">
                         Preguntas acertadas
                       </p>
                     </div>

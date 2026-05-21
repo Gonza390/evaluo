@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
+import { isAdminActor } from '@/lib/admin-users';
+import { createClientServer } from '@/lib/supabase-server';
+import { isAllowedAnalyticsEventName } from '@/lib/analytics-events';
 import { enforceRateLimit, getRequestClientKey } from '@/lib/rate-limit';
 import type { Json } from '@/types/supabase';
 
@@ -41,6 +44,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
     }
 
+    if (!isAllowedAnalyticsEventName(eventName)) {
+      return NextResponse.json({ error: 'invalid_event_name' }, { status: 400 });
+    }
+
     const userAgent = request.headers.get('user-agent') ?? '';
     const deviceType = body.device_type || detectDeviceType(userAgent);
     const normalizedPath =
@@ -53,10 +60,18 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (await isAdminActor(user)) {
+      return NextResponse.json({ ok: true, skipped: 'admin_user' }, { status: 202 });
+    }
 
     const { error } = await admin.from('analytics_events').insert({
       event_name: eventName,
-      user_id: body.user_id ?? null,
+      user_id: user?.id ?? null,
       session_key: sessionKey,
       path: normalizedPath,
       device_type: deviceType,

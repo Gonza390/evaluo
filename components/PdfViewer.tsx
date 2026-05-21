@@ -13,7 +13,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { useUser } from '@/hooks/useUser';
 import { cn } from '@/lib/utils';
 
 interface PdfViewerProps {
@@ -86,45 +86,10 @@ export default function PdfViewer({
   const [documentError, setDocumentError] = useState<string | null>(null);
   const [documentLoading, setDocumentLoading] = useState(true);
   const [viewerRuntimeError, setViewerRuntimeError] = useState<string | null>(null);
-  const [hasSession, setHasSession] = useState(false);
-  const [sessionLoading, setSessionLoading] = useState(true);
   const [showPreviewGate, setShowPreviewGate] = useState(false);
+  const { isAuthenticated, loading: userLoading } = useUser();
 
   const zoom = ZOOM_LEVELS[zoomIndex];
-
-  useEffect(() => {
-    let active = true;
-
-    const loadSession = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (active) {
-          setHasSession(Boolean(session?.user));
-        }
-      } finally {
-        if (active) {
-          setSessionLoading(false);
-        }
-      }
-    };
-
-    void loadSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setHasSession(Boolean(session?.user));
-      setSessionLoading(false);
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -263,9 +228,9 @@ export default function PdfViewer({
     if (numPages <= PREVIEW_PAGE_LIMIT) return numPages;
     return PREVIEW_PAGE_LIMIT;
   }, [numPages]);
-  const visiblePageLimit = forcePreviewLock ? numPages : hasSession ? numPages : previewPageLimit;
+  const visiblePageLimit = forcePreviewLock ? numPages : isAuthenticated ? numPages : previewPageLimit;
   const isPreviewLocked =
-    forcePreviewLock || (!sessionLoading && !hasSession && numPages > previewPageLimit);
+    forcePreviewLock || (!userLoading && !isAuthenticated && numPages > previewPageLimit);
   const canGoNext = currentPage < visiblePageLimit;
 
   const currentSearchResult = useMemo(
@@ -301,16 +266,16 @@ export default function PdfViewer({
   };
 
   useEffect(() => {
-    if (!hasSession && currentPage > visiblePageLimit && visiblePageLimit > 0) {
+    if (!isAuthenticated && currentPage > visiblePageLimit && visiblePageLimit > 0) {
       setCurrentPage(visiblePageLimit);
     }
-  }, [currentPage, hasSession, visiblePageLimit]);
+  }, [currentPage, isAuthenticated, visiblePageLimit]);
 
   useEffect(() => {
     const viewport = pageViewportRef.current;
     if (!viewport) return;
 
-    if ((hasSession && !forcePreviewLock) || sessionLoading || (!forcePreviewLock && numPages <= previewPageLimit)) {
+    if ((isAuthenticated && !forcePreviewLock) || userLoading || (!forcePreviewLock && numPages <= previewPageLimit)) {
       setShowPreviewGate(false);
       return;
     }
@@ -325,7 +290,7 @@ export default function PdfViewer({
     handleScroll();
     viewport.addEventListener('scroll', handleScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', handleScroll);
-  }, [hasSession, numPages, previewPageLimit, sessionLoading, zoom]);
+  }, [forcePreviewLock, isAuthenticated, numPages, previewPageLimit, userLoading, zoom]);
 
   const runSearch = async () => {
     const query = searchQuery.trim().toLowerCase();
