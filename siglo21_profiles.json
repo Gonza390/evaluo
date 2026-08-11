@@ -1,0 +1,303 @@
+[
+    {
+        "name":  "Abogacía",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años y medio",
+        "modality":  "Presencial, híbrida o a distancia",
+        "url":  "https://21.edu.ar/carreras-y-programas/abogacia"
+    },
+    {
+        "name":  "Contador Público",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/contador-publico"
+    },
+    {
+        "name":  "Ingeniería en Software",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/ingenieria-en-software"
+    },
+    {
+        "name":  "Lic. en Administración",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años",
+        "modality":  "Presencial, Híbrida o Distancia",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-administracion"
+    },
+    {
+        "name":  "Licenciatura en Ciencia de Datos",
+        "description":  "análisis de datos, inteligencia artificial y programación aplicada a negocios e innovación.",
+        "duration":  "4 años",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-ciencia-de-datos"
+    },
+    {
+        "name":  "Licenciatura en Comercialización – Marketing",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-comercializacion-marketing"
+    },
+    {
+        "name":  "Licenciatura en Comercio Internacional",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-comercio-internacional"
+    },
+    {
+        "name":  "Licenciatura en Criminología y Seguridad",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-criminologia-y-seguridad"
+    },
+    {
+        "name":  "Licenciatura en Diseño Gráfico",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-diseno-grafico"
+    },
+    {
+        "name":  "Licenciatura en Gestión de Recursos Humanos",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años",
+        "modality":  "Presencial o Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-gestion-de-recursos-humanos"
+    },
+    {
+        "name":  "Licenciatura en Informática",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "5 años",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-informatica"
+    },
+    {
+        "name":  "Licenciatura en Inteligencia Artificial y Robótica",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-inteligencia-artificial-y-robotica"
+    },
+    {
+        "name":  "Licenciatura en Nutrición",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-nutricion"
+    },
+    {
+        "name":  "Licenciatura en Psicología",
+        "description":  "múltiples enfoques psicológicos.",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-psicologia"
+    },
+    {
+        "name":  "Licenciatura en Publicidad",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años y medio",
+        "modality":  "Presencial o Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-publicidad"
+    },
+    {
+        "name":  "Licenciatura en Relaciones Internacionales",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años",
+        "modality":  "Presencial y Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-relaciones-internacionales"
+    },
+    {
+        "name":  "Licenciatura en Relaciones Públicas e Institucionales",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años",
+        "modality":  "Presencial o Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-relaciones-publicas-e-institucionales"
+    },
+    {
+        "name":  "Licenciatura en Seguridad Informática",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "4 años",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/licenciatura-en-seguridad-informatica"
+    },
+    {
+        "name":  "Martillero, Corredor Público y Corredor Inmobiliario",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/martillero-corredor-publico-y-corredor-inmobiliario"
+    },
+    {
+        "name":  "Medicina",
+        "description":  "excelencia clínica, sensibilidad y ética para responder a los desafíos de la salud.",
+        "duration":  "6 años",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/medicina"
+    },
+    {
+        "name":  "Procurador",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/procurador"
+    },
+    {
+        "name":  "Tecnicatura en Administración y Gestión Tributaria",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-administracion-y-gestion-tributaria"
+    },
+    {
+        "name":  "Tecnicatura en Atención Prehospitalaria de Emergencias",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-atencion-prehospitalaria-de-emergencias"
+    },
+    {
+        "name":  "Tecnicatura en Dirección de Equipos de Ventas",
+        "description":  "liderazgo comercial, negociación y gestión estratégica de equipos de ventas.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-direccion-de-equipos-de-ventas"
+    },
+    {
+        "name":  "Tecnicatura en Dirección de Protocolo, Organización de Eventos y Relaciones Públicas",
+        "description":  "protocolo, ceremonial y comunicación institucional para organizar eventos que construyen imagen.",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-direccion-de-protocolo-organizacion-de-eventos-y-rrpp"
+    },
+    {
+        "name":  "Tecnicatura en Gestión Contable e Impositiva",
+        "description":  "IVA, Monotributo, Ingresos Brutos y liquidación de sueldos",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-gestion-contable-e-impositiva"
+    },
+    {
+        "name":  "Tecnicatura en Gestión de Empresas Familiares",
+        "description":  "gestión, liderazgo y profesionalización de empresas familiares y procesos de sucesión.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-gestion-de-empresas-familiares"
+    },
+    {
+        "name":  "Tecnicatura en Gestión de Moda",
+        "description":  "gestión de moda, tendencias, comunicación y desarrollo de marcas y proyectos.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-gestion-de-moda"
+    },
+    {
+        "name":  "Tecnicatura en Gestión y Auditorías Ambientales",
+        "description":  "gestión ambiental, auditorías y sustentabilidad aplicada a organizaciones.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-gestion-y-auditorias-ambientales"
+    },
+    {
+        "name":  "Tecnicatura en Hidrocarburos y Geociencia",
+        "description":  "todas las etapas del proceso hidrocarburífero",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-hidrocarburos-y-geociencia"
+    },
+    {
+        "name":  "Tecnicatura en Higiene y Seguridad Laboral",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-higiene-y-seguridad-laboral"
+    },
+    {
+        "name":  "Tecnicatura en Investigación de la Escena del Crimen",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-investigacion-de-la-escena-del-crimen"
+    },
+    {
+        "name":  "Tecnicatura en Relaciones Laborales",
+        "description":  "relaciones laborales, negociación y gestión de personas en organizaciones.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-en-relaciones-laborales"
+    },
+    {
+        "name":  "Tecnicatura en Responsabilidad y Gestión Social",
+        "description":  "",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://inscribite.21.edu.ar/tecnicatura-en-responsabilidad-y-gesti%C3%B3n-social"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Administración Pública y Gestión de Políticas Públicas",
+        "description":  "gestión pública, planificación territorial y desarrollo de políticas públicas.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-administracion-publica-y-gestion-de-politicas-publicas"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Diseño y Animación Digital",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-diseno-y-animacion-digital"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Diseño y Desarrollo de Videojuegos",
+        "description":  "diseño, programación y desarrollo de videojuegos con herramientas de la industria.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-diseno-y-desarrollo-de-videojuegos"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Enfermería",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-enfermeria"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Gestión Administrativa de Servicios de Salud",
+        "description":  "gestión administrativa y procesos operativos para instituciones y servicios de salud.",
+        "duration":  "2 años y medio",
+        "modality":  "Virtual",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-gestion-administrativa-de-servicios-de-salud"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Gestión de Recursos Turísticos",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-gestion-de-recursos-turisticos"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Marketing y Publicidad Digital",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-marketing-y-publicidad-digital"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Promoción Comunitaria en Niñez y Adolescencia",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-promocion-comunitaria-en-ninez-y-adolescencia"
+    },
+    {
+        "name":  "Tecnicatura Universitaria en Redes Informáticas y Telecomunicaciones",
+        "description":  "quienes ya eligieron Siglo 21",
+        "duration":  "",
+        "modality":  "",
+        "url":  "https://21.edu.ar/carreras-y-programas/tecnicatura-universitaria-en-redes-informaticas-y-telecomunicaciones"
+    }
+]
