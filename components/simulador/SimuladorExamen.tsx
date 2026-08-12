@@ -761,13 +761,16 @@ export default function SimuladorExamen({
         const pregunta = preguntas[questionIndex];
         const meta = shuffledMetaByQuestion[questionIndex];
         if (!pregunta || !meta) return null;
-        const esCorrecta = isCorrectAnswer(questionIndex, optionIndex);
+        const selectedIndexes = Array.isArray(optionIndex) ? optionIndex : [optionIndex];
+        const respuestaSeleccionada = selectedIndexes
+          .map((index) => meta.options[index])
+          .filter((option): option is string => typeof option === 'string');
 
         return registrarRespuestaUsuario({
           usuario_id: userId,
           pregunta_id: pregunta.id,
           materia_id: pregunta.materia_id,
-          es_correcta: esCorrecta,
+          respuesta_seleccionada: respuestaSeleccionada,
         });
       });
 

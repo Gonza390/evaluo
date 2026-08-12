@@ -11,6 +11,7 @@ import {
   type WrongAnswerExplanation,
 } from '@/lib/simulator-wrong-answers';
 import { safeRecordSimulatorTopicMemory } from '@/lib/simulator-topic-memory';
+import { normalizeForCompare, parseCorrectAnswers } from '@/lib/simulator-core';
 
 export interface Pregunta {
   id: string;
@@ -479,18 +480,48 @@ export async function registrarRespuestaUsuario(data: {
   usuario_id: string;
   pregunta_id: string;
   materia_id: string;
-  es_correcta: boolean;
+  respuesta_seleccionada: string | string[];
 }) {
   try {
     const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const peso = data.es_correcta ? 1 : 3;
+    if (!user?.id || user.id !== data.usuario_id) {
+      return { success: false, message: 'Sesion no valida.' };
+    }
+
+    const { data: question, error: questionError } = await supabase
+      .from('preguntas_banco')
+      .select('materia_id, respuesta_correcta')
+      .eq('id', data.pregunta_id)
+      .eq('materia_id', data.materia_id)
+      .maybeSingle();
+
+    if (questionError || !question) {
+      return { success: false, message: 'No encontramos la pregunta a registrar.' };
+    }
+
+    const selectedAnswers = (Array.isArray(data.respuesta_seleccionada)
+      ? data.respuesta_seleccionada
+      : [data.respuesta_seleccionada]
+    )
+      .filter((answer): answer is string => typeof answer === 'string')
+      .map(normalizeForCompare)
+      .filter(Boolean);
+    const expectedAnswers = parseCorrectAnswers(question.respuesta_correcta).map(normalizeForCompare);
+    const esCorrecta =
+      selectedAnswers.length === expectedAnswers.length &&
+      selectedAnswers.every((answer) => expectedAnswers.includes(answer));
+
+    const peso = esCorrecta ? 1 : 3;
 
     const { error } = await supabase.from('historial_respuestas').insert({
       usuario_id: data.usuario_id,
       pregunta_id: data.pregunta_id,
       materia_id: data.materia_id,
-      es_correcta: data.es_correcta,
+      es_correcta: esCorrecta,
       peso,
       fecha_respuesta: new Date().toISOString(),
     });

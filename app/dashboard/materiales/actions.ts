@@ -58,6 +58,9 @@ export type UploadStudentMaterialResult = ActionResult & {
   materialId?: string;
 };
 
+const MAX_STUDENT_MATERIALS_PER_DAY = 5;
+const MAX_PENDING_STUDENT_MATERIALS = 2;
+
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
     return false;
@@ -123,6 +126,34 @@ async function requireAuthenticatedUser() {
   return user;
 }
 
+async function assertStudentMaterialQuota(userId: string) {
+  const admin = createAdminClient();
+  const dayStart = new Date();
+  dayStart.setUTCHours(0, 0, 0, 0);
+
+  const [dailyResult, pendingResult] = await Promise.all([
+    admin
+      .from('student_materials')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', dayStart.toISOString()),
+    admin
+      .from('student_materials')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .in('processing_status', ['uploaded', 'processing']),
+  ]);
+
+  if (dailyResult.error) throw dailyResult.error;
+  if (pendingResult.error) throw pendingResult.error;
+  if ((dailyResult.count ?? 0) >= MAX_STUDENT_MATERIALS_PER_DAY) {
+    throw new Error('Alcanzaste el limite de 5 materiales por dia. Intenta nuevamente manana.');
+  }
+  if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
+    throw new Error('Ya tenes 2 materiales en procesamiento. Espera a que finalice uno antes de subir otro.');
+  }
+}
+
 async function updateStudentMaterialProcessing(
   materialId: string,
   input: {
@@ -186,6 +217,8 @@ function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   return 'Detectamos un PDF con texto nativo. Seguimos con extraccion estructurada por temas y bloques.';
 }
 
+// Transitional implementation kept for a short rollback window while the service is adopted.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function legacyRunStudentMaterialProcessingPipeline(input: {
   materialId: string;
   ownerUserId?: string;
@@ -330,6 +363,7 @@ export async function uploadStudentMaterialAction(formData: FormData): Promise<U
   try {
     const user = await requireAuthenticatedUser();
     const admin = createAdminClient();
+    await assertStudentMaterialQuota(user.id);
 
     const parsedMetadata = studentMaterialUploadMetadataSchema.safeParse({
       universidadId: String(formData.get('universidadId') ?? '').trim(),
@@ -512,13 +546,7 @@ export async function processStudentMaterialAction(materialId: string): Promise<
         );
       }
 
-      await updateStudentMaterialProcessing(materialId, {
-        processingStatus: 'failed',
-        processingStage: 'failed',
-        processingProgress: 0,
-        processingMessage: 'No pudimos terminar el procesamiento del PDF.',
-        processingError: error instanceof Error ? error.message : 'Error desconocido al procesar el PDF.',
-      });
+      await markStudentMaterialProcessingFailed(materialId, error);
     } catch (updateError) {
       logError('studentMaterials.processStatusUpdate', updateError, { materialId });
     }

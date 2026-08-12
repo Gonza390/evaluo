@@ -61,25 +61,23 @@ export function rateLimitHeaders(result: RateLimitResult) {
   return headers;
 }
 
-export async function enforceRateLimit(options: {
-  key: string;
-  limit: number;
-  windowMs: number;
-}): Promise<RateLimitResult> {
+type RateLimitRpcClient = ReturnType<typeof createAdminClient> & {
+  rpc: (
+    functionName: string,
+    parameters: { p_key: string; p_limit: number; p_window_seconds: number }
+  ) => Promise<{ data: Array<{ allowed: boolean; remaining: number; reset_at: string }> | null; error: Error | null }>;
+};
+
+function isMissingSchemaError(error: Error | null) {
+  const errorCode = error && 'code' in error ? String(error.code ?? '') : '';
+  return errorCode === 'PGRST202' || errorCode === '42883';
+}
+
+async function enforceDirectTableRateLimit(
+  supabase: ReturnType<typeof createAdminClient>,
+  options: { key: string; limit: number; windowMs: number }
+): Promise<RateLimitResult> {
   const now = Date.now();
-  pruneMemoryBuckets(now);
-
-  const memory = memoryBuckets.get(options.key);
-  if (memory && memory.resetAt > now && memory.count >= options.limit) {
-    return {
-      allowed: false,
-      limit: options.limit,
-      remaining: 0,
-      resetAt: memory.resetAt,
-    };
-  }
-
-  const supabase = createAdminClient();
 
   const { data: existing, error: readError } = await supabase
     .from('rate_limits')
@@ -148,5 +146,57 @@ export async function enforceRateLimit(options: {
     limit: options.limit,
     remaining: Math.max(0, options.limit - newCount),
     resetAt: existingResetAt,
+  };
+}
+
+export async function enforceRateLimit(options: {
+  key: string;
+  limit: number;
+  windowMs: number;
+}): Promise<RateLimitResult> {
+  const now = Date.now();
+  pruneMemoryBuckets(now);
+
+  const memory = memoryBuckets.get(options.key);
+  if (memory && memory.resetAt > now && memory.count >= options.limit) {
+    return {
+      allowed: false,
+      limit: options.limit,
+      remaining: 0,
+      resetAt: memory.resetAt,
+    };
+  }
+
+  const supabase = createAdminClient();
+  const rpcClient = supabase as unknown as RateLimitRpcClient;
+
+  const { data, error } = await rpcClient.rpc('consume_rate_limit', {
+    p_key: options.key,
+    p_limit: options.limit,
+    p_window_seconds: Math.ceil(options.windowMs / 1_000),
+  });
+
+  if (error || !data?.[0]) {
+    if (!isMissingSchemaError(error)) {
+      console.warn('rate-limit rpc failed, allowing request', error?.message);
+      return {
+        allowed: true,
+        limit: options.limit,
+        remaining: options.limit,
+        resetAt: now + options.windowMs,
+      };
+    }
+    return enforceDirectTableRateLimit(supabase, options);
+  }
+
+  const result = data[0];
+  const resetAt = new Date(result.reset_at).getTime();
+  memoryBuckets.set(options.key, { count: options.limit - result.remaining, resetAt });
+
+  return {
+    allowed: result.allowed,
+    limit: options.limit,
+    remaining: result.remaining,
+    resetAt,
   };
 }
