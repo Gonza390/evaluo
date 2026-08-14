@@ -31,6 +31,15 @@ export async function generateMetadata({
 
   try {
     const carreraData = await getCarreraById(carreraId);
+    if (!carreraData) {
+      return {
+        title: 'Materias',
+        robots: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
     const universidadData = carreraData.universidad_id
       ? await getUniversidadById(carreraData.universidad_id)
       : null;
@@ -141,7 +150,7 @@ export default async function MateriasPage({
         initialMaterias={materias}
         carreraId={carreraId}
         carreraNombre={carreraData?.nombre}
-        carreraData={carreraData}
+        carreraData={carreraData ?? undefined}
         universidadNombre={universidadData?.nombre}
         universidadId={universidadData?.id}
         sharedStudentMaterials={sharedStudentMaterials}

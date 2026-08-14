@@ -2,24 +2,97 @@
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isAdminActor, listAdminUserIds } from '@/lib/admin-users';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 import { logError } from '@/lib/observability';
 import type { DashboardAnalytics, DashboardMateriaState } from '@/types/supabase';
-import { requirePremiumUser } from '@/lib/premium';
+import { requirePremiumUser, hasPremiumAccess, countErroresAttemptsThisWeek, FREE_ERRORS_REVIEWS_PER_WEEK } from '@/lib/premium';
 import {
   buildWrongAnswersExplanations,
   type WrongAnswerExplanation,
 } from '@/lib/simulator-wrong-answers';
 import { safeRecordSimulatorTopicMemory } from '@/lib/simulator-topic-memory';
 import { normalizeForCompare, parseCorrectAnswers } from '@/lib/simulator-core';
+import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
+import { enforceServerActionRateLimit, getServerActionClientKey } from '@/lib/rate-limit';
 
+/**
+ * Pregunta expuesta al cliente. NUNCA incluye `respuesta_correcta`: la
+ * corrección ocurre en el servidor (ver `registrarRespuestaUsuario`).
+ * `correctCount` permite el UX multi-respuesta sin revelar cuáles opciones
+ * son correctas.
+ */
 export interface Pregunta {
   id: string;
   enunciado: string;
   opciones: string[];
-  respuesta_correcta: string;
   materia_id: string;
   parcial: number;
+  correctCount: number;
+}
+
+export interface GradedPreguntaResult {
+  correct: boolean;
+  correct_indexes: number[];
+}
+
+export type GradeQuestionServerResult =
+  | { success: false; message: string; error?: unknown }
+  | { success: true; correct: boolean; correct_indexes: number[] };
+
+export type FinalizarSimuladorServerResult =
+  | { success: false; message: string }
+  | {
+      success: true;
+      finishedAt: string;
+      attemptId: string | null;
+      topicMemory: { processed: number; linked: number };
+      summary: {
+        materia_id: string;
+        parcial: number;
+        total_preguntas: number;
+        respuestas_correctas: number;
+        answered_questions: number;
+        tiempo_restante: number;
+      };
+      resultados: Record<string, GradedPreguntaResult>;
+    };
+
+type PreguntaBancoRow = {
+  id: string;
+  enunciado: string;
+  opciones: unknown;
+  respuesta_correcta: string;
+  materia_id: string | null;
+  parcial: number | null;
+};
+
+function sanitizePreguntaRow(row: PreguntaBancoRow): Pregunta {
+  return {
+    id: row.id,
+    enunciado: row.enunciado,
+    opciones: Array.isArray(row.opciones)
+      ? (row.opciones.filter((option): option is string => typeof option === 'string') as string[])
+      : [],
+    materia_id: row.materia_id ?? '',
+    parcial: row.parcial ?? 1,
+    correctCount: parseCorrectAnswers(row.respuesta_correcta).length,
+  };
+}
+
+function gradePregunta(input: {
+  respuestaCorrecta: string;
+  opciones: string[];
+  respuestaSeleccionada: string[];
+}): GradedPreguntaResult {
+  const expected = parseCorrectAnswers(input.respuestaCorrecta).map(normalizeForCompare);
+  const selected = input.respuestaSeleccionada.map(normalizeForCompare).filter(Boolean);
+  const correct =
+    selected.length === expected.length && selected.every((answer) => expected.includes(answer));
+  const correctIndexes = input.opciones
+    .map((option, index) => ({ option, index }))
+    .filter(({ option }) => expected.includes(normalizeForCompare(option)))
+    .map(({ index }) => index);
+  return { correct, correct_indexes: correctIndexes };
 }
 
 export interface DashboardState {
@@ -182,10 +255,22 @@ export async function getPreguntasSimulador(
   carreraId?: string
 ): Promise<Pregunta[]> {
   try {
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `sim:get:${clientKey}`,
+      limit: 30,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return [];
+    }
+
+    // El banco se lee con service_role: nunca viaja la respuesta_correcta al cliente.
+    const admin = createAdminClient();
     const supabase = await createClientServer();
 
     const runQuery = async (scope: 'strict' | 'university' | 'shared') =>
-      buildPreguntasBancoQuery(supabase, materiaId, parcial, universidadId, carreraId, scope);
+      buildPreguntasBancoQuery(admin, materiaId, parcial, universidadId, carreraId, scope);
 
     let { data, error } = await runQuery('strict');
 
@@ -211,15 +296,17 @@ export async function getPreguntasSimulador(
       return [];
     }
 
+    const sanitized = (data as PreguntaBancoRow[]).map(sanitizePreguntaRow);
+
     const questionLimit = parcial === 3 ? 50 : 30;
     const diversified = await selectDiverseSimulatorQuestions(
       supabase,
-      data as Pregunta[],
+      sanitized,
       materiaId,
       parcial,
       questionLimit
     );
-    return diversified as Pregunta[];
+    return diversified;
   } catch (error) {
     logError('actions.getPreguntasSimulador', error, {
       materiaId,
@@ -233,32 +320,39 @@ export async function getPreguntasSimulador(
 
 export async function getPreguntasSimuladorDemo(
   materiaId: string,
-  parcial: number,
-  universidadId?: string,
-  carreraId?: string
+  parcial: number
 ): Promise<Pregunta[]> {
   try {
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `sim:demo:${clientKey}`,
+      limit: 10,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return [];
+    }
+
     const admin = createAdminClient();
 
-    const runQuery = async (scope: 'strict' | 'university' | 'shared') =>
-      buildPreguntasBancoQuery(admin, materiaId, parcial, universidadId, carreraId, scope);
+    let query = admin
+      .from('preguntas_banco')
+      .select('*')
+      .eq('materia_id', materiaId)
+      .eq('es_demo', true);
 
-    let { data, error } = await runQuery('strict');
-
-    if ((!data || data.length === 0) && !error && universidadId && carreraId) {
-      ({ data, error } = await runQuery('university'));
+    if (parcial === 3) {
+      query = query.in('parcial', [1, 2]);
+    } else {
+      query = query.eq('parcial', parcial);
     }
 
-    if ((!data || data.length === 0) && !error) {
-      ({ data, error } = await runQuery('shared'));
-    }
+    const { data, error } = await query.limit(50);
 
     if (error) {
       logError('actions.getPreguntasSimuladorDemo.query', error, {
         materiaId,
         parcial,
-        universidadId: universidadId ?? null,
-        carreraId: carreraId ?? null,
       });
       throw new Error('No se pudieron obtener las preguntas de muestra.');
     }
@@ -267,15 +361,13 @@ export async function getPreguntasSimuladorDemo(
       return [];
     }
 
-    const shuffled = shuffleArray(data as Pregunta[]);
-    const questionLimit = parcial === 3 ? 50 : 30;
-    return shuffled.slice(0, questionLimit) as Pregunta[];
+    const sanitized = (data as PreguntaBancoRow[]).map(sanitizePreguntaRow);
+    const shuffled = shuffleArray(sanitized);
+    return shuffled.slice(0, DEMO_TOTAL_QUESTIONS);
   } catch (error) {
     logError('actions.getPreguntasSimuladorDemo', error, {
       materiaId,
       parcial,
-      universidadId: universidadId ?? null,
-      carreraId: carreraId ?? null,
     });
     return [];
   }
@@ -292,6 +384,14 @@ export async function getPreguntasSimuladorErrores(
     } = await supabase.auth.getUser();
 
     if (!user) return [];
+
+    const isPremium = await hasPremiumAccess(user.id);
+    if (!isPremium) {
+      const weeklyReviews = await countErroresAttemptsThisWeek(user.id);
+      if (weeklyReviews >= FREE_ERRORS_REVIEWS_PER_WEEK) {
+        return [];
+      }
+    }
 
     const { data: wrongHistory, error: wrongError } = await supabase
       .from('historial_respuestas')
@@ -320,10 +420,8 @@ export async function getPreguntasSimuladorErrores(
 
     if (rankedIds.length === 0) return [];
 
-    let query = supabase
-      .from('preguntas_banco')
-      .select('*')
-      .in('id', rankedIds);
+    const admin = createAdminClient();
+    let query = admin.from('preguntas_banco').select('*').in('id', rankedIds);
 
     if (parcial) {
       query = query.eq('parcial', parcial);
@@ -335,8 +433,9 @@ export async function getPreguntasSimuladorErrores(
       return [];
     }
 
-    const shuffled = shuffleArray(questions as Pregunta[]);
-    return shuffled.slice(0, 30) as Pregunta[];
+    const sanitized = (questions as PreguntaBancoRow[]).map(sanitizePreguntaRow);
+    const shuffled = shuffleArray(sanitized);
+    return shuffled.slice(0, 30);
   } catch (error) {
     logError('actions.getPreguntasSimuladorErrores', error, { materiaId, parcial });
     return [];
@@ -371,16 +470,9 @@ export async function getPreguntasSimuladorPremium(
       .order('orden', { ascending: true })
       .limit(50);
 
-    return ((rows ?? []) as Array<{ id: string; enunciado: string; opciones: unknown; respuesta_correcta: string }>).map((row) => ({
-      id: row.id,
-      enunciado: row.enunciado,
-      opciones: Array.isArray(row.opciones)
-        ? (row.opciones.filter((o: unknown) => typeof o === 'string') as string[])
-        : [],
-      respuesta_correcta: row.respuesta_correcta,
-      materia_id: materiaId,
-      parcial,
-    }));
+    return ((rows ?? []) as PreguntaBancoRow[]).map((row) =>
+      sanitizePreguntaRow({ ...row, materia_id: materiaId, parcial })
+    );
   } catch (error) {
     logError('actions.getPreguntasSimuladorPremium', error, { materiaId, parcial });
     return [];
@@ -473,15 +565,20 @@ export async function checkProfileStatus(userId: string) {
 }
 
 /**
- * Registra la respuesta de un usuario a una pregunta en el historial.
- * Se realiza de forma silenciosa para el usuario.
+ * Registra la respuesta de un usuario a una pregunta. La corrección ocurre en
+ * el servidor con service_role: el cliente recibe `correct` y `correct_indexes`
+ * (índices de las opciones correctas) pero nunca la respuesta correcta cruda.
+ *
+ * - Preguntas del banco: persiste el intento en historial_respuestas.
+ * - Preguntas premium: solo se devuelve feedback (el FK de historial_respuestas
+ *   apunta únicamente a preguntas_banco).
  */
 export async function registrarRespuestaUsuario(data: {
   usuario_id: string;
   pregunta_id: string;
   materia_id: string;
   respuesta_seleccionada: string | string[];
-}) {
+}): Promise<GradeQuestionServerResult> {
   try {
     const supabase = await createClientServer();
     const {
@@ -492,15 +589,14 @@ export async function registrarRespuestaUsuario(data: {
       return { success: false, message: 'Sesion no valida.' };
     }
 
-    const { data: question, error: questionError } = await supabase
-      .from('preguntas_banco')
-      .select('materia_id, respuesta_correcta')
-      .eq('id', data.pregunta_id)
-      .eq('materia_id', data.materia_id)
-      .maybeSingle();
-
-    if (questionError || !question) {
-      return { success: false, message: 'No encontramos la pregunta a registrar.' };
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `sim:grade:${user.id}:${clientKey}`,
+      limit: 60,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return { success: false, message: 'Demasiados intentos. Volvé a intentar en unos segundos.' };
     }
 
     const selectedAnswers = (Array.isArray(data.respuesta_seleccionada)
@@ -510,18 +606,55 @@ export async function registrarRespuestaUsuario(data: {
       .filter((answer): answer is string => typeof answer === 'string')
       .map(normalizeForCompare)
       .filter(Boolean);
-    const expectedAnswers = parseCorrectAnswers(question.respuesta_correcta).map(normalizeForCompare);
-    const esCorrecta =
-      selectedAnswers.length === expectedAnswers.length &&
-      selectedAnswers.every((answer) => expectedAnswers.includes(answer));
 
-    const peso = esCorrecta ? 1 : 3;
+    const admin = createAdminClient();
 
-    const { error } = await supabase.from('historial_respuestas').insert({
+    const { data: question, error: questionError } = await admin
+      .from('preguntas_banco')
+      .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+      .eq('id', data.pregunta_id)
+      .eq('materia_id', data.materia_id)
+      .maybeSingle();
+
+    if (questionError || !question) {
+      const { data: premiumQuestion, error: premiumError } = await admin
+        .from('premium_questions')
+        .select('id, enunciado, opciones, respuesta_correcta, set_id')
+        .eq('id', data.pregunta_id)
+        .maybeSingle();
+
+      if (premiumError || !premiumQuestion) {
+        return { success: false, message: 'No encontramos la pregunta a registrar.' };
+      }
+
+      const opciones = Array.isArray(premiumQuestion.opciones)
+        ? (premiumQuestion.opciones.filter((o: unknown) => typeof o === 'string') as string[])
+        : [];
+      const feedback = gradePregunta({
+        respuestaCorrecta: premiumQuestion.respuesta_correcta,
+        opciones,
+        respuestaSeleccionada: selectedAnswers,
+      });
+
+      return { success: true, ...feedback };
+    }
+
+    const opciones = Array.isArray(question.opciones)
+      ? (question.opciones.filter((o: unknown) => typeof o === 'string') as string[])
+      : [];
+    const feedback = gradePregunta({
+      respuestaCorrecta: question.respuesta_correcta,
+      opciones,
+      respuestaSeleccionada: selectedAnswers,
+    });
+
+    const peso = feedback.correct ? 1 : 3;
+
+    const { error } = await admin.from('historial_respuestas').insert({
       usuario_id: data.usuario_id,
       pregunta_id: data.pregunta_id,
       materia_id: data.materia_id,
-      es_correcta: esCorrecta,
+      es_correcta: feedback.correct,
       peso,
       fecha_respuesta: new Date().toISOString(),
     });
@@ -530,14 +663,75 @@ export async function registrarRespuestaUsuario(data: {
       throw error;
     }
 
-    return { success: true };
+    return { success: true, ...feedback };
   } catch (error) {
     logError('actions.registrarRespuestaUsuario', error, {
       usuarioId: data.usuario_id,
       preguntaId: data.pregunta_id,
       materiaId: data.materia_id,
     });
-    return { success: false, error };
+    return { success: false, message: 'No se pudo registrar la respuesta.', error };
+  }
+}
+
+/**
+ * Corrección server-side para el modo demo (sin sesión). Mismo contrato que
+ * registrarRespuestaUsuario pero acotado a preguntas `es_demo` y con rate limit
+ * por IP (no hay usuario que vincular).
+ */
+export async function corregirPreguntaDemo(data: {
+  pregunta_id: string;
+  materia_id: string;
+  respuesta_seleccionada: string | string[];
+}): Promise<GradeQuestionServerResult> {
+  try {
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `sim:demo-grade:${clientKey}`,
+      limit: 30,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return { success: false, message: 'Demasiados intentos. Volvé a intentar en unos segundos.' };
+    }
+
+    const admin = createAdminClient();
+    const { data: question, error: questionError } = await admin
+      .from('preguntas_banco')
+      .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+      .eq('id', data.pregunta_id)
+      .eq('materia_id', data.materia_id)
+      .eq('es_demo', true)
+      .maybeSingle();
+
+    if (questionError || !question) {
+      return { success: false, message: 'No encontramos la pregunta a corregir.' };
+    }
+
+    const selectedAnswers = (Array.isArray(data.respuesta_seleccionada)
+      ? data.respuesta_seleccionada
+      : [data.respuesta_seleccionada]
+    )
+      .filter((answer): answer is string => typeof answer === 'string')
+      .map(normalizeForCompare)
+      .filter(Boolean);
+
+    const opciones = Array.isArray(question.opciones)
+      ? (question.opciones.filter((o: unknown) => typeof o === 'string') as string[])
+      : [];
+    const feedback = gradePregunta({
+      respuestaCorrecta: question.respuesta_correcta,
+      opciones,
+      respuestaSeleccionada: selectedAnswers,
+    });
+
+    return { success: true, ...feedback };
+  } catch (error) {
+    logError('actions.corregirPreguntaDemo', error, {
+      preguntaId: data.pregunta_id,
+      materiaId: data.materia_id,
+    });
+    return { success: false, message: 'No se pudo corregir la pregunta.', error };
   }
 }
 
@@ -546,13 +740,12 @@ export async function finalizarSimuladorAction(data: {
   materia_id: string;
   parcial: number;
   total_preguntas: number;
-  respuestas_correctas: number;
   answered_questions: number;
   tiempo_restante: number;
   premium_only?: boolean;
-  wrong_question_ids?: string[];
-  answered_question_ids?: string[];
-}) {
+  mode?: string;
+  respuestas: Array<{ pregunta_id: string; respuesta_seleccionada: string | string[] }>;
+}): Promise<FinalizarSimuladorServerResult> {
   try {
     const supabase = await createClientServer();
     const {
@@ -563,23 +756,100 @@ export async function finalizarSimuladorAction(data: {
       return { success: false, message: 'Sesion no valida.' };
     }
 
-    const wrongQuestionIds = Array.from(new Set((data.wrong_question_ids ?? []).filter(Boolean)));
-    const answeredQuestionIds = Array.from(
-      new Set([...(data.answered_question_ids ?? []), ...wrongQuestionIds].filter(Boolean))
-    );
-    const wrongQuestionSet = new Set(wrongQuestionIds);
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `sim:finish:${user.id}:${clientKey}`,
+      limit: 20,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return { success: false, message: 'Demasiadas solicitudes. Volvé a intentar en unos segundos.' };
+    }
 
-    const { data: attemptRow, error: attemptError } = await supabase
+    // 1) Re-corregir en el servidor: nada de lo reportado por el cliente se da por válido.
+    const respuestas = (data.respuestas ?? []).filter(
+      (entry) => typeof entry.pregunta_id === 'string' && entry.pregunta_id
+    );
+    const respuestaIds = Array.from(new Set(respuestas.map((entry) => entry.pregunta_id)));
+
+    const admin = createAdminClient();
+
+    const [bancoRows, premiumRows] = await Promise.all([
+      respuestaIds.length > 0
+        ? admin
+            .from('preguntas_banco')
+            .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+            .in('id', respuestaIds)
+        : Promise.resolve({ data: [] as PreguntaBancoRow[], error: null }),
+      respuestaIds.length > 0
+        ? admin
+            .from('premium_questions')
+            .select('id, enunciado, opciones, respuesta_correcta, set_id')
+            .in('id', respuestaIds)
+        : Promise.resolve({ data: [] as PreguntaBancoRow[], error: null }),
+    ]);
+
+    const bancoById = new Map(
+      (bancoRows.data ?? []).map((question) => [question.id, question as PreguntaBancoRow])
+    );
+    const premiumById = new Map(
+      (premiumRows.data ?? []).map((question) => [question.id, question as PreguntaBancoRow])
+    );
+
+    const resultados = new Map<string, GradedPreguntaResult>();
+    const bancoWrongIds: string[] = [];
+    const premiumWrongIds: string[] = [];
+    let respuestasCorrectas = 0;
+    const answeredIds: string[] = [];
+
+    for (const entry of respuestas) {
+      const selectedAnswers = (Array.isArray(entry.respuesta_seleccionada)
+        ? entry.respuesta_seleccionada
+        : [entry.respuesta_seleccionada]
+      )
+        .filter((answer): answer is string => typeof answer === 'string')
+        .map(normalizeForCompare)
+        .filter(Boolean);
+
+      const question = bancoById.get(entry.pregunta_id) ?? premiumById.get(entry.pregunta_id);
+      if (!question) continue;
+
+      const opciones = Array.isArray(question.opciones)
+        ? (question.opciones.filter((o: unknown) => typeof o === 'string') as string[])
+        : [];
+      const feedback = gradePregunta({
+        respuestaCorrecta: question.respuesta_correcta,
+        opciones,
+        respuestaSeleccionada: selectedAnswers,
+      });
+
+      resultados.set(entry.pregunta_id, feedback);
+      answeredIds.push(entry.pregunta_id);
+      if (feedback.correct) {
+        respuestasCorrectas += 1;
+      } else if (bancoById.has(entry.pregunta_id)) {
+        bancoWrongIds.push(entry.pregunta_id);
+      } else {
+        premiumWrongIds.push(entry.pregunta_id);
+      }
+    }
+
+    const wrongQuestionIds = [...bancoWrongIds, ...premiumWrongIds];
+    const answeredQuestionIds = Array.from(new Set(answeredIds));
+
+    // 2) Persistir el intento.
+    const { data: attemptRow, error: attemptError } = await admin
       .from('simulator_attempts')
       .insert({
         user_id: data.usuario_id,
         materia_id: data.materia_id,
         parcial: data.parcial,
         total_questions: data.total_preguntas,
-        correct_answers: data.respuestas_correctas,
+        correct_answers: respuestasCorrectas,
         wrong_answers: wrongQuestionIds.length,
-        answered_questions: data.answered_questions,
+        answered_questions: answeredQuestionIds.length,
         premium_only: Boolean(data.premium_only),
+        mode: data.mode ?? 'regular',
       })
       .select('id')
       .single();
@@ -588,16 +858,26 @@ export async function finalizarSimuladorAction(data: {
       throw attemptError;
     }
 
+    // 3) Registrar errores (banco y premium en columnas separadas).
     if (attemptRow?.id && wrongQuestionIds.length > 0) {
-      const wrongRows = wrongQuestionIds.map((preguntaId) => ({
-        attempt_id: attemptRow.id,
-        user_id: data.usuario_id,
-        materia_id: data.materia_id,
-        parcial: data.parcial,
-        pregunta_id: preguntaId,
-      }));
+      const wrongRows = [
+        ...bancoWrongIds.map((preguntaId) => ({
+          attempt_id: attemptRow.id,
+          user_id: data.usuario_id,
+          materia_id: data.materia_id,
+          parcial: data.parcial,
+          pregunta_id: preguntaId,
+        })),
+        ...premiumWrongIds.map((preguntaId) => ({
+          attempt_id: attemptRow.id,
+          user_id: data.usuario_id,
+          materia_id: data.materia_id,
+          parcial: data.parcial,
+          premium_pregunta_id: preguntaId,
+        })),
+      ];
 
-      const { error: wrongInsertError } = await supabase
+      const { error: wrongInsertError } = await admin
         .from('simulator_attempt_wrong_questions')
         .insert(wrongRows);
 
@@ -609,8 +889,9 @@ export async function finalizarSimuladorAction(data: {
     let memoryResult = { processed: 0, linked: 0 };
     if (attemptRow?.id && answeredQuestionIds.length > 0) {
       try {
+        const wrongQuestionSet = new Set(wrongQuestionIds);
         memoryResult = await safeRecordSimulatorTopicMemory({
-          admin: createAdminClient(),
+          admin,
           userId: data.usuario_id,
           materiaId: data.materia_id,
           parcial: data.parcial,
@@ -639,10 +920,11 @@ export async function finalizarSimuladorAction(data: {
         materia_id: data.materia_id,
         parcial: data.parcial,
         total_preguntas: data.total_preguntas,
-        respuestas_correctas: data.respuestas_correctas,
-        answered_questions: data.answered_questions,
+        respuestas_correctas: respuestasCorrectas,
+        answered_questions: answeredQuestionIds.length,
         tiempo_restante: data.tiempo_restante,
       },
+      resultados: Object.fromEntries(resultados.entries()),
     };
   } catch (error) {
     logError('actions.finalizarSimulador', error, {
@@ -673,7 +955,10 @@ export async function submitSimulatorRatingAction(data: {
       return { success: true };
     }
 
-    const { error } = await supabase.from('analytics_events').insert({
+    // analytics_events no permite inserts desde el cliente (policy con check(false)),
+    // por lo que la valoración se persiste con service_role.
+    const admin = createAdminClient();
+    const { error } = await admin.from('analytics_events').insert({
       event_name: 'simulator_rating',
       user_id: user.id,
       session_key: `simulator_rating:${user.id}`,
@@ -690,6 +975,11 @@ export async function submitSimulatorRatingAction(data: {
       throw error;
     }
 
+    // El voto es una acción explícita del usuario: invalida la caché de
+    // ratings y del bootstrap de la materia para reflejarlo al instante.
+    revalidateTag('simulator-ratings', 'max');
+    revalidateTag('materia-bootstrap', 'max');
+
     return { success: true };
   } catch (error) {
     logError('actions.submitSimulatorRating', error, {
@@ -701,161 +991,122 @@ export async function submitSimulatorRatingAction(data: {
   }
 }
 
-export async function getSimulatorRatingsSummaryByMateria(
-  materiaId: string
-): Promise<SimulatorRatingSummary[]> {
-  try {
-    const admin = createAdminClient();
-    const { data, error } = await admin
-      .from('analytics_events')
-      .select('user_id, created_at, metadata')
-      .eq('event_name', 'simulator_rating')
-      .contains('metadata', { materia_id: materiaId })
-      .order('created_at', { ascending: false })
-      .limit(5000);
-
-    if (error) {
-      throw error;
-    }
-
-    const latestByUserAndParcial = new Map<string, { parcial: number; vote: 1 | -1 }>();
-
-    for (const row of data ?? []) {
-      const metadata =
-        row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
-          ? (row.metadata as Record<string, unknown>)
-          : null;
-      const parcial = Number(metadata?.parcial);
-      const vote = Number(metadata?.vote_type) === -1 ? -1 : Number(metadata?.vote_type) === 1 ? 1 : null;
-      const metadataMateriaId = typeof metadata?.materia_id === 'string' ? metadata.materia_id : null;
-      const userId = row.user_id;
-
-      if (!userId || !metadataMateriaId || metadataMateriaId !== materiaId || ![1, 2, 3].includes(parcial) || !vote) {
-        continue;
-      }
-
-      const key = `${userId}:${parcial}`;
-      if (!latestByUserAndParcial.has(key)) {
-        latestByUserAndParcial.set(key, { parcial, vote });
-      }
-    }
-
-    const summaryMap = new Map<number, { likes: number; dislikes: number }>();
-    for (const { parcial, vote } of latestByUserAndParcial.values()) {
-      const current = summaryMap.get(parcial) ?? { likes: 0, dislikes: 0 };
-      if (vote === 1) current.likes += 1;
-      if (vote === -1) current.dislikes += 1;
-      summaryMap.set(parcial, current);
-    }
-
-    return [1, 2, 3].map((parcial) => {
-      const likes = summaryMap.get(parcial)?.likes ?? 0;
-      const dislikes = summaryMap.get(parcial)?.dislikes ?? 0;
-      const total = likes + dislikes;
-      return {
+const loadSimulatorRatingsByMateria = unstable_cache(
+  async (materiaId: string): Promise<SimulatorRatingSummary[]> => {
+    const emptySummary = () =>
+      [1, 2, 3].map((parcial) => ({
         parcial,
-        likes,
-        dislikes,
-        total,
-        approvalPercent: total > 0 ? Math.round((likes / total) * 100) : 0,
-        averageScore: total > 0 ? (likes - dislikes) / total : 0,
-      };
-    });
-  } catch (error) {
-    logError('actions.getSimulatorRatingsSummaryByMateria', error, { materiaId });
-    return [
-      { parcial: 1, likes: 0, dislikes: 0, total: 0, approvalPercent: 0, averageScore: 0 },
-      { parcial: 2, likes: 0, dislikes: 0, total: 0, approvalPercent: 0, averageScore: 0 },
-      { parcial: 3, likes: 0, dislikes: 0, total: 0, approvalPercent: 0, averageScore: 0 },
-    ];
-  }
-}
+        likes: 0,
+        dislikes: 0,
+        total: 0,
+        approvalPercent: 0,
+        averageScore: 0,
+      }));
 
-export async function getSimulatorUsageSummaryByMateria(
-  materiaId: string
-): Promise<SimulatorUsageSummary[]> {
-  try {
-    const admin = createAdminClient();
-    const adminUserIds = new Set(await listAdminUserIds());
-    const simulatorPathPrefix = `/simulador/${materiaId}/`;
-    const rows: Array<{
-      user_id: string | null;
-      session_key: string | null;
-      event_name: string;
-      path: string | null;
-      metadata: unknown | null;
-      created_at: string | null;
-    }> = [];
-
-    let from = 0;
-    const pageSize = 1000;
-
-    while (true) {
-      const to = from + pageSize - 1;
-      const { data, error } = await admin
-        .from('analytics_events')
-        .select('user_id, session_key, event_name, path, metadata, created_at')
-        .in('event_name', ['page_view', 'simulator_started'])
-        .order('created_at', { ascending: false })
-        .range(from, to);
+    try {
+      const admin = createAdminClient();
+      // La función agregada no está en los tipos generados de Database.
+      const rpc = admin.rpc as unknown as (
+        fn: string,
+        args?: Record<string, unknown>
+      ) => Promise<{ data: unknown; error: unknown }>;
+      const { data, error } = await rpc('get_simulator_ratings_summary', {
+        p_materia_id: materiaId,
+      });
 
       if (error) {
         throw error;
       }
 
-      const chunk = data ?? [];
-      rows.push(...chunk);
+      const rows = (data ?? []) as Array<{ parcial: number; likes: number; dislikes: number }>;
+      const byParcial = new Map(rows.map((row) => [row.parcial, row]));
 
-      if (chunk.length < pageSize || rows.length >= 5000) {
-        break;
+      return [1, 2, 3].map((parcial) => {
+        const row = byParcial.get(parcial);
+        const likes = Number(row?.likes ?? 0);
+        const dislikes = Number(row?.dislikes ?? 0);
+        const total = likes + dislikes;
+        return {
+          parcial,
+          likes,
+          dislikes,
+          total,
+          approvalPercent: total > 0 ? Math.round((likes / total) * 100) : 0,
+          averageScore: total > 0 ? (likes - dislikes) / total : 0,
+        };
+      });
+    } catch (error) {
+      logError('actions.getSimulatorRatingsSummaryByMateria', error, { materiaId });
+      return emptySummary();
+    }
+  },
+  ['simulator-ratings'],
+  { revalidate: 600, tags: ['simulator-ratings', 'materia-bootstrap'] }
+);
+
+export async function getSimulatorRatingsSummaryByMateria(
+  materiaId: string
+): Promise<SimulatorRatingSummary[]> {
+  return loadSimulatorRatingsByMateria(materiaId);
+}
+
+const loadSimulatorUsageByMateria = unstable_cache(
+  async (materiaId: string): Promise<SimulatorUsageSummary[]> => {
+    try {
+      const admin = createAdminClient();
+      const adminUserIds = new Set(await listAdminUserIds());
+      const simulatorPathPrefix = `/simulador/${materiaId}/`;
+
+      // Ventana de 90 días, filtrada por path y event_name en SQL: ya no se
+      // descargan miles de filas para contar.
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data, error } = await admin
+        .from('analytics_events')
+        .select('user_id, path')
+        .eq('event_name', 'page_view')
+        .like('path', `${simulatorPathPrefix}%`)
+        .gte('created_at', ninetyDaysAgo);
+
+      if (error) {
+        throw error;
       }
 
-      from += pageSize;
+      const viewsByParcial = new Map<number, number>();
+
+      for (const row of data ?? []) {
+        if (row.user_id && adminUserIds.has(row.user_id)) continue;
+
+        const path = row.path ?? '';
+        if (!path.startsWith(simulatorPathPrefix)) continue;
+
+        const parcial = Number(path.slice(simulatorPathPrefix.length).split('/')[0]);
+        if (!Number.isFinite(parcial) || ![1, 2, 3].includes(parcial)) continue;
+
+        viewsByParcial.set(parcial, (viewsByParcial.get(parcial) ?? 0) + 1);
+      }
+
+      return [1, 2, 3].map((parcial) => ({
+        parcial,
+        views: viewsByParcial.get(parcial) ?? 0,
+      }));
+    } catch (error) {
+      logError('actions.getSimulatorUsageSummaryByMateria', error, { materiaId });
+      return [
+        { parcial: 1, views: 0 },
+        { parcial: 2, views: 0 },
+        { parcial: 3, views: 0 },
+      ];
     }
+  },
+  ['simulator-usage'],
+  { revalidate: 600, tags: ['simulator-usage'] }
+);
 
-    const viewsByParcial = new Map<number, number>();
-
-    for (const row of rows) {
-      if (row.user_id && adminUserIds.has(row.user_id)) continue;
-
-      const metadata =
-        row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
-          ? (row.metadata as Record<string, unknown>)
-          : null;
-
-      const metadataMateriaId = typeof metadata?.materia_id === 'string' ? metadata.materia_id : null;
-      const metadataParcial = Number(metadata?.parcial);
-      const path = row.path ?? '';
-      const pathMatch = path.match(/^\/simulador\/([^/]+)\/(\d+)/);
-      const pathMateriaId = pathMatch?.[1] ?? null;
-      const pathParcial = pathMatch?.[2] ? Number(pathMatch[2]) : NaN;
-      const parcial = Number.isFinite(metadataParcial)
-        ? metadataParcial
-        : Number.isFinite(pathParcial)
-          ? pathParcial
-          : null;
-      const resolvedMateriaId = metadataMateriaId ?? pathMateriaId;
-
-      if (!resolvedMateriaId || resolvedMateriaId !== materiaId) continue;
-      if (!parcial || ![1, 2, 3].includes(parcial)) continue;
-      if (!path.startsWith(simulatorPathPrefix)) continue;
-      if (row.event_name !== 'page_view') continue;
-
-      viewsByParcial.set(parcial, (viewsByParcial.get(parcial) ?? 0) + 1);
-    }
-
-    return [1, 2, 3].map((parcial) => ({
-      parcial,
-      views: viewsByParcial.get(parcial) ?? 0,
-    }));
-  } catch (error) {
-    logError('actions.getSimulatorUsageSummaryByMateria', error, { materiaId });
-    return [
-      { parcial: 1, views: 0 },
-      { parcial: 2, views: 0 },
-      { parcial: 3, views: 0 },
-    ];
-  }
+export async function getSimulatorUsageSummaryByMateria(
+  materiaId: string
+): Promise<SimulatorUsageSummary[]> {
+  return loadSimulatorUsageByMateria(materiaId);
 }
 
 export async function getPreguntasSimuladorUltimoIntentoPremium(
@@ -885,7 +1136,7 @@ export async function getPreguntasSimuladorUltimoIntentoPremium(
 
     const { data: wrongRows, error: wrongError } = await supabase
       .from('simulator_attempt_wrong_questions')
-      .select('pregunta_id')
+      .select('pregunta_id, premium_pregunta_id')
       .eq('attempt_id', latestAttempt.id)
       .order('created_at', { ascending: true });
 
@@ -893,7 +1144,13 @@ export async function getPreguntasSimuladorUltimoIntentoPremium(
       return [];
     }
 
-    const wrongIds = Array.from(new Set(wrongRows.map((row) => row.pregunta_id).filter(Boolean)));
+    const wrongIds = Array.from(
+      new Set(
+        wrongRows
+          .flatMap((row) => [row.pregunta_id, row.premium_pregunta_id])
+          .filter((id): id is string => Boolean(id))
+      )
+    );
     if (wrongIds.length === 0) return [];
 
     const admin = createAdminClient();
@@ -909,16 +1166,7 @@ export async function getPreguntasSimuladorUltimoIntentoPremium(
     const byId = new Map(
       questions.map((question) => [
         question.id,
-        {
-          id: question.id,
-          enunciado: question.enunciado,
-          opciones: Array.isArray(question.opciones)
-            ? (question.opciones.filter((o: unknown) => typeof o === 'string') as string[])
-            : [],
-          respuesta_correcta: question.respuesta_correcta,
-          materia_id: materiaId,
-          parcial,
-        } as Pregunta,
+        sanitizePreguntaRow({ ...(question as PreguntaBancoRow), materia_id: materiaId, parcial }),
       ])
     );
     return wrongIds
@@ -1030,7 +1278,10 @@ export async function getPartialStudyInsights(
       return null;
     }
 
-    const { count: totalPreguntasParcial } = await supabase
+    // El banco se lee con service_role (RLS de preguntas_banco es admin-only).
+    const admin = createAdminClient();
+
+    const { count: totalPreguntasParcial } = await admin
       .from('preguntas_banco')
       .select('*', { count: 'exact', head: true })
       .eq('materia_id', materiaId)
@@ -1053,7 +1304,7 @@ export async function getPartialStudyInsights(
     let respuestasParcialCorrectas = 0;
 
     if (uniqueQuestionIds.length > 0) {
-      const { data: parcialQuestions } = await supabase
+      const { data: parcialQuestions } = await admin
         .from('preguntas_banco')
         .select('id')
         .in('id', uniqueQuestionIds)
@@ -1126,13 +1377,16 @@ export async function getWrongAnswersExplanations(data: {
       return { success: true, explanations: [] as WrongAnswerExplanation[] };
     }
 
+    const isPremium = await hasPremiumAccess(user.id);
+    const limitedWrongIds = isPremium ? wrongIds : wrongIds.slice(0, 3);
+
     const { explanations, metrics } = await buildWrongAnswersExplanations({
       materiaId,
       parcial: data.parcial,
-      wrongQuestionIds: wrongIds,
+      wrongQuestionIds: limitedWrongIds,
       userId: user.id,
     });
-    return { success: true, explanations, metrics };
+    return { success: true, explanations, metrics, premium: isPremium };
   } catch (error) {
     logError('actions.getWrongAnswersExplanations', error, {
       materiaId: data.materia_id,
@@ -1140,5 +1394,19 @@ export async function getWrongAnswersExplanations(data: {
       wrongQuestionCount: data.wrong_question_ids.length,
     });
     return { success: false, message: 'No se pudieron generar las explicaciones.' };
+  }
+}
+
+export async function getPremiumStatus(): Promise<{ isPremium: boolean }> {
+  try {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { isPremium: false };
+    return { isPremium: await hasPremiumAccess(user.id) };
+  } catch (error) {
+    logError('actions.getPremiumStatus', error);
+    return { isPremium: false };
   }
 }

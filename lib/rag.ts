@@ -64,12 +64,14 @@ export function selectTopRagContextChunks(
 export async function hydrateChunksForMateria(materiaId: string) {
   const admin = createAdminClient();
 
-  const { count } = await admin
+  const { data: existingRows } = await admin
     .from('rag_document_chunks')
-    .select('*', { count: 'exact', head: true })
+    .select('source_id, source_table')
     .eq('materia_id', materiaId);
 
-  if ((count ?? 0) > 0) return;
+  const existingSourceKeys = new Set(
+    (existingRows ?? []).map((row) => `${row.source_table ?? ''}:${row.source_id ?? ''}`)
+  );
 
   const { data: recursos } = await admin
     .from('recursos')
@@ -80,6 +82,8 @@ export async function hydrateChunksForMateria(materiaId: string) {
     .limit(6);
 
   for (const recurso of recursos ?? []) {
+    if (existingSourceKeys.has(`recursos:${recurso.id}`)) continue;
+
     const path = (recurso.url_archivo ?? '').trim();
     if (!path) continue;
 

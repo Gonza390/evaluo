@@ -1,4 +1,4 @@
-import type { Pregunta } from '@/app/actions';
+import type { GradedPreguntaResult, Pregunta } from '@/app/actions';
 
 export type SimuladorPersistedState = {
   version: 2;
@@ -11,6 +11,7 @@ export type SimuladorPersistedState = {
   timeLeft: number;
   selectedAnswers: Record<number, number | number[]>;
   flaggedQuestions: number[];
+  feedback?: Record<number, GradedPreguntaResult>;
   hasStarted: boolean;
   savedAt: string;
 };

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { checkProfileStatus } from '@/app/actions';
 import { useUser } from '@/hooks/useUser';
+import { usePremium } from '@/hooks/usePremium';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
@@ -242,7 +243,7 @@ function CalendarTourCard({
         <button
           type="button"
           onClick={onNext}
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] max-sm:w-full"
+          className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] max-sm:w-full"
         >
           {stepIndex === totalSteps - 1 ? 'Entendido' : 'Siguiente'}
         </button>
@@ -253,6 +254,7 @@ function CalendarTourCard({
 
 export default function CalendarioPage() {
   const { user, loading } = useUser();
+  const { isPremium } = usePremium();
   const router = useRouter();
   const { toast } = useToast();
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);
@@ -641,6 +643,16 @@ export default function CalendarioPage() {
     if (!user) {
       toast({
         description: 'Inicia sesión para guardar fechas en tu calendario.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const examEventCount = events.filter((event) => event.type === 'exam').length;
+    if (payload.type === 'exam' && !isPremium && examEventCount >= 3) {
+      toast({
+        description:
+          'Alcanzaste el límite de 3 parciales en el plan gratis. Sumate a Premium para agendar parciales ilimitados y recordatorios.',
         variant: 'destructive',
       });
       return;

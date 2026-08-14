@@ -163,15 +163,12 @@ export function InteractiveDemo() {
   return (
     <div className="w-full rounded-[32px] border border-slate-100 bg-white p-5 shadow-[0_24px_55px_rgba(15,27,61,0.06)] md:p-8">
       {/* Indicador de Pasos */}
-      <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-5">
+      <div className="mb-6 flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
             <Sparkles className="h-4.5 w-4.5 animate-pulse" />
           </div>
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Demo interactiva</span>
-            <h4 className="text-sm font-bold text-slate-800">Probá la experiencia real</h4>
-          </div>
+          <span className="text-sm font-bold text-slate-800">Demo interactiva</span>
         </div>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
           <span className={`rounded-full px-2 py-0.5 transition ${step === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}>1. Universidad</span>
@@ -194,7 +191,7 @@ export function InteractiveDemo() {
               <button
                 key={key}
                 onClick={() => handleSelectUni(key)}
-                className={`group flex flex-col items-center justify-between rounded-2xl border bg-slate-50/50 p-6 text-center transition-all hover:border-indigo-400 hover:bg-white hover:shadow-lg hover:scale-[1.02]`}
+                className={`group flex flex-col items-center justify-between rounded-2xl border bg-slate-50/50 p-6 text-center transition-all hover:border-indigo-400 hover:bg-white hover:shadow-lg hover:-translate-y-0.5`}
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1B3D] to-[#2563EB] text-xl font-black text-white shadow-md group-hover:scale-110 transition-transform">
                   {uni.shortName}
@@ -219,9 +216,9 @@ export function InteractiveDemo() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-stretch">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
           {/* Columna Izquierda: El Resumen Adaptado */}
-          <div className="flex flex-col rounded-2xl border border-slate-100 bg-slate-50/40 p-5 md:p-6 justify-between">
+          <div className="flex flex-col justify-between rounded-2xl border-b border-slate-200 bg-slate-50/60 p-5 md:p-6 lg:rounded-none lg:border-b-0 lg:border-r">
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${currentUni.badgeBg} ${currentUni.textColor} border ${currentUni.borderColor}`}>
@@ -260,7 +257,7 @@ export function InteractiveDemo() {
           </div>
 
           {/* Columna Derecha: El Simulador de Examen */}
-          <div className="flex flex-col rounded-2xl border border-slate-100 bg-white p-5 md:p-6 shadow-sm justify-between">
+          <div className="flex flex-col justify-between rounded-2xl bg-white p-5 md:p-6 lg:rounded-none">
             <div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">

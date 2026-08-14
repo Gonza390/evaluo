@@ -1,11 +1,10 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
 import {
-  buildFallbackSectionTitle,
   buildSummaryChunks,
   cleanLine,
-  cleanMultilineBlock,
   extractPdfTextAndPageCount,
+  parseSections,
 } from '@/lib/student-materials/text';
 import { generateStudentMaterialGlossary } from '@/lib/student-materials/glossary';
 import { generateStudentMaterialSummary } from '@/lib/student-materials/summary';
@@ -29,20 +28,6 @@ function isMissingSummaryTableError(error: unknown) {
 function parseKeyPoints(value: unknown) {
   if (!Array.isArray(value)) return [];
   return value.map((item) => cleanLine(String(item ?? ''))).filter(Boolean);
-}
-
-function parseSections(value: unknown) {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .map((item, index) => {
-      if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
-      const title = 'title' in item ? cleanLine(String(item.title ?? '')) : buildFallbackSectionTitle(index);
-      const body = 'body' in item ? cleanMultilineBlock(String(item.body ?? '')) : '';
-      if (!body) return null;
-      return { title: title || buildFallbackSectionTitle(index), body };
-    })
-    .filter((item): item is { title: string; body: string } => Boolean(item));
 }
 
 function mapStoredSummary(row: StoredSummaryRow): StudentMaterialSummary {

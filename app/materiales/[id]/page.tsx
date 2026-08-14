@@ -5,6 +5,7 @@ import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { getMateriaRoute } from '@/lib/routes';
+import { isUuid } from '@/lib/uuid';
 import {
   ensureStudentMaterialStudyArtifacts,
 } from '@/lib/student-material-summary';
@@ -31,6 +32,11 @@ function isMissingStudentMaterialsTableError(error: unknown) {
 
 export default async function StudentMaterialViewerPage({ params }: PageProps) {
   const { id } = await params;
+
+  if (!isUuid(id)) {
+    notFound();
+  }
+
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -103,7 +109,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/dashboard/materiales"
-                className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:opacity-95"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
               >
                 Volver a materiales
               </Link>
@@ -149,7 +155,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
             <div className="flex flex-wrap gap-3">
               <Link
                 href={isOwner ? '/dashboard/materiales' : getMateriaRoute(material.materia_id, material.carrera_id)}
-                className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:opacity-95"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
               >
                 Volver
               </Link>

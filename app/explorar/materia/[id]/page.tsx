@@ -1,7 +1,8 @@
 import dynamic from 'next/dynamic';
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getCanonicalMateriaId } from '@/lib/materia-aliases';
+import { isUuid } from '@/lib/uuid';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 
 const MateriaContent = dynamic(() => import('./materia-content'), {
@@ -76,11 +77,19 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
   }
 
   const materiaId = canonicalMateriaId;
+  if (!isUuid(materiaId)) {
+    return notFound();
+  }
+
   const requestedCarreraId = resolvedSearchParams.carreraId?.trim() ?? '';
   const bootstrap = await getMateriaBootstrap({
     materiaId,
     requestedCarreraId,
   });
+
+  if (bootstrap.materiaFound === false) {
+    return notFound();
+  }
 
   return (
     <MateriaContent

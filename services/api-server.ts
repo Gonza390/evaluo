@@ -24,15 +24,15 @@ export const getMateriasByCarrera = cache(async (carreraId: string): Promise<Mat
   return fetchMateriasByCarrera(getPublicCatalogClient(), carreraId);
 });
 
-export const getMateriaById = cache(async (materiaId: string): Promise<Materia> => {
+export const getMateriaById = cache(async (materiaId: string): Promise<Materia | null> => {
   return fetchMateriaById(getPublicCatalogClient(), materiaId);
 });
 
-export const getCarreraById = cache(async (carreraId: string): Promise<Carrera> => {
+export const getCarreraById = cache(async (carreraId: string): Promise<Carrera | null> => {
   return fetchCarreraById(getPublicCatalogClient(), carreraId);
 });
 
-export const getUniversidadById = cache(async (uniId: string): Promise<Universidad> => {
+export const getUniversidadById = cache(async (uniId: string): Promise<Universidad | null> => {
   return fetchUniversidadById(getPublicCatalogClient(), uniId);
 });
 

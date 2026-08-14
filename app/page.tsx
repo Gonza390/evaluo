@@ -245,7 +245,7 @@ export default function Home() {
             </div>
 
             {/* Right Column: Premium CSS Product Mockup */}
-            <div className="relative animate-surface-reveal hidden lg:block" style={{ animationDelay: '100ms' }}>
+            <div className="relative animate-surface-reveal block" style={{ animationDelay: '100ms' }}>
               
               {/* Contenedor del mockup */}
               <div className="w-full rounded-[24px] border border-slate-200 bg-slate-950 p-3 shadow-[0_28px_60px_rgba(15,23,42,0.15)] relative overflow-hidden">
@@ -321,7 +321,7 @@ export default function Home() {
                       <Bot className="h-4 w-4 text-indigo-400" />
                       <span className="text-[10px] font-black text-indigo-200">Explicación Paso a Paso &bull; Exclusivo Evaluo:</span>
                     </div>
-                    <p className="text-[9px] leading-4 text-indigo-200/80">
+                    <p className="text-[11px] leading-5 text-indigo-200/80">
                       ¡Excelente respuesta! Como f&apos;&apos;(c) &gt; 0, la función posee una concavidad hacia arriba en el entorno de c, lo cual geométricamente asegura que el valor de la función en f(c) corresponds a un mínimo local. Si f&apos;&apos;(c) hubiese dado 0, el criterio no definiría.
                     </p>
                   </div>
@@ -329,7 +329,7 @@ export default function Home() {
               </div>
 
               {/* Decoración flotante con Sparkles */}
-              <div className="absolute -bottom-5 -left-5 z-20 rounded-2xl border border-white/10 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+              <div className="absolute -bottom-5 -left-5 z-20 hidden rounded-2xl border border-white/10 bg-white/95 px-4 py-3 shadow-lg backdrop-blur sm:block">
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                     <Sparkles className="h-4 w-4" />
@@ -341,7 +341,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute -top-5 -right-5 z-20 rounded-2xl border border-white/10 bg-white/95 px-4 py-3 shadow-lg backdrop-blur">
+              <div className="absolute -top-5 -right-5 z-20 hidden rounded-2xl border border-white/10 bg-white/95 px-4 py-3 shadow-lg backdrop-blur sm:block">
                 <div className="flex items-center gap-2">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 animate-study-float">
                     <CheckCircle2 className="h-4 w-4" />
@@ -375,7 +375,7 @@ export default function Home() {
           </div>
 
           <div className="mt-10 border-t border-slate-200/60 pt-8 text-center">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
               Contenido adaptado para estudiantes de universidades argentinas
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -430,7 +430,7 @@ export default function Home() {
                     </div>
 
                     <div className="mt-6 flex items-center gap-2">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-black text-indigo-600">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-black text-indigo-600">
                         {index + 1}
                       </span>
                       <h3 className="text-[15px] font-bold text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
@@ -438,7 +438,7 @@ export default function Home() {
                       </h3>
                     </div>
 
-                    <p className="mt-3 text-xs leading-5 text-slate-500">
+                    <p className="mt-3 text-xs leading-5 text-slate-600">
                       {step.description}
                     </p>
                   </div>
@@ -481,7 +481,7 @@ export default function Home() {
                   <h3 className="mt-5 text-[15px] font-bold text-slate-800 tracking-tight">
                     {feat.title}
                   </h3>
-                  <p className="mt-3 text-xs leading-5 text-slate-500">
+                  <p className="mt-3 text-xs leading-5 text-slate-600">
                     {feat.description}
                   </p>
                 </article>
@@ -515,7 +515,7 @@ export default function Home() {
                   <X className="h-4 w-4 shrink-0" />
                   <span>El caos tradicional de fotocopiadora y chat</span>
                 </div>
-                <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Estudiar a la vieja escuela</p>
+                <p className="mt-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Estudiar a la vieja escuela</p>
                 
                 <ul className="mt-6 space-y-4">
                   {comparison.chaos.map((item, idx) => (

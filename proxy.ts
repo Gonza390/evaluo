@@ -1,6 +1,12 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase';
+import {
+  checkProxyRateLimit,
+  getClientIpFromRequest,
+  isLikelyBotUserAgent,
+  proxyRateLimitHeaders,
+} from '@/lib/proxy-security';
 
 function createClient(request: NextRequest, response: NextResponse) {
   return createServerClient<Database>(
@@ -22,9 +28,37 @@ function createClient(request: NextRequest, response: NextResponse) {
   );
 }
 
+function enforceProxyApiProtection(request: NextRequest, pathname: string): NextResponse | null {
+  if (!pathname.startsWith('/api/')) return null;
+
+  const isInternalApi = pathname.startsWith('/api/internal');
+  if (isInternalApi) return null;
+
+  const userAgent = request.headers.get('user-agent') ?? '';
+  if (isLikelyBotUserAgent(userAgent)) {
+    return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+  }
+
+  const clientKey = getClientIpFromRequest(request);
+  const rateLimit = checkProxyRateLimit(`proxy:${clientKey}`, 600, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'rate_limited' },
+      { status: 429, headers: proxyRateLimitHeaders(rateLimit) }
+    );
+  }
+
+  return null;
+}
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
+
+  const apiProtectionBlock = enforceProxyApiProtection(request, pathname);
+  if (apiProtectionBlock) {
+    return apiProtectionBlock;
+  }
 
   const isRegularSimulatorRoute =
     pathname === '/simulador' || /^\/simulador\/[^/]+\/\d+$/.test(pathname);

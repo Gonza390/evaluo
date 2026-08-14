@@ -1,3 +1,4 @@
+import { headers } from 'next/headers';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 const MAX_MEMORY_ENTRIES = 5_000;
@@ -5,11 +6,56 @@ const MEMORY_CLEANUP_THRESHOLD = 250;
 
 const memoryBuckets = new Map<string, { count: number; resetAt: number }>();
 
+function pickClientIp(headersSource: Headers): string {
+  // x-real-ip / x-vercel-forwarded-for son fijados por el proxy de Vercel y no
+  // son spoofeables por el cliente; x-forwarded-for puede forjarse (primer valor).
+  const realIp = headersSource.get('x-real-ip') ?? '';
+  if (realIp.trim()) return realIp.trim();
+
+  const vercelForwarded = headersSource.get('x-vercel-forwarded-for') ?? '';
+  if (vercelForwarded.trim()) return vercelForwarded.split(',')[0]?.trim() || 'unknown';
+
+  const forwardedFor = headersSource.get('x-forwarded-for') ?? '';
+  const fallback = forwardedFor.split(',').pop()?.trim() || forwardedFor.trim();
+  return fallback || 'unknown';
+}
+
 export function getRequestClientKey(request: Request) {
-  const forwardedFor = request.headers.get('x-forwarded-for') ?? '';
-  const realIp = request.headers.get('x-real-ip') ?? '';
-  const fallbackIp = forwardedFor.split(',')[0]?.trim() || realIp.trim() || 'unknown';
-  return fallbackIp || 'unknown';
+  return pickClientIp(request.headers);
+}
+
+/**
+ * Clave de cliente para server actions (no reciben `Request`).
+ * `headers()` de next/headers expone los encabezados de la petición entrante.
+ */
+export async function getServerActionClientKey(): Promise<string> {
+  try {
+    const headersStore = await headers();
+    return pickClientIp(headersStore);
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
+ * Aplica rate limit dentro de una server action. Falla abierto: si el store de
+ * rate limit no responde, la petición sigue adelante (mismo criterio que /api).
+ */
+export async function enforceServerActionRateLimit(options: {
+  key: string;
+  limit: number;
+  windowMs: number;
+}): Promise<RateLimitResult> {
+  try {
+    return await enforceRateLimit(options);
+  } catch {
+    return {
+      allowed: true,
+      limit: options.limit,
+      remaining: options.limit,
+      resetAt: Date.now() + options.windowMs,
+    };
+  }
 }
 
 function pruneMemoryBuckets(now: number) {

@@ -1,5 +1,6 @@
 import { AppShellProviders } from '@/components/app-shell-providers';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
+import { PdfWorkerPreload } from '@/components/pdf/pdf-worker-preload';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 
 const GENERAL_STUDY_SUMMARY: StudentMaterialSummary = {
@@ -55,23 +56,26 @@ const GENERAL_STUDY_GLOSSARY: StudyGlossaryItem[] = [
 
 export default function DemoMaterialEstudioPage() {
   return (
-    <AppShellProviders>
-      <MaterialStudyWorkspace
-        backHref="/dashboard/materiales"
-        canRegenerate={false}
-        carreraName="Abogacía"
-        fileName="Material general de prueba.pdf"
-        materialId="demo-material"
-        isOwner
-        materiaName="Aprender en el Siglo 21"
-        pageCount={3}
-        title="Material general de prueba"
-        universidadName="Universidad Siglo 21"
-        viewerUrl="/material-general-prueba.pdf"
-        visibility="shared"
-        studyGlossary={GENERAL_STUDY_GLOSSARY}
-        studySummary={GENERAL_STUDY_SUMMARY}
-      />
-    </AppShellProviders>
+    <>
+      <PdfWorkerPreload />
+      <AppShellProviders>
+        <MaterialStudyWorkspace
+          backHref="/dashboard/materiales"
+          canRegenerate={false}
+          carreraName="Abogacía"
+          fileName="Material general de prueba.pdf"
+          materialId="demo-material"
+          isOwner
+          materiaName="Aprender en el Siglo 21"
+          pageCount={3}
+          title="Material general de prueba"
+          universidadName="Universidad Siglo 21"
+          viewerUrl="/material-general-prueba.pdf"
+          visibility="shared"
+          studyGlossary={GENERAL_STUDY_GLOSSARY}
+          studySummary={GENERAL_STUDY_SUMMARY}
+        />
+      </AppShellProviders>
+    </>
   );
 }

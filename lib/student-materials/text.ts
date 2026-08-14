@@ -95,7 +95,7 @@ function detectSections(lines: string[], paragraphs: string[]) {
   const sectionCandidates = lines.filter((line) => {
     const clean = cleanLine(line);
     if (clean.length < 12 || clean.length > 80) return false;
-    return /^(\d+([.)-])\s+|\p{Lu}[\p{L}\p{N}\s-]{8,})/u.test(clean);
+    return /^(\d+([.)-])\s+|\p{Lu}[\p{L}\p{N}\s.-]{8,})/u.test(clean);
   });
 
   const uniqueTitles = dedupeStrings(sectionCandidates).slice(0, 5);
@@ -118,9 +118,10 @@ function isLikelyHeading(line: string) {
   if (/^[a-z]/.test(clean)) return false;
   if (/^[\d\s./-]+$/.test(clean)) return false;
   if (/^(?:[-*]|\u2022)\s+/.test(clean)) return false;
+  if (/[.!?:;]$/.test(clean) && clean.length > 70) return false;
   return (
     /^(\d+([.)-]|\.\d+)\s+)/.test(clean) ||
-    /^\p{Lu}[\p{L}\p{N}\s:()/,-]{6,}$/u.test(clean)
+    /^\p{Lu}[\p{L}\p{N}\s:()/,.-]{6,}$/u.test(clean)
   );
 }
 
@@ -517,7 +518,7 @@ export function prepareTextForSummary(text: string) {
         .replace(/\s+/g, ' ')
         .trim()
     )
-    .filter((line) => !isLikelyNoiseLine(line));
+    .filter((line) => line.trim() === '' || !isLikelyNoiseLine(line));
 
   const cleanedLines = collapseBrokenParagraphs(stripRepeatedPdfChrome(lines));
 
@@ -611,10 +612,10 @@ export function summarizeExtractedText(text: string, title: string) {
   );
 
   const bulletLikeLines = lines.filter((line) => /^(?:[-*]|\u2022|\d+[.)-])\s+/i.test(line));
-  const keyPointsSource =
-    bulletLikeLines.length > 0
-      ? bulletLikeLines.map((line) => line.replace(/^(?:[-*]|\u2022|\d+[.)-])\s+/i, ''))
-      : sentencePool.slice(0, 5);
+  const keyPointsSource = dedupeStrings([
+    ...bulletLikeLines.map((line) => line.replace(/^(?:[-*]|\u2022|\d+[.)-])\s+/i, '')),
+    ...sentencePool.slice(0, 5),
+  ]);
 
   const keyPoints = dedupeStrings(keyPointsSource)
     .map((point) => truncateAtWord(point, 220))
@@ -735,6 +736,7 @@ export function analyzePdfDocument(
     hasSelectableText &&
     resolvedPageCount >= 3 &&
     averageCharsPerPage <= 900 &&
+    paragraphs.length <= Math.max(1, Math.floor(resolvedPageCount / 2)) &&
     headingCount >= Math.max(2, Math.floor(resolvedPageCount / 2));
   const isImageHeavy = hasEmbeddedImages && imageCountEstimate >= Math.max(2, resolvedPageCount);
   const requiresOcr =

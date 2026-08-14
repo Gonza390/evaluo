@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/supabase';
 import { logError } from '@/lib/observability';
-import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/student-materials/providers';
+import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/ai/providers';
+import { isolateUntrustedContent, PROMPT_INJECTION_GUARD } from '@/lib/ai/safety';
 
 type AdminClient = SupabaseClient<Database>;
 type AttemptTopicEventInsert = Database['public']['Tables']['simulator_attempt_topic_events']['Insert'];
@@ -278,11 +279,14 @@ async function classifyTopicWithAi(input: {
     'Usa nombres cortos, claros y reutilizables. No inventes contenido externo.',
     'Si hay temas existentes, reutiliza el mas cercano.',
     'Devuelve solo JSON valido con estas claves: topic, subtopic, confidence, rationale, keywords.',
+    PROMPT_INJECTION_GUARD,
     '',
-    `Pregunta: ${input.question.enunciado}`,
-    `Respuesta correcta: ${input.question.respuesta_correcta}`,
+    `Pregunta: ${isolateUntrustedContent(input.question.enunciado)}`,
+    `Respuesta correcta: ${isolateUntrustedContent(input.question.respuesta_correcta)}`,
     '',
-    hints ? `Contexto de materiales de la materia:\n${hints}` : 'Contexto de materiales de la materia: no disponible.',
+    hints
+      ? `Contexto de materiales de la materia:\n${isolateUntrustedContent(hints)}`
+      : 'Contexto de materiales de la materia: no disponible.',
   ].join('\n');
 
   const system = 'Sos un clasificador academico. Respondés únicamente JSON valido, breve y verificable.';

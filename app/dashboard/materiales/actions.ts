@@ -2,19 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import type { Database } from '@/types/supabase';
-import {
-  analyzePdfDocument,
-  extractPdfTextAndPageCount,
-  generateStudentMaterialGlossary,
-  generateStudentMaterialSummary,
-  persistStudentMaterialGlossaryArtifacts,
-  persistStudentMaterialSummaryFromComputed,
-} from '@/lib/student-material-summary';
 import type { StudyDocumentAnalysis } from '@/lib/student-material-summary';
 import {
   claimNextQueuedStudentMaterialJob,
   claimStudentMaterialJob,
-  completeStudentMaterialJob,
   enqueueStudentMaterialJob,
   failStudentMaterialJob,
 } from '@/lib/student-material-jobs';
@@ -22,6 +13,7 @@ import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { resolveAdminActor } from '@/lib/access-control';
+import { hasPremiumAccess } from '@/lib/premium';
 import {
   markStudentMaterialProcessingFailed,
   processStudentMaterial,
@@ -58,8 +50,9 @@ export type UploadStudentMaterialResult = ActionResult & {
   materialId?: string;
 };
 
-const MAX_STUDENT_MATERIALS_PER_DAY = 5;
+const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = 3;
 const MAX_PENDING_STUDENT_MATERIALS = 2;
+const FREE_MATERIAL_UPLOAD_INTERVAL_DAYS = 15;
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -128,10 +121,13 @@ async function requireAuthenticatedUser() {
 
 async function assertStudentMaterialQuota(userId: string) {
   const admin = createAdminClient();
-  const dayStart = new Date();
+  const now = new Date();
+  const dayStart = new Date(now);
   dayStart.setUTCHours(0, 0, 0, 0);
+  const intervalStart = new Date(now);
+  intervalStart.setUTCDate(intervalStart.getUTCDate() - (FREE_MATERIAL_UPLOAD_INTERVAL_DAYS - 1));
 
-  const [dailyResult, pendingResult] = await Promise.all([
+  const [dailyResult, pendingResult, intervalResult] = await Promise.all([
     admin
       .from('student_materials')
       .select('id', { count: 'exact', head: true })
@@ -142,13 +138,31 @@ async function assertStudentMaterialQuota(userId: string) {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .in('processing_status', ['uploaded', 'processing']),
+    admin
+      .from('student_materials')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('created_at', intervalStart.toISOString()),
   ]);
 
   if (dailyResult.error) throw dailyResult.error;
   if (pendingResult.error) throw pendingResult.error;
-  if ((dailyResult.count ?? 0) >= MAX_STUDENT_MATERIALS_PER_DAY) {
-    throw new Error('Alcanzaste el limite de 5 materiales por dia. Intenta nuevamente manana.');
+  if (intervalResult.error) throw intervalResult.error;
+
+  const isPremium = await hasPremiumAccess(userId);
+
+  if (isPremium) {
+    if ((dailyResult.count ?? 0) >= MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY) {
+      throw new Error(
+        `Alcanzaste el limite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por dia. Intenta nuevamente manana.`
+      );
+    }
+  } else if ((intervalResult.count ?? 0) >= 1) {
+    throw new Error(
+      'El plan gratis permite subir 1 material cada 15 dias. Sumate a Premium para subir hasta 3 por dia.'
+    );
   }
+
   if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
     throw new Error('Ya tenes 2 materiales en procesamiento. Espera a que finalice uno antes de subir otro.');
   }
@@ -199,164 +213,6 @@ async function updateStudentMaterialProcessing(
   if (error) {
     throw error;
   }
-}
-
-function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
-  if (analysis.requiresOcr) {
-    return 'Detectamos un PDF escaneado o muy visual. Seguimos con extraccion base y dejamos OCR recomendado.';
-  }
-
-  if (analysis.processingStrategy === 'slide_layout') {
-    return 'Detectamos un material tipo diapositiva. Ajustamos la lectura para priorizar bloques, titulos y puntos clave.';
-  }
-
-  if (analysis.processingStrategy === 'hybrid_text') {
-    return 'Detectamos un PDF mixto con texto e imagenes. Priorizamos una lectura hibrida del contenido.';
-  }
-
-  return 'Detectamos un PDF con texto nativo. Seguimos con extraccion estructurada por temas y bloques.';
-}
-
-// Transitional implementation kept for a short rollback window while the service is adopted.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function legacyRunStudentMaterialProcessingPipeline(input: {
-  materialId: string;
-  ownerUserId?: string;
-  jobId?: string | null;
-}) {
-  const admin = createAdminClient();
-
-  const materialQuery = admin
-    .from('student_materials')
-    .select('id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path')
-    .eq('id', input.materialId);
-
-  if (input.ownerUserId) {
-    materialQuery.eq('user_id', input.ownerUserId);
-  }
-
-  const { data: material, error } = await materialQuery.maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  if (!material) {
-    throw new Error('No encontramos el material que querés procesar.');
-  }
-
-  await updateStudentMaterialProcessing(material.id, {
-    processingStatus: 'processing',
-    processingStage: 'extracting',
-    processingProgress: 18,
-    processingMessage: 'Analizando el PDF para clasificar su estructura y estrategia de lectura.',
-  });
-
-  const [{ data: fileData, error: downloadError }, { data: carrera }, { data: universidad }, { data: materiaSubject }] =
-    await Promise.all([
-      admin.storage.from('biblioteca').download(material.file_path),
-      admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
-      admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
-      admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
-    ]);
-
-  if (downloadError || !fileData) {
-    throw new Error('No pudimos volver a leer el PDF desde almacenamiento.');
-  }
-
-  const buffer = Buffer.from(await fileData.arrayBuffer());
-  const { text, pageCount } = await extractPdfTextAndPageCount(buffer);
-  const documentAnalysis = analyzePdfDocument(buffer, text, pageCount);
-
-  await updateStudentMaterialProcessing(material.id, {
-    processingStatus: 'processing',
-    processingStage: 'extracting',
-    processingProgress: 34,
-    processingMessage: buildAnalysisMessage(documentAnalysis),
-    pageCount,
-    processingStrategy: documentAnalysis.processingStrategy,
-    documentAnalysis,
-  });
-
-  await updateStudentMaterialProcessing(material.id, {
-    processingStatus: 'processing',
-    processingStage: 'summarizing',
-    processingProgress: 52,
-    processingMessage:
-      documentAnalysis.processingStrategy === 'slide_layout'
-        ? 'Generando resumen estructurado a partir de bloques visuales y temas detectados.'
-        : 'Generando resumen estructurado del PDF.',
-    pageCount,
-    processingStrategy: documentAnalysis.processingStrategy,
-  });
-
-  const summary = await generateStudentMaterialSummary({
-    title: material.title,
-    universidadName: universidad?.nombre ?? undefined,
-    carreraName: carrera?.nombre ?? undefined,
-    materiaName: materiaSubject?.nombre ?? undefined,
-    text,
-    documentAnalysis,
-  });
-
-  await persistStudentMaterialSummaryFromComputed({
-    admin,
-    studentMaterialId: material.id,
-    text,
-    summary,
-    persistChunks: true,
-  });
-
-  await updateStudentMaterialProcessing(material.id, {
-    processingStatus: 'processing',
-    processingStage: 'glossary',
-    processingProgress: 78,
-    processingMessage: 'Generando glosario y conceptos clave para estudiar.',
-    pageCount,
-    processingStrategy: documentAnalysis.processingStrategy,
-  });
-
-  const glossary = await generateStudentMaterialGlossary(
-    {
-      title: material.title,
-      universidadName: universidad?.nombre ?? undefined,
-      carreraName: carrera?.nombre ?? undefined,
-      materiaName: materiaSubject?.nombre ?? undefined,
-      text,
-      documentAnalysis,
-    },
-    summary
-  );
-
-  await persistStudentMaterialGlossaryArtifacts({
-    admin,
-    studentMaterialId: material.id,
-    glossary,
-    provider: summary.provider,
-    errorMessage: summary.errorMessage,
-  });
-
-  await updateStudentMaterialProcessing(material.id, {
-    processingStatus: 'ready',
-    processingStage: 'ready',
-    processingProgress: 100,
-    processingMessage: 'Material listo para estudiar.',
-    processingError: null,
-    pageCount,
-    processingStrategy: documentAnalysis.processingStrategy,
-  });
-
-  if (input.jobId) {
-    await completeStudentMaterialJob(admin, input.jobId);
-  }
-
-  revalidatePath('/dashboard/materiales');
-  revalidatePath(`/materiales/${material.id}`);
-
-  return {
-    success: true,
-    message: 'El PDF ya quedó listo con su resumen y glosario.',
-  } satisfies ActionResult;
 }
 
 export async function uploadStudentMaterialAction(formData: FormData): Promise<UploadStudentMaterialResult> {

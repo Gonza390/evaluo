@@ -1,6 +1,12 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
-import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/student-materials/providers';
+import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/ai/providers';
+import { extractJsonObject } from '@/lib/ai/json';
+import {
+  isolateUntrustedContent,
+  MAX_AI_SECTION_BODY_CHARS,
+  PROMPT_INJECTION_GUARD,
+} from '@/lib/ai/safety';
 import {
   buildStudyDocumentModel,
   buildFallbackSectionTitle,
@@ -108,6 +114,8 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     '  Importante: conclusion o reflexion central de esa seccion.',
     '- Si el texto incluye clasificaciones, comparaciones o tipos, puedes usar tablas Markdown limpias con columnas "Tipo/Ambito", "Descripcion" y "Ejemplos".',
     '',
+    PROMPT_INJECTION_GUARD,
+    '',
     'Criterios de calidad:',
     '- Ordena el resumen por temas y subtitulos reales del PDF.',
     '- Prioriza definiciones, modelos, etapas, clasificaciones, autores, comparaciones, cuadros conceptuales y ejemplos del documento.',
@@ -126,24 +134,8 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     context,
     '',
     'Contenido base del PDF:',
-    sourceText,
+    isolateUntrustedContent(sourceText),
   ].join('\n');
-}
-
-function extractJsonObject(raw: string) {
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1] ?? raw;
-  const start = candidate.indexOf('{');
-  const end = candidate.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error('No se encontro JSON util en la respuesta del modelo.');
-  }
-
-  return JSON.parse(candidate.slice(start, end + 1)) as {
-    summary_short?: string;
-    key_points?: string[];
-    sections?: Array<{ title?: string; body?: unknown }>;
-  };
 }
 
 function fallbackParseModelJson(raw: string) {
@@ -172,9 +164,15 @@ function fallbackParseModelJson(raw: string) {
   };
 }
 
+type SummaryPayload = {
+  summary_short?: string;
+  key_points?: string[];
+  sections?: Array<{ title?: string; body?: unknown }>;
+};
+
 function parseModelSummaryPayload(raw: string) {
   try {
-    return extractJsonObject(raw);
+    return extractJsonObject(raw) as SummaryPayload;
   } catch {
     return fallbackParseModelJson(raw);
   }
@@ -441,7 +439,7 @@ function normalizeSummarySections(
       title: normalizeTopLevelSectionTitle(section.title, index),
       body: truncateAtWord(
         normalizeSectionBody(cleanMultilineBlock(section.body), String(index + 1)),
-        4_800
+        MAX_AI_SECTION_BODY_CHARS
       ),
     }))
     .filter((section) => section.body.length > 0);

@@ -796,7 +796,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-5 text-white/78">
                         <span>{'\u00A1Vas muy bien!'}</span>
                         {partialInsights ? (
-                          <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/88">
+                          <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/88">
                             Parcial {partialInsights.parcial}
                           </span>
                         ) : null}
@@ -809,7 +809,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                       <p className="text-[15px] font-black text-white sm:text-[17px]">
                         {partialInsights?.preguntasRespondidasParcial?.toLocaleString('es-AR') ?? 0}
                       </p>
-                      <p className="mt-0.5 text-[9px] leading-3.5 text-white/68 sm:mt-1 sm:text-[10px] sm:leading-4">
+                      <p className="mt-0.5 text-[11px] leading-4 text-white/68 sm:mt-1 sm:text-[11px] sm:leading-4">
                         Preguntas practicadas
                       </p>
                     </div>
@@ -817,7 +817,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                       <p className="text-[15px] font-black text-white sm:text-[17px]">
                         {partialInsights?.preguntasAcertadasParcial?.toLocaleString('es-AR') ?? 0}
                       </p>
-                      <p className="mt-0.5 text-[9px] leading-3.5 text-white/68 sm:mt-1 sm:text-[10px] sm:leading-4">
+                      <p className="mt-0.5 text-[11px] leading-4 text-white/68 sm:mt-1 sm:text-[11px] sm:leading-4">
                         Preguntas acertadas
                       </p>
                     </div>
@@ -835,6 +835,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   width={1024}
                   height={1536}
                   sizes="(max-width: 1279px) 180px, 18vw"
+                  priority
                   className="relative z-10 h-auto w-full max-w-[180px] object-contain sm:max-w-[200px] xl:max-w-[220px]"
                 />
               </div>
@@ -1054,7 +1055,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                     <div className="relative mx-auto grid h-28 w-28 place-items-center rounded-full animate-saas-glow sm:h-32 sm:w-32" style={partialProgressRingStyle}>
                       <div className="grid h-20 w-20 place-items-center rounded-full bg-white shadow-[0_10px_30px_rgba(79,93,255,0.12)] sm:h-24 sm:w-24">
                         <p className="text-2xl font-black text-slate-900">{partialInsights.coberturaPorcentaje}%</p>
-                        <p className="text-[10px] text-slate-500">Progreso</p>
+                        <p className="text-[11px] text-slate-600">Progreso</p>
                       </div>
                       <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(74,222,128,0.16)]" />
                     </div>

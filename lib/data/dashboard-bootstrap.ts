@@ -1,6 +1,8 @@
 import { cache } from 'react';
+import { unstable_cache as nextCache } from 'next/cache';
 import { createClientServer } from '@/lib/supabase-server';
 import { createPublicClient } from '@/lib/supabase-public';
+import { createAdminClient } from '@/lib/supabase-admin';
 import type {
   DashboardState,
   PartialStudyInsights,
@@ -144,66 +146,97 @@ async function fetchMateriaSummariesByIds(
   return mapMateriaSummaries((materias ?? []) as MateriaRow[], carrerasMap);
 }
 
-async function getPartialStudyInsightsForUser(
-  supabase: Awaited<ReturnType<typeof createClientServer>>,
+async function getPartialStudyInsightsForUserRaw(
   userId: string,
   materiaId: string,
   parcial: number
 ): Promise<PartialStudyInsights | null> {
-  const [{ count: totalPreguntasParcial }, historialResult] = await Promise.all([
-    supabase
-      .from('preguntas_banco')
-      .select('id', { count: 'exact', head: true })
-      .eq('materia_id', materiaId)
-      .eq('parcial', parcial),
-    supabase
+  const supabase = createAdminClient();
+
+  const totalCountPromise = supabase
+    .from('preguntas_banco')
+    .select('id', { count: 'exact', head: true })
+    .eq('materia_id', materiaId)
+    .eq('parcial', parcial);
+
+  type AggregateStatsRow = {
+    total_respuestas: number;
+    correctas: number;
+    distintas_preguntas: number;
+  };
+
+  const aggregatePromise = (async (): Promise<AggregateStatsRow | null> => {
+    try {
+      const rpc = supabase.rpc as unknown as (
+        name: string,
+        args: Record<string, unknown>
+      ) => Promise<{ data: unknown; error: unknown }>;
+
+      const result = await rpc('get_user_partial_stats', {
+        p_user_id: userId,
+        p_materia_id: materiaId,
+        p_parcial: parcial,
+      });
+
+      if (result.error) throw result.error;
+      if (
+        result.data &&
+        typeof (result.data as AggregateStatsRow).total_respuestas === 'number'
+      ) {
+        return result.data as AggregateStatsRow;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const [{ count: totalPreguntasParcial }, aggregateStats] = await Promise.all([
+    totalCountPromise,
+    aggregatePromise,
+  ]);
+
+  const total = totalPreguntasParcial ?? 0;
+
+  let respuestasParcialTotal = 0;
+  let respuestasParcialCorrectas = 0;
+  let preguntasParcialRespondidas = 0;
+
+  if (aggregateStats) {
+    respuestasParcialTotal = Math.max(0, Number(aggregateStats.total_respuestas) || 0);
+    respuestasParcialCorrectas = Math.max(0, Number(aggregateStats.correctas) || 0);
+    preguntasParcialRespondidas = Math.max(0, Number(aggregateStats.distintas_preguntas) || 0);
+  } else {
+    const historialResult = await supabase
       .from('historial_respuestas')
       .select('pregunta_id, es_correcta')
       .eq('usuario_id', userId)
       .eq('materia_id', materiaId)
       .not('pregunta_id', 'is', null)
-      .limit(5000),
-  ]);
+      .limit(2000);
 
-  if (historialResult.error) {
-    throw historialResult.error;
-  }
-
-  const historialRows = historialResult.data ?? [];
-  const uniqueQuestionIds = Array.from(
-    new Set(historialRows.map((row) => row.pregunta_id).filter(Boolean))
-  ) as string[];
-
-  let preguntasParcialRespondidas = 0;
-  let respuestasParcialTotal = 0;
-  let respuestasParcialCorrectas = 0;
-
-  if (uniqueQuestionIds.length > 0) {
-    const { data: parcialQuestions, error } = await supabase
-      .from('preguntas_banco')
-      .select('id')
-      .in('id', uniqueQuestionIds)
-      .eq('parcial', parcial)
-      .eq('materia_id', materiaId);
-
-    if (error) {
-      throw error;
+    if (historialResult.error) {
+      throw historialResult.error;
     }
 
-    const partialIds = new Set((parcialQuestions ?? []).map((question) => question.id));
-    preguntasParcialRespondidas = partialIds.size;
+    const historialRows = (historialResult.data ?? []) as Array<{
+      pregunta_id: string | null;
+      es_correcta: boolean | null;
+    }>;
 
+    const seen = new Set<string>();
     for (const row of historialRows) {
-      const questionId = row.pregunta_id;
-      if (!questionId || !partialIds.has(questionId)) continue;
+      const qid = row.pregunta_id;
+      if (!qid) continue;
       respuestasParcialTotal += 1;
-      if (row.es_correcta) {
-        respuestasParcialCorrectas += 1;
+      if (row.es_correcta) respuestasParcialCorrectas += 1;
+      if (!seen.has(qid)) {
+        seen.add(qid);
+        preguntasParcialRespondidas += 1;
       }
     }
   }
 
-  const total = totalPreguntasParcial ?? 0;
   const coberturaPorcentaje = total > 0 ? Math.round((preguntasParcialRespondidas / total) * 100) : 0;
   const modelosEstimadosRealizados = Math.max(0, Math.floor(respuestasParcialTotal / 30));
   const promedioAciertoPorcentaje =
@@ -227,6 +260,26 @@ async function getPartialStudyInsightsForUser(
     probabilidadAprobar: Math.max(0, Math.min(99, Math.round(probabilityRaw))),
   };
 }
+
+const getPartialStudyInsightsForUser = nextCache(
+  getPartialStudyInsightsForUserRaw,
+  ['user-partial-study-insights'],
+  {
+    revalidate: 90,
+    tags: ['user-partial-study-insights', 'user-dashboard'],
+  }
+);
+
+const fetchMateriasByCarreraCached = nextCache(
+  async (carreraId: string) => {
+    return fetchMateriasByCarrera(createPublicClient(), carreraId);
+  },
+  ['catalog-materias-carrera'],
+  {
+    revalidate: 600,
+    tags: ['catalog-materias'],
+  }
+);
 
 export const getDashboardBootstrap = cache(
   async (): Promise<DashboardBootstrapResult> => {
@@ -326,19 +379,17 @@ export const getDashboardBootstrap = cache(
         new Set((favoriteIdsResult.data ?? []).map((item) => item.materia_id).filter(Boolean))
       ) as string[];
 
-      const publicClient = createPublicClient();
-
       let recommendedMaterias: DashboardMateriaSummary[] = [];
       let favoriteMaterias: DashboardMateriaSummary[] = [];
       let favoriteSuggestions: DashboardMateriaSummary[] = [];
 
       let carreraMaterias: DashboardMateriaSummary[] | null = null;
+      const carreraNombre = carreraResponse.data?.nombre ?? 'Carrera';
       const getCarreraMaterias = async (): Promise<DashboardMateriaSummary[]> => {
         if (carreraMaterias) {
           return carreraMaterias;
         }
-        const suggestedMaterias = await fetchMateriasByCarrera(publicClient, carreraId);
-        const carreraNombre = carreraResponse.data?.nombre ?? 'Carrera';
+        const suggestedMaterias = await fetchMateriasByCarreraCached(carreraId);
         carreraMaterias = suggestedMaterias.map((materia) => ({
           id: materia.id,
           nombre: materia.nombre,
@@ -363,7 +414,6 @@ export const getDashboardBootstrap = cache(
 
       if (state.lastSubject?.id) {
         partialInsights = await getPartialStudyInsightsForUser(
-          supabase,
           user.id,
           state.lastSubject.id,
           1

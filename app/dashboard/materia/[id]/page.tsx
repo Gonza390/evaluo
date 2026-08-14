@@ -1,1 +1,1 @@
-export { default } from '@/app/explorar/materia/[id]/page';
+export { default, generateMetadata } from '@/app/explorar/materia/[id]/page';

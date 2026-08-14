@@ -1,11 +1,16 @@
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/inter/700.css';
-import '@fontsource/inter/900.css';
+import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '900'],
+  display: 'swap',
+  preload: true,
+  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+  adjustFontFallback: true,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -23,6 +28,10 @@ export const metadata: Metadata = {
     'estudio universitario',
     'materiales de estudio',
   ],
+  applicationName: 'Evaluo',
+  authors: [{ name: 'Evaluo' }],
+  creator: 'Evaluo',
+  publisher: 'Evaluo',
   alternates: {
     canonical: '/',
   },
@@ -41,16 +50,25 @@ export const metadata: Metadata = {
     description:
       'Resúmenes, preguntas y simuladores para preparar tus parciales desde un solo lugar.',
   },
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [{ url: '/icon.png', sizes: 'any', type: 'image/png' }],
+    apple: [{ url: '/apple-icon.png' }],
+  },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b1220' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={inter.className}>
       <body
         suppressHydrationWarning
         className="bg-background text-foreground min-h-screen text-[0.92rem]"

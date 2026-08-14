@@ -21,15 +21,15 @@ export async function getMateriasByCarrera(carreraId: string): Promise<Materia[]
   return fetchMateriasByCarrera(supabase, carreraId);
 }
 
-export async function getMateriaById(materiaId: string): Promise<Materia> {
+export async function getMateriaById(materiaId: string): Promise<Materia | null> {
   return fetchMateriaById(supabase, materiaId);
 }
 
-export async function getCarreraById(carreraId: string): Promise<Carrera> {
+export async function getCarreraById(carreraId: string): Promise<Carrera | null> {
   return fetchCarreraById(supabase, carreraId);
 }
 
-export async function getUniversidadById(uniId: string): Promise<Universidad> {
+export async function getUniversidadById(uniId: string): Promise<Universidad | null> {
   return fetchUniversidadById(supabase, uniId);
 }
 

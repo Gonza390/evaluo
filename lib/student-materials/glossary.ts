@@ -1,6 +1,12 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
-import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/student-materials/providers';
+import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/ai/providers';
+import { extractJsonObject } from '@/lib/ai/json';
+import {
+  isolateUntrustedContent,
+  MAX_AI_GLOSSARY_DEFINITION_CHARS,
+  PROMPT_INJECTION_GUARD,
+} from '@/lib/ai/safety';
 import {
   buildGlossarySourceFromModel,
   buildStudyDocumentModel,
@@ -76,7 +82,7 @@ function sanitizeGlossaryItems(items: StudyGlossaryItem[]): StudyGlossaryItem[] 
   return items
     .map((item) => ({
       term: sentenceCase(item.term),
-      definition: truncateAtWord(cleanLine(item.definition), 420),
+      definition: truncateAtWord(cleanLine(item.definition), MAX_AI_GLOSSARY_DEFINITION_CHARS),
       context: truncateAtWord(cleanLine(item.context), 180),
       importance: item.importance === 'alta' ? ('alta' as const) : ('media' as const),
     }))
@@ -325,6 +331,8 @@ function buildGlossaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     ...buildGlossaryStrategyInstructions(input),
     '',
     'Pautas:',
+    PROMPT_INJECTION_GUARD,
+    '',
     '1. Selecciona conceptos tecnicos, palabras clave, teorias, autores importantes, modelos, etapas, clasificaciones, siglas y jerga especifica del texto que sean fundamentales para entender el tema.',
     '2. Para cada termino debes devolver:',
     '   - term: termino claro y especifico.',
@@ -343,7 +351,7 @@ function buildGlossaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     context,
     '',
     'Contenido base del PDF:',
-    sourceText,
+    isolateUntrustedContent(sourceText),
   ].join('\n');
 }
 
@@ -371,29 +379,19 @@ function buildCompactGlossarySource(input: GenerateSummaryInput, summary: Studen
     .join('\n\n');
 }
 
-function extractJsonObject(raw: string) {
-  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = fenced?.[1] ?? raw;
-  const start = candidate.indexOf('{');
-  const end = candidate.lastIndexOf('}');
-  if (start === -1 || end === -1 || end <= start) {
-    throw new Error('No se encontro JSON util en la respuesta del modelo.');
-  }
-
-  return JSON.parse(candidate.slice(start, end + 1)) as {
-    items?: Array<{
-      term?: string;
-      definition?: string;
-      context?: string;
-      importance?: 'alta' | 'media' | string;
-    }>;
-  };
-}
+type GlossaryPayload = {
+  items?: Array<{
+    term?: string;
+    definition?: string;
+    context?: string;
+    importance?: 'alta' | 'media' | string;
+  }>;
+};
 
 function parseGlossaryPayload(raw: string) {
-  const parsed = (() => {
+  const parsed: GlossaryPayload = (() => {
     try {
-      return extractJsonObject(raw);
+      return extractJsonObject(raw) as GlossaryPayload;
     } catch {
       const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
       const candidate = fenced?.[1] ?? raw;
@@ -495,6 +493,25 @@ export async function generateStudentMaterialGlossary(
       prompt,
       temperature: 0.14,
       maxOutputTokens: 1200,
+      responseSchema: {
+        type: 'OBJECT',
+        properties: {
+          items: {
+            type: 'ARRAY',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                term: { type: 'STRING' },
+                definition: { type: 'STRING' },
+                context: { type: 'STRING' },
+                importance: { type: 'STRING', enum: ['alta', 'media'] },
+              },
+              required: ['term', 'definition', 'context', 'importance'],
+            },
+          },
+        },
+        required: ['items'],
+      },
     });
     if (geminiResult) {
       const glossary = parseGlossaryPayload(geminiResult.content);

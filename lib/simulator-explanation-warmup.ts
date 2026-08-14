@@ -1,10 +1,15 @@
 import { createAdminClient } from '@/lib/supabase-admin';
+import { logError } from '@/lib/observability';
 import { generateTutorExplanation } from '@/lib/ai-tutor';
 import {
   hydrateChunksForMateria,
   selectTopRagContextChunks,
   type RagChunkRow,
 } from '@/lib/rag';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
+
+type AdminClient = SupabaseClient<Database>;
 
 type QuestionRow = {
   id: string;
@@ -180,13 +185,76 @@ function buildAlternatingCandidateGroups(candidates: WarmupCandidate[]) {
   });
 }
 
-export async function runSimulatorExplanationWarmup(options: WarmupRunOptions = {}): Promise<WarmupRunResult> {
-  const admin = createAdminClient();
-  const batchSize = Math.max(1, Math.min(options.batchSize ?? DEFAULT_BATCH_SIZE, 150));
-  const dryRun = Boolean(options.dryRun);
-  const candidatePoolSize = Math.max(200, Math.min(options.candidatePoolSize ?? DEFAULT_CANDIDATE_POOL, 12_000));
-  const lookbackDays = Math.max(30, Math.min(options.lookbackDays ?? DEFAULT_LOOKBACK_DAYS, 365));
-  const maxEstimatedTokens = Math.max(5_000, options.maxEstimatedTokens ?? DEFAULT_MAX_ESTIMATED_TOKENS);
+type WarmupCandidateRow = {
+  pregunta_id: string;
+  materia_id: string | null;
+  parcial: number | null;
+  enunciado: string;
+  opciones: unknown;
+  respuesta_correcta: string;
+  creado_at: string | null;
+  tasa_acierto: number | null;
+  materia_usage: number | null;
+  parcial_usage: number | null;
+  error_frequency: number | null;
+  recommendation_score: number | null;
+};
+
+type RpcClient = {
+  rpc: (
+    fn: string,
+    args: Record<string, unknown>
+  ) => PromiseLike<{ data: WarmupCandidateRow[] | null; error: { message: string } | null }>;
+};
+
+function mapRpcCandidate(row: WarmupCandidateRow): WarmupCandidate | null {
+  const materiaId = row.materia_id;
+  if (!materiaId) return null;
+
+  const parcial = Number(row.parcial) || 1;
+  return {
+    preguntaId: row.pregunta_id,
+    materiaId,
+    parcial,
+    enunciado: row.enunciado,
+    opciones: parseOptions(row.opciones),
+    respuestaCorrecta: row.respuesta_correcta,
+    createdAt: row.creado_at,
+    priority: {
+      materiaUsage: Number(row.materia_usage) || 0,
+      parcialUsage: Number(row.parcial_usage) || 0,
+      errorFrequency: Number(row.error_frequency) || 0,
+      recommendationScore: Number(row.recommendation_score) || 0,
+    },
+  };
+}
+
+async function fetchWarmupCandidatesFromRpc(
+  admin: AdminClient,
+  lookbackDays: number,
+  candidatePoolSize: number
+) {
+  const { data, error } = await (admin as unknown as RpcClient).rpc('get_warmup_candidates', {
+    p_lookback_days: lookbackDays,
+    p_pool_size: candidatePoolSize,
+  });
+
+  if (error) {
+    logError('simulatorWarmup.rpc', new Error(error.message));
+    return null;
+  }
+
+  const candidates = (data ?? [])
+    .map(mapRpcCandidate)
+    .filter((candidate): candidate is WarmupCandidate => Boolean(candidate));
+
+  return candidates.length > 0 ? candidates : null;
+}
+
+async function fetchWarmupCandidatesLocally(
+  admin: AdminClient,
+  lookbackDays: number
+): Promise<WarmupCandidate[]> {
   const lookbackStart = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
 
   const [cachedRows, questions, attempts, wrongStats, materiaPageViews] = await Promise.all([
@@ -274,6 +342,38 @@ export async function runSimulatorExplanationWarmup(options: WarmupRunOptions = 
       },
     });
   }
+
+  return candidates;
+}
+
+async function fetchWarmupCandidates(
+  admin: AdminClient,
+  lookbackDays: number,
+  candidatePoolSize: number
+) {
+  const rpcCandidates = await fetchWarmupCandidatesFromRpc(admin, lookbackDays, candidatePoolSize);
+  if (rpcCandidates) {
+    return rpcCandidates;
+  }
+
+  const localCandidates = await fetchWarmupCandidatesLocally(admin, lookbackDays);
+  logError(
+    'simulatorWarmup.rpcFallback',
+    new Error('get_warmup_candidates no disponible, usando escaneo local.'),
+    { poolSize: localCandidates.length }
+  );
+  return localCandidates;
+}
+
+export async function runSimulatorExplanationWarmup(options: WarmupRunOptions = {}): Promise<WarmupRunResult> {
+  const admin = createAdminClient();
+  const batchSize = Math.max(1, Math.min(options.batchSize ?? DEFAULT_BATCH_SIZE, 150));
+  const dryRun = Boolean(options.dryRun);
+  const candidatePoolSize = Math.max(200, Math.min(options.candidatePoolSize ?? DEFAULT_CANDIDATE_POOL, 12_000));
+  const lookbackDays = Math.max(30, Math.min(options.lookbackDays ?? DEFAULT_LOOKBACK_DAYS, 365));
+  const maxEstimatedTokens = Math.max(5_000, options.maxEstimatedTokens ?? DEFAULT_MAX_ESTIMATED_TOKENS);
+
+  const candidates = await fetchWarmupCandidates(admin, lookbackDays, candidatePoolSize);
 
   candidates.sort((a, b) => {
     if (b.priority.materiaUsage !== a.priority.materiaUsage) {

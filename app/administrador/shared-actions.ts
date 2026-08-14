@@ -469,24 +469,42 @@ export async function obtenerRankingErroresIA(
     await requireAdminAccess();
     const admin = createAdminClient();
 
-    const [statsRes, cacheRes] = await Promise.all([
-      admin
-        .from('rag_question_stats')
-        .select('pregunta_id, materia_id, veces_fallada, updated_at')
-        .order('veces_fallada', { ascending: false })
-        .limit(limit * 3),
-      admin
-        .from('rag_explanations_cache')
-        .select('pregunta_id, materia_id, parcial, explicacion, provider, updated_at')
-        .order('updated_at', { ascending: false })
-        .limit(limit * 3),
-    ]);
+    const statsRes = await admin
+      .from('rag_question_stats')
+      .select('pregunta_id, materia_id, veces_fallada, updated_at')
+      .order('veces_fallada', { ascending: false })
+      .limit(limit * 3);
 
     if (statsRes.error) throw statsRes.error;
-    if (cacheRes.error) throw cacheRes.error;
 
     const stats = statsRes.data ?? [];
-    const cache = cacheRes.data ?? [];
+    const statQuestionIds = stats.map((item) => item.pregunta_id);
+
+    const recentCacheRes =
+      statQuestionIds.length === 0
+        ? await admin
+            .from('rag_explanations_cache')
+            .select('pregunta_id, materia_id, parcial, explicacion, provider, updated_at')
+            .order('updated_at', { ascending: false })
+            .limit(limit * 3)
+        : { data: [], error: null };
+
+    if (recentCacheRes.error) throw recentCacheRes.error;
+
+    const cacheByQuestionIdRes =
+      statQuestionIds.length > 0
+        ? await admin
+            .from('rag_explanations_cache')
+            .select('pregunta_id, materia_id, parcial, explicacion, provider, updated_at')
+            .in('pregunta_id', statQuestionIds)
+        : { data: [], error: null };
+
+    if (cacheByQuestionIdRes.error) throw cacheByQuestionIdRes.error;
+
+    const cache = [
+      ...(cacheByQuestionIdRes.data ?? []),
+      ...(recentCacheRes.data ?? []),
+    ];
     if (stats.length === 0 && cache.length === 0) return { success: true, rows: [] };
 
     const statMap = new Map(stats.map((item) => [item.pregunta_id, item]));

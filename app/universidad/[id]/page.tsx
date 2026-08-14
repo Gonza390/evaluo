@@ -3,7 +3,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, BookOpen, GraduationCap } from 'lucide-react';
-import { createClientServer } from '@/lib/supabase-server';
+import { createPublicClient } from '@/lib/supabase-public';
+import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { getUniversityProfile } from '@/lib/university-profiles';
@@ -37,7 +38,7 @@ const UNIVERSITY_SUBTITLE = 'Excelencia académica, compromiso social e innovaci
 const RELATIONS_PAGE_SIZE = 1000;
 
 async function fetchAllCarreraMateriaRelations(
-  supabase: Awaited<ReturnType<typeof createClientServer>>,
+  supabase: ReturnType<typeof createPublicClient>,
   carreraIds: string[]
 ) {
   const allRows: Array<{ carrera_id: string | null }> = [];
@@ -74,86 +75,98 @@ function getUniversityInitials(name: string) {
     .join('');
 }
 
-export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
-  const { id } = await params;
-  const supabase = await createClientServer();
+type UniversidadPageData = {
+  universidad: { id: string; nombre: string };
+  allCarreras: CarreraRow[];
+  materiaCountByCarrera: Record<string, number>;
+} | null;
 
-  try {
+const loadUniversidadPageData = unstable_cache(
+  async (id: string): Promise<UniversidadPageData> => {
+    const supabase = createPublicClient();
+
     const { data: universidad } = await supabase
       .from('universidades')
       .select('id, nombre')
       .eq('id', id)
-      .maybeSingle();
+      .single();
 
     if (!universidad) {
-      return {
-        title: 'Universidad',
-        robots: {
-          index: false,
-          follow: false,
-        },
-      };
+      return null;
     }
 
-    return {
-      title: `${universidad.nombre} | Universidad`,
-      description: `Explora carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
-      alternates: {
-        canonical: `/universidad/${universidad.id}`,
-      },
-      openGraph: {
-        title: `${universidad.nombre} | Evaluo`,
-        description: `Carreras y materias disponibles de ${universidad.nombre}.`,
-        url: `/universidad/${universidad.id}`,
-      },
-    };
-  } catch {
+    const { data: carrerasData } = await supabase
+      .from('carreras')
+      .select('id, nombre')
+      .eq('universidad_id', id)
+      .order('nombre');
+
+    const allCarreras = (carrerasData ?? []) as CarreraRow[];
+    const carreraIds = allCarreras.map((carrera) => carrera.id);
+    const materiaCountByCarrera: Record<string, number> = {};
+
+    if (carreraIds.length > 0) {
+      const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
+
+      for (const item of carreraMaterias) {
+        if (!item.carrera_id) continue;
+        materiaCountByCarrera[item.carrera_id] = (materiaCountByCarrera[item.carrera_id] ?? 0) + 1;
+      }
+    }
+
+    return { universidad, allCarreras, materiaCountByCarrera };
+  },
+  ['universidad-data'],
+  { revalidate: 600, tags: ['universidad-data'] }
+);
+
+export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
+  const { id } = await params;
+  const data = await loadUniversidadPageData(id);
+
+  if (!data) {
     return {
       title: 'Universidad',
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
+
+  const universidad = data.universidad;
+
+  return {
+    title: `${universidad.nombre} | Universidad`,
+    description: `Explora carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
+    alternates: {
+      canonical: `/universidad/${universidad.id}`,
+    },
+    openGraph: {
+      title: `${universidad.nombre} | Evaluo`,
+      description: `Carreras y materias disponibles de ${universidad.nombre}.`,
+      url: `/universidad/${universidad.id}`,
+    },
+  };
 }
 
 export default async function UniversidadPage({ params, searchParams }: Props) {
-  const [{ id }, resolvedSearchParams, supabase] = await Promise.all([
-    params,
+  const [id, resolvedSearchParams] = await Promise.all([
+    (await params).id,
     searchParams ?? Promise.resolve<{ tab?: string }>({}),
-    createClientServer(),
   ]);
   const activeTab = resolvedSearchParams?.tab === 'informacion' ? 'informacion' : 'carreras';
 
-  const { data: universidad } = await supabase
-    .from('universidades')
-    .select('nombre')
-    .eq('id', id)
-    .single();
+  const data = await loadUniversidadPageData(id);
 
-  if (!universidad) {
+  if (!data) {
     notFound();
   }
 
+  const { universidad, allCarreras } = data;
+  const materiaCountByCarrera = new Map(Object.entries(data.materiaCountByCarrera));
+
   const universityProfile = getUniversityProfile(universidad.nombre);
-
-  const { data: carrerasData } = await supabase
-    .from('carreras')
-    .select('id, nombre')
-    .eq('universidad_id', id)
-    .order('nombre');
-
-  const allCarreras = (carrerasData ?? []) as CarreraRow[];
-  const carreraIds = allCarreras.map((carrera) => carrera.id);
-  let materiaCountByCarrera = new Map<string, number>();
-
-  if (carreraIds.length > 0) {
-    const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
-
-    materiaCountByCarrera = carreraMaterias.reduce((acc, item) => {
-      if (!item.carrera_id) return acc;
-      acc.set(item.carrera_id, (acc.get(item.carrera_id) ?? 0) + 1);
-      return acc;
-    }, new Map<string, number>());
-  }
-
   const totalMaterias = Array.from(materiaCountByCarrera.values()).reduce((acc, count) => acc + count, 0);
 
   return (

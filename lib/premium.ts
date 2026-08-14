@@ -52,3 +52,24 @@ export async function requirePremiumUser() {
 
   return { ok: true as const, user, message: '' };
 }
+
+export const FREE_ERRORS_REVIEWS_PER_WEEK = 1;
+
+export async function countErroresAttemptsThisWeek(userId: string): Promise<number> {
+  const admin = createAdminClient();
+  const weekStart = new Date();
+  weekStart.setUTCHours(0, 0, 0, 0);
+  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+
+  const { count, error } = await admin
+    .from('simulator_attempts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('mode', 'errores')
+    .gte('created_at', weekStart.toISOString());
+
+  if (error) {
+    return 0;
+  }
+  return count ?? 0;
+}

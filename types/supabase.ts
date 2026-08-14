@@ -428,6 +428,7 @@ export type Database = {
           wrong_answers: number;
           answered_questions: number;
           premium_only: boolean;
+          mode: string;
           created_at: string;
         };
         Insert: {
@@ -440,6 +441,7 @@ export type Database = {
           wrong_answers?: number;
           answered_questions?: number;
           premium_only?: boolean;
+          mode?: string;
           created_at?: string;
         };
         Update: {
@@ -452,6 +454,7 @@ export type Database = {
           wrong_answers?: number;
           answered_questions?: number;
           premium_only?: boolean;
+          mode?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -463,7 +466,8 @@ export type Database = {
           user_id: string;
           materia_id: string;
           parcial: number;
-          pregunta_id: string;
+          pregunta_id: string | null;
+          premium_pregunta_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -472,7 +476,8 @@ export type Database = {
           user_id: string;
           materia_id: string;
           parcial: number;
-          pregunta_id: string;
+          pregunta_id?: string | null;
+          premium_pregunta_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -481,7 +486,8 @@ export type Database = {
           user_id?: string;
           materia_id?: string;
           parcial?: number;
-          pregunta_id?: string;
+          pregunta_id?: string | null;
+          premium_pregunta_id?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -602,6 +608,7 @@ export type Database = {
           universidad_id: string | null;
           carrera_id: string | null;
           es_general: boolean | null;
+          es_demo: boolean;
           creado_at: string | null;
           material_id: string | null;
           es_ia_generada: boolean | null;
@@ -618,6 +625,7 @@ export type Database = {
           universidad_id?: string | null;
           carrera_id?: string | null;
           es_general?: boolean | null;
+          es_demo?: boolean;
           creado_at?: string | null;
           material_id?: string | null;
           es_ia_generada?: boolean | null;
@@ -634,6 +642,7 @@ export type Database = {
           universidad_id?: string | null;
           carrera_id?: string | null;
           es_general?: boolean | null;
+          es_demo?: boolean;
           creado_at?: string | null;
           material_id?: string | null;
           es_ia_generada?: boolean | null;
@@ -1372,7 +1381,17 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      resource_view_counts: {
+        Row: {
+          resource_id: string | null;
+          views: number | null;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

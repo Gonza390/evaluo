@@ -1285,7 +1285,7 @@ export default function MateriaContent({
               </button>
               <Link
                 href={`/explorar/materia/${materiaId}?tab=pregunteros${carreraId ? `&carreraId=${carreraId}` : ''}`}
-                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] sm:h-auto sm:w-auto sm:px-5 sm:py-3"
+                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] sm:h-auto sm:w-auto sm:px-5 sm:py-3"
               >
                 <Sparkles className="h-4 w-4" />
                 Ir a Pregunteros
@@ -1458,7 +1458,7 @@ export default function MateriaContent({
 
                 <Link
                   href="/dashboard/materiales"
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
                 >
                   Subir mi PDF
                 </Link>

@@ -16,9 +16,11 @@ import {
 } from '@/app/actions';
 import { logError } from '@/lib/observability';
 import { createPublicClient } from '@/lib/supabase-public';
+import { unstable_cache } from 'next/cache';
 
 export interface MateriaBootstrapData {
   materiaId: string;
+  materiaFound: boolean | null;
   materiaNombre: string;
   carreraId?: string;
   carreraNombre?: string;
@@ -123,14 +125,13 @@ async function loadInitialResumenes(materiaId: string) {
   }
 }
 
-export async function getMateriaBootstrap(input: {
-  materiaId: string;
-  requestedCarreraId?: string;
-}): Promise<MateriaBootstrapData> {
+const loadMateriaBootstrap = unstable_cache(
+  async (materiaId: string, requestedCarreraId: string): Promise<MateriaBootstrapData> => {
   const client = createPublicClient();
 
+  let materiaFound: boolean | null = null;
   let materiaNombre = 'Materia';
-  let carreraId = input.requestedCarreraId?.trim() || '';
+  let carreraId = requestedCarreraId;
   let carreraNombre = '';
   let universidadId = '';
   let universidadNombre = '';
@@ -140,15 +141,20 @@ export async function getMateriaBootstrap(input: {
     const { data: materiaData, error: materiaError } = await client
       .from('materias')
       .select('nombre, carrera_id')
-      .eq('id', input.materiaId)
+      .eq('id', materiaId)
       .maybeSingle();
 
     if (materiaError) {
       throw materiaError;
     }
 
-    materiaNombre = materiaData?.nombre?.trim() || 'Materia';
-    carreraId ||= String(materiaData?.carrera_id ?? '').trim();
+    if (!materiaData) {
+      materiaFound = false;
+    } else {
+      materiaFound = true;
+      materiaNombre = materiaData.nombre?.trim() || 'Materia';
+      carreraId ||= String(materiaData.carrera_id ?? '').trim();
+    }
 
     if (carreraId) {
       const { data: carreraData, error: carreraError } = await client
@@ -179,18 +185,19 @@ export async function getMateriaBootstrap(input: {
       }
     }
   } catch (error) {
-    logError('materiaBootstrap.context', error, { materiaId: input.materiaId });
+    logError('materiaBootstrap.context', error, { materiaId });
     contextError = getMateriaContextErrorMessage();
   }
 
   const [{ initialResumenes, initialResumenesError }, ratings, usage] = await Promise.all([
-    loadInitialResumenes(input.materiaId),
-    getSimulatorRatingsSummaryByMateria(input.materiaId),
-    getSimulatorUsageSummaryByMateria(input.materiaId),
+    loadInitialResumenes(materiaId),
+    getSimulatorRatingsSummaryByMateria(materiaId),
+    getSimulatorUsageSummaryByMateria(materiaId),
   ]);
 
   return {
-    materiaId: input.materiaId,
+    materiaId,
+    materiaFound,
     materiaNombre,
     carreraId: carreraId || undefined,
     carreraNombre: carreraNombre || undefined,
@@ -202,4 +209,14 @@ export async function getMateriaBootstrap(input: {
     initialSimulatorRatings: toRecord(ratings),
     initialSimulatorUsage: toRecord(usage),
   };
+  },
+  ['materia-bootstrap'],
+  { revalidate: 600, tags: ['materia-bootstrap'] }
+);
+
+export async function getMateriaBootstrap(input: {
+  materiaId: string;
+  requestedCarreraId?: string;
+}): Promise<MateriaBootstrapData> {
+  return loadMateriaBootstrap(input.materiaId, input.requestedCarreraId?.trim() || '');
 }

@@ -29,14 +29,14 @@ export function SimulatorLoginGate({
               Continúa el simulador
             </div>
             <h2 className="mt-6 text-[2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.7rem]">
-              Ya respondiste las primeras 10 preguntas
+              Ya respondiste las primeras {answeredCount} preguntas
             </h2>
             <p className="mt-4 max-w-[460px] text-lg leading-8 text-slate-600">
               Para seguir con el resto del simulador, guardar tu progreso y recibir la devolución completa, inicia sesión o crea tu cuenta.
             </p>
             <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
               <span className="text-[3rem] font-black leading-none tracking-[-0.07em] text-[#4F46E5]">
-                10/30
+                {answeredCount}/{questionLimit}
               </span>
               <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
                 avance

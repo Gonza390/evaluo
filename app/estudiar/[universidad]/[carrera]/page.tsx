@@ -12,6 +12,8 @@ import {
 } from '@/lib/seo-intents';
 import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
 
+export const revalidate = 600;
+
 type PageProps = {
   params: Promise<{
     universidad: string;
@@ -33,6 +35,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       getUniversidadById(universidadId),
       getCarreraById(carreraId),
     ]);
+
+    if (!universidad || !carrera) {
+      return {
+        title: 'Estudiar una carrera',
+        robots: {
+          index: false,
+          follow: false,
+        },
+      };
+    }
 
     const officialProfile = getOfficialCareerProfile({
       universidadNombre: universidad.nombre,
@@ -188,7 +200,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={`/materias?carreraId=${encodeURIComponent(carrera.id)}`}
-                className="inline-flex items-center justify-center rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
               >
                 Ver materias de {carrera.nombre}
               </Link>

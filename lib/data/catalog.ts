@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
+import { isUuid } from '@/lib/uuid';
 
 type QueryClient = Pick<SupabaseClient<Database>, 'from'>;
 
@@ -41,6 +42,7 @@ export type ExplorarCatalogData = {
 };
 
 export async function fetchCarrerasByUniversidad(client: QueryClient, uniId: string): Promise<CatalogCarrera[]> {
+  if (!isUuid(uniId)) return [];
   const { data, error } = await client
     .from('carreras')
     .select('id, nombre, universidad_id')
@@ -52,6 +54,7 @@ export async function fetchCarrerasByUniversidad(client: QueryClient, uniId: str
 }
 
 export async function fetchMateriasByCarrera(client: QueryClient, carreraId: string): Promise<CatalogMateria[]> {
+  if (!isUuid(carreraId)) return [];
   const { data, error } = await client
     .from('materias')
     .select('*, carrera_materias!inner(prioridad)')
@@ -73,39 +76,42 @@ export async function fetchMateriasByCarrera(client: QueryClient, carreraId: str
   });
 }
 
-export async function fetchMateriaById(client: QueryClient, materiaId: string): Promise<CatalogMateria> {
+export async function fetchMateriaById(client: QueryClient, materiaId: string): Promise<CatalogMateria | null> {
+  if (!isUuid(materiaId)) return null;
   const { data, error } = await client
     .from('materias')
     .select('id, nombre, carrera_id')
     .eq('id', materiaId)
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!data) throw new Error('Materia no encontrada');
+  if (!data) return null;
   return data as CatalogMateria;
 }
 
-export async function fetchCarreraById(client: QueryClient, carreraId: string): Promise<CatalogCarrera> {
+export async function fetchCarreraById(client: QueryClient, carreraId: string): Promise<CatalogCarrera | null> {
+  if (!isUuid(carreraId)) return null;
   const { data, error } = await client
     .from('carreras')
     .select('id, nombre, universidad_id')
     .eq('id', carreraId)
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!data) throw new Error('Carrera no encontrada');
+  if (!data) return null;
   return data as CatalogCarrera;
 }
 
-export async function fetchUniversidadById(client: QueryClient, uniId: string): Promise<CatalogUniversidad> {
+export async function fetchUniversidadById(client: QueryClient, uniId: string): Promise<CatalogUniversidad | null> {
+  if (!isUuid(uniId)) return null;
   const { data, error } = await client
     .from('universidades')
     .select('id, nombre')
     .eq('id', uniId)
-    .single();
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!data) throw new Error('Universidad no encontrada');
+  if (!data) return null;
   return data as CatalogUniversidad;
 }
 

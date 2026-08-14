@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname, useSearchParams } from 'next/navigation';
 import {
   checkProfileStatus,
+  corregirPreguntaDemo,
   finalizarSimuladorAction,
   getWrongAnswersExplanations,
   getPreguntasSimuladorErrores,
@@ -15,6 +16,7 @@ import {
   getPreguntasSimulador,
   registrarRespuestaUsuario,
   submitSimulatorRatingAction,
+  type GradedPreguntaResult,
   type Pregunta,
 } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,7 @@ import { StudyStatePanel } from '@/components/study-state-panel';
 import { ElegantLoader } from '@/components/ui/elegant-loader';
 import { Spinner } from '@/components/ui/spinner';
 import { useUser } from '@/hooks/useUser';
+import { usePremium } from '@/hooks/usePremium';
 import { buildShareReferralUrl } from '@/lib/attribution';
 import { getMateriaRoute } from '@/lib/routes';
 import {
@@ -44,11 +47,10 @@ import {
 } from '@/lib/simulator-persistence';
 import {
   dedupeOptionsForView,
-  isMultiAnswer,
   normalizeForCompare,
-  parseCorrectAnswers,
   shouldAutoResumeSimulator,
 } from '@/lib/simulator-core';
+import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
 import { logError } from '@/lib/observability';
 import { supabase } from '@/lib/supabase-client';
 import { cn } from '@/lib/utils';
@@ -82,7 +84,6 @@ type EstadoExamen = 'loading' | 'resume_choice' | 'playing' | 'demo_gate' | 'fin
 
 const TOTAL_QUESTIONS = 30;
 const MIXED_TOTAL_QUESTIONS = 50;
-const DEMO_TOTAL_QUESTIONS = 10;
 const EXAM_TIME_SECONDS = 30 * 60;
 const SIMULATOR_AUTO_RESUME_WINDOW_MINUTES = 15;
 const optionLabels = ['a', 'b', 'c', 'd'];
@@ -366,6 +367,7 @@ export default function SimuladorExamen({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, loading: userLoading, getUserName, getUserInitials } = useUser();
+  const { isPremium } = usePremium();
   const { toast } = useToast();
   const resolvedDemoMode = demoMode && !user;
 
@@ -381,6 +383,10 @@ export default function SimuladorExamen({
   const [isFinishing, setIsFinishing] = useState(false);
   const [aciertosFinales, setAciertosFinales] = useState(0);
   const [respondidasFinales, setRespondidasFinales] = useState(0);
+  const [feedbackByQuestion, setFeedbackByQuestion] = useState<Record<number, GradedPreguntaResult>>(
+    {}
+  );
+  const gradedQuestionRef = useRef<Set<number>>(new Set());
   const [materiaNombre, setMateriaNombre] = useState('');
   const [wrongExplanations, setWrongExplanations] = useState<
     Array<{ preguntaId: string; enunciado: string; explicacion: string; provider: string; source: string }>
@@ -419,6 +425,7 @@ export default function SimuladorExamen({
     timeLeft: examDurationSeconds,
     selectedAnswers: {} as Record<number, number | number[]>,
     flaggedQuestions: [] as number[],
+    feedbackByQuestion: {} as Record<number, GradedPreguntaResult>,
     hasStarted: false,
   });
   const loginGateTrackedRef = useRef(false);
@@ -435,7 +442,7 @@ export default function SimuladorExamen({
       const rawOptions = Array.isArray(question.opciones)
         ? dedupeOptionsForView(question.opciones)
         : [];
-      const seed = `${question.id}:${index}:${question.respuesta_correcta}`;
+      const seed = `${question.id}:${index}`;
       const { values, indexMap } = seededShuffle(rawOptions, seed);
       return { options: values, displayedToOriginal: indexMap };
     });
@@ -443,7 +450,9 @@ export default function SimuladorExamen({
   const preguntaActualShuffled = shuffledMetaByQuestion[currentQuestionIndex];
   const answeredCount = useMemo(() => Object.keys(selectedAnswers).length, [selectedAnswers]);
   const unansweredCount = Math.max(0, preguntasDisponibles - answeredCount);
-  const demoCheckpointIndex = DEMO_TOTAL_QUESTIONS - 1;
+  const demoCheckpointIndex = resolvedDemoMode
+    ? Math.min(DEMO_TOTAL_QUESTIONS, Math.max(1, preguntasDisponibles)) - 1
+    : DEMO_TOTAL_QUESTIONS - 1;
   const progressPercent = preguntasDisponibles
     ? Math.round((answeredCount / preguntasDisponibles) * 100)
     : 0;
@@ -532,9 +541,10 @@ export default function SimuladorExamen({
       timeLeft,
       selectedAnswers,
       flaggedQuestions,
+      feedbackByQuestion,
       hasStarted,
     };
-  }, [currentQuestionIndex, flaggedQuestions, hasStarted, preguntas, selectedAnswers, timeLeft]);
+  }, [currentQuestionIndex, feedbackByQuestion, flaggedQuestions, hasStarted, preguntas, selectedAnswers, timeLeft]);
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -612,6 +622,7 @@ export default function SimuladorExamen({
         timeLeft: overrides?.timeLeft ?? snapshot.timeLeft,
         selectedAnswers: overrides?.selectedAnswers ?? snapshot.selectedAnswers,
         flaggedQuestions: overrides?.flaggedQuestions ?? snapshot.flaggedQuestions,
+        feedback: overrides?.feedback ?? snapshot.feedbackByQuestion,
         hasStarted: overrides?.hasStarted ?? snapshot.hasStarted,
         savedAt: new Date().toISOString(),
       });
@@ -646,6 +657,7 @@ export default function SimuladorExamen({
 
   const hydrateSavedExam = useCallback((saved: SimuladorPersistedState) => {
     const limitedQuestions = saved.preguntas.slice(0, questionLimit);
+    gradedQuestionRef.current = new Set(Object.keys(saved.feedback ?? {}).map(Number));
     setPreguntas(limitedQuestions);
     setCurrentQuestionIndex(
       Math.max(0, Math.min(saved.currentQuestionIndex ?? 0, Math.max(0, limitedQuestions.length - 1)))
@@ -653,79 +665,83 @@ export default function SimuladorExamen({
       setTimeLeft(Math.max(0, Math.min(saved.timeLeft ?? examDurationSeconds, examDurationSeconds)));
     setSelectedAnswers(saved.selectedAnswers ?? {});
     setFlaggedQuestions(Array.isArray(saved.flaggedQuestions) ? saved.flaggedQuestions : []);
+    setFeedbackByQuestion(saved.feedback ?? {});
     setHasStarted(Boolean(saved.hasStarted));
     setResumeSnapshot(saved);
   }, [questionLimit]);
 
-  const computeCorrectAnswers = useCallback(() => {
-    return Object.entries(selectedAnswers).reduce((acc, [index, optionIndex]) => {
-      const pregunta = preguntas[Number(index)];
-      if (!pregunta) return acc;
-      const meta = shuffledMetaByQuestion[Number(index)];
-      if (!meta) return acc;
-      const correctAnswers = parseCorrectAnswers(pregunta.respuesta_correcta);
-      if (correctAnswers.length > 1) {
-        const selectedIdx = Array.isArray(optionIndex) ? optionIndex : [];
-        const selectedValues = selectedIdx
-          .map((idx) => meta.displayedToOriginal[idx])
-          .filter((idx) => typeof idx === 'number')
-          .map((idx) => normalizeForCompare(pregunta.opciones[idx]));
-        const expected = correctAnswers.map(normalizeForCompare);
-        const isSame =
-          selectedValues.length === expected.length &&
-          selectedValues.every((value) => expected.includes(value));
-        return isSame ? acc + 1 : acc;
-      }
-      const selectedSingle = Array.isArray(optionIndex) ? optionIndex[0] : optionIndex;
-      const originalIndex = meta.displayedToOriginal[selectedSingle];
-      const selectedOption = typeof originalIndex === 'number' ? pregunta.opciones[originalIndex] : '';
-      return normalizeForCompare(selectedOption) === normalizeForCompare(correctAnswers[0] ?? '') ? acc + 1 : acc;
-    }, 0);
-  }, [preguntas, selectedAnswers, shuffledMetaByQuestion]);
-
+  // La corrección vive en el servidor (registrarRespuestaUsuario / corregirPreguntaDemo).
+  // feedbackByQuestion[questionIndex] = resultado devuelto por el servidor.
   const isCorrectAnswer = useCallback(
-    (questionIndex: number, optionIndex: number | number[]) => {
-      const pregunta = preguntas[questionIndex];
-      if (!pregunta) return false;
-      const meta = shuffledMetaByQuestion[questionIndex];
-      if (!meta) return false;
-      const correctAnswers = parseCorrectAnswers(pregunta.respuesta_correcta);
-      if (correctAnswers.length > 1) {
-        const selectedIdx = Array.isArray(optionIndex) ? optionIndex : [];
-        const selectedValues = selectedIdx
-          .map((idx) => meta.displayedToOriginal[idx])
-          .filter((idx) => typeof idx === 'number')
-          .map((idx) => normalizeForCompare(pregunta.opciones[idx]));
-        const expected = correctAnswers.map(normalizeForCompare);
-        return (
-          selectedValues.length === expected.length &&
-          selectedValues.every((value) => expected.includes(value))
-        );
-      }
-      const selectedSingle = Array.isArray(optionIndex) ? optionIndex[0] : optionIndex;
-      const originalIndex = meta.displayedToOriginal[selectedSingle];
-      return normalizeForCompare(pregunta.opciones[originalIndex] ?? '') === normalizeForCompare(correctAnswers[0] ?? '');
+    (questionIndex: number, _optionIndex: number | number[]) => {
+      return feedbackByQuestion[questionIndex]?.correct === true;
     },
-    [preguntas, shuffledMetaByQuestion]
+    [feedbackByQuestion]
   );
 
   const isCorrectChoice = useCallback(
-    (questionIndex: number, optionIndex: number) => {
-      const pregunta = preguntas[questionIndex];
-      if (!pregunta) return false;
+    (questionIndex: number, displayedOptionIndex: number) => {
+      const feedback = feedbackByQuestion[questionIndex];
+      if (!feedback) return false;
       const meta = shuffledMetaByQuestion[questionIndex];
       if (!meta) return false;
-
-      const originalIndex = meta.displayedToOriginal[optionIndex];
+      const originalIndex = meta.displayedToOriginal[displayedOptionIndex];
       if (typeof originalIndex !== 'number') return false;
-
-      const selectedOption = pregunta.opciones[originalIndex] ?? '';
-      const expected = parseCorrectAnswers(pregunta.respuesta_correcta).map(normalizeForCompare);
-
-      return expected.includes(normalizeForCompare(selectedOption));
+      return feedback.correct_indexes.includes(originalIndex);
     },
-    [preguntas, shuffledMetaByQuestion]
+    [feedbackByQuestion, shuffledMetaByQuestion]
   );
+
+  // Corrige en el servidor cada pregunta en cuanto queda respondida.
+  useEffect(() => {
+    if (estado !== 'playing') return;
+
+    for (const [index, optionIndex] of Object.entries(selectedAnswers)) {
+      const questionIndex = Number(index);
+      const pregunta = preguntas[questionIndex];
+      if (!pregunta) continue;
+      const isMulti = pregunta.correctCount > 1;
+      const answered = isMulti
+        ? Array.isArray(optionIndex) && optionIndex.length === pregunta.correctCount
+        : optionIndex !== undefined;
+      if (!answered || gradedQuestionRef.current.has(questionIndex)) continue;
+
+      gradedQuestionRef.current.add(questionIndex);
+      const meta = shuffledMetaByQuestion[questionIndex];
+      if (!meta) continue;
+
+      const selectedIndexes = Array.isArray(optionIndex) ? optionIndex : [optionIndex];
+      const respuestaSeleccionada = selectedIndexes
+        .map((selectedIndex) => meta.options[selectedIndex])
+        .filter((option): option is string => typeof option === 'string');
+
+      const gradingCall = resolvedDemoMode
+        ? corregirPreguntaDemo({
+            pregunta_id: pregunta.id,
+            materia_id: pregunta.materia_id,
+            respuesta_seleccionada: respuestaSeleccionada,
+          })
+        : userId
+          ? registrarRespuestaUsuario({
+              usuario_id: userId,
+              pregunta_id: pregunta.id,
+              materia_id: pregunta.materia_id,
+              respuesta_seleccionada: respuestaSeleccionada,
+            })
+          : Promise.resolve(null);
+
+      void gradingCall.then((result) => {
+        if (!result?.success) return;
+        const graded = result as { success: true; correct: boolean; correct_indexes: number[] };
+        setFeedbackByQuestion((prev) => ({
+          ...prev,
+          [questionIndex]: { correct: graded.correct, correct_indexes: graded.correct_indexes },
+        }));
+      }).catch((error) => {
+        logError('simulador.corregirRespuesta', error, { questionIndex, preguntaId: pregunta.id });
+      });
+    }
+  }, [estado, preguntas, resolvedDemoMode, selectedAnswers, shuffledMetaByQuestion, userId]);
 
   const finalizarExamen = useCallback(
     async (trigger: 'manual' | 'timer' = 'manual') => {
@@ -733,80 +749,107 @@ export default function SimuladorExamen({
       if (!resolvedDemoMode && !userId) return;
 
       setIsFinishing(true);
-
-      const correctas = computeCorrectAnswers();
-      const respondidas = Object.keys(selectedAnswers).length;
-      setAciertosFinales(correctas);
-      setRespondidasFinales(respondidas);
       setShowResultsFace(false);
       setEstado('finished');
-      setIsFinishing(false);
+      clearPersistedSimulatorState(storageKey);
       simulatorLifecycleRef.current.outcomeTracked = true;
+
       if (!resolvedDemoMode) {
         void emitSimulatorEvent('simulator_finished', {
           questionIndex: Math.min(preguntasDisponibles, currentQuestionIndex + 1),
-          answered: respondidas,
-          progress: preguntasDisponibles > 0 ? Math.round((respondidas / preguntasDisponibles) * 100) : 0,
+          answered: Object.keys(selectedAnswers).length,
+          progress: preguntasDisponibles > 0 ? Math.round((Object.keys(selectedAnswers).length / preguntasDisponibles) * 100) : 0,
           timeLeft: trigger === 'timer' ? 0 : timeLeft,
         });
       }
-      clearPersistedSimulatorState(storageKey);
+
+      const respuestaPayload = () =>
+        Object.entries(selectedAnswers)
+          .map(([index, optionIndex]) => {
+            const questionIndex = Number(index);
+            const pregunta = preguntas[questionIndex];
+            const meta = shuffledMetaByQuestion[questionIndex];
+            if (!pregunta || !meta) return null;
+            const selectedIndexes = Array.isArray(optionIndex) ? optionIndex : [optionIndex];
+            const respuestaSeleccionada = selectedIndexes
+              .map((selectedIndex) => meta.options[selectedIndex])
+              .filter((option): option is string => typeof option === 'string');
+            return { pregunta_id: pregunta.id, respuesta_seleccionada: respuestaSeleccionada };
+          })
+          .filter((entry): entry is { pregunta_id: string; respuesta_seleccionada: string[] } =>
+            Boolean(entry)
+          );
 
       if (resolvedDemoMode || !userId) {
+        // Demo: se corrige cada respuesta en el servidor (sin sesión).
+        const gradedResults = await Promise.all(
+          respuestaPayload().map(async (entry) => {
+            const result = await corregirPreguntaDemo({
+              pregunta_id: entry.pregunta_id,
+              materia_id: materiaId,
+              respuesta_seleccionada: entry.respuesta_seleccionada,
+            });
+            return { pregunta_id: entry.pregunta_id, result };
+          })
+        );
+        const feedbackMap: Record<number, GradedPreguntaResult> = {};
+        let correctas = 0;
+        for (const { pregunta_id, result } of gradedResults) {
+          if (!result?.success) continue;
+          const questionIndex = preguntas.findIndex((pregunta) => pregunta.id === pregunta_id);
+          if (questionIndex < 0) continue;
+          feedbackMap[questionIndex] = {
+            correct: result.correct,
+            correct_indexes: result.correct_indexes,
+          };
+          if (result.correct) correctas += 1;
+        }
+        setFeedbackByQuestion((prev) => ({ ...prev, ...feedbackMap }));
+        setAciertosFinales(correctas);
+        setRespondidasFinales(Object.keys(selectedAnswers).length);
+        setIsFinishing(false);
         return;
       }
 
-      const registros = Object.entries(selectedAnswers).map(([index, optionIndex]) => {
-        const questionIndex = Number(index);
-        const pregunta = preguntas[questionIndex];
-        const meta = shuffledMetaByQuestion[questionIndex];
-        if (!pregunta || !meta) return null;
-        const selectedIndexes = Array.isArray(optionIndex) ? optionIndex : [optionIndex];
-        const respuestaSeleccionada = selectedIndexes
-          .map((index) => meta.options[index])
-          .filter((option): option is string => typeof option === 'string');
+      // Modo autenticado: el intento se re-corrige entero en el servidor.
+      // Valor provisional desde los feedbacks ya corregidos en vivo (el servidor
+      // re-corrige y sus cifras son las que mandan).
+      const provisionalCorrectas = Object.values(feedbackByQuestion).filter(
+        (feedback) => feedback.correct
+      ).length;
+      setAciertosFinales(provisionalCorrectas);
+      setRespondidasFinales(Object.keys(selectedAnswers).length);
 
-        return registrarRespuestaUsuario({
-          usuario_id: userId,
-          pregunta_id: pregunta.id,
-          materia_id: pregunta.materia_id,
-          respuesta_seleccionada: respuestaSeleccionada,
-        });
+      const response = await finalizarSimuladorAction({
+        usuario_id: userId,
+        materia_id: materiaId,
+        parcial,
+        total_preguntas: preguntasDisponibles,
+        answered_questions: Object.keys(selectedAnswers).length,
+        tiempo_restante: trigger === 'timer' ? 0 : timeLeft,
+        premium_only: premiumOnly,
+        mode,
+        respuestas: respuestaPayload(),
       });
 
-      const wrongQuestionIds = Object.entries(selectedAnswers)
-        .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
-        .map(([index]) => preguntas[Number(index)]?.id)
-        .filter((id): id is string => Boolean(id));
-      const answeredQuestionIds = Object.keys(selectedAnswers)
-        .map((index) => preguntas[Number(index)]?.id)
-        .filter((id): id is string => Boolean(id));
+      if (response.success) {
+        setAciertosFinales(response.summary.respuestas_correctas);
+        setRespondidasFinales(response.summary.answered_questions);
 
-      void Promise.allSettled([
-        finalizarSimuladorAction({
-          usuario_id: userId,
-          materia_id: materiaId,
-          parcial,
-          total_preguntas: preguntasDisponibles,
-          respuestas_correctas: correctas,
-          answered_questions: respondidas,
-          tiempo_restante: trigger === 'timer' ? 0 : timeLeft,
-          premium_only: premiumOnly,
-          wrong_question_ids: wrongQuestionIds,
-          answered_question_ids: answeredQuestionIds,
-        }),
-        ...registros.filter(Boolean),
-      ]).catch((error) => {
-        logError('simulador.registrarResultado', error, {
-          materiaId,
-          parcial,
-          userId,
-          answeredCount: respondidas,
-        });
-      });
+        if (response.resultados) {
+          const feedbackMap: Record<number, GradedPreguntaResult> = {};
+          for (const [preguntaId, resultado] of Object.entries(response.resultados)) {
+            const questionIndex = preguntas.findIndex((pregunta) => pregunta.id === preguntaId);
+            if (questionIndex < 0) continue;
+            feedbackMap[questionIndex] = resultado;
+          }
+          setFeedbackByQuestion((prev) => ({ ...prev, ...feedbackMap }));
+        }
+      }
+
+      setIsFinishing(false);
     },
     [
-      computeCorrectAnswers,
       resolvedDemoMode,
       estado,
       isFinishing,
@@ -821,6 +864,7 @@ export default function SimuladorExamen({
       storageKey,
       currentQuestionIndex,
       emitSimulatorEvent,
+      premiumOnly,
     ]
   );
 
@@ -833,16 +877,18 @@ export default function SimuladorExamen({
         : premiumOnly
         ? await getPreguntasSimuladorPremium(materiaId, parcial)
         : resolvedDemoMode
-        ? await getPreguntasSimuladorDemo(materiaId, parcial, universidadId, carreraId)
+        ? await getPreguntasSimuladorDemo(materiaId, parcial)
         : await getPreguntasSimulador(materiaId, parcial, universidadId, carreraId);
 
     if (data && data.length > 0) {
       simulatorLifecycleRef.current.outcomeTracked = false;
+      gradedQuestionRef.current.clear();
       setPreguntas(data.slice(0, questionLimit));
       setCurrentQuestionIndex(0);
       setTimeLeft(examDurationSeconds);
       setSelectedAnswers({});
       setFlaggedQuestions([]);
+      setFeedbackByQuestion({});
       setHasStarted(false);
       setResumeSnapshot(null);
       setEstado('playing');
@@ -1010,6 +1056,7 @@ export default function SimuladorExamen({
       timeLeft,
       selectedAnswers,
       flaggedQuestions,
+      feedback: feedbackByQuestion,
       hasStarted,
       savedAt: new Date().toISOString(),
     };
@@ -1017,6 +1064,7 @@ export default function SimuladorExamen({
   }, [
     currentQuestionIndex,
     estado,
+    feedbackByQuestion,
     flaggedQuestions,
     hasStarted,
     materiaId,
@@ -1037,7 +1085,9 @@ export default function SimuladorExamen({
         .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
         .map(([index]) => preguntas[Number(index)]?.id)
         .filter((id): id is string => Boolean(id));
-      const limitedWrongQuestionIds = wrongQuestionIds.slice(0, 3);
+      const limitedWrongQuestionIds = isPremium
+        ? wrongQuestionIds
+        : wrongQuestionIds.slice(0, 3);
 
       if (limitedWrongQuestionIds.length === 0) {
         setWrongExplanations([]);
@@ -1059,7 +1109,7 @@ export default function SimuladorExamen({
     }
 
     void loadExplanations();
-  }, [estado, isCorrectAnswer, materiaId, parcial, preguntas, selectedAnswers, userId]);
+  }, [estado, isCorrectAnswer, isPremium, materiaId, parcial, preguntas, selectedAnswers, userId]);
 
   const handleExplanationFeedback = async (preguntaId: string, voto: 1 | -1) => {
     setFeedbackLoading((prev) => ({ ...prev, [preguntaId]: voto }));
@@ -1149,14 +1199,11 @@ export default function SimuladorExamen({
       if (answerValue === undefined) return false;
 
       const pregunta = preguntas[questionIndex];
-      if (!pregunta || !isMultiAnswer(pregunta.respuesta_correcta)) {
+      if (!pregunta || pregunta.correctCount <= 1) {
         return true;
       }
 
-      return (
-        Array.isArray(answerValue) &&
-        answerValue.length === parseCorrectAnswers(pregunta.respuesta_correcta).length
-      );
+      return Array.isArray(answerValue) && answerValue.length === pregunta.correctCount;
     },
     [preguntas, selectedAnswers]
   );
@@ -1170,13 +1217,13 @@ export default function SimuladorExamen({
 
   const handleSelectAnswer = (optionIndex: number) => {
     if (!preguntaActual) return;
-    if (!isMultiAnswer(preguntaActual.respuesta_correcta)) {
+    if (preguntaActual.correctCount <= 1) {
       if (selectedAnswers[currentQuestionIndex] !== undefined) return;
       setSelectedAnswers((prev) => ({ ...prev, [currentQuestionIndex]: optionIndex }));
       return;
     }
 
-    const maxAllowed = parseCorrectAnswers(preguntaActual.respuesta_correcta).length;
+    const maxAllowed = preguntaActual.correctCount;
     setSelectedAnswers((prev) => {
       const currentValue = prev[currentQuestionIndex];
       const current = Array.isArray(currentValue) ? currentValue : [];
@@ -1822,7 +1869,7 @@ export default function SimuladorExamen({
                         ))}
                       </div>
                     )}
-                    {wrongExplanations.length > 0 ? (
+                    {!isPremium && wrongExplanations.length > 0 ? (
                       explanationsMetrics ? (
                         <SimulatorPremiumUpsell
                           cacheHits={explanationsMetrics.cacheHits}
@@ -2089,9 +2136,9 @@ export default function SimuladorExamen({
               <h2 className="mt-2 text-base font-semibold leading-relaxed text-slate-900 sm:text-lg">
                 {preguntaActual?.enunciado}
               </h2>
-              {preguntaActual && isMultiAnswer(preguntaActual.respuesta_correcta) ? (
+              {preguntaActual && preguntaActual.correctCount > 1 ? (
                 <p className="mt-2 text-xs font-semibold text-indigo-700">
-                  Selecciona {parseCorrectAnswers(preguntaActual.respuesta_correcta).length} opciones correctas.
+                  Selecciona {preguntaActual.correctCount} opciones correctas.
                 </p>
               ) : null}
             </div>
@@ -2099,14 +2146,18 @@ export default function SimuladorExamen({
             <div className="space-y-3">
               {preguntaActualShuffled?.options?.map((opcion, idx) => {
                 const answerValue = selectedAnswers[currentQuestionIndex];
-                const multi = Boolean(preguntaActual && isMultiAnswer(preguntaActual.respuesta_correcta));
+                const multi = Boolean(preguntaActual && preguntaActual.correctCount > 1);
                 const selected = Array.isArray(answerValue) ? answerValue.includes(idx) : answerValue === idx;
                 const questionAnswered = multi
                   ? Array.isArray(answerValue) &&
-                    answerValue.length === parseCorrectAnswers(preguntaActual?.respuesta_correcta ?? '').length
+                    answerValue.length === (preguntaActual?.correctCount ?? 0)
                   : answerValue !== undefined;
-                const optionIsCorrect = isCorrectChoice(currentQuestionIndex, idx);
-                const selectedIsWrong = selected && questionAnswered && !optionIsCorrect;
+                const gradedFeedback = feedbackByQuestion[currentQuestionIndex];
+                const optionIsCorrect = gradedFeedback
+                  ? isCorrectChoice(currentQuestionIndex, idx)
+                  : false;
+                const selectedIsWrong =
+                  selected && questionAnswered && gradedFeedback !== undefined && !optionIsCorrect;
 
                 return (
                   <button

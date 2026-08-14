@@ -33,8 +33,8 @@ export async function fetchResourceViewCounts(
   }
 
   const { data, error } = await supabase
-    .from('resource_views')
-    .select('resource_id')
+    .from('resource_view_counts')
+    .select('resource_id, views')
     .in('resource_id', resourceIds);
 
   if (error) {
@@ -49,7 +49,7 @@ export async function fetchResourceViewCounts(
 
   for (const row of data ?? []) {
     if (!row.resource_id) continue;
-    counts[row.resource_id] = (counts[row.resource_id] ?? 0) + 1;
+    counts[row.resource_id] = row.views ?? 0;
   }
 
   return counts;

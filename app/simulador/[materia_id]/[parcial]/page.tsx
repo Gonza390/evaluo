@@ -1,5 +1,9 @@
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { createPublicClient } from '@/lib/supabase-public';
+import { isUuid } from '@/lib/uuid';
 import { createClientServer } from '@/lib/supabase-server';
 
 const SimuladorExamen = dynamic(() => import('@/components/simulador/SimuladorExamen'), {
@@ -19,14 +23,72 @@ const SimuladorExamen = dynamic(() => import('@/components/simulador/SimuladorEx
   ),
 });
 
-async function SimuladorContent({
-  params,
-  searchParams,
-}: {
+type PageProps = {
   params: Promise<{ materia_id: string; parcial: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { materia_id } = await params;
+
+  if (!isUuid(materia_id)) {
+    return {
+      title: 'Simulador',
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const client = createPublicClient();
+
+  try {
+    const { data: materia } = await client
+      .from('materias')
+      .select('nombre, carrera_id')
+      .eq('id', materia_id)
+      .maybeSingle();
+
+    if (!materia) {
+      return {
+        title: 'Simulador',
+        robots: { index: false, follow: false },
+      };
+    }
+
+    let carreraNombre: string | null = null;
+    if (materia.carrera_id) {
+      const { data: carrera } = await client
+        .from('carreras')
+        .select('nombre')
+        .eq('id', materia.carrera_id)
+        .maybeSingle();
+      carreraNombre = carrera?.nombre?.trim() ?? null;
+    }
+
+    const materiaNombre = materia.nombre?.trim() || 'Simulador';
+
+    return {
+      title: `Simulador de ${materiaNombre}`,
+      description: carreraNombre
+        ? `Practicá con simuladores de parcial de ${materiaNombre} (${carreraNombre}) en Evaluo.`
+        : `Practicá con simuladores de parcial de ${materiaNombre} en Evaluo.`,
+      robots: { index: false, follow: true },
+    };
+  } catch {
+    return {
+      title: 'Simulador',
+    };
+  }
+}
+
+async function SimuladorContent({
+  materiaId,
+  parcial,
+  searchParams,
+}: {
+  materiaId: string;
+  parcial: number;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { materia_id, parcial: parcialStr } = await params;
   const sParams = await searchParams;
 
   const supabase = await createClientServer();
@@ -35,23 +97,8 @@ async function SimuladorContent({
   } = await supabase.auth.getUser();
 
   const demoMode = !user;
-  const materiaId = materia_id;
-  const parcial = parseInt(parcialStr, 10) || 1;
   const universidadId = sParams.universidad_id as string;
   const carreraId = sParams.carrera_id as string;
-
-  if (!materiaId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-6 text-center">
-        <div className="max-w-md rounded-2xl border border-red-100 bg-white p-8 shadow-lg">
-          <h1 className="mb-2 text-2xl font-bold text-red-600">Faltan parámetros</h1>
-          <p className="text-gray-600">
-            No se proporcionó un ID de materia válido para iniciar el simulador.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <SimuladorExamen
@@ -64,13 +111,26 @@ async function SimuladorContent({
   );
 }
 
-export default async function SimuladorPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ materia_id: string; parcial: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
+export default async function SimuladorPage({ params, searchParams }: PageProps) {
+  const { materia_id, parcial: parcialStr } = await params;
+
+  if (!isUuid(materia_id)) {
+    return notFound();
+  }
+
+  const client = createPublicClient();
+  const { data: materia, error } = await client
+    .from('materias')
+    .select('id')
+    .eq('id', materia_id)
+    .maybeSingle();
+
+  if (error || !materia) {
+    return notFound();
+  }
+
+  const parcial = parseInt(parcialStr, 10) || 1;
+
   return (
     <Suspense
       fallback={
@@ -81,7 +141,11 @@ export default async function SimuladorPage({
         </div>
       }
     >
-      <SimuladorContent params={params} searchParams={searchParams} />
+      <SimuladorContent
+        materiaId={materia_id}
+        parcial={parcial}
+        searchParams={searchParams}
+      />
     </Suspense>
   );
 }
