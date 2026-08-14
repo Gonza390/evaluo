@@ -80,7 +80,7 @@ export default async function SummaryIntentPage({ params }: PageProps) {
             <FileText className="h-4 w-4" />
             Resúmenes
           </p>
-          <h1 className="mt-5 text-4xl font-black tracking-[-0.06em] text-slate-950 sm:text-5xl">
+          <h1 className="mt-5 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
             Resúmenes de {bootstrap.materiaNombre}
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">

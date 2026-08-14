@@ -11,7 +11,6 @@
     "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.12",
     "@radix-ui/react-alert-dialog": "1.1.15",
@@ -46,6 +45,7 @@
     "@supabase/supabase-js": "^2.103.3",
     "@vercel/analytics": "1.6.1",
     "autoprefixer": "^10.5.0",
+    "canvas": "^3.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.1.1",
@@ -58,6 +58,7 @@
     "next-themes": "^0.4.6",
     "pdf-lib": "^1.17.1",
     "pdf-parse-fork": "^1.2.0",
+    "pdfjs-dist": "^5.4.296",
     "react": "^19",
     "react-day-picker": "9.13.2",
     "react-dom": "^19",

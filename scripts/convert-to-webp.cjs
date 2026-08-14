@@ -6,14 +6,8 @@ const fs = require('fs');
 const publicDir = path.join(__dirname, '..', 'public');
 
 const images = [
-  'hero-home-estudiante.png',
-  'como-funciona-1.png',
-  'como-funciona-2.png',
-  'como-funciona-3.png',
   'hero-student-right-v2.png',
   'hero-student-right.png',
-  'simulador-resultado-motivacional.png',
-  'simulador-resultado.png',
 ];
 
 async function convert() {

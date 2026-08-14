@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
-import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/ai/providers';
+import { requestGeminiImagesJson, requestGeminiJson, requestGeminiPdfJson, requestGroqJson, requestNvidiaJson } from '@/lib/ai/providers';
+import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 import { extractJsonObject } from '@/lib/ai/json';
 import {
   isolateUntrustedContent,
@@ -78,25 +79,82 @@ function isGoodGlossaryTerm(term: string) {
   return /[\p{L}]/u.test(clean);
 }
 
+const NOISE_GLOSSARY_LABELS = new Set([
+  'importante',
+  'ejemplo',
+  'ejemplo aplicado',
+  'definicion',
+  'clave de estudio',
+  'puntos clave',
+  'resumen',
+  'resumen breve',
+  'concepto del documento',
+  'clasificacion del documento',
+  'definicion central del documento',
+  'glosario',
+  'contenido',
+  'bibliografia',
+  'referencias',
+  'indice',
+  'anexo',
+  'conclusion',
+  'introduccion',
+  'temario',
+  'organizacion',
+]);
+
+function stripLeadingArticle(value: string) {
+  return cleanLine(value)
+    .replace(/^(?:el|la|los|las|un|una|unos|unas)\s+/iu, '')
+    .trim();
+}
+
+function isNoisyGlossaryTerm(term: string) {
+  const clean = cleanLine(term).toLocaleLowerCase('es');
+  if (NOISE_GLOSSARY_LABELS.has(clean)) return true;
+  if (/^[\p{L}\p{N}\s,;:()-]{45,}[.]$/u.test(clean)) return true;
+  if (/—/.test(clean)) return true;
+  if (/,\s*\p{Lu}\./u.test(clean)) return true;
+  if (/^(?:bibliograf|referencias|glosario|indice|anexo|contenido del)/iu.test(clean)) return true;
+  return false;
+}
+
+function filterSectionTitleTerms(items: StudyGlossaryItem[], sectionTitles: string[]) {
+  const stripNumbering = (value: string) =>
+    stripLeadingArticle(value).replace(/^\d+(?:\.\d+)*\.?\s+/, '').trim();
+  const normalizedTitles = new Set(
+    sectionTitles.map((title) => normalizeForDedupe(stripNumbering(title)))
+  );
+  return items.filter((item) => !normalizedTitles.has(normalizeForDedupe(stripNumbering(item.term))));
+}
+
 function sanitizeGlossaryItems(items: StudyGlossaryItem[]): StudyGlossaryItem[] {
   return items
     .map((item) => ({
-      term: sentenceCase(item.term),
+      term: stripLeadingArticle(sentenceCase(item.term)),
+      englishTerm: item.englishTerm ? cleanLine(item.englishTerm) : null,
       definition: truncateAtWord(cleanLine(item.definition), MAX_AI_GLOSSARY_DEFINITION_CHARS),
       context: truncateAtWord(cleanLine(item.context), 180),
       importance: item.importance === 'alta' ? ('alta' as const) : ('media' as const),
     }))
-    .filter((item) => isGoodGlossaryTerm(item.term) && item.definition.length >= 20)
+    .filter(
+      (item) =>
+        isGoodGlossaryTerm(item.term) &&
+        !isNoisyGlossaryTerm(item.term) &&
+        item.definition.length >= 20
+    )
     .sort((a, b) => a.term.localeCompare(b.term, 'es', { sensitivity: 'base' }))
-    .slice(0, 32);
+    .slice(0, 45);
 }
 
 function normalizeGlossaryTerm(term: string) {
-  return sentenceCase(
-    cleanLine(term)
-      .replace(/^(?:[-*]|\u2022|\s)+/, '')
-      .replace(/\s+/g, ' ')
-      .trim()
+  return stripLeadingArticle(
+    sentenceCase(
+      cleanLine(term)
+        .replace(/^(?:[-*]|\u2022|\s)+/, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+    )
   );
 }
 
@@ -322,31 +380,33 @@ function buildGlossaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     .join('\n');
 
   return [
-    'Actua como un profesor experto y un especialista en tecnicas de estudio.',
+    'Actúa como un profesor experto y un especialista en técnicas de estudio.',
     'He subido un archivo PDF que contiene material que debo estudiar.',
-    'Analiza el documento por completo y crea un glosario exhaustivo, claro y estructurado con los terminos clave.',
-    'Debes responder unicamente con JSON valido.',
-    'Basate unicamente en la informacion del PDF provisto.',
-    'No inventes informacion ni completes huecos con conocimiento externo.',
+    'Analiza el documento por completo y crea un glosario exhaustivo, claro y estructurado con los términos clave.',
+    'Debes responder únicamente con JSON válido.',
+    'Básate únicamente en la información del PDF provisto.',
+    'No inventes información ni completes huecos con conocimiento externo.',
     ...buildGlossaryStrategyInstructions(input),
     '',
     'Pautas:',
     PROMPT_INJECTION_GUARD,
     '',
-    '1. Selecciona conceptos tecnicos, palabras clave, teorias, autores importantes, modelos, etapas, clasificaciones, siglas y jerga especifica del texto que sean fundamentales para entender el tema.',
-    '2. Para cada termino debes devolver:',
-    '   - term: termino claro y especifico.',
-    '   - definition: definicion clara y concisa, explicada con tus propias palabras pero basada en el texto.',
-    '   - context: breve frase de como se aplica o se menciona en el documento.',
-    '   - importance: "alta" para conceptos nucleares y "media" para complementarios utiles.',
-    '3. Organiza los terminos en orden alfabetico.',
-    '4. El glosario debe ser visualmente facil de escanear y repasar.',
-    '5. Debes cubrir todo el PDF, no solo las primeras paginas.',
-    '6. Si el documento tiene secciones o capitulos distintos, refleja esa diferencia en el campo context.',
-    '7. Genera entre 20 y 32 terminos si el documento lo permite. No devuelvas un glosario corto si el PDF contiene suficiente material.',
+    '1. Selecciona conceptos técnicos, palabras clave, teorías, autores importantes, modelos, etapas, clasificaciones, siglas y jerga específica del texto que sean fundamentales para entender el tema.',
+    '2. Para cada término debes devolver:',
+    '   - term: término claro y específico, sin artículos iniciales (ej: "Segmentación" y no "La segmentación").',
+    '   - englishTerm: la traducción o equivalente en inglés del término si existe una forma estándar (ej: "Customer journey"). Si no hay una traducción estándar, deja el campo vacío ("").',
+    '   - definition: definición clara y concisa, explicada con tus propias palabras pero basada en el texto.',
+    '   - context: breve frase de cómo se aplica o se menciona en el documento.',
+    '   - importance: "alta" para conceptos nucleares y "media" para complementarios útiles.',
+    '3. Organiza los términos en orden alfabético.',
+    '4. NO incluyas como términos: etiquetas de formato ("Importante", "Ejemplo aplicado", "Clave de estudio"), títulos de sección genéricos ("Bibliografía", "Referencias", "Glosario", "Resumen breve", "Puntos clave") ni citas bibliográficas de autores.',
+    '5. El glosario debe ser visualmente fácil de escanear y repasar.',
+    '6. Debes cubrir todo el PDF, no solo las primeras páginas.',
+    '7. Si el documento tiene secciones o capítulos distintos, refleja esa diferencia en el campo context.',
+    '8. Genera entre 30 y 40 términos si el documento lo permite. No devuelvas un glosario corto si el PDF contiene suficiente material.',
     '',
     'Formato exacto:',
-    '{"items":[{"term":"...","definition":"...","context":"...","importance":"alta"}]}',
+    '{"items":[{"term":"...","englishTerm":"...","definition":"...","context":"...","importance":"alta"}]}',
     '',
     context,
     '',
@@ -382,6 +442,7 @@ function buildCompactGlossarySource(input: GenerateSummaryInput, summary: Studen
 type GlossaryPayload = {
   items?: Array<{
     term?: string;
+    englishTerm?: string;
     definition?: string;
     context?: string;
     importance?: 'alta' | 'media' | string;
@@ -397,16 +458,17 @@ function parseGlossaryPayload(raw: string) {
       const candidate = fenced?.[1] ?? raw;
       const itemMatches = Array.from(
         candidate.matchAll(
-          /"term"\s*:\s*"([\s\S]*?)"\s*,\s*"definition"\s*:\s*"([\s\S]*?)"\s*,\s*"context"\s*:\s*"([\s\S]*?)"\s*,\s*"importance"\s*:\s*"(alta|media)"/gi
+          /"term"\s*:\s*"([\s\S]*?)"\s*,\s*"englishTerm"\s*:\s*"([\s\S]*?)"\s*,\s*"definition"\s*:\s*"([\s\S]*?)"\s*,\s*"context"\s*:\s*"([\s\S]*?)"\s*,\s*"importance"\s*:\s*"(alta|media)"/gi
         )
       );
 
       return {
         items: itemMatches.map((match) => ({
           term: cleanLine(match[1] ?? ''),
-          definition: cleanLine(match[2] ?? ''),
-          context: cleanLine(match[3] ?? ''),
-          importance: match[4] === 'alta' ? 'alta' : 'media',
+          englishTerm: cleanLine(match[2] ?? ''),
+          definition: cleanLine(match[3] ?? ''),
+          context: cleanLine(match[4] ?? ''),
+          importance: match[5] === 'alta' ? 'alta' : 'media',
         })),
       };
     }
@@ -415,6 +477,7 @@ function parseGlossaryPayload(raw: string) {
   const items: StudyGlossaryItem[] = Array.isArray(parsed.items)
     ? parsed.items.map((item) => ({
         term: String(item.term ?? ''),
+        englishTerm: item.englishTerm ? String(item.englishTerm) : null,
         definition: String(item.definition ?? ''),
         context: String(item.context ?? ''),
         importance: item.importance === 'alta' ? ('alta' as const) : ('media' as const),
@@ -436,42 +499,95 @@ export async function generateStudentMaterialGlossary(
 
   const prompt = buildGlossaryPrompt(input, buildCompactGlossarySource(input, summary));
 
-  try {
-    const githubResult = await requestGitHubModelsJson({
-      prompt,
-      system:
-        'Sos un asistente academico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON valido.',
-      temperature: 0.08,
-      maxTokens: 1200,
-    });
-    if (githubResult) {
-      const glossary = parseGlossaryPayload(githubResult.content);
-      const mergedGlossary = sanitizeGlossaryItems([
+  if (input.pdfBuffer) {
+    const glossarySchema = {
+      type: 'OBJECT',
+      properties: {
+        items: {
+          type: 'ARRAY',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              term: { type: 'STRING' },
+              englishTerm: { type: 'STRING' },
+              definition: { type: 'STRING' },
+              context: { type: 'STRING' },
+              importance: { type: 'STRING', enum: ['alta', 'media'] },
+            },
+            required: ['term', 'englishTerm', 'definition', 'context', 'importance'],
+          },
+        },
+      },
+      required: ['items'],
+    };
+
+    const mergeAiGlossary = (content: string) => {
+      const glossary = filterSectionTitleTerms(
+        parseGlossaryPayload(content),
+        summary.sections.map((section) => section.title)
+      );
+      return sanitizeGlossaryItems([
         ...glossary,
         ...fallbackGlossary.filter(
           (item) =>
             !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
         ),
-      ]);
+      ]).filter((item) => !/[\p{L}]{20,}/u.test(item.definition));
+    };
 
-      if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
-        return mergedGlossary;
+    try {
+      const pages = await renderPdfPagesToPngs(input.pdfBuffer);
+      if (pages.length > 0) {
+        const geminiVisionResult = await requestGeminiImagesJson({
+          prompt,
+          images: pages,
+          temperature: 0.1,
+          maxOutputTokens: 2600,
+          responseSchema: glossarySchema,
+        });
+        if (geminiVisionResult) {
+          const mergedGlossary = mergeAiGlossary(geminiVisionResult.content);
+          if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
+            return mergedGlossary;
+          }
+        }
       }
+    } catch (error) {
+      logError('studentMaterialGlossary.geminiVision', error, { title: input.title });
     }
-  } catch (error) {
-    logError('studentMaterialGlossary.githubModels', error, { title: input.title });
+
+    try {
+      const geminiPdfResult = await requestGeminiPdfJson({
+        prompt,
+        pdfBuffer: input.pdfBuffer,
+        temperature: 0.1,
+        maxOutputTokens: 2600,
+        responseSchema: glossarySchema,
+      });
+      if (geminiPdfResult) {
+        const mergedGlossary = mergeAiGlossary(geminiPdfResult.content);
+        if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
+          return mergedGlossary;
+        }
+      }
+    } catch (error) {
+      logError('studentMaterialGlossary.geminiPdf', error, { title: input.title });
+    }
   }
 
   try {
     const groqResult = await requestGroqJson({
       prompt,
       system:
-        'Sos un asistente academico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON valido.',
+        'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
       temperature: 0.08,
-      maxTokens: 1200,
+      maxTokens: 2400,
     });
     if (groqResult) {
-      const glossary = parseGlossaryPayload(groqResult.content);
+      const glossary = filterSectionTitleTerms(
+        parseGlossaryPayload(groqResult.content),
+        summary.sections.map((section) => section.title)
+      );
       const mergedGlossary = sanitizeGlossaryItems([
         ...glossary,
         ...fallbackGlossary.filter(
@@ -489,10 +605,39 @@ export async function generateStudentMaterialGlossary(
   }
 
   try {
+    const nvidiaResult = await requestNvidiaJson({
+      prompt,
+      system:
+        'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
+      temperature: 0.08,
+      maxTokens: 2400,
+    });
+    if (nvidiaResult) {
+      const glossary = filterSectionTitleTerms(
+        parseGlossaryPayload(nvidiaResult.content),
+        summary.sections.map((section) => section.title)
+      );
+      const mergedGlossary = sanitizeGlossaryItems([
+        ...glossary,
+        ...fallbackGlossary.filter(
+          (item) =>
+            !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
+        ),
+      ]);
+
+      if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
+        return mergedGlossary;
+      }
+    }
+  } catch (error) {
+    logError('studentMaterialGlossary.nvidia', error, { title: input.title });
+  }
+
+  try {
     const geminiResult = await requestGeminiJson({
       prompt,
       temperature: 0.14,
-      maxOutputTokens: 1200,
+      maxOutputTokens: 2400,
       responseSchema: {
         type: 'OBJECT',
         properties: {
@@ -502,11 +647,12 @@ export async function generateStudentMaterialGlossary(
               type: 'OBJECT',
               properties: {
                 term: { type: 'STRING' },
+                englishTerm: { type: 'STRING' },
                 definition: { type: 'STRING' },
                 context: { type: 'STRING' },
                 importance: { type: 'STRING', enum: ['alta', 'media'] },
               },
-              required: ['term', 'definition', 'context', 'importance'],
+              required: ['term', 'englishTerm', 'definition', 'context', 'importance'],
             },
           },
         },
@@ -514,7 +660,10 @@ export async function generateStudentMaterialGlossary(
       },
     });
     if (geminiResult) {
-      const glossary = parseGlossaryPayload(geminiResult.content);
+      const glossary = filterSectionTitleTerms(
+        parseGlossaryPayload(geminiResult.content),
+        summary.sections.map((section) => section.title)
+      );
       const mergedGlossary = sanitizeGlossaryItems([
         ...glossary,
         ...fallbackGlossary.filter(

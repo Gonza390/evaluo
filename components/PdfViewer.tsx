@@ -726,7 +726,7 @@ export default function PdfViewer({
                             {previewPageLimit} paginas
                           </span>
                         </div>
-                        <p className="mt-4 text-2xl font-black tracking-[-0.04em] text-slate-950 sm:text-3xl">
+                        <p className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
                           Accede al material completo
                         </p>
                         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">

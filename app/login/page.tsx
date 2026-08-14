@@ -5,7 +5,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,#f7faff_0%,#eef4ff_100%)] px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[1080px] items-center justify-center">
-        <div className="grid w-full max-w-[980px] overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr]">
+        <div className="grid w-full max-w-[980px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr]">
           <LoginForm />
 
           <section className="relative hidden overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.22),transparent_16%),radial-gradient(circle_at_78%_30%,rgba(129,140,248,0.22),transparent_20%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.12),transparent_22%),linear-gradient(160deg,#050B2C_0%,#0F1B3D_100%)] lg:block">

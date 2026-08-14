@@ -24,6 +24,7 @@ export type StudyCalendarEvent = {
   carreraNombre: string | null;
   examInstance: ExamInstance | null;
   sourcePayload: CalendarEventSourcePayload | null;
+  reminderDays?: number[] | null;
 };
 
 export type CareerMateriaOption = {
@@ -37,6 +38,7 @@ export const DEFAULT_CALENDAR_FORM_STATE = {
   selectedMateriaId: null as string | null,
   examInstance: '1' as ExamInstance,
   assignmentTitle: '',
+  reminderDays: [] as number[],
 };
 
 export function formatStorageDate(date: Date) {
@@ -133,6 +135,7 @@ export function buildEventPayload({
       carreraId: careerId,
       carreraNombre: careerName,
       examInstance: formState.examInstance,
+      reminderDays: formState.reminderDays,
       sourcePayload: {
         subjectName,
         examInstance: formState.examInstance,
@@ -158,6 +161,7 @@ export function buildEventPayload({
     carreraId: careerId,
     carreraNombre: careerName,
     examInstance: null,
+    reminderDays: [] as number[],
     sourcePayload: {
       assignmentTitle,
       careerId,

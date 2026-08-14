@@ -183,6 +183,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      explanations_history: {
+        Row: {
+          id: string;
+          user_id: string;
+          materia_id: string | null;
+          materia_nombre: string | null;
+          parcial: number | null;
+          pregunta_id: string | null;
+          enunciado: string;
+          explicacion: string;
+          provider: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          materia_id?: string | null;
+          materia_nombre?: string | null;
+          parcial?: number | null;
+          pregunta_id?: string | null;
+          enunciado: string;
+          explicacion: string;
+          provider?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          materia_id?: string | null;
+          materia_nombre?: string | null;
+          parcial?: number | null;
+          pregunta_id?: string | null;
+          enunciado?: string;
+          explicacion?: string;
+          provider?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       historial_respuestas: {
         Row: {
           id: string;
@@ -506,6 +545,7 @@ export type Database = {
           carrera_nombre: string | null;
           exam_instance: string | null;
           source_payload: Json | null;
+          reminder_days_before: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -522,6 +562,7 @@ export type Database = {
           carrera_nombre?: string | null;
           exam_instance?: string | null;
           source_payload?: Json | null;
+          reminder_days_before?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -538,8 +579,54 @@ export type Database = {
           carrera_nombre?: string | null;
           exam_instance?: string | null;
           source_payload?: Json | null;
+          reminder_days_before?: Json | null;
           created_at?: string;
           updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_id: string | null;
+          type: string;
+          title: string;
+          body: string;
+          materia_nombre: string | null;
+          event_date: string | null;
+          days_before: number | null;
+          status: string;
+          created_at: string;
+          seen_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_id?: string | null;
+          type?: string;
+          title: string;
+          body: string;
+          materia_nombre?: string | null;
+          event_date?: string | null;
+          days_before?: number | null;
+          status?: string;
+          created_at?: string;
+          seen_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_id?: string | null;
+          type?: string;
+          title?: string;
+          body?: string;
+          materia_nombre?: string | null;
+          event_date?: string | null;
+          days_before?: number | null;
+          status?: string;
+          created_at?: string;
+          seen_at?: string | null;
         };
         Relationships: [];
       };
@@ -1174,6 +1261,39 @@ export type Database = {
           processing_progress?: number;
           processing_message?: string | null;
           processing_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      student_material_feedback: {
+        Row: {
+          id: string;
+          user_id: string;
+          student_material_id: string;
+          rating: string;
+          report_reason: string | null;
+          report_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          student_material_id: string;
+          rating: string;
+          report_reason?: string | null;
+          report_note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          student_material_id?: string;
+          rating?: string;
+          report_reason?: string | null;
+          report_note?: string | null;
           created_at?: string;
           updated_at?: string;
         };

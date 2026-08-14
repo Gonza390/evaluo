@@ -137,7 +137,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">
                 Universidades
               </p>
-              <h2 className="mt-1 text-[1.45rem] font-black tracking-[-0.04em] text-slate-950 sm:text-2xl">
+              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
                 Empieza desde tu facultad si todavía no tienes definida la carrera
               </h2>
               <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
@@ -176,7 +176,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                       </div>
 
                       <div>
-                        <CardTitle className="text-[1.05rem] font-black leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
+                        <CardTitle className="text-[1.05rem] font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
                           {universidad.nombre}
                         </CardTitle>
                         <p className="mt-1.5 text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6">
@@ -206,7 +206,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">
                 Carreras
               </p>
-              <h2 className="mt-1 text-[1.45rem] font-black tracking-[-0.04em] text-slate-950 sm:text-2xl">
+              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
                 Entra directo a tu ruta académica
               </h2>
               <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
@@ -246,7 +246,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                     </CardHeader>
                     <CardContent className="space-y-2 pt-0">
                       <div>
-                        <CardTitle className="text-[1.15rem] font-black leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.2rem]">
+                        <CardTitle className="text-[1.15rem] font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.2rem]">
                           {carrera.nombre}
                         </CardTitle>
                         <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">

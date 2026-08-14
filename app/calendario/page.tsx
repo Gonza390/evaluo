@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  BellRing,
   CalendarPlus,
   ChevronLeft,
   ChevronRight,
@@ -43,6 +44,8 @@ import {
   type StudyCalendarEvent,
 } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { PremiumUpsell } from '@/components/premium/premium-upsell';
 
 type CalendarStorageMode = 'supabase' | 'local';
 
@@ -142,6 +145,7 @@ function buildEventPayload({
       carreraId: careerId,
       carreraNombre: careerName,
       examInstance: formState.examInstance,
+      reminderDays: formState.reminderDays,
       sourcePayload: {
         subjectName,
         examInstance: formState.examInstance,
@@ -167,6 +171,7 @@ function buildEventPayload({
     carreraId: careerId,
     carreraNombre: careerName,
     examInstance: null,
+    reminderDays: [] as number[],
     sourcePayload: {
       assignmentTitle,
       careerId,
@@ -272,6 +277,7 @@ export default function CalendarioPage() {
   const [careerName, setCareerName] = useState<string | null>(null);
   const [showCalendarTour, setShowCalendarTour] = useState(false);
   const [calendarTourStepIndex, setCalendarTourStepIndex] = useState(0);
+  const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const monthTourRef = useRef<HTMLDivElement | null>(null);
   const gridTourRef = useRef<HTMLDivElement | null>(null);
   const composerTourRef = useRef<HTMLDivElement | null>(null);
@@ -322,7 +328,7 @@ export default function CalendarioPage() {
       const { data, error } = await supabase
         .from('study_calendar_events')
         .select(
-          'id, event_type, title, notes, event_date, created_at, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload'
+          'id, event_type, title, notes, event_date, created_at, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
         )
         .eq('user_id', user.id)
         .order('event_date', { ascending: true })
@@ -369,6 +375,9 @@ export default function CalendarioPage() {
             event.source_payload && typeof event.source_payload === 'object'
               ? (event.source_payload as CalendarEventSourcePayload)
               : null,
+          reminderDays: Array.isArray(event.reminder_days_before)
+            ? (event.reminder_days_before as number[]).map(Number)
+            : null,
         }))
       );
       setHasLoadedEvents(true);
@@ -611,6 +620,16 @@ export default function CalendarioPage() {
       selectedMateriaId: null,
       examInstance: current.type === 'exam' ? current.examInstance : '1',
       assignmentTitle: '',
+      reminderDays: [],
+    }));
+  };
+
+  const toggleReminderDay = (days: number) => {
+    setFormState((current) => ({
+      ...current,
+      reminderDays: current.reminderDays.includes(days)
+        ? current.reminderDays.filter((value) => value !== days)
+        : [...current.reminderDays, days],
     }));
   };
 
@@ -650,11 +669,11 @@ export default function CalendarioPage() {
 
     const examEventCount = events.filter((event) => event.type === 'exam').length;
     if (payload.type === 'exam' && !isPremium && examEventCount >= 3) {
-      toast({
-        description:
-          'Alcanzaste el límite de 3 parciales en el plan gratis. Sumate a Premium para agendar parciales ilimitados y recordatorios.',
-        variant: 'destructive',
+      trackMarketingEvent('limit_reached_calendar_exam', {
+        exam_event_count: examEventCount,
+        limit: 3,
       });
+      setShowPremiumUpsell(true);
       return;
     }
 
@@ -672,6 +691,7 @@ export default function CalendarioPage() {
         carreraNombre: payload.carreraNombre,
         examInstance: payload.examInstance,
         sourcePayload: payload.sourcePayload,
+        reminderDays: payload.reminderDays,
       };
       const nextEvents = [...events, newEvent];
       setEvents(nextEvents);
@@ -703,9 +723,11 @@ export default function CalendarioPage() {
         carrera_nombre: payload.carreraNombre,
         exam_instance: payload.examInstance,
         source_payload: payload.sourcePayload,
+        reminder_days_before:
+          payload.reminderDays && payload.reminderDays.length > 0 ? payload.reminderDays : null,
       })
       .select(
-        'id, event_type, title, notes, event_date, created_at, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload'
+        'id, event_type, title, notes, event_date, created_at, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
       )
       .single();
 
@@ -770,10 +792,20 @@ export default function CalendarioPage() {
           data.source_payload && typeof data.source_payload === 'object'
             ? (data.source_payload as CalendarEventSourcePayload)
             : null,
+        reminderDays: Array.isArray(data.reminder_days_before)
+          ? (data.reminder_days_before as number[]).map(Number)
+          : null,
       },
     ]);
     resetForm();
     setIsComposerOpen(false);
+    if (isPremium && payload.reminderDays.length > 0) {
+      trackMarketingEvent('reminder_created', {
+        event_id: data.id,
+        days_before: payload.reminderDays.join(','),
+        materia_id: payload.materiaId ?? undefined,
+      });
+    }
     toast({
       description:
         formState.type === 'exam'
@@ -909,7 +941,7 @@ export default function CalendarioPage() {
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <h1 className="text-[1.6rem] font-black tracking-[-0.04em] text-[#050B2C] sm:text-[1.8rem]">
+              <h1 className="text-[1.6rem] font-bold tracking-[-0.04em] text-[#050B2C] sm:text-[1.8rem]">
                 {formatMonthLabel(visibleMonth)}
               </h1>
               <button
@@ -1066,7 +1098,7 @@ export default function CalendarioPage() {
           <div className="h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
-                <DialogTitle className="text-[1.15rem] font-black tracking-[-0.05em] text-[#050B2C]">
+                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-[#050B2C]">
                   Agregar fecha
                 </DialogTitle>
                 <DialogDescription className="text-[13px] leading-5 text-slate-500">
@@ -1314,6 +1346,59 @@ export default function CalendarioPage() {
                   </div>
                 </div>
 
+                {formState.type === 'exam' ? (
+                  <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                    <div className="flex items-center gap-2">
+                      <BellRing className="h-4 w-4 text-indigo-500" />
+                      <p className="text-[12px] font-bold text-slate-800">Recordatorios</p>
+                    </div>
+                    {isPremium ? (
+                      <>
+                        <p className="mt-1.5 text-[11px] text-slate-500">
+                          Recordarme antes del parcial:
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {[7, 3, 1].map((days) => {
+                            const active = formState.reminderDays.includes(days);
+                            return (
+                              <button
+                                key={days}
+                                type="button"
+                                onClick={() => toggleReminderDay(days)}
+                                className={`inline-flex h-8 items-center justify-center rounded-xl border px-3 text-[12px] font-semibold transition ${
+                                  active
+                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                }`}
+                              >
+                                {days} día{days === 1 ? '' : 's'}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mt-2">
+                        <p className="text-[11px] leading-4 text-slate-500">
+                          Recordatorios disponibles en Premium.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            trackMarketingEvent('premium_cta_clicked', {
+                              source: 'calendario_reminders',
+                            });
+                            window.location.assign('/pricing');
+                          }}
+                          className="mt-1.5 text-[12px] font-semibold text-indigo-600 transition hover:text-indigo-700"
+                        >
+                          Conocer Premium
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-slate-50 p-3">
                     <p className="text-[13px] font-semibold text-slate-900">
@@ -1388,6 +1473,23 @@ export default function CalendarioPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
+        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-[24px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)]">
+          <div className="px-4 py-4 sm:px-5 sm:py-5">
+            <PremiumUpsell
+              title="Alcanzaste el límite de 3 parciales"
+              description="El plan gratis te deja agendar 3 parciales. Con Premium agendá parciales ilimitados y activá recordatorios para llegar preparado."
+              source="calendario_exam_limit"
+              features={[
+                'Parciales ilimitados',
+                'Recordatorios 7, 3 y 1 día antes',
+                'Calendario completo para toda la cursada',
+              ]}
+            />
           </div>
         </DialogContent>
       </Dialog>

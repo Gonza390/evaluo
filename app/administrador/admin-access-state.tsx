@@ -30,7 +30,7 @@ export function AdminAccessState({
         <p className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
           Acceso restringido
         </p>
-        <h1 className="mt-3 text-[2rem] font-black tracking-[-0.05em] text-slate-950">{title}</h1>
+        <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.05em] text-slate-950">{title}</h1>
         <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
         <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
           {message}

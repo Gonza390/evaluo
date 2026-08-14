@@ -1,5 +1,5 @@
 import { logError } from '@/lib/observability';
-import { requestGeminiText, requestGroqText } from '@/lib/ai/providers';
+import { requestGeminiText, requestGroqText, requestNvidiaText } from '@/lib/ai/providers';
 import {
   isolateUntrustedContent,
   MAX_AI_EXPLANATION_CHARS,
@@ -41,22 +41,6 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
   const prompt = buildPrompt(input);
 
   try {
-    const geminiText = await requestGeminiText({
-      prompt,
-      temperature: 0.2,
-      maxOutputTokens: 420,
-    });
-    if (geminiText) {
-      return {
-        text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
-        provider: geminiText.model,
-      };
-    }
-  } catch (error) {
-    logError('aiTutor.gemini', error);
-  }
-
-  try {
     const groqText = await requestGroqText({
       prompt,
       system: 'Sos un tutor académico que explica de forma clara y accionable.',
@@ -71,6 +55,39 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
     }
   } catch (error) {
     logError('aiTutor.groq', error);
+  }
+
+  try {
+    const nvidiaText = await requestNvidiaText({
+      prompt,
+      system: 'Sos un tutor académico que explica de forma clara y accionable.',
+      temperature: 0.2,
+      maxTokens: 420,
+    });
+    if (nvidiaText) {
+      return {
+        text: truncateUtf8Text(nvidiaText.content, MAX_AI_EXPLANATION_CHARS),
+        provider: nvidiaText.model,
+      };
+    }
+  } catch (error) {
+    logError('aiTutor.nvidia', error);
+  }
+
+  try {
+    const geminiText = await requestGeminiText({
+      prompt,
+      temperature: 0.2,
+      maxOutputTokens: 420,
+    });
+    if (geminiText) {
+      return {
+        text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
+        provider: geminiText.model,
+      };
+    }
+  } catch (error) {
+    logError('aiTutor.gemini', error);
   }
 
   return {

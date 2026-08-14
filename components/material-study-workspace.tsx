@@ -17,6 +17,7 @@ import {
   SquareLibrary,
 } from 'lucide-react';
 import PdfViewer from '@/components/PdfViewer';
+import { MaterialFeedback } from '@/components/material-feedback';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -464,11 +465,6 @@ export function MaterialStudyWorkspace({
 
   const handleComments = () => {
     setCommentsOpen((current) => !current);
-    toast({
-      description: commentsOpen
-        ? 'Ocultamos el espacio de comentarios.'
-        : 'Abrimos un placeholder para comentarios y feedback del alumno.',
-    });
   };
 
   useEffect(() => {
@@ -580,7 +576,7 @@ export function MaterialStudyWorkspace({
               className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
             >
               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Comentarios
+              Calificar
             </Button>
             {canRegenerate ? (
               <Button
@@ -608,7 +604,7 @@ export function MaterialStudyWorkspace({
                   <Loader2 className="h-5 w-5 animate-spin" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-[1.2rem] font-black tracking-[-0.05em] text-slate-950">
+                  <h3 className="text-[1.2rem] font-bold tracking-[-0.05em] text-slate-950">
                     Estamos regenerando tu material
                   </h3>
                   <p className="mt-1.5 text-[13px] leading-5 text-slate-600">{fileName}</p>
@@ -674,11 +670,7 @@ export function MaterialStudyWorkspace({
       <div className="flex-1 overflow-y-auto px-2.5 pb-2.5 sm:px-4 sm:pb-4">
         {commentsOpen ? (
           <WorkspaceCard className="mb-3 border-[#BFDBFE] bg-[#F8FBFF]">
-            <p className="text-[13px] font-semibold text-[#2563EB]">Comentarios listos para la siguiente capa</p>
-            <p className="mt-2 text-[13px] leading-[1.45] text-slate-600">
-              Esta area puede alojar notas privadas del alumno, feedback del tutor o referencias cruzadas
-              con chunks concretos del PDF.
-            </p>
+            <MaterialFeedback materialId={materialId} />
           </WorkspaceCard>
         ) : null}
 
@@ -741,7 +733,14 @@ export function MaterialStudyWorkspace({
                       <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 md:hidden">
                         Termino
                       </p>
-                      <h3 className="text-[0.92rem] font-semibold tracking-[-0.03em] text-slate-950 md:text-[0.98rem]">{item.term}</h3>
+                      <h3 className="text-[0.92rem] font-semibold tracking-[-0.03em] text-slate-950 md:text-[0.98rem]">
+                        {item.term}
+                      </h3>
+                      {item.englishTerm ? (
+                        <p className="text-[12px] font-medium italic text-slate-400">
+                          {item.englishTerm}
+                        </p>
+                      ) : null}
                     </div>
 
                     <div className="space-y-1.5">
@@ -862,7 +861,7 @@ export function MaterialStudyWorkspace({
 
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-4xl">
-              <h1 className="text-2xl font-black tracking-[-0.06em] text-slate-950 sm:text-[2rem]">{title}</h1>
+              <h1 className="text-2xl font-bold tracking-[-0.06em] text-slate-950 sm:text-[2rem]">{title}</h1>
             </div>
 
             <div className="grid w-full grid-cols-1 gap-2 text-[12px] sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-[13px]">

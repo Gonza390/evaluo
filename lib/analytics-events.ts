@@ -26,6 +26,15 @@ const ANALYTICS_EVENT_NAMES = [
   'simulator_login_gate_cta_clicked',
   'simulator_result_shared',
   'simulator_rating',
+  'demo_checkpoint_reached',
+  'premium_cta_clicked',
+  'limit_reached_explanations',
+  'limit_reached_errores_review',
+  'limit_reached_calendar_exam',
+  'limit_reached_material_upload',
+  'explanation_history_viewed',
+  'reminder_created',
+  'reminder_dismissed',
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];

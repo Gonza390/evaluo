@@ -1,4 +1,4 @@
-import pdf from 'pdf-parse-fork';
+import { extractTextFromPdfBuffer } from '@/lib/student-materials/pdf-extract';
 import { splitIntoChunks } from '@/lib/rag';
 import type {
   StudyDocumentAnalysis,
@@ -798,17 +798,10 @@ export function analyzePdfDocument(
 }
 
 export async function extractPdfTextAndPageCount(buffer: Buffer) {
-  const parsed = await pdf(buffer);
-  const pageCount =
-    typeof parsed.numpages === 'number' && Number.isFinite(parsed.numpages)
-      ? parsed.numpages
-      : typeof parsed.numrender === 'number' && Number.isFinite(parsed.numrender)
-        ? parsed.numrender
-        : null;
-
+  const extracted = await extractTextFromPdfBuffer(buffer);
   return {
-    text: prepareTextForSummary(parsed.text ?? ''),
-    pageCount,
+    text: prepareTextForSummary(extracted.text ?? ''),
+    pageCount: extracted.pageCount,
   };
 }
 

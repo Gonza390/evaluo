@@ -314,7 +314,7 @@ export function ProfileCompletionModal({
               </div>
 
               <div className="min-w-0">
-                <DialogTitle className="text-[1.95rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[2.25rem]">
+                <DialogTitle className="text-[1.95rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.25rem]">
                   Contanos dónde estudias
                 </DialogTitle>
                 <DialogDescription className="mt-2 max-w-[560px] text-sm leading-6 text-slate-600 sm:text-[15px]">

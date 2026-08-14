@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -224,7 +224,7 @@ export default function LoginForm() {
               Acceso premium
             </div>
           ) : null}
-          <h1 className="mt-2 text-[2rem] font-black tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
+          <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
             {isSignUp ? 'Crea tu cuenta' : 'Bienvenido'}
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-500">
@@ -312,15 +312,10 @@ export default function LoginForm() {
 
           <Button
             type="submit"
-            disabled={loading}
+            loading={loading}
             className="h-11 w-full rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] text-sm font-bold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95"
           >
-            {loading ? (
-              <span className="inline-flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Procesando...
-              </span>
-            ) : isSignUp ? (
+            {isSignUp ? (
               intent === 'premium'
                 ? 'Reservar mi acceso premium'
                 : 'Crear cuenta'
@@ -342,30 +337,28 @@ export default function LoginForm() {
           <Button
             type="button"
             onClick={handleGoogleAuth}
-            disabled={loading}
+            loading={loading}
             className="mt-4 h-11 w-full rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
           >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <span className="inline-flex items-center gap-3">
-                <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09c0-.73.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1c-4.3 0-7.99 2.47-9.8 6.17l3.13 2.44c.87-2.6 3.3-4.57 6.1-4.57z" />
-                </svg>
-                {isSignUp
-                  ? intent === 'premium'
-                    ? 'Reservarme con Google'
-                    : 'Registrarme con Google'
-                  : 'Iniciar sesión con Google'}
-              </span>
-            )}
+            <span className="inline-flex items-center gap-3">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09c0-.73.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1c-4.3 0-7.99 2.47-9.8 6.17l3.13 2.44c.87-2.6 3.3-4.57 6.1-4.57z" />
+              </svg>
+              {isSignUp
+                ? intent === 'premium'
+                  ? 'Reservarme con Google'
+                  : 'Registrarme con Google'
+                : 'Iniciar sesión con Google'}
+            </span>
           </Button>
 
           {error ? (
             <div
+              role="status"
+              aria-live="polite"
               className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
                 isSuccessMessage
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-700'

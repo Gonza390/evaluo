@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
-import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/ai/providers';
+import { requestGeminiImagesJson, requestGeminiJson, requestGeminiPdfJson, requestGroqJson, requestNvidiaJson } from '@/lib/ai/providers';
+import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 import { extractJsonObject } from '@/lib/ai/json';
 import {
   isolateUntrustedContent,
@@ -8,10 +9,8 @@ import {
   PROMPT_INJECTION_GUARD,
 } from '@/lib/ai/safety';
 import {
-  buildStudyDocumentModel,
   buildFallbackSectionTitle,
   buildSummaryChunks,
-  buildSummarySourceFromModel,
   cleanLine,
   cleanMultilineBlock,
   dedupeStrings,
@@ -22,6 +21,15 @@ import {
   truncateAtWord,
 } from '@/lib/student-materials/text';
 import type { GenerateSummaryInput, StudentMaterialSummary } from '@/lib/student-materials/types';
+
+const SUMMARY_SYSTEM_PROMPT =
+  'Sos un asistente académico experto en transformar PDFs universitarios en guías de estudio útiles y fieles al texto. Responde solo con JSON válido.';
+
+const SUMMARY_CHUNK_GROUP_SIZE = 5;
+const SUMMARY_MAP_CONCURRENCY = 3;
+const SUMMARY_MAP_MAX_TOKENS = 1200;
+const SUMMARY_REDUCE_MAX_TOKENS = 1700;
+const SUMMARY_DIGEST_MAX_CHARS = 26_000;
 
 const SUMMARY_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -46,6 +54,28 @@ const SUMMARY_RESPONSE_SCHEMA = {
   required: ['summary_short', 'key_points', 'sections'],
 };
 
+const SUMMARY_CHUNK_RESPONSE_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    key_points: {
+      type: 'ARRAY',
+      items: { type: 'STRING' },
+    },
+    sections: {
+      type: 'ARRAY',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          title: { type: 'STRING' },
+          body: { type: 'STRING' },
+        },
+        required: ['title', 'body'],
+      },
+    },
+  },
+  required: ['key_points', 'sections'],
+};
+
 function buildSummaryStrategyInstructions(input: GenerateSummaryInput) {
   const analysis = input.documentAnalysis;
   if (!analysis) return [];
@@ -56,20 +86,20 @@ function buildSummaryStrategyInstructions(input: GenerateSummaryInput) {
   ];
 
   if (analysis.processingStrategy === 'slide_layout') {
-    lines.push('El material se parece a una presentacion o diapositiva.');
-    lines.push('Prioriza titulos, subtitulos, bullets, definiciones cortas, comparaciones y relaciones entre bloques.');
-    lines.push('No esperes parrafos largos: reconstruye el sentido academico uniendo encabezados y listas del PDF.');
+    lines.push('El material se parece a una presentación o diapositiva.');
+    lines.push('Prioriza títulos, subtítulos, bullets, definiciones cortas, comparaciones y relaciones entre bloques.');
+    lines.push('No esperes párrafos largos: reconstruye el sentido académico uniendo encabezados y listas del PDF.');
   }
 
   if (analysis.processingStrategy === 'hybrid_text') {
-    lines.push('El PDF mezcla texto e imagenes.');
-    lines.push('Da prioridad a conceptos, definiciones, clasificaciones, ejemplos y etiquetas explicitas del contenido textual extraido.');
+    lines.push('El PDF mezcla texto e imágenes.');
+    lines.push('Da prioridad a conceptos, definiciones, clasificaciones, ejemplos y etiquetas explícitas del contenido textual extraído.');
   }
 
   if (analysis.processingStrategy === 'ocr_recommended') {
     lines.push('El PDF parece escaneado o con poco texto seleccionable.');
-    lines.push('Si faltan datos en el texto base, no los inventes. Trabaja solo con lo extraido y explicita la estructura de la forma mas util posible.');
-    lines.push('Prioriza toda definicion, termino visible, encabezado, lista o fragmento util aunque el contenido sea parcial.');
+    lines.push('Si faltan datos en el texto base, no los inventes. Trabaja solo con lo extraído y explicita la estructura de la forma más útil posible.');
+    lines.push('Prioriza toda definición, término visible, encabezado, lista o fragmento útil aunque el contenido sea parcial.');
   }
 
   if (analysis.hasTables) {
@@ -90,42 +120,50 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     .join('\n');
 
   return [
-    'Actua como un tutor academico y experto en sintesis de contenido.',
+    'Actúa como un tutor académico y experto en síntesis de contenido.',
     'Analiza el documento PDF adjunto y genera un documento de estudio estructurado con el formato solicitado.',
-    'Debes responder unicamente con JSON valido.',
-    'No inventes informacion, no agregues conocimiento externo y no mezcles contenido ajeno al PDF.',
-    'Ignora marcas de agua, lineas de descarga, correos, encabezados repetidos y ruido del parser.',
-    'Debes cubrir el documento completo, no solo la introduccion.',
-    'El objetivo es producir un material realmente util para estudiar y repasar.',
+    'Debes responder únicamente con JSON válido.',
+    'No inventes información, no agregues conocimiento externo y no mezcles contenido ajeno al PDF.',
+    'Ignora marcas de agua, líneas de descarga, correos, encabezados repetidos y ruido del parser.',
+    'Debes cubrir el documento completo, no solo la introducción.',
+    'El objetivo es producir un material realmente útil para estudiar y repasar.',
     'Trabaja a partir de la estructura del documento: temas, subtemas, conceptos, definiciones, clasificaciones, autores, ejemplos y relaciones.',
     ...buildSummaryStrategyInstructions(input),
     '',
+    'El contenido base es un resumen por partes del PDF original. Úsalo para reconstruir el resumen completo, respetando el orden temático y uniendo los fragmentos sin repetir ideas.',
+    '',
     'Estructura obligatoria dentro del JSON:',
-    '- summary_short: un unico parrafo conciso de 4 a 6 lineas que sintetice globalmente el contenido del PDF, explicando su proposito principal y su alcance.',
-    '- key_points: exactamente 5 puntos clave, directos e importantes.',
+    '- summary_short: un único párrafo conciso de 4 a 6 líneas que sintetice globalmente el contenido del PDF, explicando su propósito principal y su alcance.',
+    '- key_points: exactamente 5 puntos clave. DEBEN ser ideas específicas (hechos, definiciones, conclusiones o implicancias), NO títulos de sección ni encabezados. Si no tenés 5 ideas sólidas, usá las más importantes del documento.',
     '- sections: lista ordenada por temas principales del documento.',
     '- Cada section.title debe venir numerado, por ejemplo: "1. Nombre del Tema Principal".',
-    '- Cada section.body debe seguir este formato interno, usando saltos de linea reales:',
-    '  1.1 Subtema',
-    '  - idea clave o definicion',
-    '  - idea clave o definicion',
-    '  1.2 Subtema',
-    '  - idea clave o definicion',
-    '  Importante: conclusion o reflexion central de esa seccion.',
-    '- Si el texto incluye clasificaciones, comparaciones o tipos, puedes usar tablas Markdown limpias con columnas "Tipo/Ambito", "Descripcion" y "Ejemplos".',
+    '- Cada section.body DEBE seguir este formato interno, con saltos de línea reales y jerarquía clara:',
+    '  1.1 Subtema 1',
+    '  - idea clave o definición',
+    '  - idea clave o definición',
+    '  1.2 Subtema 2',
+    '  - idea clave o definición',
+    '  Importante: conclusión o reflexión central que no se puede olvidar de esa sección.',
+    '  Ejemplo aplicado: caso concreto, ejemplo o aplicación real del tema.',
+    '- CADA sección debe tener AL MENOS 2 subtemas numerados (1.1, 1.2, ...). Evita secciones con un único bloque plano.',
+    '- Si el texto incluye clasificaciones, comparaciones, tipos, etapas, dimensiones o modelos: genera SIEMPRE una tabla Markdown con encabezados descriptivos, por ejemplo:',
+    '  | Tipo/Ámbito | Descripción | Ejemplos |',
+    '  | --- | --- | --- |',
+    '  | SEO | ... | ... |',
+    '  No dejes ninguna clasificación en texto plano: conviértela en tabla.',
+    '- Usa "Importante:" solo cuando haya una conclusión o dato relevante, y "Ejemplo aplicado:" cuando el PDF tenga un caso concreto. No los repitas mecánicamente en todas las secciones.',
     '',
     PROMPT_INJECTION_GUARD,
     '',
     'Criterios de calidad:',
-    '- Ordena el resumen por temas y subtitulos reales del PDF.',
+    '- Ordena el resumen por temas y subtítulos reales del PDF.',
     '- Prioriza definiciones, modelos, etapas, clasificaciones, autores, comparaciones, cuadros conceptuales y ejemplos del documento.',
-    '- Si existen ejemplos o aplicaciones dentro del PDF, integralos donde corresponda.',
-    '- Si aparecen casos, ejemplos o aplicaciones, conviertelos en mini bloques claramente identificables como "Ejemplo aplicado: ...".',
-    '- Si una seccion incluye clasificaciones, tipos, etapas, dimensiones o comparaciones, agrega un cuadro comparativo o una tabla Markdown clara cuando sea util.',
-    '- Si una seccion tiene un modelo, proceso o lista importante para examen, sintetizalo como bloque de estudio dentro de esa misma seccion.',
+    '- Si existen ejemplos o aplicaciones dentro del PDF, intégralos como bloques "Ejemplo aplicado: ...".',
+    '- Si una sección incluye clasificaciones, tipos, etapas, dimensiones o comparaciones, agrega SIEMPRE la tabla Markdown correspondiente dentro de esa misma sección.',
+    '- Si una sección tiene un modelo, proceso o lista importante para examen, sintetízalo como bloque de estudio dentro de esa misma sección.',
     '- No repitas ideas entre secciones.',
-    '- No escribas una prosa generica: usa subtitulos y vietas claras.',
-    '- Si el documento aborda varios bloques tematicos, distribuye la cobertura entre todos.',
+    '- No escribas una prosa genérica: usa subtítulos y viñetas claras.',
+    '- Si el documento aborda varios bloques temáticos, distribuye la cobertura entre todos.',
     '- Si el bloque incluye definiciones o clasificaciones, reflejalas en los subtemas y no las pierdas en un resumen demasiado corto.',
     '',
     'Formato exacto de salida:',
@@ -133,8 +171,42 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     '',
     context,
     '',
-    'Contenido base del PDF:',
+    'Contenido base del PDF (resumen por partes):',
     isolateUntrustedContent(sourceText),
+  ].join('\n');
+}
+
+function buildSummaryChunkPrompt(input: GenerateSummaryInput, chunkText: string, chunkIndex: number, totalChunks: number) {
+  const context = [
+    input.universidadName ? `Universidad: ${input.universidadName}` : null,
+    input.carreraName ? `Carrera: ${input.carreraName}` : null,
+    input.materiaName ? `Materia: ${input.materiaName}` : null,
+    `Documento: ${input.title}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return [
+    'Sos parte de un proceso de resumen por partes de un PDF universitario.',
+    `Estás analizando la parte ${chunkIndex} de ${totalChunks} del documento.`,
+    'Debes responder únicamente con JSON válido.',
+    'No inventes información, no agregues conocimiento externo y no mezcles contenido ajeno a esta parte.',
+    'Produce un resumen parcial y fiel de SOLO esta parte:',
+    '- key_points: hasta 5 puntos clave directos de esta parte.',
+    '- sections: hasta 4 bloques temáticos de esta parte, cada uno con title y body.',
+    '- En cada body usa subtemas numerados (1.1, 1.2, ...), viñetas, e "Importante: ..." / "Ejemplo aplicado: ..." cuando corresponda.',
+    '- Si esta parte incluye clasificaciones, comparaciones, tipos o etapas: genera SIEMPRE una tabla Markdown con encabezados.',
+    '- Ignora marcas de agua, líneas de descarga, correos, encabezados repetidos y ruido del parser.',
+    '',
+    PROMPT_INJECTION_GUARD,
+    '',
+    'Formato exacto de salida:',
+    '{"key_points":["..."],"sections":[{"title":"...","body":"..."}]}',
+    '',
+    context,
+    '',
+    'Parte del documento a resumir:',
+    isolateUntrustedContent(chunkText),
   ].join('\n');
 }
 
@@ -274,7 +346,7 @@ function tryBuildComparativeTable(lines: string[]) {
   }
 
   return [
-    '| Tipo/Ambito | Descripcion | Ejemplos |',
+    '| Tipo/Ámbito | Descripción | Ejemplos |',
     '| --- | --- | --- |',
     ...rows.map((row) => `| ${row.label} | ${row.description} | ${row.examples} |`),
   ];
@@ -316,13 +388,21 @@ function normalizeSectionBody(body: string, sectionNumber: string) {
 
     if (/^Importante:/i.test(clean)) {
       flushComparisonBuffer();
-      content.push(`Importante: ${clean.replace(/^Importante:\s*/i, '')}`);
+      const importantText = clean.replace(/^Importante:\s*/i, '');
+      content.push(
+        importantText.length <= 200 ? `Importante: ${importantText}` : ensureBulletPrefix(importantText)
+      );
       continue;
     }
 
     if (looksLikeAppliedExample(clean)) {
       flushComparisonBuffer();
-      content.push(`Ejemplo aplicado: ${clean.replace(/^(?:[-*]|\u2022)\s*/, '')}`);
+      const exampleText = clean
+        .replace(/^Ejemplo aplicado:\s*/i, '')
+        .replace(/^(?:[-*]|\u2022)\s*/, '');
+      content.push(
+        exampleText.length <= 200 ? `Ejemplo aplicado: ${exampleText}` : ensureBulletPrefix(exampleText)
+      );
       continue;
     }
 
@@ -358,7 +438,7 @@ function buildStudyAidLines(text: string) {
   }
 
   return [
-    'Clave de estudio: presta especial atencion a esta clasificacion porque organiza gran parte del tema.',
+    'Clave de estudio: presta especial atención a esta clasificación porque organiza gran parte del tema.',
     ensureBulletPrefix(classificationLine),
   ];
 }
@@ -477,8 +557,10 @@ function sanitizeAiSummaryResponse(
   fallbackTitle: string,
   sourceText: string,
   sourceChunksCount: number,
-  provider: string
+  provider: string,
+  options: { trustAi?: boolean } = {}
 ): StudentMaterialSummary {
+  const trustAi = options.trustAi ?? false;
   const localFallback = summarizeExtractedText(sourceText, fallbackTitle);
   const shortSummary = truncateAtWord(cleanLine(payload.summary_short ?? ''), 1_400);
   const aiKeyPoints = dedupeStrings(
@@ -493,12 +575,16 @@ function sanitizeAiSummaryResponse(
     .filter((section) => section.body.length > 0)
     .slice(0, 18);
 
-  const keyPoints = normalizeSummaryKeyPoints(aiKeyPoints, localFallback.keyPoints);
-  const sections = normalizeSummarySections(aiSections, localFallback.sections);
+  const keyPoints = normalizeSummaryKeyPoints(aiKeyPoints, trustAi ? [] : localFallback.keyPoints);
+  const sections = normalizeSummarySections(aiSections, trustAi ? [] : localFallback.sections);
   const finalShortSummary =
-    shortSummary.length >= 180 ? shortSummary : truncateAtWord(localFallback.shortSummary, 1_400);
+    shortSummary.length >= (trustAi ? 120 : 180)
+      ? shortSummary
+      : truncateAtWord(localFallback.shortSummary, 1_400);
 
-  if (!finalShortSummary || keyPoints.length < 5 || sections.length < 2) {
+  const minKeyPoints = trustAi ? 3 : 5;
+  const minSections = trustAi ? 1 : 2;
+  if (!finalShortSummary || keyPoints.length < minKeyPoints || sections.length < minSections) {
     return mapLocalSummaryToView(localFallback, sourceChunksCount, `${provider}-fallback`);
   }
 
@@ -514,88 +600,330 @@ function sanitizeAiSummaryResponse(
   };
 }
 
+type JsonProviderResult = {
+  content: string;
+  model: string;
+};
+
+type JsonProviderCall = () => Promise<JsonProviderResult | null>;
+
+const PROVIDER_ORDER = ['groq', 'nvidia', 'gemini'] as const;
+type ProviderName = (typeof PROVIDER_ORDER)[number];
+
+async function runJsonProviderChain(
+  calls: Array<{ name: ProviderName; call: JsonProviderCall }>,
+  onError: (name: string, error: unknown) => void
+): Promise<{ content: string; model: string; provider: string } | null> {
+  for (const entry of calls) {
+    try {
+      const result = await entry.call();
+      if (result) {
+        return { ...result, provider: entry.name };
+      }
+    } catch (error) {
+      onError(entry.name, error);
+    }
+  }
+  return null;
+}
+
+function buildJsonProviderCalls(options: {
+  prompt: string;
+  preferredProvider: ProviderName | null;
+  temperature: number;
+  maxTokens: number;
+  responseSchema?: Record<string, unknown>;
+}): Array<{ name: ProviderName; call: JsonProviderCall }> {
+  const order: ProviderName[] = options.preferredProvider
+    ? [options.preferredProvider, ...PROVIDER_ORDER.filter((name) => name !== options.preferredProvider)]
+    : [...PROVIDER_ORDER];
+
+  return order.map((name) => ({
+    name,
+    call: () => {
+      switch (name) {
+        case 'groq':
+          return requestGroqJson({
+            prompt: options.prompt,
+            system: SUMMARY_SYSTEM_PROMPT,
+            temperature: options.temperature,
+            maxTokens: options.maxTokens,
+          });
+        case 'nvidia':
+          return requestNvidiaJson({
+            prompt: options.prompt,
+            system: SUMMARY_SYSTEM_PROMPT,
+            temperature: options.temperature,
+            maxTokens: options.maxTokens,
+          });
+        case 'gemini':
+          return requestGeminiJson({
+            prompt: options.prompt,
+            temperature: options.temperature + 0.06,
+            maxOutputTokens: options.maxTokens,
+            responseSchema: options.responseSchema,
+          });
+      }
+    },
+  }));
+}
+
+async function mapWithConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<void>
+) {
+  const queue: Array<[T, number]> = items.map((item, index) => [item, index]);
+  const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
+    while (queue.length > 0) {
+      const entry = queue.shift();
+      if (!entry) break;
+      await worker(entry[0], entry[1]);
+    }
+  });
+  await Promise.all(workers);
+}
+
+function groupChunksForSummary(chunks: string[], groupSize: number) {
+  const groups: string[] = [];
+  for (let index = 0; index < chunks.length; index += groupSize) {
+    groups.push(chunks.slice(index, index + groupSize).join('\n\n'));
+  }
+  return groups;
+}
+
+type ChunkPartial = {
+  keyPoints: string[];
+  sections: Array<{ title: string; body: string }>;
+};
+
+function sanitizeAiChunkSummary(payload: SummaryPayload): ChunkPartial {
+  const keyPoints = dedupeStrings(
+    Array.isArray(payload.key_points)
+      ? payload.key_points.map((item) => truncateAtWord(cleanLine(item), 220))
+      : []
+  )
+    .filter((point) => point.length >= 24)
+    .slice(0, 5);
+
+  const sections = (Array.isArray(payload.sections) ? payload.sections : [])
+    .map((section, index) => ({
+      title: cleanLine(section.title ?? '') || buildFallbackSectionTitle(index),
+      body: truncateAtWord(cleanMultilineBlock(coerceSectionBodyLines(section.body).join('\n')), 1_800),
+    }))
+    .filter((section) => section.body.length > 0)
+    .slice(0, 4);
+
+  return { keyPoints, sections };
+}
+
+function buildPartialSummaryDigest(partials: ChunkPartial[]) {
+  const blocks: string[] = [];
+
+  partials.forEach((partial, index) => {
+    const sectionText = partial.sections.map((section) => `${section.title}\n${section.body}`).join('\n\n');
+    const keyPointText = partial.keyPoints.map((point) => `- ${point}`).join('\n');
+    const block = [sectionText, keyPointText].filter(Boolean).join('\n\n');
+    if (block) {
+      blocks.push(`Fragmento ${index + 1}:\n${block}`);
+    }
+  });
+
+  return truncateAtWord(blocks.join('\n\n---\n\n'), SUMMARY_DIGEST_MAX_CHARS);
+}
+
+async function mapChunksToPartialSummaries(
+  input: GenerateSummaryInput,
+  groups: string[]
+): Promise<{ partials: ChunkPartial[]; preferredProvider: ProviderName | null }> {
+  const partials: ChunkPartial[] = [];
+  let preferredProvider: ProviderName | null = null;
+
+  const processGroup = async (group: string, groupIndex: number) => {
+    const prompt = buildSummaryChunkPrompt(input, group, groupIndex + 1, groups.length);
+    const result = await runJsonProviderChain(
+      buildJsonProviderCalls({
+        prompt,
+        preferredProvider,
+        temperature: 0.1,
+        maxTokens: SUMMARY_MAP_MAX_TOKENS,
+        responseSchema: SUMMARY_CHUNK_RESPONSE_SCHEMA,
+      }),
+      (name, error) => logError(`studentMaterialSummary.map.${name}`, error, { title: input.title })
+    );
+
+    if (!result) {
+      return;
+    }
+
+    preferredProvider = result.provider as ProviderName;
+    const partial = sanitizeAiChunkSummary(parseModelSummaryPayload(result.content));
+    if (partial.keyPoints.length > 0 || partial.sections.length > 0) {
+      partials.push(partial);
+    }
+  };
+
+  await mapWithConcurrency(groups, SUMMARY_MAP_CONCURRENCY, processGroup);
+  return { partials, preferredProvider };
+}
+
 async function generateAiSummary(input: GenerateSummaryInput, sourceChunksCount: number) {
   const chunks = buildSummaryChunks(input.text);
   if (chunks.length === 0) {
     return null;
   }
 
-  const documentModel = buildStudyDocumentModel(input.text, input.title);
-  const prompt = buildSummaryPrompt(input, buildSummarySourceFromModel(documentModel));
+  const groups = groupChunksForSummary(chunks, SUMMARY_CHUNK_GROUP_SIZE);
+  const { partials, preferredProvider } = await mapChunksToPartialSummaries(input, groups);
+
+  if (partials.length === 0) {
+    return null;
+  }
+
+  const digest = buildPartialSummaryDigest(partials);
+  const prompt = buildSummaryPrompt(input, digest);
+
+  const result = await runJsonProviderChain(
+    buildJsonProviderCalls({
+      prompt,
+      preferredProvider,
+      temperature: 0.12,
+      maxTokens: SUMMARY_REDUCE_MAX_TOKENS,
+      responseSchema: SUMMARY_RESPONSE_SCHEMA,
+    }),
+    (name, error) => logError(`studentMaterialSummary.reduce.${name}`, error, { title: input.title })
+  );
+
+  if (!result) {
+    return null;
+  }
+
+  return sanitizeAiSummaryResponse(
+    parseModelSummaryPayload(result.content),
+    input.title,
+    input.text,
+    sourceChunksCount,
+    result.model
+  );
+}
+
+function buildPdfSummaryPrompt(input: GenerateSummaryInput) {
+  const context = [
+    input.universidadName ? `Universidad: ${input.universidadName}` : null,
+    input.carreraName ? `Carrera: ${input.carreraName}` : null,
+    input.materiaName ? `Materia: ${input.materiaName}` : null,
+    `Documento: ${input.title}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  return [
+    'Sos un tutor académico. Leíste el PDF adjunto completo.',
+    'Genera un resumen fiel del documento como guía de estudio.',
+    'Responde SOLO con JSON válido con este formato: {"summary_short":"...","key_points":["..."],"sections":[{"title":"...","body":"..."}]}',
+    'Reglas breves:',
+    '- summary_short: un párrafo de 4 a 6 líneas que sintetice el documento.',
+    '- key_points: 5 ideas específicas (hechos, definiciones o conclusiones). NO uses títulos de sección.',
+    '- sections: temas en orden; cada title numerado ("1. Tema").',
+    '- section.body: subtemas numerados (1.1, 1.2, ...), viñetas, y bloques "Importante: ..." y "Ejemplo aplicado: ...".',
+    '- Para CADA clasificación o comparación: genera SIEMPRE una tabla Markdown con encabezados.',
+    '- Cada sección con al menos 2 subtemas.',
+    'No inventes información.',
+    ...buildSummaryStrategyInstructions(input),
+    '',
+    context,
+    '',
+  ].join('\n');
+}
+
+function isSummaryDegraded(summary: StudentMaterialSummary) {
+  const texts = [
+    summary.shortSummary,
+    ...summary.keyPoints,
+    ...summary.sections.map((section) => `${section.title} ${section.body}`),
+  ].join('\n');
+  return /[\p{L}]{20,}/u.test(texts);
+}
+
+async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
+  if (!input.pdfBuffer) {
+    return null;
+  }
+
+  const prompt = buildPdfSummaryPrompt(input);
 
   try {
-    const githubResult = await requestGitHubModelsJson({
-      prompt,
-      system:
-        'Sos un asistente academico experto en transformar PDFs universitarios en guias de estudio utiles y fieles al texto. Responde solo con JSON valido.',
-      temperature: 0.12,
-      maxTokens: 1700,
-    });
-    if (githubResult) {
-      return sanitizeAiSummaryResponse(
-        parseModelSummaryPayload(githubResult.content),
-        input.title,
-        input.text,
-        sourceChunksCount,
-        githubResult.model
-      );
+    const pages = await renderPdfPagesToPngs(input.pdfBuffer);
+    if (pages.length > 0) {
+      const result = await requestGeminiImagesJson({
+        prompt,
+        images: pages,
+        temperature: 0.12,
+        maxOutputTokens: 2800,
+        responseSchema: SUMMARY_RESPONSE_SCHEMA,
+      });
+      if (result) {
+        const summary = sanitizeAiSummaryResponse(
+          parseModelSummaryPayload(result.content),
+          input.title,
+          input.text,
+          buildSummaryChunks(input.text).length,
+          `${result.model}-vision`,
+          { trustAi: true }
+        );
+        if (summary.hasContent && !isSummaryDegraded(summary)) {
+          return summary;
+        }
+      }
     }
   } catch (error) {
-    logError('studentMaterialSummary.githubModels', error, { title: input.title });
+    logError('studentMaterialSummary.vision', error, { title: input.title });
   }
 
   try {
-    const groqResult = await requestGroqJson({
+    const result = await requestGeminiPdfJson({
       prompt,
-      system:
-        'Sos un asistente academico experto en transformar PDFs universitarios en guias de estudio utiles y fieles al texto. Responde solo con JSON valido.',
+      pdfBuffer: input.pdfBuffer,
       temperature: 0.12,
-      maxTokens: 1700,
-    });
-    if (groqResult) {
-      return sanitizeAiSummaryResponse(
-        parseModelSummaryPayload(groqResult.content),
-        input.title,
-        input.text,
-        sourceChunksCount,
-        groqResult.model
-      );
-    }
-  } catch (error) {
-    logError('studentMaterialSummary.groq', error, { title: input.title });
-  }
-
-  try {
-    const geminiResult = await requestGeminiJson({
-      prompt,
-      temperature: 0.18,
-      maxOutputTokens: 1700,
+      maxOutputTokens: 2800,
       responseSchema: SUMMARY_RESPONSE_SCHEMA,
     });
-    if (geminiResult) {
-      return sanitizeAiSummaryResponse(
-        parseModelSummaryPayload(geminiResult.content),
-        input.title,
-        input.text,
-        sourceChunksCount,
-        geminiResult.model
-      );
-    }
-  } catch (error) {
-    logError('studentMaterialSummary.gemini', error, { title: input.title });
-  }
 
-  return null;
+    if (!result) {
+      return null;
+    }
+
+    const summary = sanitizeAiSummaryResponse(
+      parseModelSummaryPayload(result.content),
+      input.title,
+      input.text,
+      buildSummaryChunks(input.text).length,
+      `${result.model}-pdf`,
+      { trustAi: true }
+    );
+
+    return summary.hasContent && !isSummaryDegraded(summary) ? summary : null;
+  } catch (error) {
+    logError('studentMaterialSummary.pdfGemini', error, { title: input.title });
+    return null;
+  }
 }
 
 export async function generateStudentMaterialSummary(input: GenerateSummaryInput): Promise<StudentMaterialSummary> {
+  if (input.pdfBuffer) {
+    const pdfSummary = await generatePdfSummaryWithGemini(input);
+    if (pdfSummary) {
+      return pdfSummary;
+    }
+  }
+
   const text = prepareTextForSummary(input.text);
   const chunks = buildSummaryChunks(text);
 
   if (text.length < 120 || chunks.length === 0) {
     return {
       shortSummary:
-        'Este PDF no trae suficiente texto extraible para construir un resumen automatico. Puede ser un escaneo o una imagen.',
+        'Este PDF no trae suficiente texto extraíble para construir un resumen automático. Puede ser un escaneo o una imagen.',
       keyPoints: [],
       sections: [],
       hasContent: false,
@@ -637,7 +965,7 @@ export async function buildStudentMaterialSummary(
   try {
     const buffer = Buffer.from(await fileData.arrayBuffer());
     const { text } = await extractPdfTextAndPageCount(buffer);
-    return await generateStudentMaterialSummary({ title, text });
+    return await generateStudentMaterialSummary({ title, text, pdfBuffer: buffer });
   } catch (summaryError) {
     logError('studentMaterialSummary.build', summaryError, { filePath, title });
     return {

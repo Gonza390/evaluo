@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -32,6 +32,7 @@ import { useUser } from '@/hooks/useUser';
 import { usePremium } from '@/hooks/usePremium';
 import { buildShareReferralUrl } from '@/lib/attribution';
 import { getMateriaRoute } from '@/lib/routes';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import {
   trackSimulatorAbandonEvent,
   trackSimulatorLifecycleEvent,
@@ -68,6 +69,7 @@ import {
   ThumbsDown,
   ThumbsUp,
   Trophy,
+  Sparkles,
 } from 'lucide-react';
 
 interface SimuladorExamenProps {
@@ -1104,6 +1106,14 @@ export default function SimuladorExamen({
       if (response.success) {
         setWrongExplanations(response.explanations ?? []);
         setExplanationsMetrics(response.metrics ?? null);
+        if (!response.premium && wrongQuestionIds.length > 3) {
+          trackMarketingEvent('limit_reached_explanations', {
+            materia_id: materiaId,
+            parcial,
+            wrong_answers_count: wrongQuestionIds.length,
+            limit: 3,
+          });
+        }
       }
       setLoadingExplanations(false);
     }
@@ -1294,6 +1304,7 @@ export default function SimuladorExamen({
 
     loginGateTrackedRef.current = true;
     void emitLoginGateEvent('simulator_login_gate_viewed');
+    void trackMarketingEvent('demo_checkpoint_reached', { materia_id: materiaId, parcial });
   }, [emitLoginGateEvent, estado]);
 
   if (estado === 'profile_incomplete') {
@@ -1527,7 +1538,7 @@ export default function SimuladorExamen({
                     Respondiste {respondidasFinales} de {totalPreguntasExamen} preguntas y obtuviste un {porcentaje}% de aciertos en {materiaNombre || 'esta materia'}.
                   </p>
                   <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-                    <span className={cn('text-[3rem] font-black leading-none tracking-[-0.07em]', porcentaje >= 60 ? 'text-[#4F46E5]' : 'text-rose-600')}>
+                    <span className={cn('text-[3rem] font-bold leading-none tracking-[-0.07em]', porcentaje >= 60 ? 'text-[#4F46E5]' : 'text-rose-600')}>
                       {porcentaje}%
                     </span>
                     <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -1557,14 +1568,14 @@ export default function SimuladorExamen({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
-                    <p className="mt-2 text-2xl font-black text-slate-900">
+                    <p className="mt-2 text-2xl font-bold text-slate-900">
                       {aciertosFinales}
                       <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota estimada</p>
-                    <p className={cn('mt-2 text-2xl font-black', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
+                    <p className={cn('mt-2 text-2xl font-bold', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
                       {nota.toFixed(1)}
                     </p>
                   </div>
@@ -1623,7 +1634,7 @@ export default function SimuladorExamen({
                     {frontMessage}
                   </p>
                   <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-                    <span className={cn('text-[3.1rem] font-black leading-none tracking-[-0.07em]', porcentaje >= 85 ? 'text-[#4F46E5]' : porcentaje >= 60 ? 'text-[#2563EB]' : 'text-rose-600')}>
+                    <span className={cn('text-[3.1rem] font-bold leading-none tracking-[-0.07em]', porcentaje >= 85 ? 'text-[#4F46E5]' : porcentaje >= 60 ? 'text-[#2563EB]' : 'text-rose-600')}>
                       {porcentaje}%
                     </span>
                     <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -1684,14 +1695,14 @@ export default function SimuladorExamen({
                   <div className="mt-6 grid max-w-[360px] grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
-                      <p className="mt-2 text-2xl font-black text-slate-900">
+                      <p className="mt-2 text-2xl font-bold text-slate-900">
                         {aciertosFinales}
                         <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota</p>
-                      <p className={cn('mt-2 text-2xl font-black', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
+                      <p className={cn('mt-2 text-2xl font-bold', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
                         {nota.toFixed(1)}
                       </p>
                     </div>
@@ -1874,9 +1885,26 @@ export default function SimuladorExamen({
                         <SimulatorPremiumUpsell
                           cacheHits={explanationsMetrics.cacheHits}
                           generatedCount={explanationsMetrics.generatedCount}
-                          onUpgrade={() => window.location.assign('/pricing')}
+                          onUpgrade={() => {
+                            trackMarketingEvent('premium_cta_clicked', {
+                              source: 'simulator_explanations',
+                              materia_id: materiaId,
+                            });
+                            window.location.assign('/pricing');
+                          }}
                         />
                       ) : null
+                    ) : null}
+                    {isPremium ? (
+                      <div className="mt-4">
+                        <Link
+                          href="/dashboard/explicaciones"
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          Ver historial de explicaciones
+                        </Link>
+                      </div>
                     ) : null}
                   </div>
                 </div>
@@ -1960,7 +1988,7 @@ export default function SimuladorExamen({
       <header className="hidden border-b border-slate-200 bg-white lg:block">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-10">
-            <Link href="/" className="text-[30px] font-black tracking-[-0.04em] text-[#0F1B3D]">
+            <Link href="/" className="text-[30px] font-bold tracking-[-0.04em] text-[#0F1B3D]">
               Evaluo
             </Link>
 
@@ -2281,7 +2309,7 @@ export default function SimuladorExamen({
               <div className="mt-3 flex justify-center">
                 <div className="relative grid h-24 w-24 place-items-center rounded-full" style={progressRingStyle}>
                   <div className="grid h-16 w-16 place-items-center rounded-full bg-white">
-                    <span className="text-2xl font-black text-slate-800">{progressPercent}%</span>
+                    <span className="text-2xl font-bold text-slate-800">{progressPercent}%</span>
                   </div>
                 </div>
               </div>

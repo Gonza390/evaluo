@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/supabase';
 import { logError } from '@/lib/observability';
-import { requestGeminiJson, requestGitHubModelsJson, requestGroqJson } from '@/lib/ai/providers';
+import { requestGeminiJson, requestGroqJson, requestNvidiaJson } from '@/lib/ai/providers';
 import { isolateUntrustedContent, PROMPT_INJECTION_GUARD } from '@/lib/ai/safety';
 
 type AdminClient = SupabaseClient<Database>;
@@ -303,8 +303,8 @@ async function classifyTopicWithAi(input: {
   };
 
   const providers = [
-    async () => requestGitHubModelsJson({ prompt, system, temperature: 0.1, maxTokens: 220 }),
     async () => requestGroqJson({ prompt, system, temperature: 0.1, maxTokens: 220 }),
+    async () => requestNvidiaJson({ prompt, system, temperature: 0.1, maxTokens: 220 }),
     async () => requestGeminiJson({ prompt, temperature: 0.1, maxOutputTokens: 220, responseSchema }),
   ];
 

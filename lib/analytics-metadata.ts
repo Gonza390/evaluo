@@ -181,6 +181,15 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'result_pct',
   ],
   simulator_rating: ['materia_id', 'parcial', 'vote_type', 'rating', 'liked', 'source'],
+  demo_checkpoint_reached: ['attribution', 'anonymous_id', 'page_type', 'materia_id', 'parcial'],
+  premium_cta_clicked: ['attribution', 'anonymous_id', 'page_type', 'source', 'materia_id'],
+  limit_reached_explanations: ['materia_id', 'parcial', 'wrong_answers_count', 'limit'],
+  limit_reached_errores_review: ['materia_id', 'parcial', 'weekly_reviews', 'limit'],
+  limit_reached_calendar_exam: ['exam_event_count', 'limit'],
+  limit_reached_material_upload: ['materia_id'],
+  explanation_history_viewed: ['explanation_count'],
+  reminder_created: ['event_id', 'days_before', 'materia_id'],
+  reminder_dismissed: ['event_id', 'days_before'],
 };
 
 function sanitizeAttribution(value: Json): Json | undefined {

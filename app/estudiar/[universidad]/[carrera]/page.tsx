@@ -132,7 +132,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
               <GraduationCap className="h-4 w-4" />
               Guía de carrera
             </p>
-            <h1 className="mt-5 text-4xl font-black tracking-[-0.06em] text-slate-950 sm:text-5xl">
+            <h1 className="mt-5 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
               Estudiar {carrera.nombre} en {universidad.nombre}
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">

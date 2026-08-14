@@ -35,7 +35,7 @@ export function SimulatorLoginGate({
               Para seguir con el resto del simulador, guardar tu progreso y recibir la devolución completa, inicia sesión o crea tu cuenta.
             </p>
             <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-              <span className="text-[3rem] font-black leading-none tracking-[-0.07em] text-[#4F46E5]">
+              <span className="text-[3rem] font-bold leading-none tracking-[-0.07em] text-[#4F46E5]">
                 {answeredCount}/{questionLimit}
               </span>
               <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -62,14 +62,14 @@ export function SimulatorLoginGate({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Respondidas</p>
-              <p className="mt-2 text-2xl font-black text-slate-900">
+              <p className="mt-2 text-2xl font-bold text-slate-900">
                 {answeredCount}
                 <span className="text-sm font-semibold text-slate-500"> / {questionLimit}</span>
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Guardado</p>
-              <p className="mt-2 text-2xl font-black text-slate-900">Progreso</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">Progreso</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Qué desbloqueas al continuar</p>

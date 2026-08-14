@@ -52,6 +52,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import type { DashboardMateriaState } from '@/types/supabase';
+import { ExamRemindersPanel } from '@/components/dashboard/exam-reminders-panel';
 
 type MateriaSummary = DashboardMateriaSummary;
 type MateriaDetailsMap = DashboardMateriaDetailsMap;
@@ -724,7 +725,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
         <div className="mx-auto max-w-6xl">
           <div className="animate-study-reveal mb-5 grid gap-4 px-1 py-1 sm:px-0 sm:py-0 xl:grid-cols-[1fr_minmax(320px,460px)] xl:items-start">
             <div className="min-w-0">
-              <h1 className="text-[1.82rem] font-black tracking-[-0.06em] text-[#0F1B3D] sm:text-[2rem]">
+              <h1 className="text-[1.82rem] font-bold tracking-[-0.06em] text-[#0F1B3D] sm:text-[2rem]">
                 {`\u00A1Hola, ${getUserName()}!`}
                 <span className="ml-2 inline-block" aria-hidden="true">{'\uD83D\uDC4B'}</span>
               </h1>
@@ -779,7 +780,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                         }}
                       />
                       <div className="relative flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#2563EB]">
-                        <p className="text-[24px] font-black leading-none text-white">{heroCoverage}%</p>
+                        <p className="text-[24px] font-bold leading-none text-white">{heroCoverage}%</p>
                       </div>
                     </div>
 
@@ -806,7 +807,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
                   <div className="mt-3.5 grid max-w-[360px] grid-cols-2 gap-2 min-[480px]:max-w-[430px] sm:gap-2">
                     <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
-                      <p className="text-[15px] font-black text-white sm:text-[17px]">
+                      <p className="text-[15px] font-bold text-white sm:text-[17px]">
                         {partialInsights?.preguntasRespondidasParcial?.toLocaleString('es-AR') ?? 0}
                       </p>
                       <p className="mt-0.5 text-[11px] leading-4 text-white/68 sm:mt-1 sm:text-[11px] sm:leading-4">
@@ -814,7 +815,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                       </p>
                     </div>
                     <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
-                      <p className="text-[15px] font-black text-white sm:text-[17px]">
+                      <p className="text-[15px] font-bold text-white sm:text-[17px]">
                         {partialInsights?.preguntasAcertadasParcial?.toLocaleString('es-AR') ?? 0}
                       </p>
                       <p className="mt-0.5 text-[11px] leading-4 text-white/68 sm:mt-1 sm:text-[11px] sm:leading-4">
@@ -1021,6 +1022,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
               </CardContent>
             </Card>
 
+            <ExamRemindersPanel />
+
             <Card className="bg-white/90 backdrop-blur">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-semibold text-slate-950">
@@ -1054,7 +1057,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-[140px_minmax(0,1fr)] md:items-center">
                     <div className="relative mx-auto grid h-28 w-28 place-items-center rounded-full animate-saas-glow sm:h-32 sm:w-32" style={partialProgressRingStyle}>
                       <div className="grid h-20 w-20 place-items-center rounded-full bg-white shadow-[0_10px_30px_rgba(79,93,255,0.12)] sm:h-24 sm:w-24">
-                        <p className="text-2xl font-black text-slate-900">{partialInsights.coberturaPorcentaje}%</p>
+                        <p className="text-2xl font-bold text-slate-900">{partialInsights.coberturaPorcentaje}%</p>
                         <p className="text-[11px] text-slate-600">Progreso</p>
                       </div>
                       <span className="absolute right-2 top-2 h-3 w-3 rounded-full bg-emerald-400 shadow-[0_0_0_6px_rgba(74,222,128,0.16)]" />

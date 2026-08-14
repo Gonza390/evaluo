@@ -37,6 +37,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { PremiumUpsell } from '@/components/premium/premium-upsell';
 
 type UniversidadOption = {
   id: string;
@@ -107,6 +109,7 @@ export function StudentMaterialsWorkspace({
   const [activeProcessing, setActiveProcessing] = useState<StudentMaterialProcessingState | null>(null);
   const [displayProgress, setDisplayProgress] = useState(0);
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
+  const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
 
   const featuredMaterial = initialMaterials[0] ?? null;
 
@@ -275,10 +278,26 @@ export function StudentMaterialsWorkspace({
     startTransition(async () => {
       const result = await uploadStudentMaterialAction(formData);
 
-      toast({
-        description: result.message,
-        variant: result.success ? 'default' : 'destructive',
-      });
+      let isQuotaError = false;
+      if (!result.success) {
+        const message = result.message.toLowerCase();
+        isQuotaError =
+          message.includes('limite') || message.includes('límite') || message.includes('plan gratis');
+
+        if (isQuotaError) {
+          trackMarketingEvent('limit_reached_material_upload', {
+            materia_id: materiaId || undefined,
+          });
+          setShowPremiumUpsell(true);
+        }
+      }
+
+      if (!isQuotaError) {
+        toast({
+          description: result.message,
+          variant: result.success ? 'default' : 'destructive',
+        });
+      }
 
       if (result.success) {
         if (result.materialId) {
@@ -326,7 +345,7 @@ export function StudentMaterialsWorkspace({
       <div className="space-y-4">
         <section className="overflow-hidden rounded-[1.6rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,250,252,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-5">
           <div className="text-center">
-            <h1 className="text-[1.9rem] font-black tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
+            <h1 className="text-[1.9rem] font-bold tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
               Hola, listo para estudiar mejor?
             </h1>
           </div>
@@ -343,7 +362,7 @@ export function StudentMaterialsWorkspace({
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-700/80">
                       {getFeaturedMaterialLabel(featuredMaterial)}
                     </p>
-                    <h2 className="mt-1.5 break-words text-[1.3rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[1.45rem]">
+                    <h2 className="mt-1.5 break-words text-[1.3rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[1.45rem]">
                       {featuredMaterial?.title ?? 'Tu primer material'}
                     </h2>
                     <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
@@ -398,7 +417,7 @@ export function StudentMaterialsWorkspace({
                   <Files className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <h2 className="text-[1.15rem] font-black tracking-[-0.04em] text-slate-950">
+                  <h2 className="text-[1.15rem] font-bold tracking-[-0.04em] text-slate-950">
                     Sube tu material del curso
                   </h2>
                   <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
@@ -446,7 +465,7 @@ export function StudentMaterialsWorkspace({
           <div className="flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Biblioteca personal</p>
-              <h2 className="mt-1.5 text-[1.25rem] font-black tracking-[-0.05em] text-slate-950">Tus materiales</h2>
+              <h2 className="mt-1.5 text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">Tus materiales</h2>
             </div>
             <Button type="button" size="sm" variant="outline" onClick={() => setIsUploadDialogOpen(true)}>
               <Plus className="h-4 w-4" />
@@ -532,7 +551,7 @@ export function StudentMaterialsWorkspace({
         <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto rounded-[1.5rem] border-slate-200 bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
             <DialogHeader className="text-left">
-              <DialogTitle className="text-[1.25rem] font-black tracking-[-0.05em] text-slate-950">
+              <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
                 Sube tu material
               </DialogTitle>
               <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-500">
@@ -685,7 +704,7 @@ export function StudentMaterialsWorkspace({
                     )}
                   </div>
                   <div className="min-w-0">
-                    <DialogTitle className="text-[1.2rem] font-black tracking-[-0.05em] text-slate-950">
+                    <DialogTitle className="text-[1.2rem] font-bold tracking-[-0.05em] text-slate-950">
                       {activeProcessing.status === 'failed' ? 'No pudimos terminar el PDF' : 'Estamos preparando tu material'}
                     </DialogTitle>
                     <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
@@ -772,6 +791,23 @@ export function StudentMaterialsWorkspace({
               </div>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
+        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-[24px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+          <div className="px-4 py-4 sm:px-5 sm:py-5">
+            <PremiumUpsell
+              title="Alcanzaste el límite de subida de materiales"
+              description="El plan gratis permite 1 material cada 15 días. Con Premium subí hasta 3 por día y estudiá sin esperas."
+              source="materiales_upload_limit"
+              features={[
+                'Hasta 3 materiales por día',
+                'Resúmenes y glosarios automáticos',
+                'Repaso con IA sobre tus apuntes',
+              ]}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </>

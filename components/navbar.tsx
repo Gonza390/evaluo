@@ -12,6 +12,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  Sparkles,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -50,6 +51,7 @@ const navItems: NavConfigItem[] = [
   { label: 'Inicio', href: '/dashboard', icon: Home },
   { label: 'Mi espacio', href: '/dashboard/materiales', icon: FileText },
   { label: 'Calendario de exámenes', href: '/calendario', icon: CalendarDays },
+  { label: 'Explicaciones IA', href: '/dashboard/explicaciones', icon: Sparkles },
 ];
 
 function NavItem({
@@ -168,7 +170,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   onClick={onToggleCollapsed}
                   aria-label="Ocultar barra lateral"
                   title="Ocultar barra lateral"
-                  className="flex h-10 w-10 items-center justify-center text-slate-500 transition hover:text-slate-900"
+                  className="flex h-11 w-11 items-center justify-center text-slate-500 transition hover:text-slate-900"
                 >
                   <ToggleIcon className="h-4 w-4" />
                 </button>

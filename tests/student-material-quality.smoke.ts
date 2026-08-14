@@ -47,7 +47,11 @@ const glossary = buildStudentMaterialGlossary(sampleText, {
   sourceChunksCount: model.chunkCount,
 });
 
-assert.ok(glossary.length >= 6, 'El glosario deberia detectar varios conceptos utiles.');
+assert.ok(glossary.length >= 4, 'El glosario deberia detectar varios conceptos utiles.');
 assert.ok(glossary.some((item) => /autorregulado/i.test(item.term) || /autorregulado/i.test(item.definition)));
+assert.ok(
+  !glossary.some((item) => /^(importante|ejemplo|definicion|clave de estudio)$/i.test(item.term)),
+  'El glosario no deberia incluir etiquetas de formato como terminos.'
+);
 
 console.log('Student material quality smoke tests passed.');

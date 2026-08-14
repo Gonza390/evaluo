@@ -193,7 +193,7 @@ export function InteractiveDemo() {
                 onClick={() => handleSelectUni(key)}
                 className={`group flex flex-col items-center justify-between rounded-2xl border bg-slate-50/50 p-6 text-center transition-all hover:border-indigo-400 hover:bg-white hover:shadow-lg hover:-translate-y-0.5`}
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1B3D] to-[#2563EB] text-xl font-black text-white shadow-md group-hover:scale-110 transition-transform">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1B3D] to-[#2563EB] text-xl font-bold text-white shadow-md group-hover:scale-110 transition-transform">
                   {uni.shortName}
                 </div>
                 <div className="mt-5">
@@ -227,7 +227,7 @@ export function InteractiveDemo() {
                 <span className="text-[11px] font-medium text-slate-400">{currentUni.carrera}</span>
               </div>
 
-              <h3 className="mt-4 text-lg font-black text-[#0F1B3D]">
+              <h3 className="mt-4 text-lg font-bold text-[#0F1B3D]">
                 Materia: <span className="text-indigo-600">{currentUni.materia}</span>
               </h3>
               <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-100">
@@ -330,7 +330,7 @@ export function InteractiveDemo() {
                 <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/20 p-4 animate-tab-panel">
                   <div className="flex items-center gap-2 mb-2">
                     <Bot className="h-4.5 w-4.5 text-indigo-600" />
-                    <span className="text-xs font-black text-indigo-950">Explicación Paso a Paso de Evaluo IA:</span>
+                    <span className="text-xs font-bold text-indigo-950">Explicación Paso a Paso de Evaluo IA:</span>
                   </div>
                   <p className="text-[11px] leading-5 text-indigo-900 whitespace-pre-line">
                     {currentUni.question.explanation}

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import dynamic from 'next/dynamic';
 import { Suspense, useEffect, useState } from 'react';
@@ -21,6 +21,7 @@ import { getCachedStreakSnapshot, getShellProfileSummary } from '@/lib/client-sh
 import { logError } from '@/lib/observability';
 import { Toaster } from '@/components/ui/toaster';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 import {
   Dialog,
   DialogContent,
@@ -258,7 +259,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/96 backdrop-blur">
           <div className="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-6 sm:py-3">
             <Link href="/" className="transition hover:opacity-85">
-              <div className="text-[1.05rem] font-black tracking-tight text-slate-900 sm:text-lg">
+              <div className="text-[1.05rem] font-bold tracking-tight text-slate-900 sm:text-lg">
                 Evaluo
               </div>
               <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block">
@@ -283,9 +284,11 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               </div>
             ) : (
               <>
-                <button
-                  type="button"
-                  onClick={() => setShowStreakDialog(true)}
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <NotificationBell />
+                  <button
+                    type="button"
+                    onClick={() => setShowStreakDialog(true)}
                   className="inline-flex max-w-[82vw] items-center gap-2.5 rounded-[24px] border border-slate-200/90 bg-white px-2.5 py-2 text-left shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition hover:border-slate-300 hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] sm:max-w-none sm:gap-3 sm:px-3 sm:py-2.5"
                 >
                   <Avatar className="h-10 w-10 border border-slate-200/80 ring-2 ring-white sm:h-11 sm:w-11">
@@ -332,6 +335,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     </span>
                   </div>
                 </button>
+                </div>
 
                 <Dialog open={showStreakDialog} onOpenChange={setShowStreakDialog}>
                 <DialogContent
@@ -355,7 +359,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           <Flame className="h-5 w-5" />
                         </div>
                       </div>
-                      <DialogTitle className="mt-3 text-[3.2rem] font-black leading-none tracking-[-0.08em] text-[#091225]">
+                      <DialogTitle className="mt-3 text-[3.2rem] font-bold leading-none tracking-[-0.08em] text-[#091225]">
                         {streakDays}
                       </DialogTitle>
                       <DialogDescription className="mt-1 text-sm font-semibold text-[#2563EB]">

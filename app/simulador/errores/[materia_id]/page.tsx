@@ -3,6 +3,8 @@ import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { hasPremiumAccess, countErroresAttemptsThisWeek, FREE_ERRORS_REVIEWS_PER_WEEK } from '@/lib/premium';
+import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
+import { ErrorsReviewLimit } from '@/components/premium/errors-review-limit';
 
 const SimuladorExamen = dynamic(() => import('@/components/simulador/SimuladorExamen'), {
   loading: () => (
@@ -43,7 +45,13 @@ async function SimuladorErroresContent({
   if (!isPremium) {
     const weeklyReviews = await countErroresAttemptsThisWeek(user.id);
     if (weeklyReviews >= FREE_ERRORS_REVIEWS_PER_WEEK) {
-      redirect('/pricing');
+      await trackServerAnalyticsEvent({
+        eventName: 'limit_reached_errores_review',
+        userId: user.id,
+        path: `/simulador/errores/${materia_id}`,
+        metadata: { materia_id, parcial, weekly_reviews: weeklyReviews, limit: FREE_ERRORS_REVIEWS_PER_WEEK },
+      });
+      return <ErrorsReviewLimit materiaId={materia_id} />;
     }
   }
 

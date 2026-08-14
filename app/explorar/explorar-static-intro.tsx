@@ -8,7 +8,7 @@ export function ExplorarStaticIntro() {
           <Sparkles className="h-3.5 w-3.5" />
           Explorar Evaluo
         </div>
-        <h1 className="mt-3 text-[1.5rem] font-black tracking-[-0.05em] text-slate-950 sm:mt-4 sm:text-[2.6rem]">
+        <h1 className="mt-3 text-[1.5rem] font-bold tracking-[-0.05em] text-slate-950 sm:mt-4 sm:text-[2.6rem]">
           Encuentra tu universidad o tu carrera y entra más rápido a estudiar.
         </h1>
         <p className="mt-2 max-w-2xl text-[13px] leading-6 text-slate-500 sm:mt-3 sm:text-base sm:leading-7">

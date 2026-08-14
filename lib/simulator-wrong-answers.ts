@@ -7,6 +7,7 @@ import {
   type RagChunkRow,
 } from '@/lib/rag';
 import { buildStudentMaterialContextsForQuestions } from '@/lib/student-materials/simulator-context';
+import { recordExplanationsHistory } from '@/lib/explanations-history';
 
 export type WrongAnswerExplanation = {
   preguntaId: string;
@@ -233,6 +234,18 @@ export async function buildWrongAnswersExplanations(input: {
       generatedCount += 1;
     }
   }
+
+  await recordExplanationsHistory({
+    userId: input.userId,
+    materiaId: input.materiaId,
+    parcial: input.parcial,
+    items: results.map((result) => ({
+      preguntaId: result.preguntaId,
+      enunciado: result.enunciado,
+      explicacion: result.explicacion,
+      provider: result.provider,
+    })),
+  });
 
   return { explanations: results, metrics: { cacheHits, generatedCount } };
 }

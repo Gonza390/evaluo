@@ -31,15 +31,15 @@ export type StudentMaterialProcessingResult = {
 
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
-    return 'Detectamos un PDF escaneado o muy visual. Seguimos con extraccion base y dejamos OCR recomendado.';
+    return 'Detectamos un PDF escaneado o muy visual. Seguimos con extracción base y dejamos OCR recomendado.';
   }
   if (analysis.processingStrategy === 'slide_layout') {
-    return 'Detectamos un material tipo diapositiva. Ajustamos la lectura para priorizar bloques, titulos y puntos clave.';
+    return 'Detectamos un material tipo diapositiva. Ajustamos la lectura para priorizar bloques, títulos y puntos clave.';
   }
   if (analysis.processingStrategy === 'hybrid_text') {
-    return 'Detectamos un PDF mixto con texto e imagenes. Priorizamos una lectura hibrida del contenido.';
+    return 'Detectamos un PDF mixto con texto e imágenes. Priorizamos una lectura híbrida del contenido.';
   }
-  return 'Detectamos un PDF con texto nativo. Seguimos con extraccion estructurada por temas y bloques.';
+  return 'Detectamos un PDF con texto nativo. Seguimos con extracción estructurada por temas y bloques.';
 }
 
 export async function processStudentMaterial(input: {
@@ -77,7 +77,7 @@ export async function processStudentMaterial(input: {
 
   const summary = await generateStudentMaterialSummary({
     title: material.title, universidadName: context.universidadName, carreraName: context.carreraName,
-    materiaName: context.materiaName, text, documentAnalysis,
+    materiaName: context.materiaName, text, documentAnalysis, pdfBuffer: buffer,
   });
   await persistStudentMaterialSummaryFromComputed({
     admin, studentMaterialId: material.id, text, summary, persistChunks: true,
@@ -90,7 +90,7 @@ export async function processStudentMaterial(input: {
   });
   const glossary = await generateStudentMaterialGlossary({
     title: material.title, universidadName: context.universidadName, carreraName: context.carreraName,
-    materiaName: context.materiaName, text, documentAnalysis,
+    materiaName: context.materiaName, text, documentAnalysis, pdfBuffer: buffer,
   }, summary);
   await persistStudentMaterialGlossaryArtifacts({
     admin, studentMaterialId: material.id, glossary, provider: summary.provider, errorMessage: summary.errorMessage,

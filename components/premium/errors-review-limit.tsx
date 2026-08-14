@@ -1,0 +1,32 @@
+'use client';
+
+import Link from 'next/link';
+import { PremiumUpsell } from '@/components/premium/premium-upsell';
+
+export function ErrorsReviewLimit({ materiaId }: { materiaId: string }) {
+  return (
+    <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
+        <PremiumUpsell
+          title="Alcanzaste tu repaso semanal de errores"
+          description="El plan gratis incluye 1 repaso de errores por semana. Con Premium repasá tus errores todas las veces que quieras y prepará cada parcial sin límites."
+          source="errores_review"
+          materiaId={materiaId}
+          features={[
+            'Repasos de errores ilimitados',
+            'Explicaciones IA en todas tus respuestas',
+            'Recordatorios de parciales',
+          ]}
+        />
+        <div className="mt-4 text-center">
+          <Link
+            href="/dashboard"
+            className="text-sm font-semibold text-slate-500 transition hover:text-slate-700"
+          >
+            Volver al dashboard
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

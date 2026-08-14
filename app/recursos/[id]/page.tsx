@@ -445,7 +445,7 @@ function RecursoContent() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{nombreMateria}</p>
-              <h1 className="mt-2 text-[1.7rem] font-black tracking-tight text-slate-950 sm:text-3xl md:text-4xl">
+              <h1 className="mt-2 text-[1.7rem] font-bold tracking-tight text-slate-950 sm:text-3xl md:text-4xl">
                 {selectedResource?.nombre || getSectionTitle(tipo)}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
@@ -476,7 +476,7 @@ function RecursoContent() {
                     </span>
                   ) : null}
                 </div>
-                <h2 className="mt-3 text-xl font-black text-slate-900 lg:text-2xl">
+                <h2 className="mt-3 text-xl font-bold text-slate-900 lg:text-2xl">
                   {selectedResource?.nombre || 'Seleccioná un documento'}
                 </h2>
               </div>
@@ -620,7 +620,7 @@ function RecursoContent() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Biblioteca</p>
-                  <h3 className="mt-1 text-lg font-black text-slate-900">Más documentos de esta sección</h3>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">Más documentos de esta sección</h3>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                   <BookOpen className="h-3.5 w-3.5" />

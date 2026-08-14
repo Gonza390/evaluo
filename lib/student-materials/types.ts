@@ -10,6 +10,7 @@ export type GenerateSummaryInput = {
   materiaName?: string;
   text: string;
   documentAnalysis?: StudyDocumentAnalysis;
+  pdfBuffer?: Buffer;
 };
 
 export type PersistSummaryArtifactsInput = {
@@ -94,6 +95,7 @@ export type StudyGlossaryItem = {
   definition: string;
   context: string;
   importance: 'alta' | 'media';
+  englishTerm?: string | null;
 };
 
 export type StudentMaterialSummary = {

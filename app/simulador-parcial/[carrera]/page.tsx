@@ -111,7 +111,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
             <Target className="h-4 w-4" />
             Simuladores
           </p>
-          <h1 className="mt-5 text-4xl font-black tracking-[-0.06em] text-slate-950 sm:text-5xl">
+          <h1 className="mt-5 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
             Simulador de parcial de {carrera.nombre}
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">

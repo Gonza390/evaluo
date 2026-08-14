@@ -94,17 +94,6 @@ function buildMaterialTitle(rawTitle: FormDataEntryValue | null, fileName: strin
   return fileName.replace(/\.pdf$/i, '').trim() || 'Material de estudio';
 }
 
-function formatUserFacingText(value: string) {
-  return value
-    .replace(/\bautomatico\b/gi, 'automático')
-    .replace(/\bextraible\b/gi, 'extraíble')
-    .replace(/\bacademico\b/gi, 'académico')
-    .replace(/\btecnicas\b/gi, 'técnicas')
-    .replace(/\bpagina(s)?\b/gi, (_match, plural) => (plural ? 'páginas' : 'página'))
-    .replace(/\bglosario\b/gi, 'glosario')
-    .replace(/\bresumen\b/gi, 'resumen');
-}
-
 async function requireAuthenticatedUser() {
   const supabase = await createClientServer();
   const {
@@ -113,7 +102,7 @@ async function requireAuthenticatedUser() {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    throw new Error('Inicia sesion para gestionar tu espacio de estudio.');
+    throw new Error('Inicia sesión para gestionar tu espacio de estudio.');
   }
 
   return user;
@@ -154,7 +143,7 @@ async function assertStudentMaterialQuota(userId: string) {
   if (isPremium) {
     if ((dailyResult.count ?? 0) >= MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY) {
       throw new Error(
-        `Alcanzaste el limite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por dia. Intenta nuevamente manana.`
+        `Alcanzaste el limite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por dia. Intenta nuevamente mañana.`
       );
     }
   } else if ((intervalResult.count ?? 0) >= 1) {
@@ -164,7 +153,7 @@ async function assertStudentMaterialQuota(userId: string) {
   }
 
   if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
-    throw new Error('Ya tenes 2 materiales en procesamiento. Espera a que finalice uno antes de subir otro.');
+    throw new Error('Ya tenés 2 materiales en procesamiento. Espera a que finalice uno antes de subir otro.');
   }
 }
 
@@ -467,7 +456,7 @@ export async function processNextStudentMaterialJobAction(): Promise<ActionResul
 
     return {
       success: false,
-      message: error instanceof Error ? formatUserFacingText(error.message) : 'No pudimos avanzar la cola de materiales.',
+      message: error instanceof Error ? error.message : 'No pudimos avanzar la cola de materiales.',
     };
   }
 }

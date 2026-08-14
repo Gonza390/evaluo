@@ -1,6 +1,6 @@
 import { logError } from '@/lib/observability';
 
-export type AiProviderName = 'gemini' | 'groq' | 'github';
+export type AiProviderName = 'gemini' | 'groq' | 'nvidia' | 'github';
 
 export type AiUsage = {
   promptTokens: number | null;
@@ -15,11 +15,13 @@ export type ProviderResult = {
   usage?: AiUsage;
 };
 
-const AI_REQUEST_TIMEOUT_MS = 20_000;
+const AI_REQUEST_TIMEOUT_MS = 45_000;
 const GITHUB_MODELS_ENDPOINT =
   process.env.GITHUB_MODELS_URL ?? 'https://models.github.ai/inference/chat/completions';
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+const NVIDIA_ENDPOINT =
+  process.env.NVIDIA_URL ?? 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 // Modelos estandarizados por env. Un solo lugar para decidir primario/fallback.
 const GITHUB_MODELS_PRIMARY_SUMMARY_MODEL =
@@ -33,6 +35,10 @@ const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'llama-3.3-70b-versatile';
 const GROQ_FALLBACK_SUMMARY_MODEL =
   process.env.GROQ_FALLBACK_MODEL ?? 'llama-3.1-8b-instant';
+const NVIDIA_PRIMARY_SUMMARY_MODEL =
+  process.env.NVIDIA_SUMMARY_MODEL ?? 'meta/llama-3.3-70b-instruct';
+const NVIDIA_FALLBACK_SUMMARY_MODEL =
+  process.env.NVIDIA_FALLBACK_MODEL ?? 'meta/llama-3.1-8b-instruct';
 
 export function getGeminiSummaryModels() {
   return uniqueConfiguredValues([GEMINI_PRIMARY_SUMMARY_MODEL, GEMINI_FALLBACK_SUMMARY_MODEL]);
@@ -46,6 +52,13 @@ export function getGithubModelsSummaryModels() {
   return uniqueConfiguredValues([
     GITHUB_MODELS_PRIMARY_SUMMARY_MODEL,
     GITHUB_MODELS_FALLBACK_SUMMARY_MODEL,
+  ]);
+}
+
+export function getNvidiaSummaryModels() {
+  return uniqueConfiguredValues([
+    NVIDIA_PRIMARY_SUMMARY_MODEL,
+    NVIDIA_FALLBACK_SUMMARY_MODEL,
   ]);
 }
 
@@ -350,6 +363,50 @@ export async function requestGroqText(input: OpenAiCompatibleRequest) {
   }
 }
 
+const NVIDIA_TRANSIENT_STATUSES = [401, 403, 404, 429, 500, 503];
+
+export async function requestNvidiaJson(input: OpenAiCompatibleRequest) {
+  const config: OpenAiCompatibleConfig = {
+    endpoint: NVIDIA_ENDPOINT,
+    provider: 'nvidia',
+    logScope: 'aiProviders.nvidia',
+    transientStatuses: NVIDIA_TRANSIENT_STATUSES,
+    apiKeys: () => uniqueConfiguredValues([process.env.NVIDIA_API_KEY]),
+    models: getNvidiaSummaryModels,
+    headers: (token) => ({
+      Authorization: `Bearer ${token}`,
+    }),
+  };
+
+  try {
+    return await requestOpenAiCompatibleJson(config, input);
+  } catch (error) {
+    logError(config.logScope, error);
+    throw error;
+  }
+}
+
+export async function requestNvidiaText(input: OpenAiCompatibleRequest) {
+  const config: OpenAiCompatibleConfig = {
+    endpoint: NVIDIA_ENDPOINT,
+    provider: 'nvidia',
+    logScope: 'aiProviders.nvidia.text',
+    transientStatuses: NVIDIA_TRANSIENT_STATUSES,
+    apiKeys: () => uniqueConfiguredValues([process.env.NVIDIA_API_KEY]),
+    models: getNvidiaSummaryModels,
+    headers: (token) => ({
+      Authorization: `Bearer ${token}`,
+    }),
+  };
+
+  try {
+    return await requestOpenAiCompatibleText(config, input);
+  } catch (error) {
+    logError(config.logScope, error);
+    throw error;
+  }
+}
+
 type GeminiRequest = {
   prompt: string;
   temperature: number;
@@ -361,8 +418,8 @@ type GeminiRequest = {
 async function requestGeminiCommon(input: GeminiRequest) {
   const apiKeys = uniqueConfiguredValues([
     process.env.GEMINI_SUMMARY_API_KEY,
-    process.env.GEMINI_API_KEY_FALLBACK,
     process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_FALLBACK,
     process.env.GOOGLE_AI_KEY,
     process.env.GOOGLE_GENERATIVE_AI_API_KEY,
   ]);
@@ -452,6 +509,163 @@ export async function requestGeminiText(input: GeminiRequest) {
     return await requestGeminiCommon({ ...input, responseMimeType: 'text/plain' });
   } catch (error) {
     logError('aiProviders.gemini.text', error);
+    throw error;
+  }
+}
+
+async function runGeminiInlineJson(input: {
+  prompt: string;
+  inlineParts: Array<{ mimeType: string; data: string }>;
+  temperature: number;
+  maxOutputTokens: number;
+  responseSchema?: Record<string, unknown>;
+  logScope: string;
+}) {
+  const apiKeys = uniqueConfiguredValues([
+    process.env.GEMINI_SUMMARY_API_KEY,
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_FALLBACK,
+    process.env.GOOGLE_AI_KEY,
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  ]);
+  const models = getGeminiSummaryModels();
+  if (apiKeys.length === 0 || models.length === 0) return null;
+
+  let lastErrorMessage = '';
+
+  for (const apiKey of apiKeys) {
+    for (const model of models) {
+      const url = `${GEMINI_ENDPOINT}/${model}:generateContent`;
+      const generationConfig: Record<string, unknown> = {
+        temperature: input.temperature,
+        maxOutputTokens: input.maxOutputTokens,
+      };
+
+      if (input.responseSchema) {
+        generationConfig.responseMimeType = 'application/json';
+        generationConfig.responseSchema = input.responseSchema;
+      }
+
+      let response: Response;
+      try {
+        response = await fetchWithTimeout(
+          `${url}?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    ...input.inlineParts.map((part) => ({
+                      inlineData: { mimeType: part.mimeType, data: part.data },
+                    })),
+                    { text: input.prompt },
+                  ],
+                },
+              ],
+              generationConfig,
+            }),
+          },
+          90_000
+        );
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          lastErrorMessage = `Gemini ${input.logScope} ${model} timeout`;
+          continue;
+        }
+        throw error;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        if ([400, 401, 404, 429, 500, 503].includes(response.status)) {
+          lastErrorMessage = `Gemini ${input.logScope} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
+          continue;
+        }
+
+        throw new Error(
+          `Gemini ${input.logScope} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
+        );
+      }
+
+      const json = (await response.json()) as Record<string, unknown>;
+      const candidates = json?.candidates;
+      const content = Array.isArray(candidates)
+        ? (candidates[0] as Record<string, unknown> | undefined)?.content as
+            | Record<string, unknown>
+            | undefined
+        : undefined;
+      const parts = content?.parts;
+      const text = Array.isArray(parts)
+        ? parts
+            .map((part) => (part as Record<string, unknown> | undefined)?.text ?? '')
+            .join('')
+            .trim()
+        : '';
+
+      if (!text) continue;
+
+      return {
+        provider: 'gemini' as const,
+        model,
+        content: text,
+        usage: parseGeminiUsage(json),
+      };
+    }
+  }
+
+  if (lastErrorMessage) {
+    throw new Error(lastErrorMessage);
+  }
+
+  return null;
+}
+
+export async function requestGeminiPdfJson(input: {
+  prompt: string;
+  pdfBuffer: Buffer;
+  temperature: number;
+  maxOutputTokens: number;
+  responseSchema?: Record<string, unknown>;
+}) {
+  try {
+    return await runGeminiInlineJson({
+      ...input,
+      inlineParts: [{ mimeType: 'application/pdf', data: input.pdfBuffer.toString('base64') }],
+      logScope: 'pdf',
+    });
+  } catch (error) {
+    logError('aiProviders.gemini.pdf', error);
+    throw error;
+  }
+}
+
+export async function requestGeminiImagesJson(input: {
+  prompt: string;
+  images: Buffer[];
+  temperature: number;
+  maxOutputTokens: number;
+  responseSchema?: Record<string, unknown>;
+}) {
+  if (input.images.length === 0) {
+    return null;
+  }
+
+  try {
+    return await runGeminiInlineJson({
+      prompt: input.prompt,
+      inlineParts: input.images.map((image) => ({
+        mimeType: 'image/png',
+        data: image.toString('base64'),
+      })),
+      temperature: input.temperature,
+      maxOutputTokens: input.maxOutputTokens,
+      responseSchema: input.responseSchema,
+      logScope: 'vision',
+    });
+  } catch (error) {
+    logError('aiProviders.gemini.vision', error);
     throw error;
   }
 }

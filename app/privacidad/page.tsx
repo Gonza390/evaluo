@@ -39,7 +39,7 @@ export default function PrivacyPage() {
 
             <div className="mt-8 border-b border-slate-200 pb-8">
               <p className="text-xs font-bold uppercase tracking-[0.26em] text-indigo-600">Legal</p>
-              <h1 className="mt-4 text-4xl font-black tracking-[-0.06em] text-slate-950 sm:text-5xl">
+              <h1 className="mt-4 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
                 Política de privacidad
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
             <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] lg:gap-14">
               <div className="space-y-10">
                 <section className="border-b border-slate-200 pb-10">
-                  <h2 className="text-2xl font-black tracking-[-0.04em] text-slate-950">
+                  <h2 className="text-2xl font-bold tracking-[-0.04em] text-slate-950">
                     Qué datos podemos recopilar
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="border-b border-slate-200 pb-10">
-                  <h2 className="text-2xl font-black tracking-[-0.04em] text-slate-950">
+                  <h2 className="text-2xl font-bold tracking-[-0.04em] text-slate-950">
                     Cómo usamos esa información
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
@@ -82,7 +82,7 @@ export default function PrivacyPage() {
                 </section>
 
                 <section className="pb-4">
-                  <h2 className="text-2xl font-black tracking-[-0.04em] text-slate-950">
+                  <h2 className="text-2xl font-bold tracking-[-0.04em] text-slate-950">
                     Tus derechos y controles
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">

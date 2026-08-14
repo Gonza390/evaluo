@@ -146,7 +146,7 @@ export default function Home() {
           
           {/* Header / Navbar */}
           <header className="animate-surface-reveal flex h-13 items-center justify-between gap-2 rounded-2xl border-b border-slate-200/50 bg-white/70 px-3 shadow-sm backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6">
-            <Link href="/" className="flex items-center gap-2 text-2xl font-black tracking-[-0.04em] text-[#050B2C]">
+            <Link href="/" className="flex items-center gap-2 text-2xl font-bold tracking-[-0.04em] text-[#050B2C]">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#2563EB] to-[#6366F1] text-white shadow-md">
                 <GraduationCap className="h-5 w-5" />
               </div>
@@ -162,7 +162,7 @@ export default function Home() {
             </nav>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <Link href="/login" className="hidden px-3 py-2 text-xs font-bold text-slate-700 transition hover:text-indigo-600 sm:inline-flex">
+              <Link href="/login" className="hidden min-h-[44px] items-center px-3 text-xs font-bold text-slate-700 transition hover:text-indigo-600 sm:inline-flex">
                 Ingresar
               </Link>
               <TrackedLink
@@ -190,11 +190,11 @@ export default function Home() {
                 <span>Estudiá con inteligencia, aprobá con confianza</span>
               </div>
 
-              <h1 className="mt-4 text-[2.2rem] font-black leading-[1.02] tracking-[-0.05em] text-[#050B2C] sm:mt-5 sm:text-5xl lg:text-[62px]">
+              <h1 className="mt-4 text-[2.2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#050B2C] sm:mt-5 sm:text-5xl lg:text-[62px]">
                 Todo lo que necesitás para aprobar tus parciales, <span className="bg-gradient-to-r from-[#2563EB] to-[#6366F1] bg-clip-text text-transparent">en un solo lugar</span>.
               </h1>
 
-              <p className="mt-4 max-w-[560px] text-[13px] leading-6 text-slate-500 sm:mt-5 sm:text-base sm:leading-8">
+              <p className="mt-4 max-w-[560px] text-[13px] leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-8">
                 Encontrá tu universidad, estudiá con resúmenes claros y practicá con simuladores de examen de tus materias reales. Sin PDFs caóticos ni ChatGPT genérico.
               </p>
 
@@ -248,7 +248,7 @@ export default function Home() {
             <div className="relative animate-surface-reveal block" style={{ animationDelay: '100ms' }}>
               
               {/* Contenedor del mockup */}
-              <div className="w-full rounded-[24px] border border-slate-200 bg-slate-950 p-3 shadow-[0_28px_60px_rgba(15,23,42,0.15)] relative overflow-hidden">
+              <div className="w-full rounded-2xl border border-slate-200 bg-slate-950 p-3 shadow-[0_28px_60px_rgba(15,23,42,0.15)] relative overflow-hidden">
                 
                 {/* Header Mockup */}
                 <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/60 rounded-xl px-4 py-2.5 mb-3 text-[10px]">
@@ -319,7 +319,7 @@ export default function Home() {
                   <div className="mt-4 rounded-xl border border-indigo-500/20 bg-indigo-950/40 p-3.5 border-t-2 border-t-indigo-500">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <Bot className="h-4 w-4 text-indigo-400" />
-                      <span className="text-[10px] font-black text-indigo-200">Explicación Paso a Paso &bull; Exclusivo Evaluo:</span>
+                      <span className="text-[10px] font-bold text-indigo-200">Explicación Paso a Paso &bull; Exclusivo Evaluo:</span>
                     </div>
                     <p className="text-[11px] leading-5 text-indigo-200/80">
                       ¡Excelente respuesta! Como f&apos;&apos;(c) &gt; 0, la función posee una concavidad hacia arriba en el entorno de c, lo cual geométricamente asegura que el valor de la función en f(c) corresponds a un mínimo local. Si f&apos;&apos;(c) hubiese dado 0, el criterio no definiría.
@@ -383,7 +383,7 @@ export default function Home() {
                 <div
                   key={uni.name}
                   title={uni.longName}
-                  className="rounded-xl border border-slate-200/80 bg-white px-4 py-2 text-xs font-black text-slate-700 shadow-sm transition hover:border-indigo-400 hover:text-indigo-600 hover:scale-[1.03] cursor-default"
+                  className="rounded-xl border border-slate-200/80 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:border-indigo-400 hover:text-indigo-600 hover:scale-[1.03] cursor-default"
                 >
                   {uni.name}
                 </div>
@@ -406,7 +406,7 @@ export default function Home() {
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#050B2C] sm:text-4xl lg:text-[40px]">
               ¿Cómo funciona el Método Evaluo?
             </h2>
-            <p className="mt-3 text-sm text-slate-500 sm:text-base">
+            <p className="mt-3 text-sm text-slate-600 sm:text-base">
               Todo lo que necesitás para preparar tus parciales universitarios en 4 simples pasos coordinados.
             </p>
           </div>
@@ -430,7 +430,7 @@ export default function Home() {
                     </div>
 
                     <div className="mt-6 flex items-center gap-2">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-black text-indigo-600">
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-bold text-indigo-600">
                         {index + 1}
                       </span>
                       <h3 className="text-[15px] font-bold text-slate-800 tracking-tight group-hover:text-indigo-600 transition-colors">
@@ -462,7 +462,7 @@ export default function Home() {
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#050B2C] sm:text-4xl lg:text-[40px]">
               Qué encontrás en la plataforma
             </h2>
-            <p className="mt-3 text-sm text-slate-500 sm:text-base">
+            <p className="mt-3 text-sm text-slate-600 sm:text-base">
               Una suite de herramientas académicas integradas diseñadas específicamente para el ritmo de estudio universitario argentino.
             </p>
           </div>
@@ -500,7 +500,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tight text-[#050B2C] sm:text-4xl lg:text-[40px]">
               Dejá de luchar contra el caos de estudio
             </h2>
-            <p className="mt-3 text-sm text-slate-500 sm:text-base">
+            <p className="mt-3 text-sm text-slate-600 sm:text-base">
               Estudiar para un examen universitario en Argentina ya es bastante complejo. Tu plataforma de estudio no debería complicarlo más.
             </p>
           </div>
@@ -575,7 +575,7 @@ export default function Home() {
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-[#050B2C] sm:text-4xl lg:text-[40px]">
               Viví la experiencia de estudio
             </h2>
-            <p className="mt-3 text-sm text-slate-500 sm:text-base">
+            <p className="mt-3 text-sm text-slate-600 sm:text-base">
               Seleccioná tu universidad, recorré el plan de tu materia y probá una pregunta del simulador. Sin registros obligatorios.
             </p>
           </div>
@@ -592,7 +592,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tight text-[#050B2C] sm:text-4xl lg:text-[40px]">
               Preguntas Frecuentes
             </h2>
-            <p className="mt-3 text-sm text-slate-500 sm:text-base">
+            <p className="mt-3 text-sm text-slate-600 sm:text-base">
               Todo lo que necesitás saber sobre la plataforma y cómo prepararte para tus parciales.
             </p>
           </div>
@@ -606,7 +606,7 @@ export default function Home() {
       <section className="py-16 sm:py-24 bg-white">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           
-          <div className="relative overflow-hidden rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_40%),linear-gradient(180deg,#050B2C_0%,#0F1B3D_100%)] p-8 md:p-14 text-center shadow-xl">
+          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_40%),linear-gradient(180deg,#050B2C_0%,#0F1B3D_100%)] p-8 md:p-14 text-center shadow-xl">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
             <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
@@ -615,10 +615,10 @@ export default function Home() {
                 Comenzá hoy mismo
               </span>
 
-              <h2 className="mt-6 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
+              <h2 className="mt-6 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
                 Dejá de estudiar a ciegas.
               </h2>
-              <p className="mt-4 max-w-xl text-xs sm:text-sm leading-6 text-slate-300">
+              <p className="mt-4 max-w-xl text-xs sm:text-sm leading-6 text-white/80">
                 Unite a miles de estudiantes universitarios de Argentina que preparan sus parciales con orden, practicidad y la estructura exacta de sus cátedras reales.
               </p>
 

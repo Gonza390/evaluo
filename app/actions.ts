@@ -14,6 +14,11 @@ import { safeRecordSimulatorTopicMemory } from '@/lib/simulator-topic-memory';
 import { normalizeForCompare, parseCorrectAnswers } from '@/lib/simulator-core';
 import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
 import { enforceServerActionRateLimit, getServerActionClientKey } from '@/lib/rate-limit';
+import {
+  syncAndGetExamReminders,
+  dismissExamReminder,
+  type ExamReminderItem,
+} from '@/lib/exam-reminders';
 
 /**
  * Pregunta expuesta al cliente. NUNCA incluye `respuesta_correcta`: la
@@ -1408,5 +1413,40 @@ export async function getPremiumStatus(): Promise<{ isPremium: boolean }> {
   } catch (error) {
     logError('actions.getPremiumStatus', error);
     return { isPremium: false };
+  }
+}
+
+export async function getExamReminders(): Promise<{
+  success: boolean;
+  reminders: ExamReminderItem[];
+}> {
+  try {
+    const premiumCheck = await requirePremiumUser();
+    if (!premiumCheck.ok) {
+      return { success: false, reminders: [] };
+    }
+
+    const reminders = await syncAndGetExamReminders(premiumCheck.user.id);
+    return { success: true, reminders };
+  } catch (error) {
+    logError('actions.getExamReminders', error);
+    return { success: false, reminders: [] };
+  }
+}
+
+export async function dismissExamReminderAction(notificationId: string): Promise<{
+  success: boolean;
+}> {
+  try {
+    const premiumCheck = await requirePremiumUser();
+    if (!premiumCheck.ok) {
+      return { success: false };
+    }
+
+    await dismissExamReminder(premiumCheck.user.id, notificationId);
+    return { success: true };
+  } catch (error) {
+    logError('actions.dismissExamReminder', error);
+    return { success: false };
   }
 }
