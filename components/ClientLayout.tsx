@@ -270,16 +270,16 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/login"
-                  className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
+                  className="inline-flex h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:h-11 sm:px-4 sm:text-sm"
                 >
                   Iniciar
                 </Link>
                 <Link
                   href="/login?mode=signup"
-                  className="inline-flex h-9 items-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:opacity-95 sm:h-10 sm:px-4 sm:text-sm"
+                  className="inline-flex h-11 items-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:opacity-95 sm:h-11 sm:px-4 sm:text-sm"
                 >
-                  <span className="sm:hidden">Regístrate</span>
-                  <span className="hidden sm:inline">Regístrate gratis</span>
+                  <span className="sm:hidden">Registrate</span>
+                  <span className="hidden sm:inline">Registrate gratis</span>
                 </Link>
               </div>
             ) : (
@@ -347,7 +347,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     <button
                       type="button"
                       onClick={() => setShowStreakDialog(false)}
-                      className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-400 shadow-sm transition hover:border-slate-300 hover:text-slate-600"
+                      className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-600"
                       aria-label="Cerrar resumen de racha"
                     >
                       <span className="text-lg leading-none">×</span>
@@ -389,7 +389,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                             >
                               <span
                                 className={`block text-[9px] font-bold tracking-[0.06em] ${
-                                  day.isToday ? 'text-[#2563EB]' : 'text-slate-400'
+                                  day.isToday ? 'text-[#2563EB]' : 'text-slate-500'
                                 }`}
                               >
                                 {day.label}
