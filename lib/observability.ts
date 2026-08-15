@@ -19,8 +19,29 @@ export function logInfo(scope: string, details?: Record<string, unknown>) {
 
 export function logError(scope: string, error: unknown, details?: Record<string, unknown>) {
   const normalized = normalizeError(error);
+  const entry = {
+    scope,
+    ...normalized,
+    ...(details ? { details } : {}),
+  };
   console.error(`[${scope}]`, {
     ...normalized,
     ...(details ? { details } : {}),
   });
+  void forwardError(entry);
+}
+
+async function forwardError(entry: Record<string, unknown>) {
+  const url = process.env.ERROR_REPORT_URL;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: 'logError', ...entry }),
+      signal: AbortSignal.timeout(3000),
+    });
+  } catch {
+    // best-effort, nunca romper el flujo de la app
+  }
 }
