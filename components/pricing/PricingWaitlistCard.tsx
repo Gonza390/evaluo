@@ -51,7 +51,7 @@ export function PricingWaitlistCard() {
           </div>
 
           <h2 className="mt-5 text-[2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.6rem]">
-            Reserva tu lugar y entra primero cuando activemos Premium.
+            Reservá tu lugar y entrá primero cuando activemos Premium.
           </h2>
 
           <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
@@ -80,7 +80,7 @@ export function PricingWaitlistCard() {
             Acceso prioritario
           </p>
           <h3 className="mt-3 text-[1.7rem] font-bold leading-[1.02] tracking-[-0.04em] text-[#0F1B3D]">
-            Guarda tu acceso antes del lanzamiento
+            Guardá tu acceso antes del lanzamiento
           </h3>
           <p className="mt-3 text-sm leading-7 text-slate-500">
             Déjanos tu email y te llevamos a crear tu cuenta para guardar tu prioridad dentro de Evaluo.
@@ -96,7 +96,7 @@ export function PricingWaitlistCard() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="tu@universidad.edu"
-              className="mt-3 h-12 rounded-2xl border-slate-200 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400"
+              className="mt-3 h-12 rounded-2xl border-slate-200 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-500"
               required
             />
           </div>

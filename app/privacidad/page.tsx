@@ -4,13 +4,13 @@ import { FooterHome } from '@/components/footer-home';
 
 const collectedDataItems = [
   'Datos de registro básicos, como nombre, correo electrónico y credenciales de acceso.',
-  'Información académica que completas dentro de la plataforma, como universidad, carrera y materias de interés.',
+      'Información académica que completás dentro de la plataforma, como universidad, carrera y materias de interés.',
   'Actividad dentro de Evaluo, incluyendo uso del dashboard, simuladores, recursos abiertos y progreso de estudio.',
   'Datos técnicos necesarios para operar la web, como navegador, dispositivo, dirección IP aproximada y eventos de sesión.',
 ];
 
 const usageItems = [
-  'Personalizar tu experiencia según la carrera, la materia y el uso que haces de la plataforma.',
+      'Personalizar tu experiencia según la carrera, la materia y el uso que hacés de la plataforma.',
   'Permitir que retomes simuladores, materiales y avances sin empezar desde cero.',
   'Mejorar el funcionamiento del producto, detectar errores y analizar qué secciones necesitan ajustes.',
   'Comunicarnos contigo sobre acceso, seguridad, cambios relevantes o mejoras del servicio.',
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
                 En Evaluo tratamos la información personal con un criterio de necesidad, cuidado y
                 mejora continua del producto. Esta política resume qué datos usamos, para qué los
-                usamos y qué opciones tienes sobre tu información dentro de la plataforma.
+                usamos y qué opciones tenés sobre tu información dentro de la plataforma.
               </p>
             </div>
 
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
                     Si necesitas revisar, corregir o eliminar información asociada a tu cuenta,
-                    puedes solicitarlo. También puedes escribirnos si quieres entender mejor qué datos
+                    podés solicitarlo. También podés escribirnos si querés entender mejor qué datos
                     usamos y por qué.
                   </p>
                   <ol className="mt-5 space-y-4 pl-6 text-[15px] leading-8 text-slate-600 marker:font-semibold marker:text-slate-900">
@@ -101,7 +101,7 @@ export default function PrivacyPage() {
               <aside className="lg:pt-1">
                 <div className="sticky top-8 space-y-8 border-t border-slate-200 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
                       En la práctica
                     </p>
                     <div className="mt-4 space-y-5 text-[15px] leading-8 text-slate-600">
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
                         foco en funcionamiento, personalización y mejora del servicio.
                       </p>
                       <p>
-                        Si más adelante quieres formalizar este bloque con lenguaje legal más exhaustivo,
+                        Si más adelante querés formalizar este bloque con lenguaje legal más exhaustivo,
                         lo ideal es revisarlo junto con tus términos, flujos de consentimiento y canales
                         de contacto oficiales.
                       </p>
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
                   </div>
 
                   <div className="border-t border-slate-200 pt-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
                       Resumen
                     </p>
                     <div className="mt-4 space-y-3 text-sm text-slate-600">

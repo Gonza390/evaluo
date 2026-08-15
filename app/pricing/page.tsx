@@ -71,7 +71,7 @@ export default function PricingPage() {
               </div>
 
               <h1 className="mt-6 text-[2.65rem] font-bold leading-[0.97] tracking-[-0.06em] text-[#0F1B3D] sm:mt-8 sm:text-[3.75rem] lg:text-[4.5rem]">
-                Entra primero a la versión premium de Evaluo.
+                Entrá primero a la versión premium de Evaluo.
               </h1>
 
               <p className="mt-5 max-w-[560px] text-base leading-7 text-slate-500 sm:mt-7 sm:text-xl sm:leading-8">

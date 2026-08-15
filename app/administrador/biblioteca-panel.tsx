@@ -288,7 +288,7 @@ export function BibliotecaPanel({
     finalResumenParcial?: string;
   }) => {
     if (!selectedMateria || !universidadId) {
-      return { success: false, message: 'Completa universidad y materia antes de continuar.' };
+      return { success: false, message: 'Completá universidad y materia antes de continuar.' };
     }
 
     const carreraId = selectedMateria.isGeneral
@@ -323,15 +323,15 @@ export function BibliotecaPanel({
 
   const addMaterialBatch = () => {
     if (!selectedMateria || !universidadId) {
-      toast({ description: 'Completa universidad y materia antes de continuar.', variant: 'destructive' });
+          toast({ description: 'Completá universidad y materia antes de continuar.', variant: 'destructive' });
       return;
     }
 
     if (!canAddBatch) {
       toast({
         description: isResumen
-          ? 'Selecciona archivos y clasifícalos por módulos o parcial antes de agregarlos.'
-          : 'Selecciona archivos y el trabajo práctico antes de agregarlos.',
+          ? 'Seleccioná archivos y clasificalos por módulos o parcial antes de agregarlos.'
+          : 'Seleccioná archivos y el trabajo práctico antes de agregarlos.',
         variant: 'destructive',
       });
       return;
@@ -356,7 +356,7 @@ export function BibliotecaPanel({
 
   const handleUpload = async () => {
     if (!selectedMateria || !universidadId) {
-      toast({ description: 'Completa universidad y materia antes de continuar.', variant: 'destructive' });
+          toast({ description: 'Completá universidad y materia antes de continuar.', variant: 'destructive' });
       return;
     }
 
@@ -388,7 +388,7 @@ export function BibliotecaPanel({
         }
 
         if (materialBatchQueue.length === 0) {
-          toast({ description: 'Agrega al menos un lote de archivos antes de continuar.', variant: 'destructive' });
+          toast({ description: 'Agregá al menos un lote de archivos antes de continuar.', variant: 'destructive' });
           return;
         }
 
@@ -457,7 +457,7 @@ export function BibliotecaPanel({
   const handleImportMaterias = async () => {
     if (!materiasImportFile || !universidadId) {
       toast({
-        description: 'Selecciona una universidad y un archivo Excel antes de importar.',
+        description: 'Seleccioná una universidad y un archivo Excel antes de importar.',
         variant: 'destructive',
       });
       return;
@@ -531,7 +531,7 @@ export function BibliotecaPanel({
         <div className="mb-5">
           <p className="text-[14px] font-semibold text-[#1d2a44]">Simuladores por carrera</p>
           <p className="mt-1 text-[13px] text-[#7f8aa3]">
-            Revisa carrera por carrera qu&eacute; materias ya tienen preguntas cargadas en parcial 1 y parcial 2.
+            Revisá carrera por carrera qu&eacute; materias ya tienen preguntas cargadas en parcial 1 y parcial 2.
           </p>
         </div>
 
@@ -591,7 +591,7 @@ export function BibliotecaPanel({
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[13px] font-semibold text-[#1d2a44]">
-                  {carreraSimuladoresActiva?.carreraNombre ?? 'Selecciona una carrera'}
+                  {carreraSimuladoresActiva?.carreraNombre ?? 'Seleccioná una carrera'}
                 </p>
                 <p className="mt-1 text-[12px] text-[#7f8aa3]">
                   {carreraSimuladoresActiva?.universidadNombre ?? 'Aqu&iacute; vas a ver las materias y sus preguntas por parcial.'}
@@ -627,7 +627,7 @@ export function BibliotecaPanel({
             <div className="max-h-[360px] space-y-2 overflow-y-auto pr-1">
               {!carreraSimuladoresActiva ? (
                 <p className="rounded-[12px] border border-dashed border-[#dbe2f0] px-3 py-4 text-[12px] text-[#7f8aa3]">
-                  Elige una carrera para ver sus materias.
+                  Elegí una carrera para ver sus materias.
                 </p>
               ) : materiasSimuladoresFiltradas.length === 0 ? (
                 <p className="rounded-[12px] border border-dashed border-[#dbe2f0] px-3 py-4 text-[12px] text-[#7f8aa3]">
@@ -806,7 +806,7 @@ export function BibliotecaPanel({
             <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
               {carrerasFiltradas.length === 0 ? (
                 <p className="rounded-[12px] border border-dashed border-[#dbe2f0] px-3 py-4 text-[12px] text-[#7f8aa3]">
-                  {universidadId ? 'Todav&iacute;a no hay carreras para esta universidad.' : 'Elige una universidad para ver carreras.'}
+                  {universidadId ? 'Todav&iacute;a no hay carreras para esta universidad.' :               'Elegí una universidad para ver carreras.'}
                 </p>
               ) : (
                 carrerasFiltradas.map((carrera) => {
@@ -897,7 +897,7 @@ export function BibliotecaPanel({
             <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
               {materiasPorCarrera.length === 0 ? (
                 <p className="rounded-[12px] border border-dashed border-[#dbe2f0] px-3 py-4 text-[12px] text-[#7f8aa3]">
-                  {carreraId ? 'Todav&iacute;a no hay materias para esta carrera.' : 'Elige una carrera para ver materias.'}
+                  {carreraId ? 'Todav&iacute;a no hay materias para esta carrera.' :               'Elegí una carrera para ver materias.'}
                 </p>
               ) : (
                 materiasPorCarrera.map((materia) => (
@@ -940,7 +940,7 @@ export function BibliotecaPanel({
               Importacion masiva Excel
             </p>
             <p className="text-[12px] leading-5 text-[#7f8aa3]">
-              Sube la malla con carreras en la primera fila y las materias debajo de cada columna.
+              Subí la malla con carreras en la primera fila y las materias debajo de cada columna.
               Las carreras faltantes se crean dentro de la universidad seleccionada.
             </p>
           </div>
@@ -965,7 +965,7 @@ export function BibliotecaPanel({
 
           {!universidadId ? (
             <p className="mt-3 text-[12px] text-[#b45309]">
-              Primero elige la universidad donde quieras crear las carreras nuevas.
+              Primero elegí la universidad donde quieras crear las carreras nuevas.
             </p>
           ) : null}
 
@@ -1235,7 +1235,7 @@ export function BibliotecaPanel({
               <div className="space-y-3">
                 {materialBatchQueue.length === 0 ? (
                   <p className="rounded-[14px] border border-dashed border-[#dbe2f0] px-4 py-4 text-[12px] text-[#7f8aa3]">
-                    Todavía no agregaste lotes. Puedes cargar varios PDFs por módulo, parcial o TP antes de subir.
+                    Todavía no agregaste lotes. Podés cargar varios PDFs por módulo, parcial o TP antes de subir.
                   </p>
                 ) : (
                   materialBatchQueue.map((batch) => {

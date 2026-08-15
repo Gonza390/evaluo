@@ -10,15 +10,15 @@ export function AdminAccessState({
 }) {
   const title =
     reason === 'unauthenticated'
-      ? 'Inicia sesión para entrar al panel'
+      ? 'Iniciá sesión para entrar al panel'
       : reason === 'forbidden'
-        ? 'No tienes acceso a este panel'
+        ?       'No tenés acceso a este panel'
         : 'No pudimos validar tu acceso';
   const description =
     reason === 'unauthenticated'
       ? 'El panel de administración solo está disponible para cuentas con permisos internos.'
       : reason === 'forbidden'
-        ? 'Tu cuenta funciona bien, pero no tiene permisos de administrador. Vuelve al dashboard para seguir usando la plataforma.'
+        ? 'Tu cuenta funciona bien, pero no tiene permisos de administrador. Volvé al dashboard para seguir usando la plataforma.'
         : 'Intenta nuevamente en unos minutos. Si el problema sigue, revisa tu sesión o el estado del servidor.';
 
   return (
@@ -27,7 +27,7 @@ export function AdminAccessState({
         <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-amber-50 text-amber-600">
           <ShieldAlert className="h-7 w-7" />
         </div>
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
+        <p className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
           Acceso restringido
         </p>
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.05em] text-slate-950">{title}</h1>

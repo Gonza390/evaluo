@@ -46,7 +46,7 @@ export async function generateMetadata({
 
     return {
       title: `${carreraData.nombre} | Materias`,
-      description: `Explora las materias de ${carreraData.nombre}${universidadData ? ` en ${universidadData.nombre}` : ''} y estudia con materiales y simuladores en Evaluo.`,
+      description: `Explorá las materias de ${carreraData.nombre}${universidadData ? ` en ${universidadData.nombre}` : ''} y estudiá con materiales y simuladores en Evaluo.`,
       alternates: {
         canonical: `/materias?carreraId=${encodeURIComponent(carreraId)}`,
       },
@@ -82,7 +82,7 @@ export default async function MateriasPage({
           icon={BookOpen}
           className="w-full"
           title="Todavía no elegiste una carrera"
-          description="Entra desde explorar o desde una universidad para ver el plan de materias correcto."
+          description="Entrá desde explorar o desde una universidad para ver el plan de materias correcto."
           secondaryText="Así mantenemos el recorrido ordenado y te mostramos solo el contenido que corresponde a esa carrera."
           primaryActionLabel="Explorar carreras"
           primaryActionHref="/explorar"
@@ -122,7 +122,7 @@ export default async function MateriasPage({
           className="w-full"
           title="No pudimos cargar esta carrera"
           description={message}
-          secondaryText="Prueba nuevamente en unos segundos o vuelve a explorar otras carreras."
+          secondaryText="Probá nuevamente en unos segundos o volvé a explorar otras carreras."
           primaryActionLabel="Volver a explorar"
           primaryActionHref="/explorar"
           secondaryActionLabel="Ir al inicio"

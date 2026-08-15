@@ -138,7 +138,7 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
 
   return {
     title: `${universidad.nombre} | Universidad`,
-    description: `Explora carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
+    description: `Explorá carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
     alternates: {
       canonical: `/universidad/${universidad.id}`,
     },
@@ -303,7 +303,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                       <p className="section-copy mt-3 max-w-3xl text-[#475569] sm:text-[15px]">
                         {universidad.nombre} reúne una propuesta académica pensada para avanzar
                         con orden, criterio práctico y una experiencia de estudio más simple.
-                        En Evaluo puedes entrar directo a cada carrera, encontrar sus materias y
+                        En Evaluo podés entrar directo a cada carrera, encontrar sus materias y
                         estudiar desde un mismo lugar sin perder continuidad.
                       </p>
                     </div>

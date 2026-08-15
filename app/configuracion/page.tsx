@@ -280,7 +280,7 @@ export default function ConfiguracionPage() {
       });
       toast({
         title: 'No pudimos guardar los cambios',
-        description: 'Revisa los datos e intenta de nuevo.',
+        description: 'Revisá los datos e intentá de nuevo.',
         variant: 'destructive',
       });
     } finally {
@@ -320,7 +320,7 @@ export default function ConfiguracionPage() {
                   Configura tu cuenta
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-[15px]">
-                  Actualiza tu nombre, tu universidad, tu carrera y el país desde el que estudias para
+                  Actualizá tu nombre, tu universidad, tu carrera y el país desde el que estudiás para
                   que Evaluo pueda personalizar mejor tu experiencia.
                 </p>
               </div>
@@ -388,7 +388,7 @@ export default function ConfiguracionPage() {
                     setCarreraId('');
                     setCarreraSearch('');
                   }}
-                  placeholder="Busca tu universidad"
+                  placeholder="Buscá tu universidad"
                   className="h-12 rounded-2xl border-slate-200 bg-white pl-10"
                 />
               </div>
@@ -401,7 +401,7 @@ export default function ConfiguracionPage() {
                   <div className="px-4 py-4 text-sm text-slate-500">
                     {hasLoadedUniversidades
                       ? 'No encontramos esa universidad.'
-                      : 'Escribe al menos 2 letras para buscar tu universidad.'}
+                      : 'Escribí al menos 2 letras para buscar tu universidad.'}
                   </div>
                 ) : (
                   universidades.map((universidad) => (
@@ -447,7 +447,7 @@ export default function ConfiguracionPage() {
                   disabled={!universidadId}
                   placeholder={
                     universidadSeleccionada
-                      ? `Busca tu carrera en ${universidadSeleccionada.nombre}`
+                      ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
                       : 'Primero selecciona una universidad'
                   }
                   className="h-12 rounded-2xl border-slate-200 bg-white pl-10"
@@ -498,19 +498,19 @@ export default function ConfiguracionPage() {
           <h2 className="text-lg font-bold text-slate-900">Resumen de tu perfil</h2>
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Nombre
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">{nombre || 'Sin completar'}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Pais
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">{pais || 'Sin completar'}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Universidad
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">
@@ -518,7 +518,7 @@ export default function ConfiguracionPage() {
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Carrera
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">

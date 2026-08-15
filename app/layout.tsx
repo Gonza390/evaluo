@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: '%s | Evaluo',
   },
   description:
-    'Estudia con resúmenes, preguntas y simuladores universitarios en un solo lugar. Organiza tus materiales y mejora tu rendimiento con Evaluo.',
+    'Estudiá con resúmenes, preguntas y simuladores universitarios en un solo lugar. Organizá tus materiales y mejorá tu rendimiento con Evaluo.',
   keywords: [
     'evaluo',
     'simulador de exámenes',

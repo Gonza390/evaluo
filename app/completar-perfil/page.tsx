@@ -29,9 +29,9 @@ function ProfileSetupSkeleton({ compact = false }: { compact?: boolean }) {
         </div>
         <p className="mt-6 text-sm font-semibold text-slate-700">Estamos preparando tu experiencia académica</p>
         <p className="mt-1 text-sm text-slate-500">
-          Validamos tu sesión y revisamos si ya tienes universidad y carrera configuradas.
+          Validamos tu sesión y revisamos si ya tenés universidad y carrera configuradas.
         </p>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-xs text-slate-500">
           Si este paso tarda demasiado, recarga la página e intenta nuevamente.
         </p>
       </div>

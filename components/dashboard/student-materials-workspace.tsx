@@ -242,7 +242,7 @@ export function StudentMaterialsWorkspace({
 
   const estimatedTimeLabel = useMemo(() => {
     if (estimatedSecondsRemaining === null) {
-      return 'Necesita revision';
+      return 'Necesita revisión';
     }
 
     if (estimatedSecondsRemaining <= 0) {
@@ -261,7 +261,7 @@ export function StudentMaterialsWorkspace({
   const handleUpload = () => {
     if (!selectedFile) {
       toast({
-        description: 'Selecciona un PDF antes de continuar.',
+        description: 'Seleccioná un PDF antes de continuar.',
         variant: 'destructive',
       });
       return;
@@ -368,7 +368,7 @@ export function StudentMaterialsWorkspace({
                     <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
                       {featuredMaterial
                         ? featuredMaterial.file_name
-                        : 'Sube un documento y tendras un espacio ordenado para estudiar, resumir y repasar.'}
+                        : 'Subí un documento y tendrás un espacio ordenado para estudiar, resumir y repasar.'}
                     </p>
                   </div>
                 </div>
@@ -418,11 +418,11 @@ export function StudentMaterialsWorkspace({
                 </div>
                 <div>
                   <h2 className="text-[1.15rem] font-bold tracking-[-0.04em] text-slate-950">
-                    Sube tu material del curso
+                    Subí tu material del curso
                   </h2>
                   <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                    Mantendremos una estructura simple para que despues puedas convertir cada PDF en un
-                    espacio de estudio mas completo.
+                    Mantendremos una estructura simple para que después puedas convertir cada PDF en un
+                    espacio de estudio más completo.
                   </p>
                 </div>
               </div>
@@ -449,7 +449,7 @@ export function StudentMaterialsWorkspace({
                   size="sm"
                   onClick={() =>
                     toast({
-                      description: 'La opcion para pegar enlaces o texto la dejamos preparada para la siguiente etapa.',
+                      description: 'La opción para pegar enlaces o texto la dejamos preparada para la siguiente etapa.',
                     })
                   }
                 >
@@ -464,7 +464,7 @@ export function StudentMaterialsWorkspace({
         <section className="rounded-[1.6rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.05)] sm:p-5">
           <div className="flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Biblioteca personal</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Biblioteca personal</p>
               <h2 className="mt-1.5 text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">Tus materiales</h2>
             </div>
             <Button type="button" size="sm" variant="outline" onClick={() => setIsUploadDialogOpen(true)}>
@@ -477,9 +477,9 @@ export function StudentMaterialsWorkspace({
             {initialMaterials.length === 0 ? (
               <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
                 <FileText className="mx-auto h-8 w-8 text-slate-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-900">Todavia no subiste materiales</p>
+                <p className="mt-3 text-sm font-semibold text-slate-900">Todavía no subiste materiales</p>
                 <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                  Cuando cargues tu primer PDF, aparecera aca con su categoria y accesos rapidos.
+                  Cuando cargues tu primer PDF, aparecerá acá con su categoría y accesos rápidos.
                 </p>
               </div>
             ) : (
@@ -556,10 +556,10 @@ export function StudentMaterialsWorkspace({
           <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
             <DialogHeader className="text-left">
               <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
-                Sube tu material
+                Subí tu material
               </DialogTitle>
               <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                Completa la estructura base del documento antes de cargarlo. Despues podremos trabajar el
+                Completá la estructura base del documento antes de cargarlo. Después podremos trabajar el
                 resumen y el espacio de estudio sobre este mismo PDF.
               </DialogDescription>
             </DialogHeader>
@@ -567,7 +567,7 @@ export function StudentMaterialsWorkspace({
 
           <div className="grid gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Titulo</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Titulo</p>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -576,7 +576,7 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div>
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Universidad</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Universidad</p>
               <select
                 value={universidadId}
                 onChange={(event) => {
@@ -596,7 +596,7 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div>
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Carrera</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Carrera</p>
               <select
                 value={carreraId}
                 onChange={(event) => {
@@ -616,7 +616,7 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Materia</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Materia</p>
               <select
                 value={materiaId}
                 onChange={(event) => setMateriaId(event.target.value)}
@@ -633,7 +633,7 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Archivo PDF</p>
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Archivo PDF</p>
               <Input
                 key={fileInputKey}
                 type="file"
@@ -655,7 +655,7 @@ export function StudentMaterialsWorkspace({
                   onChange={(event) => setShareWithCatalog(event.target.checked)}
                   className="mt-1"
                 />
-                <span>Comparte este PDF en la materia y la carrera para que otros alumnos tambien lo vean.</span>
+                <span>Compartí este PDF en la materia y la carrera para que otros alumnos también lo vean.</span>
               </label>
             </div>
           </div>
@@ -720,7 +720,7 @@ export function StudentMaterialsWorkspace({
 
               <div className="space-y-5 px-5 py-5 sm:px-6">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                     <span>Progreso</span>
                     <span>{Math.min(100, Math.max(displayProgress, activeProcessing.progress))}%</span>
                   </div>
@@ -776,12 +776,12 @@ export function StudentMaterialsWorkspace({
 
                 <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
                   <p className="text-[13px] font-semibold text-slate-950">
-                    {activeProcessing.status === 'failed' ? 'Se interrumpio el procesamiento' : activeProcessing.message}
+                    {activeProcessing.status === 'failed' ? 'Se interrumpió el procesamiento' : activeProcessing.message}
                   </p>
                   <p className="mt-1.5 text-[12.5px] leading-5 text-slate-500">
                     {activeProcessing.status === 'failed'
-                      ? activeProcessing.error ?? 'No recibimos mas detalle del error.'
-                      : 'Puedes dejar esta ventana abierta mientras armamos el resumen y el glosario del PDF.'}
+                      ? activeProcessing.error ?? 'No recibimos más detalle del error.'
+                      : 'Podés dejar esta ventana abierta mientras armamos el resumen y el glosario del PDF.'}
                   </p>
                 </div>
 

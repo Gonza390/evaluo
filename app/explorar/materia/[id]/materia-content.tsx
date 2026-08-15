@@ -239,7 +239,7 @@ export default function MateriaContent({
           await navigator.clipboard.writeText(shareUrl);
           toast({
             title: 'Link copiado',
-            description: 'Ya puedes compartir este preguntero.',
+                        description: 'Ya podés compartir este preguntero.',
           });
         }
     } catch (error) {
@@ -381,7 +381,7 @@ export default function MateriaContent({
 
     if (!authUser) {
       toast({
-        title: 'Inicia sesión para guardar favoritos',
+        title: 'Iniciá sesión para guardar favoritos',
         description: 'Te llevamos al login para guardar esta materia.',
         duration: 2500,
       });
@@ -1018,7 +1018,7 @@ export default function MateriaContent({
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: 'Link copiado',
-          description: 'Ya puedes compartir esta materia con quien quieras.',
+                        description: 'Ya podés compartir esta materia con quien quieras.',
           duration: 2500,
         });
       }
@@ -1031,7 +1031,7 @@ export default function MateriaContent({
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: 'Link copiado',
-          description: 'Ya puedes compartir esta materia con quien quieras.',
+                        description: 'Ya podés compartir esta materia con quien quieras.',
           duration: 2500,
         });
       } catch {
@@ -1550,7 +1550,7 @@ export default function MateriaContent({
                           <h3 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{simulador.titulo}</h3>
                           <p className="mt-3 text-sm leading-6 text-slate-600">
                             {simulador.parcial === 3
-                              ? `Preguntero completo del examen integrador ${nombre} con todos los modelos de exámenes que podes llegar a rendir.`
+                               ? `Preguntero completo del examen integrador ${nombre} con todos los modelos de exámenes que podés llegar a rendir.`
                               : 'Preguntero de examen con 30 preguntas por modelo.'}
                           </p>
                           <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">

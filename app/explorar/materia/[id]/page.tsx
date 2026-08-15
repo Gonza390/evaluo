@@ -38,8 +38,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${materiaNombre} | Materia`,
     description:
       carreraNombre
-        ? `Estudia ${materiaNombre} de ${carreraNombre} con resúmenes, pregunteros y simuladores en Evaluo.`
-        : `Estudia ${materiaNombre} con resúmenes, pregunteros y simuladores en Evaluo.`,
+        ? `Estudiá ${materiaNombre} de ${carreraNombre} con resúmenes, pregunteros y simuladores en Evaluo.`
+        : `Estudiá ${materiaNombre} con resúmenes, pregunteros y simuladores en Evaluo.`,
     alternates: {
       canonical: `/explorar/materia/${canonicalMateriaId}`,
     },

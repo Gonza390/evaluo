@@ -121,7 +121,7 @@ export function ExplanationsHistoryClient({
                     <CalendarDays className="h-4 w-4 text-indigo-500" />
                     <h2 className="text-sm font-bold text-slate-900">{materiaNombre}</h2>
                   </div>
-                  <span className="text-xs font-medium text-slate-400">
+                  <span className="text-xs font-medium text-slate-500">
                     {items.length} {items.length === 1 ? 'explicación' : 'explicaciones'}
                   </span>
                 </div>
@@ -139,7 +139,7 @@ export function ExplanationsHistoryClient({
                             <p className="line-clamp-2 text-sm font-medium text-slate-800">
                               {item.enunciado}
                             </p>
-                            <p className="mt-1 text-xs text-slate-400">
+                            <p className="mt-1 text-xs text-slate-500">
                               {formatDate(item.createdAt)}
                               {item.parcial ? ` · Parcial ${item.parcial}` : ''}
                             </p>

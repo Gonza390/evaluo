@@ -52,7 +52,7 @@ export function StudyStatePanel({
         <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">{title}</h3>
         <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
         {secondaryText ? (
-          <p className="mt-3 text-xs leading-5 text-slate-400">{secondaryText}</p>
+          <p className="mt-3 text-xs leading-5 text-slate-500">{secondaryText}</p>
         ) : null}
       </div>
 

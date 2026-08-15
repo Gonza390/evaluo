@@ -99,7 +99,7 @@ export function ExamRemindersPanel() {
             <p className="mt-2 text-sm font-medium text-slate-600">
               No hay parciales próximos con recordatorios
             </p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-500">
               Cargá un parcial en el calendario y activá sus recordatorios.
             </p>
           </div>
@@ -125,7 +125,7 @@ export function ExamRemindersPanel() {
               <button
                 type="button"
                 onClick={() => void handleDismiss(reminder)}
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Descartar recordatorio"
               >
                 <X className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function ExamRemindersPanel() {
         )}
       </div>
 
-      <div className="flex items-center gap-1.5 border-t border-slate-100 px-5 py-3 text-[11px] text-slate-400">
+      <div className="flex items-center gap-1.5 border-t border-slate-100 px-5 py-3 text-[11px] text-slate-500">
         <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
         Recordatorios disponibles en Premium
       </div>

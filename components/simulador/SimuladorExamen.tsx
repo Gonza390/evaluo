@@ -136,17 +136,17 @@ const SIMULATOR_TOUR_STEPS: SimulatorTourStep[] = [
   {
     id: 'progress',
     title: 'Progreso del examen',
-    description: 'Acá puedes seguir cuántas preguntas respondiste, cuántas te faltan y tu avance total.',
+    description: 'Acá podés seguir cuántas preguntas respondiste, cuántas te faltan y tu avance total.',
   },
   {
     id: 'questions',
     title: 'Mapa de preguntas',
-    description: 'Desde este panel puedes moverte entre preguntas, ver dónde estás y finalizar el examen cuando quieras.',
+    description: 'Desde este panel podés moverte entre preguntas, ver dónde estás y finalizar el examen cuando quieras.',
   },
   {
     id: 'mark',
     title: 'Marcar preguntas',
-    description: 'Si tienes dudas, marca la pregunta para identificarla rápido y volver a revisarla antes de finalizar.',
+    description: 'Si tenés dudas, marcá la pregunta para identificarla rápido y volver a revisarla antes de finalizar.',
   },
   {
     id: 'navigation',
@@ -201,7 +201,7 @@ function inferErrorFocus(preguntasErradas: Pregunta[], suggestedModule: number):
     return {
       title: `Buen dominio del Módulo ${suggestedModule}`,
       description: 'No detectamos un patrón fuerte de error en este intento.',
-      recommendation: `Si quieres consolidarlo más, repasa una vez el Módulo ${suggestedModule} y vuelve a intentar.`,
+      recommendation: `Si querés consolidarlo más, repasá una vez el Módulo ${suggestedModule} y volvé a intentar.`,
     };
   }
 
@@ -311,7 +311,7 @@ function SimulatorTourCard({
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:text-slate-600 max-sm:h-8 max-sm:w-8"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-600 max-sm:h-8 max-sm:w-8"
           aria-label="Cerrar guía"
         >
           ×
@@ -1150,7 +1150,7 @@ export default function SimuladorExamen({
   const handleSimulatorVote = async (voteType: 1 | -1) => {
     if (!user) {
       toast({
-        title: 'Inicia sesión para valorar el simulador',
+        title: 'Iniciá sesión para valorar el simulador',
         description: 'Te llevamos al login para guardar tu opinión.',
       });
       window.location.assign('/login');
@@ -1339,7 +1339,7 @@ export default function SimuladorExamen({
           className="w-full max-w-xl"
           title={
             isLastAttemptMode
-              ? 'Todavía no tienes errores guardados de tu último intento'
+              ? 'Todavía no tenés errores guardados de tu último intento'
               : premiumOnly
                 ? 'Aún no hay un set premium cargado'
                 : 'Estamos preparando este parcial'
@@ -1355,8 +1355,8 @@ export default function SimuladorExamen({
             isLastAttemptMode
               ? 'Cuando falles preguntas en un intento, este acceso te armará un simulador con ese set exacto.'
               : premiumOnly
-                ? 'Vuelve en unas horas o prueba el simulador regular mientras se actualiza este premium.'
-                : 'Vuelve en unas horas o entra a otra materia mientras terminamos de prepararlo.'
+                ? 'Volvé en unas horas o probá el simulador regular mientras se actualiza este premium.'
+                : 'Volvé en unas horas o entrá a otra materia mientras terminamos de prepararlo.'
           }
           primaryActionLabel="Reintentar"
           onPrimaryAction={reiniciarSimulador}
@@ -1467,7 +1467,7 @@ export default function SimuladorExamen({
           await navigator.clipboard.writeText(shareUrl);
           toast({
             title: 'Link copiado',
-            description: 'Ya puedes compartir tu resultado con un compañero.',
+            description: 'Ya podés compartir tu resultado con un compañero.',
           });
         }
       } catch (error) {
@@ -1511,10 +1511,10 @@ export default function SimuladorExamen({
         : []),
       {
         label: 'Luego',
-        title: 'Vuelve a rendir desde cero',
+        title: 'Volvé a rendir desde cero',
         description:
           aprobado
-            ? 'Haz un nuevo intento cuando quieras medir si ya puedes sostener el resultado.'
+            ? 'Hacé un nuevo intento cuando quieras medir si ya podés sostener el resultado.'
             : 'Después del repaso, toma un nuevo modelo y compara si subiste la nota.',
         onClick: reiniciarSimulador,
         cta: 'Intentar de nuevo',
@@ -1541,12 +1541,12 @@ export default function SimuladorExamen({
                     <span className={cn('text-[3rem] font-bold leading-none tracking-[-0.07em]', porcentaje >= 60 ? 'text-[#4F46E5]' : 'text-rose-600')}>
                       {porcentaje}%
                     </span>
-                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                       aciertos
                     </span>
                   </div>
                   <p className="mt-6 max-w-[460px] text-sm leading-7 text-slate-600">
-                    Crea tu cuenta o inicia sesión para desbloquear el simulador completo, guardar tu progreso y ver correcciones inteligentes de tus errores.
+                    Creá tu cuenta o iniciá sesión para desbloquear el simulador completo, guardar tu progreso y ver correcciones inteligentes de tus errores.
                   </p>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                     <Link
@@ -1567,20 +1567,20 @@ export default function SimuladorExamen({
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aciertos</p>
                     <p className="mt-2 text-2xl font-bold text-slate-900">
                       {aciertosFinales}
                       <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota estimada</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Nota estimada</p>
                     <p className={cn('mt-2 text-2xl font-bold', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
                       {nota.toFixed(1)}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Qué desbloqueas al continuar</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Qué desbloqueás al continuar</p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       Resultado final, guardado del intento, recomendaciones de repaso y práctica enfocada en tus errores.
                     </p>
@@ -1625,7 +1625,7 @@ export default function SimuladorExamen({
                 <div className="max-w-[430px]">
                   <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm', needsMotivation ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF]')}>
                     {needsMotivation ? <Star className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}
-                    {needsMotivation ? 'Todavía puedes levantarlo' : 'Resultado del simulador'}
+                    {needsMotivation ? 'Todavía podés levantarlo' : 'Resultado del simulador'}
                   </div>
                   <h2 className="mt-6 text-[2.1rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[3rem]">
                     {frontTitle}
@@ -1637,7 +1637,7 @@ export default function SimuladorExamen({
                     <span className={cn('text-[3.1rem] font-bold leading-none tracking-[-0.07em]', porcentaje >= 85 ? 'text-[#4F46E5]' : porcentaje >= 60 ? 'text-[#2563EB]' : 'text-rose-600')}>
                       {porcentaje}%
                     </span>
-                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                       resultado
                     </span>
                   </div>
@@ -1694,14 +1694,14 @@ export default function SimuladorExamen({
                   </div>
                   <div className="mt-6 grid max-w-[360px] grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aciertos</p>
                       <p className="mt-2 text-2xl font-bold text-slate-900">
                         {aciertosFinales}
                         <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
                       </p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Nota</p>
                       <p className={cn('mt-2 text-2xl font-bold', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
                         {nota.toFixed(1)}
                       </p>
@@ -1742,13 +1742,13 @@ export default function SimuladorExamen({
                       <div className="max-w-2xl">
                         <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
                         <h3 className="mt-1 text-[2rem] font-bold tracking-[-0.04em] text-slate-900 sm:text-[2.35rem]">
-                          Tu revision completa
+                          Tu revisión completa
                         </h3>
                         <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-[15px]">
                           {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
                         </p>
                         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                        Revisa dónde fallaste, qué tema te conviene reforzar y cómo encarar el próximo intento.
+                        Revisá dónde fallaste, qué tema te conviene reforzar y cómo encarar el próximo intento.
                         </p>
                       </div>
                       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
@@ -1774,7 +1774,7 @@ export default function SimuladorExamen({
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {examSummaryCards.map((card) => (
                       <div key={card.label} className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                           {card.label}
                         </p>
                         <h3 className="mt-2 text-[17px] font-semibold text-slate-900">{card.title}</h3>
@@ -1801,7 +1801,7 @@ export default function SimuladorExamen({
                     <h3 className="mt-2 text-xl font-bold text-slate-900">{patternMessage}</h3>
                     <p className="mt-3 text-sm leading-6 text-slate-700">
                       {needsMotivation
-                        ? `Todavía no alcanzaste el 60%, pero ya tienes una ruta clara: ${recommendationMessage}`
+                        ? `Todavía no alcanzaste el 60%, pero ya tenés una ruta clara: ${recommendationMessage}`
                         : recommendationMessage}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">{errorFocus.description}</p>
@@ -1828,7 +1828,7 @@ export default function SimuladorExamen({
                       <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
                         <p className="text-sm font-semibold text-emerald-900">No hubo errores para revisar.</p>
                         <p className="mt-1 text-sm text-emerald-800">
-                          Excelente trabajo. Si quieres consolidarlo todavía más, intenta otro modelo o repasa el módulo sugerido.
+                          Excelente trabajo. Si querés consolidarlo todavía más, intentá otro modelo o repasá el módulo sugerido.
                         </p>
                       </div>
                     ) : (
@@ -2166,7 +2166,7 @@ export default function SimuladorExamen({
               </h2>
               {preguntaActual && preguntaActual.correctCount > 1 ? (
                 <p className="mt-2 text-xs font-semibold text-indigo-700">
-                  Selecciona {preguntaActual.correctCount} opciones correctas.
+                  Seleccioná {preguntaActual.correctCount} opciones correctas.
                 </p>
               ) : null}
             </div>
@@ -2391,7 +2391,7 @@ export default function SimuladorExamen({
           </div>
 
           <div className="mb-2 flex items-center justify-between gap-3 px-0.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
               Mapa rápido
             </p>
             <p className="text-[12px] font-medium text-slate-500">

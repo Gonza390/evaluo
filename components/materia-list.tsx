@@ -82,24 +82,24 @@ function getDescripcionMateria(nombre: string) {
   const normalized = normalizeMateriaName(nombre);
 
   const exactDescriptions: Record<string, string> = {
-    'introduccion al derecho': 'Bases del sistema juridico, sus fuentes y conceptos esenciales.',
+    'introduccion al derecho': 'Bases del sistema jurídico, sus fuentes y conceptos esenciales.',
     'derecho civil': 'Principios civiles clave sobre personas, bienes y relaciones privadas.',
-    'derecho penal': 'Delitos, responsabilidad penal y estructura basica del sistema punitivo.',
-    'derecho constitucional': 'Organizacion del Estado, derechos fundamentales y control constitucional.',
-    'derecho romano': 'Origenes y categorias clasicas que influyen en el derecho actual.',
+    'derecho penal': 'Delitos, responsabilidad penal y estructura básica del sistema punitivo.',
+    'derecho constitucional': 'Organización del Estado, derechos fundamentales y control constitucional.',
+    'derecho romano': 'Orígenes y categorías clásicas que influyen en el derecho actual.',
     'filosofia del derecho': 'Ideas, fundamentos y debates centrales sobre justicia y norma.',
-    'historia del derecho': 'Evolucion historica de las instituciones juridicas principales.',
-    'economia': 'Conceptos economicos base para analizar decisiones, mercados y contexto.',
-    'contabilidad': 'Registro, lectura e interpretacion de informacion contable esencial.',
+    'historia del derecho': 'Evolución histórica de las instituciones jurídicas principales.',
+    'economia': 'Conceptos económicos base para analizar decisiones, mercados y contexto.',
+    'contabilidad': 'Registro, lectura e interpretación de información contable esencial.',
     'administracion': 'Herramientas de gestión, organización y toma de decisiones.',
     'marketing': 'Estrategias de mercado, posicionamiento y comportamiento del consumidor.',
-    'matematica': 'Nociones cuantitativas para resolver problemas y fortalecer analisis.',
-    'estadistica': 'Analisis de datos, probabilidades e interpretacion de resultados.',
+    'matematica': 'Nociones cuantitativas para resolver problemas y fortalecer análisis.',
+    'estadistica': 'Análisis de datos, probabilidades e interpretación de resultados.',
     'metodologia de la investigacion': 'Técnicas para investigar, argumentar y estructurar trabajos académicos.',
-    'psicologia': 'Procesos de conducta, pensamiento y comprension del comportamiento humano.',
-    'sociologia': 'Analisis de instituciones, vinculos sociales y dinamicas colectivas.',
+    'psicologia': 'Procesos de conducta, pensamiento y comprensión del comportamiento humano.',
+    'sociologia': 'Análisis de instituciones, vínculos sociales y dinámicas colectivas.',
     'ingles': 'Comprensión y uso de inglés aplicado al entorno académico y profesional.',
-    'informatica': 'Herramientas digitales y nociones tecnicas utiles para la cursada.',
+    'informatica': 'Herramientas digitales y nociones técnicas útiles para la cursada.',
   };
 
   if (exactDescriptions[normalized]) {
@@ -114,27 +114,27 @@ function getDescripcionMateria(nombre: string) {
     ['derecho laboral', 'Relaciones de trabajo, derechos laborales y normativa vigente.'],
     ['derecho internacional', 'Normas, tratados y relaciones entre Estados y actores globales.'],
     ['derecho administrativo', 'Función del Estado, administración pública y actos administrativos.'],
-    ['derecho procesal', 'Etapas del proceso, reglas del litigio y tecnicas de actuacion.'],
+    ['derecho procesal', 'Etapas del proceso, reglas del litigio y técnicas de actuación.'],
     ['derecho tributario', 'Impuestos, obligaciones fiscales y marco tributario general.'],
-    ['derecho ambiental', 'Regulacion del ambiente, sostenibilidad y responsabilidad juridica.'],
+    ['derecho ambiental', 'Regulación del ambiente, sostenibilidad y responsabilidad jurídica.'],
     ['filosofia', 'Ideas y problemas centrales para pensar fundamentos y argumentos.'],
-    ['historia', 'Contexto historico y evolucion de procesos e instituciones relevantes.'],
-    ['econom', 'Conceptos economicos base para analizar decisiones, incentivos y contexto.'],
-    ['contab', 'Registro, lectura e interpretacion de informacion contable esencial.'],
-    ['admin', 'Herramientas de gestion, organizacion y toma de decisiones.'],
+    ['historia', 'Contexto histórico y evolución de procesos e instituciones relevantes.'],
+    ['econom', 'Conceptos económicos base para analizar decisiones, incentivos y contexto.'],
+    ['contab', 'Registro, lectura e interpretación de información contable esencial.'],
+    ['admin', 'Herramientas de gestión, organización y toma de decisiones.'],
     ['marketing', 'Estrategias de mercado, posicionamiento y comportamiento del consumidor.'],
-    ['matemat', 'Nociones cuantitativas para resolver problemas y fortalecer analisis.'],
-    ['estad', 'Analisis de datos, probabilidades e interpretacion de resultados.'],
+    ['matemat', 'Nociones cuantitativas para resolver problemas y fortalecer análisis.'],
+    ['estad', 'Análisis de datos, probabilidades e interpretación de resultados.'],
     ['investig', 'Métodos para investigar, argumentar y presentar trabajo académico sólido.'],
-    ['psicolog', 'Procesos de conducta, pensamiento y comprension del comportamiento humano.'],
-    ['sociolog', 'Analisis de instituciones, vinculos sociales y dinamicas colectivas.'],
+    ['psicolog', 'Procesos de conducta, pensamiento y comprensión del comportamiento humano.'],
+    ['sociolog', 'Análisis de instituciones, vínculos sociales y dinámicas colectivas.'],
     ['informat', 'Herramientas digitales y nociones técnicas útiles para la cursada.'],
     ['program', 'Lógica, estructuras y resolución de problemas con enfoque práctico.'],
     ['ingles', 'Comprensión y uso de inglés aplicado al entorno académico y profesional.'],
     ['comunic', 'Expresión, argumentación y estrategias de comunicación efectiva.'],
     ['metodolog', 'Métodos de estudio, investigación y construcción de conocimiento.'],
     ['practica', 'Aplicación concreta de contenidos con foco en resolución y criterio.'],
-    ['laboratorio', 'Trabajo aplicado, observacion y experimentacion sobre contenidos clave.'],
+    ['laboratorio', 'Trabajo aplicado, observación y experimentación sobre contenidos clave.'],
     ['introduccion', 'Panorama inicial de conceptos, lenguaje y ejes fundamentales de la materia.'],
   ];
 
@@ -225,7 +225,7 @@ export default function MateriaList({
   const toggleFavorite = async (materiaId: string) => {
     if (!user) {
       toast({
-        title: 'Inicia sesión para guardar favoritos',
+        title: 'Iniciá sesión para guardar favoritos',
         description: 'Te llevamos al login para guardar esta materia.',
         duration: 2500,
       });
@@ -277,7 +277,7 @@ export default function MateriaList({
 
     if (!user) {
       toast({
-        title: 'Inicia sesión para guardar favoritos',
+        title: 'Iniciá sesión para guardar favoritos',
         description: 'Te llevamos al login para guardar esta carrera.',
         duration: 2500,
       });
@@ -317,7 +317,7 @@ export default function MateriaList({
           : basePath;
 
     const shareTitle = carreraNombre || carreraData?.nombre || 'Carrera';
-    const shareText = `Mira esta carrera en Evaluo: ${shareTitle}`;
+    const shareText = `Mirá esta carrera en Evaluo: ${shareTitle}`;
 
     try {
       if (typeof navigator !== 'undefined' && navigator.share) {
@@ -330,7 +330,7 @@ export default function MateriaList({
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: 'Link copiado',
-          description: 'Ya puedes compartir esta carrera.',
+          description: 'Ya podés compartir esta carrera.',
           duration: 2200,
         });
       }
@@ -343,7 +343,7 @@ export default function MateriaList({
           await navigator.clipboard.writeText(shareUrl);
           toast({
             title: 'Link copiado',
-            description: 'Ya puedes compartir esta carrera.',
+            description: 'Ya podés compartir esta carrera.',
             duration: 2200,
           });
           return;
@@ -354,7 +354,7 @@ export default function MateriaList({
 
       toast({
         title: 'No pudimos compartir la carrera',
-        description: 'Prueba nuevamente en unos segundos.',
+        description: 'Probá nuevamente en unos segundos.',
         duration: 2500,
       });
     }
@@ -519,7 +519,7 @@ export default function MateriaList({
             <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="section-title text-[1.6rem] text-slate-900 sm:text-3xl">Plan de estudios</h2>
-                <p className="section-copy mt-1 text-sm text-slate-600">Explora todas las materias de la carrera</p>
+                <p className="section-copy mt-1 text-sm text-slate-600">Explorá todas las materias de la carrera</p>
               </div>
               <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -573,10 +573,10 @@ export default function MateriaList({
                           className={`shrink-0 rounded-xl border p-2 shadow-sm transition-all duration-300 ${
                             isFavorite
                                 ? 'border-amber-300 bg-gradient-to-br from-amber-100 via-white to-amber-50 text-amber-500 shadow-amber-100 hover:-translate-y-0.5 hover:shadow-md'
-                                : 'border-slate-200 bg-white text-slate-400 hover:-translate-y-0.5 hover:border-slate-300 hover:text-amber-500 hover:shadow-md'
+                                : 'border-slate-200 bg-white text-slate-500 hover:-translate-y-0.5 hover:border-slate-300 hover:text-amber-500 hover:shadow-md'
                           }`}
                           aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          title={user ? (isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos') : 'Inicia sesión para guardar favoritos'}
+                          title={user ? (isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos') : 'Iniciá sesión para guardar favoritos'}
                           disabled={isFavoriteLoading}
                         >
                           {isFavoriteLoading ? (
@@ -607,7 +607,7 @@ export default function MateriaList({
                 <div className="col-span-full py-20 text-center">
                   <Search className="mx-auto mb-4 h-16 w-16 text-slate-300" />
                   <h3 className="mb-2 text-xl font-semibold text-slate-800">No se encontraron materias</h3>
-                  <p className="text-slate-500">Prueba con otra búsqueda</p>
+                  <p className="text-slate-500">Probá con otra búsqueda</p>
                 </div>
               )}
             </div>
@@ -627,24 +627,24 @@ export default function MateriaList({
               <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {careerDuration ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    <span className="block text-xs uppercase tracking-wide text-slate-400">Duración</span>
+                    <span className="block text-xs uppercase tracking-wide text-slate-500">Duración</span>
                     <span className="mt-1 block font-semibold">{careerDuration}</span>
                   </div>
                 ) : null}
                 {careerTitle ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    <span className="block text-xs uppercase tracking-wide text-slate-400">Título otorgado</span>
+                    <span className="block text-xs uppercase tracking-wide text-slate-500">Título otorgado</span>
                     <span className="mt-1 block font-semibold">{careerTitle}</span>
                   </div>
                 ) : null}
                 {careerLevel ? (
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                    <span className="block text-xs uppercase tracking-wide text-slate-400">Tipo de programa</span>
+                    <span className="block text-xs uppercase tracking-wide text-slate-500">Tipo de programa</span>
                     <span className="mt-1 block font-semibold">{careerLevel}</span>
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                  <span className="block text-xs uppercase tracking-wide text-slate-400">Materias visibles</span>
+                  <span className="block text-xs uppercase tracking-wide text-slate-500">Materias visibles</span>
                   <span className="mt-1 block font-semibold">{materias.length}</span>
                 </div>
               </div>

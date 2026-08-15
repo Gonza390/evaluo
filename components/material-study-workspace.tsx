@@ -423,11 +423,11 @@ export function MaterialStudyWorkspace({
         back: 'Respuesta corta basada en un chunk del PDF.',
       },
       {
-        front: 'Definicion importante',
-        back: 'Explicacion breve mas referencia a la seccion original.',
+        front: 'Definición importante',
+        back: 'Explicación breve más referencia a la sección original.',
       },
       {
-        front: 'Repaso rapido',
+        front: 'Repaso rápido',
         back: 'Formato ideal para memoria activa y estudio espaciado.',
       },
     ],
@@ -438,7 +438,7 @@ export function MaterialStudyWorkspace({
     () => [
       {
         title: 'Multiple choice',
-        description: 'Podemos generar preguntas con opciones y explicacion de la correcta.',
+        description: 'Podemos generar preguntas con opciones y explicación de la correcta.',
       },
       {
         title: 'Respuesta abierta',
@@ -614,7 +614,7 @@ export function MaterialStudyWorkspace({
 
             <div className="space-y-5 px-5 py-5 sm:px-6">
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                   <span>Progreso</span>
                   <span>{Math.min(100, regenerationProgress)}%</span>
                 </div>
@@ -659,7 +659,7 @@ export function MaterialStudyWorkspace({
                   {regenerationStages[Math.min(regenerationStageIndex, regenerationStages.length - 1)]?.[1]}
                 </p>
                 <p className="mt-1.5 text-[12.5px] leading-5 text-slate-500">
-                  Puedes dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario del PDF.
+                  Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario del PDF.
                 </p>
               </div>
             </div>
@@ -705,7 +705,7 @@ export function MaterialStudyWorkspace({
                 ))
               ) : (
                 <p className="text-[14px] leading-6 text-slate-500">
-                  Todavia no pudimos organizar el contenido por temas claros dentro del texto extraido del PDF.
+                  Todavía no pudimos organizar el contenido por temas claros dentro del texto extraído del PDF.
                 </p>
               )}
             </section>
@@ -715,13 +715,13 @@ export function MaterialStudyWorkspace({
         <TabsContent value="glosario" className="animate-tab-panel">
           <StudyDocumentShell
             title="Glosario del documento"
-            description="Terminos y conceptos detectados desde el contenido del PDF para estudiar con mas precision."
+            description="Términos y conceptos detectados desde el contenido del PDF para estudiar con más precisión."
           >
             {studyGlossary.length > 0 ? (
               <div className="overflow-hidden rounded-[18px] border border-slate-200">
                 <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-6 border-b border-slate-200 bg-slate-50 px-4 py-3 md:grid">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Termino</p>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">Definicion</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Término</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Definición</p>
                 </div>
                 <div className="divide-y divide-slate-200 bg-white">
                 {studyGlossary.map((item) => (
@@ -730,26 +730,26 @@ export function MaterialStudyWorkspace({
                     className="grid gap-2.5 px-3.5 py-3.5 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-6 md:px-4 md:py-4"
                   >
                     <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 md:hidden">
-                        Termino
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:hidden">
+                        Término
                       </p>
                       <h3 className="text-[0.92rem] font-semibold tracking-[-0.03em] text-slate-950 md:text-[0.98rem]">
                         {item.term}
                       </h3>
                       {item.englishTerm ? (
-                        <p className="text-[12px] font-medium italic text-slate-400">
+                        <p className="text-[12px] font-medium italic text-slate-500">
                           {item.englishTerm}
                         </p>
                       ) : null}
                     </div>
 
                     <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 md:hidden">
-                        Definicion
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:hidden">
+                        Definición
                       </p>
                       <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">{item.definition}</p>
                       <p className="text-[11.5px] leading-5 text-slate-500 md:text-[12px]">
-                        <span className="font-semibold text-slate-400">Contexto:</span> {item.context}
+                        <span className="font-semibold text-slate-500">Contexto:</span> {item.context}
                       </p>
                     </div>
                   </article>
@@ -758,7 +758,7 @@ export function MaterialStudyWorkspace({
               </div>
             ) : (
               <p className="text-[14px] leading-6 text-slate-500">
-                Todavia no pudimos detectar un glosario claro a partir de este PDF.
+                Todavía no pudimos detectar un glosario claro a partir de este PDF.
               </p>
             )}
           </StudyDocumentShell>
@@ -788,7 +788,7 @@ export function MaterialStudyWorkspace({
 
         <TabsContent value="ejercicios" className="animate-tab-panel">
           <StudyDocumentShell
-            title="Ejercicios y practica"
+            title="Ejercicios y práctica"
             description="Este panel queda listo para multiple choice, preguntas abiertas y mini parciales generados desde el mismo PDF."
           >
             <div className="space-y-4">
@@ -815,7 +815,7 @@ export function MaterialStudyWorkspace({
           >
             <div className="grid gap-4 xl:grid-cols-[1fr_220px_1fr] xl:items-center">
               <div className="space-y-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Rama 1</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Rama 1</p>
                 {['Conceptos base', 'Definiciones', 'Contexto de lectura'].map((item, index) => (
                   <div key={item} className="space-y-3">
                     <p className="text-[13px] font-medium text-slate-700">{item}</p>
@@ -831,7 +831,7 @@ export function MaterialStudyWorkspace({
               </div>
 
               <div className="space-y-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Rama 2</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Rama 2</p>
                 {['Preguntas posibles', 'Glosario derivado', 'Tarjetas relacionadas'].map((item, index) => (
                   <div key={item} className="space-y-3">
                     <p className="text-[13px] font-medium text-slate-700">{item}</p>
@@ -866,15 +866,15 @@ export function MaterialStudyWorkspace({
 
             <div className="grid w-full grid-cols-1 gap-2 text-[12px] sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-[13px]">
               <p className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-slate-500 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0">
-                <span className="block font-semibold uppercase tracking-[0.14em] text-slate-400 sm:inline">Carrera</span>
+                <span className="block font-semibold uppercase tracking-[0.14em] text-slate-500 sm:inline">Carrera</span>
                 <span className="mt-0.5 block font-semibold text-slate-900 sm:ml-2 sm:mt-0 sm:inline">{carreraName}</span>
               </p>
               <p className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-slate-500 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0">
-                <span className="block font-semibold uppercase tracking-[0.14em] text-slate-400 sm:inline">Universidad</span>
+                <span className="block font-semibold uppercase tracking-[0.14em] text-slate-500 sm:inline">Universidad</span>
                 <span className="mt-0.5 block font-semibold text-slate-900 sm:ml-2 sm:mt-0 sm:inline">{universidadName}</span>
               </p>
               <p className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-slate-500 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0">
-                <span className="block font-semibold uppercase tracking-[0.14em] text-slate-400 sm:inline">Materia</span>
+                <span className="block font-semibold uppercase tracking-[0.14em] text-slate-500 sm:inline">Materia</span>
                 <span className="mt-0.5 block font-semibold text-slate-900 sm:ml-2 sm:mt-0 sm:inline">{materiaName}</span>
               </p>
             </div>
@@ -957,9 +957,9 @@ export function MaterialStudyWorkspace({
             <div className="rounded-[20px] border border-dashed border-slate-300 bg-white/80 px-4 py-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-400">PDF oculto</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">PDF oculto</p>
                   <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                    Muestra el documento cuando quieras contrastar el resumen con el archivo original.
+                    Mostrá el documento cuando quieras contrastar el resumen con el archivo original.
                   </p>
                 </div>
                 <button

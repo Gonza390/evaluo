@@ -13,7 +13,7 @@ export function ExplorarStaticIntro() {
         </h1>
         <p className="mt-2 max-w-2xl text-[13px] leading-6 text-slate-500 sm:mt-3 sm:text-base sm:leading-7">
           Reunimos todas las universidades y todas las carreras en una sola vista para que
-          encuentres tu camino sin pasos innecesarios. Busca, entra y llega antes a tus
+          encuentres tu camino sin pasos innecesarios. Buscá, entrá y llegá antes a tus
           materias, resúmenes y simuladores.
         </p>
       </div>
@@ -21,10 +21,10 @@ export function ExplorarStaticIntro() {
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
         <div className="rounded-[var(--radius-card)] border border-indigo-100 bg-indigo-50/70 px-4 py-3.5">
           <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">
-            Entra más rápido
+            Entrá más rápido
           </p>
           <p className="mt-1.5 text-[13px] leading-5 text-slate-700 sm:text-sm sm:leading-6">
-            Si ya sabes tu carrera, entra directo a sus materias y evita pasar por pantallas
+            Si ya sabés tu carrera, entrá directo a sus materias y evitá pasar por pantallas
             intermedias.
           </p>
         </div>

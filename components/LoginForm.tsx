@@ -167,7 +167,7 @@ export default function LoginForm() {
           location,
           provider: 'email',
         });
-        setError('Registro exitoso. Revisa tu correo para confirmar tu cuenta.');
+        setError('Registro exitoso. Revisá tu correo para confirmar tu cuenta.');
         return;
       }
 
@@ -225,18 +225,18 @@ export default function LoginForm() {
             </div>
           ) : null}
           <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
-            {isSignUp ? 'Crea tu cuenta' : 'Bienvenido'}
+            {isSignUp ? 'Creá tu cuenta' : 'Bienvenido'}
           </h1>
           <p className="mt-3 text-sm leading-6 text-slate-500">
             {isSignUp
               ? intent === 'premium'
-                ? 'Crea tu cuenta para reservar tu acceso premium, guardar tu prioridad y entrar antes a la beta.'
-                : 'Regístrate con Google para empezar a estudiar con Evaluo y guardar tu progreso.'
-              : 'Entra a tus materias, retoma tus PDFs, sigue el simulador y mantén tu avance siempre a mano desde un mismo lugar.'}
+                ? 'Creá tu cuenta para reservar tu acceso premium, guardar tu prioridad y entrar antes a la beta.'
+                : 'Registrate con Google para empezar a estudiar con Evaluo y guardar tu progreso.'
+              : 'Entrá a tus materias, retomá tus PDFs, seguí el simulador y mantené tu avance siempre a mano desde un mismo lugar.'}
           </p>
           {nextPath !== '/dashboard' ? (
             <p className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-              Inicia sesión para continuar a {loginContextLabel}.
+              Iniciá sesión para continuar a {loginContextLabel}.
             </p>
           ) : null}
         </div>
@@ -270,7 +270,7 @@ export default function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-slate-400 transition hover:text-slate-600"
+                className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-600"
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -328,7 +328,7 @@ export default function LoginForm() {
         <div className="mt-4">
           <div className="flex items-center gap-4 py-1">
             <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               o continúa con
             </span>
             <div className="h-px flex-1 bg-slate-200" />
@@ -371,7 +371,7 @@ export default function LoginForm() {
         </div>
 
         <div className="mt-8 text-center text-sm text-slate-500 lg:text-left">
-          {isSignUp ? '¿Ya tienes cuenta?' : '¿Todavía no tienes cuenta?'}{' '}
+          {isSignUp ? '¿Ya tenés cuenta?' : '¿Todavía no tenés cuenta?'}{' '}
           <button
             type="button"
             onClick={() => {

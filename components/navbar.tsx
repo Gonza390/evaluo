@@ -143,7 +143,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
 
   return (
     <aside
-      className={`hidden border-r border-slate-100 bg-white transition-[width] duration-200 md:fixed md:bottom-0 md:left-0 md:top-[83px] md:z-20 md:block ${
+      className={`hidden border-r border-slate-100 bg-white transition-[width] duration-200 md:fixed md:bottom-0 md:left-0 md:top-[81px] md:z-20 md:block ${
         collapsed ? 'w-[76px]' : 'w-[248px]'
       }`}
       onClick={collapsed ? onToggleCollapsed : undefined}
@@ -202,7 +202,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 </span>
                 {!collapsed ? (
                   <div className="min-w-0">
-                    <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                       Tu carrera
                     </p>
                     <p className="truncate text-sm font-medium text-slate-800">
@@ -278,7 +278,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 {!collapsed ? (
                   <div className="min-w-0">
                     <p className="text-sm font-medium">Iniciar sesión</p>
-                    <p className="text-[10px] text-slate-500">Guarda tu progreso y tus materias</p>
+                    <p className="text-[10px] text-slate-500">Guardá tu progreso y tus materias</p>
                   </div>
                 ) : null}
               </Link>

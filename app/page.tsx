@@ -44,7 +44,7 @@ const trustSignals = [
   'Contenido ordenado por universidad, carrera y materia.',
   'Resumenes, pregunteros y simuladores dentro del mismo flujo.',
   'Experiencia pensada para estudiar mejor desde celular y desktop.',
-  'Acceso rapido a lo importante sin perseguir PDFs ni links rotos.',
+  'Acceso rápido a lo importante sin perseguir PDFs ni links rotos.',
 ];
 
 const argentinianUnis = [

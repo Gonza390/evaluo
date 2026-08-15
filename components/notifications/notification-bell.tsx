@@ -85,7 +85,7 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
         aria-label="Notificaciones"
       >
         <Bell className="h-4 w-4" />
@@ -97,13 +97,13 @@ export function NotificationBell() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
+        <div className="absolute right-0 top-full z-50 mt-2 w-[320px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.16)] max-sm:fixed max-sm:inset-x-4 max-sm:top-[4.5rem] max-sm:mt-0 max-sm:w-auto">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <p className="text-sm font-bold text-slate-900">Recordatorios</p>
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-600"
               aria-label="Cerrar"
             >
               <X className="h-3.5 w-3.5" />
@@ -112,7 +112,7 @@ export function NotificationBell() {
 
           <div className="max-h-[360px] overflow-y-auto">
             {count === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-slate-400">
+              <div className="px-4 py-10 text-center text-sm text-slate-500">
                 No tenés recordatorios pendientes.
               </div>
             ) : (
@@ -135,7 +135,7 @@ export function NotificationBell() {
                   <button
                     type="button"
                     onClick={() => void handleDismiss(reminder)}
-                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                    className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-600"
                     aria-label="Descartar recordatorio"
                   >
                     <X className="h-3.5 w-3.5" />

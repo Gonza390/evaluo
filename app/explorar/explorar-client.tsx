@@ -138,10 +138,10 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                 Universidades
               </p>
               <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
-                Empieza desde tu facultad si todavía no tienes definida la carrera
+                Empezá desde tu facultad si todavía no tenés definida la carrera
               </h2>
               <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
-                Entra por universidad para ver carreras activas y el contenido disponible en cada una.
+                Entrá por universidad para ver carreras activas y el contenido disponible en cada una.
               </p>
             </div>
             <p className="shrink-0 text-sm font-semibold text-slate-500">
@@ -154,7 +154,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
               <CardContent className="py-14 text-center">
                 <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
                 <h3 className="text-xl font-semibold text-slate-900">No encontramos universidades</h3>
-                <p className="mt-2 text-slate-500">Prueba con otro término de búsqueda.</p>
+                <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
               </CardContent>
             </Card>
           ) : (
@@ -182,7 +182,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                         <p className="mt-1.5 text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6">
                           {universidad.materiasCount > 0
                             ? `${universidad.materiasCount} materias visibles para explorar desde aquí.`
-                            : 'Explora las carreras disponibles y descubre el contenido activo.'}
+                            : 'Explorá las carreras disponibles y descubrí el contenido activo.'}
                         </p>
                       </div>
 
@@ -207,10 +207,10 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                 Carreras
               </p>
               <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
-                Entra directo a tu ruta académica
+                Entrá directo a tu ruta académica
               </h2>
               <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
-                Busca por nombre de carrera o por universidad y ve directo a las materias.
+                Buscá por nombre de carrera o por universidad y entrá directo a las materias.
               </p>
             </div>
             <p className="shrink-0 text-sm font-semibold text-slate-500">
@@ -223,7 +223,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
               <CardContent className="py-14 text-center">
                 <GraduationCap className="mx-auto mb-4 h-12 w-12 text-slate-300" />
                 <h3 className="text-xl font-semibold text-slate-900">No encontramos carreras</h3>
-                <p className="mt-2 text-slate-500">Prueba con otro término de búsqueda.</p>
+                <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
               </CardContent>
             </Card>
           ) : (
@@ -256,7 +256,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
 
                       <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
                         <div className="text-[11px] leading-5 text-slate-500 sm:text-xs">
-                          Entra a las materias de esta carrera sin pasos extra.
+                          Entrá a las materias de esta carrera sin pasos extra.
                         </div>
                         <div className="inline-flex h-8 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
                           Ver materias

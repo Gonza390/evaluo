@@ -591,7 +591,7 @@ export default function PdfViewer({
                           ) : (
                             <div
                               className={cn(
-                                'flex h-[170px] items-center justify-center bg-slate-50 text-[11px] font-medium text-slate-400',
+                                'flex h-[170px] items-center justify-center bg-slate-50 text-[11px] font-medium text-slate-500',
                                 isStudyTheme && 'bg-[#18191C] text-slate-500'
                               )}
                             >
@@ -602,7 +602,7 @@ export default function PdfViewer({
                         <p
                           className={cn(
                             'mt-2 text-center text-[11px] font-semibold text-slate-600',
-                            isStudyTheme && 'text-slate-400'
+                            isStudyTheme && 'text-slate-500'
                           )}
                         >
                           Pagina {pageNumber}
@@ -629,7 +629,7 @@ export default function PdfViewer({
               <div
                 className={cn(
                   'flex h-full w-full items-center justify-center text-sm text-slate-500',
-                  isStudyTheme && 'text-slate-400'
+                  isStudyTheme && 'text-slate-500'
                 )}
               >
                 {viewerRuntimeError}
@@ -638,7 +638,7 @@ export default function PdfViewer({
               <div
                 className={cn(
                   'flex h-full w-full items-center justify-center text-sm text-slate-500',
-                  isStudyTheme && 'text-slate-400'
+                  isStudyTheme && 'text-slate-500'
                 )}
               >
                 Cargando documento...
@@ -647,7 +647,7 @@ export default function PdfViewer({
               <div
                 className={cn(
                   'flex h-full w-full items-center justify-center text-sm text-slate-500',
-                  isStudyTheme && 'text-slate-400'
+                  isStudyTheme && 'text-slate-500'
                 )}
               >
                 {documentError || 'No pudimos preparar el PDF.'}
@@ -656,7 +656,7 @@ export default function PdfViewer({
               <div
                 className={cn(
                   'flex h-full w-full items-center justify-center text-sm text-slate-500',
-                  isStudyTheme && 'text-slate-400'
+                  isStudyTheme && 'text-slate-500'
                 )}
               >
                 Inicializando lector...
@@ -705,7 +705,7 @@ export default function PdfViewer({
                         ) : (
                           <div
                             className={cn(
-                              'flex h-full min-h-[inherit] items-center justify-center rounded-[0.95rem] bg-[linear-gradient(180deg,#fafcff_0%,#f3f6fb_100%)] text-sm font-medium text-slate-400',
+                              'flex h-full min-h-[inherit] items-center justify-center rounded-[0.95rem] bg-[linear-gradient(180deg,#fafcff_0%,#f3f6fb_100%)] text-sm font-medium text-slate-500',
                               isStudyTheme && 'bg-[linear-gradient(180deg,#1B1C21_0%,#131418_100%)] text-slate-500'
                             )}
                           >
@@ -730,7 +730,7 @@ export default function PdfViewer({
                           Accede al material completo
                         </p>
                         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
-                          Ya viste una parte del documento. Inicia sesion para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
+                          Ya viste una parte del documento. Iniciá sesión para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
                         </p>
                         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
                           <Link
@@ -761,7 +761,7 @@ export default function PdfViewer({
                             }
                             className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                           >
-                            Iniciar sesion
+                            Iniciar sesión
                           </Link>
                         </div>
                       </div>

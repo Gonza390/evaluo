@@ -92,7 +92,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
                   ? material.processing_error ?? 'No pudimos generar el espacio de estudio del PDF.'
                   : material.processing_message ?? 'Seguimos generando el resumen y el glosario del documento.'}
               </p>
-              <p className="mt-3 text-xs leading-5 text-slate-400">
+              <p className="mt-3 text-xs leading-5 text-slate-500">
                 Progreso actual: {material.processing_progress ?? 0}%.
               </p>
             </div>

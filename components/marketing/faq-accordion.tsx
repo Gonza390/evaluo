@@ -9,17 +9,17 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: '¿Qué universidades están disponibles en Evaluo?',
     answer:
-      'Actualmente contamos con soporte completo y guías de cátedra de las principales universidades públicas y privadas de Argentina: UBA, UTN, UNC, UNLP, UADE, UCA, Universidad de San Andrés y Universidad Torcuato Di Tella. Si tu universidad no figura en la lista destacada, puedes registrarte, subir tus propios apuntes o programas de estudio, y la plataforma organizará el contenido y la simulación a tu medida.',
+      'Actualmente contamos con soporte completo y guías de cátedra de las principales universidades públicas y privadas de Argentina: UBA, UTN, UNC, UNLP, UADE, UCA, Universidad de San Andrés y Universidad Torcuato Di Tella. Si tu universidad no figura en la lista destacada, podés registrarte, subir tus propios apuntes o programas de estudio, y la plataforma organizará el contenido y la simulación a tu medida.',
   },
   {
     question: '¿El contenido de la plataforma es realmente gratuito?',
     answer:
-      'Sí. Evaluo ofrece un plan gratuito para explorar materias, consultar resúmenes esenciales y realizar prácticas iniciales. Si quieres una preparación más profunda, el plan premium suma simulaciones ilimitadas, más explicación paso a paso, más analítica y más seguimiento.',
+      'Sí. Evaluo ofrece un plan gratuito para explorar materias, consultar resúmenes esenciales y realizar prácticas iniciales. Si querés una preparación más profunda, el plan premium suma simulaciones ilimitadas, más explicación paso a paso, más analítica y más seguimiento.',
   },
   {
     question: '¿Es obligatorio registrarse para ver los resúmenes y preguntas?',
     answer:
-      'No para la navegación inicial. Puedes buscar tu universidad y recorrer carreras libremente. Para guardar progreso, usar simuladores completos, registrar respuestas y mantener tus materias favoritas, sí necesitas una cuenta.',
+      'No para la navegación inicial. Podés buscar tu universidad y recorrer carreras libremente. Para guardar progreso, usar simuladores completos, registrar respuestas y mantener tus materias favoritas, sí necesitas una cuenta.',
   },
   {
     question: '¿Cómo funciona el plan premium y qué métodos de pago acepta?',
@@ -29,7 +29,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     question: '¿Los simuladores de examen son parecidos a los parciales reales?',
     answer:
-      'Sí, esa es una de las propuestas centrales de Evaluo. Los simuladores se apoyan en parciales anteriores, modelos de cátedra, apuntes y material compartido por estudiantes, para reflejar mejor la estructura y el nivel de dificultad que encuentras en la práctica.',
+      'Sí, esa es una de las propuestas centrales de Evaluo. Los simuladores se apoyan en parciales anteriores, modelos de cátedra, apuntes y material compartido por estudiantes, para reflejar mejor la estructura y el nivel de dificultad que encontrás en la práctica.',
   },
 ];
 
@@ -48,7 +48,7 @@ export function FaqAccordion() {
                 {item.question}
               </span>
             </div>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-400 transition-all group-open:rotate-180 group-open:bg-indigo-50 group-open:text-indigo-600">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition-all group-open:rotate-180 group-open:bg-indigo-50 group-open:text-indigo-600">
               <ChevronDown className="h-4 w-4" />
             </span>
           </summary>

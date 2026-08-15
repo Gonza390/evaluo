@@ -315,7 +315,7 @@ export function ProfileCompletionModal({
 
               <div className="min-w-0">
                 <DialogTitle className="text-[1.95rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.25rem]">
-                  Contanos dónde estudias
+                  Contanos dónde estudiás
                 </DialogTitle>
                 <DialogDescription className="mt-2 max-w-[560px] text-sm leading-6 text-slate-600 sm:text-[15px]">
                   Necesitamos estos datos para mostrarte solo el contenido correcto desde el primer ingreso: materias, resúmenes y simuladores acordes a tu universidad y tu carrera.
@@ -336,7 +336,7 @@ export function ProfileCompletionModal({
                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
                   id="universidad-search"
-                  placeholder="Busca tu universidad"
+                  placeholder="Buscá tu universidad"
                   className="h-11 rounded-2xl border-slate-200 bg-white pl-10 focus:border-[#2563EB] focus:ring-[#2563EB]"
                   value={universidadSearch}
                   onChange={(e) => setUniversidadSearch(e.target.value)}
@@ -352,7 +352,7 @@ export function ProfileCompletionModal({
                   <div className="px-3 py-3 text-sm text-slate-500">
                     {hasLoadedUniversidades
                       ? 'No encontramos esa universidad.'
-                      : 'Escribe al menos 2 letras para buscar tu universidad.'}
+                      : 'Escribí al menos 2 letras para buscar tu universidad.'}
                   </div>
                 ) : (
                   universidades.map((universidad) => (
@@ -385,7 +385,7 @@ export function ProfileCompletionModal({
 
               {allowSkip ? (
                 <p className="text-xs text-slate-500">
-                  Puedes omitir este paso por ahora y completarlo luego.
+                  Podés omitir este paso por ahora y completarlo luego.
                 </p>
               ) : null}
             </div>
@@ -401,7 +401,7 @@ export function ProfileCompletionModal({
                   id="carrera"
                   placeholder={
                     universidadSeleccionada
-                      ? `Busca tu carrera en ${universidadSeleccionada.nombre}`
+                      ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
                       : 'Primero selecciona tu universidad'
                   }
                   className="h-11 rounded-2xl border-slate-200 bg-white pl-10 focus:border-[#2563EB] focus:ring-[#2563EB]"
@@ -418,7 +418,7 @@ export function ProfileCompletionModal({
                   </div>
                 ) : !universidadId ? (
                   <div className="px-3 py-3 text-sm text-slate-500">
-                    Elige tu universidad para ver solo las carreras correctas.
+                    Elegí tu universidad para ver solo las carreras correctas.
                   </div>
                 ) : carreras.length === 0 ? (
                   <div className="px-3 py-3 text-sm text-slate-500">

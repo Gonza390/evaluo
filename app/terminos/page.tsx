@@ -98,7 +98,7 @@ export default function TermsPage() {
               <aside className="lg:pt-1">
                 <div className="sticky top-8 space-y-8 border-t border-slate-200 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
                       Lectura rápida
                     </p>
                     <div className="mt-4 space-y-5 text-[15px] leading-8 text-slate-600">
@@ -107,14 +107,14 @@ export default function TermsPage() {
                         respeto por el sistema y colaboración razonable con la dinámica del producto.
                       </p>
                       <p>
-                        Si más adelante quieres una versión más formal y exhaustiva, conviene revisar este
+                        Si más adelante querés una versión más formal y exhaustiva, conviene revisar este
                         texto junto con política de privacidad, copyright, medios de pago y soporte.
                       </p>
                     </div>
                   </div>
 
                   <div className="border-t border-slate-200 pt-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
                       Resumen
                     </p>
                     <div className="mt-4 space-y-3 text-sm text-slate-600">

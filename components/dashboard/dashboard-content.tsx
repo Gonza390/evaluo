@@ -6,7 +6,6 @@ import Image from 'next/image';
 import {
   ArrowUpRight,
   BookOpen,
-  Check,
   FileText,
   GraduationCap,
   Heart,
@@ -124,7 +123,7 @@ function writeLocalState(state: DashboardState) {
 
 function getResourceTypeLabel(type: DashboardRecentResource['type']) {
   if (type === 'TP') {
-    return 'Trabajo practico';
+    return 'Trabajo práctico';
   }
 
   return type;
@@ -569,7 +568,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     if (dashboardState.activeSubjects.length >= 6) {
       toast({
         title: 'Limite alcanzado',
-        description: 'Solo puedes tener hasta 6 materias activas.',
+        description: 'Solo podés tener hasta 6 materias activas.',
         variant: 'destructive',
       });
       return;
@@ -635,7 +634,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
       return {
         title: 'Retoma tu simulador',
-        description: 'Tienes un intento en curso. Vuelve exactamente donde lo dejaste.',
+        description: 'Tenés un intento en curso. Volvé exactamente donde lo dejaste.',
         cta: 'Continuar simulador',
         onClick: () => router.push(href),
       };
@@ -644,7 +643,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     if (dashboardState.lastSubject) {
       return {
         title: 'Sigue con tu última materia',
-        description: `Vuelve a ${dashboardState.lastSubject.name} y continúa leyendo o practicando.`,
+        description: `Volvé a ${dashboardState.lastSubject.name} y continúa leyendo o practicando.`,
         cta: 'Abrir materia',
         onClick: () => goToMateria(dashboardState.lastSubject as DashboardMateriaState),
       };
@@ -652,7 +651,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
     if (recommendedMaterias[0]) {
       return {
-        title: 'Empieza por una materia recomendada',
+        title: 'Empezá por una materia recomendada',
         description: `Te sugerimos arrancar con ${recommendedMaterias[0].nombre} para activar tu recorrido.`,
         cta: 'Añadir recomendada',
         onClick: () => addMateria(recommendedMaterias[0]),
@@ -660,8 +659,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     }
 
     return {
-      title: 'Explora tu plan de estudio',
-      description: 'Busca una materia y arma tu espacio para volver rápido a lo importante.',
+      title: 'Explorá tu plan de estudio',
+      description: 'Buscá una materia y armá tu espacio para volver rápido a lo importante.',
       cta: 'Ir a explorar',
       onClick: () => router.push('/explorar'),
     };
@@ -712,6 +711,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
   const onboardingProgress = onboardingMilestones.filter((milestone) => milestone.done).length;
   const showOnboardingChecklist =
     Boolean(user) && !dashboardLoading && onboardingProgress < 3;
+  const currentMilestone =
+    onboardingMilestones.find((milestone) => !milestone.done) ?? onboardingMilestones[0];
 
   const partialProgressRingStyle = {
     background: `conic-gradient(#2563EB ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg, #E6EAF2 ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg)`,
@@ -790,7 +791,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
             {isSaving ? (
               <div className="flex w-full items-start justify-end">
-                <span className="pl-1 text-xs text-slate-400">Sincronizando cambios...</span>
+                <span className="pl-1 text-xs text-slate-500">Sincronizando cambios...</span>
               </div>
             ) : null}
           </div>
@@ -838,7 +839,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                     {'Segu\u00ED as\u00ED, vas por muy buen camino \uD83D\uDCAA'}
                   </h2>
                   <p className="mt-3 max-w-full text-[0.9rem] font-medium leading-6 text-white/82 sm:max-w-[230px]">
-                    {'Cada minuto que estudias, te acerca a tu pr\u00F3xima meta.'}
+                    {'Cada minuto que estudi\u00E1s, te acerca a tu pr\u00F3xima meta.'}
                   </p>
                   <Button
                     onClick={heroPrimaryAction}
@@ -923,105 +924,43 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
           </div>
 
           {showOnboardingChecklist ? (
-            <Card className="animate-study-reveal mb-5 rounded-[var(--radius-card)] border-slate-200 bg-white/90 backdrop-blur">
-              <CardHeader className="pb-3">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <CardTitle className="text-xl font-semibold text-slate-950">
-                      Completá tu primer recorrido
-                    </CardTitle>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Te acompañamos con 3 pasos para que aproveches Evaluo desde el día uno.
-                    </p>
-                  </div>
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="flex w-fit items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2"
-                  >
-                    <span className="text-sm font-bold text-slate-900">{onboardingProgress}/3</span>
-                    <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200">
+            <div className="animate-study-reveal mb-5 flex justify-end">
+              <Card className="w-full max-w-[400px] rounded-2xl border-slate-200 bg-white/90 p-4 backdrop-blur">
+                <div className="flex items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="truncate text-sm font-bold text-slate-950">
+                        Completá tu primer recorrido
+                      </h2>
+                      <span
+                        role="status"
+                        aria-live="polite"
+                        className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700"
+                      >
+                        {onboardingProgress}/3
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
                       <div
                         className="h-full rounded-full bg-[linear-gradient(90deg,#2563EB,#6366F1)] transition-all duration-500"
-                        style={{ width: `${Math.max((onboardingProgress / 3) * 100, 8)}%` }}
+                        style={{ width: `${(onboardingProgress / 3) * 100}%` }}
                       />
                     </div>
                   </div>
+                  <Button
+                    size="sm"
+                    onClick={currentMilestone.action}
+                    className="shrink-0 px-3.5 text-xs font-semibold"
+                  >
+                    {currentMilestone.actionLabel}
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-3">
-                <ol className="grid gap-3 md:grid-cols-3">
-                  {onboardingMilestones.map((milestone, index) => {
-                    const isCurrent = !milestone.done && index === onboardingProgress;
-                    const isActionable = !milestone.done && !milestone.locked;
-                    return (
-                      <li key={milestone.id} className="h-full">
-                        <div
-                          role={isActionable ? 'button' : undefined}
-                          tabIndex={isActionable ? 0 : undefined}
-                          onClick={isActionable ? milestone.action : undefined}
-                          onKeyDown={
-                            isActionable
-                              ? (event) => {
-                                  if (event.key === 'Enter' || event.key === ' ') {
-                                    event.preventDefault();
-                                    milestone.action();
-                                  }
-                                }
-                              : undefined
-                          }
-                          aria-current={isCurrent ? 'step' : undefined}
-                          className={`flex h-full w-full flex-col rounded-2xl border p-4 text-left ${
-                            milestone.done
-                              ? 'border-emerald-200 bg-emerald-50/70'
-                              : isActionable
-                                ? 'cursor-pointer border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md'
-                                : 'border-slate-200 bg-slate-50/70 opacity-70'
-                          }`}
-                        >
-                          <div className="flex w-full items-center justify-between">
-                            <span
-                              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
-                                milestone.done ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'
-                              }`}
-                            >
-                              {milestone.done ? <Check className="h-5 w-5" aria-hidden="true" /> : index + 1}
-                            </span>
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
-                              Paso {index + 1}
-                            </span>
-                          </div>
-                          <h3
-                            className={`mt-4 text-base font-semibold ${
-                              milestone.done ? 'text-emerald-900' : 'text-slate-950'
-                            }`}
-                          >
-                            {milestone.label}
-                          </h3>
-                          <p className="mt-1 text-sm text-slate-500">{milestone.description}</p>
-                          <div className="mt-auto pt-4">
-                            {milestone.done ? (
-                              <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700">
-                                Listo
-                              </span>
-                            ) : milestone.locked ? (
-                              <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-400">
-                                Primero elegí tu materia
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
-                                {milestone.actionLabel}
-                                <ArrowUpRight className="h-4 w-4" />
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </CardContent>
-            </Card>
+                <p className="mt-2.5 truncate text-xs text-slate-500">
+                  {currentMilestone.label}: {currentMilestone.description}
+                </p>
+              </Card>
+            </div>
           ) : null}
 
           <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
@@ -1085,7 +1024,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                               event.stopPropagation();
                               removeMateria(subject.id, subject.name);
                             }}
-                            className="rounded-lg p-2 text-slate-400 transition hover:bg-white/70 hover:text-slate-700"
+                            className="rounded-lg p-2 text-slate-500 transition hover:bg-white/70 hover:text-slate-700"
                             aria-label={`Eliminar ${subject.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -1108,10 +1047,10 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-8 text-center">
                     <BookOpen className="mx-auto h-10 w-10 text-slate-300" />
                     <h3 className="mt-4 text-lg font-semibold text-slate-900">
-                      Todavía no tienes materias recientes
+                      Todavía no tenés materias recientes
                     </h3>
                     <p className="mt-2 text-sm text-slate-500">
-                      Añade una materia y la dejamos lista para volver rápido desde acá.
+                      Añadí una materia y la dejamos lista para volver rápido desde acá.
                     </p>
                     {recommendedMaterias.length > 0 ? (
                       <div className="mt-8">
@@ -1288,7 +1227,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                    <p>Inicia un simulador para activar el radar de confianza de tu parcial.</p>
+                    <p>Iniciá un simulador para activar el radar de confianza de tu parcial.</p>
                     <Button
                       variant="outline"
                       className="mt-4 rounded-xl border-slate-200 bg-white"
@@ -1342,10 +1281,10 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center">
                     <Heart className="mx-auto h-8 w-8 text-slate-300" />
                     <h3 className="mt-3 text-base font-semibold text-slate-900">
-                      {'A\u00FAn no tienes materias favoritas'}
+                      {'A\u00FAn no ten\u00E9s materias favoritas'}
                     </h3>
                     <p className="mt-1 text-sm text-slate-500">
-                      {'Te sugerimos estas materias seg\u00FAn la carrera que m\u00E1s usas.'}
+                      {'Te sugerimos estas materias seg\u00FAn la carrera que m\u00E1s us\u00E1s.'}
                     </p>
                     {favoriteSuggestions.length > 0 ? (
                       <div className="mt-5 grid gap-2">
@@ -1373,7 +1312,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
             <DialogContent className="max-w-3xl rounded-xl px-4 sm:px-6">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-semibold tracking-[-0.03em] text-slate-950">
-                  Agrega una materia
+                  Agregá una materia
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
@@ -1396,7 +1335,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                     <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
                       {searchTerm.trim().length > 0
                         ? 'No encontramos materias con ese nombre.'
-                        : 'Empieza escribiendo o usa el listado sugerido.'}
+                        : 'Empezá escribiendo o usá el listado sugerido.'}
                     </div>
                   ) : (
                     allMaterias.map((materia) => (

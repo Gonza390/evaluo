@@ -84,11 +84,11 @@ export default async function DashboardMaterialsPage() {
               Falta activar el espacio de materiales
             </h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              La tabla `student_materials` todavia no existe en la base de datos remota, asi que esta
-              seccion no puede cargar ni guardar PDFs todavia.
+              La tabla `student_materials` todavía no existe en la base de datos remota, así que esta
+              sección no puede cargar ni guardar PDFs todavía.
             </p>
-            <p className="mt-3 text-xs leading-5 text-slate-400">
-              Aplica la migracion nueva de Supabase y vuelve a entrar a esta pantalla.
+            <p className="mt-3 text-xs leading-5 text-slate-500">
+              Aplicá la migración nueva de Supabase y volvé a entrar a esta pantalla.
             </p>
           </div>
           <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">

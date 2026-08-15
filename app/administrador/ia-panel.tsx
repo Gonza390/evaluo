@@ -173,7 +173,7 @@ export function IAPanel({
             value={promptSistema}
             onChange={(event) => setPromptSistema(event.target.value)}
             className="min-h-[220px] rounded-[16px] border-[#dbe2f0] bg-[#fbfcff] px-4 py-3 text-[14px] leading-6 text-[#1d2a44] shadow-none"
-            placeholder="Escribe aquí la configuración del sistema de IA..."
+            placeholder="Escribí aquí la configuración del sistema de IA..."
           />
         </div>
       </section>
@@ -204,7 +204,7 @@ export function IAPanel({
               <Input value={warmupBatchSize} onChange={(event) => setWarmupBatchSize(event.target.value)} inputMode="numeric" />
             </div>
             <div>
-              <p className="mb-2 text-[12px] font-medium text-[#7f8aa3]">Presupuesto maximo de tokens</p>
+              <p className="mb-2 text-[12px] font-medium text-[#7f8aa3]">Presupuesto máximo de tokens</p>
               <Input value={warmupTokenBudget} onChange={(event) => setWarmupTokenBudget(event.target.value)} inputMode="numeric" />
             </div>
             <div>
@@ -215,7 +215,7 @@ export function IAPanel({
 
           <div className="rounded-[16px] border border-[#e8edf5] bg-[#fbfcff] px-4 py-4 text-[13px] text-[#5f6d86]">
             Recomendacion inicial: 30 preguntas por dia con un tope de 65.000 tokens estimados. Si el costo queda comodo,
-            luego puedes subir a 40-50 por corrida.
+            luego podés subir a 40-50 por corrida.
           </div>
 
           {warmupResult ? (

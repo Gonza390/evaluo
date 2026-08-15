@@ -165,7 +165,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
               <Sparkles className="h-5 w-5 text-[#2563EB]" />
               <p className="mt-3 text-sm font-semibold text-slate-950">Resúmenes, recursos y simuladores</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Usa Evaluo para estudiar con más claridad y practicar antes de rendir.
+                Usá Evaluo para estudiar con más claridad y practicar antes de rendir.
               </p>
             </article>
           </div>
@@ -181,7 +181,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             <div className="mt-5 space-y-4">
               <p className="text-sm leading-7 text-slate-600">
                 Esta guía reúne una entrada clara para quienes buscan estudiar {carrera.nombre} en{' '}
-                {universidad.nombre}. Desde aquí puedes pasar al catálogo de materias, revisar recursos
+                {universidad.nombre}. Desde aquí podés pasar al catálogo de materias, revisar recursos
                 de estudio y descubrir cómo practicar con el simulador.
               </p>
               {officialProfile ? (

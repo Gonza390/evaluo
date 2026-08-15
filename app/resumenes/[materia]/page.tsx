@@ -113,7 +113,7 @@ export default async function SummaryIntentPage({ params }: PageProps) {
                 <Sparkles className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">Vista por materia</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Entra al espacio completo de la materia para combinar resúmenes, recursos y práctica.
+                  Entrá al espacio completo de la materia para combinar resúmenes, recursos y práctica.
                 </p>
               </article>
               <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -158,7 +158,7 @@ export default async function SummaryIntentPage({ params }: PageProps) {
               ))}
               {bootstrap.initialResumenes.length === 0 ? (
                 <p className="text-sm leading-7 text-slate-600">
-                  Todavía no hay resúmenes iniciales visibles en esta landing, pero puedes entrar a la
+                  Todavía no hay resúmenes iniciales visibles en esta landing, pero podés entrar a la
                   materia para revisar recursos y actualizaciones.
                 </p>
               ) : null}

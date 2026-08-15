@@ -187,7 +187,7 @@ export function GraphsPanel({ activePeriodLabel: _activePeriodLabel, series }: G
           Evolución diaria del producto
         </h2>
         <p className="mt-2 max-w-3xl text-[14px] leading-6 text-[#7f8aa3]">
-          Aquí puedes ver la evolución reciente del producto, enfocada en los últimos 7 días para que la lectura sea más clara.
+                            Aquí podés ver la evolución reciente del producto, enfocada en los últimos 7 días para que la lectura sea más clara.
         </p>
       </div>
 

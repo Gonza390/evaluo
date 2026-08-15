@@ -198,7 +198,7 @@ export function InteractiveDemo() {
                 </div>
                 <div className="mt-5">
                   <h4 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{uni.shortName}</h4>
-                  <p className="mt-1 text-[11px] font-medium text-slate-400 leading-4">{uni.name}</p>
+                  <p className="mt-1 text-[11px] font-medium text-slate-500 leading-4">{uni.name}</p>
                 </div>
                 <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
                   Explorar cátedra
@@ -224,7 +224,7 @@ export function InteractiveDemo() {
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${currentUni.badgeBg} ${currentUni.textColor} border ${currentUni.borderColor}`}>
                   {currentUni.shortName}
                 </span>
-                <span className="text-[11px] font-medium text-slate-400">{currentUni.carrera}</span>
+                <span className="text-[11px] font-medium text-slate-500">{currentUni.carrera}</span>
               </div>
 
               <h3 className="mt-4 text-lg font-bold text-[#0F1B3D]">
@@ -236,7 +236,7 @@ export function InteractiveDemo() {
               </div>
 
               <div className="mt-5 space-y-3.5">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Resumen curado de la clase</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Resumen curado de la clase</p>
                 <ul className="space-y-2.5">
                   {currentUni.summary.points.map((point, index) => (
                     <li key={index} className="flex items-start gap-2.5 text-xs text-slate-600 leading-5">
@@ -264,7 +264,7 @@ export function InteractiveDemo() {
                   <Bot className="h-3.5 w-3.5" />
                   Simulador Cátedra
                 </span>
-                <span className="text-xs font-bold text-slate-400">Pregunta 1 de 1</span>
+                <span className="text-xs font-bold text-slate-500">Pregunta 1 de 1</span>
               </div>
 
               <div className="mt-4 flex gap-2">

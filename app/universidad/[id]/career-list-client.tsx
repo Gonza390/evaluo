@@ -94,7 +94,7 @@ function getCareerPreset(name: string) {
       icon: GraduationCap,
       iconColor: 'text-[#5B5CF6]',
       iconBg: 'bg-[#F1F0FF]',
-      description: 'Explora una formación pensada para tu futuro profesional.',
+      description: 'Explorá una formación pensada para tu futuro profesional.',
     }
   );
 }
@@ -121,7 +121,7 @@ export default function CareerListClient({
             Todas las carreras
           </h2>
           <p className="section-copy mt-2 text-[#7C879C]">
-            Explora las carreras que ofrece esta universidad.
+            Explorá las carreras que ofrece esta universidad.
           </p>
         </div>
         <div className="relative w-full lg:w-64">
@@ -176,7 +176,7 @@ export default function CareerListClient({
               No encontramos carreras para mostrar.
             </p>
             <p className="mt-2 text-sm text-[#7C879C]">
-              Prueba con otra búsqueda para ver más resultados.
+              Probá con otra búsqueda para ver más resultados.
             </p>
           </div>
         )}

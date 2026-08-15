@@ -148,7 +148,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
                 <BookOpen className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">{materias.length} materias para revisar</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Entra a cada materia y busca parciales, errores frecuentes y materiales complementarios.
+                  Entrá a cada materia y buscá parciales, errores frecuentes y materiales complementarios.
                 </p>
               </article>
               <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">

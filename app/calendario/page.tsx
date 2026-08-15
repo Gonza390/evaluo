@@ -63,21 +63,21 @@ const CALENDAR_TOUR_STEPS: CalendarTourStep[] = [
   {
     id: 'month',
     title: 'Navega el mes',
-    description: 'Usa estas flechas para cambiar de mes o vuelve a hoy cuando quieras ubicarte rápido.',
+    description: 'Usá estas flechas para cambiar de mes o volvé a hoy cuando quieras ubicarte rápido.',
   },
   {
     id: 'grid',
-    title: 'Elige un día',
-    description: 'Toca cualquier día del calendario para ver su contenido o cargar una nueva fecha en ese momento.',
+    title: 'Elegí un día',
+    description: 'Tocá cualquier día del calendario para ver su contenido o cargar una nueva fecha en ese momento.',
   },
   {
     id: 'composer',
-    title: 'Completa la fecha',
+    title: 'Completá la fecha',
     description: 'Aquí eliges la materia o el trabajo práctico, defines la instancia y dejas listo el evento para guardarlo.',
   },
   {
     id: 'create',
-    title: 'Guarda el evento',
+    title: 'Guardá el evento',
     description: 'Cuando ya tengas los datos listos, guarda el evento para verlo dentro del calendario y consultarlo después.',
   },
 ];
@@ -211,7 +211,7 @@ function CalendarTourCard({
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:text-slate-600 max-sm:h-8 max-sm:w-8"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-600 max-sm:h-8 max-sm:w-8"
           aria-label="Cerrar guía del calendario"
         >
           ×
@@ -348,7 +348,7 @@ export default function CalendarioPage() {
         setEvents([]);
         setHasLoadedEvents(true);
         toast({
-          description: 'No pudimos cargar tu calendario. Vuelve a intentarlo en unos segundos.',
+          description: 'No pudimos cargar tu calendario. Volvé a intentarlo en unos segundos.',
           variant: 'destructive',
         });
         return;
@@ -652,8 +652,8 @@ export default function CalendarioPage() {
       toast({
         description:
           formState.type === 'exam'
-            ? 'Escribe el nombre de la materia para guardar ese parcial.'
-            : 'Escribe el nombre del trabajo práctico para guardarlo.',
+            ? 'Escribí el nombre de la materia para guardar ese parcial.'
+            : 'Escribí el nombre del trabajo práctico para guardarlo.',
         variant: 'destructive',
       });
       return;
@@ -661,7 +661,7 @@ export default function CalendarioPage() {
 
     if (!user) {
       toast({
-        description: 'Inicia sesión para guardar fechas en tu calendario.',
+        description: 'Iniciá sesión para guardar fechas en tu calendario.',
         variant: 'destructive',
       });
       return;
@@ -866,7 +866,7 @@ export default function CalendarioPage() {
           <p className="mt-1 text-sm text-slate-500">
             Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar.
           </p>
-          <p className="mt-3 text-xs text-slate-400">
+          <p className="mt-3 text-xs text-slate-500">
             Si tarda demasiado, prueba recargando la página.
           </p>
         </div>
@@ -881,7 +881,7 @@ export default function CalendarioPage() {
           icon={CalendarPlus}
           className="w-full"
           title="Tu calendario académico"
-          description="Inicia sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."
+          description="Iniciá sesión para cargar parciales, trabajos prácticos y recordatorios en tu calendario mensual."
           secondaryText="Cuando entres, podrás organizar tus fechas clave y seguirlas desde un solo lugar."
           primaryActionLabel="Iniciar sesión"
           onPrimaryAction={() => router.push('/login?next=%2Fcalendario')}
@@ -1079,7 +1079,7 @@ export default function CalendarioPage() {
                       </div>
                     ))}
                     {cellEvents.length > 2 ? (
-                      <div className="text-[10px] font-medium text-slate-400">
+                      <div className="text-[10px] font-medium text-slate-500">
                         +{cellEvents.length - 2} más
                       </div>
                     ) : null}
@@ -1187,7 +1187,7 @@ export default function CalendarioPage() {
                             }))
                           }
                           placeholder="Ej: Derecho Constitucional"
-                          className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-400"
+                          className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                         />
                       </div>
 
@@ -1223,10 +1223,10 @@ export default function CalendarioPage() {
                         <p className="text-[11px] text-slate-500">
                           {careerName
                             ? `Materias de ${careerName}`
-                            : 'Buscaremos materias de la carrera que tienes cargada.'}
+                            : 'Buscaremos materias de la carrera que tenés cargada.'}
                         </p>
                         {careerMateriaLoading ? (
-                          <span className="text-[11px] font-medium text-slate-400">
+                          <span className="text-[11px] font-medium text-slate-500">
                             Cargando...
                           </span>
                         ) : null}
@@ -1279,7 +1279,7 @@ export default function CalendarioPage() {
                           }))
                         }
                         placeholder="Ej: TP final de Derecho Privado"
-                        className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-400"
+                        className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
                       />
                     </div>
                     <div className="space-y-2 opacity-45">
@@ -1290,7 +1290,7 @@ export default function CalendarioPage() {
                             key={`assignment-${examInstance}`}
                             type="button"
                             variant="outline"
-                            className="h-9 rounded-xl border-slate-200 bg-white px-2 text-[13px] text-slate-400"
+                            className="h-9 rounded-xl border-slate-200 bg-white px-2 text-[13px] text-slate-500"
                             disabled
                           >
                             {examInstanceLabel(examInstance)}
@@ -1299,19 +1299,19 @@ export default function CalendarioPage() {
                       </div>
                     </div>
                     <div className="flex min-h-[112px] flex-col justify-between rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
                         Organizacion
                       </p>
                       <p>
-                        Guarda la entrega con un nombre claro para ubicarla rápido en recordatorios,
+                        Guardá la entrega con un nombre claro para ubicarla rápido en recordatorios,
                         calendario y seguimiento semanal.
                       </p>
-                      <p className="text-[12px] text-slate-400">
+                      <p className="text-[12px] text-slate-500">
                         Ejemplo: TP final de Derecho Privado.
                       </p>
                     </div>
                     <div className="hidden rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
-                      Guarda la entrega con un nombre claro para poder usar esta información después
+                      Guardá la entrega con un nombre claro para poder usar esta información después
                       en recordatorios, analíticas o planificación.
                     </div>
                   </div>
@@ -1321,13 +1321,13 @@ export default function CalendarioPage() {
 
               <div className="space-y-3">
                 <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
                     Vista previa
                   </p>
                   <div className="mt-2 min-h-[84px] rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
                     {formState.type === 'exam' ? (
                       <span>
-                        Se guardara como{' '}
+                        Se guardará como{' '}
                         <strong className="text-slate-900">
                           {formState.subjectName.trim() || 'tu materia'} -{' '}
                           {examInstanceLabel(formState.examInstance)}
@@ -1336,7 +1336,7 @@ export default function CalendarioPage() {
                       </span>
                     ) : (
                       <span>
-                        Se guardara como{' '}
+                        Se guardará como{' '}
                         <strong className="text-slate-900">
                           {formState.assignmentTitle.trim() || 'tu trabajo práctico'}
                         </strong>
@@ -1402,7 +1402,7 @@ export default function CalendarioPage() {
                 {selectedDateEvents.length > 0 ? (
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-slate-50 p-3">
                     <p className="text-[13px] font-semibold text-slate-900">
-                      Ya tienes cargado para este dia
+                      Ya tenés cargado para este día
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
@@ -1427,7 +1427,7 @@ export default function CalendarioPage() {
                         <button
                           type="button"
                           onClick={() => void handleDeleteEvent(event.id)}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-rose-500"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-rose-500"
                           aria-label="Eliminar fecha"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1437,7 +1437,7 @@ export default function CalendarioPage() {
                   </div>
                 ) : (
                   <div className="min-h-[74px] rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] leading-5 text-slate-500">
-                    Todavía no tienes fechas guardadas para este día.
+                    Todavía no tenés fechas guardadas para este día.
                   </div>
                 )}
 

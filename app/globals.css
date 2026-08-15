@@ -127,6 +127,12 @@
   }
 }
 
+@media (min-width: 1024px) {
+  html {
+    zoom: 0.97;
+  }
+}
+
 @layer components {
   .pc-gigante-card {
     @apply rounded-[var(--radius-hero)];

@@ -210,7 +210,7 @@ function RecursoContent() {
         if (!response.ok) {
           if (response.status === 401) {
             setViewerUrl(null);
-            setReaderError('Inicia sesión para acceder al documento completo.');
+            setReaderError('Iniciá sesión para acceder al documento completo.');
             return;
           }
 
@@ -444,7 +444,7 @@ function RecursoContent() {
         <section className="surface-panel animate-saas-lift-in mb-4 px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{nombreMateria}</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">{nombreMateria}</p>
               <h1 className="mt-2 text-[1.7rem] font-bold tracking-tight text-slate-950 sm:text-3xl md:text-4xl">
                 {selectedResource?.nombre || getSectionTitle(tipo)}
               </h1>
@@ -581,7 +581,7 @@ function RecursoContent() {
                     <p className="mt-1 text-xs text-slate-500">
                       Generamos el acceso seguro y dejamos el documento listo para leer.
                     </p>
-                    <p className="mt-2 text-xs text-slate-400">
+                    <p className="mt-2 text-xs text-slate-500">
                       La primera carga puede tardar unos segundos. Si se extiende demasiado, recarga la página.
                     </p>
                   </div>
@@ -593,7 +593,7 @@ function RecursoContent() {
                   className="min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh]"
                   title="No pudimos abrir este documento"
                   description={readerError}
-                  secondaryText="Puedes volver a intentarlo o elegir otro material desde la columna lateral."
+                  secondaryText="Podés volver a intentarlo o elegir otro material desde la columna lateral."
                 />
               ) : viewerUrl ? (
                 <PdfViewer
@@ -608,7 +608,7 @@ function RecursoContent() {
                   icon={FileText}
                   className="min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh]"
                   title="Todavía no hay un documento listo para leer"
-                  description="Elige otro material desde la columna lateral para abrirlo en el visor."
+                  description="Elegí otro material desde la columna lateral para abrirlo en el visor."
                   secondaryText="Cuando el documento esté disponible, aparecerá aquí automáticamente."
                 />
               )}
@@ -619,7 +619,7 @@ function RecursoContent() {
             <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_14px_50px_rgba(15,23,42,0.06)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Biblioteca</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Biblioteca</p>
                   <h3 className="mt-1 text-lg font-bold text-slate-900">Más documentos de esta sección</h3>
                 </div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -673,7 +673,7 @@ function RecursoContent() {
                               </div>
                             </div>
                           </div>
-                          <span className="text-[11px] font-bold text-slate-400">{String(index + 1).padStart(2, '0')}</span>
+                          <span className="text-[11px] font-bold text-slate-500">{String(index + 1).padStart(2, '0')}</span>
                         </div>
 
                         <div className="mt-4 rounded-[1.25rem] bg-gradient-to-b from-slate-50 to-slate-100 p-4">

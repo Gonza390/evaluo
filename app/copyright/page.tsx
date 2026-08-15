@@ -4,9 +4,9 @@ import { FooterHome } from '@/components/footer-home';
 
 const complaintItems = [
   'Tu nombre completo y una forma válida de contacto.',
-  'La identificación de la obra o material que consideras afectado.',
+  'La identificación de la obra o material que considerás afectado.',
   'La URL exacta dentro de Evaluo donde aparece el contenido reportado.',
-  'Una explicación breve de por qué consideras que el contenido infringe tus derechos.',
+  'Una explicación breve de por qué considerás que el contenido infringe tus derechos.',
   'Una declaración de buena fe indicando que el uso reportado no está autorizado por el titular, su representante o la ley.',
   'Una declaración confirmando que la información enviada es correcta.',
 ];
@@ -14,7 +14,7 @@ const complaintItems = [
 const counterNoticeItems = [
   'Tu nombre y datos de contacto.',
   'La URL o referencia del material retirado o restringido.',
-  'Una explicación breve de por qué consideras que el retiro fue un error.',
+  'Una explicación breve de por qué considerás que el retiro fue un error.',
   'Una declaración de buena fe sobre la exactitud de tu presentación.',
 ];
 
@@ -39,7 +39,7 @@ export default function CopyrightPage() {
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
                 En Evaluo respetamos los derechos de autor y la propiedad intelectual de terceros. Si
-                consideras que un contenido publicado en la plataforma infringe tus derechos, puedes
+                  considerás que un contenido publicado en la plataforma infringe tus derechos, podés
                 reportarlo para que lo revisemos y actuemos de forma razonable.
               </p>
             </div>
@@ -84,7 +84,7 @@ export default function CopyrightPage() {
                     Contra aviso
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
-                    Si consideras que un contenido tuyo fue retirado o restringido por error, puedes
+                    Si considerás que un contenido tuyo fue retirado o restringido por error, podés
                     presentar una contra notificación para una segunda revisión.
                   </p>
                   <ol className="mt-5 space-y-4 pl-6 text-[15px] leading-8 text-slate-600 marker:font-semibold marker:text-slate-900">
@@ -98,7 +98,7 @@ export default function CopyrightPage() {
               <aside className="lg:pt-1">
                 <div className="sticky top-8 space-y-8 border-t border-slate-200 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
                       Importante
                     </p>
                     <div className="mt-4 space-y-5 text-[15px] leading-8 text-slate-600">
@@ -108,7 +108,7 @@ export default function CopyrightPage() {
                         razonables.
                       </p>
                       <p>
-                        Si más adelante quieres profesionalizar este bloque legal todavía más, lo ideal es
+                        Si más adelante querés profesionalizar este bloque legal todavía más, lo ideal es
                         conectar esta página con una vía de contacto formal y con tus términos y política
                         de privacidad para cerrar el circuito legal completo.
                       </p>
@@ -116,7 +116,7 @@ export default function CopyrightPage() {
                   </div>
 
                   <div className="border-t border-slate-200 pt-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-400">
+                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
                       Estado
                     </p>
                     <div className="mt-4 space-y-3 text-sm text-slate-600">

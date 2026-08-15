@@ -21,10 +21,10 @@ import { cn } from '@/lib/utils';
 
 const REPORT_REASONS = [
   { value: 'resumen incorrecto', label: 'El resumen es incorrecto' },
-  { value: 'informacion inventada', label: 'Inventa informacion' },
+  { value: 'informacion inventada', label: 'Inventá información' },
   { value: 'falta contenido', label: 'Le falta contenido' },
-  { value: 'glosario erroneo', label: 'El glosario es erroneo' },
-  { value: 'error de extraccion', label: 'El PDF no se leyo bien' },
+  { value: 'glosario erroneo', label: 'El glosario es erróneo' },
+  { value: 'error de extraccion', label: 'El PDF no se leyó bien' },
   { value: 'otro', label: 'Otro' },
 ];
 
@@ -109,9 +109,9 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <p className="text-[13px] font-semibold text-slate-950">¿Te fue util este material?</p>
+          <p className="text-[13px] font-semibold text-slate-950">¿Te fue útil este material?</p>
           <p className="text-[12px] leading-5 text-slate-500">
-            Tu opinion nos ayuda a mejorar los resumenes y glosarios generados.
+            Tu opinión nos ayuda a mejorar los resúmenes y glosarios generados.
           </p>
         </div>
 
@@ -142,15 +142,15 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
             )}
           >
             <ThumbsDown className="h-3.5 w-3.5" />
-            No util
+            No útil
           </Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
         {counts && (counts.up > 0 || counts.down > 0) ? (
-          <p className="text-[11.5px] text-slate-400">
-            {counts.up} util · {counts.down} no util
+          <p className="text-[11.5px] text-slate-500">
+            {counts.up} útil · {counts.down} no útil
             {counts.reports > 0 ? ` · ${counts.reports} reportado${counts.reports > 1 ? 's' : ''}` : ''}
           </p>
         ) : null}
@@ -185,7 +185,7 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
               value={reportNote}
               onChange={(event) => setReportNote(event.target.value)}
               maxLength={500}
-              placeholder="Contanos con mas detalle (opcional)"
+              placeholder="Contanos con más detalle (opcional)"
               className="min-h-[64px] rounded-[12px] border-slate-200 bg-white text-[12.5px]"
             />
           </div>
