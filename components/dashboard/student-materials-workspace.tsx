@@ -489,7 +489,8 @@ export function StudentMaterialsWorkspace({
                 return (
                   <article
                     key={material.id}
-                    className="flex flex-col gap-3 rounded-[1.25rem] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3.5 py-3.5 sm:px-4"
+                    onClick={() => router.push(getStudentMaterialRoute(material.id))}
+                    className="flex cursor-pointer flex-col gap-3 rounded-[1.25rem] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#FAFBFF_100%)] px-3.5 py-3.5 transition hover:border-slate-300 hover:shadow-[0_10px_28px_rgba(15,23,42,0.06)] sm:px-4"
                   >
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div className="min-w-0">
@@ -525,16 +526,19 @@ export function StudentMaterialsWorkspace({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => handleVisibilityChange(material.id, isShared ? 'private' : 'shared')}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleVisibilityChange(material.id, isShared ? 'private' : 'shared');
+                          }}
                           disabled={isPending}
                         >
                           {isShared ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
                           {isShared ? 'Ocultar' : 'Compartir'}
                         </Button>
-                        <Button asChild size="sm">
+                        <Button asChild size="sm" onClick={(event) => event.stopPropagation()}>
                           <Link href={getStudentMaterialRoute(material.id)}>
                             <Eye className="h-4 w-4" />
-                            {material.processing_status === 'ready' ? 'Abrir PDF' : 'Ver estado'}
+                            {material.processing_status === 'ready' ? 'Abrir' : 'Ver estado'}
                           </Link>
                         </Button>
                       </div>

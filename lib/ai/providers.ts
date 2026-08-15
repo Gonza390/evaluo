@@ -28,9 +28,9 @@ const GITHUB_MODELS_PRIMARY_SUMMARY_MODEL =
   process.env.GITHUB_MODELS_SUMMARY_MODEL ?? 'openai/gpt-4o-mini';
 const GITHUB_MODELS_FALLBACK_SUMMARY_MODEL =
   process.env.GITHUB_MODELS_FALLBACK_MODEL ?? 'openai/gpt-4.1-mini';
-const GEMINI_PRIMARY_SUMMARY_MODEL = process.env.GEMINI_SUMMARY_MODEL ?? 'gemini-2.5-flash';
+const GEMINI_PRIMARY_SUMMARY_MODEL = process.env.GEMINI_SUMMARY_MODEL ?? 'gemini-flash-lite-latest';
 const GEMINI_FALLBACK_SUMMARY_MODEL =
-  process.env.GEMINI_FALLBACK_SUMMARY_MODEL ?? 'gemini-2.0-flash-001';
+  process.env.GEMINI_FALLBACK_SUMMARY_MODEL ?? 'gemini-flash-lite-latest';
 const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'llama-3.3-70b-versatile';
 const GROQ_FALLBACK_SUMMARY_MODEL =

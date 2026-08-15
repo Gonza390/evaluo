@@ -18,3 +18,8 @@ tsconfig.tsbuildinfo
 supabase/.temp/
 backups/
 audit-report-*.md
+
+# Local diagnostics
+dev-server.log
+test-data/
+tests/probe-results.json
