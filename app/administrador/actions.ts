@@ -348,6 +348,37 @@ async function listStoragePathsRecursively(
   return paths;
 }
 
+async function fetchUserEmailsByIds(
+  admin: ReturnType<typeof createAdminClient>,
+  userIds: string[]
+): Promise<Map<string, string>> {
+  const emails = new Map<string, string>();
+  if (userIds.length === 0) return emails;
+
+  const wanted = new Set(userIds);
+  let page = 1;
+  const perPage = 1000;
+
+  while (wanted.size > 0) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      logError('admin.fetchUserEmailsByIds.listUsers', error);
+      break;
+    }
+
+    for (const user of data?.users ?? []) {
+      if (!user.email || !wanted.has(user.id)) continue;
+      emails.set(user.id, user.email);
+      wanted.delete(user.id);
+    }
+
+    if ((data?.users?.length ?? 0) < perPage) break;
+    page += 1;
+  }
+
+  return emails;
+}
+
 export async function obtenerResumenAdministrador(
   rangeDays = 30,
   metricPeriods?: Partial<AdministradorMetricPeriods>
@@ -724,27 +755,9 @@ export async function obtenerResumenAdministrador(
 
 
     if (recentActivityUserIds.length > 0) {
-      const recentUsersLookup = await Promise.all(
-        recentActivityUserIds.map(async (userId) => {
-          try {
-            const response = await admin.auth.admin.getUserById(userId);
-            return {
-              userId,
-              email: response.data.user?.email ?? null,
-            };
-          } catch {
-            return {
-              userId,
-              email: null,
-            };
-          }
-        })
-      );
-
-      for (const row of recentUsersLookup) {
-        if (row.email) {
-          userEmailById.set(row.userId, row.email);
-        }
+      const recentEmails = await fetchUserEmailsByIds(admin, recentActivityUserIds);
+      for (const [userId, email] of recentEmails) {
+        userEmailById.set(userId, email);
       }
     }
     const usersActive = uniqueUsersFromEvents(todayEventsFiltered);
@@ -892,6 +905,352 @@ export async function obtenerResumenAdministrador(
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos cargar el resumen del administrador.',
+    };
+  }
+}
+
+export interface AdministradorConversionStats {
+  rangeDays: 1 | 7 | 30;
+  funnel: Array<{ step: string; value: number; conversionPct: number | null }>;
+  gate: { reached: number; converted: number; abandoned: number; conversionRatePct: number };
+  postSignup: {
+    landed: number;
+    continued: number;
+    dismissed: number;
+    resumed: number;
+    finished: number;
+    resumeRatePct: number;
+  };
+  demoToSignup: {
+    demoReached: number;
+    signedUp: number;
+    convertedPct: number;
+  };
+  retention: {
+    newUsers: number;
+    day2Cohort: number;
+    activeDay2: number;
+    day2RetentionPct: number;
+    day7Cohort: number;
+    activeDay7: number;
+    day7RetentionPct: number;
+    usersWithSimulator: number;
+    usersWith2PlusSimulators: number;
+    twoPlusPct: number;
+  };
+  signupSources: Array<{ label: string; value: number }>;
+  dailyConversion: Array<{ label: string; registros: number; landings: number; retomas: number }>;
+}
+
+function labelSignupSource(location: string, provider: string) {
+  const labels: Record<string, string> = {
+    login: 'Página de login',
+    login_premium_intent: 'Intento premium',
+    auth_callback: provider === 'google' ? 'Google (signup)' : 'Email (confirmado)',
+  };
+  const value = labels[location] ?? location;
+  return value.trim() || 'desconocido';
+}
+
+const CONVERSION_EVENT_NAMES = [
+  'demo_checkpoint_reached',
+  'simulator_login_gate_viewed',
+  'simulator_login_gate_cta_clicked',
+  'signup_completed',
+  'post_signup_landing',
+  'post_signup_landing_cta_clicked',
+  'simulator_resumed',
+  'simulator_finished',
+  'login_success',
+];
+
+export async function obtenerConversionAdministrador(
+  rangeDays: 1 | 7 | 30
+): Promise<{ success: boolean; stats?: AdministradorConversionStats; message?: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const adminUserIds = await listAdminUserIds();
+    const adminUserIdSet = new Set(adminUserIds);
+
+    const normalizedRangeDays = rangeDays === 1 || rangeDays === 7 || rangeDays === 30 ? rangeDays : 7;
+    const now = new Date();
+    const currentStart = calendarPeriodStart(normalizedRangeDays, now);
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    const [conversionEvents, profilesRes, simulatorAttemptUserRows, activityRows] = await Promise.all([
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('analytics_events')
+          .select('event_name, user_id, session_key, created_at, metadata')
+          .in('event_name', CONVERSION_EVENT_NAMES)
+          .gte('created_at', currentStart.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('profiles')
+          .select('id, creado_at')
+          .gte('creado_at', currentStart.toISOString())
+          .order('creado_at', { ascending: false })
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        excludeUserIds(
+          admin
+            .from('simulator_attempts')
+            .select('user_id')
+            .gte('created_at', currentStart.toISOString())
+            .range(from, to),
+          adminUserIds
+        )
+      ),
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('analytics_events')
+          .select('user_id, created_at')
+          .not('user_id', 'is', null)
+          .gte('created_at', currentStart.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ),
+    ]);
+
+    const events = conversionEvents.filter((event) => isNonAdminAnalyticsEvent(event, adminUserIdSet));
+    const newUserRows = profilesRes.filter((row) => !adminUserIdSet.has(row.id));
+    const newUserIds = new Set(newUserRows.map((row) => row.id));
+
+    const demoCheckpointSessions = new Set<string>();
+    const gateViewedSessions = new Set<string>();
+    const gateCtaSessions = new Set<string>();
+    const signupIdentities = new Set<string>();
+    const signupSources = new Map<string, number>();
+    const landingUsers = new Set<string>();
+    const continueUsers = new Set<string>();
+    const dismissUsers = new Set<string>();
+    const allResumedUsers = new Set<string>();
+    const allFinishedUsers = new Set<string>();
+    const resumedAtByUser = new Map<string, string>();
+    const demoAnonymousIds = new Set<string>();
+    const signupAnonymousIds = new Set<string>();
+    const dailySignup = new Map<string, number>();
+    const dailyLanding = new Map<string, number>();
+
+    for (const event of events) {
+      const sessionKey = event.session_key ?? 'unknown';
+      const userId = event.user_id ?? '';
+      const metadata =
+        typeof event.metadata === 'object' && event.metadata
+          ? (event.metadata as Record<string, unknown>)
+          : {};
+      const anonymousId = String(metadata.anonymous_id ?? '').trim();
+
+      switch (event.event_name) {
+        case 'demo_checkpoint_reached':
+          demoCheckpointSessions.add(sessionKey);
+          if (anonymousId) demoAnonymousIds.add(anonymousId);
+          break;
+        case 'simulator_login_gate_viewed':
+          gateViewedSessions.add(sessionKey);
+          break;
+        case 'simulator_login_gate_cta_clicked':
+          gateCtaSessions.add(sessionKey);
+          break;
+        case 'signup_completed': {
+          const identity = userId || (anonymousId ? `anon:${anonymousId}` : `session:${sessionKey}`);
+          signupIdentities.add(identity);
+          if (anonymousId) signupAnonymousIds.add(anonymousId);
+          const provider = String(metadata.provider ?? '').trim();
+          const source = labelSignupSource(String(metadata.location ?? '').trim(), provider);
+          signupSources.set(source, (signupSources.get(source) ?? 0) + 1);
+          if (event.created_at) {
+            const label = formatAnalyticsDayLabel(event.created_at);
+            dailySignup.set(label, (dailySignup.get(label) ?? 0) + 1);
+          }
+          break;
+        }
+        case 'post_signup_landing':
+          if (userId) {
+            landingUsers.add(userId);
+            if (event.created_at) {
+              const label = formatAnalyticsDayLabel(event.created_at);
+              dailyLanding.set(label, (dailyLanding.get(label) ?? 0) + 1);
+            }
+          }
+          break;
+        case 'post_signup_landing_cta_clicked':
+          if (!userId) break;
+          if (metadata.cta === 'continue') continueUsers.add(userId);
+          else if (metadata.cta === 'dismiss') dismissUsers.add(userId);
+          break;
+        case 'simulator_resumed':
+          if (userId) {
+            allResumedUsers.add(userId);
+            if (event.created_at) {
+              const previous = resumedAtByUser.get(userId);
+              if (!previous || previous < event.created_at) {
+                resumedAtByUser.set(userId, event.created_at);
+              }
+            }
+          }
+          break;
+        case 'simulator_finished':
+          if (userId) allFinishedUsers.add(userId);
+          break;
+        default:
+          break;
+      }
+    }
+
+    const gateConvertedSessions = new Set<string>();
+    for (const event of events) {
+      if (
+        event.event_name === 'login_success' &&
+        event.user_id &&
+        gateViewedSessions.has(event.session_key ?? 'unknown')
+      ) {
+        gateConvertedSessions.add(event.session_key ?? 'unknown');
+      }
+    }
+
+    const resumedByNewUser = new Set([...allResumedUsers].filter((id) => newUserIds.has(id)));
+    const finishedByNewUser = new Set([...allFinishedUsers].filter((id) => newUserIds.has(id)));
+
+    const dailyResume = new Map<string, number>();
+    for (const userId of resumedByNewUser) {
+      const createdAt = resumedAtByUser.get(userId);
+      if (!createdAt) continue;
+      const label = formatAnalyticsDayLabel(createdAt);
+      dailyResume.set(label, (dailyResume.get(label) ?? 0) + 1);
+    }
+
+    const demoToSignup = new Set([...demoAnonymousIds].filter((id) => signupAnonymousIds.has(id))).size;
+
+    const activityByUser = new Map<string, string[]>();
+    for (const row of activityRows) {
+      if (!row.user_id || adminUserIdSet.has(row.user_id) || !row.created_at) continue;
+      const list = activityByUser.get(row.user_id) ?? [];
+      list.push(row.created_at);
+      activityByUser.set(row.user_id, list);
+    }
+    let activeDay2 = 0;
+    let day2Cohort = 0;
+    let activeDay7 = 0;
+    let day7Cohort = 0;
+    for (const profile of newUserRows) {
+      const createdMs = new Date(profile.creado_at ?? '').getTime();
+      if (Number.isNaN(createdMs)) continue;
+      const activity = activityByUser.get(profile.id) ?? [];
+      const hasActivityBetween = (fromMs: number, toMs: number) =>
+        activity.some((createdAt) => {
+          const ms = new Date(createdAt).getTime();
+          return ms >= fromMs && ms < toMs;
+        });
+
+      if (now.getTime() - createdMs >= 2 * DAY_MS) {
+        day2Cohort += 1;
+        if (hasActivityBetween(createdMs + DAY_MS, createdMs + 2 * DAY_MS)) activeDay2 += 1;
+      }
+      if (now.getTime() - createdMs >= 7 * DAY_MS) {
+        day7Cohort += 1;
+        if (hasActivityBetween(createdMs + 6 * DAY_MS, createdMs + 7 * DAY_MS)) activeDay7 += 1;
+      }
+    }
+
+    const simulatorCountByUser = new Map<string, number>();
+    for (const row of simulatorAttemptUserRows) {
+      if (!row.user_id || adminUserIdSet.has(row.user_id)) continue;
+      simulatorCountByUser.set(row.user_id, (simulatorCountByUser.get(row.user_id) ?? 0) + 1);
+    }
+    const usersWithSimulator = simulatorCountByUser.size;
+    const usersWith2PlusSimulators = [...simulatorCountByUser.values()].filter(
+      (count) => count >= 2
+    ).length;
+
+    const funnelSteps = [
+      { step: 'Llegaron al checkpoint demo', value: demoCheckpointSessions.size },
+      { step: 'Vieron el gate de login', value: gateViewedSessions.size },
+      { step: 'Clickearon el CTA del gate', value: gateCtaSessions.size },
+      { step: 'Completaron el registro', value: signupIdentities.size },
+      { step: 'Aterrizaron en el dashboard', value: landingUsers.size },
+      { step: 'Retomaron el simulador', value: resumedByNewUser.size },
+      { step: 'Terminaron el simulador', value: finishedByNewUser.size },
+    ];
+
+    const gateReached = gateViewedSessions.size;
+    const gateConverted = gateConvertedSessions.size;
+    const postSignupResumed = resumedByNewUser.size;
+    const postSignupLanded = landingUsers.size;
+
+    return {
+      success: true,
+      stats: {
+        rangeDays: normalizedRangeDays,
+        funnel: funnelSteps.map((item, index) => {
+          const base = index === 0 ? null : funnelSteps[index - 1].value;
+          return {
+            ...item,
+            conversionPct: base && base > 0 ? Number(((item.value / base) * 100).toFixed(1)) : null,
+          };
+        }),
+        gate: {
+          reached: gateReached,
+          converted: gateConverted,
+          abandoned: Math.max(0, gateReached - gateConverted),
+          conversionRatePct:
+            gateReached > 0 ? Number(((gateConverted / gateReached) * 100).toFixed(1)) : 0,
+        },
+        postSignup: {
+          landed: postSignupLanded,
+          continued: continueUsers.size,
+          dismissed: dismissUsers.size,
+          resumed: postSignupResumed,
+          finished: finishedByNewUser.size,
+          resumeRatePct:
+            postSignupLanded > 0
+              ? Number(((postSignupResumed / postSignupLanded) * 100).toFixed(1))
+              : 0,
+        },
+        demoToSignup: {
+          demoReached: demoAnonymousIds.size,
+          signedUp: demoToSignup,
+          convertedPct:
+            demoAnonymousIds.size > 0
+              ? Number(((demoToSignup / demoAnonymousIds.size) * 100).toFixed(1))
+              : 0,
+        },
+        retention: {
+          newUsers: newUserRows.length,
+          day2Cohort,
+          activeDay2,
+          day2RetentionPct: day2Cohort > 0 ? Number(((activeDay2 / day2Cohort) * 100).toFixed(1)) : 0,
+          day7Cohort,
+          activeDay7,
+          day7RetentionPct: day7Cohort > 0 ? Number(((activeDay7 / day7Cohort) * 100).toFixed(1)) : 0,
+          usersWithSimulator,
+          usersWith2PlusSimulators,
+          twoPlusPct:
+            usersWithSimulator > 0
+              ? Number(((usersWith2PlusSimulators / usersWithSimulator) * 100).toFixed(1))
+              : 0,
+        },
+        signupSources: Array.from(signupSources.entries())
+          .map(([label, value]) => ({ label, value }))
+          .sort((a, b) => b.value - a.value),
+        dailyConversion: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => ({
+          label,
+          registros: dailySignup.get(label) ?? 0,
+          landings: dailyLanding.get(label) ?? 0,
+          retomas: dailyResume.get(label) ?? 0,
+        })),
+      },
+    };
+  } catch (error) {
+    logError('admin.obtenerConversion', error, { formattedError: formatAdminError(error) });
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No pudimos cargar la conversión del administrador.',
     };
   }
 }
@@ -1956,21 +2315,9 @@ export async function obtenerLogsAdministrador(): Promise<{
     const userEmailById = new Map<string, string>();
 
     if (recentUserIds.length > 0) {
-      const users = await Promise.all(
-        recentUserIds.map(async (userId) => {
-          try {
-            const response = await admin.auth.admin.getUserById(userId);
-            return { userId, email: response.data.user?.email ?? null };
-          } catch {
-            return { userId, email: null };
-          }
-        })
-      );
-
-      for (const row of users) {
-        if (row.email) {
-          userEmailById.set(row.userId, row.email);
-        }
+      const recentEmails = await fetchUserEmailsByIds(admin, recentUserIds);
+      for (const [userId, email] of recentEmails) {
+        userEmailById.set(userId, email);
       }
     }
 

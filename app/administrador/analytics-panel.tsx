@@ -38,11 +38,6 @@ interface AnalyticsPanelProps {
     dailyUsage: Array<{ label: string; sesiones: number; usuarios: number }>;
     visitorLoginSeries: Array<{ label: string; visitantes: number; logins: number }>;
     funnel: Array<{ step: string; value: number }>;
-    simulatorLoginGate: {
-      reached: number;
-      converted: number;
-      abandoned: number;
-    };
   };
   materiaDetail: {
     materiaId: string;
@@ -262,29 +257,6 @@ export function AnalyticsPanel({
             filterValue={metricPeriods.anonymous}
             hrefBuilder={buildMetricHref}
           />
-          <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
-            <p className="text-[12px] font-medium text-[#7f8aa3]">Intento de simulador y login</p>
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between gap-3 text-[12px]">
-                <span className="text-[#4b5874]">Llegaron al login</span>
-                <span className="font-semibold text-[#1d2a44]">
-                  {stats.simulatorLoginGate.reached.toLocaleString('es-AR')}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-[12px]">
-                <span className="text-[#4b5874]">Se loguearon</span>
-                <span className="font-semibold text-emerald-600">
-                  {stats.simulatorLoginGate.converted.toLocaleString('es-AR')}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-[12px]">
-                <span className="text-[#4b5874]">Abandonaron</span>
-                <span className="font-semibold text-amber-600">
-                  {stats.simulatorLoginGate.abandoned.toLocaleString('es-AR')}
-                </span>
-              </div>
-            </div>
-          </div>
           <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
             <p className="text-[12px] font-medium text-[#7f8aa3]">Top 3 lugares de login</p>
             <div className="mt-3 space-y-2">

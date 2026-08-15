@@ -231,7 +231,10 @@ function buildPreguntasBancoQuery(
   carreraId: string | undefined,
   scope: 'strict' | 'university' | 'shared'
 ) {
-  let query = client.from('preguntas_banco').select('*').eq('materia_id', materiaId);
+  let query = client
+    .from('preguntas_banco')
+    .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+    .eq('materia_id', materiaId);
 
   if (parcial === 3) {
     query = query.in('parcial', [1, 2]);
@@ -340,33 +343,63 @@ export async function getPreguntasSimuladorDemo(
 
     const admin = createAdminClient();
 
-    let query = admin
-      .from('preguntas_banco')
-      .select('*')
-      .eq('materia_id', materiaId)
-      .eq('es_demo', true);
+    const buildBaseQuery = () => {
+      let query = admin
+        .from('preguntas_banco')
+        .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+        .eq('materia_id', materiaId);
 
-    if (parcial === 3) {
-      query = query.in('parcial', [1, 2]);
-    } else {
-      query = query.eq('parcial', parcial);
-    }
+      if (parcial === 3) {
+        query = query.in('parcial', [1, 2]);
+      } else {
+        query = query.eq('parcial', parcial);
+      }
 
-    const { data, error } = await query.limit(50);
+      return query;
+    };
 
-    if (error) {
-      logError('actions.getPreguntasSimuladorDemo.query', error, {
+    const { data: demoRows, error: demoError } = await buildBaseQuery()
+      .eq('es_demo', true)
+      .limit(DEMO_TOTAL_QUESTIONS);
+
+    if (demoError) {
+      logError('actions.getPreguntasSimuladorDemo.query', demoError, {
         materiaId,
         parcial,
       });
       throw new Error('No se pudieron obtener las preguntas de muestra.');
     }
 
-    if (!data || data.length === 0) {
+    const demoQuestions = (demoRows ?? []) as PreguntaBancoRow[];
+
+    // Si no alcanzamos el tope de preguntas demo, completamos con el banco general
+    // para que el simulador de muestra no quede con muy pocas preguntas.
+    if (demoQuestions.length < DEMO_TOTAL_QUESTIONS) {
+      const demoIds = demoQuestions.map((question) => question.id);
+      const fillQuery =
+        demoIds.length > 0
+          ? buildBaseQuery()
+              .not('id', 'in', `(${demoIds.map((id) => `'${id}'`).join(',')})`)
+              .limit(50)
+          : buildBaseQuery().limit(50);
+
+      const { data: fillRows, error: fillError } = await fillQuery;
+
+      if (fillError) {
+        logError('actions.getPreguntasSimuladorDemo.fill', fillError, {
+          materiaId,
+          parcial,
+        });
+      } else {
+        demoQuestions.push(...((fillRows ?? []) as PreguntaBancoRow[]));
+      }
+    }
+
+    if (!demoQuestions.length) {
       return [];
     }
 
-    const sanitized = (data as PreguntaBancoRow[]).map(sanitizePreguntaRow);
+    const sanitized = demoQuestions.map(sanitizePreguntaRow);
     const shuffled = shuffleArray(sanitized);
     return shuffled.slice(0, DEMO_TOTAL_QUESTIONS);
   } catch (error) {
@@ -426,7 +459,10 @@ export async function getPreguntasSimuladorErrores(
     if (rankedIds.length === 0) return [];
 
     const admin = createAdminClient();
-    let query = admin.from('preguntas_banco').select('*').in('id', rankedIds);
+    let query = admin
+      .from('preguntas_banco')
+      .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
+      .in('id', rankedIds);
 
     if (parcial) {
       query = query.eq('parcial', parcial);
@@ -706,7 +742,6 @@ export async function corregirPreguntaDemo(data: {
       .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
       .eq('id', data.pregunta_id)
       .eq('materia_id', data.materia_id)
-      .eq('es_demo', true)
       .maybeSingle();
 
     if (questionError || !question) {
@@ -1448,5 +1483,70 @@ export async function dismissExamReminderAction(notificationId: string): Promise
   } catch (error) {
     logError('actions.dismissExamReminder', error);
     return { success: false };
+  }
+}
+
+export interface DashboardLastAttempt {
+  materiaId: string;
+  parcial: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  mode: string;
+  createdAt: string;
+}
+
+export async function getDashboardLastAttempts(
+  materiaIds: string[]
+): Promise<Record<string, DashboardLastAttempt | null>> {
+  try {
+    if (materiaIds.length === 0) {
+      return {};
+    }
+
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      return {};
+    }
+
+    const { data, error } = await supabase
+      .from('simulator_attempts')
+      .select(
+        'materia_id, parcial, total_questions, correct_answers, wrong_answers, mode, created_at'
+      )
+      .eq('user_id', user.id)
+      .in('materia_id', materiaIds)
+      .order('created_at', { ascending: false });
+
+    if (error || !data) {
+      return {};
+    }
+
+    const result: Record<string, DashboardLastAttempt | null> = {};
+    const seen = new Set<string>();
+
+    for (const row of data) {
+      if (seen.has(row.materia_id)) {
+        continue;
+      }
+      seen.add(row.materia_id);
+      result[row.materia_id] = {
+        materiaId: row.materia_id,
+        parcial: row.parcial,
+        totalQuestions: row.total_questions ?? 0,
+        correctAnswers: row.correct_answers ?? 0,
+        wrongAnswers: row.wrong_answers ?? 0,
+        mode: row.mode ?? 'regular',
+        createdAt: row.created_at ?? new Date().toISOString(),
+      };
+    }
+
+    return result;
+  } catch (error) {
+    logError('actions.getDashboardLastAttempts', error, { materiaIds });
+    return {};
   }
 }

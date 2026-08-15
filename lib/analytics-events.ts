@@ -11,6 +11,8 @@ const ANALYTICS_EVENT_NAMES = [
   'signup_started',
   'signup_completed',
   'signup_error',
+  'post_signup_landing',
+  'post_signup_landing_cta_clicked',
   'auth_mode_switch',
   'pdf_gate_viewed',
   'pdf_gate_cta_clicked',

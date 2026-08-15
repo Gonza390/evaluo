@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ProfileCompletionModal } from '@/components/profile-completion-modal';
 import { useUser } from '@/hooks/useUser';
 import { logError } from '@/lib/observability';
+import { DEMO_MIGRATION_FLAG_KEY } from '@/lib/simulator-persistence';
 import { supabase } from '@/lib/supabase-client';
 
 function sanitizeNextPath(value: string | null) {
@@ -157,7 +158,10 @@ function CompletarPerfilContent() {
         isOpen={true}
         allowSkip={false}
         onComplete={() => {
-          router.replace(nextPath);
+          const cameFromDemo =
+            typeof window !== 'undefined' &&
+            window.localStorage.getItem(DEMO_MIGRATION_FLAG_KEY) === '1';
+          router.replace(cameFromDemo ? '/dashboard' : nextPath);
           router.refresh();
         }}
       />

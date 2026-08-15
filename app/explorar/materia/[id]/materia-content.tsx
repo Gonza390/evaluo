@@ -280,7 +280,7 @@ export default function MateriaContent({
     try {
       let query = supabase
         .from('resumenes')
-        .select('*')
+        .select('id, title, author_name, file_url, module_id, score, created_at')
         .eq('materia_id', materiaId)
         .eq('module_id', Number(activeUnidad));
 

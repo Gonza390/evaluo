@@ -163,10 +163,6 @@ export default function LoginForm() {
           return;
         }
 
-        trackMarketingEvent('signup_completed', {
-          location,
-          provider: 'email',
-        });
         setError('Registro exitoso. Revisá tu correo para confirmar tu cuenta.');
         return;
       }

@@ -83,10 +83,15 @@ export async function fetchResourceVoteSummaries(
     return {};
   }
 
-  const { data, error } = await supabase
-    .from('resource_votes')
-    .select('resource_id, user_id, vote_type')
-    .in('resource_id', resourceIds);
+  const { data, error } = await (supabase as unknown as {
+    rpc: (
+      fn: string,
+      args: Record<string, unknown>
+    ) => Promise<{ data: unknown; error: unknown }>;
+  }).rpc('get_resource_vote_summaries', {
+    p_resource_ids: resourceIds,
+    p_user_id: userId ?? null,
+  });
 
   if (error) {
     throw error;
@@ -98,20 +103,27 @@ export async function fetchResourceVoteSummaries(
     summaries[resourceId] = { ...DEFAULT_VOTE_SUMMARY };
   }
 
-  for (const row of data ?? []) {
+  const rows = data as Array<{
+    resource_id: string;
+    likes: number;
+    dislikes: number;
+    score: number;
+    user_vote: number;
+  }>;
+
+  for (const row of rows ?? []) {
     const resourceId = row.resource_id;
     if (!resourceId) continue;
 
-    const current = summaries[resourceId] ?? { ...DEFAULT_VOTE_SUMMARY };
-    if (row.vote_type === 1) current.likes += 1;
-    if (row.vote_type === -1) current.dislikes += 1;
-    current.score = current.likes - current.dislikes;
-
-    if (userId && row.user_id === userId && (row.vote_type === 1 || row.vote_type === -1)) {
-      current.userVote = row.vote_type;
-    }
-
-    summaries[resourceId] = current;
+    summaries[resourceId] = {
+      likes: Number(row.likes ?? 0),
+      dislikes: Number(row.dislikes ?? 0),
+      score: Number(row.score ?? 0),
+      userVote:
+        row.user_vote === 1 || row.user_vote === -1
+          ? (row.user_vote as 1 | -1)
+          : 0,
+    };
   }
 
   return summaries;

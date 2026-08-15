@@ -41,6 +41,8 @@ import {
 } from '@/lib/simulator-analytics';
 import {
   clearPersistedSimulatorState,
+  DEMO_MIGRATION_FLAG_KEY,
+  migrateDemoToFullSnapshots,
   readPersistedSimulatorState,
   saveLastSimulatorContext,
   type SimuladorPersistedState,
@@ -754,6 +756,11 @@ export default function SimuladorExamen({
       setShowResultsFace(false);
       setEstado('finished');
       clearPersistedSimulatorState(storageKey);
+      try {
+        window.localStorage.removeItem(DEMO_MIGRATION_FLAG_KEY);
+      } catch {
+        // ignore
+      }
       simulatorLifecycleRef.current.outcomeTracked = true;
 
       if (!resolvedDemoMode) {
@@ -967,6 +974,28 @@ export default function SimuladorExamen({
           }
         }
 
+        // Migración demo → full: si el usuario recién se logueó tras el simulador de
+        // muestra, continuamos con sus respuestas en vez de empezar de cero.
+        if (user) {
+          const migrated = migrateDemoToFullSnapshots(user.id);
+          const currentSnapshot = migrated.find(
+            (snapshot) =>
+              snapshot.materiaId === materiaId &&
+              snapshot.parcial === parcial &&
+              snapshot.mode === mode
+          );
+
+          if (currentSnapshot) {
+            hydrateSavedExam(currentSnapshot);
+            if (currentSnapshot.hasStarted && shouldAutoResumeSimulator(currentSnapshot.savedAt)) {
+              setEstado('playing');
+            } else {
+              setEstado('resume_choice');
+            }
+            return;
+          }
+        }
+
         await loadFreshQuestions();
       } catch (error) {
         logError('simulador.inicializar', error, {
@@ -1046,10 +1075,10 @@ export default function SimuladorExamen({
   }, [persistSimulatorSnapshot, simulatorEventContext]);
 
   useEffect(() => {
-    if (estado !== 'playing' || !userId) return;
+    if (estado !== 'playing') return;
     const payload: SimuladorPersistedState = {
       version: 2,
-      userId,
+      userId: userId ?? null,
       materiaId,
       parcial,
       mode,
@@ -1263,6 +1292,11 @@ export default function SimuladorExamen({
   const goNext = () => {
     if (resolvedDemoMode && currentQuestionIndex >= demoCheckpointIndex) {
       if (isQuestionAnswered(demoCheckpointIndex)) {
+        try {
+          window.localStorage.setItem(DEMO_MIGRATION_FLAG_KEY, '1');
+        } catch {
+          // ignore
+        }
         setEstado('demo_gate');
       }
       return;
@@ -1284,6 +1318,11 @@ export default function SimuladorExamen({
     loginGateTrackedRef.current = false;
     simulatorLifecycleRef.current.outcomeTracked = false;
     clearPersistedSimulatorState(storageKey);
+    try {
+      window.localStorage.removeItem(DEMO_MIGRATION_FLAG_KEY);
+    } catch {
+      // ignore
+    }
     window.location.reload();
   };
 
@@ -1292,6 +1331,11 @@ export default function SimuladorExamen({
     if (currentQuestionIndex !== demoCheckpointIndex) return;
     if (!isQuestionAnswered(demoCheckpointIndex)) return;
 
+    try {
+      window.localStorage.setItem(DEMO_MIGRATION_FLAG_KEY, '1');
+    } catch {
+      // ignore
+    }
     setEstado('demo_gate');
   }, [currentQuestionIndex, demoCheckpointIndex, estado, hasStarted, isQuestionAnswered, resolvedDemoMode]);
 

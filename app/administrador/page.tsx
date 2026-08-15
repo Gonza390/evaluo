@@ -20,12 +20,14 @@ import {
 import {
   obtenerBibliotecaFormularioAdministrador,
   obtenerBibliotecaResumenAdministrador,
+  obtenerConversionAdministrador,
   obtenerDetalleMateriaAnaliticaAdministrador,
   obtenerLogsAdministrador,
   obtenerResumenAdministrador,
   obtenerUsuariosAdministrador,
 } from './actions';
 import { AnalyticsPanel } from './analytics-panel';
+import { ConversionPanel } from './conversion-panel';
 import { BibliotecaPanel } from './biblioteca-panel';
 import dynamic from 'next/dynamic';
 
@@ -251,6 +253,7 @@ export default async function AdministradorPage({
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsStats =
     activePanel === 'dashboard' || activePanel === 'analiticas' || activePanel === 'graficas';
+  const needsConversion = activePanel === 'marketing';
   const needsUsers = activePanel === 'usuarios';
   const needsLogs = activePanel === 'logs';
   const needsIA = activePanel === 'ia';
@@ -261,6 +264,7 @@ export default async function AdministradorPage({
     bibliotecaStatsResult,
     logsResult,
     analyticsMateriaResult,
+    conversionResult,
     iaPromptResult,
     iaRankingResult,
     iaFeedbackStatsResult,
@@ -275,6 +279,7 @@ export default async function AdministradorPage({
       activePanel === 'analiticas' && selectedAnalyticsMateriaId
         ? obtenerDetalleMateriaAnaliticaAdministrador(selectedAnalyticsMateriaId, activePeriod)
         : Promise.resolve(null),
+      needsConversion ? obtenerConversionAdministrador(activePeriod) : Promise.resolve(null),
       needsIA ? obtenerPromptSistema() : Promise.resolve(null),
       needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
       needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -370,6 +375,24 @@ export default async function AdministradorPage({
               iaRankingResult?.message ??
               iaFeedbackReviewResult?.message ??
               'Prob\u00e1 nuevamente en unos segundos.'}
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (
+    needsConversion &&
+    (!conversionResult?.success || !conversionResult.stats)
+  ) {
+    return (
+      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+        <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
+          <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
+            No pudimos cargar el panel de conversión
+          </h1>
+          <p className="mt-3 text-[14px] leading-6 text-[#7f8aa3]">
+            {conversionResult?.message ?? 'Probá nuevamente en unos segundos.'}
           </p>
         </div>
       </main>
@@ -562,9 +585,24 @@ export default async function AdministradorPage({
                     topMaterias,
                     devices: stats.devices,
                     funnel: stats.funnel,
-                    simulatorLoginGate: stats.simulatorLoginGate,
                   }}
                   materiaDetail={analyticsMateriaResult?.success ? analyticsMateriaResult.detail ?? null : null}
+                />
+              </section>
+            ) : activePanel === 'marketing' && conversionResult?.success && conversionResult.stats ? (
+              <section>
+                <div className="mb-5">
+                  <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Conversión</p>
+                  <p className="mt-1 text-[14px] text-[#7f8aa3]">
+                    El recorrido del simulador de muestra al registro, la retoma del examen y la retención temprana.
+                  </p>
+                </div>
+
+                <ConversionPanel
+                  stats={conversionResult.stats}
+                  activePeriodLabel={activePeriodLabel}
+                  activePeriod={activePeriod}
+                  buildHref={(period) => `/administrador?panel=marketing&period=${period}`}
                 />
               </section>
             ) : activePanel === 'graficas' && stats ? (

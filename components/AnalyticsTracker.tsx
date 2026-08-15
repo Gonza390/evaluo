@@ -100,6 +100,27 @@ export default function AnalyticsTracker() {
           page_type: getAnalyticsPageType(pathname),
         },
       });
+
+      const createdAt = user?.created_at ? new Date(user.created_at).getTime() : 0;
+      const isNewUser = createdAt > 0 && Date.now() - createdAt < 10 * 60 * 1000;
+      if (isNewUser) {
+        const provider =
+          String(user?.app_metadata?.provider ?? user?.user_metadata?.provider ?? '').trim() ||
+          'email';
+        void track('signup_completed', {
+          session_key: sessionKey,
+          user_id: currentUserId,
+          path: pathname,
+          device_type: deviceType,
+          metadata: {
+            provider,
+            location: 'auth_callback',
+            attribution,
+            anonymous_id: getAnalyticsAnonymousId(),
+            page_type: getAnalyticsPageType(pathname),
+          },
+        });
+      }
     }
 
     previousUserIdRef.current = currentUserId;

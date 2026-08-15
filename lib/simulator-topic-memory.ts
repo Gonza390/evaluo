@@ -6,6 +6,10 @@ import { isolateUntrustedContent, PROMPT_INJECTION_GUARD } from '@/lib/ai/safety
 
 type AdminClient = SupabaseClient<Database>;
 type AttemptTopicEventInsert = Database['public']['Tables']['simulator_attempt_topic_events']['Insert'];
+type TopicInsert = Database['public']['Tables']['simulator_topics']['Insert'];
+type SubtopicInsert = Database['public']['Tables']['simulator_subtopics']['Insert'];
+type TopicLinkInsert = Database['public']['Tables']['simulator_question_topic_links']['Insert'];
+type PerformanceInsert = Database['public']['Tables']['student_topic_performance']['Insert'];
 
 type QuestionRow = {
   id: string;
@@ -165,7 +169,6 @@ async function buildClassificationHints(input: {
   admin: AdminClient;
   materiaId: string;
   parcial: number;
-  question: QuestionRow;
 }) {
   const [{ data: existingTopics }, { data: summaries }, { data: glossaries }] = await Promise.all([
     input.admin
@@ -272,8 +275,9 @@ async function classifyTopicWithAi(input: {
   question: QuestionRow;
   materiaId: string;
   parcial: number;
+  hints?: string;
 }) {
-  const hints = await buildClassificationHints(input);
+  const hints = input.hints ?? (await buildClassificationHints(input));
   const prompt = [
     'Clasifica esta pregunta de simulador universitario en un tema y subtema academico.',
     'Usa nombres cortos, claros y reutilizables. No inventes contenido externo.',
@@ -350,190 +354,351 @@ async function classifyTopicWithAi(input: {
   return null;
 }
 
-async function getOrCreateQuestionTopicLink(input: {
+async function getOrCreateQuestionTopicLinks(input: {
   admin: AdminClient;
-  question: QuestionRow;
-  materiaId: string;
-  parcial: number;
-  useAi?: boolean;
-}): Promise<TopicLink | null> {
-  const { data: existingLink, error: existingError } = await input.admin
+  questions: QuestionRow[];
+  defaultMateriaId: string;
+  defaultParcial: number;
+  answerMap: Map<string, AnsweredQuestion>;
+}): Promise<Map<string, TopicLink>> {
+  const result = new Map<string, TopicLink>();
+  if (input.questions.length === 0) return result;
+
+  const questionIds = input.questions.map((question) => question.id);
+
+  const { data: existingLinks, error: existingLinksError } = await input.admin
     .from('simulator_question_topic_links')
-    .select('topic_id, subtopic_id')
-    .eq('pregunta_id', input.question.id)
-    .maybeSingle();
+    .select('pregunta_id, topic_id, subtopic_id')
+    .in('pregunta_id', questionIds);
 
-  if (existingError && existingError.code !== 'PGRST116') {
-    throw existingError;
+  if (existingLinksError) {
+    throw existingLinksError;
   }
 
-  if (existingLink?.topic_id) {
-    const [{ data: topic }, { data: subtopic }] = await Promise.all([
-      input.admin.from('simulator_topics').select('title').eq('id', existingLink.topic_id).maybeSingle(),
-      existingLink.subtopic_id
-        ? input.admin.from('simulator_subtopics').select('title').eq('id', existingLink.subtopic_id).maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
-
-    return {
-      topicId: existingLink.topic_id,
-      subtopicId: existingLink.subtopic_id ?? null,
-      title: topic?.title ?? 'Tema detectado',
-      subtopicTitle: subtopic?.title ?? 'Subtema detectado',
-      source: 'cache',
-    };
+  const linkByQuestionId = new Map<string, { topic_id: string; subtopic_id: string | null }>();
+  const linkedTopicIds = new Set<string>();
+  const linkedSubtopicIds = new Set<string>();
+  for (const link of existingLinks ?? []) {
+    linkByQuestionId.set(link.pregunta_id, {
+      topic_id: link.topic_id,
+      subtopic_id: link.subtopic_id ?? null,
+    });
+    linkedTopicIds.add(link.topic_id);
+    if (link.subtopic_id) linkedSubtopicIds.add(link.subtopic_id);
   }
 
-  const inferred =
-    input.useAi
-      ? (await classifyTopicWithAi(input)) ?? inferTopic(input.question)
-      : inferTopic(input.question);
-  const source = 'source' in inferred ? inferred.source : 'local-inference';
+  const topicTitles = new Map<string, string>();
+  const subtopicTitles = new Map<string, string>();
 
-  const { data: topicRow, error: topicError } = await input.admin
-    .from('simulator_topics')
-    .upsert(
-      {
-        materia_id: input.materiaId,
-        parcial: input.parcial,
-        topic_key: inferred.topicKey,
-        title: inferred.title,
-        description: 'Tema inferido automaticamente desde una pregunta del simulador.',
-        source,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'materia_id,parcial,topic_key' }
-    )
-    .select('id, title')
-    .single();
-
-  if (topicError || !topicRow?.id) {
-    throw topicError ?? new Error('No se pudo crear el tema del simulador.');
+  if (linkedTopicIds.size > 0) {
+    const { data: topics, error: topicsError } = await input.admin
+      .from('simulator_topics')
+      .select('id, title')
+      .in('id', [...linkedTopicIds]);
+    if (topicsError) {
+      throw topicsError;
+    }
+    for (const topic of topics ?? []) {
+      topicTitles.set(topic.id, topic.title);
+    }
   }
 
-  const { data: subtopicRow, error: subtopicError } = await input.admin
-    .from('simulator_subtopics')
-    .upsert(
-      {
-        topic_id: topicRow.id,
-        subtopic_key: inferred.subtopicKey,
-        title: inferred.subtopicTitle,
-        description: 'Subtema inferido automaticamente desde una pregunta del simulador.',
-        source,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'topic_id,subtopic_key' }
-    )
-    .select('id, title')
-    .single();
-
-  if (subtopicError || !subtopicRow?.id) {
-    throw subtopicError ?? new Error('No se pudo crear el subtema del simulador.');
+  if (linkedSubtopicIds.size > 0) {
+    const { data: subtopics, error: subtopicsError } = await input.admin
+      .from('simulator_subtopics')
+      .select('id, title')
+      .in('id', [...linkedSubtopicIds]);
+    if (subtopicsError) {
+      throw subtopicsError;
+    }
+    for (const subtopic of subtopics ?? []) {
+      subtopicTitles.set(subtopic.id, subtopic.title);
+    }
   }
 
-  const { error: linkError } = await input.admin.from('simulator_question_topic_links').upsert(
-    {
-      pregunta_id: input.question.id,
-      materia_id: input.materiaId,
-      parcial: input.parcial,
-      topic_id: topicRow.id,
-      subtopic_id: subtopicRow.id,
-      confidence_score: inferred.confidenceScore,
-      source,
+  for (const question of input.questions) {
+    const existingLink = linkByQuestionId.get(question.id);
+    if (existingLink?.topic_id) {
+      result.set(question.id, {
+        topicId: existingLink.topic_id,
+        subtopicId: existingLink.subtopic_id ?? null,
+        title: topicTitles.get(existingLink.topic_id) ?? 'Tema detectado',
+        subtopicTitle: existingLink.subtopic_id
+          ? subtopicTitles.get(existingLink.subtopic_id) ?? 'Subtema detectado'
+          : 'Subtema detectado',
+        source: 'cache',
+      });
+    }
+  }
+
+  const unlinkedQuestions = input.questions.filter((question) => !result.has(question.id));
+  if (unlinkedQuestions.length === 0) return result;
+
+  const hintCache = new Map<string, string>();
+
+  const classifications: Array<{
+    question: QuestionRow;
+    materiaId: string;
+    parcial: number;
+    topicKey: string;
+    title: string;
+    subtopicKey: string;
+    subtopicTitle: string;
+    confidenceScore: number;
+    source: string;
+    evidence: Json;
+  }> = [];
+
+  for (const question of unlinkedQuestions) {
+    const answer = input.answerMap.get(question.id);
+    if (!answer) continue;
+
+    const materiaId = question.materia_id ?? input.defaultMateriaId;
+    const parcial = question.parcial ?? input.defaultParcial;
+    const useAi = !answer.wasCorrect;
+    const hintKey = `${materiaId}:${parcial}`;
+
+    if (useAi && !hintCache.has(hintKey)) {
+      hintCache.set(
+        hintKey,
+        await buildClassificationHints({ admin: input.admin, materiaId, parcial })
+      );
+    }
+
+    const inferred = useAi
+      ? (await classifyTopicWithAi({
+          admin: input.admin,
+          question,
+          materiaId,
+          parcial,
+          hints: hintCache.get(hintKey),
+        })) ?? inferTopic(question)
+      : inferTopic(question);
+
+    classifications.push({
+      question,
+      materiaId,
+      parcial,
+      topicKey: inferred.topicKey,
+      title: inferred.title,
+      subtopicKey: inferred.subtopicKey,
+      subtopicTitle: inferred.subtopicTitle,
+      confidenceScore: inferred.confidenceScore,
+      source: 'source' in inferred ? inferred.source : 'local-inference',
       evidence: inferred.evidence,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'pregunta_id' }
-  );
-
-  if (linkError) {
-    throw linkError;
+    });
   }
 
-  return {
-    topicId: topicRow.id,
-    subtopicId: subtopicRow.id,
-    title: topicRow.title,
-    subtopicTitle: subtopicRow.title,
-    source,
-  };
+  if (classifications.length === 0) return result;
+
+  const now = new Date().toISOString();
+
+  const topicUpserts = new Map<string, TopicInsert>();
+  for (const classification of classifications) {
+    const key = `${classification.materiaId}:${classification.parcial}:${classification.topicKey}`;
+    if (!topicUpserts.has(key)) {
+      topicUpserts.set(key, {
+        materia_id: classification.materiaId,
+        parcial: classification.parcial,
+        topic_key: classification.topicKey,
+        title: classification.title,
+        description: 'Tema inferido automaticamente desde una pregunta del simulador.',
+        source: classification.source,
+        updated_at: now,
+      });
+    }
+  }
+
+  const topicIdByKey = new Map<string, string>();
+  if (topicUpserts.size > 0) {
+    const { data: upsertedTopics, error: topicsError } = await input.admin
+      .from('simulator_topics')
+      .upsert([...topicUpserts.values()], { onConflict: 'materia_id,parcial,topic_key' })
+      .select('id, materia_id, parcial, topic_key');
+    if (topicsError) {
+      throw topicsError;
+    }
+    for (const topic of upsertedTopics ?? []) {
+      topicIdByKey.set(`${topic.materia_id}:${topic.parcial}:${topic.topic_key}`, topic.id);
+    }
+  }
+
+  const subtopicUpserts = new Map<string, SubtopicInsert>();
+  for (const classification of classifications) {
+    const topicId = topicIdByKey.get(
+      `${classification.materiaId}:${classification.parcial}:${classification.topicKey}`
+    );
+    if (!topicId) continue;
+    const key = `${topicId}:${classification.subtopicKey}`;
+    if (!subtopicUpserts.has(key)) {
+      subtopicUpserts.set(key, {
+        topic_id: topicId,
+        subtopic_key: classification.subtopicKey,
+        title: classification.subtopicTitle,
+        description: 'Subtema inferido automaticamente desde una pregunta del simulador.',
+        source: classification.source,
+        updated_at: now,
+      });
+    }
+  }
+
+  const subtopicIdByKey = new Map<string, string>();
+  if (subtopicUpserts.size > 0) {
+    const { data: upsertedSubtopics, error: subtopicsError } = await input.admin
+      .from('simulator_subtopics')
+      .upsert([...subtopicUpserts.values()], { onConflict: 'topic_id,subtopic_key' })
+      .select('id, topic_id, subtopic_key');
+    if (subtopicsError) {
+      throw subtopicsError;
+    }
+    for (const subtopic of upsertedSubtopics ?? []) {
+      subtopicIdByKey.set(`${subtopic.topic_id}:${subtopic.subtopic_key}`, subtopic.id);
+    }
+  }
+
+  const linkUpserts: TopicLinkInsert[] = [];
+  for (const classification of classifications) {
+    const topicId = topicIdByKey.get(
+      `${classification.materiaId}:${classification.parcial}:${classification.topicKey}`
+    );
+    const subtopicId = topicId
+      ? subtopicIdByKey.get(`${topicId}:${classification.subtopicKey}`)
+      : undefined;
+    if (!topicId) continue;
+
+    linkUpserts.push({
+      pregunta_id: classification.question.id,
+      materia_id: classification.materiaId,
+      parcial: classification.parcial,
+      topic_id: topicId,
+      subtopic_id: subtopicId ?? null,
+      confidence_score: classification.confidenceScore,
+      source: classification.source,
+      evidence: classification.evidence,
+      updated_at: now,
+    });
+
+    result.set(classification.question.id, {
+      topicId,
+      subtopicId: subtopicId ?? null,
+      title: classification.title,
+      subtopicTitle: classification.subtopicTitle,
+      source: classification.source,
+    });
+  }
+
+  if (linkUpserts.length > 0) {
+    const { error: linkError } = await input.admin
+      .from('simulator_question_topic_links')
+      .upsert(linkUpserts, { onConflict: 'pregunta_id' });
+    if (linkError) {
+      throw linkError;
+    }
+  }
+
+  return result;
 }
 
-async function updateStudentTopicPerformance(input: {
+async function updateStudentTopicPerformanceBatch(input: {
   admin: AdminClient;
   userId: string;
-  materiaId: string;
-  parcial: number;
-  topicId: string;
-  subtopicId: string | null;
-  wasCorrect: boolean;
+  entries: Array<{
+    materiaId: string;
+    parcial: number;
+    topicId: string;
+    subtopicId: string | null;
+    wasCorrect: boolean;
+  }>;
 }) {
-  const now = new Date().toISOString();
-  const query = input.admin
-    .from('student_topic_performance')
-    .select('id, attempts_count, correct_count, wrong_count')
-    .eq('user_id', input.userId)
-    .eq('materia_id', input.materiaId)
-    .eq('parcial', input.parcial)
-    .eq('topic_id', input.topicId);
+  if (input.entries.length === 0) return;
 
-  const scopedQuery = input.subtopicId
-    ? query.eq('subtopic_id', input.subtopicId)
-    : query.is('subtopic_id', null);
-
-  const { data: current, error } = await scopedQuery.maybeSingle();
-
-  if (error && error.code !== 'PGRST116') {
-    throw error;
+  const scopeTotals = new Map<
+    string,
+    { materiaId: string; parcial: number; topicId: string; subtopicId: string | null; correct: number; wrong: number }
+  >();
+  for (const entry of input.entries) {
+    const key = `${entry.materiaId}:${entry.parcial}:${entry.topicId}:${entry.subtopicId ?? 'null'}`;
+    const current = scopeTotals.get(key);
+    if (current) {
+      if (entry.wasCorrect) current.correct += 1;
+      else current.wrong += 1;
+    } else {
+      scopeTotals.set(key, {
+        materiaId: entry.materiaId,
+        parcial: entry.parcial,
+        topicId: entry.topicId,
+        subtopicId: entry.subtopicId,
+        correct: entry.wasCorrect ? 1 : 0,
+        wrong: entry.wasCorrect ? 0 : 1,
+      });
+    }
   }
 
-  const attemptsCount = (current?.attempts_count ?? 0) + 1;
-  const correctCount = (current?.correct_count ?? 0) + (input.wasCorrect ? 1 : 0);
-  const wrongCount = (current?.wrong_count ?? 0) + (input.wasCorrect ? 0 : 1);
-  const masteryScore = attemptsCount > 0 ? Math.round((correctCount / attemptsCount) * 10000) / 100 : 0;
+  const scopes = [...scopeTotals.values()];
+  const topicIds = [...new Set(scopes.map((scope) => scope.topicId))];
 
-  if (current?.id) {
-    const updatePayload: Database['public']['Tables']['student_topic_performance']['Update'] = {
+  const existingByScope = new Map<string, { id: string; attempts_count: number; correct_count: number; wrong_count: number }>();
+
+  if (topicIds.length > 0) {
+    const { data: existingRows, error: existingError } = await input.admin
+      .from('student_topic_performance')
+      .select('id, user_id, materia_id, parcial, topic_id, subtopic_id, attempts_count, correct_count, wrong_count')
+      .eq('user_id', input.userId)
+      .in('topic_id', topicIds);
+    if (existingError) {
+      throw existingError;
+    }
+    for (const row of existingRows ?? []) {
+      const key = `${row.materia_id}:${row.parcial}:${row.topic_id}:${row.subtopic_id ?? 'null'}`;
+      existingByScope.set(key, {
+        id: row.id,
+        attempts_count: row.attempts_count ?? 0,
+        correct_count: row.correct_count ?? 0,
+        wrong_count: row.wrong_count ?? 0,
+      });
+    }
+  }
+
+  const now = new Date().toISOString();
+  const upserts: PerformanceInsert[] = [];
+
+  for (const scope of scopes) {
+    const key = `${scope.materiaId}:${scope.parcial}:${scope.topicId}:${scope.subtopicId ?? 'null'}`;
+    const current = existingByScope.get(key);
+    const attemptsCount = (current?.attempts_count ?? 0) + scope.correct + scope.wrong;
+    const correctCount = (current?.correct_count ?? 0) + scope.correct;
+    const wrongCount = (current?.wrong_count ?? 0) + scope.wrong;
+    const masteryScore = attemptsCount > 0 ? Math.round((correctCount / attemptsCount) * 10000) / 100 : 0;
+
+    const payload: PerformanceInsert = {
+      user_id: input.userId,
+      materia_id: scope.materiaId,
+      parcial: scope.parcial,
+      topic_id: scope.topicId,
+      subtopic_id: scope.subtopicId,
       attempts_count: attemptsCount,
       correct_count: correctCount,
       wrong_count: wrongCount,
       mastery_score: masteryScore,
       last_answer_at: now,
+      last_wrong_at: scope.wrong > 0 ? now : (current ? undefined : null),
       updated_at: now,
     };
 
-    if (!input.wasCorrect) {
-      updatePayload.last_wrong_at = now;
+    if (current?.id) {
+      payload.id = current.id;
     }
 
-    const { error: updateError } = await input.admin
-      .from('student_topic_performance')
-      .update(updatePayload)
-      .eq('id', current.id);
-
-    if (updateError) {
-      throw updateError;
-    }
-    return;
+    upserts.push(payload);
   }
 
-  const { error: insertError } = await input.admin.from('student_topic_performance').insert({
-    user_id: input.userId,
-    materia_id: input.materiaId,
-    parcial: input.parcial,
-    topic_id: input.topicId,
-    subtopic_id: input.subtopicId,
-    attempts_count: attemptsCount,
-    correct_count: correctCount,
-    wrong_count: wrongCount,
-    mastery_score: masteryScore,
-    last_answer_at: now,
-    last_wrong_at: input.wasCorrect ? null : now,
-    updated_at: now,
-  });
-
-  if (insertError) {
-    throw insertError;
+  if (upserts.length > 0) {
+    const { error: upsertError } = await input.admin
+      .from('student_topic_performance')
+      .upsert(upserts, { onConflict: 'id' });
+    if (upsertError) {
+      throw upsertError;
+    }
   }
 }
 
@@ -569,29 +734,42 @@ export async function recordSimulatorTopicMemory(input: {
     throw questionsError;
   }
 
-  const answerMap = new Map(answers.map((answer) => [answer.preguntaId, answer]));
-  const events: AttemptTopicEventInsert[] = [];
-  let linked = 0;
+  const questionRows = (questions ?? []) as QuestionRow[];
+  if (questionRows.length === 0) {
+    return { processed: answers.length, linked: 0 };
+  }
 
-  for (const question of (questions ?? []) as QuestionRow[]) {
-    const answer = answerMap.get(question.id);
+  const topicLinks = await getOrCreateQuestionTopicLinks({
+    admin: input.admin,
+    questions: questionRows,
+    defaultMateriaId: input.materiaId,
+    defaultParcial: input.parcial,
+    answerMap: uniqueAnswers,
+  });
+
+  const performanceEntries: Array<{
+    materiaId: string;
+    parcial: number;
+    topicId: string;
+    subtopicId: string | null;
+    wasCorrect: boolean;
+  }> = [];
+
+  const events: AttemptTopicEventInsert[] = [];
+
+  for (const question of questionRows) {
+    const answer = uniqueAnswers.get(question.id);
     if (!answer) continue;
 
-    const topicLink = await getOrCreateQuestionTopicLink({
-      admin: input.admin,
-      question,
-      materiaId: question.materia_id ?? input.materiaId,
-      parcial: question.parcial ?? input.parcial,
-      useAi: !answer.wasCorrect,
-    });
-
+    const topicLink = topicLinks.get(question.id);
     if (!topicLink) continue;
 
-    await updateStudentTopicPerformance({
-      admin: input.admin,
-      userId: input.userId,
-      materiaId: question.materia_id ?? input.materiaId,
-      parcial: question.parcial ?? input.parcial,
+    const materiaId = question.materia_id ?? input.materiaId;
+    const parcial = question.parcial ?? input.parcial;
+
+    performanceEntries.push({
+      materiaId,
+      parcial,
       topicId: topicLink.topicId,
       subtopicId: topicLink.subtopicId,
       wasCorrect: answer.wasCorrect,
@@ -600,15 +778,20 @@ export async function recordSimulatorTopicMemory(input: {
     events.push({
       attempt_id: input.attemptId,
       user_id: input.userId,
-      materia_id: question.materia_id ?? input.materiaId,
-      parcial: question.parcial ?? input.parcial,
+      materia_id: materiaId,
+      parcial,
       pregunta_id: question.id,
       topic_id: topicLink.topicId,
       subtopic_id: topicLink.subtopicId,
       was_correct: answer.wasCorrect,
     });
-    linked += 1;
   }
+
+  await updateStudentTopicPerformanceBatch({
+    admin: input.admin,
+    userId: input.userId,
+    entries: performanceEntries,
+  });
 
   if (events.length > 0) {
     const { error: eventError } = await input.admin.from('simulator_attempt_topic_events').insert(events);
@@ -617,7 +800,7 @@ export async function recordSimulatorTopicMemory(input: {
     }
   }
 
-  return { processed: answers.length, linked };
+  return { processed: answers.length, linked: events.length };
 }
 
 export async function safeRecordSimulatorTopicMemory(input: Parameters<typeof recordSimulatorTopicMemory>[0]) {

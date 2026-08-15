@@ -49,6 +49,14 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   signup_started: ['attribution', 'anonymous_id', 'page_type', 'location', 'provider'],
   signup_completed: ['attribution', 'anonymous_id', 'page_type', 'location', 'provider'],
   signup_error: ['attribution', 'anonymous_id', 'page_type', 'location', 'provider', 'error_code'],
+  post_signup_landing: ['attribution', 'anonymous_id', 'page_type', 'destination', 'origin'],
+  post_signup_landing_cta_clicked: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'cta',
+    'destination',
+  ],
   auth_mode_switch: ['attribution', 'anonymous_id', 'page_type', 'location', 'current_mode', 'next_mode'],
   pdf_gate_viewed: ['attribution', 'anonymous_id', 'page_type', 'location', 'resource_title', 'preview_pages'],
   pdf_gate_cta_clicked: [

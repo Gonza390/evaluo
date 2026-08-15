@@ -82,6 +82,74 @@ export function clearPersistedSimulatorState(storageKey: string) {
   }
 }
 
+const DEMO_STORAGE_MARKER = 'evaluo_simulador_in_progress:demo:';
+export const DEMO_MIGRATION_FLAG_KEY = 'evaluo_demo_migration_pending';
+
+/**
+ * Convierte los snapshots de un simulador de muestra (demo, sin sesión) en
+ * snapshots "full" ligados al usuario. Se usa cuando un usuario crea la cuenta
+ * después de llegar por un link al simulador: conserva sus respuestas en vez
+ * de empezar de cero. Devuelve los snapshots migrados, ordenados por fecha.
+ */
+export function migrateDemoToFullSnapshots(userId: string): SimuladorPersistedState[] {
+  try {
+    const migrated: SimuladorPersistedState[] = [];
+    const keysToRemove: string[] = [];
+
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index);
+      if (!key || !key.startsWith(DEMO_STORAGE_MARKER)) continue;
+
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+
+      const parsed = JSON.parse(raw) as Partial<SimuladorPersistedState> | null;
+      if (
+        !parsed ||
+        parsed.version !== 2 ||
+        parsed.userId !== null ||
+        typeof parsed.materiaId !== 'string' ||
+        !parsed.materiaId ||
+        Number(parsed.parcial) <= 0 ||
+        (parsed.mode !== 'regular' && parsed.mode !== 'errores' && parsed.mode !== 'ultimo_intento') ||
+        !Array.isArray(parsed.preguntas) ||
+        parsed.preguntas.length === 0
+      ) {
+        continue;
+      }
+
+      const fullKey = key.replace(':demo:', ':full:');
+      const existingFull = readPersistedSimulatorState(fullKey);
+      if (existingFull) {
+        // No pisamos un intento full existente; solo descartamos el demo huérfano.
+        keysToRemove.push(key);
+        continue;
+      }
+
+      const migratedState: SimuladorPersistedState = {
+        ...(parsed as SimuladorPersistedState),
+        userId,
+        savedAt: new Date().toISOString(),
+      };
+      writePersistedSimulatorState(fullKey, migratedState);
+      keysToRemove.push(key);
+      migrated.push(migratedState);
+    }
+
+    for (const key of keysToRemove) {
+      window.localStorage.removeItem(key);
+    }
+
+    window.localStorage.removeItem(DEMO_MIGRATION_FLAG_KEY);
+
+    return migrated.sort(
+      (a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime()
+    );
+  } catch {
+    return [];
+  }
+}
+
 export function saveLastSimulatorContext(materiaId: string, parcial: number) {
   try {
     window.localStorage.setItem(
