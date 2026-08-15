@@ -6,6 +6,7 @@ import Image from 'next/image';
 import {
   ArrowUpRight,
   BookOpen,
+  Check,
   FileText,
   GraduationCap,
   Heart,
@@ -15,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 import { supabase } from '@/lib/supabase';
-import { getDashboardMateriaRoute, getMateriaRoute } from '@/lib/routes';
+import { getDashboardMateriaRoute, getMateriaRoute, getSimulatorRoute } from '@/lib/routes';
 import {
   getDashboardState,
   getPartialStudyInsights,
@@ -666,6 +667,52 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     };
   }, [dashboardState.lastSubject, recommendedMaterias, router, simuladorInProgress]);
 
+  const primarySubjectId =
+    dashboardState.lastSubject?.id ??
+    dashboardState.activeSubjects[0]?.id ??
+    simuladorInProgress?.materiaId ??
+    partialInsights?.materiaId ??
+    '';
+  const hasAnySubject = dashboardState.activeSubjects.length > 0 || Boolean(dashboardState.lastSubject);
+  const isNewUser =
+    Boolean(user) &&
+    !dashboardLoading &&
+    !hasAnySubject &&
+    !partialInsights &&
+    !simuladorInProgress;
+  const onboardingMilestones = [
+    {
+      id: 'materia',
+      label: 'Elegí tu primera materia',
+      description: 'Añadí una materia de tu carrera para activar resúmenes, pregunteros y simulacros.',
+      done: hasAnySubject,
+      locked: false,
+      action: () => setShowAddModal(true),
+      actionLabel: 'Elegir materia',
+    },
+    {
+      id: 'practica',
+      label: 'Respondé 5 preguntas de práctica',
+      description: 'Arrancá un simulador de parcial y respondé tus primeras preguntas.',
+      done: (partialInsights?.preguntasRespondidasParcial ?? 0) >= 5,
+      locked: !hasAnySubject,
+      action: () => router.push(getSimulatorRoute(primarySubjectId, 1)),
+      actionLabel: 'Practicar ahora',
+    },
+    {
+      id: 'simulacro',
+      label: 'Rendí tu primer simulacro',
+      description: 'Completá un parcial cronometrado para medir tu nivel con el radar de confianza.',
+      done: (partialInsights?.modelosEstimadosRealizados ?? 0) >= 1,
+      locked: !hasAnySubject,
+      action: () => router.push(getSimulatorRoute(primarySubjectId, 1)),
+      actionLabel: 'Empezar simulacro',
+    },
+  ];
+  const onboardingProgress = onboardingMilestones.filter((milestone) => milestone.done).length;
+  const showOnboardingChecklist =
+    Boolean(user) && !dashboardLoading && onboardingProgress < 3;
+
   const partialProgressRingStyle = {
     background: `conic-gradient(#2563EB ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg, #E6EAF2 ${Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0)) * 3.6}deg)`,
   };
@@ -755,7 +802,37 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
           <div className="animate-study-reveal mb-5 overflow-hidden rounded-[30px] bg-[linear-gradient(135deg,#2563EB_0%,#4F46E5_45%,#6366F1_100%)] px-4.5 py-4 text-white shadow-[0_22px_50px_rgba(37,99,235,0.22)] sm:px-6 sm:py-4">
             <div className="mx-auto grid max-w-[1000px] gap-5 xl:grid-cols-[1.18fr_0.82fr] xl:items-center">
-              <div className="grid gap-4 lg:grid-cols-[0.52fr_0.95fr] lg:items-center">
+              <div className={isNewUser ? 'min-w-0' : 'grid gap-4 lg:grid-cols-[0.52fr_0.95fr] lg:items-center'}>
+                {isNewUser ? (
+                  <div className="min-w-0 max-w-[620px]">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+                      Primeros pasos
+                    </p>
+                    <h2 className="mt-2 text-[1.5rem] font-bold leading-[1.08] tracking-[-0.05em] text-white sm:text-[1.85rem]">
+                      Armemos tu espacio de estudio
+                    </h2>
+                    <p className="mt-3 max-w-[500px] text-[0.95rem] font-medium leading-6 text-white/85">
+                      Elegí tu primera materia y activá resúmenes, pregunteros y simulacros de tu
+                      cátedra. Te acompañamos con 3 pasos para que arranques desde hoy.
+                    </p>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                      <Button
+                        onClick={() => setShowAddModal(true)}
+                        className="h-12 w-full rounded-xl bg-white px-6 text-[13px] font-semibold text-[#3042E8] shadow-[0_12px_24px_rgba(17,24,39,0.16)] hover:bg-white/95 sm:w-auto"
+                      >
+                        Elegir mi primera materia
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => router.push('/explorar')}
+                        className="h-12 w-full rounded-xl border border-white/25 bg-white/10 px-6 text-[13px] font-semibold text-white hover:bg-white/20 sm:w-auto"
+                      >
+                        Explorar materias
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
                 <div className="min-w-0 max-w-[520px]">
                   <h2 className="max-w-full text-[1.48rem] font-bold leading-[1.06] tracking-[-0.05em] text-white sm:max-w-[230px] sm:text-[1.62rem]">
                     {'Segu\u00ED as\u00ED, vas por muy buen camino \uD83D\uDCAA'}
@@ -795,7 +872,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                         </div>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-5 text-white/78">
-                        <span>{'\u00A1Vas muy bien!'}</span>
+                        <span>{heroCoverage > 0 ? '\u00A1Vas muy bien!' : 'Arranc\u00E1 practicando para activar tu progreso'}</span>
                         {partialInsights ? (
                           <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-white/88">
                             Parcial {partialInsights.parcial}
@@ -826,6 +903,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
                   <p className="mt-3.5 max-w-[430px] text-[11px] leading-5 text-white/74">{heroProgressLabel}</p>
                 </div>
+                  </>
+                )}
               </div>
 
               <div className="relative hidden items-center justify-center xl:flex xl:justify-end">
@@ -842,6 +921,108 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
               </div>
             </div>
           </div>
+
+          {showOnboardingChecklist ? (
+            <Card className="animate-study-reveal mb-5 rounded-[var(--radius-card)] border-slate-200 bg-white/90 backdrop-blur">
+              <CardHeader className="pb-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <CardTitle className="text-xl font-semibold text-slate-950">
+                      Completá tu primer recorrido
+                    </CardTitle>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Te acompañamos con 3 pasos para que aproveches Evaluo desde el día uno.
+                    </p>
+                  </div>
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="flex w-fit items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2"
+                  >
+                    <span className="text-sm font-bold text-slate-900">{onboardingProgress}/3</span>
+                    <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-200">
+                      <div
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#2563EB,#6366F1)] transition-all duration-500"
+                        style={{ width: `${Math.max((onboardingProgress / 3) * 100, 8)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-3">
+                <ol className="grid gap-3 md:grid-cols-3">
+                  {onboardingMilestones.map((milestone, index) => {
+                    const isCurrent = !milestone.done && index === onboardingProgress;
+                    const isActionable = !milestone.done && !milestone.locked;
+                    return (
+                      <li key={milestone.id} className="h-full">
+                        <div
+                          role={isActionable ? 'button' : undefined}
+                          tabIndex={isActionable ? 0 : undefined}
+                          onClick={isActionable ? milestone.action : undefined}
+                          onKeyDown={
+                            isActionable
+                              ? (event) => {
+                                  if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    milestone.action();
+                                  }
+                                }
+                              : undefined
+                          }
+                          aria-current={isCurrent ? 'step' : undefined}
+                          className={`flex h-full w-full flex-col rounded-2xl border p-4 text-left ${
+                            milestone.done
+                              ? 'border-emerald-200 bg-emerald-50/70'
+                              : isActionable
+                                ? 'cursor-pointer border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md'
+                                : 'border-slate-200 bg-slate-50/70 opacity-70'
+                          }`}
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <span
+                              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
+                                milestone.done ? 'bg-emerald-500 text-white' : 'bg-blue-600 text-white'
+                              }`}
+                            >
+                              {milestone.done ? <Check className="h-5 w-5" aria-hidden="true" /> : index + 1}
+                            </span>
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">
+                              Paso {index + 1}
+                            </span>
+                          </div>
+                          <h3
+                            className={`mt-4 text-base font-semibold ${
+                              milestone.done ? 'text-emerald-900' : 'text-slate-950'
+                            }`}
+                          >
+                            {milestone.label}
+                          </h3>
+                          <p className="mt-1 text-sm text-slate-500">{milestone.description}</p>
+                          <div className="mt-auto pt-4">
+                            {milestone.done ? (
+                              <span className="inline-flex items-center gap-1 text-sm font-semibold text-emerald-700">
+                                Listo
+                              </span>
+                            ) : milestone.locked ? (
+                              <span className="inline-flex items-center gap-1 text-sm font-medium text-slate-400">
+                                Primero elegí tu materia
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700">
+                                {milestone.actionLabel}
+                                <ArrowUpRight className="h-4 w-4" />
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </CardContent>
+            </Card>
+          ) : null}
 
           <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
             <Card
