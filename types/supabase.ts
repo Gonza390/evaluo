@@ -4,7 +4,7 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
 export type AppRole = 'admin' | 'student';
 
@@ -19,1515 +19,2338 @@ export interface DashboardAnalytics {
 }
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      carrera_materias: {
-        Row: {
-          id: string;
-          carrera_id: string | null;
-          materia_id: string | null;
-          prioridad: number | null;
-        };
-        Insert: {
-          id?: string;
-          carrera_id?: string | null;
-          materia_id?: string | null;
-          prioridad?: number | null;
-        };
-        Update: {
-          id?: string;
-          carrera_id?: string;
-          materia_id?: string;
-          prioridad?: number | null;
-        };
-        Relationships: [];
-      };
-      carreras: {
-        Row: {
-          id: string;
-          nombre: string;
-          universidad_id: string | null;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          universidad_id?: string | null;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          nombre?: string;
-          universidad_id?: string | null;
-          created_at?: string | null;
-        };
-        Relationships: [];
-      };
-      subscription_plans: {
-        Row: {
-          id: string;
-          code: string;
-          name: string;
-          price_ars: number;
-          interval: string;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          code: string;
-          name: string;
-          price_ars?: number;
-          interval?: string;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          code?: string;
-          name?: string;
-          price_ars?: number;
-          interval?: string;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      user_subscriptions: {
-        Row: {
-          id: string;
-          user_id: string;
-          plan_id: string;
-          status: string;
-          started_at: string;
-          expires_at: string | null;
-          payment_provider: string | null;
-          payment_reference: string | null;
-          amount_ars: number | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          plan_id: string;
-          status?: string;
-          started_at?: string;
-          expires_at?: string | null;
-          payment_provider?: string | null;
-          payment_reference?: string | null;
-          amount_ars?: number | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          plan_id?: string;
-          status?: string;
-          started_at?: string;
-          expires_at?: string | null;
-          payment_provider?: string | null;
-          payment_reference?: string | null;
-          amount_ars?: number | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      analytics_events: {
-        Row: {
-          id: string;
-          event_name: string;
-          user_id: string | null;
-          session_key: string;
-          path: string | null;
-          device_type: string | null;
-          metadata: Json | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          event_name: string;
-          user_id?: string | null;
-          session_key: string;
-          path?: string | null;
-          device_type?: string | null;
-          metadata?: Json | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          event_name?: string;
-          user_id?: string | null;
-          session_key?: string;
-          path?: string | null;
-          device_type?: string | null;
-          metadata?: Json | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      configuracion_ia: {
-        Row: {
-          id: string;
-          prompt_sistema: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id: string;
-          prompt_sistema?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          prompt_sistema?: string | null;
-          updated_at?: string | null;
-        };
-        Relationships: [];
-      };
-      explanations_history: {
-        Row: {
-          id: string;
-          user_id: string;
-          materia_id: string | null;
-          materia_nombre: string | null;
-          parcial: number | null;
-          pregunta_id: string | null;
-          enunciado: string;
-          explicacion: string;
-          provider: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          materia_id?: string | null;
-          materia_nombre?: string | null;
-          parcial?: number | null;
-          pregunta_id?: string | null;
-          enunciado: string;
-          explicacion: string;
-          provider?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          materia_id?: string | null;
-          materia_nombre?: string | null;
-          parcial?: number | null;
-          pregunta_id?: string | null;
-          enunciado?: string;
-          explicacion?: string;
-          provider?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      historial_respuestas: {
-        Row: {
-          id: string;
-          usuario_id: string | null;
-          pregunta_id: string | null;
-          materia_id: string | null;
-          es_correcta: boolean | null;
-          peso: number | null;
-          fecha_intento: string | null;
-          fecha_respuesta: string | null;
-        };
-        Insert: {
-          id?: string;
-          usuario_id?: string | null;
-          pregunta_id?: string | null;
-          materia_id?: string | null;
-          es_correcta?: boolean | null;
-          peso?: number | null;
-          fecha_intento?: string | null;
-          fecha_respuesta?: string | null;
-        };
-        Update: {
-          id?: string;
-          usuario_id?: string | null;
-          pregunta_id?: string | null;
-          materia_id?: string | null;
-          es_correcta?: boolean | null;
-          peso?: number | null;
-          fecha_intento?: string | null;
-          fecha_respuesta?: string | null;
-        };
-        Relationships: [];
-      };
-      simulator_topics: {
-        Row: {
-          id: string;
-          materia_id: string;
-          parcial: number | null;
-          topic_key: string;
-          title: string;
-          description: string | null;
-          source: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          materia_id: string;
-          parcial?: number | null;
-          topic_key: string;
-          title: string;
-          description?: string | null;
-          source?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          materia_id?: string;
-          parcial?: number | null;
-          topic_key?: string;
-          title?: string;
-          description?: string | null;
-          source?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      simulator_subtopics: {
-        Row: {
-          id: string;
-          topic_id: string;
-          subtopic_key: string;
-          title: string;
-          description: string | null;
-          source: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          topic_id: string;
-          subtopic_key: string;
-          title: string;
-          description?: string | null;
-          source?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          topic_id?: string;
-          subtopic_key?: string;
-          title?: string;
-          description?: string | null;
-          source?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      simulator_question_topic_links: {
-        Row: {
-          id: string;
-          pregunta_id: string;
-          materia_id: string;
-          parcial: number | null;
-          topic_id: string;
-          subtopic_id: string | null;
-          confidence_score: number;
-          source: string;
-          evidence: Json;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          pregunta_id: string;
-          materia_id: string;
-          parcial?: number | null;
-          topic_id: string;
-          subtopic_id?: string | null;
-          confidence_score?: number;
-          source?: string;
-          evidence?: Json;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          pregunta_id?: string;
-          materia_id?: string;
-          parcial?: number | null;
-          topic_id?: string;
-          subtopic_id?: string | null;
-          confidence_score?: number;
-          source?: string;
-          evidence?: Json;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      student_topic_performance: {
-        Row: {
-          id: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          topic_id: string;
-          subtopic_id: string | null;
-          attempts_count: number;
-          correct_count: number;
-          wrong_count: number;
-          mastery_score: number;
-          last_answer_at: string | null;
-          last_wrong_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          topic_id: string;
-          subtopic_id?: string | null;
-          attempts_count?: number;
-          correct_count?: number;
-          wrong_count?: number;
-          mastery_score?: number;
-          last_answer_at?: string | null;
-          last_wrong_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          materia_id?: string;
-          parcial?: number;
-          topic_id?: string;
-          subtopic_id?: string | null;
-          attempts_count?: number;
-          correct_count?: number;
-          wrong_count?: number;
-          mastery_score?: number;
-          last_answer_at?: string | null;
-          last_wrong_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      simulator_attempt_topic_events: {
-        Row: {
-          id: string;
-          attempt_id: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          pregunta_id: string;
-          topic_id: string;
-          subtopic_id: string | null;
-          was_correct: boolean;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          attempt_id: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          pregunta_id: string;
-          topic_id: string;
-          subtopic_id?: string | null;
-          was_correct?: boolean;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          attempt_id?: string;
-          user_id?: string;
-          materia_id?: string;
-          parcial?: number;
-          pregunta_id?: string;
-          topic_id?: string;
-          subtopic_id?: string | null;
-          was_correct?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      simulator_attempts: {
-        Row: {
-          id: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          total_questions: number;
-          correct_answers: number;
-          wrong_answers: number;
-          answered_questions: number;
-          premium_only: boolean;
-          mode: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          total_questions?: number;
-          correct_answers?: number;
-          wrong_answers?: number;
-          answered_questions?: number;
-          premium_only?: boolean;
-          mode?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          materia_id?: string;
-          parcial?: number;
-          total_questions?: number;
-          correct_answers?: number;
-          wrong_answers?: number;
-          answered_questions?: number;
-          premium_only?: boolean;
-          mode?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      simulator_attempt_wrong_questions: {
-        Row: {
-          id: string;
-          attempt_id: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          pregunta_id: string | null;
-          premium_pregunta_id: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          attempt_id: string;
-          user_id: string;
-          materia_id: string;
-          parcial: number;
-          pregunta_id?: string | null;
-          premium_pregunta_id?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          attempt_id?: string;
-          user_id?: string;
-          materia_id?: string;
-          parcial?: number;
-          pregunta_id?: string | null;
-          premium_pregunta_id?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      study_calendar_events: {
-        Row: {
-          id: string;
-          user_id: string;
-          event_type: string;
-          title: string;
-          notes: string | null;
-          event_date: string;
-          materia_id: string | null;
-          materia_nombre: string | null;
-          carrera_id: string | null;
-          carrera_nombre: string | null;
-          exam_instance: string | null;
-          source_payload: Json | null;
-          reminder_days_before: Json | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          event_type: string;
-          title: string;
-          notes?: string | null;
-          event_date: string;
-          materia_id?: string | null;
-          materia_nombre?: string | null;
-          carrera_id?: string | null;
-          carrera_nombre?: string | null;
-          exam_instance?: string | null;
-          source_payload?: Json | null;
-          reminder_days_before?: Json | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          event_type?: string;
-          title?: string;
-          notes?: string | null;
-          event_date?: string;
-          materia_id?: string | null;
-          materia_nombre?: string | null;
-          carrera_id?: string | null;
-          carrera_nombre?: string | null;
-          exam_instance?: string | null;
-          source_payload?: Json | null;
-          reminder_days_before?: Json | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      user_notifications: {
-        Row: {
-          id: string;
-          user_id: string;
-          event_id: string | null;
-          type: string;
-          title: string;
-          body: string;
-          materia_nombre: string | null;
-          event_date: string | null;
-          days_before: number | null;
-          status: string;
-          created_at: string;
-          seen_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          event_id?: string | null;
-          type?: string;
-          title: string;
-          body: string;
-          materia_nombre?: string | null;
-          event_date?: string | null;
-          days_before?: number | null;
-          status?: string;
-          created_at?: string;
-          seen_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          event_id?: string | null;
-          type?: string;
-          title?: string;
-          body?: string;
-          materia_nombre?: string | null;
-          event_date?: string | null;
-          days_before?: number | null;
-          status?: string;
-          created_at?: string;
-          seen_at?: string | null;
-        };
-        Relationships: [];
-      };
-      materiales: {
-        Row: {
-          id: string;
-          materia_id: string | null;
-          titulo: string;
-          tipo: string;
-          parcial: number | null;
-          archivo_url: string;
-          creado_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          materia_id?: string | null;
-          titulo: string;
-          tipo: string;
-          parcial?: number | null;
-          archivo_url: string;
-          creado_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          materia_id?: string | null;
-          titulo?: string;
-          tipo?: string;
-          parcial?: number | null;
-          archivo_url?: string;
-          creado_at?: string | null;
-        };
-        Relationships: [];
-      };
-      materias: {
-        Row: {
-          id: string;
-          nombre: string;
-          carrera_id: string | null;
-          slug: string | null;
-          es_general: boolean | null;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-          carrera_id?: string | null;
-          slug?: string | null;
-          es_general?: boolean | null;
-        };
-        Update: {
-          id?: string;
-          nombre?: string;
-          carrera_id?: string | null;
-          slug?: string | null;
-          es_general?: boolean | null;
-        };
-        Relationships: [];
-      };
-      preguntas_banco: {
-        Row: {
-          id: string;
-          materia_id: string | null;
-          enunciado: string;
-          opciones: Json;
-          respuesta_correcta: string;
-          parcial: number | null;
-          universidad_id: string | null;
-          carrera_id: string | null;
-          es_general: boolean | null;
-          es_demo: boolean;
-          creado_at: string | null;
-          material_id: string | null;
-          es_ia_generada: boolean | null;
-          dificultad: string | null;
-          tasa_acierto: number | null;
-        };
-        Insert: {
-          id?: string;
-          materia_id?: string | null;
-          enunciado: string;
-          opciones: Json;
-          respuesta_correcta: string;
-          parcial?: number | null;
-          universidad_id?: string | null;
-          carrera_id?: string | null;
-          es_general?: boolean | null;
-          es_demo?: boolean;
-          creado_at?: string | null;
-          material_id?: string | null;
-          es_ia_generada?: boolean | null;
-          dificultad?: string | null;
-          tasa_acierto?: number | null;
-        };
-        Update: {
-          id?: string;
-          materia_id?: string | null;
-          enunciado?: string;
-          opciones?: Json;
-          respuesta_correcta?: string;
-          parcial?: number | null;
-          universidad_id?: string | null;
-          carrera_id?: string | null;
-          es_general?: boolean | null;
-          es_demo?: boolean;
-          creado_at?: string | null;
-          material_id?: string | null;
-          es_ia_generada?: boolean | null;
-          dificultad?: string | null;
-          tasa_acierto?: number | null;
-        };
-        Relationships: [];
-      };
-      question_edit_audit: {
-        Row: {
-          id: string;
-          pregunta_id: string;
-          admin_user_id: string | null;
-          before_payload: Json | null;
-          after_payload: Json | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          pregunta_id: string;
-          admin_user_id?: string | null;
-          before_payload?: Json | null;
-          after_payload?: Json | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          pregunta_id?: string;
-          admin_user_id?: string | null;
-          before_payload?: Json | null;
-          after_payload?: Json | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      rag_explanation_feedback: {
-        Row: {
-          id: string;
-          pregunta_id: string;
-          user_id: string | null;
-          voto: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          pregunta_id: string;
-          user_id?: string | null;
-          voto: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          pregunta_id?: string;
-          user_id?: string | null;
-          voto?: number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
       admin_alert_logs: {
         Row: {
-          id: string;
-          alert_key: string;
-          severity: string;
-          message: string;
-          metadata: Json | null;
-          created_at: string;
-        };
+          alert_key: string
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          severity: string
+        }
         Insert: {
-          id?: string;
-          alert_key: string;
-          severity: string;
-          message: string;
-          metadata?: Json | null;
-          created_at?: string;
-        };
+          alert_key: string
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          severity: string
+        }
         Update: {
-          id?: string;
-          alert_key?: string;
-          severity?: string;
-          message?: string;
-          metadata?: Json | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      rag_document_chunks: {
+          alert_key?: string
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          severity?: string
+        }
+        Relationships: []
+      }
+      analytics_events: {
         Row: {
-          id: string;
-          materia_id: string | null;
-          source_table: string;
-          source_id: string | null;
-          source_title: string | null;
-          chunk_index: number;
-          chunk_text: string;
-          created_at: string;
-        };
+          created_at: string
+          device_type: string | null
+          event_name: string
+          id: string
+          metadata: Json | null
+          path: string | null
+          session_key: string
+          user_id: string | null
+        }
         Insert: {
-          id?: string;
-          materia_id?: string | null;
-          source_table: string;
-          source_id?: string | null;
-          source_title?: string | null;
-          chunk_index: number;
-          chunk_text: string;
-          created_at?: string;
-        };
+          created_at?: string
+          device_type?: string | null
+          event_name: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          session_key: string
+          user_id?: string | null
+        }
         Update: {
-          id?: string;
-          materia_id?: string | null;
-          source_table?: string;
-          source_id?: string | null;
-          source_title?: string | null;
-          chunk_index?: number;
-          chunk_text?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      rag_explanations_cache: {
+          created_at?: string
+          device_type?: string | null
+          event_name?: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          session_key?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      analytics_events_archive: {
         Row: {
-          id: string;
-          pregunta_id: string;
-          materia_id: string | null;
-          parcial: number | null;
-          explicacion: string;
-          provider: string | null;
-          source_used: string | null;
-          updated_at: string;
-        };
+          archived_at: string
+          created_at: string
+          device_type: string | null
+          event_name: string
+          id: string
+          metadata: Json | null
+          path: string | null
+          session_key: string
+          user_id: string | null
+        }
         Insert: {
-          id?: string;
-          pregunta_id: string;
-          materia_id?: string | null;
-          parcial?: number | null;
-          explicacion: string;
-          provider?: string | null;
-          source_used?: string | null;
-          updated_at?: string;
-        };
+          archived_at?: string
+          created_at: string
+          device_type?: string | null
+          event_name: string
+          id: string
+          metadata?: Json | null
+          path?: string | null
+          session_key: string
+          user_id?: string | null
+        }
         Update: {
-          id?: string;
-          pregunta_id?: string;
-          materia_id?: string | null;
-          parcial?: number | null;
-          explicacion?: string;
-          provider?: string | null;
-          source_used?: string | null;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      rag_generation_logs: {
+          archived_at?: string
+          created_at?: string
+          device_type?: string | null
+          event_name?: string
+          id?: string
+          metadata?: Json | null
+          path?: string | null
+          session_key?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      carrera_materias: {
         Row: {
-          id: string;
-          pregunta_id: string | null;
-          materia_id: string | null;
-          provider: string | null;
-          status: string;
-          error_message: string | null;
-          metadata: Json | null;
-          created_at: string;
-        };
+          carrera_id: string | null
+          id: string
+          materia_id: string | null
+          prioridad: number | null
+        }
         Insert: {
-          id?: string;
-          pregunta_id?: string | null;
-          materia_id?: string | null;
-          provider?: string | null;
-          status: string;
-          error_message?: string | null;
-          metadata?: Json | null;
-          created_at?: string;
-        };
+          carrera_id?: string | null
+          id?: string
+          materia_id?: string | null
+          prioridad?: number | null
+        }
         Update: {
-          id?: string;
-          pregunta_id?: string | null;
-          materia_id?: string | null;
-          provider?: string | null;
-          status?: string;
-          error_message?: string | null;
-          metadata?: Json | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      rag_question_stats: {
+          carrera_id?: string | null
+          id?: string
+          materia_id?: string | null
+          prioridad?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carrera_materias_carrera_id_fkey"
+            columns: ["carrera_id"]
+            isOneToOne: false
+            referencedRelation: "carreras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carrera_materias_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carreras: {
         Row: {
-          id: string;
-          pregunta_id: string;
-          materia_id: string | null;
-          veces_fallada: number;
-          updated_at: string;
-        };
+          created_at: string | null
+          id: string
+          nombre: string
+          universidad_id: string | null
+        }
         Insert: {
-          id?: string;
-          pregunta_id: string;
-          materia_id?: string | null;
-          veces_fallada?: number;
-          updated_at?: string;
-        };
+          created_at?: string | null
+          id?: string
+          nombre: string
+          universidad_id?: string | null
+        }
         Update: {
-          id?: string;
-          pregunta_id?: string;
-          materia_id?: string | null;
-          veces_fallada?: number;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string | null
+          id?: string
+          nombre?: string
+          universidad_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carreras_universidad_id_fkey"
+            columns: ["universidad_id"]
+            isOneToOne: false
+            referencedRelation: "universidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracion_ia: {
+        Row: {
+          id: string
+          prompt_sistema: string
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          prompt_sistema: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          prompt_sistema?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      explanations_history: {
+        Row: {
+          created_at: string
+          enunciado: string
+          explicacion: string
+          id: string
+          materia_id: string | null
+          materia_nombre: string | null
+          opcion_elegida: number | null
+          opciones: Json | null
+          parcial: number | null
+          pregunta_id: string | null
+          provider: string | null
+          respuesta_correcta: string | null
+          user_id: string
+          veces_fallada: number
+        }
+        Insert: {
+          created_at?: string
+          enunciado: string
+          explicacion: string
+          id?: string
+          materia_id?: string | null
+          materia_nombre?: string | null
+          opcion_elegida?: number | null
+          opciones?: Json | null
+          parcial?: number | null
+          pregunta_id?: string | null
+          provider?: string | null
+          respuesta_correcta?: string | null
+          user_id: string
+          veces_fallada?: number
+        }
+        Update: {
+          created_at?: string
+          enunciado?: string
+          explicacion?: string
+          id?: string
+          materia_id?: string | null
+          materia_nombre?: string | null
+          opcion_elegida?: number | null
+          opciones?: Json | null
+          parcial?: number | null
+          pregunta_id?: string | null
+          provider?: string | null
+          respuesta_correcta?: string | null
+          user_id?: string
+          veces_fallada?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "explanations_history_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historial_respuestas: {
+        Row: {
+          es_correcta: boolean | null
+          fecha_intento: string | null
+          fecha_respuesta: string | null
+          id: string
+          materia_id: string | null
+          peso: number | null
+          pregunta_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          es_correcta?: boolean | null
+          fecha_intento?: string | null
+          fecha_respuesta?: string | null
+          id?: string
+          materia_id?: string | null
+          peso?: number | null
+          pregunta_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          es_correcta?: boolean | null
+          fecha_intento?: string | null
+          fecha_respuesta?: string | null
+          id?: string
+          materia_id?: string | null
+          peso?: number | null
+          pregunta_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historial_respuestas_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historial_respuestas_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materiales: {
+        Row: {
+          archivo_url: string
+          creado_at: string | null
+          id: string
+          materia_id: string | null
+          parcial: number | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          archivo_url: string
+          creado_at?: string | null
+          id?: string
+          materia_id?: string | null
+          parcial?: number | null
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          archivo_url?: string
+          creado_at?: string | null
+          id?: string
+          materia_id?: string | null
+          parcial?: number | null
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiales_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materias: {
+        Row: {
+          carrera_id: string | null
+          es_general: boolean | null
+          id: string
+          nombre: string
+          slug: string | null
+        }
+        Insert: {
+          carrera_id?: string | null
+          es_general?: boolean | null
+          id?: string
+          nombre: string
+          slug?: string | null
+        }
+        Update: {
+          carrera_id?: string | null
+          es_general?: boolean | null
+          id?: string
+          nombre?: string
+          slug?: string | null
+        }
+        Relationships: []
+      }
+      preguntas_banco: {
+        Row: {
+          carrera_id: string | null
+          creado_at: string | null
+          dificultad: string | null
+          enunciado: string
+          es_demo: boolean
+          es_general: boolean | null
+          es_ia_generada: boolean | null
+          id: string
+          materia_id: string | null
+          material_id: string | null
+          opciones: Json
+          parcial: number | null
+          respuesta_correcta: string
+          tasa_acierto: number | null
+          universidad_id: string | null
+        }
+        Insert: {
+          carrera_id?: string | null
+          creado_at?: string | null
+          dificultad?: string | null
+          enunciado: string
+          es_demo?: boolean
+          es_general?: boolean | null
+          es_ia_generada?: boolean | null
+          id?: string
+          materia_id?: string | null
+          material_id?: string | null
+          opciones: Json
+          parcial?: number | null
+          respuesta_correcta: string
+          tasa_acierto?: number | null
+          universidad_id?: string | null
+        }
+        Update: {
+          carrera_id?: string | null
+          creado_at?: string | null
+          dificultad?: string | null
+          enunciado?: string
+          es_demo?: boolean
+          es_general?: boolean | null
+          es_ia_generada?: boolean | null
+          id?: string
+          materia_id?: string | null
+          material_id?: string | null
+          opciones?: Json
+          parcial?: number | null
+          respuesta_correcta?: string
+          tasa_acierto?: number | null
+          universidad_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preguntas_banco_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preguntas_banco_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materiales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       premium_question_sets: {
         Row: {
-          id: string;
-          materia_id: string;
-          parcial: number;
-          titulo: string;
-          source_exam_date: string | null;
-          created_by: string | null;
-          is_active: boolean;
-          created_at: string;
-        };
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          materia_id: string
+          notes: string | null
+          parcial: number
+          source_exam_date: string | null
+          titulo: string
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          materia_id: string;
-          parcial: number;
-          titulo: string;
-          source_exam_date?: string | null;
-          created_by?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          materia_id: string
+          notes?: string | null
+          parcial?: number
+          source_exam_date?: string | null
+          titulo: string
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          materia_id?: string;
-          parcial?: number;
-          titulo?: string;
-          source_exam_date?: string | null;
-          created_by?: string | null;
-          is_active?: boolean;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          materia_id?: string
+          notes?: string | null
+          parcial?: number
+          source_exam_date?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "premium_question_sets_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       premium_questions: {
         Row: {
-          id: string;
-          set_id: string;
-          enunciado: string;
-          opciones: Json;
-          respuesta_correcta: string;
-          orden: number;
-          created_at: string;
-        };
+          created_at: string
+          enunciado: string
+          id: string
+          opciones: string[]
+          orden: number
+          respuesta_correcta: string
+          set_id: string
+        }
         Insert: {
-          id?: string;
-          set_id: string;
-          enunciado: string;
-          opciones: Json;
-          respuesta_correcta: string;
-          orden: number;
-          created_at?: string;
-        };
+          created_at?: string
+          enunciado: string
+          id?: string
+          opciones: string[]
+          orden?: number
+          respuesta_correcta: string
+          set_id: string
+        }
         Update: {
-          id?: string;
-          set_id?: string;
-          enunciado?: string;
-          opciones?: Json;
-          respuesta_correcta?: string;
-          orden?: number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          enunciado?: string
+          id?: string
+          opciones?: string[]
+          orden?: number
+          respuesta_correcta?: string
+          set_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "premium_questions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "premium_question_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
-          id: string;
-          creado_at: string | null;
-          nombre: string | null;
-          universidad_id: string | null;
-          whatsapp: string | null;
-          carrera_id: string | null;
-          role: AppRole | null;
-          last_subject_id: string | null;
-          last_subject_name: string | null;
-          active_subjects: DashboardMateriaState[] | null;
-          finished_subjects: DashboardMateriaState[] | null;
-          dashboard_analytics: DashboardAnalytics | null;
-          updated_at: string | null;
-        };
+          active_subjects: DashboardMateriaState[] | null
+          carrera_id: string | null
+          creado_at: string | null
+          dashboard_analytics: DashboardAnalytics | null
+          finished_subjects: DashboardMateriaState[] | null
+          id: string
+          last_subject_id: string | null
+          last_subject_name: string | null
+          nombre: string | null
+          role: AppRole | null
+          universidad_id: string | null
+          updated_at: string | null
+          whatsapp: string | null
+        }
         Insert: {
-          id: string;
-          creado_at?: string | null;
-          nombre?: string | null;
-          universidad_id?: string | null;
-          whatsapp?: string | null;
-          carrera_id?: string | null;
-          role?: AppRole | null;
-          last_subject_id?: string | null;
-          last_subject_name?: string | null;
-          active_subjects?: DashboardMateriaState[] | null;
-          finished_subjects?: DashboardMateriaState[] | null;
-          dashboard_analytics?: DashboardAnalytics | null;
-          updated_at?: string | null;
-        };
+          active_subjects?: DashboardMateriaState[] | null
+          carrera_id?: string | null
+          creado_at?: string | null
+          dashboard_analytics?: DashboardAnalytics | null
+          finished_subjects?: DashboardMateriaState[] | null
+          id: string
+          last_subject_id?: string | null
+          last_subject_name?: string | null
+          nombre?: string | null
+          role?: AppRole | null
+          universidad_id?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
         Update: {
-          id?: string;
-          creado_at?: string | null;
-          nombre?: string | null;
-          universidad_id?: string | null;
-          whatsapp?: string | null;
-          carrera_id?: string | null;
-          role?: AppRole | null;
-          last_subject_id?: string | null;
-          last_subject_name?: string | null;
-          active_subjects?: DashboardMateriaState[] | null;
-          finished_subjects?: DashboardMateriaState[] | null;
-          dashboard_analytics?: DashboardAnalytics | null;
-          updated_at?: string | null;
-        };
-        Relationships: [];
-      };
-      recursos: {
+          active_subjects?: DashboardMateriaState[] | null
+          carrera_id?: string | null
+          creado_at?: string | null
+          dashboard_analytics?: DashboardAnalytics | null
+          finished_subjects?: DashboardMateriaState[] | null
+          id?: string
+          last_subject_id?: string | null
+          last_subject_name?: string | null
+          nombre?: string | null
+          role?: AppRole | null
+          universidad_id?: string | null
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      question_edit_audit: {
         Row: {
-          id: string;
-          nombre: string;
-          tipo: string | null;
-          url_archivo: string | null;
-          creado_at: string | null;
-          materia_id: string | null;
-          carrera_id: string | null;
-          universidad_id: string | null;
-          etiqueta: string | null;
-          paginas: number | null;
-        };
+          admin_user_id: string | null
+          after_payload: Json | null
+          before_payload: Json | null
+          created_at: string
+          id: string
+          pregunta_id: string
+        }
         Insert: {
-          id?: string;
-          nombre: string;
-          tipo?: string | null;
-          url_archivo?: string | null;
-          creado_at?: string | null;
-          materia_id?: string | null;
-          carrera_id?: string | null;
-          universidad_id?: string | null;
-          etiqueta?: string | null;
-          paginas?: number | null;
-        };
+          admin_user_id?: string | null
+          after_payload?: Json | null
+          before_payload?: Json | null
+          created_at?: string
+          id?: string
+          pregunta_id: string
+        }
         Update: {
-          id?: string;
-          nombre?: string;
-          tipo?: string | null;
-          url_archivo?: string | null;
-          creado_at?: string | null;
-          materia_id?: string | null;
-          carrera_id?: string | null;
-          universidad_id?: string | null;
-          etiqueta?: string | null;
-          paginas?: number | null;
-        };
-        Relationships: [];
-      };
-      resource_votes: {
+          admin_user_id?: string | null
+          after_payload?: Json | null
+          before_payload?: Json | null
+          created_at?: string
+          id?: string
+          pregunta_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_edit_audit_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_edit_audit_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_document_chunks: {
         Row: {
-          id: string;
-          user_id: string;
-          resource_id: string;
-          vote_type: number;
-          created_at: string;
-          updated_at: string;
-        };
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          id: string
+          materia_id: string | null
+          source_id: string | null
+          source_table: string
+          source_title: string | null
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          resource_id: string;
-          vote_type: number;
-          created_at?: string;
-          updated_at?: string;
-        };
+          chunk_index: number
+          chunk_text: string
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          source_id?: string | null
+          source_table: string
+          source_title?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          resource_id?: string;
-          vote_type?: number;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      resource_views: {
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          source_id?: string | null
+          source_table?: string
+          source_title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_document_chunks_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_explanation_feedback: {
         Row: {
-          id: string;
-          resource_id: string;
-          user_id: string | null;
-          session_key: string | null;
-          created_at: string;
-        };
+          created_at: string
+          id: string
+          pregunta_id: string
+          user_id: string | null
+          voto: number
+        }
         Insert: {
-          id?: string;
-          resource_id: string;
-          user_id?: string | null;
-          session_key?: string | null;
-          created_at?: string;
-        };
+          created_at?: string
+          id?: string
+          pregunta_id: string
+          user_id?: string | null
+          voto: number
+        }
         Update: {
-          id?: string;
-          resource_id?: string;
-          user_id?: string | null;
-          session_key?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      resumen_votes: {
+          created_at?: string
+          id?: string
+          pregunta_id?: string
+          user_id?: string | null
+          voto?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_explanation_feedback_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_explanation_feedback_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_explanations_cache: {
         Row: {
-          id: string;
-          user_id: string | null;
-          resumen_id: string | null;
-          vote_type: number | null;
-        };
+          explicacion: string
+          id: string
+          materia_id: string | null
+          parcial: number | null
+          pregunta_id: string
+          provider: string | null
+          source_used: string | null
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          user_id?: string | null;
-          resumen_id?: string | null;
-          vote_type?: number | null;
-        };
+          explicacion: string
+          id?: string
+          materia_id?: string | null
+          parcial?: number | null
+          pregunta_id: string
+          provider?: string | null
+          source_used?: string | null
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          user_id?: string | null;
-          resumen_id?: string | null;
-          vote_type?: number | null;
-        };
-        Relationships: [];
-      };
-      resumenes: {
+          explicacion?: string
+          id?: string
+          materia_id?: string | null
+          parcial?: number | null
+          pregunta_id?: string
+          provider?: string | null
+          source_used?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_explanations_cache_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_explanations_cache_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_explanations_cache_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_generation_logs: {
         Row: {
-          id: string;
-          materia_id: string | null;
-          module_id: number;
-          title: string;
-          author_name: string | null;
-          file_url: string;
-          score: number | null;
-          created_at: string;
-        };
+          created_at: string
+          error_message: string | null
+          id: string
+          materia_id: string | null
+          metadata: Json | null
+          pregunta_id: string | null
+          provider: string | null
+          status: string
+        }
         Insert: {
-          id?: string;
-          materia_id?: string | null;
-          module_id: number;
-          title: string;
-          author_name?: string | null;
-          file_url: string;
-          score?: number | null;
-          created_at?: string;
-        };
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          materia_id?: string | null
+          metadata?: Json | null
+          pregunta_id?: string | null
+          provider?: string | null
+          status: string
+        }
         Update: {
-          id?: string;
-          materia_id?: string | null;
-          module_id?: number;
-          title?: string;
-          author_name?: string | null;
-          file_url?: string;
-          score?: number | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      student_materials: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          materia_id?: string | null
+          metadata?: Json | null
+          pregunta_id?: string | null
+          provider?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_generation_logs_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_generation_logs_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_generation_logs_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rag_question_stats: {
         Row: {
-          id: string;
-          user_id: string;
-          universidad_id: string;
-          carrera_id: string;
-          materia_id: string;
-          title: string;
-          file_name: string;
-          file_path: string;
-          mime_type: string | null;
-          file_size_bytes: number | null;
-          page_count: number | null;
-          processing_strategy: string | null;
-          document_analysis: Json | null;
-          visibility: string;
-          processing_status: string;
-          processing_stage: string;
-          processing_progress: number;
-          processing_message: string | null;
-          processing_error: string | null;
-          created_at: string;
-          updated_at: string;
-        };
+          id: string
+          materia_id: string | null
+          pregunta_id: string
+          updated_at: string
+          veces_fallada: number
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          universidad_id: string;
-          carrera_id: string;
-          materia_id: string;
-          title: string;
-          file_name: string;
-          file_path: string;
-          mime_type?: string | null;
-          file_size_bytes?: number | null;
-          page_count?: number | null;
-          processing_strategy?: string | null;
-          document_analysis?: Json | null;
-          visibility?: string;
-          processing_status?: string;
-          processing_stage?: string;
-          processing_progress?: number;
-          processing_message?: string | null;
-          processing_error?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+          id?: string
+          materia_id?: string | null
+          pregunta_id: string
+          updated_at?: string
+          veces_fallada?: number
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          universidad_id?: string;
-          carrera_id?: string;
-          materia_id?: string;
-          title?: string;
-          file_name?: string;
-          file_path?: string;
-          mime_type?: string | null;
-          file_size_bytes?: number | null;
-          page_count?: number | null;
-          processing_strategy?: string | null;
-          document_analysis?: Json | null;
-          visibility?: string;
-          processing_status?: string;
-          processing_stage?: string;
-          processing_progress?: number;
-          processing_message?: string | null;
-          processing_error?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      student_material_feedback: {
-        Row: {
-          id: string;
-          user_id: string;
-          student_material_id: string;
-          rating: string;
-          report_reason: string | null;
-          report_note: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          student_material_id: string;
-          rating: string;
-          report_reason?: string | null;
-          report_note?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          student_material_id?: string;
-          rating?: string;
-          report_reason?: string | null;
-          report_note?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      student_material_chunks: {
-        Row: {
-          id: string;
-          student_material_id: string;
-          chunk_index: number;
-          chunk_text: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          student_material_id: string;
-          chunk_index: number;
-          chunk_text: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          student_material_id?: string;
-          chunk_index?: number;
-          chunk_text?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      student_material_glossaries: {
-        Row: {
-          id: string;
-          student_material_id: string;
-          status: string;
-          glossary_items: Json | null;
-          provider: string | null;
-          error_message: string | null;
-          generated_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          student_material_id: string;
-          status?: string;
-          glossary_items?: Json | null;
-          provider?: string | null;
-          error_message?: string | null;
-          generated_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          student_material_id?: string;
-          status?: string;
-          glossary_items?: Json | null;
-          provider?: string | null;
-          error_message?: string | null;
-          generated_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      student_material_jobs: {
-        Row: {
-          id: string;
-          student_material_id: string;
-          status: string;
-          attempts: number;
-          last_error: string | null;
-          started_at: string | null;
-          completed_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          student_material_id: string;
-          status?: string;
-          attempts?: number;
-          last_error?: string | null;
-          started_at?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          student_material_id?: string;
-          status?: string;
-          attempts?: number;
-          last_error?: string | null;
-          started_at?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-      student_material_summaries: {
-        Row: {
-          id: string;
-          student_material_id: string;
-          status: string;
-          summary_short: string | null;
-          key_points: Json | null;
-          summary_sections: Json | null;
-          source_chunks_count: number;
-          provider: string | null;
-          error_message: string | null;
-          generated_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          student_material_id: string;
-          status?: string;
-          summary_short?: string | null;
-          key_points?: Json | null;
-          summary_sections?: Json | null;
-          source_chunks_count?: number;
-          provider?: string | null;
-          error_message?: string | null;
-          generated_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          student_material_id?: string;
-          status?: string;
-          summary_short?: string | null;
-          key_points?: Json | null;
-          summary_sections?: Json | null;
-          source_chunks_count?: number;
-          provider?: string | null;
-          error_message?: string | null;
-          generated_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
-      universidades: {
-        Row: {
-          id: string;
-          nombre: string;
-        };
-        Insert: {
-          id?: string;
-          nombre: string;
-        };
-        Update: {
-          id?: string;
-          nombre?: string;
-        };
-        Relationships: [];
-      };
+          id?: string
+          materia_id?: string | null
+          pregunta_id?: string
+          updated_at?: string
+          veces_fallada?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rag_question_stats_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_question_stats_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rag_question_stats_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
-          id: number;
-          key: string;
-          count: number;
-          reset_at: string;
-          created_at: string;
-        };
+          count: number
+          created_at: string
+          id: number
+          key: string
+          reset_at: string
+        }
         Insert: {
-          id?: number;
-          key: string;
-          count?: number;
-          reset_at: string;
-          created_at?: string;
-        };
+          count?: number
+          created_at?: string
+          id?: never
+          key: string
+          reset_at: string
+        }
         Update: {
-          id?: number;
-          key?: string;
-          count?: number;
-          reset_at?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+          count?: number
+          created_at?: string
+          id?: never
+          key?: string
+          reset_at?: string
+        }
+        Relationships: []
+      }
+      recursos: {
+        Row: {
+          carrera_id: string | null
+          creado_at: string | null
+          etiqueta: string | null
+          id: string
+          materia_id: string | null
+          nombre: string
+          paginas: number | null
+          tipo: string | null
+          universidad_id: string | null
+          url_archivo: string | null
+        }
+        Insert: {
+          carrera_id?: string | null
+          creado_at?: string | null
+          etiqueta?: string | null
+          id?: string
+          materia_id?: string | null
+          nombre: string
+          paginas?: number | null
+          tipo?: string | null
+          universidad_id?: string | null
+          url_archivo?: string | null
+        }
+        Update: {
+          carrera_id?: string | null
+          creado_at?: string | null
+          etiqueta?: string | null
+          id?: string
+          materia_id?: string | null
+          nombre?: string
+          paginas?: number | null
+          tipo?: string | null
+          universidad_id?: string | null
+          url_archivo?: string | null
+        }
+        Relationships: []
+      }
+      resource_views: {
+        Row: {
+          created_at: string
+          id: string
+          resource_id: string
+          session_key: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          resource_id: string
+          session_key?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          resource_id?: string
+          session_key?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_views_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "recursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_votes: {
+        Row: {
+          created_at: string
+          id: string
+          resource_id: string
+          updated_at: string
+          user_id: string
+          vote_type: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          resource_id: string
+          updated_at?: string
+          user_id: string
+          vote_type: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          resource_id?: string
+          updated_at?: string
+          user_id?: string
+          vote_type?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_votes_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "recursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resumen_votes: {
+        Row: {
+          id: string
+          resumen_id: string | null
+          user_id: string | null
+          vote_type: number | null
+        }
+        Insert: {
+          id?: string
+          resumen_id?: string | null
+          user_id?: string | null
+          vote_type?: number | null
+        }
+        Update: {
+          id?: string
+          resumen_id?: string | null
+          user_id?: string | null
+          vote_type?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resumen_votes_resumen_id_fkey"
+            columns: ["resumen_id"]
+            isOneToOne: false
+            referencedRelation: "resumenes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resumenes: {
+        Row: {
+          author_name: string | null
+          created_at: string
+          file_url: string
+          id: string
+          materia_id: string | null
+          module_id: number
+          score: number | null
+          title: string
+        }
+        Insert: {
+          author_name?: string | null
+          created_at?: string
+          file_url: string
+          id?: string
+          materia_id?: string | null
+          module_id: number
+          score?: number | null
+          title: string
+        }
+        Update: {
+          author_name?: string | null
+          created_at?: string
+          file_url?: string
+          id?: string
+          materia_id?: string | null
+          module_id?: number
+          score?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resumenes_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulator_attempt_topic_events: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          materia_id: string
+          parcial: number
+          pregunta_id: string
+          subtopic_id: string | null
+          topic_id: string
+          user_id: string
+          was_correct: boolean
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          materia_id: string
+          parcial: number
+          pregunta_id: string
+          subtopic_id?: string | null
+          topic_id: string
+          user_id: string
+          was_correct?: boolean
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          materia_id?: string
+          parcial?: number
+          pregunta_id?: string
+          subtopic_id?: string | null
+          topic_id?: string
+          user_id?: string
+          was_correct?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_attempt_topic_events_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_topic_events_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_topic_events_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_topic_events_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_topic_events_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_subtopics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_topic_events_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulator_attempt_wrong_questions: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          materia_id: string
+          parcial: number
+          pregunta_id: string | null
+          premium_pregunta_id: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          materia_id: string
+          parcial: number
+          pregunta_id?: string | null
+          premium_pregunta_id?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          materia_id?: string
+          parcial?: number
+          pregunta_id?: string | null
+          premium_pregunta_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_attempt_wrong_questions_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_wrong_questions_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_wrong_questions_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_wrong_questions_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_attempt_wrong_questions_premium_pregunta_id_fkey"
+            columns: ["premium_pregunta_id"]
+            isOneToOne: false
+            referencedRelation: "premium_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulator_attempts: {
+        Row: {
+          answered_questions: number
+          correct_answers: number
+          created_at: string
+          id: string
+          materia_id: string
+          mode: string
+          parcial: number
+          premium_only: boolean
+          total_questions: number
+          user_id: string
+          wrong_answers: number
+        }
+        Insert: {
+          answered_questions?: number
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          materia_id: string
+          mode?: string
+          parcial: number
+          premium_only?: boolean
+          total_questions?: number
+          user_id: string
+          wrong_answers?: number
+        }
+        Update: {
+          answered_questions?: number
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          materia_id?: string
+          mode?: string
+          parcial?: number
+          premium_only?: boolean
+          total_questions?: number
+          user_id?: string
+          wrong_answers?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_attempts_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulator_question_topic_links: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          evidence: Json
+          id: string
+          materia_id: string
+          parcial: number | null
+          pregunta_id: string
+          source: string
+          subtopic_id: string | null
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          evidence?: Json
+          id?: string
+          materia_id: string
+          parcial?: number | null
+          pregunta_id: string
+          source?: string
+          subtopic_id?: string | null
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          evidence?: Json
+          id?: string
+          materia_id?: string
+          parcial?: number | null
+          pregunta_id?: string
+          source?: string
+          subtopic_id?: string | null
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_question_topic_links_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_question_topic_links_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "demo_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_question_topic_links_pregunta_id_fkey"
+            columns: ["pregunta_id"]
+            isOneToOne: true
+            referencedRelation: "preguntas_banco"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_question_topic_links_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_subtopics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "simulator_question_topic_links_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulator_subtopics: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          source: string
+          subtopic_key: string
+          title: string
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          source?: string
+          subtopic_key: string
+          title: string
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          source?: string
+          subtopic_key?: string
+          title?: string
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_subtopics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      simulator_topics: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          materia_id: string
+          parcial: number | null
+          source: string
+          title: string
+          topic_key: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          materia_id: string
+          parcial?: number | null
+          source?: string
+          title: string
+          topic_key: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          materia_id?: string
+          parcial?: number | null
+          source?: string
+          title?: string
+          topic_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "simulator_topics_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_material_chunks: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          id: string
+          student_material_id: string
+        }
+        Insert: {
+          chunk_index: number
+          chunk_text: string
+          created_at?: string
+          id?: string
+          student_material_id: string
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          id?: string
+          student_material_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_material_chunks_student_material_id_fkey"
+            columns: ["student_material_id"]
+            isOneToOne: false
+            referencedRelation: "student_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_material_feedback: {
+        Row: {
+          created_at: string
+          id: string
+          rating: string
+          report_note: string | null
+          report_reason: string | null
+          student_material_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          rating: string
+          report_note?: string | null
+          report_reason?: string | null
+          student_material_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          rating?: string
+          report_note?: string | null
+          report_reason?: string | null
+          student_material_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_material_feedback_student_material_id_fkey"
+            columns: ["student_material_id"]
+            isOneToOne: false
+            referencedRelation: "student_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_material_glossaries: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          generated_at: string | null
+          glossary_items: Json
+          id: string
+          provider: string | null
+          status: string
+          student_material_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          generated_at?: string | null
+          glossary_items?: Json
+          id?: string
+          provider?: string | null
+          status?: string
+          student_material_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          generated_at?: string | null
+          glossary_items?: Json
+          id?: string
+          provider?: string | null
+          status?: string
+          student_material_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_material_glossaries_student_material_id_fkey"
+            columns: ["student_material_id"]
+            isOneToOne: true
+            referencedRelation: "student_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_material_jobs: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          id: string
+          last_error: string | null
+          started_at: string | null
+          status: string
+          student_material_id: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          started_at?: string | null
+          status?: string
+          student_material_id: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          started_at?: string | null
+          status?: string
+          student_material_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_material_jobs_student_material_id_fkey"
+            columns: ["student_material_id"]
+            isOneToOne: false
+            referencedRelation: "student_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_material_summaries: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          generated_at: string | null
+          id: string
+          key_points: Json
+          provider: string | null
+          source_chunks_count: number
+          status: string
+          student_material_id: string
+          summary_sections: Json
+          summary_short: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          generated_at?: string | null
+          id?: string
+          key_points?: Json
+          provider?: string | null
+          source_chunks_count?: number
+          status?: string
+          student_material_id: string
+          summary_sections?: Json
+          summary_short?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          generated_at?: string | null
+          id?: string
+          key_points?: Json
+          provider?: string | null
+          source_chunks_count?: number
+          status?: string
+          student_material_id?: string
+          summary_sections?: Json
+          summary_short?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_material_summaries_student_material_id_fkey"
+            columns: ["student_material_id"]
+            isOneToOne: true
+            referencedRelation: "student_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_materials: {
+        Row: {
+          carrera_id: string
+          created_at: string
+          document_analysis: Json | null
+          file_name: string
+          file_path: string
+          file_size_bytes: number | null
+          id: string
+          materia_id: string
+          mime_type: string | null
+          page_count: number | null
+          processing_error: string | null
+          processing_message: string | null
+          processing_progress: number
+          processing_stage: string
+          processing_status: string
+          processing_strategy: string | null
+          title: string
+          universidad_id: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          carrera_id: string
+          created_at?: string
+          document_analysis?: Json | null
+          file_name: string
+          file_path: string
+          file_size_bytes?: number | null
+          id?: string
+          materia_id: string
+          mime_type?: string | null
+          page_count?: number | null
+          processing_error?: string | null
+          processing_message?: string | null
+          processing_progress?: number
+          processing_stage?: string
+          processing_status?: string
+          processing_strategy?: string | null
+          title: string
+          universidad_id: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          carrera_id?: string
+          created_at?: string
+          document_analysis?: Json | null
+          file_name?: string
+          file_path?: string
+          file_size_bytes?: number | null
+          id?: string
+          materia_id?: string
+          mime_type?: string | null
+          page_count?: number | null
+          processing_error?: string | null
+          processing_message?: string | null
+          processing_progress?: number
+          processing_stage?: string
+          processing_status?: string
+          processing_strategy?: string | null
+          title?: string
+          universidad_id?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_materials_carrera_id_fkey"
+            columns: ["carrera_id"]
+            isOneToOne: false
+            referencedRelation: "carreras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_materials_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_materials_universidad_id_fkey"
+            columns: ["universidad_id"]
+            isOneToOne: false
+            referencedRelation: "universidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_topic_performance: {
+        Row: {
+          attempts_count: number
+          correct_count: number
+          created_at: string
+          id: string
+          last_answer_at: string | null
+          last_wrong_at: string | null
+          mastery_score: number
+          materia_id: string
+          parcial: number
+          subtopic_id: string | null
+          topic_id: string
+          updated_at: string
+          user_id: string
+          wrong_count: number
+        }
+        Insert: {
+          attempts_count?: number
+          correct_count?: number
+          created_at?: string
+          id?: string
+          last_answer_at?: string | null
+          last_wrong_at?: string | null
+          mastery_score?: number
+          materia_id: string
+          parcial: number
+          subtopic_id?: string | null
+          topic_id: string
+          updated_at?: string
+          user_id: string
+          wrong_count?: number
+        }
+        Update: {
+          attempts_count?: number
+          correct_count?: number
+          created_at?: string
+          id?: string
+          last_answer_at?: string | null
+          last_wrong_at?: string | null
+          mastery_score?: number
+          materia_id?: string
+          parcial?: number
+          subtopic_id?: string | null
+          topic_id?: string
+          updated_at?: string
+          user_id?: string
+          wrong_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_topic_performance_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_topic_performance_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_subtopics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_topic_performance_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "simulator_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_calendar_events: {
+        Row: {
+          carrera_id: string | null
+          carrera_nombre: string | null
+          created_at: string
+          event_date: string
+          event_type: string
+          exam_instance: string | null
+          id: string
+          materia_id: string | null
+          materia_nombre: string | null
+          notes: string | null
+          reminder_days_before: Json | null
+          source_payload: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          carrera_id?: string | null
+          carrera_nombre?: string | null
+          created_at?: string
+          event_date: string
+          event_type: string
+          exam_instance?: string | null
+          id?: string
+          materia_id?: string | null
+          materia_nombre?: string | null
+          notes?: string | null
+          reminder_days_before?: Json | null
+          source_payload?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          carrera_id?: string | null
+          carrera_nombre?: string | null
+          created_at?: string
+          event_date?: string
+          event_type?: string
+          exam_instance?: string | null
+          id?: string
+          materia_id?: string | null
+          materia_nombre?: string | null
+          notes?: string | null
+          reminder_days_before?: Json | null
+          source_payload?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_calendar_events_carrera_id_fkey"
+            columns: ["carrera_id"]
+            isOneToOne: false
+            referencedRelation: "carreras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          interval: string
+          is_active: boolean
+          name: string
+          price_ars: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          interval?: string
+          is_active?: boolean
+          name: string
+          price_ars?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          interval?: string
+          is_active?: boolean
+          name?: string
+          price_ars?: number
+        }
+        Relationships: []
+      }
+      universidades: {
+        Row: {
+          id: string
+          nombre: string
+        }
+        Insert: {
+          id?: string
+          nombre: string
+        }
+        Update: {
+          id?: string
+          nombre?: string
+        }
+        Relationships: []
+      }
       user_favorites: {
         Row: {
-          id: string;
-          user_id: string;
-          materia_id: string | null;
-          carrera_id: string | null;
-          created_at: string;
-        };
+          carrera_id: string | null
+          created_at: string
+          id: string
+          materia_id: string | null
+          user_id: string
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          materia_id?: string | null;
-          carrera_id?: string | null;
-          created_at?: string;
-        };
+          carrera_id?: string | null
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          user_id: string
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          materia_id?: string | null;
-          carrera_id?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-    };
+          carrera_id?: string | null
+          created_at?: string
+          id?: string
+          materia_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          days_before: number | null
+          event_date: string | null
+          event_id: string | null
+          id: string
+          materia_nombre: string | null
+          seen_at: string | null
+          status: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          days_before?: number | null
+          event_date?: string | null
+          event_id?: string | null
+          id?: string
+          materia_nombre?: string | null
+          seen_at?: string | null
+          status?: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          days_before?: number | null
+          event_date?: string | null
+          event_id?: string | null
+          id?: string
+          materia_nombre?: string | null
+          seen_at?: string | null
+          status?: string
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "study_calendar_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_subscriptions: {
+        Row: {
+          amount_ars: number | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          payment_provider: string | null
+          payment_reference: string | null
+          plan_id: string
+          started_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount_ars?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
+          plan_id: string
+          started_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount_ars?: number | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_provider?: string | null
+          payment_reference?: string | null
+          plan_id?: string
+          started_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
     Views: {
+      demo_questions: {
+        Row: {
+          correct_count: number | null
+          enunciado: string | null
+          id: string | null
+          materia_id: string | null
+          opciones: Json | null
+          parcial: number | null
+        }
+        Insert: {
+          correct_count?: never
+          enunciado?: string | null
+          id?: string | null
+          materia_id?: string | null
+          opciones?: Json | null
+          parcial?: number | null
+        }
+        Update: {
+          correct_count?: never
+          enunciado?: string | null
+          id?: string | null
+          materia_id?: string | null
+          opciones?: Json | null
+          parcial?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preguntas_banco_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preguntas_banco_public: {
+        Row: {
+          creado_at: string | null
+          enunciado: string | null
+          id: string | null
+          materia_id: string | null
+          opciones: Json | null
+          parcial: number | null
+        }
+        Insert: {
+          creado_at?: string | null
+          enunciado?: string | null
+          id?: string | null
+          materia_id?: string | null
+          opciones?: Json | null
+          parcial?: number | null
+        }
+        Update: {
+          creado_at?: string | null
+          enunciado?: string | null
+          id?: string | null
+          materia_id?: string | null
+          opciones?: Json | null
+          parcial?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preguntas_banco_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resource_view_counts: {
         Row: {
-          resource_id: string | null;
-          views: number | null;
-        };
-        Insert: Record<string, never>;
-        Update: Record<string, never>;
-        Relationships: [];
-      };
-    };
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
-};
+          resource_id: string | null
+          views: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_views_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "recursos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Functions: {
+      archive_analytics_events: {
+        Args: {
+          p_batch_size?: number
+          p_max_batches?: number
+          p_retention_days?: number
+        }
+        Returns: {
+          archived_rows: number
+          remaining_in_main: number
+        }[]
+      }
+      consume_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          reset_at: string
+        }[]
+      }
+      current_user_is_admin: { Args: never; Returns: boolean }
+      get_resource_vote_summaries: {
+        Args: { p_resource_ids: string[]; p_user_id?: string }
+        Returns: {
+          dislikes: number
+          likes: number
+          resource_id: string
+          score: number
+          user_vote: number
+        }[]
+      }
+      get_simulator_ratings_summary: {
+        Args: { p_materia_id: string }
+        Returns: {
+          dislikes: number
+          likes: number
+          parcial: number
+        }[]
+      }
+      get_user_partial_stats: {
+        Args: { p_materia_id: string; p_parcial: number; p_user_id: string }
+        Returns: {
+          correctas: number
+          distintas_preguntas: number
+          total_respuestas: number
+        }[]
+      }
+      get_warmup_candidates: {
+        Args: { p_lookback_days?: number; p_pool_size?: number }
+        Returns: {
+          creado_at: string
+          enunciado: string
+          error_frequency: number
+          materia_id: string
+          materia_usage: number
+          opciones: Json
+          parcial: number
+          parcial_usage: number
+          pregunta_id: string
+          recommendation_score: number
+          respuesta_correcta: string
+          tasa_acierto: number
+        }[]
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
 
-type PublicSchema = Database['public'];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  TableName extends keyof PublicSchema['Tables']
-> = PublicSchema['Tables'][TableName]['Row'];
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-export type TableInsert<
-  TableName extends keyof PublicSchema['Tables']
-> = PublicSchema['Tables'][TableName]['Insert'];
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-export type TableUpdate<
-  TableName extends keyof PublicSchema['Tables']
-> = PublicSchema['Tables'][TableName]['Update'];
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+} as const

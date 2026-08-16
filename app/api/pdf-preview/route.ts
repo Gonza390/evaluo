@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { PDF_PREVIEW_PAGE_LIMIT } from '@/lib/pdf-preview';
 import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 
 function getStorageObjectPath(resourcePath: string) {
@@ -56,9 +57,14 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient();
+    // Validación de visibilidad con RLS: solo se sirve el preview si el recurso
+    // o resumen es visible para el solicitante (las policies de recursos/
+    // resumenes deciden). La descarga del blob usa admin porque el bucket
+    // biblioteca es admin-only.
+    const server = await createClientServer();
     const [{ data: resourceMatch }, { data: resumenMatch }] = await Promise.all([
-      admin.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
-      admin.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
+      server.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
+      server.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
     ]);
 
     if (!resourceMatch && !resumenMatch) {

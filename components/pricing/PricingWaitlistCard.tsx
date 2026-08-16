@@ -76,7 +76,7 @@ export function PricingWaitlistCard() {
           onSubmit={handleSubmit}
           className="rounded-[30px] border border-white/80 bg-white/94 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.10)] backdrop-blur sm:p-6"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">
+          <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">
             Acceso prioritario
           </p>
           <h3 className="mt-3 text-[1.7rem] font-bold leading-[1.02] tracking-[-0.04em] text-[#0F1B3D]">

@@ -34,7 +34,7 @@ async function SimuladorErroresContent({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login');
+    redirect(`/login?next=${encodeURIComponent(`/simulador/errores/${materia_id}`)}`);
   }
 
   if (!materia_id) {

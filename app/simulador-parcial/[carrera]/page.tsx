@@ -51,15 +51,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
 
     return {
-      title: `Simulador de parcial de ${carrera.nombre}`,
+      title: `Pregunteros y simuladores de ${carrera.nombre}`,
       description,
       alternates: {
         canonical: buildSimulatorHref(carrera.nombre, carrera.id),
       },
       openGraph: {
-        title: `Simulador de parcial de ${carrera.nombre} | Evaluo`,
+        title: `Pregunteros y simuladores de ${carrera.nombre} | Evaluo`,
         description,
         url: buildSimulatorHref(carrera.nombre, carrera.id),
+        images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
       },
     };
   } catch {
@@ -101,7 +102,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
           { name: 'Explorar', path: '/explorar' },
-          { name: `Simulador de parcial de ${carrera.nombre}`, path: canonicalHref },
+          { name: `Pregunteros y simuladores de ${carrera.nombre}`, path: canonicalHref },
         ])}
       />
 
@@ -109,10 +110,10 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <p className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
             <Target className="h-4 w-4" />
-            Simuladores
+            Pregunteros y simuladores
           </p>
           <h1 className="mt-5 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
-            Simulador de parcial de {carrera.nombre}
+            Pregunteros y simuladores de {carrera.nombre}
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">
             {buildSimulatorLandingDescription({

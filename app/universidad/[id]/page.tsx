@@ -288,10 +288,10 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 <div className="grid gap-6 p-6 lg:grid-cols-[1.3fr_0.9fr] lg:p-8">
                   <div className="space-y-5">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="rounded-full border border-[#C7D2FE] bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">
+                      <span className="rounded-full border border-[#C7D2FE] bg-white/90 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">
                         Universidad
                       </span>
-                      <span className="rounded-full border border-[#E2E8F0] bg-white/90 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#64748B]">
+                      <span className="rounded-full border border-[#E2E8F0] bg-white/90 px-3 py-1 text-[12px] font-medium uppercase tracking-[0.18em] text-[#64748B]">
                         {allCarreras.length} carreras activas
                       </span>
                     </div>
@@ -310,13 +310,13 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                        <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
                           Carreras visibles
                         </p>
                         <p className="mt-2 text-base font-semibold text-[#0F172A]">{allCarreras.length}</p>
                       </div>
                       <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                        <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
                           Materias visibles
                         </p>
                         <p className="mt-2 text-base font-semibold text-[#0F172A]">
@@ -328,7 +328,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
 
                   <div className="space-y-4">
                     <div className="surface-card rounded-[var(--radius-panel)] border-white/80 bg-white/88 p-5 backdrop-blur">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                      <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
                         Datos rápidos
                       </p>
                       <div className="mt-4 space-y-3">
@@ -348,7 +348,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                     </div>
 
                     <div className="rounded-[28px] border border-[#D9E2FF] bg-[linear-gradient(135deg,#EEF2FF_0%,#FFFFFF_100%)] p-5">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">En Evaluo</p>
+                      <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">En Evaluo</p>
                       <p className="mt-3 text-sm leading-7 text-[#475569]">
                         El contenido se organiza por materia y se comparte entre carreras cuando
                         corresponde. Eso evita duplicaciones y te deja una experiencia más clara,

@@ -71,7 +71,7 @@ export function UsersPanel({
           {rows.length > 5 ? (
             <Link
               href={showAll ? '/administrador?panel=usuarios' : '/administrador?panel=usuarios&users=all'}
-              className="rounded-full border border-[#d9e1f1] px-3 py-1.5 text-[12px] font-medium text-[#315efb] transition hover:bg-[#f5f8ff]"
+              className="rounded-full border border-[#d9e1f1] px-3 py-1.5 text-[12px] font-medium text-[#2563EB] transition hover:bg-[#f5f8ff]"
             >
               {showAll ? 'Ver menos' : 'Ver más'}
             </Link>
@@ -96,7 +96,7 @@ export function UsersPanel({
                   <td className="px-5 py-3.5">{user.email}</td>
                   <td className="px-4 py-3.5">
                     <span
-                      className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${
+                      className={`inline-flex rounded-full px-2 py-1 text-[12px] font-medium ${
                         user.estado === 'activo'
                           ? 'bg-[#eaf9f1] text-[#10936f]'
                           : 'bg-[#f1f4f9] text-[#75829a]'
@@ -107,7 +107,7 @@ export function UsersPanel({
                   </td>
                   <td className="px-4 py-3.5">
                     <span
-                      className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${
+                      className={`inline-flex rounded-full px-2 py-1 text-[12px] font-medium ${
                         user.role === 'admin'
                           ? 'bg-[#fff2df] text-[#c87511]'
                           : 'bg-[#f1f4f9] text-[#75829a]'
@@ -118,9 +118,9 @@ export function UsersPanel({
                   </td>
                   <td className="px-4 py-3.5">
                     <span
-                      className={`inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${
+                      className={`inline-flex rounded-full px-2 py-1 text-[12px] font-medium ${
                         user.plan === 'premium'
-                          ? 'bg-[#eef3ff] text-[#315efb]'
+                          ? 'bg-[#eef3ff] text-[#2563EB]'
                           : 'bg-[#f1f4f9] text-[#75829a]'
                       }`}
                     >

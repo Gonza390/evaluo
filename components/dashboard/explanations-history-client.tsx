@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CalendarDays, ChevronDown, ChevronUp, Search, Sparkles } from 'lucide-react';
+import { CalendarDays, Check, ChevronDown, ChevronUp, Search, Sparkles, X } from 'lucide-react';
 import type { ExplanationHistoryItem } from '@/lib/explanations-history';
+import { StudyRichText } from '@/components/study-rich-text';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { Input } from '@/components/ui/input';
 
@@ -142,6 +143,7 @@ export function ExplanationsHistoryClient({
                             <p className="mt-1 text-xs text-slate-500">
                               {formatDate(item.createdAt)}
                               {item.parcial ? ` · Parcial ${item.parcial}` : ''}
+                              {item.vecesFallada > 1 ? ` · fallada ${item.vecesFallada} veces` : ''}
                             </p>
                           </div>
                           {isExpanded ? (
@@ -151,8 +153,44 @@ export function ExplanationsHistoryClient({
                           )}
                         </button>
                         {isExpanded ? (
-                          <div className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
-                            <p className="text-sm leading-6 text-slate-700">{item.explicacion}</p>
+                          <div className="mt-3 space-y-3">
+                            {item.opciones && item.opciones.length > 0 ? (
+                              <div className="space-y-1.5">
+                                {item.opciones.map((option, index) => {
+                                  const isCorrect =
+                                    item.respuestaCorrecta != null &&
+                                    normalize(option) === normalize(item.respuestaCorrecta);
+                                  const isChosen = item.opcionElegida === index;
+                                  return (
+                                    <div
+                                      key={`${option}-${index}`}
+                                      className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-[13px] leading-5 ${
+                                        isCorrect
+                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                          : isChosen
+                                            ? 'border-rose-200 bg-rose-50 text-rose-800'
+                                            : 'border-slate-200 bg-white text-slate-600'
+                                      }`}
+                                    >
+                                      <span className="shrink-0 font-semibold">
+                                        {String.fromCharCode(65 + index)}.
+                                      </span>
+                                      <span className="flex-1">{option}</span>
+                                      {isCorrect ? <Check className="h-4 w-4 shrink-0 text-emerald-600" /> : null}
+                                      {isChosen ? <X className="h-4 w-4 shrink-0 text-rose-600" /> : null}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : item.respuestaCorrecta ? (
+                              <p className="text-[13px] text-slate-600">
+                                <span className="font-semibold text-emerald-700">Respuesta correcta:</span>{' '}
+                                {item.respuestaCorrecta}
+                              </p>
+                            ) : null}
+                            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                              <StudyRichText body={item.explicacion} />
+                            </div>
                           </div>
                         ) : null}
                       </div>

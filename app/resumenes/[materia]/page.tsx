@@ -46,6 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         universidadNombre: bootstrap.universidadNombre,
       }),
       url: buildResumenesHref(bootstrap.materiaNombre, bootstrap.materiaId),
+      images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
     },
   };
 }

@@ -67,6 +67,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: `Estudiar ${carrera.nombre} en ${universidad.nombre} | Evaluo`,
         description,
         url: buildCareerHref(universidad.id, universidad.nombre, carrera.id, carrera.nombre),
+        images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
       },
     };
   } catch {

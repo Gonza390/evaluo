@@ -7,8 +7,15 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   const nextPathRaw = requestUrl.searchParams.get('next');
+  // Solo redirigir a rutas internas: rechaza URLs absolutas (https://), scheme
+  // relativo (//host) y rutas que no empiecen con '/'.
   const nextPath =
-    nextPathRaw && nextPathRaw.startsWith('/') ? nextPathRaw : '/dashboard';
+    nextPathRaw &&
+    nextPathRaw.startsWith('/') &&
+    !nextPathRaw.startsWith('//') &&
+    !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(nextPathRaw)
+      ? nextPathRaw
+      : '/dashboard';
 
   if (code) {
     const cookieStore = await cookies();

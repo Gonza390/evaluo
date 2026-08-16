@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Trophy } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -61,18 +63,18 @@ export function SimulatorLoginGate({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Respondidas</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Respondidas</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">
                 {answeredCount}
                 <span className="text-sm font-semibold text-slate-500"> / {questionLimit}</span>
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Guardado</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Guardado</p>
               <p className="mt-2 text-2xl font-bold text-slate-900">Progreso</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Qué desbloqueás al continuar</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Qué desbloqueás al continuar</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Acceso al simulador completo de {questionLimit} preguntas, guardado del intento, resultados finales y correcciones inteligentes de tus errores.
               </p>

@@ -111,7 +111,7 @@ export function ExamRemindersPanel() {
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700">
+                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[12px] font-semibold text-indigo-700">
                     {daysRemainingLabel(reminder.daysRemaining)}
                   </span>
                 </div>
@@ -135,7 +135,7 @@ export function ExamRemindersPanel() {
         )}
       </div>
 
-      <div className="flex items-center gap-1.5 border-t border-slate-100 px-5 py-3 text-[11px] text-slate-500">
+      <div className="flex items-center gap-1.5 border-t border-slate-100 px-5 py-3 text-[12px] text-slate-500">
         <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
         Recordatorios disponibles en Premium
       </div>

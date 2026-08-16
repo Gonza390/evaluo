@@ -46,6 +46,7 @@ import {
 import { logError } from '@/lib/observability';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
+import { TourCard } from '@/components/ui/tour-card';
 
 type CalendarStorageMode = 'supabase' | 'local';
 
@@ -178,83 +179,6 @@ function buildEventPayload({
       careerName,
     } satisfies CalendarEventSourcePayload,
   };
-}
-
-function CalendarTourCard({
-  step,
-  stepIndex,
-  totalSteps,
-  onNext,
-  onPrevious,
-  onClose,
-  className,
-}: {
-  step: CalendarTourStep;
-  stepIndex: number;
-  totalSteps: number;
-  onNext: () => void;
-  onPrevious: () => void;
-  onClose: () => void;
-  className: string;
-}) {
-  return (
-    <div
-      className={`absolute z-[80] w-[320px] rounded-[26px] border border-[#DCE6FF] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] p-5 shadow-[0_24px_60px_rgba(15,23,42,0.18)] animate-saas-lift-in max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:w-auto max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-[24px] max-sm:p-4 ${className}`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
-            Paso {stepIndex + 1} de {totalSteps}
-          </p>
-          <h3 className="mt-2 text-base font-bold text-slate-950 max-sm:text-[0.98rem]">{step.title}</h3>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-600 max-sm:h-8 max-sm:w-8"
-          aria-label="Cerrar guía del calendario"
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E8EFFC]">
-        <div
-          className="h-full rounded-full bg-[linear-gradient(90deg,#2563EB_0%,#6366F1_100%)] transition-all duration-300"
-          style={{ width: `${((stepIndex + 1) / totalSteps) * 100}%` }}
-        />
-      </div>
-
-      <p className="mt-4 text-[0.95rem] leading-7 text-slate-600 max-sm:text-[0.9rem] max-sm:leading-6">{step.description}</p>
-
-      <div className="mt-5 flex items-center justify-between gap-2 max-sm:flex-col max-sm:items-stretch">
-        <div className="flex items-center gap-2 max-sm:grid max-sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={onPrevious}
-            disabled={stepIndex === 0}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
-          >
-            Anterior
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-          >
-            Cerrar
-          </button>
-        </div>
-        <button
-          type="button"
-          onClick={onNext}
-          className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] max-sm:w-full"
-        >
-          {stepIndex === totalSteps - 1 ? 'Entendido' : 'Siguiente'}
-        </button>
-      </div>
-    </div>
-  );
 }
 
 export default function CalendarioPage() {
@@ -852,21 +776,21 @@ export default function CalendarioPage() {
   if (loading || isCheckingProfile) {
     return (
       <div className="mx-auto flex min-h-[60vh] w-full max-w-[1080px] items-center justify-center px-4">
-        <div className="w-full rounded-[32px] border border-slate-200/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_52%,#edf4ff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
-          <div className="h-5 w-36 animate-pulse rounded-full bg-slate-200/90" />
-          <div className="mt-4 h-10 w-64 animate-pulse rounded-2xl bg-slate-200/80" />
-          <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-slate-200/70" />
-          <div className="mt-2 h-4 w-5/6 animate-pulse rounded-full bg-slate-200/60" />
+        <div className="w-full rounded-[32px] border border-slate-200/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_52%,#edf4ff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-[linear-gradient(135deg,#0f172a_0%,#101b36_52%,#16233f_100%)] dark:shadow-none sm:p-8">
+          <div className="h-5 w-36 animate-pulse rounded-full bg-slate-200/90 dark:bg-slate-800/90" />
+          <div className="mt-4 h-10 w-64 animate-pulse rounded-2xl bg-slate-200/80 dark:bg-slate-800/80" />
+          <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-slate-200/70 dark:bg-slate-800/70" />
+          <div className="mt-2 h-4 w-5/6 animate-pulse rounded-full bg-slate-200/60 dark:bg-slate-800/60" />
           <div className="mt-8 grid grid-cols-7 gap-2">
             {Array.from({ length: 35 }).map((_, index) => (
-              <div key={index} className="h-16 animate-pulse rounded-2xl bg-white/80 shadow-sm" />
+              <div key={index} className="h-16 animate-pulse rounded-2xl bg-white/80 shadow-sm dark:bg-slate-900/80 dark:shadow-none" />
             ))}
           </div>
-          <p className="mt-6 text-sm font-semibold text-slate-700">Estamos preparando tu calendario</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-6 text-sm font-semibold text-slate-700 dark:text-slate-300">Estamos preparando tu calendario</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar.
           </p>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             Si tarda demasiado, prueba recargando la página.
           </p>
         </div>
@@ -892,23 +816,23 @@ export default function CalendarioPage() {
 
   if (!hasLoadedEvents) {
     return (
-      <div className="rounded-[32px] border border-slate-200/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_52%,#edf4ff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
+      <div className="rounded-[32px] border border-slate-200/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_52%,#edf4ff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-[linear-gradient(135deg,#0f172a_0%,#101b36_52%,#16233f_100%)] dark:shadow-none sm:p-8">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="h-4 w-24 animate-pulse rounded-full bg-slate-200/90" />
-              <div className="mt-3 h-8 w-48 animate-pulse rounded-2xl bg-slate-200/80" />
+              <div className="h-4 w-24 animate-pulse rounded-full bg-slate-200/90 dark:bg-slate-800/90" />
+              <div className="mt-3 h-8 w-48 animate-pulse rounded-2xl bg-slate-200/80 dark:bg-slate-800/80" />
             </div>
-            <div className="h-11 w-32 animate-pulse rounded-2xl bg-white/90" />
+            <div className="h-11 w-32 animate-pulse rounded-2xl bg-white/90 dark:bg-slate-900/90" />
           </div>
           <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: 35 }).map((_, index) => (
-              <div key={index} className="h-20 animate-pulse rounded-2xl bg-white/85 shadow-sm" />
+              <div key={index} className="h-20 animate-pulse rounded-2xl bg-white/85 shadow-sm dark:bg-slate-900/85 dark:shadow-none" />
             ))}
           </div>
         </div>
-        <p className="mt-6 text-sm font-semibold text-slate-700">Estamos trayendo tus fechas del mes</p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-6 text-sm font-semibold text-slate-700 dark:text-slate-300">Estamos trayendo tus fechas del mes</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante.
         </p>
       </div>
@@ -918,17 +842,17 @@ export default function CalendarioPage() {
   return (
     <>
       <div className="mx-auto w-full max-w-[1080px] space-y-6">
-        <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_50%,#edf4ff_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
+        <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_50%,#edf4ff_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-[linear-gradient(135deg,#0f172a_0%,#101b36_50%,#16233f_100%)] dark:shadow-none">
           <div className="relative px-3 py-3 sm:px-4 sm:py-4">
             {showCalendarTour ? (
-              <div className="pointer-events-none absolute inset-0 z-[60] bg-white/18 backdrop-blur-[3px]" />
+              <div className="pointer-events-none absolute inset-0 z-[60] bg-white/18 backdrop-blur-[3px] dark:bg-slate-950/40" />
             ) : null}
-            <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+            <div className="overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
           <div
             ref={monthTourRef}
-            className={`flex flex-col gap-2 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between ${
+            className={`flex flex-col gap-2 border-b border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800 dark:bg-[linear-gradient(180deg,#0f172a_0%,#0b1220_100%)] ${
               showCalendarTour && currentCalendarTourStep.id === 'month'
-                ? 'relative z-[70] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.12)]'
+                ? 'relative z-[70] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.12)] dark:ring-indigo-500/40'
                 : ''
             }`}
           >
@@ -936,31 +860,32 @@ export default function CalendarioPage() {
               <button
                 type="button"
                 onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800/60 dark:hover:text-slate-100"
                 aria-label="Mes anterior"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <h1 className="text-[1.6rem] font-bold tracking-[-0.04em] text-[#050B2C] sm:text-[1.8rem]">
+              <h1 className="text-[1.6rem] font-bold tracking-[-0.04em] text-[#050B2C] dark:text-slate-100 sm:text-[1.8rem]">
                 {formatMonthLabel(visibleMonth)}
               </h1>
               <button
                 type="button"
                 onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-transparent text-slate-500 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800/60 dark:hover:text-slate-100"
                 aria-label="Mes siguiente"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
               {showCalendarTour && currentCalendarTourStep.id === 'month' ? (
-                <CalendarTourCard
-                  step={currentCalendarTourStep}
+                <TourCard
+                  title={currentCalendarTourStep.title}
+                  description={currentCalendarTourStep.description}
                   stepIndex={calendarTourStepIndex}
                   totalSteps={CALENDAR_TOUR_STEPS.length}
                   onNext={handleCalendarTourNext}
                   onPrevious={handleCalendarTourPrevious}
                   onClose={closeCalendarTour}
-                  className="left-0 top-full mt-4 pointer-events-auto"
+                  className="absolute left-0 top-full mt-4 z-[80] pointer-events-auto max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:translate-x-0 max-sm:translate-y-0"
                 />
               ) : null}
             </div>
@@ -974,7 +899,7 @@ export default function CalendarioPage() {
                   setSelectedDate(today);
                   setVisibleMonth(getMonthStart(today));
                 }}
-                className="h-8 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900"
+                className="h-8 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:shadow-none dark:hover:bg-slate-800 dark:hover:text-slate-100"
               >
                 Hoy
               </Button>
@@ -990,13 +915,13 @@ export default function CalendarioPage() {
           </div>
 
           <div
-            className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#f3f7ff_100%)]"
+            className="border-b border-slate-200/80 bg-[linear-gradient(180deg,#f8fbff_0%,#f3f7ff_100%)] dark:border-slate-800 dark:bg-[linear-gradient(180deg,#0b1220_0%,#101b36_100%)]"
             style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
           >
             {WEEKDAY_LABELS.map((label) => (
               <div
                 key={label}
-                className="border-r border-slate-200/80 px-2 py-2 text-center text-[12px] font-bold text-slate-600 last:border-r-0 sm:px-3"
+                className="border-r border-slate-200/80 px-2 py-2 text-center text-[12px] font-bold text-slate-600 last:border-r-0 dark:border-slate-800 dark:text-slate-400 sm:px-3"
               >
                 <span className="hidden sm:inline">{label}</span>
                 <span className="sm:hidden text-xs">{label.slice(0, 3)}</span>
@@ -1017,14 +942,15 @@ export default function CalendarioPage() {
             }
           >
             {showCalendarTour && currentCalendarTourStep.id === 'grid' ? (
-              <CalendarTourCard
-                step={currentCalendarTourStep}
+              <TourCard
+                title={currentCalendarTourStep.title}
+                description={currentCalendarTourStep.description}
                 stepIndex={calendarTourStepIndex}
                 totalSteps={CALENDAR_TOUR_STEPS.length}
                 onNext={handleCalendarTourNext}
                 onPrevious={handleCalendarTourPrevious}
                 onClose={closeCalendarTour}
-                className="left-1/2 top-4 -translate-x-1/2 pointer-events-auto"
+                className="absolute left-1/2 top-4 z-[80] -translate-x-1/2 pointer-events-auto max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:translate-x-0 max-sm:translate-y-0"
               />
             ) : null}
             {monthGrid.map((date) => {
@@ -1039,25 +965,25 @@ export default function CalendarioPage() {
                   key={dateKey}
                   type="button"
                   onClick={() => openComposerForDate(date)}
-                  className={`group flex min-h-[66px] flex-col gap-1.5 border-r border-b px-2 py-2 text-left transition hover:bg-[#f8fbff] last:border-r-0 sm:min-h-[74px] sm:px-2.5 lg:min-h-[86px] ${
-                    !isCurrentMonth ? 'text-slate-300' : 'text-slate-900'
+                  className={`group flex min-h-[66px] flex-col gap-1.5 border-r border-b px-2 py-2 text-left transition hover:bg-[#f8fbff] last:border-r-0 dark:hover:bg-slate-800/50 sm:min-h-[74px] sm:px-2.5 lg:min-h-[86px] ${
+                    !isCurrentMonth ? 'text-slate-300 dark:text-slate-600' : 'text-slate-900 dark:text-slate-100'
                   }`}
                   style={{
-                    borderRightColor: '#e7ebf4',
-                    borderBottomColor: '#e7ebf4',
+                    borderRightColor: 'var(--border)',
+                    borderBottomColor: 'var(--border)',
                     backgroundColor: isSelected
-                      ? '#eef3ff'
+                      ? 'color-mix(in oklch, var(--primary) 14%, var(--background))'
                       : isCurrentMonth
-                        ? '#ffffff'
-                        : '#f7f9fc',
+                        ? 'var(--background)'
+                        : 'color-mix(in oklch, var(--muted) 55%, var(--background))',
                   }}
                 >
                   <div className="flex items-start justify-between">
                     <span
                       className="inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[12px] font-semibold"
                       style={{
-                        backgroundColor: isToday ? '#2563EB' : isSelected ? '#dce8ff' : 'transparent',
-                        color: isToday ? '#ffffff' : isSelected ? '#2563EB' : undefined,
+                        backgroundColor: isToday ? '#2563EB' : isSelected ? 'color-mix(in oklch, #dce8ff 55%, var(--background))' : 'transparent',
+                        color: isToday ? '#ffffff' : isSelected ? 'color-mix(in oklch, #2563EB 75%, var(--foreground))' : undefined,
                       }}
                     >
                       {date.getDate()}
@@ -1068,18 +994,18 @@ export default function CalendarioPage() {
                     {cellEvents.slice(0, 2).map((event) => (
                       <div
                         key={event.id}
-                        className="truncate rounded-[8px] border px-2 py-0.5 text-[10px] font-semibold shadow-sm"
+                        className="truncate rounded-[8px] border px-2 py-0.5 text-[12px] font-semibold shadow-sm"
                         style={{
-                          backgroundColor: event.type === 'exam' ? '#fff4df' : '#edf4ff',
-                          borderColor: event.type === 'exam' ? '#f6ddb0' : '#d5e4ff',
-                          color: event.type === 'exam' ? '#b7791f' : '#2563EB',
+                          backgroundColor: event.type === 'exam' ? 'color-mix(in oklch, #fff4df 62%, var(--background))' : 'color-mix(in oklch, #edf4ff 62%, var(--background))',
+                          borderColor: event.type === 'exam' ? 'color-mix(in oklch, #f6ddb0 52%, var(--border))' : 'color-mix(in oklch, #d5e4ff 52%, var(--border))',
+                          color: event.type === 'exam' ? 'color-mix(in oklch, #b7791f 72%, var(--foreground))' : 'color-mix(in oklch, #2563EB 72%, var(--foreground))',
                         }}
                       >
                         {event.title}
                       </div>
                     ))}
                     {cellEvents.length > 2 ? (
-                      <div className="text-[10px] font-medium text-slate-500">
+                      <div className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
                         +{cellEvents.length - 2} más
                       </div>
                     ) : null}
@@ -1094,27 +1020,30 @@ export default function CalendarioPage() {
       </div>
 
       <Dialog open={isComposerOpen} onOpenChange={setIsComposerOpen}>
-        <DialogContent className="h-[min(78vh,640px)] w-[min(calc(100vw-1rem),360px)] max-w-[360px] overflow-hidden rounded-[22px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] md:h-auto md:max-h-[76vh] md:w-[680px] md:max-w-[680px] lg:w-[760px] lg:max-w-[760px]">
-          <div className="h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
+        <DialogContent className="h-[min(78vh,640px)] w-[min(calc(100vw-1rem),360px)] max-w-[360px] overflow-hidden rounded-[22px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none md:h-auto md:max-h-[76vh] md:w-[680px] md:max-w-[680px] lg:w-[760px] lg:max-w-[760px]">
+          <div className="relative h-full overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 md:max-h-[76vh]">
+            {showCalendarTour && currentCalendarTourStep.id === 'composer' ? (
+              <div className="pointer-events-none absolute inset-0 z-[70] bg-white/18 backdrop-blur-[3px] dark:bg-slate-950/40" />
+            ) : null}
             <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
               <DialogHeader className="space-y-2 text-left">
-                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-[#050B2C]">
+                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-[#050B2C] dark:text-slate-100">
                   Agregar fecha
                 </DialogTitle>
-                <DialogDescription className="text-[13px] leading-5 text-slate-500">
+                <DialogDescription className="text-[13px] leading-5 text-slate-500 dark:text-slate-400">
                   {formatLongDate(selectedDate)}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-1">
+              <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-1 dark:border-slate-800 dark:bg-slate-800/50">
                 <div className="grid grid-cols-2 gap-1">
                   <Button
                     type="button"
                     variant="ghost"
                     className={`h-9 rounded-[12px] text-[13px] font-semibold ${
                       formState.type === 'exam'
-                        ? 'bg-white text-[#2563EB] shadow-sm hover:bg-white'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-white text-[#2563EB] shadow-sm hover:bg-white dark:bg-slate-900 dark:text-blue-300 dark:shadow-none dark:hover:bg-slate-900'
+                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                     }`}
                     onClick={() =>
                       setFormState((currentState) => ({
@@ -1132,8 +1061,8 @@ export default function CalendarioPage() {
                     variant="ghost"
                     className={`h-9 rounded-[12px] text-[13px] font-semibold ${
                       formState.type === 'assignment'
-                        ? 'bg-white text-[#2563EB] shadow-sm hover:bg-white'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-white text-[#2563EB] shadow-sm hover:bg-white dark:bg-slate-900 dark:text-blue-300 dark:shadow-none dark:hover:bg-slate-900'
+                        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
                     }`}
                     onClick={() =>
                       setFormState((currentState) => ({
@@ -1151,30 +1080,19 @@ export default function CalendarioPage() {
             </div>
 
             <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_240px] lg:items-start">
+              <div ref={composerTourRef} className="relative">
               <div
-                ref={composerTourRef}
                 className={`h-[332px] overflow-hidden ${
                   showCalendarTour && currentCalendarTourStep.id === 'composer'
                     ? 'relative z-[80] rounded-[24px] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.12)]'
                     : ''
                 }`}
               >
-                {showCalendarTour && currentCalendarTourStep.id === 'composer' ? (
-                  <CalendarTourCard
-                    step={currentCalendarTourStep}
-                    stepIndex={calendarTourStepIndex}
-                    totalSteps={CALENDAR_TOUR_STEPS.length}
-                    onNext={handleCalendarTourNext}
-                    onPrevious={handleCalendarTourPrevious}
-                    onClose={closeCalendarTour}
-                    className="left-1/2 top-2 -translate-x-1/2 pointer-events-auto"
-                  />
-                ) : null}
                 {formState.type === 'exam' ? (
                   <div className="grid h-full grid-rows-[auto_auto_minmax(112px,1fr)] gap-3">
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-slate-700">
+                        <label className="text-[13px] font-medium text-slate-700 dark:text-slate-300">
                           Seleccionar materia
                         </label>
                         <Input
@@ -1187,12 +1105,12 @@ export default function CalendarioPage() {
                             }))
                           }
                           placeholder="Ej: Derecho Constitucional"
-                          className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
+                          className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-[13px] font-medium text-slate-700">Instancia</label>
+                        <label className="text-[13px] font-medium text-slate-700 dark:text-slate-300">Instancia</label>
                         <div className="grid grid-cols-3 gap-2">
                           {(['1', '2', 'integrador'] as ExamInstance[]).map((examInstance) => (
                             <Button
@@ -1201,8 +1119,8 @@ export default function CalendarioPage() {
                               variant="outline"
                               className={`h-9 rounded-xl px-2 text-[13px] ${
                                 formState.examInstance === examInstance
-                                  ? 'border-[#CFE0FF] bg-[#EEF4FF] text-[#2563EB] hover:bg-[#EEF4FF]'
-                                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                                  ? 'border-[#CFE0FF] bg-[#EEF4FF] text-[#2563EB] hover:bg-[#EEF4FF] dark:border-blue-500/40 dark:bg-blue-500/15 dark:text-blue-300 dark:hover:bg-blue-500/15'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
                               }`}
                               onClick={() =>
                                 setFormState((currentState) => ({
@@ -1220,24 +1138,24 @@ export default function CalendarioPage() {
 
                     <div className="flex min-h-[112px] flex-col space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[11px] text-slate-500">
+                        <p className="text-[12px] text-slate-500 dark:text-slate-400">
                           {careerName
                             ? `Materias de ${careerName}`
                             : 'Buscaremos materias de la carrera que tenés cargada.'}
                         </p>
                         {careerMateriaLoading ? (
-                          <span className="text-[11px] font-medium text-slate-500">
+                          <span className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
                             Cargando...
                           </span>
                         ) : null}
                       </div>
 
                       {careerMateriaLoading ? (
-                        <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
+                        <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                           Cargando materias de tu carrera...
                         </div>
                       ) : filteredCareerMateriaOptions.length > 0 ? (
-                        <div className="max-h-[112px] min-h-[112px] overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-1 shadow-sm">
+                        <div className="max-h-[112px] min-h-[112px] overflow-y-auto rounded-[16px] border border-slate-200 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                           {filteredCareerMateriaOptions.map((materia) => (
                             <button
                               key={materia.id}
@@ -1249,18 +1167,18 @@ export default function CalendarioPage() {
                                   selectedMateriaId: materia.id,
                                 }))
                               }
-                              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-[13px] text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                              className="flex w-full items-center rounded-xl px-3 py-2 text-left text-[13px] text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                             >
                               {materia.nombre}
                             </button>
                           ))}
                         </div>
                       ) : formState.subjectName.trim().length > 0 ? (
-                        <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
+                        <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                           No encontramos una materia de tu carrera con ese nombre.
                         </div>
                       ) : careerMateriaOptions.length === 0 ? (
-                        <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
+                        <div className="flex min-h-[112px] items-center rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                           Cuando tu carrera tenga materias asociadas, aparecerán aquí para elegirlas.
                         </div>
                       ) : null}
@@ -1269,7 +1187,7 @@ export default function CalendarioPage() {
                 ) : (
                   <div className="grid h-full grid-rows-[auto_auto_minmax(112px,1fr)] gap-3">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Trabajo práctico</label>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Trabajo práctico</label>
                       <Input
                         value={formState.assignmentTitle}
                         onChange={(event) =>
@@ -1279,18 +1197,18 @@ export default function CalendarioPage() {
                           }))
                         }
                         placeholder="Ej: TP final de Derecho Privado"
-                        className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500"
+                        className="h-10 rounded-[16px] border-slate-200 bg-white text-[13px] text-slate-900 placeholder:text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
                       />
                     </div>
                     <div className="space-y-2 opacity-45">
-                      <label className="text-[13px] font-medium text-slate-700">Instancia</label>
+                      <label className="text-[13px] font-medium text-slate-700 dark:text-slate-300">Instancia</label>
                       <div className="grid grid-cols-3 gap-2 pointer-events-none">
                         {(['1', '2', 'integrador'] as ExamInstance[]).map((examInstance) => (
                           <Button
                             key={`assignment-${examInstance}`}
                             type="button"
                             variant="outline"
-                            className="h-9 rounded-xl border-slate-200 bg-white px-2 text-[13px] text-slate-500"
+                            className="h-9 rounded-xl border-slate-200 bg-white px-2 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
                             disabled
                           >
                             {examInstanceLabel(examInstance)}
@@ -1298,19 +1216,19 @@ export default function CalendarioPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="flex min-h-[112px] flex-col justify-between rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    <div className="flex min-h-[112px] flex-col justify-between rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
                         Organizacion
                       </p>
                       <p>
                         Guardá la entrega con un nombre claro para ubicarla rápido en recordatorios,
                         calendario y seguimiento semanal.
                       </p>
-                      <p className="text-[12px] text-slate-500">
+                      <p className="text-[12px] text-slate-500 dark:text-slate-400">
                         Ejemplo: TP final de Derecho Privado.
                       </p>
                     </div>
-                    <div className="hidden rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500">
+                    <div className="hidden rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                       Guardá la entrega con un nombre claro para poder usar esta información después
                       en recordatorios, analíticas o planificación.
                     </div>
@@ -1319,16 +1237,30 @@ export default function CalendarioPage() {
 
               </div>
 
+                {showCalendarTour && currentCalendarTourStep.id === 'composer' ? (
+                  <TourCard
+                    title={currentCalendarTourStep.title}
+                    description={currentCalendarTourStep.description}
+                    stepIndex={calendarTourStepIndex}
+                    totalSteps={CALENDAR_TOUR_STEPS.length}
+                    onNext={handleCalendarTourNext}
+                    onPrevious={handleCalendarTourPrevious}
+                    onClose={closeCalendarTour}
+                    className="absolute left-1/2 top-full mt-3 z-[90] -translate-x-1/2 pointer-events-auto max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:translate-x-0 max-sm:translate-y-0"
+                  />
+                ) : null}
+              </div>
+
               <div className="space-y-3">
-                <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                <div className="rounded-[18px] border border-slate-200 bg-slate-50 p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-800/50 dark:shadow-none">
+                  <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                     Vista previa
                   </p>
-                  <div className="mt-2 min-h-[84px] rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600">
+                  <div className="mt-2 min-h-[84px] rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 text-[13px] leading-5 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
                     {formState.type === 'exam' ? (
                       <span>
                         Se guardará como{' '}
-                        <strong className="text-slate-900">
+                        <strong className="text-slate-900 dark:text-slate-100">
                           {formState.subjectName.trim() || 'tu materia'} -{' '}
                           {examInstanceLabel(formState.examInstance)}
                         </strong>
@@ -1337,7 +1269,7 @@ export default function CalendarioPage() {
                     ) : (
                       <span>
                         Se guardará como{' '}
-                        <strong className="text-slate-900">
+                        <strong className="text-slate-900 dark:text-slate-100">
                           {formState.assignmentTitle.trim() || 'tu trabajo práctico'}
                         </strong>
                         .
@@ -1347,14 +1279,14 @@ export default function CalendarioPage() {
                 </div>
 
                 {formState.type === 'exam' ? (
-                  <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                  <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
                     <div className="flex items-center gap-2">
                       <BellRing className="h-4 w-4 text-indigo-500" />
-                      <p className="text-[12px] font-bold text-slate-800">Recordatorios</p>
+                      <p className="text-[12px] font-bold text-slate-800 dark:text-slate-200">Recordatorios</p>
                     </div>
                     {isPremium ? (
                       <>
-                        <p className="mt-1.5 text-[11px] text-slate-500">
+                        <p className="mt-1.5 text-[12px] text-slate-500 dark:text-slate-400">
                           Recordarme antes del parcial:
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1367,8 +1299,8 @@ export default function CalendarioPage() {
                                 onClick={() => toggleReminderDay(days)}
                                 className={`inline-flex h-8 items-center justify-center rounded-xl border px-3 text-[12px] font-semibold transition ${
                                   active
-                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300'
+                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
                                 }`}
                               >
                                 {days} día{days === 1 ? '' : 's'}
@@ -1379,7 +1311,7 @@ export default function CalendarioPage() {
                       </>
                     ) : (
                       <div className="mt-2">
-                        <p className="text-[11px] leading-4 text-slate-500">
+                        <p className="text-[12px] leading-4 text-slate-500 dark:text-slate-400">
                           Recordatorios disponibles en Premium.
                         </p>
                         <button
@@ -1390,7 +1322,7 @@ export default function CalendarioPage() {
                             });
                             window.location.assign('/pricing');
                           }}
-                          className="mt-1.5 text-[12px] font-semibold text-indigo-600 transition hover:text-indigo-700"
+                          className="mt-1.5 text-[12px] font-semibold text-indigo-600 transition hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
                         >
                           Conocer Premium
                         </button>
@@ -1400,34 +1332,34 @@ export default function CalendarioPage() {
                 ) : null}
 
                 {selectedDateEvents.length > 0 ? (
-                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-slate-50 p-3">
-                    <p className="text-[13px] font-semibold text-slate-900">
+                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-[16px] border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-800/50">
+                    <p className="text-[13px] font-semibold text-slate-900 dark:text-slate-100">
                       Ya tenés cargado para este día
                     </p>
                     {selectedDateEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="flex items-start justify-between gap-3 rounded-[16px] border border-slate-200 bg-white px-3 py-2.5"
+                        className="flex items-start justify-between gap-3 rounded-[16px] border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <Badge
                               className={
                                 event.type === 'exam'
-                                  ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                  : 'border-blue-200 bg-blue-50 text-blue-700'
+                                  ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300'
+                                  : 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300'
                               }
                               variant="outline"
                             >
                               {eventTypeLabel(event.type)}
                             </Badge>
                           </div>
-                          <p className="mt-1.5 text-[13px] font-medium text-slate-900">{event.title}</p>
+                          <p className="mt-1.5 text-[13px] font-medium text-slate-900 dark:text-slate-100">{event.title}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => void handleDeleteEvent(event.id)}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-rose-500"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-rose-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-rose-400"
                           aria-label="Eliminar fecha"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -1436,7 +1368,7 @@ export default function CalendarioPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="min-h-[74px] rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] leading-5 text-slate-500">
+                  <div className="min-h-[74px] rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-[13px] leading-5 text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                     Todavía no tenés fechas guardadas para este día.
                   </div>
                 )}
@@ -1445,7 +1377,7 @@ export default function CalendarioPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-9 rounded-xl border-slate-200 bg-white px-3.5 text-[13px] text-slate-700 hover:bg-slate-50"
+                    className="h-9 rounded-xl border-slate-200 bg-white px-3.5 text-[13px] text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                     onClick={() => setIsComposerOpen(false)}
                   >
                     Cancelar
@@ -1460,14 +1392,15 @@ export default function CalendarioPage() {
                     {isSavingEvent ? 'Guardando...' : 'Guardar'}
                   </Button>
                   {showCalendarTour && currentCalendarTourStep.id === 'create' ? (
-                    <CalendarTourCard
-                      step={currentCalendarTourStep}
+                    <TourCard
+                      title={currentCalendarTourStep.title}
+                      description={currentCalendarTourStep.description}
                       stepIndex={calendarTourStepIndex}
                       totalSteps={CALENDAR_TOUR_STEPS.length}
                       onNext={handleCalendarTourNext}
                       onPrevious={handleCalendarTourPrevious}
                       onClose={closeCalendarTour}
-                      className="right-0 bottom-full mb-3 pointer-events-auto"
+                      className="absolute right-0 bottom-full mb-3 z-[80] pointer-events-auto max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:translate-x-0 max-sm:translate-y-0"
                     />
                   ) : null}
                 </div>
@@ -1478,7 +1411,7 @@ export default function CalendarioPage() {
       </Dialog>
 
       <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
-        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-[24px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)]">
+        <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-[24px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.14)] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-none">
           <div className="px-4 py-4 sm:px-5 sm:py-5">
             <PremiumUpsell
               title="Alcanzaste el límite de 3 parciales"

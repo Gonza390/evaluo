@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -826,7 +826,7 @@ export default function MateriaContent({
               {isUserLogged ? (
                 <div className="ml-auto flex items-center gap-2">
                   {resourceVoteSummary ? (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                       {resourceVoteSummary.score >= 0 ? '+' : ''}
                       {resourceVoteSummary.score} ranking
                     </span>
@@ -891,7 +891,7 @@ export default function MateriaContent({
                       {recurso.nombre}
                     </p>
                   </div>
-                  <div className="inline-flex items-center justify-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                  <div className="inline-flex items-center justify-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                     <ThumbsUp className="h-3 w-3" />
                     <span>{voteSummary.likes}</span>
                     <ThumbsDown className="ml-1 h-3 w-3" />
@@ -1306,7 +1306,7 @@ export default function MateriaContent({
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id as typeof activeTab)}
-                className={`relative min-h-[48px] rounded-xl px-2 py-2 text-[11px] font-medium leading-4 transition-all duration-300 sm:min-h-0 sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
+                className={`relative min-h-[48px] rounded-xl px-2 py-2 text-[12px] font-medium leading-4 transition-all duration-300 sm:min-h-0 sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
                   activeTab === tab.id
                     ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#2563EB] sm:after:content-[""]'
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
@@ -1500,7 +1500,7 @@ export default function MateriaContent({
                           </p>
                         </div>
                         {material.page_count ? (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                             {material.page_count} páginas
                           </span>
                         ) : null}

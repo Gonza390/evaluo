@@ -483,7 +483,7 @@ export default function PdfViewer({
 
             <div
               className={cn(
-                'min-h-8 rounded-[0.9rem] border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 sm:min-h-10 sm:rounded-[1rem] sm:px-3 sm:py-2 sm:text-xs',
+                'min-h-8 rounded-[0.9rem] border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-700 sm:min-h-10 sm:rounded-[1rem] sm:px-3 sm:py-2 sm:text-xs',
                 isStudyTheme && 'border-white/8 bg-white/3 text-slate-100'
               )}
             >
@@ -591,7 +591,7 @@ export default function PdfViewer({
                           ) : (
                             <div
                               className={cn(
-                                'flex h-[170px] items-center justify-center bg-slate-50 text-[11px] font-medium text-slate-500',
+                                'flex h-[170px] items-center justify-center bg-slate-50 text-[12px] font-medium text-slate-500',
                                 isStudyTheme && 'bg-[#18191C] text-slate-500'
                               )}
                             >
@@ -601,7 +601,7 @@ export default function PdfViewer({
                         </div>
                         <p
                           className={cn(
-                            'mt-2 text-center text-[11px] font-semibold text-slate-600',
+                            'mt-2 text-center text-[12px] font-semibold text-slate-600',
                             isStudyTheme && 'text-slate-500'
                           )}
                         >
@@ -720,9 +720,9 @@ export default function PdfViewer({
                     <div className="sticky bottom-3 z-10 mx-auto mt-6 flex w-full max-w-2xl justify-center px-1 sm:bottom-4 sm:px-3">
                       <div className="absolute inset-x-5 -top-10 h-14 rounded-full bg-gradient-to-t from-white via-white/80 to-transparent blur-2xl" />
                       <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-indigo-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
-                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700">
+                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-indigo-700">
                           Preview disponible
-                          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-indigo-600">
+                          <span className="rounded-full bg-white px-2 py-0.5 text-[12px] text-indigo-600">
                             {previewPageLimit} paginas
                           </span>
                         </div>

@@ -59,8 +59,8 @@ function FileDrop({
   return (
     <div>
       <FieldLabel>{label}</FieldLabel>
-      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#cfd8ea] bg-[#fbfcff] px-5 py-6 text-center transition hover:border-[#315efb] hover:bg-[#f6f9ff]">
-        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#eef3ff] text-[#315efb]">
+      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#cfd8ea] bg-[#fbfcff] px-5 py-6 text-center transition hover:border-[#2563EB] hover:bg-[#f6f9ff]">
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#eef3ff] text-[#2563EB]">
           <FileUp className="h-5 w-5" />
         </div>
         <p className="text-[14px] font-medium text-[#1d2a44]">
@@ -565,13 +565,13 @@ export function BibliotecaPanel({
                       setSimuladorMateriaSearch('');
                     }}
                     className={`w-full rounded-[12px] border px-3 py-3 text-left transition ${
-                      isActive ? 'border-[#315efb] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
+                      isActive ? 'border-[#2563EB] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
                     }`}
                   >
                     <p className={`text-[13px] font-semibold ${isActive ? 'text-[#2148d8]' : 'text-[#1d2a44]'}`}>
                       {carrera.carreraNombre}
                     </p>
-                    <p className="mt-1 text-[11px] text-[#7f8aa3]">
+                    <p className="mt-1 text-[12px] text-[#7f8aa3]">
                       {carrera.universidadNombre ?? 'Sin universidad'} · {materiasConSimulador}/
                       {carrera.materias.length} materias con simulador
                     </p>
@@ -646,14 +646,14 @@ export function BibliotecaPanel({
                           <p className="truncate text-[13px] font-semibold text-[#1d2a44]">
                             {materia.nombre}
                           </p>
-                          <p className="mt-1 text-[11px] text-[#7f8aa3]">
+                          <p className="mt-1 text-[12px] text-[#7f8aa3]">
                             {hasSimulator
                               ? `${materia.totalPreguntas.toLocaleString('es-AR')} preguntas cargadas`
                               : 'Sin simulador cargado'}
                           </p>
                         </div>
                         <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                          className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${
                             hasSimulator
                               ? 'bg-[#e9fbf4] text-[#10936f]'
                               : 'bg-[#f4f6fb] text-[#7f8aa3]'
@@ -665,13 +665,13 @@ export function BibliotecaPanel({
 
                       <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
                         <div className="rounded-[10px] border border-[#eef2f8] bg-[#fafcff] px-3 py-2">
-                          <p className="text-[11px] uppercase tracking-[0.14em] text-[#98a3bb]">Parcial 1</p>
+                          <p className="text-[12px] uppercase tracking-[0.14em] text-[#667085]">Parcial 1</p>
                           <p className="mt-1 text-[15px] font-semibold text-[#2148d8]">
                             {materia.parcial1Preguntas.toLocaleString('es-AR')} preguntas
                           </p>
                         </div>
                         <div className="rounded-[10px] border border-[#eef2f8] bg-[#fafcff] px-3 py-2">
-                          <p className="text-[11px] uppercase tracking-[0.14em] text-[#98a3bb]">Parcial 2</p>
+                          <p className="text-[12px] uppercase tracking-[0.14em] text-[#667085]">Parcial 2</p>
                           <p className="mt-1 text-[15px] font-semibold text-[#6f42ff]">
                             {materia.parcial2Preguntas.toLocaleString('es-AR')} preguntas
                           </p>
@@ -713,7 +713,7 @@ export function BibliotecaPanel({
                 type="button"
                 size="icon"
                 disabled={structurePending || !nuevaUniversidad.trim()}
-                className="h-10 w-10 rounded-[12px] bg-[#315efb] hover:bg-[#2649c7]"
+                className="h-10 w-10 rounded-[12px] bg-[#2563EB] hover:bg-[#2649c7]"
                 onClick={() =>
                   void handleStructureAction(async () => {
                     const result = await crearUniversidadBibliotecaAdministrador(nuevaUniversidad);
@@ -735,7 +735,7 @@ export function BibliotecaPanel({
                   <div
                     key={universidad.id}
                     className={`flex items-center justify-between rounded-[12px] border px-3 py-2.5 transition ${
-                      isActive ? 'border-[#315efb] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
+                      isActive ? 'border-[#2563EB] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
                     }`}
                   >
                     <button
@@ -785,7 +785,7 @@ export function BibliotecaPanel({
                 type="button"
                 size="icon"
                 disabled={structurePending || !universidadId || !nuevaCarrera.trim()}
-                className="h-10 w-10 rounded-[12px] bg-[#315efb] hover:bg-[#2649c7]"
+                className="h-10 w-10 rounded-[12px] bg-[#2563EB] hover:bg-[#2649c7]"
                 onClick={() =>
                   void handleStructureAction(async () => {
                     const result = await crearCarreraBibliotecaAdministrador({
@@ -815,7 +815,7 @@ export function BibliotecaPanel({
                     <div
                       key={carrera.id}
                       className={`flex items-center justify-between rounded-[12px] border px-3 py-2.5 transition ${
-                        isActive ? 'border-[#315efb] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
+                        isActive ? 'border-[#2563EB] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
                       }`}
                     >
                       <button
@@ -876,7 +876,7 @@ export function BibliotecaPanel({
                 type="button"
                 size="icon"
                 disabled={structurePending || !carreraId || !nuevaMateria.trim()}
-                className="h-10 w-10 rounded-[12px] bg-[#315efb] hover:bg-[#2649c7]"
+                className="h-10 w-10 rounded-[12px] bg-[#2563EB] hover:bg-[#2649c7]"
                 onClick={() =>
                   void handleStructureAction(async () => {
                     const result = await crearMateriaBibliotecaAdministrador({
@@ -908,7 +908,7 @@ export function BibliotecaPanel({
                     <div className="min-w-0">
                       <p className="truncate text-[13px] font-medium text-[#1d2a44]">{materia.nombre}</p>
                       {materia.isGeneral ? (
-                        <p className="mt-1 text-[11px] text-[#7f8aa3]">Materia general</p>
+                        <p className="mt-1 text-[12px] text-[#7f8aa3]">Materia general</p>
                       ) : null}
                     </div>
                     {!materia.isGeneral ? (
@@ -936,7 +936,7 @@ export function BibliotecaPanel({
 
         <div className="mt-4 rounded-[16px] border border-dashed border-[#dbe2f0] bg-[#fbfcff] p-4">
           <div className="space-y-1">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#98a3bb]">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#667085]">
               Importacion masiva Excel
             </p>
             <p className="text-[12px] leading-5 text-[#7f8aa3]">
@@ -1256,7 +1256,7 @@ export function BibliotecaPanel({
                             <p className="mt-1 text-[12px] text-[#7f8aa3]">
                               {batch.files.length} archivo{batch.files.length === 1 ? '' : 's'}
                             </p>
-                            <p className="mt-2 break-words text-[12px] text-[#98a3bb]">
+                            <p className="mt-2 break-words text-[12px] text-[#667085]">
                               {batch.files.map((file) => file.name).join(' · ')}
                             </p>
                           </div>
@@ -1283,7 +1283,7 @@ export function BibliotecaPanel({
           <Button
             onClick={() => void handleUpload()}
             disabled={!canSubmit || uploadingFile || isPending}
-            className="h-10 rounded-[12px] bg-[#315efb] px-5 hover:bg-[#2649c7]"
+            className="h-10 rounded-[12px] bg-[#2563EB] px-5 hover:bg-[#2649c7]"
           >
             {uploadingFile || isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
             Subir material

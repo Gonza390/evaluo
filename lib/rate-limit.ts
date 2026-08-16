@@ -58,6 +58,34 @@ export async function enforceServerActionRateLimit(options: {
   }
 }
 
+/**
+ * Variante estricta: falla CERRADO. Si el store de rate limit no responde (RPC
+ * con error, tabla no disponible o cliente admin sin configurar), la petición
+ * se DENIEGA. Se usa en endpoints sin login que disparan gasto (p. ej.
+ * inferencia IA del demo), donde permitir ante una falla implicaría coste
+ * arbitrario.
+ */
+export async function enforceStrictRateLimit(options: {
+  key: string;
+  limit: number;
+  windowMs: number;
+}): Promise<RateLimitResult> {
+  try {
+    return await enforceRateLimit({ ...options, failClosed: true });
+  } catch (error) {
+    console.warn(
+      'rate-limit strict: store unavailable, denying request',
+      error instanceof Error ? error.message : String(error)
+    );
+    return {
+      allowed: false,
+      limit: options.limit,
+      remaining: 0,
+      resetAt: Date.now() + options.windowMs,
+    };
+  }
+}
+
 function pruneMemoryBuckets(now: number) {
   if (memoryBuckets.size < MEMORY_CLEANUP_THRESHOLD) return;
 
@@ -121,7 +149,7 @@ function isMissingSchemaError(error: Error | null) {
 
 async function enforceDirectTableRateLimit(
   supabase: ReturnType<typeof createAdminClient>,
-  options: { key: string; limit: number; windowMs: number }
+  options: { key: string; limit: number; windowMs: number; failClosed?: boolean }
 ): Promise<RateLimitResult> {
   const now = Date.now();
 
@@ -134,6 +162,15 @@ async function enforceDirectTableRateLimit(
     .maybeSingle<{ count: number; reset_at: string }>();
 
   if (readError) {
+    if (options.failClosed) {
+      console.warn('rate-limit read failed, denying request (strict)', readError.message);
+      return {
+        allowed: false,
+        limit: options.limit,
+        remaining: 0,
+        resetAt: now + options.windowMs,
+      };
+    }
     console.warn('rate-limit read failed, allowing request', readError.message);
     return {
       allowed: true,
@@ -154,6 +191,15 @@ async function enforceDirectTableRateLimit(
       reset_at: new Date(resetAt).toISOString(),
     });
     if (insertError) {
+      if (options.failClosed) {
+        console.warn('rate-limit insert failed, denying request (strict)', insertError.message);
+        return {
+          allowed: false,
+          limit: options.limit,
+          remaining: 0,
+          resetAt,
+        };
+      }
       console.warn('rate-limit insert failed', insertError.message);
     }
     memoryBuckets.set(options.key, { count: 1, resetAt });
@@ -183,6 +229,15 @@ async function enforceDirectTableRateLimit(
     .eq('key', options.key)
     .eq('reset_at', existing.reset_at);
   if (updateError) {
+    if (options.failClosed) {
+      console.warn('rate-limit update failed, denying request (strict)', updateError.message);
+      return {
+        allowed: false,
+        limit: options.limit,
+        remaining: 0,
+        resetAt: existingResetAt,
+      };
+    }
     console.warn('rate-limit update failed', updateError.message);
   }
   memoryBuckets.set(options.key, { count: newCount, resetAt: existingResetAt });
@@ -199,6 +254,7 @@ export async function enforceRateLimit(options: {
   key: string;
   limit: number;
   windowMs: number;
+  failClosed?: boolean;
 }): Promise<RateLimitResult> {
   const now = Date.now();
   pruneMemoryBuckets(now);
@@ -224,6 +280,15 @@ export async function enforceRateLimit(options: {
 
   if (error || !data?.[0]) {
     if (!isMissingSchemaError(error)) {
+      if (options.failClosed) {
+        console.warn('rate-limit rpc failed, denying request (strict)', error?.message);
+        return {
+          allowed: false,
+          limit: options.limit,
+          remaining: 0,
+          resetAt: now + options.windowMs,
+        };
+      }
       console.warn('rate-limit rpc failed, allowing request', error?.message);
       return {
         allowed: true,

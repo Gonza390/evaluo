@@ -204,9 +204,20 @@ function renderLine(line: Line) {
   for (const fragment of sorted) {
     if (!fragment.text.trim()) continue;
     const charWidth = Math.max(2, fragment.width / Math.max(1, fragment.text.length));
-    if (previousEnd > -Infinity && fragment.x - previousEnd > previousCharWidth * 2.5) {
-      text += ' ';
+
+    if (text.length > 0) {
+      const gap = fragment.x - previousEnd;
+      const carriesItsOwnSpace = /\s$/.test(text) || /^\s/.test(fragment.text);
+      // pdf.js suele posicionar todos los items de una línea en el mismo x
+      // (gap negativo) o dejar un hueco posicional sin espacio real. En ambos
+      // casos el fragmento es una nueva palabra: insertamos espacio salvo que
+      // el texto ya lo traiga o el hueco sea un kerning intra-palabra.
+      const needsSpace = !carriesItsOwnSpace && (gap < 0 || gap > 0.3 * previousCharWidth);
+      if (needsSpace) {
+        text += ' ';
+      }
     }
+
     text += fragment.text;
     previousEnd = fragment.x + fragment.width;
     previousCharWidth = charWidth;

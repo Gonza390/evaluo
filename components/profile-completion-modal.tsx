@@ -251,6 +251,11 @@ export function ProfileCompletionModal({
     [universidadId, universidades]
   );
 
+  const carreraSeleccionada = useMemo(
+    () => carreras.find((carrera) => carrera.id === carreraId) ?? null,
+    [carreraId, carreras]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!universidadId || !carreraId) return;
@@ -281,7 +286,7 @@ export function ProfileCompletionModal({
       });
       toast({
         title: 'Error',
-        description: 'No pudimos guardar tus datos. Por favor intenta de nuevo.',
+        description: 'No pudimos guardar tus datos. Por favor intentá de nuevo.',
         variant: 'destructive',
       });
     } finally {
@@ -337,13 +342,27 @@ export function ProfileCompletionModal({
                 <Input
                   id="universidad-search"
                   placeholder="Buscá tu universidad"
+                  role="combobox"
+                  aria-expanded={universidades.length > 0}
+                  aria-controls="universidad-listbox"
+                  aria-autocomplete="list"
+                  aria-activedescendant={
+                    universidadSeleccionada
+                      ? `universidad-option-${universidadSeleccionada.id}`
+                      : undefined
+                  }
                   className="h-11 rounded-2xl border-slate-200 bg-white pl-10 focus:border-[#2563EB] focus:ring-[#2563EB]"
                   value={universidadSearch}
                   onChange={(e) => setUniversidadSearch(e.target.value)}
                 />
               </div>
 
-              <div className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+              <div
+                id="universidad-listbox"
+                role="listbox"
+                aria-label="Universidades disponibles"
+                className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white"
+              >
                 {loadingUniversidades ? (
                   <div className="flex items-center justify-center p-3">
                     <Spinner size="sm" />
@@ -359,6 +378,9 @@ export function ProfileCompletionModal({
                     <button
                       key={universidad.id}
                       type="button"
+                      id={`universidad-option-${universidad.id}`}
+                      role="option"
+                      aria-selected={universidadId === universidad.id}
                       onClick={() => {
                         setUniversidadId(universidad.id);
                         setUniversidadSearch(universidad.nombre);
@@ -402,7 +424,14 @@ export function ProfileCompletionModal({
                   placeholder={
                     universidadSeleccionada
                       ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
-                      : 'Primero selecciona tu universidad'
+                      : 'Primero seleccioná tu universidad'
+                  }
+                  role="combobox"
+                  aria-expanded={carreras.length > 0}
+                  aria-controls="carrera-listbox"
+                  aria-autocomplete="list"
+                  aria-activedescendant={
+                    carreraSeleccionada ? `carrera-option-${carreraSeleccionada.id}` : undefined
                   }
                   className="h-11 rounded-2xl border-slate-200 bg-white pl-10 focus:border-[#2563EB] focus:ring-[#2563EB]"
                   value={carreraSearch}
@@ -411,7 +440,12 @@ export function ProfileCompletionModal({
                 />
               </div>
 
-              <div className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+              <div
+                id="carrera-listbox"
+                role="listbox"
+                aria-label="Carreras disponibles"
+                className="max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white"
+              >
                 {loadingCarreras ? (
                   <div className="flex items-center justify-center p-3">
                     <Spinner size="sm" />
@@ -429,6 +463,9 @@ export function ProfileCompletionModal({
                     <button
                       key={carrera.id}
                       type="button"
+                      id={`carrera-option-${carrera.id}`}
+                      role="option"
+                      aria-selected={carreraId === carrera.id}
                       onClick={() => {
                         setCarreraId(carrera.id);
                         setCarreraSearch(carrera.nombre);

@@ -28,6 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${baseUrl}/pregunteros`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.85,
+    },
+    {
       url: `${baseUrl}/pricing`,
       lastModified: now,
       changeFrequency: 'weekly',
@@ -54,11 +60,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const client = createPublicClient();
-  const [universidadesResult, materiasResult, explorarDataResult] = await Promise.allSettled([
-    client.from('universidades').select('id'),
-    client.from('materias').select('id, nombre'),
-    fetchExplorarCatalogData(client),
-  ]);
+  const [universidadesResult, materiasResult, explorarDataResult, frescuraResult] =
+    await Promise.allSettled([
+      client.from('universidades').select('id'),
+      client.from('materias').select('id, nombre'),
+      fetchExplorarCatalogData(client),
+      client
+        .from('preguntas_banco_public')
+        .select('materia_id, creado_at')
+        .order('creado_at', { ascending: false })
+        .limit(10000),
+    ]);
+
+  const materiaLastModified = new Map<string, Date>();
+  if (isFulfilled(frescuraResult)) {
+    for (const row of frescuraResult.value.data ?? []) {
+      const materiaId = String(row.materia_id ?? '');
+      const creadoAt = row.creado_at;
+      if (!materiaId || !creadoAt) continue;
+      const date = new Date(creadoAt);
+      const current = materiaLastModified.get(materiaId);
+      if (!current || date.getTime() > current.getTime()) {
+        materiaLastModified.set(materiaId, date);
+      }
+    }
+  }
 
   if (isFulfilled(universidadesResult)) {
     for (const universidad of universidadesResult.value.data ?? []) {
@@ -73,16 +99,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (isFulfilled(materiasResult)) {
     for (const materia of materiasResult.value.data ?? []) {
+      const lastModified = materiaLastModified.get(materia.id) ?? now;
+
       routes.push({
         url: `${baseUrl}/explorar/materia/${materia.id}`,
-        lastModified: now,
+        lastModified,
         changeFrequency: 'weekly',
         priority: 0.7,
       });
 
       routes.push({
+        url: `${baseUrl}/pregunteros/${buildSeoEntitySlug(materia.nombre, materia.id)}`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.75,
+      });
+
+      const materiaSlug = buildSeoEntitySlug(materia.nombre, materia.id);
+      routes.push({
+        url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/1`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.78,
+      });
+      routes.push({
+        url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/2`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.78,
+      });
+      routes.push({
+        url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/integrador`,
+        lastModified,
+        changeFrequency: 'weekly',
+        priority: 0.76,
+      });
+
+      routes.push({
         url: `${baseUrl}/resumenes/${buildSeoEntitySlug(materia.nombre, materia.id)}`,
-        lastModified: now,
+        lastModified,
         changeFrequency: 'weekly',
         priority: 0.65,
       });

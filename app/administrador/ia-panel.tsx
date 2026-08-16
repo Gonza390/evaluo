@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { Brain, Loader2, RefreshCcw, Save } from 'lucide-react';
@@ -163,7 +163,7 @@ export function IAPanel({
             <p className="text-[14px] font-semibold text-[#1d2a44]">Configuración de IA</p>
             <p className="mt-1 text-[13px] text-[#7f8aa3]">Prompt base usado para la extracción y configuración del sistema.</p>
           </div>
-          <Button onClick={() => void savePrompt()} disabled={loadingPrompt} className="h-9 rounded-[12px] bg-[#315efb] px-4 hover:bg-[#2649c7]">
+          <Button onClick={() => void savePrompt()} disabled={loadingPrompt} className="h-9 rounded-[12px] bg-[#2563EB] px-4 hover:bg-[#2649c7]">
             {loadingPrompt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Guardar
           </Button>
@@ -191,7 +191,7 @@ export function IAPanel({
               {warmupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Simular costo
             </Button>
-            <Button onClick={() => void runWarmup(false)} disabled={warmupLoading} className="rounded-[12px] bg-[#315efb] hover:bg-[#2649c7]">
+            <Button onClick={() => void runWarmup(false)} disabled={warmupLoading} className="rounded-[12px] bg-[#2563EB] hover:bg-[#2649c7]">
               {warmupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Generar ahora
             </Button>
@@ -228,7 +228,7 @@ export function IAPanel({
               </div>
 
               <div className="rounded-[14px] border border-[#e8edf5] bg-[#fbfcff] p-3">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#98a3bb]">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#667085]">
                   {warmupResult.dryRun ? 'Cobertura prevista' : 'Última corrida generada'}
                 </p>
                 <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -283,9 +283,9 @@ export function IAPanel({
       <section className="rounded-[20px] border border-[#e7ebf4] bg-white">
         <div className="flex items-center justify-between gap-3 border-b border-[#eef1f6] px-5 py-4">
           <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-[#315efb]" />
+            <Brain className="h-4 w-4 text-[#2563EB]" />
             <p className="text-[14px] font-semibold text-[#1d2a44]">Ranking de errores explicados por IA</p>
-            <span className="rounded-full border border-[#dbe2f0] bg-[#f5f7fb] px-2 py-0.5 text-[11px] font-medium text-[#5f6d86]">
+            <span className="rounded-full border border-[#dbe2f0] bg-[#f5f7fb] px-2 py-0.5 text-[12px] font-medium text-[#5f6d86]">
               {feedbackStats?.generatedCount?.toLocaleString('es-AR') ?? 0} generadas
             </span>
           </div>
@@ -327,7 +327,7 @@ export function IAPanel({
                     size="sm"
                     onClick={() => void regenerateExplanation(row.pregunta_id)}
                     disabled={refreshingPreguntaId === row.pregunta_id}
-                    className="h-9 rounded-[12px] bg-[#315efb] px-4 hover:bg-[#2649c7]"
+                    className="h-9 rounded-[12px] bg-[#2563EB] px-4 hover:bg-[#2649c7]"
                   >
                     {refreshingPreguntaId === row.pregunta_id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -354,7 +354,7 @@ export function IAPanel({
                 </div>
                 {expandedQuestions[row.pregunta_id] ? (
                   <div className="mt-3 rounded-[14px] border border-[#e8edf5] bg-white p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#98a3bb]">Explicación guardada</p>
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#667085]">Explicación guardada</p>
                     <p className="mt-2 text-[13px] leading-6 text-[#42506a]">
                       {row.explicacion ?? 'Esta pregunta todavía no tiene una explicación cacheada.'}
                     </p>

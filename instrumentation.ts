@@ -5,6 +5,59 @@ const ERROR_REPORT_URL = process.env.ERROR_REPORT_URL;
 const AXIOM_INGEST_URL = process.env.AXIOM_INGEST_URL;
 const AXIOM_INGEST_TOKEN = process.env.AXIOM_INGEST_TOKEN;
 
+// Headers sensibles que jamás deben salir del servidor hacia terceros
+// (Sentry/Axiom/endpoint propio). La cookie de sesión de Supabase y
+// Authorization no pueden quedar en el envelope de error.
+const SENSITIVE_HEADERS = new Set([
+  'cookie',
+  'authorization',
+  'set-cookie',
+  'x-supabase-auth',
+  'x-supabase-api-version',
+  'x-auth-token',
+  'proxy-authorization',
+]);
+
+function sanitizeRequestMeta(request: unknown) {
+  if (!request || typeof request !== 'object') {
+    return { sanitized: true, url: undefined, method: undefined, headers: undefined };
+  }
+
+  const req = request as {
+    url?: string;
+    method?: string;
+    headers?: Headers | Record<string, string>;
+  };
+
+  let headers: Record<string, string> | undefined;
+  try {
+    if (req.headers instanceof Headers) {
+      headers = {};
+      req.headers.forEach((value, key) => {
+        if (!SENSITIVE_HEADERS.has(key.toLowerCase())) {
+          headers![key] = value;
+        }
+      });
+    } else if (req.headers && typeof req.headers === 'object') {
+      headers = {};
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (!SENSITIVE_HEADERS.has(key.toLowerCase()) && typeof value === 'string') {
+          headers[key] = value;
+        }
+      }
+    }
+  } catch {
+    headers = undefined;
+  }
+
+  return {
+    sanitized: true,
+    url: typeof req.url === 'string' ? req.url : undefined,
+    method: typeof req.method === 'string' ? req.method : undefined,
+    headers,
+  };
+}
+
 function getErrorDetails(err: unknown) {
   const message = err instanceof Error ? err.message : String(err);
   const digest =
@@ -27,7 +80,7 @@ async function reportToSentry(eventId: string, err: unknown, request: unknown, c
       server_name: 'vercel',
       level: 'error',
       message: { message },
-      extra: { digest, request, context },
+      extra: { digest, request: sanitizeRequestMeta(request), context },
     }),
   ].join('\n');
   await fetch(`${host}/api/${dsn.pathname.split('/')[1]}/envelope/`, {
@@ -52,7 +105,7 @@ async function reportToAxiom(err: unknown, request: unknown, context: unknown) {
         level: 'error',
         message,
         digest,
-        request,
+        request: sanitizeRequestMeta(request),
         context,
       },
     ]),
@@ -70,7 +123,7 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
       fetch(ERROR_REPORT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, message, digest, request, context }),
+        body: JSON.stringify({ eventId, message, digest, request: sanitizeRequestMeta(request), context }),
       })
     );
   }

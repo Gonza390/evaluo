@@ -105,22 +105,23 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
             placeholder="Buscar universidad o carrera..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            className="h-10 rounded-2xl border-slate-200 bg-white pl-10 text-sm shadow-sm sm:h-11"
+            className="h-10 rounded-2xl border-slate-200 bg-white pl-10 text-sm shadow-sm sm:h-11 dark:border-slate-800 dark:bg-slate-900"
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-slate-200 bg-white p-1 sm:w-fit sm:gap-2">
+        <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-slate-200 bg-white p-1 sm:w-fit sm:gap-2 dark:border-slate-800 dark:bg-slate-900">
           {FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
             return (
               <button
                 key={filter.id}
                 type="button"
+                aria-pressed={isActive}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`rounded-xl px-2.5 py-2 text-[11px] font-semibold transition sm:px-3 sm:text-sm ${
+                className={`rounded-xl px-2.5 py-2 text-[12px] font-semibold transition sm:px-3 sm:text-sm ${
                   isActive
                     ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    : 'text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/60'
                 }`}
               >
                 {filter.label}
@@ -134,17 +135,17 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
         <section className="mt-6">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">
+              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-300">
                 Universidades
               </p>
-              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
+              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 dark:text-slate-100 sm:text-2xl">
                 Empezá desde tu facultad si todavía no tenés definida la carrera
               </h2>
-              <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
+              <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400 sm:text-sm">
                 Entrá por universidad para ver carreras activas y el contenido disponible en cada una.
               </p>
             </div>
-            <p className="shrink-0 text-sm font-semibold text-slate-500">
+            <p className="shrink-0 text-sm font-semibold text-slate-500 dark:text-slate-400">
               {visibleUniversidades.length} resultados
             </p>
           </div>
@@ -152,9 +153,9 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
           {visibleUniversidades.length === 0 ? (
             <Card className="surface-panel rounded-[var(--radius-panel)]">
               <CardContent className="py-14 text-center">
-                <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900">No encontramos universidades</h3>
-                <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
+                <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300 dark:text-slate-600" />
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">No encontramos universidades</h3>
+                <p className="mt-2 text-slate-500 dark:text-slate-400">Probá con otro término de búsqueda.</p>
               </CardContent>
             </Card>
           ) : (
@@ -162,31 +163,31 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
               {visibleUniversidades.map((universidad, index) => (
                 <Link key={universidad.id} href={getUniversityRoute(universidad.id)} className="block">
                   <Card
-                    className="surface-card animate-surface-reveal h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]"
+                    className="surface-card animate-surface-reveal h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/50"
                     style={{ animationDelay: `${index * 40}ms` }}
                   >
                     <CardContent className="flex h-full flex-col justify-between gap-4 p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
                           <Building2 className="h-5 w-5" />
                         </div>
-                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                           {universidad.carrerasCount} carreras
                         </span>
                       </div>
 
                       <div>
-                        <CardTitle className="text-[1.05rem] font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
+                        <CardTitle className="text-[1.05rem] font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.1rem] dark:text-slate-100">
                           {universidad.nombre}
                         </CardTitle>
-                        <p className="mt-1.5 text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6">
+                        <p className="mt-1.5 text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6 dark:text-slate-400">
                           {universidad.materiasCount > 0
                             ? `${universidad.materiasCount} materias visibles para explorar desde aquí.`
                             : 'Explorá las carreras disponibles y descubrí el contenido activo.'}
                         </p>
                       </div>
 
-                      <div className="inline-flex h-8 w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
+                      <div className="inline-flex h-8 w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
                         Ver carreras
                         <ArrowRight className="h-4 w-4" />
                       </div>
@@ -203,17 +204,17 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
         <section className="mt-6">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">
+              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-indigo-600 dark:text-indigo-300">
                 Carreras
               </p>
-              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
+              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 dark:text-slate-100 sm:text-2xl">
                 Entrá directo a tu ruta académica
               </h2>
-              <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
+              <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400 sm:text-sm">
                 Buscá por nombre de carrera o por universidad y entrá directo a las materias.
               </p>
             </div>
-            <p className="shrink-0 text-sm font-semibold text-slate-500">
+            <p className="shrink-0 text-sm font-semibold text-slate-500 dark:text-slate-400">
               {filteredCarreras.length} resultados
             </p>
           </div>
@@ -221,9 +222,9 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
           {filteredCarreras.length === 0 ? (
             <Card className="surface-panel rounded-[var(--radius-panel)]">
               <CardContent className="py-14 text-center">
-                <GraduationCap className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900">No encontramos carreras</h3>
-                <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
+                <GraduationCap className="mx-auto mb-4 h-12 w-12 text-slate-300 dark:text-slate-600" />
+                <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100">No encontramos carreras</h3>
+                <p className="mt-2 text-slate-500 dark:text-slate-400">Probá con otro término de búsqueda.</p>
               </CardContent>
             </Card>
           ) : (
@@ -231,34 +232,34 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
               {filteredCarreras.map((carrera, index) => (
                 <Link key={carrera.id} href={getCareerRoute(carrera.id)} className="block">
                   <Card
-                    className="surface-card animate-surface-reveal h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]"
+                    className="surface-card animate-surface-reveal h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-500/50"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
                           <GraduationCap className="h-5 w-5" />
                         </div>
-                        <span className="inline-flex max-w-full items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">
+                        <span className="inline-flex max-w-full items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.16em] text-indigo-600 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300">
                           {getCareerBadge(carrera, topCareerMaterias)}
                         </span>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2 pt-0">
                       <div>
-                        <CardTitle className="text-[1.15rem] font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.2rem]">
+                        <CardTitle className="text-[1.15rem] font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-[1.2rem] dark:text-slate-100">
                           {carrera.nombre}
                         </CardTitle>
-                        <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">
+                        <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm dark:text-slate-400">
                           {carrera.universidadNombre}
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
-                        <div className="text-[11px] leading-5 text-slate-500 sm:text-xs">
+                      <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2 dark:border-slate-800">
+                        <div className="text-[12px] leading-5 text-slate-500 sm:text-xs dark:text-slate-400">
                           Entrá a las materias de esta carrera sin pasos extra.
                         </div>
-                        <div className="inline-flex h-8 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
+                        <div className="inline-flex h-8 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
                           Ver materias
                           <ArrowRight className="h-4 w-4" />
                         </div>

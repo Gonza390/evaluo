@@ -842,7 +842,7 @@ function isSummaryDegraded(summary: StudentMaterialSummary) {
     ...summary.keyPoints,
     ...summary.sections.map((section) => `${section.title} ${section.body}`),
   ].join('\n');
-  return /[\p{L}]{20,}/u.test(texts);
+  return /[\p{L}]{14,}/u.test(texts);
 }
 
 async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {

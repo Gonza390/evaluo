@@ -11,7 +11,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <div className="text-[1.05rem] font-bold tracking-tight text-slate-900 sm:text-lg">
               Evaluo
             </div>
-            <p className="mt-0.5 hidden text-[11px] text-slate-500 sm:block">
+            <p className="mt-0.5 hidden text-[12px] text-slate-500 sm:block">
               Tu espacio académico
             </p>
           </Link>

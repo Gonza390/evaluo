@@ -5,11 +5,11 @@ interface FaqItem {
   answer: string;
 }
 
-const FAQ_ITEMS: FaqItem[] = [
+export const FAQ_ITEMS: FaqItem[] = [
   {
     question: '¿Qué universidades están disponibles en Evaluo?',
     answer:
-      'Actualmente contamos con soporte completo y guías de cátedra de las principales universidades públicas y privadas de Argentina: UBA, UTN, UNC, UNLP, UADE, UCA, Universidad de San Andrés y Universidad Torcuato Di Tella. Si tu universidad no figura en la lista destacada, podés registrarte, subir tus propios apuntes o programas de estudio, y la plataforma organizará el contenido y la simulación a tu medida.',
+      'Actualizamos contenido de estudio de las principales universidades públicas y privadas de Argentina: UBA, UTN, UNC, UNLP, UADE, UCA, Universidad de San Andrés y Universidad Torcuato Di Tella. Evaluo no está afiliada a ninguna de estas instituciones. Si tu universidad no figura en la lista destacada, podés registrarte, subir tus propios apuntes o programas de estudio, y la plataforma organizará el contenido y la simulación a tu medida.',
   },
   {
     question: '¿El contenido de la plataforma es realmente gratuito?',
@@ -27,9 +27,9 @@ const FAQ_ITEMS: FaqItem[] = [
       'El plan premium desbloquea simulacros ilimitados, explicaciones más completas de cada error, métricas de avance y herramientas extra de estudio. Los pagos se procesan en pesos argentinos a través de Mercado Pago y admiten dinero en cuenta, transferencia y tarjetas.',
   },
   {
-    question: '¿Los simuladores de examen son parecidos a los parciales reales?',
+    question: '¿Los simuladores de examen son parecidos a los parciales?',
     answer:
-      'Sí, esa es una de las propuestas centrales de Evaluo. Los simuladores se apoyan en parciales anteriores, modelos de cátedra, apuntes y material compartido por estudiantes, para reflejar mejor la estructura y el nivel de dificultad que encontrás en la práctica.',
+      'Sí. Los simuladores se preparan a partir de los temas y el nivel de dificultad habitual de cada materia, usando programas de estudio, apuntes y material compartido por estudiantes. No reproducimos exámenes oficiales ni evaluaciones de ninguna universidad: son prácticas originales que te ayudan a familiarizarte con el formato y los contenidos que podés llegar a encontrar.',
   },
 ];
 

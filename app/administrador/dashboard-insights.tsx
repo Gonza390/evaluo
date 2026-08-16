@@ -2,23 +2,14 @@
 
 import {
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
-
-interface ChartDatum {
-  name: string;
-  value: number;
-  color: string;
-}
 
 interface VisitorLoginPoint {
   label: string;
@@ -50,13 +41,9 @@ function InsightCard({
 }
 
 export function DashboardInsights({
-  topMaterias,
-  devices,
   visitorLoginSeries,
   recentActivity,
 }: {
-  topMaterias: ChartDatum[];
-  devices: ChartDatum[];
   visitorLoginSeries: VisitorLoginPoint[];
   recentActivity: RecentActivityItem[];
 }) {
@@ -69,84 +56,6 @@ export function DashboardInsights({
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[0.95fr_0.95fr_1.1fr]">
-      <InsightCard title="Materias más utilizadas">
-        {topMaterias.length === 0 ? (
-          <p className="text-[13px] text-[#7f8aa3]">Todavía no hay datos suficientes para este período.</p>
-        ) : (
-          <>
-            <div className="h-[220px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={topMaterias}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={48}
-                    outerRadius={78}
-                    paddingAngle={3}
-                    stroke="transparent"
-                  >
-                    {topMaterias.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-2">
-              {topMaterias.map((item) => (
-                <div key={item.name} className="flex items-center gap-1.5 text-[12px] text-[#6f7c96]">
-                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span>{item.name}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </InsightCard>
-
-      <InsightCard title="Distribución por dispositivo">
-        {devices.length === 0 ? (
-          <p className="text-[13px] text-[#7f8aa3]">Todavía no hay datos suficientes para este período.</p>
-        ) : (
-          <>
-            <div className="h-[220px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={devices}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={48}
-                    outerRadius={78}
-                    paddingAngle={3}
-                    stroke="transparent"
-                  >
-                    {devices.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="space-y-2">
-              {devices.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-[12px]">
-                  <div className="flex items-center gap-2 text-[#6f7c96]">
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span>{item.name}</span>
-                  </div>
-                  <span className="font-semibold text-[#1d2a44]">{item.value.toLocaleString('es-AR')}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </InsightCard>
-
       <InsightCard title="Ingresos y logins">
         {visitorLoginSeries.length === 0 ? (
           <p className="text-[13px] text-[#7f8aa3]">Todavía no hay datos suficientes para este período.</p>
@@ -188,14 +97,13 @@ export function DashboardInsights({
           </div>
         )}
       </InsightCard>
-      </div>
 
       <InsightCard title="Actividad reciente">
         {recentActivity.length === 0 ? (
           <p className="text-[13px] text-[#7f8aa3]">Todavía no hay actividad reciente para mostrar.</p>
         ) : (
           <div className="overflow-hidden rounded-[14px] border border-[#edf1f7]">
-            <div className="grid grid-cols-[140px_minmax(0,1fr)_140px_140px] border-b border-[#edf1f7] bg-[#fafbfd] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8c97ad]">
+            <div className="grid grid-cols-[140px_minmax(0,1fr)_140px_140px] border-b border-[#edf1f7] bg-[#fafbfd] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#8c97ad]">
               <span>Acción</span>
               <span>Detalles</span>
               <span>Administrador</span>
@@ -208,7 +116,7 @@ export function DashboardInsights({
                   className="grid grid-cols-[140px_minmax(0,1fr)_140px_140px] items-center px-4 py-2.5 text-[12px]"
                 >
                   <div>
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${toneClasses[item.tone]}`}>
+                    <span className={`inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold ${toneClasses[item.tone]}`}>
                       {item.action}
                     </span>
                   </div>

@@ -1,1 +1,2 @@
-export const DEMO_TOTAL_QUESTIONS = 10;
+export const DEMO_TOTAL_QUESTIONS = 30;
+export const DEMO_LOGIN_GATE_TOTAL_QUESTIONS = 10;

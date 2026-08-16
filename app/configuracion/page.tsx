@@ -313,7 +313,7 @@ export default function ConfiguracionPage() {
                 <Settings className="h-7 w-7" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#2563EB]">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#2563EB]">
                   Perfil
                 </p>
                 <h1 className="mt-1 text-3xl font-bold tracking-[-0.05em] text-slate-950 sm:text-4xl">
@@ -498,19 +498,19 @@ export default function ConfiguracionPage() {
           <h2 className="text-lg font-bold text-slate-900">Resumen de tu perfil</h2>
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Nombre
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">{nombre || 'Sin completar'}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Pais
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">{pais || 'Sin completar'}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Universidad
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">
@@ -518,7 +518,7 @@ export default function ConfiguracionPage() {
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                 Carrera
               </p>
               <p className="mt-1 text-sm font-medium text-slate-900">

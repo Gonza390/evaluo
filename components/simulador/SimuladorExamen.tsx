@@ -9,6 +9,7 @@ import {
   corregirPreguntaDemo,
   finalizarSimuladorAction,
   getWrongAnswersExplanations,
+  getWrongAnswersExplanationsDemo,
   getPreguntasSimuladorErrores,
   getPreguntasSimuladorDemo,
   getPreguntasSimuladorUltimoIntentoPremium,
@@ -21,6 +22,16 @@ import {
 } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { ProfileCompletionModal } from '@/components/profile-completion-modal';
 import { SimulatorLoginGate } from '@/components/simulador/SimulatorLoginGate';
@@ -53,12 +64,13 @@ import {
   normalizeForCompare,
   shouldAutoResumeSimulator,
 } from '@/lib/simulator-core';
-import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
+import { DEMO_LOGIN_GATE_TOTAL_QUESTIONS, DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
 import { logError } from '@/lib/observability';
 import { supabase } from '@/lib/supabase-client';
 import { cn } from '@/lib/utils';
 import {
   AlertCircle,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -72,6 +84,7 @@ import {
   ThumbsUp,
   Trophy,
   Sparkles,
+  X,
 } from 'lucide-react';
 
 interface SimuladorExamenProps {
@@ -153,7 +166,7 @@ const SIMULATOR_TOUR_STEPS: SimulatorTourStep[] = [
   {
     id: 'navigation',
     title: 'Navegación del examen',
-    description: 'Con estos botones avanzas o vuelves entre preguntas y sigues tu conteo de respuestas.',
+    description: 'Con estos botones avanzás o volvés entre preguntas y seguís tu conteo de respuestas.',
   },
 ];
 
@@ -298,36 +311,36 @@ function SimulatorTourCard({
     <div
       key={`${step.id}-${direction}`}
       className={cn(
-        'absolute z-[80] w-[320px] rounded-[26px] border border-[#DCE6FF] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] p-5 shadow-[0_24px_60px_rgba(15,23,42,0.18)] max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:w-auto max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-[24px] max-sm:p-4',
+        'absolute z-[80] w-[320px] rounded-[26px] border border-[#DCE6FF] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] p-5 shadow-[0_24px_60px_rgba(15,23,42,0.18)] max-sm:fixed max-sm:inset-x-4 max-sm:bottom-[5.75rem] max-sm:top-auto max-sm:w-auto max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-[24px] max-sm:p-4 dark:border-indigo-500/30 dark:bg-[linear-gradient(180deg,#0f172a_0%,#0b1220_100%)]',
         direction === 'forward' ? 'animate-simulator-tour-forward' : 'animate-simulator-tour-backward',
         className
       )}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
             Paso {stepIndex + 1} de {totalSteps}
           </p>
-          <h3 className="mt-2 text-[1.05rem] font-bold text-slate-950 max-sm:text-[0.98rem]">{step.title}</h3>
+          <h3 className="mt-2 text-[1.05rem] font-bold text-slate-950 dark:text-slate-100 max-sm:text-[0.98rem]">{step.title}</h3>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-600 max-sm:h-8 max-sm:w-8"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-500 dark:text-slate-400 transition hover:border-slate-300 hover:text-slate-600 dark:hover:text-slate-300 max-sm:h-8 max-sm:w-8"
           aria-label="Cerrar guía"
         >
           ×
         </button>
       </div>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E8EFFC]">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E8EFFC] dark:bg-slate-800">
         <div
           className="h-full rounded-full bg-gradient-to-r from-[#2563EB] to-[#5B7BFF] transition-all duration-300"
           style={{ width: progressWidth }}
         />
       </div>
 
-      <p className="mt-4 text-[0.95rem] leading-7 text-slate-600 max-sm:text-[0.9rem] max-sm:leading-6">{step.description}</p>
+      <p className="mt-4 text-[0.95rem] leading-7 text-slate-600 dark:text-slate-400 max-sm:text-[0.9rem] max-sm:leading-6">{step.description}</p>
 
       <div className="mt-5 flex items-center justify-between gap-2 max-sm:flex-col max-sm:items-stretch">
         <div className="flex items-center gap-2 max-sm:grid max-sm:grid-cols-2">
@@ -335,14 +348,14 @@ function SimulatorTourCard({
             type="button"
             onClick={onPrevious}
             disabled={stepIndex === 0}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 disabled:cursor-not-allowed disabled:opacity-45"
           >
             Anterior
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300 transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
           >
             Cerrar
           </button>
@@ -454,8 +467,9 @@ export default function SimuladorExamen({
   const preguntaActualShuffled = shuffledMetaByQuestion[currentQuestionIndex];
   const answeredCount = useMemo(() => Object.keys(selectedAnswers).length, [selectedAnswers]);
   const unansweredCount = Math.max(0, preguntasDisponibles - answeredCount);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const demoCheckpointIndex = resolvedDemoMode
-    ? Math.min(DEMO_TOTAL_QUESTIONS, Math.max(1, preguntasDisponibles)) - 1
+    ? Math.min(DEMO_LOGIN_GATE_TOTAL_QUESTIONS, Math.max(1, preguntasDisponibles)) - 1
     : DEMO_TOTAL_QUESTIONS - 1;
   const progressPercent = preguntasDisponibles
     ? Math.round((answeredCount / preguntasDisponibles) * 100)
@@ -473,7 +487,7 @@ export default function SimuladorExamen({
     }),
     [carreraId, materiaId, mode, parcial, premiumOnly, universidadId, userId]
   );
-  const shouldShowSimulatorTour = searchParams.get(SIMULATOR_TOUR_PARAM) === '1';
+  const tourForcedByParam = searchParams.get(SIMULATOR_TOUR_PARAM) === '1';
   const simulatorTourStorageKey = useMemo(
     () => getSimulatorTourStorageKey(materiaId, parcial, mode),
     [materiaId, mode, parcial]
@@ -558,18 +572,18 @@ export default function SimuladorExamen({
   };
 
   const progressRingStyle = {
-    background: `conic-gradient(#2563EB ${progressPercent * 3.6}deg, #E6EAF2 ${progressPercent * 3.6}deg)`,
+    background: `conic-gradient(#2563EB ${progressPercent * 3.6}deg, var(--border) ${progressPercent * 3.6}deg)`,
   };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!user || resolvedDemoMode || !shouldShowSimulatorTour || estado !== 'playing' || !hasStarted) {
+    if (!user || resolvedDemoMode || estado !== 'playing' || !hasStarted) {
       setShowSimulatorTour(false);
       return;
     }
 
     const alreadySeen = window.localStorage.getItem(simulatorTourStorageKey) === 'done';
-    if (alreadySeen) {
+    if (alreadySeen && !tourForcedByParam) {
       setShowSimulatorTour(false);
       return;
     }
@@ -577,7 +591,7 @@ export default function SimuladorExamen({
     setSimulatorTourStepIndex(0);
     setSimulatorTourDirection('forward');
     setShowSimulatorTour(true);
-  }, [estado, hasStarted, resolvedDemoMode, shouldShowSimulatorTour, simulatorTourStorageKey, user]);
+  }, [estado, hasStarted, resolvedDemoMode, tourForcedByParam, simulatorTourStorageKey, user]);
 
   const closeSimulatorTour = useCallback(() => {
     setShowSimulatorTour(false);
@@ -877,6 +891,16 @@ export default function SimuladorExamen({
     ]
   );
 
+  // Confirma antes de finalizar si quedan preguntas sin responder, para no
+  // perder el intento por un toque accidental (UX-07).
+  const requestFinalizar = useCallback(() => {
+    if (unansweredCount > 0 && estado === 'playing') {
+      setShowFinishConfirm(true);
+      return;
+    }
+    void finalizarExamen('manual');
+  }, [estado, finalizarExamen, unansweredCount]);
+
   const loadFreshQuestions = useCallback(async () => {
     const data =
       mode === 'errores'
@@ -1074,8 +1098,16 @@ export default function SimuladorExamen({
     };
   }, [persistSimulatorSnapshot, simulatorEventContext]);
 
+  // La persistencia se throttle: el timer cambia `timeLeft` cada 1s y serializar
+  // el snapshot completo (30-50 preguntas) en cada tick satura el hilo principal.
+  // Se escribe como máximo 1 vez cada ~5s, y los eventos pagehide/unmount de arriba
+  // hacen el flush final (persistSimulatorSnapshot).
+  const lastPersistAtRef = useRef(0);
+  const pendingPersistPayloadRef = useRef<SimuladorPersistedState | null>(null);
+
   useEffect(() => {
     if (estado !== 'playing') return;
+
     const payload: SimuladorPersistedState = {
       version: 2,
       userId: userId ?? null,
@@ -1091,7 +1123,25 @@ export default function SimuladorExamen({
       hasStarted,
       savedAt: new Date().toISOString(),
     };
-    writePersistedSimulatorState(storageKey, payload);
+    pendingPersistPayloadRef.current = payload;
+
+    const THROTTLE_MS = 5000;
+    const now = Date.now();
+    const write = (snapshot: SimuladorPersistedState) => {
+      writePersistedSimulatorState(storageKey, snapshot);
+      lastPersistAtRef.current = Date.now();
+    };
+
+    if (now - lastPersistAtRef.current >= THROTTLE_MS) {
+      write(payload);
+    } else {
+      // Trailing write: captura el último estado si los cambios se detienen.
+      const trailingTimer = window.setTimeout(() => {
+        const pending = pendingPersistPayloadRef.current;
+        if (pending) write(pending);
+      }, THROTTLE_MS - (now - lastPersistAtRef.current));
+      return () => window.clearTimeout(trailingTimer);
+    }
   }, [
     currentQuestionIndex,
     estado,
@@ -1110,26 +1160,53 @@ export default function SimuladorExamen({
 
   useEffect(() => {
     async function loadExplanations() {
-      if (estado !== 'finished' || !userId) return;
+      if (estado !== 'finished') return;
 
       const wrongQuestionIds = Object.entries(selectedAnswers)
         .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
         .map(([index]) => preguntas[Number(index)]?.id)
         .filter((id): id is string => Boolean(id));
-      const limitedWrongQuestionIds = isPremium
-        ? wrongQuestionIds
-        : wrongQuestionIds.slice(0, 3);
 
-      if (limitedWrongQuestionIds.length === 0) {
+      if (wrongQuestionIds.length === 0) {
         setWrongExplanations([]);
         return;
       }
+
+      const chosenAnswers: Record<string, number | number[] | null> = {};
+      for (const [index, optionIndex] of Object.entries(selectedAnswers)) {
+        const question = preguntas[Number(index)];
+        if (question) {
+          chosenAnswers[question.id] = optionIndex ?? null;
+        }
+      }
+
+      // Visitante anónimo (modo demo): mostramos 1 explicación IA gratuita como
+      // muestra del valor completo ("momento aha"), sin pedir cuenta todavía.
+      if (!userId) {
+        setLoadingExplanations(true);
+        const demoResponse = await getWrongAnswersExplanationsDemo({
+          materia_id: materiaId,
+          parcial,
+          wrong_question_ids: wrongQuestionIds.slice(0, 1),
+          chosen_answers: chosenAnswers,
+        });
+        if (demoResponse.success) {
+          setWrongExplanations(demoResponse.explanations ?? []);
+        }
+        setLoadingExplanations(false);
+        return;
+      }
+
+      const limitedWrongQuestionIds = isPremium
+        ? wrongQuestionIds
+        : wrongQuestionIds.slice(0, 3);
 
       setLoadingExplanations(true);
       const response = await getWrongAnswersExplanations({
         materia_id: materiaId,
         parcial,
         wrong_question_ids: limitedWrongQuestionIds,
+        chosen_answers: chosenAnswers,
       });
 
       if (response.success) {
@@ -1393,7 +1470,7 @@ export default function SimuladorExamen({
               ? 'Termina un simulador, guarda tus errores y luego podrás practicar solo esas preguntas en este modo.'
               : premiumOnly
                 ? 'Estamos actualizando las últimas preguntas validadas para este parcial premium.'
-                : 'Estamos procesando el material oficial de esta materia para que Evaluo te enseñe con la mejor calidad posible.'
+                : 'Estamos preparando las prácticas de esta materia para que Evaluo te ayude a estudiar con la mejor calidad posible.'
           }
           secondaryText={
             isLastAttemptMode
@@ -1428,27 +1505,27 @@ export default function SimuladorExamen({
 
   if (estado === 'resume_choice') {
     return (
-      <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
-        <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <h2 className="text-2xl font-extrabold text-slate-900">Tenés un simulador en curso</h2>
-          <p className="mt-3 text-slate-600">
+      <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] dark:bg-slate-950 p-6">
+        <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-8 shadow-xl">
+          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">Tenés un simulador en curso</h2>
+          <p className="mt-3 text-slate-600 dark:text-slate-400">
             Guardamos este intento con las mismas preguntas para que puedas retomarlo sin cambios.
           </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Si vuelves dentro de {SIMULATOR_AUTO_RESUME_WINDOW_MINUTES} minutos, el simulador se retoma automáticamente.
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Si volvés dentro de {SIMULATOR_AUTO_RESUME_WINDOW_MINUTES} minutos, el simulador se retoma automáticamente.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Respondidas</p>
-              <p className="font-bold text-slate-900">{Object.keys(resumeSnapshot?.selectedAnswers ?? {}).length}</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-3 text-sm">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Respondidas</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100">{Object.keys(resumeSnapshot?.selectedAnswers ?? {}).length}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Tiempo restante</p>
-              <p className="font-bold text-slate-900">{formatTime(resumeSnapshot?.timeLeft ?? examDurationSeconds)}</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-3 text-sm">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Tiempo restante</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100">{formatTime(resumeSnapshot?.timeLeft ?? examDurationSeconds)}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Preguntas</p>
-              <p className="font-bold text-slate-900">{resumeSnapshot?.preguntas?.length ?? 0}</p>
+            <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-3 text-sm">
+              <p className="text-xs text-slate-500 dark:text-slate-400">Preguntas</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100">{resumeSnapshot?.preguntas?.length ?? 0}</p>
             </div>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -1534,10 +1611,10 @@ export default function SimuladorExamen({
       },
       {
         label: 'Después',
-        title: 'Practica tus errores',
+        title: 'Practicá tus errores',
         description:
           erroresPendientes > 0
-            ? `Tienes ${erroresPendientes} respuestas para revisar y convertir en puntos rápidos.`
+            ? `Tenés ${erroresPendientes} respuestas para revisar y convertir en puntos rápidos.`
             : 'Aunque aprobaste, repasar tus errores te ayuda a fijar mejor el parcial.',
         href: `/simulador/errores/${materiaId}?parcial=${resolvedParcial}`,
         cta: 'Practicar errores',
@@ -1559,7 +1636,7 @@ export default function SimuladorExamen({
         description:
           aprobado
             ? 'Hacé un nuevo intento cuando quieras medir si ya podés sostener el resultado.'
-            : 'Después del repaso, toma un nuevo modelo y compara si subiste la nota.',
+            : 'Después del repaso, tomá un nuevo modelo y compara si subiste la nota.',
         onClick: reiniciarSimulador,
         cta: 'Intentar de nuevo',
       },
@@ -1567,29 +1644,29 @@ export default function SimuladorExamen({
 
     if (resolvedDemoMode) {
       return (
-          <div className="flex min-h-[680px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6">
-            <Card className="w-full max-w-4xl overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
+          <div className="flex min-h-[680px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6 dark:bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.12),transparent_28%),linear-gradient(180deg,#0b1220_0%,#101b36_100%)]">
+            <Card className="w-full max-w-4xl overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
               <div className="grid gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-12">
                 <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF] ring-1 ring-[#D9DBFF]">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF] ring-1 ring-[#D9DBFF] dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/30">
                     <Trophy className="h-4 w-4" />
                     Simulador de muestra
                   </div>
-                  <h2 className="mt-6 text-[2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.7rem]">
+                  <h2 className="mt-6 text-[2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] dark:text-slate-100 sm:text-[2.7rem]">
                     Terminaste tu prueba gratis
                   </h2>
-                  <p className="mt-4 max-w-[420px] text-lg leading-8 text-slate-600">
+                  <p className="mt-4 max-w-[420px] text-lg leading-8 text-slate-600 dark:text-slate-400">
                     Respondiste {respondidasFinales} de {totalPreguntasExamen} preguntas y obtuviste un {porcentaje}% de aciertos en {materiaNombre || 'esta materia'}.
                   </p>
-                  <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
+                  <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)] dark:border-indigo-500/30 dark:bg-slate-900/90">
                     <span className={cn('text-[3rem] font-bold leading-none tracking-[-0.07em]', porcentaje >= 60 ? 'text-[#4F46E5]' : 'text-rose-600')}>
                       {porcentaje}%
                     </span>
-                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                       aciertos
                     </span>
                   </div>
-                  <p className="mt-6 max-w-[460px] text-sm leading-7 text-slate-600">
+                  <p className="mt-6 max-w-[460px] text-sm leading-7 text-slate-600 dark:text-slate-400">
                     Creá tu cuenta o iniciá sesión para desbloquear el simulador completo, guardar tu progreso y ver correcciones inteligentes de tus errores.
                   </p>
                   <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -1603,29 +1680,29 @@ export default function SimuladorExamen({
                     <Link
                       href={signupHref}
                       onClick={() => void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'signup')}
-                      className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 px-6 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF]"
+                      className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 px-6 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] dark:border-slate-800 dark:text-indigo-300 dark:hover:bg-indigo-500/15"
                     >
                       Crear cuenta
                     </Link>
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aciertos</p>
-                    <p className="mt-2 text-2xl font-bold text-slate-900">
+                  <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-sm">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Aciertos</p>
+                    <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
                       {aciertosFinales}
-                      <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
+                      <span className="text-sm font-semibold text-slate-500 dark:text-slate-400"> / {totalPreguntasExamen}</span>
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Nota estimada</p>
+                  <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-sm">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Nota estimada</p>
                     <p className={cn('mt-2 text-2xl font-bold', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
                       {nota.toFixed(1)}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Qué desbloqueás al continuar</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                  <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-sm sm:col-span-2">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Qué desbloqueás al continuar</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400">
                       Resultado final, guardado del intento, recomendaciones de repaso y práctica enfocada en tus errores.
                     </p>
                   </div>
@@ -1637,7 +1714,7 @@ export default function SimuladorExamen({
     }
 
     return (
-        <div className="flex min-h-[700px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6">
+          <div className="flex min-h-[700px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6 dark:bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.12),transparent_28%),linear-gradient(180deg,#0b1220_0%,#101b36_100%)]">
         <div className="w-full max-w-6xl [perspective:2200px]">
           <div
             className={cn(
@@ -1647,7 +1724,7 @@ export default function SimuladorExamen({
             style={isMobileResults ? undefined : { transform: showResultsFace ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
           >
             <Card className={cn(
-              'relative w-full overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]',
+              'relative w-full overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none',
               isMobileResults
                 ? showResultsFace
                   ? 'pointer-events-none translate-y-6 opacity-0 transition-all duration-500'
@@ -1667,21 +1744,21 @@ export default function SimuladorExamen({
 
               <div className="relative grid min-h-[540px] gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:min-h-[620px] lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-14 lg:py-12">
                 <div className="max-w-[430px]">
-                  <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm', needsMotivation ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF]')}>
+                  <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm', needsMotivation ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/30' : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF] dark:bg-indigo-500/15 dark:text-indigo-300 dark:ring-indigo-500/30')}>
                     {needsMotivation ? <Star className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}
                     {needsMotivation ? 'Todavía podés levantarlo' : 'Resultado del simulador'}
                   </div>
-                  <h2 className="mt-6 text-[2.1rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[3rem]">
+                  <h2 className="mt-6 text-[2.1rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] dark:text-slate-100 sm:text-[3rem]">
                     {frontTitle}
                   </h2>
-                  <p className="mt-4 max-w-[360px] text-lg leading-8 text-slate-600 sm:text-[24px] sm:leading-9">
+                  <p className="mt-4 max-w-[360px] text-lg leading-8 text-slate-600 dark:text-slate-400 sm:text-[24px] sm:leading-9">
                     {frontMessage}
                   </p>
-                  <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
+                  <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)] dark:border-indigo-500/30 dark:bg-slate-900/90">
                     <span className={cn('text-[3.1rem] font-bold leading-none tracking-[-0.07em]', porcentaje >= 85 ? 'text-[#4F46E5]' : porcentaje >= 60 ? 'text-[#2563EB]' : 'text-rose-600')}>
                       {porcentaje}%
                     </span>
-                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                       resultado
                     </span>
                   </div>
@@ -1696,17 +1773,17 @@ export default function SimuladorExamen({
                       <Button
                         variant="outline"
                         onClick={() => void shareSimulatorResult()}
-                        className="h-12 rounded-xl border-slate-200 px-4 text-base font-semibold text-slate-700 hover:bg-slate-50"
+                        className="h-12 rounded-xl border-slate-200 px-4 text-base font-semibold text-slate-700 dark:border-slate-800 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                       >
                         Compartir mi resultado
                       </Button>
                     ) : null}
-                    <Button variant="ghost" onClick={() => window.history.back()} className="h-12 rounded-xl px-4 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] hover:text-[#4C55E6]">
+                    <Button variant="ghost" onClick={() => window.history.back()} className="h-12 rounded-xl px-4 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] hover:text-[#4C55E6] dark:text-indigo-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-200">
                       Volver a la materia
                     </Button>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <p className="text-sm font-medium text-slate-600">¿Te sirvió este simulador?</p>
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">¿Te sirvió este simulador?</p>
                     <button
                       type="button"
                       onClick={() => void handleSimulatorVote(1)}
@@ -1714,8 +1791,8 @@ export default function SimuladorExamen({
                       className={cn(
                         'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
                         simulatorVote === 1
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300'
+                          : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       )}
                     >
                       <ThumbsUp className="h-4 w-4" />
@@ -1728,8 +1805,8 @@ export default function SimuladorExamen({
                       className={cn(
                         'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
                         simulatorVote === -1
-                          ? 'border-rose-200 bg-rose-50 text-rose-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300'
+                          : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50'
                       )}
                     >
                       <ThumbsDown className="h-4 w-4" />
@@ -1737,22 +1814,22 @@ export default function SimuladorExamen({
                     </button>
                   </div>
                   <div className="mt-6 grid max-w-[360px] grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Aciertos</p>
-                      <p className="mt-2 text-2xl font-bold text-slate-900">
+                    <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-sm">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Aciertos</p>
+                      <p className="mt-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
                         {aciertosFinales}
-                        <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
+                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400"> / {totalPreguntasExamen}</span>
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Nota</p>
+                    <div className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/80 p-4 shadow-sm">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Nota</p>
                       <p className={cn('mt-2 text-2xl font-bold', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
                         {nota.toFixed(1)}
                       </p>
                     </div>
                   </div>
                   {needsMotivation ? (
-                    <p className="mt-6 max-w-[390px] text-sm leading-7 text-slate-600">
+                    <p className="mt-6 max-w-[390px] text-sm leading-7 text-slate-600 dark:text-slate-400">
                       No aprobaste esta vez, pero ya identificamos por dónde empezar. Con un repaso enfocado en el Módulo {suggestedModule} y otro intento, esta nota puede subir rápido.
                     </p>
                   ) : null}
@@ -1771,7 +1848,7 @@ export default function SimuladorExamen({
             </Card>
 
             <Card className={cn(
-              'overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]',
+              'overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none',
               isMobileResults
                 ? showResultsFace
                   ? 'relative mt-4 translate-y-0 opacity-100 transition-all duration-500'
@@ -1781,17 +1858,17 @@ export default function SimuladorExamen({
               <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
               <div className="relative h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
                 <div className="mx-auto max-w-5xl">
-                  <div className="rounded-[28px] border border-slate-200 bg-white/90 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:px-6">
+                  <div className="rounded-[28px] border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/90 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:px-6">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                       <div className="max-w-2xl">
                         <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
-                        <h3 className="mt-1 text-[2rem] font-bold tracking-[-0.04em] text-slate-900 sm:text-[2.35rem]">
+                        <h3 className="mt-1 text-[2rem] font-bold tracking-[-0.04em] text-slate-900 dark:text-slate-100 sm:text-[2.35rem]">
                           Tu revisión completa
                         </h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-[15px]">
+                        <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-400 sm:text-[15px]">
                           {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
                         </p>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-400">
                         Revisá dónde fallaste, qué tema te conviene reforzar y cómo encarar el próximo intento.
                         </p>
                       </div>
@@ -1817,19 +1894,19 @@ export default function SimuladorExamen({
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {examSummaryCards.map((card) => (
-                      <div key={card.label} className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <div key={card.label} className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-[linear-gradient(180deg,#0f172a_0%,#0b1220_100%)] dark:shadow-none">
+                        <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                           {card.label}
                         </p>
-                        <h3 className="mt-2 text-[17px] font-semibold text-slate-900">{card.title}</h3>
-                        <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-600">{card.description}</p>
+                        <h3 className="mt-2 text-[17px] font-semibold text-slate-900 dark:text-slate-100">{card.title}</h3>
+                        <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-600 dark:text-slate-400">{card.description}</p>
                         {'href' in card ? (
-                          <Link href={card.href} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+                          <Link href={card.href} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200">
                             {card.cta}
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         ) : (
-                          <button type="button" onClick={card.onClick} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+                          <button type="button" onClick={card.onClick} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200">
                             {card.cta}
                             <ChevronRight className="h-4 w-4" />
                           </button>
@@ -1838,49 +1915,51 @@ export default function SimuladorExamen({
                     ))}
                   </div>
 
-                  <div className={cn('mt-6 rounded-[28px] p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]', needsMotivation ? 'border border-rose-200 bg-rose-50' : 'border border-indigo-200 bg-indigo-50/70')}>
-                    <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700' : 'text-indigo-700')}>
+                  <div className={cn('mt-6 rounded-[28px] p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)] dark:shadow-none', needsMotivation ? 'border border-rose-200 bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10' : 'border border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10')}>
+                    <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700 dark:text-rose-300' : 'text-indigo-700 dark:text-indigo-300')}>
                       Revisión rápida por tema
                     </p>
-                    <h3 className="mt-2 text-xl font-bold text-slate-900">{patternMessage}</h3>
-                    <p className="mt-3 text-sm leading-6 text-slate-700">
+                    <h3 className="mt-2 text-xl font-bold text-slate-900 dark:text-slate-100">{patternMessage}</h3>
+                    <p className="mt-3 text-sm leading-6 text-slate-700 dark:text-slate-300">
                       {needsMotivation
                         ? `Todavía no alcanzaste el 60%, pero ya tenés una ruta clara: ${recommendationMessage}`
                         : recommendationMessage}
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">{errorFocus.description}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-300">{errorFocus.description}</p>
                     <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
                       <Button asChild className={cn('rounded-xl', needsMotivation ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700')}>
                         <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
                           Repasar resúmenes
                         </Link>
                       </Button>
-                      <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm', needsMotivation ? 'border-rose-200 text-rose-800' : 'border-indigo-200 text-indigo-800')}>
+                      <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm dark:bg-slate-900', needsMotivation ? 'border-rose-200 text-rose-800 dark:border-rose-500/30 dark:text-rose-300' : 'border-indigo-200 text-indigo-800 dark:border-indigo-500/30 dark:text-indigo-300')}>
                         Recomendación de este intento: enfócate en Módulo {suggestedModule}.
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
-                    <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por qué fallaste y cómo mejorarlo</h3>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
+                  <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Tutor Evaluo: por qué fallaste y cómo mejorarlo</h3>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      {userId
+                        ? 'Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.'
+                        : 'Mostramos una explicación gratis de muestra. Creá tu cuenta para verlas todas.'}
                     </p>
                     {loadingExplanations ? (
-                      <p className="mt-3 text-sm text-slate-600">Generando explicaciones personalizadas...</p>
+                      <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">Generando explicaciones personalizadas...</p>
                     ) : wrongExplanations.length === 0 ? (
-                      <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
-                        <p className="text-sm font-semibold text-emerald-900">No hubo errores para revisar.</p>
-                        <p className="mt-1 text-sm text-emerald-800">
+                      <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                        <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-300">No hubo errores para revisar.</p>
+                        <p className="mt-1 text-sm text-emerald-800 dark:text-emerald-200/90">
                           Excelente trabajo. Si querés consolidarlo todavía más, intentá otro modelo o repasá el módulo sugerido.
                         </p>
                       </div>
                     ) : (
                       <div className="mt-4 space-y-4">
                         {wrongExplanations.map((item) => (
-                          <div key={item.preguntaId} className="rounded-xl border border-slate-200 bg-white p-4">
-                            <p className="text-sm font-semibold text-slate-800">{item.enunciado}</p>
-                            <p className="mt-2 text-sm leading-6 text-slate-700">{item.explicacion}</p>
+                          <div key={item.preguntaId} className="rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4">
+                            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">{item.enunciado}</p>
+                            <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-300">{item.explicacion}</p>
                             <div className="mt-3 flex items-center gap-2">
                               {(() => {
                                 const currentVote = feedbackVotes[item.preguntaId];
@@ -1894,8 +1973,8 @@ export default function SimuladorExamen({
                                       className={cn(
                                         'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
                                         currentVote === 1
-                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                          : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                          : 'border-slate-200 text-slate-600 dark:border-slate-800 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50',
                                         currentLoading === 1 && 'opacity-70'
                                       )}
                                     >
@@ -1908,8 +1987,8 @@ export default function SimuladorExamen({
                                       className={cn(
                                         'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
                                         currentVote === -1
-                                          ? 'border-rose-200 bg-rose-50 text-rose-700'
-                                          : 'border-slate-200 text-slate-600 hover:bg-slate-50',
+                                          ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300'
+                                          : 'border-slate-200 text-slate-600 dark:border-slate-800 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50',
                                         currentLoading === -1 && 'opacity-70'
                                       )}
                                     >
@@ -1924,7 +2003,31 @@ export default function SimuladorExamen({
                         ))}
                       </div>
                     )}
-                    {!isPremium && wrongExplanations.length > 0 ? (
+                    {!userId && wrongExplanations.length > 0 ? (
+                      <div className="mt-5 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-white p-4 dark:border-indigo-500/30 dark:from-indigo-500/10 dark:to-slate-900">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          ¿Viste la diferencia? Esto es la IA de Evaluo
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+                          Creá tu cuenta gratis y practicá el simulador completo con explicaciones de cada error, progreso y probabilidad de aprobar.
+                        </p>
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                          <Link
+                            href={signupHref}
+                            className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.28)] hover:opacity-95"
+                          >
+                            Crear cuenta gratis
+                          </Link>
+                          <Link
+                            href="/pricing"
+                            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 px-5 text-sm font-semibold text-[#5D65F6] hover:bg-[#EEF0FF]"
+                          >
+                            Ver premium
+                          </Link>
+                        </div>
+                      </div>
+                    ) : null}
+                    {!isPremium && userId && wrongExplanations.length > 0 ? (
                       explanationsMetrics ? (
                         <SimulatorPremiumUpsell
                           cacheHits={explanationsMetrics.cacheHits}
@@ -1943,7 +2046,7 @@ export default function SimuladorExamen({
                       <div className="mt-4">
                         <Link
                           href="/dashboard/explicaciones"
-                          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200"
                         >
                           <Sparkles className="h-4 w-4" />
                           Ver historial de explicaciones
@@ -1961,7 +2064,7 @@ export default function SimuladorExamen({
   }
 
   const accessibleQuestionCount = resolvedDemoMode
-    ? Math.min(DEMO_TOTAL_QUESTIONS, preguntasDisponibles)
+    ? Math.min(DEMO_LOGIN_GATE_TOTAL_QUESTIONS, preguntasDisponibles)
     : Math.min(questionLimit, preguntasDisponibles);
   const maxIndex = Math.max(0, accessibleQuestionCount - 1);
   const isCurrentFlagged = flaggedQuestions.includes(currentQuestionIndex);
@@ -1972,27 +2075,27 @@ export default function SimuladorExamen({
     const returnToMateriaHref = getMateriaRoute(materiaId, carreraId);
 
     return (
-        <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
-          <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-            <h2 className="text-2xl font-extrabold text-slate-900">
+        <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] dark:bg-slate-950 p-6">
+          <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-8 shadow-xl">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
               {`Antes de comenzar el Preguntero de ${materiaNombre || `Materia ${materiaId}`}`}
             </h2>
-            <p className="mt-3 text-slate-600">
+            <p className="mt-3 text-slate-600 dark:text-slate-400">
               Contamos con múltiples modelos de examen para practicar. No todos son iguales:
               cada intento mezcla los diferentes modelos que tiene la universidad para que puedas entender cada modelo de examen.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-                <p className="text-xs text-slate-500">Preguntas</p>
-                <p className="font-bold text-slate-900">{preguntasDisponibles}</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-3 text-sm">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Preguntas</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100">{preguntasDisponibles}</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-                <p className="text-xs text-slate-500">Tiempo</p>
-                <p className="font-bold text-slate-900">{formatTime(examDurationSeconds)}</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-3 text-sm">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Tiempo</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100">{formatTime(examDurationSeconds)}</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-                <p className="text-xs text-slate-500">Parcial</p>
-                <p className="font-bold text-slate-900">{getParcialLabel(parcial)}</p>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 p-3 text-sm">
+                <p className="text-xs text-slate-500 dark:text-slate-400">Parcial</p>
+                <p className="font-bold text-slate-900 dark:text-slate-100">{getParcialLabel(parcial)}</p>
               </div>
             </div>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -2016,7 +2119,7 @@ export default function SimuladorExamen({
                 </Button>
                 <Link
                   href={returnToMateriaHref}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:border-slate-800 dark:text-slate-300 transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                 >
                   <BookOpen className="h-4 w-4 text-[#4F5DFF]" />
                   Ver resúmenes y material de la materia
@@ -2028,17 +2131,17 @@ export default function SimuladorExamen({
   }
 
   return (
-    <div className="min-h-screen bg-[#F3F5F9] pb-36 lg:pb-8">
-      <header className="hidden border-b border-slate-200 bg-white lg:block">
+    <div className="min-h-screen bg-[#F3F5F9] dark:bg-slate-950 pb-36 lg:pb-8">
+      <header className="hidden border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:block">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
           <div className="flex items-center gap-10">
-            <Link href="/" className="text-[30px] font-bold tracking-[-0.04em] text-[#0F1B3D]">
+            <Link href="/" className="text-[30px] font-bold tracking-[-0.04em] text-[#0F1B3D] dark:text-slate-100">
               Evaluo
             </Link>
 
             <div>
-              <p className="text-2xl font-semibold text-slate-900">Simulador de Examen</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Simulador de Examen</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
               </p>
             </div>
@@ -2061,17 +2164,17 @@ export default function SimuladorExamen({
                 }
                 window.history.back();
               }}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-800 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800/50"
             >
               <LogOut className="h-4 w-4" />
               Abandonar examen
             </button>
 
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
-              <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 dark:border-slate-800">
+              <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
                 {getUserInitials()}
               </div>
-              <span className="max-w-[130px] truncate text-sm font-medium text-slate-700">
+              <span className="max-w-[130px] truncate text-sm font-medium text-slate-700 dark:text-slate-300">
                 {getUserName()}
               </span>
               <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -2080,13 +2183,13 @@ export default function SimuladorExamen({
         </div>
       </header>
 
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-            <Clock3 className="h-4 w-4 text-slate-500" />
-            <span className="font-mono text-sm font-bold text-slate-800">{formatTime(timeLeft)}</span>
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 px-3 py-1.5">
+            <Clock3 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+            <span className="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">{formatTime(timeLeft)}</span>
           </div>
-              <p className="text-sm font-semibold text-slate-700">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             {currentQuestionIndex + 1}/{questionLimit}
               </p>
         </div>
@@ -2094,21 +2197,21 @@ export default function SimuladorExamen({
 
       <div className="relative mx-auto max-w-6xl px-3 py-3 lg:py-6">
         {showSimulatorTour ? (
-          <div className="pointer-events-none absolute inset-x-0 top-[88px] z-[60] hidden h-[calc(100%-88px)] bg-white/18 backdrop-blur-[3px] lg:block" />
+          <div className="pointer-events-none absolute inset-x-0 top-[88px] z-[60] hidden h-[calc(100%-88px)] bg-white/18 backdrop-blur-[3px] dark:bg-slate-950/40 lg:block" />
         ) : null}
         <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)_14rem] lg:gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_15.5rem] xl:gap-5">
           <aside
             ref={questionsTourTargetRef}
             className={cn(
-              'relative hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:block',
+              'relative hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm lg:block',
               showSimulatorTour &&
                 currentTourStep.id === 'questions' &&
                 'z-[70] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.16)]'
             )}
           >
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-600">Pregunta {currentQuestionIndex + 1} de {questionLimit}</p>
-              <div className="flex items-center gap-1 text-xs font-medium text-slate-500">
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">Pregunta {currentQuestionIndex + 1} de {questionLimit}</p>
+              <div className="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                 <Flag className="h-3.5 w-3.5" /> {flaggedQuestions.length}
               </div>
             </div>
@@ -2131,18 +2234,25 @@ export default function SimuladorExamen({
                 const isAnswered = selectedAnswers[index] !== undefined;
                 const isFlagged = flaggedQuestions.includes(index);
                 const isDisabled = index > maxIndex;
+                const questionMapLabel = isCurrent
+                  ? `Pregunta ${index + 1} actual`
+                  : isAnswered
+                    ? `Pregunta ${index + 1} respondida`
+                    : `Pregunta ${index + 1}`;
 
                 return (
                   <button
                     key={index}
                     onClick={() => goToQuestion(index)}
                     disabled={isDisabled}
+                    aria-label={questionMapLabel}
+                    aria-current={isCurrent ? 'step' : undefined}
                     className={cn(
-                      'relative h-8 rounded-lg border text-[11px] font-semibold transition',
-                      isDisabled && 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300',
-                      !isDisabled && 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
-                      isAnswered && !isDisabled && 'bg-blue-50 text-blue-700',
-                      isCurrent && !isDisabled && 'border-blue-500 ring-2 ring-blue-100'
+                      'relative h-8 rounded-lg border text-[12px] font-semibold transition',
+                      isDisabled && 'cursor-not-allowed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-300 dark:text-slate-600',
+                      !isDisabled && 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-slate-300',
+                      isAnswered && !isDisabled && 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+                      isCurrent && !isDisabled && 'border-blue-500 ring-2 ring-blue-100 dark:ring-blue-500/30'
                     )}
                   >
                     {index + 1}
@@ -2153,9 +2263,9 @@ export default function SimuladorExamen({
             </div>
 
             <Button
-              onClick={() => void finalizarExamen('manual')}
+              onClick={() => requestFinalizar()}
               disabled={isFinishing}
-              className="mt-4 w-full rounded-lg bg-slate-900 py-4 text-sm text-white hover:bg-slate-800"
+              className="mt-4 w-full rounded-lg bg-slate-900 py-4 text-sm text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700"
             >
               Finalizar
             </Button>
@@ -2163,16 +2273,16 @@ export default function SimuladorExamen({
 
           <main
             className={cn(
-              'rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6',
+              'rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm sm:p-5 lg:p-6',
               showSimulatorTour &&
                 (currentTourStep.id === 'mark' || currentTourStep.id === 'navigation') &&
                 'relative z-[70] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.16)]'
             )}
           >
             <div className="mb-6 hidden items-center justify-between lg:flex">
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-                <Clock3 className="h-4 w-4 text-slate-500" />
-                <span className="font-mono text-sm font-bold text-slate-800">{formatTime(timeLeft)}</span>
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50 px-3 py-1.5">
+                <Clock3 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                <span className="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">{formatTime(timeLeft)}</span>
               </div>
 
               <div ref={markTourTargetRef} className="relative">
@@ -2181,8 +2291,8 @@ export default function SimuladorExamen({
                 className={cn(
                   'inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition',
                   isCurrentFlagged
-                    ? 'border-orange-200 bg-orange-50 text-orange-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                    ? 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300'
+                    : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
                 )}
               >
                 <Star className={cn('h-4 w-4', isCurrentFlagged && 'fill-orange-400 text-orange-500')} />
@@ -2203,19 +2313,29 @@ export default function SimuladorExamen({
               </div>
             </div>
 
-            <div className="mb-5 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-xs font-semibold text-slate-500">Pregunta {currentQuestionIndex + 1}</p>
-              <h2 className="mt-2 text-base font-semibold leading-relaxed text-slate-900 sm:text-lg">
+            <div className="mb-5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 p-4 dark:bg-slate-800/50">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Pregunta {currentQuestionIndex + 1}</p>
+              <h2
+                id="pregunta-actual-enunciado"
+                className="mt-2 text-base font-semibold leading-relaxed text-slate-900 dark:text-slate-100 sm:text-lg"
+              >
                 {preguntaActual?.enunciado}
               </h2>
               {preguntaActual && preguntaActual.correctCount > 1 ? (
-                <p className="mt-2 text-xs font-semibold text-indigo-700">
+                <p className="mt-2 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                   Seleccioná {preguntaActual.correctCount} opciones correctas.
                 </p>
               ) : null}
+              <p className="sr-only" role="status" aria-live="polite">
+                {feedbackByQuestion[currentQuestionIndex]?.correct === undefined
+                  ? ''
+                  : feedbackByQuestion[currentQuestionIndex].correct
+                    ? 'Respuesta correcta.'
+                    : 'Respuesta incorrecta.'}
+              </p>
             </div>
 
-            <div className="space-y-3">
+            <div role="group" aria-labelledby="pregunta-actual-enunciado" className="space-y-3">
               {preguntaActualShuffled?.options?.map((opcion, idx) => {
                 const answerValue = selectedAnswers[currentQuestionIndex];
                 const multi = Boolean(preguntaActual && preguntaActual.correctCount > 1);
@@ -2236,15 +2356,16 @@ export default function SimuladorExamen({
                     key={`${currentQuestionIndex}-${idx}`}
                     onClick={() => handleSelectAnswer(idx)}
                     disabled={questionAnswered}
+                    aria-pressed={selected}
                     className={cn(
                       'w-full rounded-lg border p-3.5 text-left transition',
-                      !questionAnswered && 'border-slate-200 bg-[#FBFCFF] hover:border-slate-300 hover:bg-white',
-                      questionAnswered && 'border-slate-200 bg-white',
-                      selected && !questionAnswered && 'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100',
+                      !questionAnswered && 'border-slate-200 bg-[#FBFCFF] hover:border-slate-300 hover:bg-white dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700 dark:hover:bg-slate-800',
+                      questionAnswered && 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900',
+                      selected && !questionAnswered && 'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-100 dark:ring-blue-500/30',
                       questionAnswered &&
                         optionIsCorrect &&
-                        'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-100',
-                      selectedIsWrong && 'border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-100'
+                        'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-500/30',
+                      selectedIsWrong && 'border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-100 dark:ring-rose-500/30'
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -2252,13 +2373,25 @@ export default function SimuladorExamen({
                         className={cn(
                           'mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold uppercase',
                           selected
-                            ? 'border-blue-500 bg-white text-blue-600'
-                            : 'border-slate-300 bg-white text-slate-500'
+                            ? 'border-blue-500 bg-white text-blue-600 dark:bg-slate-900 dark:text-blue-300'
+                            : 'border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
                         )}
                       >
                         {optionLabels[idx] ?? idx + 1}
                       </span>
-                      <span className="text-sm leading-5 sm:text-[15px]">{opcion}</span>
+                      <span className="flex-1 text-sm leading-5 sm:text-[15px]">{opcion}</span>
+                      {questionAnswered && optionIsCorrect ? (
+                        <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+                          <Check className="h-3 w-3" />
+                          Correcta
+                        </span>
+                      ) : null}
+                      {selectedIsWrong ? (
+                        <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-800 dark:bg-rose-500/15 dark:text-rose-300">
+                          <X className="h-3 w-3" />
+                          Incorrecta
+                        </span>
+                      ) : null}
                     </div>
                   </button>
                 );
@@ -2275,11 +2408,11 @@ export default function SimuladorExamen({
                 <ChevronLeft className="mr-1 h-4 w-4" />
                 Anterior
               </Button>
-              <p className="text-sm text-slate-500">
-                Respondidas: <span className="font-semibold text-slate-800">{answeredCount}</span> / {preguntasDisponibles}
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Respondidas: <span className="font-semibold text-slate-800 dark:text-slate-200">{answeredCount}</span> / {preguntasDisponibles}
               </p>
               <Button
-                onClick={() => (isLastQuestion ? void finalizarExamen('manual') : goNext())}
+                onClick={() => (isLastQuestion ? requestFinalizar() : goNext())}
                 disabled={isFinishing}
                 className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700"
               >
@@ -2299,32 +2432,41 @@ export default function SimuladorExamen({
                 />
               ) : null}
             </div>
+
+            <div className="mt-6 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 p-3.5 dark:bg-slate-800/50">
+              <p className="text-[12px] leading-5 text-slate-600 dark:text-slate-400">
+                Esta práctica es un simulacro de estudio preparado por Evaluo a partir de temas
+                habituales de la materia. No es un examen oficial ni reemplaza el criterio de tus
+                docentes: Evaluo no está afiliada a ninguna universidad. Verificá los contenidos con
+                la bibliografía y las guías de tu cátedra.
+              </p>
+            </div>
           </main>
 
           <aside className="mt-6 hidden space-y-3 lg:mt-0 lg:block">
             <Card
               ref={timerTourTargetRef}
               className={cn(
-                'relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm',
+                'relative rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm',
                 showSimulatorTour &&
                   currentTourStep.id === 'timer' &&
                   'z-[70] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.16)]'
               )}
             >
-              <div className="flex items-center gap-2 text-slate-700">
+              <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                 <Clock3 className="h-3.5 w-3.5" />
                 <p className="text-xs font-semibold">Tiempo restante</p>
               </div>
-              <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-slate-900">
+              <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 {formatTime(timeLeft)}
               </p>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
               <div
                   className="h-full rounded-full bg-blue-600 transition-all"
                   style={{ width: `${Math.max(0, Math.min(100, (timeLeft / examDurationSeconds) * 100))}%` }}
                 />
               </div>
-              <p className="mt-2 text-[11px] text-slate-500">de {formatTime(examDurationSeconds)}</p>
+              <p className="mt-2 text-[12px] text-slate-500 dark:text-slate-400">de {formatTime(examDurationSeconds)}</p>
               {showSimulatorTour && currentTourStep.id === 'timer' ? (
                 <SimulatorTourCard
                   step={currentTourStep}
@@ -2342,23 +2484,23 @@ export default function SimuladorExamen({
             <Card
               ref={progressTourTargetRef}
               className={cn(
-                'relative rounded-xl border border-slate-200 bg-white p-4 shadow-sm',
+                'relative rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 p-4 shadow-sm',
                 showSimulatorTour &&
                   currentTourStep.id === 'progress' &&
                   'z-[70] ring-1 ring-[#BFD4FF] shadow-[0_24px_70px_rgba(15,23,42,0.16)]'
               )}
             >
-              <p className="text-xs font-semibold text-slate-800">Progreso del examen</p>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Progreso del examen</p>
 
               <div className="mt-3 flex justify-center">
                 <div className="relative grid h-24 w-24 place-items-center rounded-full" style={progressRingStyle}>
-                  <div className="grid h-16 w-16 place-items-center rounded-full bg-white">
-                    <span className="text-2xl font-bold text-slate-800">{progressPercent}%</span>
+                  <div className="grid h-16 w-16 place-items-center rounded-full bg-white dark:bg-slate-900">
+                    <span className="text-2xl font-bold text-slate-800 dark:text-slate-200">{progressPercent}%</span>
                   </div>
                 </div>
               </div>
 
-              <p className="mt-3 text-center text-xs text-slate-500">
+              <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-400">
                 {answeredCount} de {preguntasDisponibles || questionLimit} preguntas
               </p>
 
@@ -2367,7 +2509,7 @@ export default function SimuladorExamen({
                   <span>Respondidas</span>
                   <span className="font-semibold">{answeredCount}</span>
                 </div>
-                <div className="flex items-center justify-between text-slate-500">
+                <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                   <span>Sin responder</span>
                   <span className="font-semibold">{unansweredCount}</span>
                 </div>
@@ -2390,9 +2532,11 @@ export default function SimuladorExamen({
               ) : null}
             </Card>
 
-            <Card className="rounded-xl border border-blue-100 bg-blue-50/70 p-4 shadow-sm">
-              <p className="text-xs font-semibold text-blue-700">Consejo</p>
-              <p className="mt-2 text-xs leading-5 text-blue-700">
+            <Card className="rounded-xl border border-blue-100 bg-blue-50/70 p-4 shadow-sm dark:border-blue-500/25 dark:bg-blue-500/10">
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                Consejo
+              </p>
+              <p className="mt-2 text-xs leading-5 text-blue-700 dark:text-blue-300">
                 Leé cada pregunta atentamente antes de seleccionar tu respuesta.
               </p>
             </Card>
@@ -2400,7 +2544,7 @@ export default function SimuladorExamen({
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/98 px-2.5 pb-[max(env(safe-area-inset-bottom),0.45rem)] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/98 px-2.5 pb-[max(env(safe-area-inset-bottom),0.45rem)] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden">
         <div className="mx-auto max-w-7xl">
           <div className="mb-2 flex items-center justify-between gap-2">
             <Button
@@ -2417,15 +2561,15 @@ export default function SimuladorExamen({
               className={cn(
                 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition',
                 isCurrentFlagged
-                  ? 'border-orange-200 bg-orange-50 text-orange-600'
-                  : 'border-slate-200 bg-white text-slate-600'
+                  ? 'border-orange-200 bg-orange-50 text-orange-600 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300'
+                  : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-600 dark:text-slate-400'
               )}
               aria-label="Marcar pregunta"
             >
               <Star className={cn('h-4 w-4', isCurrentFlagged && 'fill-orange-400 text-orange-500')} />
             </button>
             <Button
-              onClick={() => (isLastQuestion ? void finalizarExamen('manual') : goNext())}
+              onClick={() => (isLastQuestion ? requestFinalizar() : goNext())}
               disabled={isFinishing}
               className="h-10 flex-1 rounded-xl bg-indigo-600 px-3 text-[13px] hover:bg-indigo-700"
             >
@@ -2435,10 +2579,10 @@ export default function SimuladorExamen({
           </div>
 
           <div className="mb-2 flex items-center justify-between gap-3 px-0.5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
               Mapa rápido
             </p>
-            <p className="text-[12px] font-medium text-slate-500">
+            <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">
               {currentQuestionIndex + 1} de {questionLimit}
             </p>
           </div>
@@ -2449,18 +2593,25 @@ export default function SimuladorExamen({
               const isAnswered = selectedAnswers[index] !== undefined;
               const isFlagged = flaggedQuestions.includes(index);
               const isDisabled = index > maxIndex;
+              const questionMapLabel = isCurrent
+                ? `Pregunta ${index + 1} actual`
+                : isAnswered
+                  ? `Pregunta ${index + 1} respondida`
+                  : `Pregunta ${index + 1}`;
 
               return (
                 <button
                   key={`mobile-${index}`}
                   onClick={() => goToQuestion(index)}
                   disabled={isDisabled}
+                  aria-label={questionMapLabel}
+                  aria-current={isCurrent ? 'step' : undefined}
                   className={cn(
-                    'relative h-8 min-w-8 shrink-0 rounded-lg border px-1 text-[10px] font-semibold',
-                    isDisabled && 'border-slate-100 bg-slate-50 text-slate-300',
-                    !isDisabled && 'border-slate-200 bg-white text-slate-700',
-                    isAnswered && !isDisabled && 'bg-blue-50 text-blue-700',
-                    isCurrent && !isDisabled && 'border-blue-500 ring-1 ring-blue-200'
+                    'relative h-8 min-w-8 shrink-0 rounded-lg border px-1 text-[12px] font-semibold',
+                    isDisabled && 'cursor-not-allowed border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-300 dark:text-slate-600',
+                    !isDisabled && 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-700 dark:text-slate-300',
+                    isAnswered && !isDisabled && 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+                    isCurrent && !isDisabled && 'border-blue-500 ring-1 ring-blue-200 dark:ring-blue-500/30'
                   )}
                 >
                   {index + 1}
@@ -2473,14 +2624,38 @@ export default function SimuladorExamen({
           </div>
 
           <button
-            onClick={() => void finalizarExamen('manual')}
+            onClick={() => requestFinalizar()}
             disabled={isFinishing}
-            className="mt-1.5 w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white"
+            className="mt-1.5 w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white dark:bg-slate-800"
           >
             Finalizar
           </button>
         </div>
       </div>
+
+      <AlertDialog open={showFinishConfirm} onOpenChange={setShowFinishConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Finalizar el simulador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Te quedaron <span className="font-semibold text-slate-900 dark:text-slate-100">{unansweredCount}</span>{' '}
+              {unansweredCount === 1 ? 'pregunta sin responder' : 'preguntas sin responder'}. Si finalizás ahora, no
+              se corrigen las respuestas que quedaron vacías.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Seguir respondiendo</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowFinishConfirm(false);
+                void finalizarExamen('manual');
+              }}
+            >
+              Finalizar igual
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

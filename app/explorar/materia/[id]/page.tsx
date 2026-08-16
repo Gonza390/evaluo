@@ -4,14 +4,16 @@ import { notFound, redirect } from 'next/navigation';
 import { getCanonicalMateriaId } from '@/lib/materia-aliases';
 import { isUuid } from '@/lib/uuid';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildLearningResourceJsonLd } from '@/lib/seo';
 
 const MateriaContent = dynamic(() => import('./materia-content'), {
   loading: () => (
     <div className="space-y-6">
-      <div className="surface-panel min-h-[220px] animate-pulse bg-white/80" aria-hidden="true" />
+      <div className="surface-panel min-h-[220px] animate-pulse bg-white/80 dark:bg-slate-900/80" aria-hidden="true" />
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80" aria-hidden="true" />
-        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80" aria-hidden="true" />
+        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80 dark:bg-slate-900/80" aria-hidden="true" />
+        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80 dark:bg-slate-900/80" aria-hidden="true" />
       </div>
     </div>
   ),
@@ -35,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const carreraNombre = bootstrap.carreraNombre?.trim();
 
   return {
-    title: `${materiaNombre} | Materia`,
+    title: `Preguntero y simulador de ${materiaNombre}`,
     description:
       carreraNombre
         ? `Estudiá ${materiaNombre} de ${carreraNombre} con resúmenes, pregunteros y simuladores en Evaluo.`
@@ -44,11 +46,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical: `/explorar/materia/${canonicalMateriaId}`,
     },
     openGraph: {
-      title: `${materiaNombre} | Evaluo`,
+      title: `Preguntero y simulador de ${materiaNombre} | Evaluo`,
       description: carreraNombre
-        ? `Resúmenes, recursos y simuladores para estudiar ${materiaNombre} en ${carreraNombre}.`
-        : `Resúmenes, recursos y simuladores para estudiar ${materiaNombre} en Evaluo.`,
+        ? `Preguntero y simulador para estudiar ${materiaNombre} en ${carreraNombre}.`
+        : `Preguntero y simulador para estudiar ${materiaNombre} en Evaluo.`,
       url: `/explorar/materia/${canonicalMateriaId}`,
+      images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
     },
     robots: {
       index: true,
@@ -92,7 +95,16 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
   }
 
   return (
-    <MateriaContent
+    <>
+      <JsonLd
+        data={buildLearningResourceJsonLd({
+          name: bootstrap.materiaNombre,
+          universityName: bootstrap.universidadNombre,
+          careerName: bootstrap.carreraNombre,
+          url: `/explorar/materia/${materiaId}`,
+        })}
+      />
+      <MateriaContent
       materiaId={materiaId}
       materiaNombre={bootstrap.materiaNombre}
       carreraId={bootstrap.carreraId || requestedCarreraId || undefined}
@@ -105,5 +117,6 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
       initialSimulatorRatings={bootstrap.initialSimulatorRatings}
       initialSimulatorUsage={bootstrap.initialSimulatorUsage}
     />
+    </>
   );
 }

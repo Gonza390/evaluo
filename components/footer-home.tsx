@@ -47,7 +47,7 @@ export function FooterHome() {
           </div>
 
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-white/60">
               Navegación
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
@@ -64,7 +64,7 @@ export function FooterHome() {
           </div>
 
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-white/60">
               Legal
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
@@ -77,12 +77,18 @@ export function FooterHome() {
               <a href="/copyright" className="text-xs text-white/80 transition hover:text-white">
                 Copyright
               </a>
+              <a href="/facturacion" className="text-xs text-white/80 transition hover:text-white">
+                Facturación
+              </a>
             </nav>
           </div>
         </div>
 
         <div className="mt-6 border-t border-white/10 pt-4 text-center md:text-left">
-          <p className="text-[10px] text-white/60">
+          <p className="text-[12px] text-white/60">
+            Evaluo no es una institución educativa ni está afiliada, patrocinada o aprobada por ninguna universidad. Los materiales son de estudio y las marcas mencionadas pertenecen a sus respectivos titulares.
+          </p>
+          <p className="mt-2 text-[12px] text-white/60">
             Copyright <span suppressHydrationWarning>{new Date().getFullYear()}</span> Evaluo. Todos los derechos reservados.
           </p>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -16,8 +17,8 @@ import {
   Sparkles,
   SquareLibrary,
 } from 'lucide-react';
-import PdfViewer from '@/components/PdfViewer';
 import { MaterialFeedback } from '@/components/material-feedback';
+import { StudyRichText } from '@/components/study-rich-text';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -56,6 +57,15 @@ const STUDY_TABS: Array<{
   { id: 'ejercicios', label: 'Ejercicios', icon: BrainCircuit },
   { id: 'mapa', label: 'Mapa mental', icon: Map },
 ];
+
+const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center px-4 py-16 text-sm font-medium">
+      Cargando visor del PDF...
+    </div>
+  ),
+});
 
 function WorkspaceCard({
   children,
@@ -203,7 +213,7 @@ function StructuredSectionBody({ body }: { body: string }) {
     if (/^[•\-]\s+/.test(line)) {
       content.push(
         <div key={`bullet-${index}`} className="flex items-start gap-2 text-[13.5px] leading-6 text-slate-700">
-          <span className="mt-[0.42rem] text-[10px] text-[#2563EB]">•</span>
+          <span className="mt-[0.42rem] text-[12px] text-[#2563EB]">•</span>
           <p>{line.replace(/^[•\-]\s+/, '')}</p>
         </div>
       );
@@ -218,154 +228,6 @@ function StructuredSectionBody({ body }: { body: string }) {
         >
           <span className="font-semibold text-[#2563EB]">Importante:</span>{' '}
           {line.replace(/^Importante:\s*/i, '')}
-        </div>
-      );
-      return;
-    }
-
-    content.push(
-      <p key={`paragraph-${index}`} className="text-[13.5px] leading-6 text-slate-700">
-        {line}
-      </p>
-    );
-  });
-
-  if (isCollectingTable) {
-    flushTable('table-final');
-  }
-
-  return <div className="space-y-3">{content}</div>;
-}
-
-function StructuredSectionBodyEnhanced({ body }: { body: string }) {
-  const lines = body
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  const rows: Array<{ columns: string[] }> = [];
-  let isCollectingTable = false;
-  const content: React.ReactNode[] = [];
-
-  const flushTable = (key: string) => {
-    if (rows.length < 2) {
-      rows.length = 0;
-      return;
-    }
-
-    const header = rows[0]?.columns ?? [];
-    const bodyRows = rows.slice(1).filter((row) =>
-      row.columns.some((column) => !/^:?-+:?$/i.test(column))
-    );
-
-    if (header.length === 0 || bodyRows.length === 0) {
-      rows.length = 0;
-      return;
-    }
-
-    content.push(
-      <div key={key} className="overflow-x-auto rounded-[16px] border border-slate-200">
-        <table className="min-w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50 text-slate-700">
-            <tr>
-              {header.map((column, index) => (
-                <th key={`${column}-${index}`} className="border-b border-slate-200 px-3 py-2 font-semibold">
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {bodyRows.map((row, rowIndex) => (
-              <tr key={`${row.columns.join('|')}-${rowIndex}`} className="bg-white">
-                {row.columns.map((column, columnIndex) => (
-                  <td
-                    key={`${column}-${columnIndex}`}
-                    className="border-t border-slate-200 px-3 py-2 align-top text-slate-600"
-                  >
-                    {column}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-
-    rows.length = 0;
-  };
-
-  lines.forEach((line, index) => {
-    if (line.includes('|')) {
-      isCollectingTable = true;
-      rows.push({
-        columns: line
-          .split('|')
-          .map((column) => column.trim())
-          .filter(Boolean),
-      });
-      return;
-    }
-
-    if (isCollectingTable) {
-      flushTable(`table-${index}`);
-      isCollectingTable = false;
-    }
-
-    if (/^\d+\.\d+\s+/.test(line)) {
-      content.push(
-        <h5 key={`subheading-${index}`} className="pt-1 text-[0.95rem] font-semibold text-slate-950">
-          {line}
-        </h5>
-      );
-      return;
-    }
-
-    if (/^(?:[\u2022\-])\s+/.test(line)) {
-      content.push(
-        <div key={`bullet-${index}`} className="flex items-start gap-2 text-[13.5px] leading-6 text-slate-700">
-          <span className="mt-[0.42rem] text-[10px] text-[#2563EB]">•</span>
-          <p>{line.replace(/^(?:[\u2022\-])\s+/, '')}</p>
-        </div>
-      );
-      return;
-    }
-
-    if (/^Importante:/i.test(line)) {
-      content.push(
-        <div
-          key={`important-${index}`}
-          className="rounded-[16px] border border-[#DBEAFE] bg-[#F8FBFF] px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-[#2563EB]">Importante:</span>{' '}
-          {line.replace(/^Importante:\s*/i, '')}
-        </div>
-      );
-      return;
-    }
-
-    if (/^Clave de estudio:/i.test(line)) {
-      content.push(
-        <div
-          key={`study-tip-${index}`}
-          className="rounded-[16px] border border-amber-200 bg-amber-50/80 px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-amber-700">Clave de estudio:</span>{' '}
-          {line.replace(/^Clave de estudio:\s*/i, '')}
-        </div>
-      );
-      return;
-    }
-
-    if (/^Ejemplo aplicado:/i.test(line)) {
-      content.push(
-        <div
-          key={`example-${index}`}
-          className="rounded-[16px] border border-emerald-200 bg-emerald-50/80 px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-emerald-700">Ejemplo aplicado:</span>{' '}
-          {line.replace(/^Ejemplo aplicado:\s*/i, '')}
         </div>
       );
       return;
@@ -699,7 +561,7 @@ export function MaterialStudyWorkspace({
                 fullSummarySections.map((section, index) => (
                   <div key={`${section.title}:${section.body}`} className="space-y-3">
                     <h3 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">{section.title}</h3>
-                    <StructuredSectionBodyEnhanced body={section.body} />
+                    <StudyRichText body={section.body} />
                     {index < fullSummarySections.length - 1 ? <div className="h-px bg-slate-200" /> : null}
                   </div>
                 ))
@@ -720,8 +582,8 @@ export function MaterialStudyWorkspace({
             {studyGlossary.length > 0 ? (
               <div className="overflow-hidden rounded-[18px] border border-slate-200">
                 <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-6 border-b border-slate-200 bg-slate-50 px-4 py-3 md:grid">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Término</p>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Definición</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Término</p>
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Definición</p>
                 </div>
                 <div className="divide-y divide-slate-200 bg-white">
                 {studyGlossary.map((item) => (
@@ -730,7 +592,7 @@ export function MaterialStudyWorkspace({
                     className="grid gap-2.5 px-3.5 py-3.5 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-6 md:px-4 md:py-4"
                   >
                     <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:hidden">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:hidden">
                         Término
                       </p>
                       <h3 className="text-[0.92rem] font-semibold tracking-[-0.03em] text-slate-950 md:text-[0.98rem]">
@@ -744,7 +606,7 @@ export function MaterialStudyWorkspace({
                     </div>
 
                     <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:hidden">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500 md:hidden">
                         Definición
                       </p>
                       <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">{item.definition}</p>

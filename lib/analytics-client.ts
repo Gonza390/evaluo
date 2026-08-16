@@ -38,10 +38,15 @@ export function getAnalyticsPageType(pathname: string) {
   if (pathname.startsWith('/universidad/')) return 'universidad';
   if (pathname.startsWith('/materias')) return 'materias';
   if (pathname.startsWith('/recursos/')) return 'recursos';
+  if (pathname.startsWith('/resumenes/')) return 'resumenes';
+  if (pathname.startsWith('/pregunteros')) return 'pregunteros';
+  if (pathname.startsWith('/estudiar/')) return 'estudiar';
+  if (pathname.startsWith('/simulador-parcial')) return 'simulador-parcial';
   if (pathname.startsWith('/pricing')) return 'pricing';
   if (pathname.startsWith('/login')) return 'login';
   if (pathname.startsWith('/dashboard')) return 'dashboard';
   if (pathname.startsWith('/simulador')) return 'simulador';
+  if (pathname.startsWith('/calendario')) return 'calendario';
   return 'other';
 }
 

@@ -29,6 +29,16 @@ export function cleanMultilineBlock(value: string) {
     .trim();
 }
 
+/**
+ * Detecta una fila de tabla Markdown reconstruida por el extractor:
+ * empieza y termina con "|" y tiene al menos 2 celdas (3+ pipes).
+ */
+export function isTableRowLine(value: string) {
+  const line = value.trim();
+  if (!line.startsWith('|') || !line.endsWith('|')) return false;
+  return (line.match(/\|/g) ?? []).length >= 3;
+}
+
 function isLikelyNoiseLine(value: string) {
   const line = cleanLine(value);
   if (!line) return true;
@@ -396,6 +406,7 @@ function normalizePdfRawText(text: string) {
 
 function shouldMergeWithPreviousLine(previous: string, current: string) {
   if (!previous || !current) return false;
+  if (isTableRowLine(previous) || isTableRowLine(current)) return false;
   if (/[.!?:;]$/.test(previous)) return false;
   if (/^(?:[-*]|\u2022)\s+/.test(current)) return false;
   if (/^\d+([.)-])\s+/.test(current)) return false;
@@ -511,13 +522,19 @@ export function mapLocalSummaryToView(
 export function prepareTextForSummary(text: string) {
   const lines = normalizePdfRawText(text)
     .split(/\r?\n/)
-    .map((line) =>
-      line
+    .map((line) => {
+      const trimmed = line.trim();
+      if (isTableRowLine(trimmed)) {
+        // Preservamos las filas de tabla reconstruidas (con pipes) para que el
+        // modelo reciba la estructura tabular real del PDF.
+        return trimmed;
+      }
+      return trimmed
         .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gim, ' ')
         .replace(/\s+[|]\s+/g, ' ')
         .replace(/\s+/g, ' ')
-        .trim()
-    )
+        .trim();
+    })
     .filter((line) => line.trim() === '' || !isLikelyNoiseLine(line));
 
   const cleanedLines = collapseBrokenParagraphs(stripRepeatedPdfChrome(lines));
@@ -720,7 +737,7 @@ export function analyzePdfDocument(
     .filter((paragraph) => paragraph.length >= 40);
   const headingCount = lines.filter(isLikelyHeading).length;
   const bulletCount = lines.filter((line) => /^(?:[-*]|\u2022|\d+[.)-])\s+/i.test(line)).length;
-  const tableLineCount = lines.filter((line) => /(?:\|.+\|)|(?:\S+\s{2,}\S+\s{2,}\S+)/.test(line)).length;
+  const tableLineCount = lines.filter((line) => isTableRowLine(line) || /(?:\S+\s{2,}\S+\s{2,}\S+)/.test(line)).length;
   const rawPdf = buffer.toString('latin1');
   const imageCountEstimate = countRegexMatches(rawPdf, /\/Subtype\s*\/Image\b/g);
   const resolvedPageCount =

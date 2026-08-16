@@ -703,7 +703,7 @@ export default function MateriaList({
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2563EB]">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#2563EB]">
                           <Globe className="h-3.5 w-3.5" />
                           Compartido
                         </div>
@@ -712,7 +712,7 @@ export default function MateriaList({
                         </h3>
                       </div>
                       {material.page_count ? (
-                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                           {material.page_count} páginas
                         </span>
                       ) : null}

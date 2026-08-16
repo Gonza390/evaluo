@@ -13,7 +13,11 @@ import {
 import { safeRecordSimulatorTopicMemory } from '@/lib/simulator-topic-memory';
 import { normalizeForCompare, parseCorrectAnswers } from '@/lib/simulator-core';
 import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
-import { enforceServerActionRateLimit, getServerActionClientKey } from '@/lib/rate-limit';
+import {
+  enforceServerActionRateLimit,
+  enforceStrictRateLimit,
+  getServerActionClientKey,
+} from '@/lib/rate-limit';
 import {
   syncAndGetExamReminders,
   dismissExamReminder,
@@ -379,7 +383,7 @@ export async function getPreguntasSimuladorDemo(
       const fillQuery =
         demoIds.length > 0
           ? buildBaseQuery()
-              .not('id', 'in', `(${demoIds.map((id) => `'${id}'`).join(',')})`)
+              .not('id', 'in', `(${demoIds.join(',')})`)
               .limit(50)
           : buildBaseQuery().limit(50);
 
@@ -658,6 +662,13 @@ export async function registrarRespuestaUsuario(data: {
       .maybeSingle();
 
     if (questionError || !question) {
+      // Un usuario free no debe poder corregir preguntas premium pasando un ID
+      // arbitrario: solo usuarios con acceso premium pueden obtener el feedback.
+      const isPremium = await hasPremiumAccess(user.id);
+      if (!isPremium) {
+        return { success: false, message: 'No encontramos la pregunta a registrar.' };
+      }
+
       const { data: premiumQuestion, error: premiumError } = await admin
         .from('premium_questions')
         .select('id, enunciado, opciones, respuesta_correcta, set_id')
@@ -742,6 +753,7 @@ export async function corregirPreguntaDemo(data: {
       .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
       .eq('id', data.pregunta_id)
       .eq('materia_id', data.materia_id)
+      .eq('es_demo', true)
       .maybeSingle();
 
     if (questionError || !question) {
@@ -814,6 +826,10 @@ export async function finalizarSimuladorAction(data: {
 
     const admin = createAdminClient();
 
+    // Gate premium: un usuario free no debe poder corregir preguntas premium
+    // pasando IDs arbitrarios (mismo criterio que registrarRespuestaUsuario).
+    const isPremium = await hasPremiumAccess(user.id);
+
     const [bancoRows, premiumRows] = await Promise.all([
       respuestaIds.length > 0
         ? admin
@@ -821,7 +837,7 @@ export async function finalizarSimuladorAction(data: {
             .select('id, enunciado, opciones, respuesta_correcta, materia_id, parcial')
             .in('id', respuestaIds)
         : Promise.resolve({ data: [] as PreguntaBancoRow[], error: null }),
-      respuestaIds.length > 0
+      respuestaIds.length > 0 && isPremium
         ? admin
             .from('premium_questions')
             .select('id, enunciado, opciones, respuesta_correcta, set_id')
@@ -1392,10 +1408,396 @@ export async function getPartialStudyInsights(
   }
 }
 
+export async function getBestPartialStudyInsights(
+  materiaId: string
+): Promise<PartialStudyInsights | null> {
+  try {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      return null;
+    }
+
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `insights:best:${user.id}:${clientKey}`,
+      limit: 20,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return null;
+    }
+
+    // El banco se lee con service_role (RLS de preguntas_banco es admin-only).
+    const admin = createAdminClient();
+
+    // Total por parcial con count exacto (sin descargar filas del banco completo).
+    const [countP1, countP2, countP3] = await Promise.all(
+      [1, 2, 3].map((parcial) =>
+        admin
+          .from('preguntas_banco')
+          .select('id', { count: 'exact', head: true })
+          .eq('materia_id', materiaId)
+          .eq('parcial', parcial)
+      )
+    );
+    const totalByParcial = new Map<number, number>([
+      [1, countP1.count ?? 0],
+      [2, countP2.count ?? 0],
+      [3, countP3.count ?? 0],
+    ]);
+
+    const { data: historialRows } = await supabase
+      .from('historial_respuestas')
+      .select('pregunta_id, es_correcta')
+      .eq('usuario_id', user.id)
+      .eq('materia_id', materiaId)
+      .not('pregunta_id', 'is', null)
+      .limit(1000);
+
+    const uniqueQuestionIds = Array.from(
+      new Set(
+        (historialRows ?? [])
+          .map((row) => row.pregunta_id)
+          .filter((id): id is string => Boolean(id))
+      )
+    );
+
+    // Mapeo parcial de SOLO las preguntas respondidas (acotado a uniqueQuestionIds).
+    const parcialByQuestionId = new Map<string, number>();
+    if (uniqueQuestionIds.length > 0) {
+      const { data: bancoRows } = await admin
+        .from('preguntas_banco')
+        .select('id, parcial')
+        .eq('materia_id', materiaId)
+        .in('id', uniqueQuestionIds);
+      for (const row of bancoRows ?? []) {
+        parcialByQuestionId.set(row.id, Number(row.parcial ?? 1));
+      }
+    }
+
+    const answeredRowsByParcial = new Map<number, number>();
+    const correctRowsByParcial = new Map<number, number>();
+    const respondedIdsByParcial = new Map<number, Set<string>>();
+
+    for (const row of historialRows ?? []) {
+      const questionId = row.pregunta_id;
+      if (!questionId) continue;
+      const parcial = parcialByQuestionId.get(questionId);
+      if (!parcial) continue;
+      answeredRowsByParcial.set(parcial, (answeredRowsByParcial.get(parcial) ?? 0) + 1);
+      if (row.es_correcta) {
+        correctRowsByParcial.set(parcial, (correctRowsByParcial.get(parcial) ?? 0) + 1);
+      }
+      const respondedIds = respondedIdsByParcial.get(parcial) ?? new Set<string>();
+      respondedIds.add(questionId);
+      respondedIdsByParcial.set(parcial, respondedIds);
+    }
+
+    let bestParcial = 1;
+    let bestAnsweredRows = 0;
+    for (const [parcial, count] of answeredRowsByParcial) {
+      if (count > bestAnsweredRows) {
+        bestParcial = parcial;
+        bestAnsweredRows = count;
+      }
+    }
+
+    const preguntasParcialRespondidas = respondedIdsByParcial.get(bestParcial)?.size ?? 0;
+    const respuestasParcialTotal = answeredRowsByParcial.get(bestParcial) ?? 0;
+    const respuestasParcialCorrectas = correctRowsByParcial.get(bestParcial) ?? 0;
+    const total = totalByParcial.get(bestParcial) ?? 0;
+
+    const coberturaPorcentaje = total > 0 ? Math.round((preguntasParcialRespondidas / total) * 100) : 0;
+    const modelosEstimadosRealizados = Math.max(0, Math.floor(respuestasParcialTotal / 30));
+    const promedioAciertoPorcentaje =
+      respuestasParcialTotal > 0
+        ? Number(((respuestasParcialCorrectas / respuestasParcialTotal) * 100).toFixed(1))
+        : 0;
+
+    const practiceFactor = Math.min(100, modelosEstimadosRealizados * 20);
+    const probabilityRaw =
+      promedioAciertoPorcentaje * 0.5 + coberturaPorcentaje * 0.3 + practiceFactor * 0.2;
+    const probabilidadAprobar = Math.max(5, Math.min(95, Math.round(probabilityRaw)));
+
+    return {
+      materiaId,
+      parcial: bestParcial,
+      totalPreguntasParcial: total,
+      preguntasRespondidasParcial: preguntasParcialRespondidas,
+      preguntasAcertadasParcial: respuestasParcialCorrectas,
+      coberturaPorcentaje,
+      modelosEstimadosRealizados,
+      promedioAciertoPorcentaje,
+      probabilidadAprobar,
+    };
+  } catch (error) {
+    logError('actions.getBestPartialStudyInsights', error, { materiaId });
+    return null;
+  }
+}
+
+export interface StudyRecommendation {
+  materiaId: string;
+  materiaNombre: string;
+  examDate: string;
+  daysUntil: number;
+  examInstance: '1' | '2' | 'integrador';
+  parcial: number;
+  totalPreguntasParcial: number;
+  preguntasRespondidasParcial: number;
+  coberturaPorcentaje: number;
+  modelosEstimadosRealizados: number;
+  promedioAciertoPorcentaje: number;
+  probabilidadAprobar: number;
+  reason: 'falta-practica' | 'falta-cobertura' | 'listo';
+  simulatedHref: string;
+}
+
+function examInstanceToParcial(instance: string | null): number {
+  if (instance === '1') return 1;
+  if (instance === '2') return 2;
+  return 3;
+}
+
+function examInstanceLabel(instance: string | null): '1' | '2' | 'integrador' {
+  if (instance === '1') return '1';
+  if (instance === '2') return '2';
+  return 'integrador';
+}
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function daysUntilDate(dateKey: string) {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const target = new Date(year, (month ?? 1) - 1, day ?? 1, 12);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.max(0, Math.round((target.getTime() - today.getTime()) / msPerDay));
+}
+
+export async function getStudyRecommendations(
+  horizonDays = 21
+): Promise<StudyRecommendation[]> {
+  try {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      return [];
+    }
+
+    const todayKey = toDateKey(new Date());
+    const horizon = new Date();
+    horizon.setDate(horizon.getDate() + horizonDays);
+    const horizonKey = toDateKey(horizon);
+
+    const { data: events, error: eventsError } = await supabase
+      .from('study_calendar_events')
+      .select('id, title, materia_id, materia_nombre, event_date, exam_instance')
+      .eq('user_id', user.id)
+      .eq('event_type', 'exam')
+      .not('materia_id', 'is', null)
+      .gte('event_date', todayKey)
+      .lte('event_date', horizonKey)
+      .order('event_date', { ascending: true });
+
+    if (eventsError) {
+      logError('actions.getStudyRecommendations.events', eventsError, { userId: user.id });
+      return [];
+    }
+
+    const uniqueMaterias = Array.from(
+      new Set((events ?? []).map((event) => String(event.materia_id ?? '')).filter(Boolean))
+    ) as string[];
+
+    const insightsByMateria = new Map<string, PartialStudyInsights | null>();
+    if (uniqueMaterias.length > 0) {
+      const results = await Promise.all(
+        uniqueMaterias.map(async (materiaId) => {
+          const insight = await getBestPartialStudyInsights(materiaId);
+          return [materiaId, insight] as const;
+        })
+      );
+      for (const [materiaId, insight] of results) {
+        insightsByMateria.set(materiaId, insight);
+      }
+    }
+
+    const recommendations: StudyRecommendation[] = [];
+
+    for (const event of events ?? []) {
+      const materiaId = String(event.materia_id ?? '');
+      if (!materiaId) continue;
+
+      const examInstance = examInstanceLabel(event.exam_instance);
+      const parcial = examInstanceToParcial(event.exam_instance);
+      const insight = insightsByMateria.get(materiaId);
+      const eventDate = event.event_date ?? '';
+      const daysUntil = daysUntilDate(eventDate);
+
+      const cobertura = insight?.coberturaPorcentaje ?? 0;
+      const modelos = insight?.modelosEstimadosRealizados ?? 0;
+      const acierto = insight?.promedioAciertoPorcentaje ?? 0;
+      const probabilidad = insight?.probabilidadAprobar ?? 0;
+
+      let reason: StudyRecommendation['reason'] = 'listo';
+      if (cobertura < 40 || modelos === 0) {
+        reason = 'falta-cobertura';
+      } else if (acierto < 60) {
+        reason = 'falta-practica';
+      }
+
+      recommendations.push({
+        materiaId,
+        materiaNombre: event.materia_nombre?.trim() || event.title?.trim() || 'Materia',
+        examDate: eventDate,
+        daysUntil,
+        examInstance,
+        parcial,
+        totalPreguntasParcial: insight?.totalPreguntasParcial ?? 0,
+        preguntasRespondidasParcial: insight?.preguntasRespondidasParcial ?? 0,
+        coberturaPorcentaje: cobertura,
+        modelosEstimadosRealizados: modelos,
+        promedioAciertoPorcentaje: acierto,
+        probabilidadAprobar: probabilidad,
+        reason,
+        simulatedHref: `/simulador/${materiaId}/${parcial}`,
+      });
+    }
+
+    return recommendations.sort((a, b) => a.daysUntil - b.daysUntil);
+  } catch (error) {
+    logError('actions.getStudyRecommendations', error);
+    return [];
+  }
+}
+
+/**
+ * Resuelve los IDs de preguntas del banco que pertenecen a `materia_id` +
+ * `parcial`. Para `parcial === 3` (integrador) se aceptan parciales 1 y 2.
+ * `demoOnly` acota además a preguntas marcadas como demo.
+ */
+async function fetchBancoQuestionIdsScoped(
+  admin: ReturnType<typeof createAdminClient>,
+  materiaId: string,
+  parcial: number,
+  ids: string[],
+  demoOnly: boolean
+): Promise<string[]> {
+  if (ids.length === 0) return [];
+  let query = admin
+    .from('preguntas_banco')
+    .select('id')
+    .eq('materia_id', materiaId)
+    .in('id', ids);
+
+  if (demoOnly) {
+    query = query.eq('es_demo', true);
+  }
+
+  if (parcial === 3) {
+    query = query.in('parcial', [1, 2]);
+  } else {
+    query = query.eq('parcial', parcial);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    logError('actions.fetchBancoQuestionIdsScoped', error, { materiaId, parcial, demoOnly });
+    return [];
+  }
+  return (data ?? []).map((row) => row.id);
+}
+
+/**
+ * Resuelve los IDs de preguntas premium que pertenecen a `materia_id` +
+ * `parcial` (vía premium_question_sets). Solo se usa para usuarios premium.
+ */
+async function fetchPremiumQuestionIdsScoped(
+  admin: ReturnType<typeof createAdminClient>,
+  materiaId: string,
+  parcial: number,
+  ids: string[]
+): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const { data: premiumRows, error } = await admin
+    .from('premium_questions')
+    .select('id, set_id')
+    .in('id', ids);
+
+  if (error || !premiumRows || premiumRows.length === 0) {
+    if (error) {
+      logError('actions.fetchPremiumQuestionIdsScoped', error, { materiaId, parcial });
+    }
+    return [];
+  }
+
+  const setIds = Array.from(new Set(premiumRows.map((row) => row.set_id)));
+  const { data: setRows, error: setError } = await admin
+    .from('premium_question_sets')
+    .select('id')
+    .eq('materia_id', materiaId)
+    .eq('parcial', parcial)
+    .in('id', setIds);
+
+  if (setError) {
+    logError('actions.fetchPremiumQuestionIdsScoped.sets', setError, { materiaId, parcial });
+    return [];
+  }
+
+  const validSetIds = new Set((setRows ?? []).map((row) => row.id));
+  return premiumRows.filter((row) => validSetIds.has(row.set_id)).map((row) => row.id);
+}
+
+/**
+ * Verifica que el usuario realmente respondió las preguntas del banco usando
+ * `historial_respuestas` (se escribe al corregir cada respuesta en vivo, antes
+ * de finalizar el intento). Ante un fallo del store se devuelve el conjunto de
+ * entrada (fallback al acotado por materia/parcial ya aplicado), para no
+ * denegar explicaciones legítimas por un error transitorio.
+ */
+async function filterAnsweredBancoQuestionIds(
+  supabase: Awaited<ReturnType<typeof createClientServer>>,
+  userId: string,
+  materiaId: string,
+  ids: string[]
+): Promise<Set<string>> {
+  if (ids.length === 0) return new Set<string>();
+
+  const { data, error } = await supabase
+    .from('historial_respuestas')
+    .select('pregunta_id')
+    .eq('usuario_id', userId)
+    .eq('materia_id', materiaId)
+    .in('pregunta_id', ids);
+
+  if (error) {
+    logError('actions.filterAnsweredBancoQuestionIds', error, { materiaId });
+    return new Set(ids);
+  }
+
+  return new Set(
+    (data ?? [])
+      .map((row) => row.pregunta_id)
+      .filter((id): id is string => Boolean(id))
+  );
+}
+
 export async function getWrongAnswersExplanations(data: {
   materia_id: string;
   parcial: number;
   wrong_question_ids: string[];
+  chosen_answers?: Record<string, number | number[] | null>;
 }) {
   try {
     const supabase = await createClientServer();
@@ -1420,11 +1822,43 @@ export async function getWrongAnswersExplanations(data: {
     const isPremium = await hasPremiumAccess(user.id);
     const limitedWrongIds = isPremium ? wrongIds : wrongIds.slice(0, 3);
 
+    // Validación server-side contra IDOR: solo se explican preguntas de esta
+    // materia/parcial. Las preguntas del banco además deben haber sido
+    // respondidas por el usuario (historial_respuestas); `premium_questions`
+    // queda acotado a usuarios premium y a su materia/parcial.
+    const admin = createAdminClient();
+    const bancoScoped = await fetchBancoQuestionIdsScoped(
+      admin,
+      materiaId,
+      data.parcial,
+      limitedWrongIds,
+      false
+    );
+    const premiumScoped = isPremium
+      ? await fetchPremiumQuestionIdsScoped(admin, materiaId, data.parcial, limitedWrongIds)
+      : [];
+
+    const answeredBanco = await filterAnsweredBancoQuestionIds(
+      supabase,
+      user.id,
+      materiaId,
+      bancoScoped
+    );
+    const premiumAllowed = new Set(premiumScoped);
+
+    const authorizedIds = limitedWrongIds.filter(
+      (id) => answeredBanco.has(id) || premiumAllowed.has(id)
+    );
+    if (authorizedIds.length === 0) {
+      return { success: true, explanations: [] as WrongAnswerExplanation[] };
+    }
+
     const { explanations, metrics } = await buildWrongAnswersExplanations({
       materiaId,
       parcial: data.parcial,
-      wrongQuestionIds: limitedWrongIds,
+      wrongQuestionIds: authorizedIds,
       userId: user.id,
+      chosenAnswers: data.chosen_answers,
     });
     return { success: true, explanations, metrics, premium: isPremium };
   } catch (error) {
@@ -1434,6 +1868,103 @@ export async function getWrongAnswersExplanations(data: {
       wrongQuestionCount: data.wrong_question_ids.length,
     });
     return { success: false, message: 'No se pudieron generar las explicaciones.' };
+  }
+}
+
+/**
+ * Versión demo: genera la explicación de IA de un único error SIN requerir login.
+ * Es el "momento aha" que convierte al visitante anónimo: práctica + IA, sin cuenta.
+ * Limitado a 1 explicación y con rate limit por IP.
+ */
+export async function getWrongAnswersExplanationsDemo(data: {
+  materia_id: string;
+  parcial: number;
+  wrong_question_ids: string[];
+  chosen_answers?: Record<string, number | number[] | null>;
+}) {
+  try {
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceStrictRateLimit({
+      key: `demo:explanations:${clientKey}`,
+      limit: 5,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return { success: false, message: 'Demasiados intentos. Probá de nuevo en un momento.' };
+    }
+
+    const materiaId = data.materia_id;
+    if (!materiaId) {
+      return { success: false, message: 'Materia no especificada.' };
+    }
+
+    const wrongIds = Array.from(new Set(data.wrong_question_ids.filter(Boolean))).slice(0, 1);
+    if (wrongIds.length === 0) {
+      return { success: true, explanations: [] as WrongAnswerExplanation[] };
+    }
+
+    // Validación server-side: solo preguntas `es_demo` de esta materia/parcial.
+    // `premium_questions` queda totalmente excluido del path demo.
+    const admin = createAdminClient();
+    const validDemoIds = await fetchBancoQuestionIdsScoped(
+      admin,
+      materiaId,
+      data.parcial,
+      wrongIds,
+      true
+    );
+    if (validDemoIds.length === 0) {
+      return { success: true, explanations: [] as WrongAnswerExplanation[] };
+    }
+
+    const { explanations, metrics } = await buildWrongAnswersExplanations({
+      materiaId,
+      parcial: data.parcial,
+      wrongQuestionIds: validDemoIds,
+      chosenAnswers: data.chosen_answers,
+      includePremium: false,
+      includeCorrectAnswer: false,
+      demo: true,
+    });
+
+    return { success: true, explanations, metrics, premium: false };
+  } catch (error) {
+    logError('actions.getWrongAnswersExplanationsDemo', error, {
+      materiaId: data.materia_id,
+      parcial: data.parcial,
+    });
+    return { success: false, message: 'No se pudieron generar las explicaciones.' };
+  }
+}
+
+export async function hasUpcomingExam(): Promise<boolean> {
+  try {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user?.id) {
+      return false;
+    }
+
+    const todayKey = toDateKey(new Date());
+    const { data, error } = await supabase
+      .from('study_calendar_events')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('event_type', 'exam')
+      .gte('event_date', todayKey)
+      .limit(1);
+
+    if (error) {
+      logError('actions.hasUpcomingExam', error, { userId: user.id });
+      return false;
+    }
+
+    return (data?.length ?? 0) > 0;
+  } catch (error) {
+    logError('actions.hasUpcomingExam', error);
+    return false;
   }
 }
 
@@ -1494,6 +2025,11 @@ export interface DashboardLastAttempt {
   wrongAnswers: number;
   mode: string;
   createdAt: string;
+  previousAttempt: {
+    totalQuestions: number;
+    correctAnswers: number;
+    createdAt: string;
+  } | null;
 }
 
 export async function getDashboardLastAttempts(
@@ -1525,22 +2061,39 @@ export async function getDashboardLastAttempts(
       return {};
     }
 
-    const result: Record<string, DashboardLastAttempt | null> = {};
-    const seen = new Set<string>();
-
+    const attemptsByMateria = new Map<string, typeof data>();
     for (const row of data) {
-      if (seen.has(row.materia_id)) {
+      const current = attemptsByMateria.get(row.materia_id) ?? [];
+      current.push(row);
+      attemptsByMateria.set(row.materia_id, current);
+    }
+
+    const result: Record<string, DashboardLastAttempt | null> = {};
+
+    for (const [materiaId, attempts] of attemptsByMateria) {
+      const latest = attempts[0];
+      const previous = attempts[1];
+
+      if (!latest) {
+        result[materiaId] = null;
         continue;
       }
-      seen.add(row.materia_id);
-      result[row.materia_id] = {
-        materiaId: row.materia_id,
-        parcial: row.parcial,
-        totalQuestions: row.total_questions ?? 0,
-        correctAnswers: row.correct_answers ?? 0,
-        wrongAnswers: row.wrong_answers ?? 0,
-        mode: row.mode ?? 'regular',
-        createdAt: row.created_at ?? new Date().toISOString(),
+
+      result[materiaId] = {
+        materiaId: latest.materia_id,
+        parcial: latest.parcial,
+        totalQuestions: latest.total_questions ?? 0,
+        correctAnswers: latest.correct_answers ?? 0,
+        wrongAnswers: latest.wrong_answers ?? 0,
+        mode: latest.mode ?? 'regular',
+        createdAt: latest.created_at ?? new Date().toISOString(),
+        previousAttempt: previous
+          ? {
+              totalQuestions: previous.total_questions ?? 0,
+              correctAnswers: previous.correct_answers ?? 0,
+              createdAt: previous.created_at ?? new Date().toISOString(),
+            }
+          : null,
       };
     }
 

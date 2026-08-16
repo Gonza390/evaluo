@@ -3,9 +3,9 @@ import LoginForm from '@/components/LoginForm';
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,#f7faff_0%,#eef4ff_100%)] px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,#f7faff_0%,#eef4ff_100%)] px-4 py-6 sm:px-6 lg:px-8 dark:bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.14),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.1),transparent_24%),linear-gradient(180deg,#0b1220_0%,#101b36_100%)]">
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[1080px] items-center justify-center">
-        <div className="grid w-full max-w-[980px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr]">
+        <div className="grid w-full max-w-[980px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
           <LoginForm />
 
           <section className="relative hidden overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.22),transparent_16%),radial-gradient(circle_at_78%_30%,rgba(129,140,248,0.22),transparent_20%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.12),transparent_22%),linear-gradient(160deg,#050B2C_0%,#0F1B3D_100%)] lg:block">
@@ -17,12 +17,12 @@ export default function LoginPage() {
             <div className="absolute inset-y-10 left-10 w-px bg-white/12" />
             <div className="absolute left-10 right-10 top-10 h-px bg-white/12" />
             <div className="absolute left-[36%] top-[30%] animate-loginFloat rounded-2xl border border-white/18 bg-white/14 px-4 py-3 text-white shadow-[0_20px_34px_rgba(15,23,42,0.16)] backdrop-blur-md">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/72">
                 Simuladores
               </p>
             </div>
             <div className="absolute right-[12%] top-[16%] animate-loginFloat rounded-2xl border border-white/18 bg-white/14 px-4 py-3 text-white shadow-[0_20px_34px_rgba(15,23,42,0.16)] backdrop-blur-md" style={{ animationDelay: '220ms' }}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/72">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-white/72">
                 Resúmenes
               </p>
             </div>

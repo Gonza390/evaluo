@@ -170,7 +170,7 @@ export function InteractiveDemo() {
           </div>
           <span className="text-sm font-bold text-slate-800">Demo interactiva</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
           <span className={`rounded-full px-2 py-0.5 transition ${step === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}>1. Universidad</span>
           <ChevronRight className="h-3 w-3 text-slate-300" />
           <span className={`rounded-full px-2 py-0.5 transition ${step === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}>2. Práctica</span>
@@ -198,7 +198,7 @@ export function InteractiveDemo() {
                 </div>
                 <div className="mt-5">
                   <h4 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{uni.shortName}</h4>
-                  <p className="mt-1 text-[11px] font-medium text-slate-500 leading-4">{uni.name}</p>
+                  <p className="mt-1 text-[12px] font-medium text-slate-500 leading-4">{uni.name}</p>
                 </div>
                 <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
                   Explorar cátedra
@@ -224,7 +224,7 @@ export function InteractiveDemo() {
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${currentUni.badgeBg} ${currentUni.textColor} border ${currentUni.borderColor}`}>
                   {currentUni.shortName}
                 </span>
-                <span className="text-[11px] font-medium text-slate-500">{currentUni.carrera}</span>
+                <span className="text-[12px] font-medium text-slate-500">{currentUni.carrera}</span>
               </div>
 
               <h3 className="mt-4 text-lg font-bold text-[#0F1B3D]">
@@ -302,7 +302,7 @@ export function InteractiveDemo() {
                       onClick={() => handleAnswer(idx)}
                       className={`flex w-full items-start gap-3 rounded-xl border p-3.5 text-left text-xs transition ${optionStyle}`}
                     >
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
+                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[12px] font-bold ${
                         answered && isCorrect 
                           ? 'border-emerald-500 bg-emerald-500 text-white' 
                           : answered && isSelected
@@ -332,7 +332,7 @@ export function InteractiveDemo() {
                     <Bot className="h-4.5 w-4.5 text-indigo-600" />
                     <span className="text-xs font-bold text-indigo-950">Explicación Paso a Paso de Evaluo IA:</span>
                   </div>
-                  <p className="text-[11px] leading-5 text-indigo-900 whitespace-pre-line">
+                  <p className="text-[12px] leading-5 text-indigo-900 whitespace-pre-line">
                     {currentUni.question.explanation}
                   </p>
                 </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +30,7 @@ function StatCard({
 }) {
   const tones = {
     red: 'text-[#d44848]',
-    blue: 'text-[#315efb]',
+    blue: 'text-[#2563EB]',
     amber: 'text-[#b7791f]',
     slate: 'text-[#1d2a44]',
   } as const;
@@ -69,7 +69,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
 
       <section className="rounded-[20px] border border-[#e7ebf4] bg-white p-5">
         <div className="mb-4 flex items-center gap-2">
-          <ShieldAlert className="h-4 w-4 text-[#315efb]" />
+          <ShieldAlert className="h-4 w-4 text-[#2563EB]" />
           <p className="text-[14px] font-semibold text-[#1d2a44]">Alertas del sistema</p>
         </div>
 
@@ -110,7 +110,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
           <div className="max-h-[360px] overflow-auto">
             <table className="min-w-full text-left">
               <thead>
-                <tr className="sticky top-0 border-b border-[#eef1f6] bg-white text-[11px] uppercase tracking-[0.16em] text-[#98a3bb]">
+                <tr className="sticky top-0 border-b border-[#eef1f6] bg-white text-[12px] uppercase tracking-[0.16em] text-[#667085]">
                   <th className="px-5 py-3 font-semibold">Evento</th>
                   <th className="px-5 py-3 font-semibold">Detalle</th>
                   <th className="px-5 py-3 font-semibold">Actor</th>
@@ -217,7 +217,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-[#e8edf7]">
                     <div
-                      className="h-full rounded-full bg-[#315efb]"
+                      className="h-full rounded-full bg-[#2563EB]"
                       style={{
                         width: `${Math.min(100, (row.count / Math.max(data.failuresByPath[0]?.count ?? 1, 1)) * 100)}%`,
                       }}
@@ -251,7 +251,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
                     <p className="text-[13px] font-semibold text-[#1d2a44]">
                       Grupo #{index + 1}
                     </p>
-                    <span className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[#5f6d86]">
+                    <span className="rounded-full bg-white px-3 py-1 text-[12px] font-semibold text-[#5f6d86]">
                       {group.count.toLocaleString('es-AR')} archivos
                     </span>
                   </div>

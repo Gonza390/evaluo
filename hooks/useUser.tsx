@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase-client';
 
@@ -68,13 +76,16 @@ export function UserProvider({ children }: UserProviderProps) {
     };
   }, []);
 
-  const value: UserContextType = {
-    user,
-    loading,
-    isAuthenticated: Boolean(user),
-    getUserName,
-    getUserInitials,
-  };
+  const value = useMemo<UserContextType>(
+    () => ({
+      user,
+      loading,
+      isAuthenticated: Boolean(user),
+      getUserName,
+      getUserInitials,
+    }),
+    [getUserInitials, getUserName, loading, user]
+  );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

@@ -9,8 +9,6 @@ import { createAdminClient } from '@/lib/supabase-admin';
 export interface AdministradorResumenStats {
   usersActive: number;
   usersActiveTrendPct: number;
-  anonymousToday: number;
-  anonymousTrendPct: number;
   loginToday: number;
   loginTopSources: Array<{ label: string; value: number }>;
   loginDevices: Array<{ name: string; value: number }>;
@@ -22,13 +20,6 @@ export interface AdministradorResumenStats {
   simulatorAttemptsTrendPct: number;
   topMaterias: Array<{ id: string; name: string; views: number }>;
   devices: Array<{ name: string; value: number; color: string }>;
-  dailyPerformance: Array<{
-    label: string;
-    usuariosActivos: number;
-    preguntasRespondidas: number;
-    simuladoresRealizados: number;
-  }>;
-  dailyUsage: Array<{ label: string; sesiones: number; usuarios: number }>;
   visitorLoginSeries: Array<{ label: string; visitantes: number; logins: number }>;
   topPages: Array<{ path: string; views: number }>;
   funnel: Array<{ step: string; value: number }>;
@@ -403,7 +394,6 @@ export async function obtenerResumenAdministrador(
       metricPeriods?.simulatorAttempts,
       normalizedRangeDays === 7 ? 7 : 30
     );
-    const anonymousPeriod = normalizeMetricPeriod(metricPeriods?.anonymous, 1);
     const now = new Date();
     const todayStart = startOfDay(now);
     const yesterdayStart = startOfDay(new Date(todayStart.getTime() - 24 * 60 * 60 * 1000));
@@ -414,23 +404,17 @@ export async function obtenerResumenAdministrador(
     const answeredPreviousStart = calendarPeriodStart(answeredPeriod * 2, now);
     const simulatorAttemptsCurrentStart = calendarPeriodStart(simulatorAttemptsPeriod, now);
     const simulatorAttemptsPreviousStart = calendarPeriodStart(simulatorAttemptsPeriod * 2, now);
-    const anonymousCurrentStart = calendarPeriodStart(anonymousPeriod, now);
-    const anonymousPreviousStart = calendarPeriodStart(anonymousPeriod * 2, now);
 
     const [
       currentEvents,
       todayEvents,
       yesterdayEvents,
-      anonymousCurrentEvents,
-      anonymousPreviousEvents,
-      answeredRows,
       answeredCurrentRes,
       answeredPreviousRes,
       recentAuthUsersRes,
       recentSimulatorEventsRaw,
       newRegistrationsCurrentRes,
       newRegistrationsPreviousRes,
-      simulatorAttemptRows,
       simulatorAttemptsCurrentRes,
       simulatorAttemptsPreviousRes,
     ] = await Promise.all([
@@ -458,35 +442,6 @@ export async function obtenerResumenAdministrador(
           .lt('created_at', todayStart.toISOString())
           .order('created_at', { ascending: false })
           .range(from, to)
-      ),
-      fetchAllAdminRows((from, to) =>
-        admin
-          .from('analytics_events')
-          .select('user_id, session_key, event_name, created_at')
-          .gte('created_at', anonymousCurrentStart.toISOString())
-          .order('created_at', { ascending: false })
-          .range(from, to)
-      ),
-      fetchAllAdminRows((from, to) =>
-        admin
-          .from('analytics_events')
-          .select('user_id, session_key, event_name, created_at')
-          .gte('created_at', anonymousPreviousStart.toISOString())
-          .lt('created_at', anonymousCurrentStart.toISOString())
-          .order('created_at', { ascending: false })
-          .range(from, to)
-      ),
-      fetchAllAdminRows((from, to) =>
-        excludeUserIds(
-          admin
-            .from('historial_respuestas')
-            .select('usuario_id, fecha_respuesta')
-            .gte('fecha_respuesta', currentStart.toISOString())
-            .order('fecha_respuesta', { ascending: true })
-            .range(from, to),
-          adminUserIds,
-          'usuario_id'
-        )
       ),
       excludeUserIds(
         admin
@@ -537,17 +492,6 @@ export async function obtenerResumenAdministrador(
         .select('id', { count: 'exact', head: true })
         .gte('creado_at', newRegistrationsPreviousStart.toISOString())
         .lt('creado_at', newRegistrationsCurrentStart.toISOString()),
-      fetchAllAdminRows((from, to) =>
-        excludeUserIds(
-          admin
-            .from('simulator_attempts')
-            .select('user_id, created_at')
-            .gte('created_at', currentStart.toISOString())
-            .order('created_at', { ascending: true })
-            .range(from, to),
-          adminUserIds
-        )
-      ),
       excludeUserIds(
         admin
           .from('simulator_attempts')
@@ -594,18 +538,9 @@ export async function obtenerResumenAdministrador(
     const yesterdayEventsFiltered = yesterdayEvents.filter((event) =>
       isNonAdminAnalyticsEvent(event, adminUserIdSet)
     );
-    const anonymousCurrentEventsFiltered = anonymousCurrentEvents.filter((event) =>
-      isNonAdminAnalyticsEvent(event, adminUserIdSet)
-    );
-    const anonymousPreviousEventsFiltered = anonymousPreviousEvents.filter((event) =>
-      isNonAdminAnalyticsEvent(event, adminUserIdSet)
-    );
 
     const topMateriaViews = new Map<string, number>();
     const topPageViews = new Map<string, number>();
-    const dailyAnsweredMap = new Map<string, number>();
-    const dailySimulatorAttemptsMap = new Map<string, number>();
-    const dailyUsageMap = new Map<string, { sesiones: Set<string>; usuarios: Set<string> }>();
     const visitorLoginSeriesMap = new Map<string, { visitantes: Set<string>; logins: Set<string> }>();
     const deviceCounters = { Desktop: 0, Mobile: 0, Tablet: 0 };
     const sessionStages = new Map<string, Set<string>>();
@@ -641,13 +576,6 @@ export async function obtenerResumenAdministrador(
 
       if (createdAt) {
         const dayLabel = formatAnalyticsDayLabel(createdAt);
-        const dayUsage = dailyUsageMap.get(dayLabel) ?? {
-          sesiones: new Set<string>(),
-          usuarios: new Set<string>(),
-        };
-        dayUsage.sesiones.add(sessionKey);
-        dayUsage.usuarios.add(actorId);
-        dailyUsageMap.set(dayLabel, dayUsage);
 
         const dayVisitors = visitorLoginSeriesMap.get(dayLabel) ?? {
           visitantes: new Set<string>(),
@@ -673,29 +601,6 @@ export async function obtenerResumenAdministrador(
       if (path.startsWith('/simulador')) stageSet.add('simulador');
       sessionStages.set(sessionKey, stageSet);
     }
-
-    for (const row of answeredRows) {
-      if (!row.fecha_respuesta) continue;
-      const dayLabel = formatAnalyticsDayLabel(row.fecha_respuesta);
-      dailyAnsweredMap.set(dayLabel, (dailyAnsweredMap.get(dayLabel) ?? 0) + 1);
-    }
-
-    for (const row of simulatorAttemptRows) {
-      if (!row.created_at) continue;
-      const dayLabel = formatAnalyticsDayLabel(row.created_at);
-      dailySimulatorAttemptsMap.set(dayLabel, (dailySimulatorAttemptsMap.get(dayLabel) ?? 0) + 1);
-    }
-
-    const anonymousCurrentSessions = new Set(
-      anonymousCurrentEventsFiltered
-        .filter((event) => !event.user_id && event.event_name === 'page_view')
-        .map((event) => event.session_key ?? 'unknown')
-    );
-    const anonymousPreviousSessions = new Set(
-      anonymousPreviousEventsFiltered
-        .filter((event) => !event.user_id && event.event_name === 'page_view')
-        .map((event) => event.session_key ?? 'unknown')
-    );
 
     const loginTodayUsers = new Set<string>();
 
@@ -824,8 +729,6 @@ export async function obtenerResumenAdministrador(
       stats: {
         usersActive,
         usersActiveTrendPct: calculateTrend(usersActive, previousUsersActive),
-        anonymousToday: anonymousCurrentSessions.size,
-        anonymousTrendPct: calculateTrend(anonymousCurrentSessions.size, anonymousPreviousSessions.size),
         loginToday: loginTodayUsers.size,
         loginTopSources: Array.from(loginSourceCounts.entries())
           .map(([label, value]) => ({ label, value }))
@@ -872,23 +775,6 @@ export async function obtenerResumenAdministrador(
           converted: simulatorLoginGateConverted,
           abandoned: simulatorLoginGateAbandoned,
         },
-        dailyPerformance: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => {
-          const usage = dailyUsageMap.get(label);
-          return {
-            label,
-            usuariosActivos: usage?.usuarios.size ?? 0,
-            preguntasRespondidas: dailyAnsweredMap.get(label) ?? 0,
-            simuladoresRealizados: dailySimulatorAttemptsMap.get(label) ?? 0,
-          };
-        }),
-        dailyUsage: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => {
-          const value = dailyUsageMap.get(label);
-          return {
-            label,
-            sesiones: value?.sesiones.size ?? 0,
-            usuarios: value?.usuarios.size ?? 0,
-          };
-        }),
         visitorLoginSeries: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => {
           const value = visitorLoginSeriesMap.get(label);
           return {
@@ -910,7 +796,6 @@ export async function obtenerResumenAdministrador(
 }
 
 export interface AdministradorConversionStats {
-  rangeDays: 1 | 7 | 30;
   funnel: Array<{ step: string; value: number; conversionPct: number | null }>;
   gate: { reached: number; converted: number; abandoned: number; conversionRatePct: number };
   postSignup: {
@@ -939,7 +824,15 @@ export interface AdministradorConversionStats {
     twoPlusPct: number;
   };
   signupSources: Array<{ label: string; value: number }>;
-  dailyConversion: Array<{ label: string; registros: number; landings: number; retomas: number }>;
+  dailyConversion: Array<{
+    label: string;
+    demo: number;
+    gate: number;
+    registros: number;
+    landings: number;
+    retomas: number;
+    terminados: number;
+  }>;
 }
 
 function labelSignupSource(location: string, provider: string) {
@@ -964,18 +857,20 @@ const CONVERSION_EVENT_NAMES = [
   'login_success',
 ];
 
-export async function obtenerConversionAdministrador(
-  rangeDays: 1 | 7 | 30
-): Promise<{ success: boolean; stats?: AdministradorConversionStats; message?: string }> {
+export async function obtenerConversionAdministrador(): Promise<{
+  success: boolean;
+  stats?: AdministradorConversionStats;
+  message?: string;
+}> {
   try {
     await requireAdminAccess();
     const admin = createAdminClient();
     const adminUserIds = await listAdminUserIds();
     const adminUserIdSet = new Set(adminUserIds);
 
-    const normalizedRangeDays = rangeDays === 1 || rangeDays === 7 || rangeDays === 30 ? rangeDays : 7;
+    const rangeDays = 30;
     const now = new Date();
-    const currentStart = calendarPeriodStart(normalizedRangeDays, now);
+    const currentStart = calendarPeriodStart(rangeDays, now);
     const DAY_MS = 24 * 60 * 60 * 1000;
 
     const [conversionEvents, profilesRes, simulatorAttemptUserRows, activityRows] = await Promise.all([
@@ -1036,6 +931,9 @@ export async function obtenerConversionAdministrador(
     const signupAnonymousIds = new Set<string>();
     const dailySignup = new Map<string, number>();
     const dailyLanding = new Map<string, number>();
+    const dailyDemo = new Map<string, number>();
+    const dailyGate = new Map<string, number>();
+    const dailyFinished = new Map<string, number>();
 
     for (const event of events) {
       const sessionKey = event.session_key ?? 'unknown';
@@ -1050,9 +948,17 @@ export async function obtenerConversionAdministrador(
         case 'demo_checkpoint_reached':
           demoCheckpointSessions.add(sessionKey);
           if (anonymousId) demoAnonymousIds.add(anonymousId);
+          if (event.created_at) {
+            const label = formatAnalyticsDayLabel(event.created_at);
+            dailyDemo.set(label, (dailyDemo.get(label) ?? 0) + 1);
+          }
           break;
         case 'simulator_login_gate_viewed':
           gateViewedSessions.add(sessionKey);
+          if (event.created_at) {
+            const label = formatAnalyticsDayLabel(event.created_at);
+            dailyGate.set(label, (dailyGate.get(label) ?? 0) + 1);
+          }
           break;
         case 'simulator_login_gate_cta_clicked':
           gateCtaSessions.add(sessionKey);
@@ -1096,7 +1002,13 @@ export async function obtenerConversionAdministrador(
           }
           break;
         case 'simulator_finished':
-          if (userId) allFinishedUsers.add(userId);
+          if (userId) {
+            allFinishedUsers.add(userId);
+            if (event.created_at) {
+              const label = formatAnalyticsDayLabel(event.created_at);
+              dailyFinished.set(label, (dailyFinished.get(label) ?? 0) + 1);
+            }
+          }
           break;
         default:
           break;
@@ -1186,7 +1098,6 @@ export async function obtenerConversionAdministrador(
     return {
       success: true,
       stats: {
-        rangeDays: normalizedRangeDays,
         funnel: funnelSteps.map((item, index) => {
           const base = index === 0 ? null : funnelSteps[index - 1].value;
           return {
@@ -1238,11 +1149,14 @@ export async function obtenerConversionAdministrador(
         signupSources: Array.from(signupSources.entries())
           .map(([label, value]) => ({ label, value }))
           .sort((a, b) => b.value - a.value),
-        dailyConversion: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => ({
+        dailyConversion: buildAnalyticsDayLabels(rangeDays, now).map((label) => ({
           label,
+          demo: dailyDemo.get(label) ?? 0,
+          gate: dailyGate.get(label) ?? 0,
           registros: dailySignup.get(label) ?? 0,
           landings: dailyLanding.get(label) ?? 0,
           retomas: dailyResume.get(label) ?? 0,
+          terminados: dailyFinished.get(label) ?? 0,
         })),
       },
     };

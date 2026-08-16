@@ -216,7 +216,7 @@ export default function LoginForm() {
 
         <div className="mt-8 text-center lg:text-left">
           {intent === 'premium' && isSignUp ? (
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700">
+            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-indigo-700">
               Acceso premium
             </div>
           ) : null}
@@ -239,8 +239,11 @@ export default function LoginForm() {
 
         <form onSubmit={handleEmailAuth} className="mt-8 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">Correo electrónico</label>
+            <Label htmlFor="login-email" className="text-sm font-medium text-slate-600">
+              Correo electrónico
+            </Label>
             <Input
+              id="login-email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -252,9 +255,12 @@ export default function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-600">Contraseña</label>
+            <Label htmlFor="login-password" className="text-sm font-medium text-slate-600">
+              Contraseña
+            </Label>
             <div className="relative">
               <Input
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -324,7 +330,7 @@ export default function LoginForm() {
         <div className="mt-4">
           <div className="flex items-center gap-4 py-1">
             <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               o continúa con
             </span>
             <div className="h-px flex-1 bg-slate-200" />

@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
+import { ThemeProvider } from '@/components/theme-provider';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -19,11 +20,12 @@ export const metadata: Metadata = {
     template: '%s | Evaluo',
   },
   description:
-    'Estudiá con resúmenes, preguntas y simuladores universitarios en un solo lugar. Organizá tus materiales y mejorá tu rendimiento con Evaluo.',
+    'Estudiá con resúmenes, pregunteros y simuladores universitarios en un solo lugar. Organizá tus materiales y mejorá tu rendimiento con Evaluo.',
   keywords: [
     'evaluo',
     'simulador de exámenes',
     'resúmenes universitarios',
+    'pregunteros',
     'preguntas de parcial',
     'estudio universitario',
     'materiales de estudio',
@@ -34,6 +36,13 @@ export const metadata: Metadata = {
   publisher: 'Evaluo',
   alternates: {
     canonical: '/',
+    languages: {
+      'es-AR': '/',
+    },
+  },
+  other: {
+    'geo.region': 'AR',
+    'geo.placename': 'Argentina',
   },
   openGraph: {
     type: 'website',
@@ -43,12 +52,21 @@ export const metadata: Metadata = {
     description:
       'Resúmenes, preguntas, simuladores y seguimiento de progreso para estudiar mejor en la universidad.',
     locale: 'es_AR',
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Evaluo | Simulador de exámenes y materiales universitarios',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Evaluo | Simulador de exámenes y materiales universitarios',
     description:
       'Resúmenes, preguntas y simuladores para preparar tus parciales desde un solo lugar.',
+    images: ['/opengraph-image.png'],
   },
   manifest: '/manifest.webmanifest',
   icons: {
@@ -68,12 +86,14 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning className={inter.className}>
+    <html lang="es-AR" suppressHydrationWarning className={inter.className}>
       <body
         suppressHydrationWarning
         className="bg-background text-foreground min-h-screen text-[0.92rem]"
       >
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

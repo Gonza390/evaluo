@@ -41,6 +41,47 @@ export const DEFAULT_CALENDAR_FORM_STATE = {
   reminderDays: [] as number[],
 };
 
+/**
+ * Devuelve la dayKey `YYYY-MM-DD` del día en la zona horaria de Argentina.
+ * Es el helper canónico para rachas de estudio y calendarios locales.
+ */
+export function getArgentinaDayKey(dateInput: Date | string) {
+  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = parts.find((part) => part.type === 'year')?.value ?? '0000';
+  const month = parts.find((part) => part.type === 'month')?.value ?? '00';
+  const day = parts.find((part) => part.type === 'day')?.value ?? '00';
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Desplaza una dayKey `YYYY-MM-DD` (interpretada en UTC) por `offset` días.
+ */
+export function shiftDayKey(dayKey: string, offset: number) {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1, day));
+  shifted.setUTCDate(shifted.getUTCDate() + offset);
+  return shifted.toISOString().slice(0, 10);
+}
+
+/**
+ * Índice de día de semana a partir de una dayKey (lunes = 0 ... domingo = 6).
+ */
+export function getWeekdayIndexFromDayKey(dayKey: string) {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const weekday = date.getUTCDay();
+  return weekday === 0 ? 6 : weekday - 1;
+}
+
 export function formatStorageDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

@@ -532,7 +532,7 @@ export async function generateStudentMaterialGlossary(
           (item) =>
             !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
         ),
-      ]).filter((item) => !/[\p{L}]{20,}/u.test(item.definition));
+      ]).filter((item) => !/[\p{L}]{14,}/u.test(item.definition));
     };
 
     try {

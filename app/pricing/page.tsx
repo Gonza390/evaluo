@@ -146,7 +146,7 @@ export default function PricingPage() {
               </div>
 
               <div className="overflow-hidden rounded-[32px] border border-[#D9DBFF] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(238,240,255,0.92)_100%)] p-6 shadow-[0_18px_45px_rgba(99,102,241,0.10)]">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">
+                <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">
                   Lo que buscamos construir
                 </p>
                 <h2 className="mt-3 text-[1.9rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.3rem]">

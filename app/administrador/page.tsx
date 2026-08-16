@@ -26,16 +26,15 @@ import {
   obtenerResumenAdministrador,
   obtenerUsuariosAdministrador,
 } from './actions';
-import { AnalyticsPanel } from './analytics-panel';
-import { ConversionPanel } from './conversion-panel';
-import { BibliotecaPanel } from './biblioteca-panel';
 import dynamic from 'next/dynamic';
 
 const DashboardInsights = dynamic(() => import('./dashboard-insights').then(mod => mod.DashboardInsights));
-import { GraphsPanel } from './graphs-panel';
-import { IAPanel } from './ia-panel';
-import { LogsPanel } from './logs-panel';
-import { UsersPanel } from './users-panel';
+const AnalyticsPanel = dynamic(() => import('./analytics-panel').then(mod => mod.AnalyticsPanel));
+const ConversionPanel = dynamic(() => import('./conversion-panel').then(mod => mod.ConversionPanel));
+const BibliotecaPanel = dynamic(() => import('./biblioteca-panel').then(mod => mod.BibliotecaPanel));
+const IAPanel = dynamic(() => import('./ia-panel').then(mod => mod.IAPanel));
+const LogsPanel = dynamic(() => import('./logs-panel').then(mod => mod.LogsPanel));
+const UsersPanel = dynamic(() => import('./users-panel').then(mod => mod.UsersPanel));
 import { getAdminAccessContext } from '@/lib/access-control';
 
 type PanelKey =
@@ -43,7 +42,6 @@ type PanelKey =
   | 'biblioteca'
   | 'usuarios'
   | 'analiticas'
-  | 'graficas'
   | 'marketing'
   | 'logs'
   | 'ia';
@@ -57,7 +55,6 @@ const PANELS: Array<{
   { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
   { key: 'analiticas', label: 'Analíticas', icon: BarChart3 },
-  { key: 'graficas', label: 'Gráficas', icon: LineChart },
   { key: 'marketing', label: 'Marketing', icon: Megaphone },
   { key: 'logs', label: 'Logs', icon: Waypoints },
   { key: 'ia', label: 'IA', icon: Bot },
@@ -96,21 +93,20 @@ function MetricCard({
   const tones = {
     blue: {
       halo: 'bg-blue-50 text-blue-600',
-      trend: 'text-emerald-600',
     },
     green: {
       halo: 'bg-emerald-50 text-emerald-600',
-      trend: 'text-emerald-600',
     },
     violet: {
       halo: 'bg-violet-50 text-violet-600',
-      trend: 'text-emerald-600',
     },
     orange: {
       halo: 'bg-orange-50 text-orange-600',
-      trend: 'text-emerald-600',
     },
   } as const;
+
+  const isPositive = !trend.startsWith('-');
+  const trendClass = isPositive ? 'text-emerald-600' : 'text-rose-600';
 
   return (
     <article className="rounded-[16px] border border-[#e8ebf3] bg-white px-3.5 py-3 shadow-[0_6px_18px_rgba(15,23,42,0.045)]">
@@ -121,8 +117,8 @@ function MetricCard({
       <p className="mt-1.5 text-[1.4rem] font-semibold leading-none tracking-[-0.04em] text-[#1d2a44]">
         {value}
       </p>
-      <p className={`mt-2.5 text-[12px] font-semibold ${tones[tone].trend}`}>{trend}</p>
-      <p className="mt-0.5 text-[12px] text-[#95a0b8]">{caption}</p>
+      <p className={`mt-2.5 text-[12px] font-semibold ${trendClass}`}>{trend}</p>
+      <p className="mt-0.5 text-[12px] text-[#667085]">{caption}</p>
     </article>
   );
 }
@@ -130,7 +126,7 @@ function MetricCard({
 function EmptyPanel({ title }: { title: string }) {
   return (
     <section className="rounded-[22px] border border-dashed border-[#d8deea] bg-white px-6 py-10 text-center">
-      <p className="text-[12px] font-medium uppercase tracking-[0.22em] text-[#98a3bb]">{title}</p>
+      <p className="text-[12px] font-medium uppercase tracking-[0.22em] text-[#667085]">{title}</p>
       <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
         Panel en construcción
       </h2>
@@ -206,7 +202,6 @@ export default async function AdministradorPage({
     analyticsNewRegistrations?: string;
     analyticsAnswered?: string;
     analyticsSimulators?: string;
-    analyticsAnonymous?: string;
   }>;
 }) {
   const [adminAccess, rawSearchParams] = await Promise.all([
@@ -227,7 +222,6 @@ export default async function AdministradorPage({
     analyticsNewRegistrations?: string;
     analyticsAnswered?: string;
     analyticsSimulators?: string;
-    analyticsAnonymous?: string;
   };
 
   const requestedPanel = resolvedSearchParams.panel;
@@ -248,11 +242,10 @@ export default async function AdministradorPage({
       resolvedSearchParams.analyticsSimulators,
       activePeriod === 7 ? 7 : activePeriod === 30 ? 30 : 1
     ),
-    anonymous: normalizeMetricPeriod(resolvedSearchParams.analyticsAnonymous, 1),
   } as const;
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsStats =
-    activePanel === 'dashboard' || activePanel === 'analiticas' || activePanel === 'graficas';
+    activePanel === 'dashboard' || activePanel === 'analiticas';
   const needsConversion = activePanel === 'marketing';
   const needsUsers = activePanel === 'usuarios';
   const needsLogs = activePanel === 'logs';
@@ -279,7 +272,7 @@ export default async function AdministradorPage({
       activePanel === 'analiticas' && selectedAnalyticsMateriaId
         ? obtenerDetalleMateriaAnaliticaAdministrador(selectedAnalyticsMateriaId, activePeriod)
         : Promise.resolve(null),
-      needsConversion ? obtenerConversionAdministrador(activePeriod) : Promise.resolve(null),
+      needsConversion ? obtenerConversionAdministrador() : Promise.resolve(null),
       needsIA ? obtenerPromptSistema() : Promise.resolve(null),
       needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
       needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -413,7 +406,7 @@ export default async function AdministradorPage({
     <>
       <main className="min-h-screen bg-[#f6f8fc] px-5 py-8 text-[#1d2a44] lg:hidden">
         <div className="mx-auto max-w-md rounded-[28px] border border-[#e7ebf4] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#98a3bb]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#667085]">
             Panel administrador
           </p>
           <h1 className="mt-3 text-[1.7rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">
@@ -424,7 +417,7 @@ export default async function AdministradorPage({
           </p>
           <Link
             href="/dashboard"
-            className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#315efb] px-4 text-sm font-semibold text-white transition hover:bg-[#264ee0]"
+            className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#264ee0]"
           >
             Volver al dashboard
           </Link>
@@ -435,7 +428,7 @@ export default async function AdministradorPage({
         <header className="fixed left-[184px] right-0 top-0 z-40 border-b border-[#e7ebf4] bg-white/95 backdrop-blur">
           <div className="flex h-[64px] items-center justify-between px-6">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#98a3bb]">Panel actual</p>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Panel actual</p>
               <h1 className="mt-0.5 text-[1.1rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
                 {activePanelMeta.label}
               </h1>
@@ -464,7 +457,7 @@ export default async function AdministradorPage({
                   href={`/administrador?panel=${panel.key}&period=${activePeriod}`}
                   className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition ${
                     isActive
-                      ? 'bg-[#eef3ff] text-[#315efb]'
+                      ? 'bg-[#eef3ff] text-[#2563EB]'
                       : 'text-[#6f7c96] hover:bg-[#f5f7fb] hover:text-[#1d2a44]'
                   }`}
                 >
@@ -493,7 +486,7 @@ export default async function AdministradorPage({
                           href={`/administrador?panel=${activePanel}&period=${option.value}`}
                           className={`rounded-md px-2.5 py-1.5 text-[12px] font-medium transition ${
                             isActive
-                              ? 'bg-[#eef3ff] text-[#315efb]'
+                              ? 'bg-[#eef3ff] text-[#2563EB]'
                               : 'text-[#6f7c96] hover:bg-[#f5f7fb] hover:text-[#1d2a44]'
                           }`}
                         >
@@ -534,14 +527,12 @@ export default async function AdministradorPage({
                 </div>
 
                 <DashboardInsights
-                  topMaterias={topMaterias}
-                  devices={stats.devices}
                   visitorLoginSeries={stats.visitorLoginSeries}
                   recentActivity={stats.recentActivity}
                 />
 
                 <div className="mt-6 rounded-[22px] border border-dashed border-[#d8deea] bg-white px-6 py-12 text-center">
-                  <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#98a3bb]">Siguiente bloque</p>
+                  <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#667085]">Siguiente bloque</p>
                   <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
                     Dejamos el resto vacío por ahora
                   </h2>
@@ -567,8 +558,6 @@ export default async function AdministradorPage({
                   stats={{
                     usersActive: stats.usersActive,
                     usersActiveTrendPct: stats.usersActiveTrendPct,
-                    anonymousToday: stats.anonymousToday,
-                    anonymousTrendPct: stats.anonymousTrendPct,
                     loginToday: stats.loginToday,
                     loginTopSources: stats.loginTopSources,
                     loginDevices: stats.loginDevices,
@@ -578,9 +567,6 @@ export default async function AdministradorPage({
                     answeredTodayTrendPct: stats.answeredTodayTrendPct,
                     simulatorAttempts: stats.simulatorAttempts,
                     simulatorAttemptsTrendPct: stats.simulatorAttemptsTrendPct,
-                    dailyPerformance: stats.dailyPerformance,
-                    dailyUsage: stats.dailyUsage,
-                    visitorLoginSeries: stats.visitorLoginSeries,
                     topPages: stats.topPages,
                     topMaterias,
                     devices: stats.devices,
@@ -594,34 +580,11 @@ export default async function AdministradorPage({
                 <div className="mb-5">
                   <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Conversión</p>
                   <p className="mt-1 text-[14px] text-[#7f8aa3]">
-                    El recorrido del simulador de muestra al registro, la retoma del examen y la retención temprana.
+                    El recorrido del simulador de muestra al registro, la retoma del examen y la retención temprana, día a día en los últimos 30 días.
                   </p>
                 </div>
 
-                <ConversionPanel
-                  stats={conversionResult.stats}
-                  activePeriodLabel={activePeriodLabel}
-                  activePeriod={activePeriod}
-                  buildHref={(period) => `/administrador?panel=marketing&period=${period}`}
-                />
-              </section>
-            ) : activePanel === 'graficas' && stats ? (
-              <section>
-                <div className="mb-5">
-                  <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Gráficas</p>
-                  <p className="mt-1 text-[14px] text-[#7f8aa3]">
-                    Evolución diaria en gráficos de líneas para entender uso, visitantes y conversiones.
-                  </p>
-                </div>
-
-                <GraphsPanel
-                  activePeriodLabel={activePeriodLabel}
-                  series={{
-                    dailyPerformance: stats.dailyPerformance,
-                    dailyUsage: stats.dailyUsage,
-                    visitorLoginSeries: stats.visitorLoginSeries,
-                  }}
-                />
+                <ConversionPanel stats={conversionResult.stats} />
               </section>
             ) : activePanel === 'biblioteca' &&
               bibliotecaResult?.universidades &&
