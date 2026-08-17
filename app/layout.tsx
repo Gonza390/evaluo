@@ -1,6 +1,5 @@
 import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
-import { ThemeProvider } from '@/components/theme-provider';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -78,22 +77,16 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b1220' },
-  ],
+  themeColor: '#ffffff',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-AR" suppressHydrationWarning className={inter.className}>
+    <html lang="es-AR" className={inter.className}>
       <body
-        suppressHydrationWarning
         className="bg-background text-foreground min-h-screen text-[0.92rem]"
       >
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );

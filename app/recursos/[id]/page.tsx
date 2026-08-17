@@ -21,7 +21,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { pushActivityHit, pushRecentResource } from '@/lib/dashboard-client';
 import { useUser } from '@/hooks/useUser';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { logError } from '@/lib/observability';
 import { getSimulatorRoute } from '@/lib/routes';
 import { StudyStatePanel } from '@/components/study-state-panel';

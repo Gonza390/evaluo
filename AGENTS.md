@@ -49,3 +49,24 @@ EdTech web platform — Next.js 16 (App Router), React 19, TypeScript, Supabase,
 - `next.config.mjs` — strict CSP + security headers; any new third-party script/connect domain must be whitelisted there or it will be blocked.
 - `instrumentation.ts` — Next `onRequestError` forwards server errors to Sentry/Axiom/`ERROR_REPORT_URL` when those env vars are set.
 - `Evaluo/` (empty) and `backups/` are legacy artifacts; `backups/` is excluded from `tsconfig`.
+
+## Codex Skills
+
+Codex principal coordina el trabajo y conserva la responsabilidad de interpretar el pedido, activar Skills, ordenar dependencias, integrar resultados y responder al usuario. No existe ni debe crearse un Skill `orchestrator`.
+
+Activa solo los Skills estrictamente necesarios para la tarea. No cargues especialistas por rutina ni delegues una tarea que Codex pueda resolver directamente con el contexto ya disponible. Si un cambio cruza dominios, usa el conjunto mínimo de Skills y mantén un único responsable por cada parte:
+
+- `product-strategist`: producto, MVP, prioridad, PMF, growth, pricing, funnels y métricas.
+- `cto`: decisiones de arquitectura, contratos transversales, deuda estructural y gate técnico.
+- `backend`: APIs, server actions, Supabase, datos, auth, jobs y lógica de servidor.
+- `frontend`: Next.js/React, componentes, integración cliente y estados de interfaz.
+- `ai`: proveedores LLM, prompts, structured output, resiliencia, coste y seguridad de IA.
+- `rag`: extracción documental, chunking, recuperación, trazabilidad y calidad pedagógica.
+- `ux`: flujos, jerarquía, responsive y accesibilidad.
+- `security`: auditoría de vulnerabilidades y controles de seguridad.
+- `qa`: criterios de aceptación, regresiones, verificaciones y readiness de release.
+- `legal`: revisión jurídica preliminar de privacidad, copyright, términos y regulación.
+
+Backend, Frontend, AI y RAG implementan únicamente dentro de su dominio. Product Strategist, CTO, UX, Security, QA y Legal revisan o definen su especialidad; no deben absorber implementación ajena salvo instrucción explícita del usuario.
+
+Exige revisión de Security cuando el cambio afecte auth/autorización, RLS, secretos, datos sensibles, uploads, endpoints públicos o internos, pagos, dependencias externas, IA no confiable o límites de abuso. Exige QA cuando exista riesgo razonable de regresión o se prepare un release. Exige gate de CTO cuando cambien arquitectura, esquema o contratos transversales, infraestructura, proveedores, costes relevantes, seguridad crítica, rendimiento/escalabilidad o preparación para producción. Para cambios pequeños y locales de bajo riesgo, evita estos gates adicionales.

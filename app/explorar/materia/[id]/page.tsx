@@ -10,10 +10,10 @@ import { buildLearningResourceJsonLd } from '@/lib/seo';
 const MateriaContent = dynamic(() => import('./materia-content'), {
   loading: () => (
     <div className="space-y-6">
-      <div className="surface-panel min-h-[220px] animate-pulse bg-white/80 dark:bg-slate-900/80" aria-hidden="true" />
+      <div className="surface-panel min-h-[220px] animate-pulse bg-white/80" aria-hidden="true" />
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80 dark:bg-slate-900/80" aria-hidden="true" />
-        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80 dark:bg-slate-900/80" aria-hidden="true" />
+        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80" aria-hidden="true" />
+        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80" aria-hidden="true" />
       </div>
     </div>
   ),

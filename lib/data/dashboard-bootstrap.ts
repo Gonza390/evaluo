@@ -3,22 +3,18 @@ import { unstable_cache as nextCache } from 'next/cache';
 import { createClientServer } from '@/lib/supabase-server';
 import { createPublicClient } from '@/lib/supabase-public';
 import { createAdminClient } from '@/lib/supabase-admin';
-import type {
-  DashboardState,
-  PartialStudyInsights,
-} from '@/app/actions';
+import type { DashboardState, PartialStudyInsights } from '@/lib/actions/dashboard';
 import type {
   DashboardAcademicProfile,
   DashboardMateriaDetailsMap,
   DashboardMateriaSummary,
 } from '@/lib/data/dashboard';
-import type { DashboardAnalytics } from '@/types/supabase';
+import {
+  defaultDashboardAnalytics,
+  parseDashboardAnalytics,
+  parseDashboardMateriaStates,
+} from '@/lib/dashboard-state';
 import { fetchMateriasByCarrera } from '@/lib/data/catalog';
-
-const defaultDashboardAnalytics: DashboardAnalytics = {
-  subjectsCompleted: 0,
-  lastUpdatedAt: null,
-};
 
 const defaultDashboardState: DashboardState = {
   lastSubject: null,
@@ -53,9 +49,9 @@ function mapDashboardState(
     | {
         last_subject_id: string | null;
         last_subject_name: string | null;
-        active_subjects: DashboardState['activeSubjects'] | null;
-        finished_subjects: DashboardState['finishedSubjects'] | null;
-        dashboard_analytics: DashboardAnalytics | null;
+        active_subjects: import('@/types/supabase').Json;
+        finished_subjects: import('@/types/supabase').Json;
+        dashboard_analytics: import('@/types/supabase').Json;
       }
     | null
     | undefined
@@ -65,9 +61,9 @@ function mapDashboardState(
       data?.last_subject_id && data.last_subject_name
         ? { id: data.last_subject_id, name: data.last_subject_name }
         : null,
-    activeSubjects: data?.active_subjects ?? [],
-    finishedSubjects: data?.finished_subjects ?? [],
-    analytics: data?.dashboard_analytics ?? defaultDashboardAnalytics,
+    activeSubjects: parseDashboardMateriaStates(data?.active_subjects),
+    finishedSubjects: parseDashboardMateriaStates(data?.finished_subjects),
+    analytics: parseDashboardAnalytics(data?.dashboard_analytics),
   };
 }
 
@@ -104,7 +100,7 @@ function mapMateriaSummaries(
     nombre: materia.nombre,
     carreraId: materia.carrera_id,
     carreraNombre: materia.carrera_id
-      ? carrerasMap.get(materia.carrera_id) ?? 'Carrera'
+      ? (carrerasMap.get(materia.carrera_id) ?? 'Carrera')
       : 'Materia general',
   }));
 }
@@ -179,10 +175,7 @@ async function getPartialStudyInsightsForUserRaw(
       });
 
       if (result.error) throw result.error;
-      if (
-        result.data &&
-        typeof (result.data as AggregateStatsRow).total_respuestas === 'number'
-      ) {
+      if (result.data && typeof (result.data as AggregateStatsRow).total_respuestas === 'number') {
         return result.data as AggregateStatsRow;
       }
       return null;
@@ -237,7 +230,8 @@ async function getPartialStudyInsightsForUserRaw(
     }
   }
 
-  const coberturaPorcentaje = total > 0 ? Math.round((preguntasParcialRespondidas / total) * 100) : 0;
+  const coberturaPorcentaje =
+    total > 0 ? Math.round((preguntasParcialRespondidas / total) * 100) : 0;
   const modelosEstimadosRealizados = Math.max(0, Math.floor(respuestasParcialTotal / 30));
   const promedioAciertoPorcentaje =
     respuestasParcialTotal > 0
@@ -281,163 +275,75 @@ const fetchMateriasByCarreraCached = nextCache(
   }
 );
 
-export const getDashboardBootstrap = cache(
-  async (): Promise<DashboardBootstrapResult> => {
-    const supabase = await createClientServer();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+export const getDashboardBootstrap = cache(async (): Promise<DashboardBootstrapResult> => {
+  const supabase = await createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (!user) {
-      return {
-        status: 'login',
-        state: defaultDashboardState,
-        academicProfile: null,
-        materiaDetails: {},
-        recommendedMaterias: [],
-        favoriteMaterias: [],
-        favoriteSuggestions: [],
-        partialInsights: null,
-        partialInsightMateriaName: null,
-      };
+  if (!user) {
+    return {
+      status: 'login',
+      state: defaultDashboardState,
+      academicProfile: null,
+      materiaDetails: {},
+      recommendedMaterias: [],
+      favoriteMaterias: [],
+      favoriteSuggestions: [],
+      partialInsights: null,
+      partialInsightMateriaName: null,
+    };
+  }
+
+  try {
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select(
+        'universidad_id, carrera_id, last_subject_id, last_subject_name, active_subjects, finished_subjects, dashboard_analytics'
+      )
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      throw profileError;
     }
 
-    try {
-      const { data: profileRow, error: profileError } = await supabase
-        .from('profiles')
-        .select(
-          'universidad_id, carrera_id, last_subject_id, last_subject_name, active_subjects, finished_subjects, dashboard_analytics'
-        )
-        .eq('id', user.id)
-        .maybeSingle();
+    const state = mapDashboardState(profileRow);
+    const universidadId = String(profileRow?.universidad_id ?? '').trim() || null;
+    const carreraId = String(profileRow?.carrera_id ?? '').trim() || null;
 
-      if (profileError) {
-        throw profileError;
-      }
+    const [universidadResponse, carreraResponse] = await Promise.all([
+      universidadId
+        ? supabase.from('universidades').select('nombre').eq('id', universidadId).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      carreraId
+        ? supabase.from('carreras').select('nombre').eq('id', carreraId).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
 
-      const state = mapDashboardState(profileRow);
-      const universidadId = String(profileRow?.universidad_id ?? '').trim() || null;
-      const carreraId = String(profileRow?.carrera_id ?? '').trim() || null;
+    if (universidadResponse.error) {
+      throw universidadResponse.error;
+    }
 
-      const [universidadResponse, carreraResponse] = await Promise.all([
-        universidadId
-          ? supabase.from('universidades').select('nombre').eq('id', universidadId).maybeSingle()
-          : Promise.resolve({ data: null, error: null }),
-        carreraId
-          ? supabase.from('carreras').select('nombre').eq('id', carreraId).maybeSingle()
-          : Promise.resolve({ data: null, error: null }),
-      ]);
+    if (carreraResponse.error) {
+      throw carreraResponse.error;
+    }
 
-      if (universidadResponse.error) {
-        throw universidadResponse.error;
-      }
+    const academicProfile: DashboardAcademicProfile | null =
+      universidadId || carreraId
+        ? {
+            universidadId,
+            universidadNombre: universidadResponse.data?.nombre ?? null,
+            carreraId,
+            carreraNombre: carreraResponse.data?.nombre ?? null,
+          }
+        : null;
 
-      if (carreraResponse.error) {
-        throw carreraResponse.error;
-      }
-
-      const academicProfile: DashboardAcademicProfile | null =
-        universidadId || carreraId
-          ? {
-              universidadId,
-              universidadNombre: universidadResponse.data?.nombre ?? null,
-              carreraId,
-              carreraNombre: carreraResponse.data?.nombre ?? null,
-            }
-          : null;
-
-      if (!universidadId || !carreraId) {
-        return {
-          status: 'complete-profile',
-          state,
-          academicProfile,
-          materiaDetails: {},
-          recommendedMaterias: [],
-          favoriteMaterias: [],
-          favoriteSuggestions: [],
-          partialInsights: null,
-          partialInsightMateriaName: null,
-        };
-      }
-
-      const activeSubjectIds = state.activeSubjects.map((subject) => subject.id);
-      const [materiaDetailsRows, favoriteIdsResult] = await Promise.all([
-        fetchMateriaSummariesByIds(supabase, activeSubjectIds),
-        supabase
-          .from('user_favorites')
-          .select('materia_id')
-          .eq('user_id', user.id)
-          .not('materia_id', 'is', null),
-      ]);
-
-      if (favoriteIdsResult.error) {
-        throw favoriteIdsResult.error;
-      }
-
-      const materiaDetails = mapMateriaDetails(materiaDetailsRows);
-      const favoriteIds = Array.from(
-        new Set((favoriteIdsResult.data ?? []).map((item) => item.materia_id).filter(Boolean))
-      ) as string[];
-
-      let recommendedMaterias: DashboardMateriaSummary[] = [];
-      let favoriteMaterias: DashboardMateriaSummary[] = [];
-      let favoriteSuggestions: DashboardMateriaSummary[] = [];
-
-      let carreraMaterias: DashboardMateriaSummary[] | null = null;
-      const carreraNombre = carreraResponse.data?.nombre ?? 'Carrera';
-      const getCarreraMaterias = async (): Promise<DashboardMateriaSummary[]> => {
-        if (carreraMaterias) {
-          return carreraMaterias;
-        }
-        const suggestedMaterias = await fetchMateriasByCarreraCached(carreraId);
-        carreraMaterias = suggestedMaterias.map((materia) => ({
-          id: materia.id,
-          nombre: materia.nombre,
-          carreraId: materia.carrera_id ?? carreraId,
-          carreraNombre,
-        }));
-        return carreraMaterias;
-      };
-
-      if (favoriteIds.length > 0) {
-        favoriteMaterias = await fetchMateriaSummariesByIds(supabase, favoriteIds);
-      } else {
-        favoriteSuggestions = (await getCarreraMaterias()).slice(0, 4);
-      }
-
-      if (state.activeSubjects.length === 0) {
-        recommendedMaterias = (await getCarreraMaterias()).slice(0, 3);
-      }
-
-      let partialInsights: PartialStudyInsights | null = null;
-      let partialInsightMateriaName: string | null = null;
-
-      if (state.lastSubject?.id) {
-        partialInsights = await getPartialStudyInsightsForUser(
-          user.id,
-          state.lastSubject.id,
-          1
-        );
-        partialInsightMateriaName = state.lastSubject.name ?? null;
-      }
-
+    if (!universidadId || !carreraId) {
       return {
-        status: 'ok',
+        status: 'complete-profile',
         state,
         academicProfile,
-        materiaDetails,
-        recommendedMaterias,
-        favoriteMaterias,
-        favoriteSuggestions,
-        partialInsights,
-        partialInsightMateriaName,
-      };
-    } catch (error) {
-      console.error('getDashboardBootstrap failed, falling back to degraded state', error);
-      return {
-        status: 'ok',
-        state: defaultDashboardState,
-        academicProfile: null,
         materiaDetails: {},
         recommendedMaterias: [],
         favoriteMaterias: [],
@@ -446,5 +352,87 @@ export const getDashboardBootstrap = cache(
         partialInsightMateriaName: null,
       };
     }
+
+    const activeSubjectIds = state.activeSubjects.map((subject) => subject.id);
+    const [materiaDetailsRows, favoriteIdsResult] = await Promise.all([
+      fetchMateriaSummariesByIds(supabase, activeSubjectIds),
+      supabase
+        .from('user_favorites')
+        .select('materia_id')
+        .eq('user_id', user.id)
+        .not('materia_id', 'is', null),
+    ]);
+
+    if (favoriteIdsResult.error) {
+      throw favoriteIdsResult.error;
+    }
+
+    const materiaDetails = mapMateriaDetails(materiaDetailsRows);
+    const favoriteIds = Array.from(
+      new Set((favoriteIdsResult.data ?? []).map((item) => item.materia_id).filter(Boolean))
+    ) as string[];
+
+    let recommendedMaterias: DashboardMateriaSummary[] = [];
+    let favoriteMaterias: DashboardMateriaSummary[] = [];
+    let favoriteSuggestions: DashboardMateriaSummary[] = [];
+
+    let carreraMaterias: DashboardMateriaSummary[] | null = null;
+    const carreraNombre = carreraResponse.data?.nombre ?? 'Carrera';
+    const getCarreraMaterias = async (): Promise<DashboardMateriaSummary[]> => {
+      if (carreraMaterias) {
+        return carreraMaterias;
+      }
+      const suggestedMaterias = await fetchMateriasByCarreraCached(carreraId);
+      carreraMaterias = suggestedMaterias.map((materia) => ({
+        id: materia.id,
+        nombre: materia.nombre,
+        carreraId: materia.carrera_id ?? carreraId,
+        carreraNombre,
+      }));
+      return carreraMaterias;
+    };
+
+    if (favoriteIds.length > 0) {
+      favoriteMaterias = await fetchMateriaSummariesByIds(supabase, favoriteIds);
+    } else {
+      favoriteSuggestions = (await getCarreraMaterias()).slice(0, 4);
+    }
+
+    if (state.activeSubjects.length === 0) {
+      recommendedMaterias = (await getCarreraMaterias()).slice(0, 3);
+    }
+
+    let partialInsights: PartialStudyInsights | null = null;
+    let partialInsightMateriaName: string | null = null;
+
+    if (state.lastSubject?.id) {
+      partialInsights = await getPartialStudyInsightsForUser(user.id, state.lastSubject.id, 1);
+      partialInsightMateriaName = state.lastSubject.name ?? null;
+    }
+
+    return {
+      status: 'ok',
+      state,
+      academicProfile,
+      materiaDetails,
+      recommendedMaterias,
+      favoriteMaterias,
+      favoriteSuggestions,
+      partialInsights,
+      partialInsightMateriaName,
+    };
+  } catch (error) {
+    console.error('getDashboardBootstrap failed, falling back to degraded state', error);
+    return {
+      status: 'ok',
+      state: defaultDashboardState,
+      academicProfile: null,
+      materiaDetails: {},
+      recommendedMaterias: [],
+      favoriteMaterias: [],
+      favoriteSuggestions: [],
+      partialInsights: null,
+      partialInsightMateriaName: null,
+    };
   }
-);
+});

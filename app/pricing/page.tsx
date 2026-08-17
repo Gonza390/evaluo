@@ -3,9 +3,11 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
+  Check,
   CheckCircle2,
   Sparkles,
   Target,
+  X,
 } from 'lucide-react';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
@@ -51,6 +53,65 @@ const premiumHighlights = [
   'Más visibilidad sobre errores, progreso y repaso',
 ];
 
+const comparisonFeatures = [
+  {
+    feature: 'Resúmenes por materia',
+    free: true,
+    premium: true,
+    freeNote: '',
+    premiumNote: '',
+  },
+  {
+    feature: 'Pregunteros con práctica',
+    free: true,
+    premium: true,
+    freeNote: '',
+    premiumNote: '',
+  },
+  {
+    feature: 'Simuladores de examen',
+    free: true,
+    premium: true,
+    freeNote: 'Formato básico',
+    premiumNote: 'Modelos más curados y ajustados',
+  },
+  {
+    feature: 'Revisión de errores con IA',
+    free: true,
+    premium: true,
+    freeNote: '1 por semana',
+    premiumNote: 'Sin límite',
+  },
+  {
+    feature: 'Explicaciones paso a paso con IA',
+    free: false,
+    premium: true,
+    freeNote: '',
+    premiumNote: 'En cada respuesta incorrecta',
+  },
+  {
+    feature: 'Simulador de errores personalizado',
+    free: false,
+    premium: true,
+    freeNote: '',
+    premiumNote: 'Enfocado en tus puntos débiles',
+  },
+  {
+    feature: 'Radar de progreso avanzado',
+    free: false,
+    premium: true,
+    freeNote: '',
+    premiumNote: 'Tema por tema con historial',
+  },
+  {
+    feature: 'Prioridad en nuevas funciones',
+    free: false,
+    premium: true,
+    freeNote: '',
+    premiumNote: '',
+  },
+];
+
 export default function PricingPage() {
   return (
     <main className="min-h-screen overflow-x-clip bg-white text-slate-900">
@@ -64,13 +125,13 @@ export default function PricingPage() {
           <div className="grid items-start gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10">
             <div className="animate-surface-reveal max-w-[640px]">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-sm font-semibold ring-1 ring-[#C7D2FE] backdrop-blur">
-                <Sparkles className="h-4 w-4 text-[#6366F1]" />
-                <span className="bg-gradient-to-r from-[#2563EB] to-[#6366F1] bg-clip-text text-transparent">
+                <Sparkles className="h-4 w-4 text-brand-2" />
+                <span className="bg-gradient-to-r from-brand to-brand-2 bg-clip-text text-transparent">
                   Acceso premium en beta
                 </span>
               </div>
 
-              <h1 className="mt-6 text-[2.65rem] font-bold leading-[0.97] tracking-[-0.06em] text-[#0F1B3D] sm:mt-8 sm:text-[3.75rem] lg:text-[4.5rem]">
+              <h1 className="mt-6 text-[2.65rem] font-bold leading-[0.97] tracking-[-0.06em] text-heading sm:mt-8 sm:text-[3.75rem] lg:text-[4.5rem]">
                 Entrá primero a la versión premium de Evaluo.
               </h1>
 
@@ -89,7 +150,7 @@ export default function PricingPage() {
                     destination: '/login?mode=signup&intent=premium',
                     plan_context: 'premium_waitlist',
                   }}
-                  className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.24)] transition hover:translate-y-[-1px] sm:h-14 sm:px-8 sm:text-base"
+                   className="inline-flex h-13 items-center justify-center rounded-2xl bg-gradient-to-r from-brand to-brand-2 px-6 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.24)] transition hover:translate-y-[-1px] sm:h-14 sm:px-8 sm:text-base"
                 >
                   Reservar acceso premium
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -103,7 +164,7 @@ export default function PricingPage() {
                     destination: '/explorar',
                     plan_context: 'premium_waitlist',
                   }}
-                  className="inline-flex h-13 items-center justify-center rounded-2xl border border-[#2563EB]/25 bg-white px-6 text-[15px] font-semibold text-[#2563EB] shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition hover:border-[#2563EB]/45 sm:h-14 sm:px-8 sm:text-base"
+                   className="inline-flex h-13 items-center justify-center rounded-2xl border border-brand/25 bg-white px-6 text-[15px] font-semibold text-brand shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition hover:border-brand/45 sm:h-14 sm:px-8 sm:text-base"
                 >
                   Ver materiales gratis
                 </TrackedLink>
@@ -112,7 +173,7 @@ export default function PricingPage() {
               <div className="mt-8 grid gap-3 text-sm text-slate-500 min-[440px]:grid-cols-3 sm:mt-10">
                 {premiumHighlights.map((item) => (
                   <div key={item} className="surface-card rounded-2xl bg-white/85 px-4 py-4">
-                    <CheckCircle2 className="h-5 w-5 text-[#2563EB]" />
+                    <CheckCircle2 className="h-5 w-5 text-brand" />
                     <p className="mt-3 text-sm leading-6 text-slate-600">{item}</p>
                   </div>
                 ))}
@@ -130,10 +191,10 @@ export default function PricingPage() {
                         key={item.title}
                         className="rounded-[26px] border border-slate-100 bg-slate-50/85 px-4 py-5"
                       >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#2563EB] shadow-sm">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-brand shadow-sm">
                           <Icon className="h-5 w-5" />
                         </div>
-                        <h2 className="mt-4 text-[17px] font-semibold leading-6 text-[#0F1B3D]">
+                        <h2 className="mt-4 text-[17px] font-semibold leading-6 text-heading">
                           {item.title}
                         </h2>
                         <p className="mt-2 text-[14px] leading-7 text-slate-500">
@@ -149,7 +210,7 @@ export default function PricingPage() {
                 <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#5B5FEF]">
                   Lo que buscamos construir
                 </p>
-                <h2 className="mt-3 text-[1.9rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.3rem]">
+                <h2 className="mt-3 text-[1.9rem] font-bold leading-[1.02] tracking-[-0.05em] text-heading sm:text-[2.3rem]">
                   Menos estudiar a ciegas. Más criterio para rendir mejor.
                 </h2>
                 <p className="mt-3 max-w-[520px] text-sm leading-7 text-slate-600 sm:text-[15px]">
@@ -158,6 +219,78 @@ export default function PricingPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* --- TABLA COMPARATIVA --- */}
+          <div className="mt-12 sm:mt-16">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
+                <Target className="h-3.5 w-3.5" />
+                Compará los planes
+              </span>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-heading sm:text-3xl">
+                Gratis vs Premium
+              </h2>
+              <p className="mt-3 text-sm text-slate-500 sm:text-base">
+                Conocé exactamente qué incluye cada plan para que elijas con tranquilidad.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-8 max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_120px_120px] border-b border-slate-200 bg-slate-50 text-sm font-semibold text-slate-600 sm:grid-cols-[1fr_160px_160px]">
+                <div className="px-5 py-4">Característica</div>
+                <div className="px-4 py-4 text-center">Gratis</div>
+                <div className="px-4 py-4 text-center text-indigo-700">Premium</div>
+              </div>
+
+              {/* Rows */}
+              {comparisonFeatures.map((row, idx) => (
+                <div
+                  key={row.feature}
+                  className={`grid grid-cols-[1fr_120px_120px] text-sm sm:grid-cols-[1fr_160px_160px] ${
+                    idx < comparisonFeatures.length - 1 ? 'border-b border-slate-100' : ''
+                  } ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+                >
+                  <div className="flex items-center gap-3 px-5 py-3.5 font-medium text-slate-700">
+                    {row.feature}
+                  </div>
+                  <div className="flex flex-col items-center justify-center px-4 py-3.5 text-center">
+                    {row.free ? (
+                      <Check className="h-4.5 w-4.5 text-emerald-500" />
+                    ) : (
+                      <X className="h-4.5 w-4.5 text-slate-300" />
+                    )}
+                    {row.freeNote && (
+                      <span className="mt-1 text-[11px] leading-4 text-slate-400">{row.freeNote}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center justify-center px-4 py-3.5 text-center">
+                    <Check className="h-4.5 w-4.5 text-indigo-600" />
+                    {row.premiumNote && (
+                      <span className="mt-1 text-[11px] leading-4 text-slate-500">{row.premiumNote}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Badge de precio */}
+            <div className="mx-auto mt-6 flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-6">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold tracking-tight text-heading sm:text-3xl">
+                  ARS $12,990
+                </span>
+                <span className="text-sm text-slate-500">/mes</span>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1.5 text-xs font-bold text-indigo-700 ring-1 ring-indigo-200/50">
+                <Sparkles className="h-3.5 w-3.5" />
+                En preparación
+              </span>
+            </div>
+            <p className="mt-2 text-center text-xs text-slate-400">
+              Plan anual con 20% de descuento disponible al lanzar.
+            </p>
           </div>
 
           <section className="mt-8 sm:mt-10">

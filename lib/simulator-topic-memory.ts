@@ -3,6 +3,7 @@ import type { Database, Json } from '@/types/supabase';
 import { logError } from '@/lib/observability';
 import { requestGeminiJson, requestGroqJson, requestNvidiaJson } from '@/lib/ai/providers';
 import { isolateUntrustedContent, PROMPT_INJECTION_GUARD } from '@/lib/ai/safety';
+import { checkDailyLimit, incrementDailyUsage } from '@/lib/ai/daily-limit';
 
 type AdminClient = SupabaseClient<Database>;
 type AttemptTopicEventInsert = Database['public']['Tables']['simulator_attempt_topic_events']['Insert'];
@@ -360,6 +361,7 @@ async function getOrCreateQuestionTopicLinks(input: {
   defaultMateriaId: string;
   defaultParcial: number;
   answerMap: Map<string, AnsweredQuestion>;
+  userId: string;
 }): Promise<Map<string, TopicLink>> {
   const result = new Map<string, TopicLink>();
   if (input.questions.length === 0) return result;
@@ -449,14 +451,24 @@ async function getOrCreateQuestionTopicLinks(input: {
     evidence: Json;
   }> = [];
 
+  let dailyLimitReached = false;
+
   for (const question of unlinkedQuestions) {
     const answer = input.answerMap.get(question.id);
     if (!answer) continue;
 
     const materiaId = question.materia_id ?? input.defaultMateriaId;
     const parcial = question.parcial ?? input.defaultParcial;
-    const useAi = !answer.wasCorrect;
+    const useAi = !answer.wasCorrect && !dailyLimitReached;
     const hintKey = `${materiaId}:${parcial}`;
+
+    // Check daily AI limit before each classification (skip if already exceeded).
+    if (useAi && input.userId) {
+      const limit = await checkDailyLimit(input.userId);
+      if (!limit.allowed) {
+        dailyLimitReached = true;
+      }
+    }
 
     if (useAi && !hintCache.has(hintKey)) {
       hintCache.set(
@@ -465,15 +477,22 @@ async function getOrCreateQuestionTopicLinks(input: {
       );
     }
 
-    const inferred = useAi
-      ? (await classifyTopicWithAi({
+    const aiResult = useAi
+      ? await classifyTopicWithAi({
           admin: input.admin,
           question,
           materiaId,
           parcial,
           hints: hintCache.get(hintKey),
-        })) ?? inferTopic(question)
-      : inferTopic(question);
+        })
+      : null;
+
+    // Increment daily usage after a successful AI classification.
+    if (aiResult && input.userId) {
+      await incrementDailyUsage(input.userId);
+    }
+
+    const inferred = aiResult ?? inferTopic(question);
 
     classifications.push({
       question,
@@ -745,6 +764,7 @@ export async function recordSimulatorTopicMemory(input: {
     defaultMateriaId: input.materiaId,
     defaultParcial: input.parcial,
     answerMap: uniqueAnswers,
+    userId: input.userId,
   });
 
   const performanceEntries: Array<{

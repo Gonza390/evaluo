@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Bell, CalendarDays, Sparkles, X } from 'lucide-react';
-import { dismissExamReminderAction, getExamReminders } from '@/app/actions';
+import { dismissExamReminderAction, getExamReminders } from '@/lib/actions/calendario';
 import { usePremium } from '@/hooks/usePremium';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { ExamReminderItem } from '@/lib/exam-reminders';

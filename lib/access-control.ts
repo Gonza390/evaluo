@@ -2,19 +2,24 @@ import { cache } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
-import { ADMIN_ROLE, isAdminRole, isAdminUserSession } from '@/lib/roles';
-import type { AppRole } from '@/types/supabase';
+import {
+  ADMIN_ROLE,
+  isAdminRole,
+  isAdminUserSession,
+  parseAppRole,
+  type AppRole,
+} from '@/lib/roles';
 
 export const getCachedProfileRole = cache(async (userId: string): Promise<AppRole | null> => {
   const supabase = await createClientServer();
   const { data } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
-  return data?.role ?? null;
+  return parseAppRole(data?.role);
 });
 
 const getCachedProfileRoleAdmin = cache(async (userId: string): Promise<AppRole | null> => {
   const admin = createAdminClient();
   const { data } = await admin.from('profiles').select('role').eq('id', userId).maybeSingle();
-  return data?.role ?? null;
+  return parseAppRole(data?.role);
 });
 
 export async function resolveUserRole(user: User | null | undefined): Promise<AppRole | null> {

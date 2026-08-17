@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getPremiumStatus } from '@/app/actions';
+import { getPremiumStatus } from '@/lib/actions/premium';
 import { useUser } from '@/hooks/useUser';
 
 // Caché compartida a nivel de módulo: evita un round-trip al servidor por cada

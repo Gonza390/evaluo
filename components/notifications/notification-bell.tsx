@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Bell, X } from 'lucide-react';
-import { dismissExamReminderAction, getExamReminders } from '@/app/actions';
+import { dismissExamReminderAction, getExamReminders } from '@/lib/actions/calendario';
 import { usePremium } from '@/hooks/usePremium';
 import { useUser } from '@/hooks/useUser';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';

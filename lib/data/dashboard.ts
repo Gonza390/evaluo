@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import type { DashboardMateriaState } from '@/types/supabase';
+import type { DashboardMateriaState } from '@/lib/dashboard-state';
 
 export type DashboardMateriaSummary = {
   id: string;
@@ -52,7 +52,7 @@ function mapMateriaSummaries(
     nombre: materia.nombre,
     carreraId: materia.carrera_id,
     carreraNombre: materia.carrera_id
-      ? carrerasMap.get(materia.carrera_id) ?? 'Carrera'
+      ? (carrerasMap.get(materia.carrera_id) ?? 'Carrera')
       : 'Materia general',
   }));
 }
@@ -189,7 +189,9 @@ export async function fetchDashboardFavoriteMateriaIds(userId: string) {
     throw error;
   }
 
-  return Array.from(new Set((data ?? []).map((item) => item.materia_id).filter(Boolean))) as string[];
+  return Array.from(
+    new Set((data ?? []).map((item) => item.materia_id).filter(Boolean))
+  ) as string[];
 }
 
 export function mapDashboardMateriaDetails(

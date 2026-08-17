@@ -1,7 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@custom-variant dark (&:is(.dark *));
-
 :root {
   --background: oklch(0.985 0.002 210);
   --foreground: oklch(0.15 0.01 230);
@@ -13,6 +11,8 @@
   --primary-foreground: oklch(1 0 0);
   --brand: #2563eb;
   --brand-2: #6366f1;
+  --heading: #0F1B3D;
+  --accent-violet: #5B5FEF;
   --secondary: oklch(0.96 0.005 210);
   --secondary-foreground: oklch(0.15 0.01 230);
   --muted: oklch(0.95 0.005 210);
@@ -32,30 +32,6 @@
   --shadow-card: 0 18px 44px -18px oklch(0.15 0.01 230 / 0.1);
   --shadow-panel: 0 24px 60px -22px oklch(0.15 0.01 230 / 0.12);
   --pc-gigante-shadow: var(--shadow-panel);
-}
-
-.dark {
-  --background: oklch(0.22 0.01 230);
-  --foreground: oklch(0.97 0.003 210);
-  --card: oklch(0.26 0.01 230);
-  --card-foreground: oklch(0.97 0.003 210);
-  --popover: oklch(0.26 0.01 230);
-  --popover-foreground: oklch(0.97 0.003 210);
-  --primary: oklch(0.62 0.19 253.9);
-  --primary-foreground: oklch(0.18 0.01 230);
-  --brand: #3b82f6;
-  --brand-2: #818cf8;
-  --secondary: oklch(0.3 0.01 230);
-  --secondary-foreground: oklch(0.97 0.003 210);
-  --muted: oklch(0.31 0.01 230);
-  --muted-foreground: oklch(0.77 0.01 230);
-  --accent: oklch(0.65 0.18 266.3);
-  --accent-foreground: oklch(0.18 0.01 230);
-  --destructive: oklch(0.68 0.2 27.325);
-  --destructive-foreground: oklch(0.18 0.01 230);
-  --border: oklch(0.38 0.01 230);
-  --input: oklch(0.34 0.01 230);
-  --ring: oklch(0.62 0.19 253.9);
 }
 
 @theme inline {
@@ -333,6 +309,12 @@
     transform: translate3d(0, 0, 0) scale(1);
   }
 }
+
+@utility bg-brand { background-color: #2563EB; }
+@utility bg-brand-2 { background-color: #6366F1; }
+@utility text-brand { color: #2563EB; }
+@utility text-brand-2 { color: #6366F1; }
+@utility text-heading { color: #0F1B3D; }
 
 @layer utilities {
   .animate-study-float {

@@ -1,5 +1,6 @@
 import type { User } from '@supabase/supabase-js';
-import type { AppRole } from '@/types/supabase';
+
+export type AppRole = 'admin' | 'student';
 
 export const ADMIN_ROLE: AppRole = 'admin';
 
@@ -10,6 +11,11 @@ function normalizeRole(role: unknown): string | null {
 
   const normalized = role.trim().toLowerCase();
   return normalized.length > 0 ? normalized : null;
+}
+
+export function parseAppRole(role: unknown): AppRole | null {
+  const normalized = normalizeRole(role);
+  return normalized === 'admin' || normalized === 'student' ? normalized : null;
 }
 
 export function isAdminRole(role: AppRole | null | undefined) {

@@ -57,6 +57,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${baseUrl}/landings/parciales`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/landings/resumenes`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
   ];
 
   const client = createPublicClient();
@@ -139,6 +151,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         url: `${baseUrl}/resumenes/${buildSeoEntitySlug(materia.nombre, materia.id)}`,
         lastModified,
         changeFrequency: 'weekly',
+        priority: 0.65,
+      });
+
+      routes.push({
+        url: `${baseUrl}/landings/estudiar/${buildSeoEntitySlug(materia.nombre, materia.id)}`,
+        lastModified,
+        changeFrequency: 'monthly',
         priority: 0.65,
       });
     }

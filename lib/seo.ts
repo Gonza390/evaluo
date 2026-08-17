@@ -62,6 +62,31 @@ export function buildFaqJsonLd(
   };
 }
 
+export function buildCourseJsonLd({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name,
+    description,
+    url: toAbsoluteUrl(url),
+    provider: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: toAbsoluteUrl('/'),
+    },
+    inLanguage: 'es-AR',
+    isAccessibleForFree: true,
+  };
+}
+
 export function buildLearningResourceJsonLd({
   name,
   universityName,

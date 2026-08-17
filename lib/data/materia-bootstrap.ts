@@ -13,7 +13,7 @@ import {
   getSimulatorUsageSummaryByMateria,
   type SimulatorRatingSummary,
   type SimulatorUsageSummary,
-} from '@/app/actions';
+} from '@/lib/actions/simulador';
 import { logError } from '@/lib/observability';
 import { createPublicClient } from '@/lib/supabase-public';
 import { unstable_cache } from 'next/cache';

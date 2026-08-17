@@ -1,6 +1,14 @@
-'use client';
+﻿'use client';
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
@@ -23,17 +31,14 @@ import {
   getDashboardLastAttempts,
   getDashboardState,
   getPartialStudyInsights,
-  hasUpcomingExam,
   saveDashboardState,
   type DashboardLastAttempt,
   type DashboardState,
   type PartialStudyInsights,
-} from '@/app/actions';
+} from '@/lib/actions/dashboard';
+import { hasUpcomingExam } from '@/lib/actions/calendario';
 import { getMateriasByCarrera } from '@/services/api';
-import {
-  readRecentResources,
-  type DashboardRecentResource,
-} from '@/lib/dashboard-client';
+import { readRecentResources, type DashboardRecentResource } from '@/lib/dashboard-client';
 import {
   DEMO_MIGRATION_FLAG_KEY,
   listPersistedSimulatorStates,
@@ -53,7 +58,7 @@ import {
   type DashboardMateriaSummary,
 } from '@/lib/data/dashboard';
 import type { DashboardBootstrapData } from '@/lib/data/dashboard-bootstrap';
-import { getCachedStreakSnapshot } from '@/lib/client-shell-cache';
+import { useShellData } from '@/components/ShellDataProvider';
 import { logError } from '@/lib/observability';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { useToast } from '@/components/ui/use-toast';
@@ -62,10 +67,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import type { DashboardMateriaState } from '@/types/supabase';
+import type { DashboardMateriaState } from '@/lib/dashboard-state';
 import { ExamRemindersPanel } from '@/components/dashboard/exam-reminders-panel';
 import { StudyRecommendationsPanel } from '@/components/dashboard/study-recommendations-panel';
 import { GuidedTour, type GuidedTourStep } from '@/components/ui/guided-tour';
+import { StreakCard } from '@/components/dashboard/StreakCard';
 
 type MateriaSummary = DashboardMateriaSummary;
 type MateriaDetailsMap = DashboardMateriaDetailsMap;
@@ -91,30 +97,6 @@ const DEFAULT_STATE: DashboardState = {
     lastUpdatedAt: null,
   },
 };
-
-function getArgentinaDayKey(dateInput: Date | string) {
-  const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Argentina/Buenos_Aires',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
-
-  const parts = formatter.formatToParts(date);
-  const year = parts.find((part) => part.type === 'year')?.value ?? '0000';
-  const month = parts.find((part) => part.type === 'month')?.value ?? '00';
-  const day = parts.find((part) => part.type === 'day')?.value ?? '00';
-
-  return `${year}-${month}-${day}`;
-}
-
-function shiftDayKey(dayKey: string, offset: number) {
-  const [year, month, day] = dayKey.split('-').map(Number);
-  const shifted = new Date(Date.UTC(year, month - 1, day));
-  shifted.setUTCDate(shifted.getUTCDate() + offset);
-  return shifted.toISOString().slice(0, 10);
-}
 
 function readLocalState(): DashboardState {
   if (typeof window === 'undefined') {
@@ -179,7 +161,11 @@ function normalizeHeroTitle(value: string) {
 
 const DASHBOARD_PANEL_CLASS = 'surface-panel';
 
-export function DashboardContent({ initialBootstrap }: { initialBootstrap?: DashboardBootstrapData }) {
+export function DashboardContent({
+  initialBootstrap,
+}: {
+  initialBootstrap?: DashboardBootstrapData;
+}) {
   const { user, loading: userLoading, getUserName } = useUser();
   const router = useRouter();
   const { toast } = useToast();
@@ -219,14 +205,17 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
   const [partialInsightMateriaName, setPartialInsightMateriaName] = useState<string | null>(
     initialBootstrap?.partialInsightMateriaName ?? null
   );
-  const [simuladorInProgress, setSimuladorInProgress] = useState<SimuladorInProgressSnapshot | null>(null);
+  const [simuladorInProgress, setSimuladorInProgress] =
+    useState<SimuladorInProgressSnapshot | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showDashboardTour, setShowDashboardTour] = useState(false);
   const [dashboardTourStepIndex, setDashboardTourStepIndex] = useState(0);
   const heroTourRef = useRef<HTMLDivElement | null>(null);
   const checklistTourRef = useRef<HTMLDivElement | null>(null);
   const tabsTourRef = useRef<HTMLDivElement | null>(null);
-  const [subjectInsights, setSubjectInsights] = useState<Record<string, PartialStudyInsights | null>>(() => {
+  const [subjectInsights, setSubjectInsights] = useState<
+    Record<string, PartialStudyInsights | null>
+  >(() => {
     const seed: Record<string, PartialStudyInsights | null> = {};
     if (initialBootstrap?.partialInsights) {
       seed[initialBootstrap.partialInsights.materiaId] = initialBootstrap.partialInsights;
@@ -236,7 +225,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
   const [progressLoading, setProgressLoading] = useState(false);
   const [lastAttempts, setLastAttempts] = useState<Record<string, DashboardLastAttempt | null>>({});
   const [hasExamEvent, setHasExamEvent] = useState(false);
-  const [streakDays, setStreakDays] = useState(0);
+  const { streak } = useShellData();
+  const streakDays = streak?.streakDays ?? 0;
 
   useEffect(() => {
     if (!user) return;
@@ -307,8 +297,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     }
 
     try {
-      const cameFromDemo =
-        window.localStorage.getItem(DEMO_MIGRATION_FLAG_KEY) === '1';
+      const cameFromDemo = window.localStorage.getItem(DEMO_MIGRATION_FLAG_KEY) === '1';
 
       if (cameFromDemo) {
         migrateDemoToFullSnapshots(user.id);
@@ -407,12 +396,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
       insightsFetchingRef.current = false;
       setProgressLoading(false);
     }
-  }, [
-    user,
-    userLoading,
-    dashboardState.lastSubject,
-    dashboardState.activeSubjects,
-  ]);
+  }, [user, userLoading, dashboardState.lastSubject, dashboardState.activeSubjects]);
 
   useEffect(() => {
     void refreshSubjectInsights();
@@ -444,31 +428,6 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
       window.removeEventListener('storage', onStorage);
     };
   }, [refreshSubjectInsights]);
-
-  useEffect(() => {
-    if (userLoading || !user) {
-      setStreakDays(0);
-      return;
-    }
-
-    let active = true;
-
-    void getCachedStreakSnapshot(user.id, getArgentinaDayKey, shiftDayKey)
-      .then((snapshot) => {
-        if (active) {
-          setStreakDays(snapshot.streakDays);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setStreakDays(0);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [user, userLoading]);
 
   useEffect(() => {
     let isMounted = true;
@@ -712,9 +671,12 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      void loadAllMaterias(deferredSearchTerm);
-    }, deferredSearchTerm.trim().length > 0 ? 180 : 0);
+    const timeoutId = window.setTimeout(
+      () => {
+        void loadAllMaterias(deferredSearchTerm);
+      },
+      deferredSearchTerm.trim().length > 0 ? 180 : 0
+    );
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -782,10 +744,12 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
   };
 
   const removeMateria = (subjectId: string, subjectName: string) => {
-    const nextActiveSubjects = dashboardState.activeSubjects.filter((subject) => subject.id !== subjectId);
+    const nextActiveSubjects = dashboardState.activeSubjects.filter(
+      (subject) => subject.id !== subjectId
+    );
     const nextLastSubject =
       dashboardState.lastSubject?.id === subjectId
-        ? nextActiveSubjects[0] ?? null
+        ? (nextActiveSubjects[0] ?? null)
         : dashboardState.lastSubject;
 
     persistDashboardState({
@@ -857,7 +821,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     simuladorInProgress?.materiaId ??
     partialInsights?.materiaId ??
     '';
-  const hasAnySubject = dashboardState.activeSubjects.length > 0 || Boolean(dashboardState.lastSubject);
+  const hasAnySubject =
+    dashboardState.activeSubjects.length > 0 || Boolean(dashboardState.lastSubject);
   const isNewUser =
     Boolean(user) &&
     !dashboardLoading &&
@@ -868,7 +833,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     {
       id: 'materia',
       label: 'Elegí tu primera materia',
-      description: 'Agregá una materia de tu carrera para activar resúmenes, pregunteros y simulacros.',
+      description:
+        'Agregá una materia de tu carrera para activar resúmenes, pregunteros y simulacros.',
       done: hasAnySubject,
       locked: false,
       action: () => setShowAddModal(true),
@@ -895,7 +861,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     {
       id: 'calendario',
       label: 'Cargá tu parcial en el calendario',
-      description: 'Con la fecha de tu examen, Evaluo te dice qué practicar cada día antes de rendir.',
+      description:
+        'Con la fecha de tu examen, Evaluo te dice qué practicar cada día antes de rendir.',
       done: hasExamEvent,
       locked: !hasAnySubject,
       action: () => router.push('/calendario'),
@@ -903,8 +870,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     },
   ];
   const onboardingProgress = onboardingMilestones.filter((milestone) => milestone.done).length;
-  const showOnboardingChecklist =
-    Boolean(user) && !dashboardLoading && onboardingProgress < 4;
+  const showOnboardingChecklist = Boolean(user) && !dashboardLoading && onboardingProgress < 4;
   const currentMilestone =
     onboardingMilestones.find((milestone) => !milestone.done) ?? onboardingMilestones[0];
 
@@ -997,9 +963,9 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     ? 'Continuar con el simulador'
     : nextStudyAction.cta;
   const subjectAccentStyles = [
-    'from-blue-500/15 to-cyan-500/10 border-blue-200/70 dark:from-blue-500/20 dark:to-cyan-500/10 dark:border-blue-500/30',
-    'from-indigo-500/15 to-violet-500/10 border-indigo-200/70 dark:from-indigo-500/20 dark:to-violet-500/10 dark:border-indigo-500/30',
-    'from-emerald-500/15 to-teal-500/10 border-emerald-200/70 dark:from-emerald-500/20 dark:to-teal-500/10 dark:border-emerald-500/30',
+    'from-blue-500/15 to-cyan-500/10 border-blue-200/70',
+    'from-indigo-500/15 to-violet-500/10 border-indigo-200/70',
+    'from-emerald-500/15 to-teal-500/10 border-emerald-200/70',
   ];
 
   const progressSubjects = useMemo(() => {
@@ -1050,12 +1016,12 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     : null;
 
   const emptyStateGuide = (
-    <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
-      <BookOpen className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
-      <h3 className="mt-3 text-base font-semibold text-slate-900 dark:text-slate-100">
+    <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center">
+      <BookOpen className="mx-auto h-8 w-8 text-slate-300" />
+      <h3 className="mt-3 text-base font-semibold text-slate-900">
         Todavía no tenés materias recientes
       </h3>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Empezá a estudiar en 3 pasos:</p>
+      <p className="mt-1 text-sm text-slate-500">Empezá a estudiar en 3 pasos:</p>
       <ol className="mx-auto mt-5 max-w-md space-y-2.5 text-left">
         {[
           {
@@ -1065,25 +1031,22 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
           },
           {
             title: 'Practicá con simulacros',
-            description:
-              'Respondé preguntas de práctica para medir tu nivel sin presión.',
+            description: 'Respondé preguntas de práctica para medir tu nivel sin presión.',
           },
           {
             title: 'Rendí con confianza',
-            description:
-              'Completá un parcial cronometrado y seguí tu radar de confianza.',
+            description: 'Completá un parcial cronometrado y seguí tu radar de confianza.',
           },
         ].map((step, index) => (
           <li
             key={step.title}
-            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
           >
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
               {index + 1}
             </span>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              <span className="font-semibold text-slate-900 dark:text-slate-100">{step.title}:</span>{' '}
-              {step.description}
+            <p className="text-sm text-slate-600">
+              <span className="font-semibold text-slate-900">{step.title}:</span> {step.description}
             </p>
           </li>
         ))}
@@ -1095,10 +1058,9 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
         <Button
           size="sm"
           variant="outline"
-          className="rounded-xl border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-xl border-slate-200 bg-white"
           onClick={() => {
-            const sampleMateriaId =
-              recommendedMaterias[0]?.id ?? dashboardState.lastSubject?.id;
+            const sampleMateriaId = recommendedMaterias[0]?.id ?? dashboardState.lastSubject?.id;
             if (sampleMateriaId) {
               router.push(getSimulatorRoute(sampleMateriaId, 1));
             } else {
@@ -1111,31 +1073,29 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
         <Button
           size="sm"
           variant="outline"
-          className="rounded-xl border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+          className="rounded-xl border-slate-200 bg-white"
           onClick={() => router.push('/explorar')}
         >
           Explorar materias
         </Button>
       </div>
       {recommendedMaterias.length > 0 ? (
-        <div className="mx-auto mt-6 max-w-md border-t border-slate-200 pt-4 text-left dark:border-slate-800">
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Empezá con una materia recomendada
-          </p>
+        <div className="mx-auto mt-6 max-w-md border-t border-slate-200 pt-4 text-left">
+          <p className="text-sm font-semibold text-slate-900">Empezá con una materia recomendada</p>
           <div className="mt-2 space-y-2">
             {recommendedMaterias.map((materia) => (
               <div
                 key={materia.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{materia.nombre}</p>
-                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{materia.carreraNombre}</p>
+                  <p className="truncate text-sm font-medium text-slate-800">{materia.nombre}</p>
+                  <p className="truncate text-xs text-slate-500">{materia.carreraNombre}</p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="shrink-0 rounded-xl border-slate-200 bg-white px-3 dark:border-slate-800 dark:bg-slate-900"
+                  className="shrink-0 rounded-xl border-slate-200 bg-white px-3"
                   onClick={() => {
                     addMateria(materia);
                     router.push(getMateriaRoute(materia.id));
@@ -1153,26 +1113,29 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
   if (dashboardLoading && recentSubjects.length === 0) {
     return (
-      <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans dark:bg-slate-950">
+      <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans">
         <div className="w-full p-2 md:p-3">
           <div className="mx-auto max-w-6xl">
             <div className={`${DASHBOARD_PANEL_CLASS} mb-4 px-5 py-5`}>
-              <div className="h-7 w-56 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-              <div className="mt-3 h-4 w-80 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-              <div className="mt-5 h-10 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />
+              <div className="h-7 w-56 animate-pulse rounded-lg bg-slate-100" />
+              <div className="mt-3 h-4 w-80 animate-pulse rounded-lg bg-slate-100" />
+              <div className="mt-5 h-10 animate-pulse rounded-xl bg-slate-100" />
             </div>
             <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="surface-card h-28 animate-pulse rounded-[var(--radius-card)] bg-white/90 dark:bg-slate-900/90" />
+                <div
+                  key={index}
+                  className="surface-card h-28 animate-pulse rounded-[var(--radius-card)] bg-white/90"
+                />
               ))}
             </div>
             <div className="mb-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="surface-card h-80 animate-pulse rounded-[var(--radius-card)] bg-white/90 dark:bg-slate-900/90" />
-              <div className="surface-card h-80 animate-pulse rounded-[var(--radius-card)] bg-white/90 dark:bg-slate-900/90" />
+              <div className="surface-card h-80 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+              <div className="surface-card h-80 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
             </div>
             <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-              <div className="surface-card h-72 animate-pulse rounded-[var(--radius-card)] bg-white/90 dark:bg-slate-900/90" />
-              <div className="surface-card h-72 animate-pulse rounded-[var(--radius-card)] bg-white/90 dark:bg-slate-900/90" />
+              <div className="surface-card h-72 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
+              <div className="surface-card h-72 animate-pulse rounded-[var(--radius-card)] bg-white/90" />
             </div>
           </div>
         </div>
@@ -1181,58 +1144,68 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
   }
 
   return (
-    <div className="animate-page-enter flex-1 overflow-x-hidden overflow-y-auto bg-[#f7f9fc] font-sans dark:bg-slate-950">
+    <div className="animate-page-enter flex-1 overflow-x-hidden overflow-y-auto bg-[#f7f9fc] font-sans">
       <div className="w-full px-2.5 py-2 sm:p-3">
         <div className="mx-auto max-w-6xl">
           <div className="animate-study-reveal mb-5 grid gap-4 px-1 py-1 sm:px-0 sm:py-0 xl:grid-cols-[1fr_minmax(320px,460px)] xl:items-start">
             <div className="min-w-0">
-              <h1 className="text-[1.82rem] font-bold tracking-[-0.06em] text-[#0F1B3D] sm:text-[2rem] dark:text-slate-100">
+              <h1 className="text-heading text-[1.82rem] font-bold tracking-[-0.06em] sm:text-[2rem]">
                 {`\u00A1Hola, ${getUserName()}!`}
-                <span className="ml-2 inline-block" aria-hidden="true">{'\uD83D\uDC4B'}</span>
+                <span className="ml-2 inline-block" aria-hidden="true">
+                  {'\uD83D\uDC4B'}
+                </span>
               </h1>
               {academicProfile?.carreraNombre ? (
-                <p className="mt-1 text-sm font-medium text-slate-600 dark:text-slate-400 sm:text-[15px]">
+                <p className="mt-1 text-sm font-medium text-slate-600 sm:text-[15px]">
                   {academicProfile.universidadNombre
                     ? `${academicProfile.carreraNombre} · ${academicProfile.universidadNombre}`
                     : academicProfile.carreraNombre}
                 </p>
               ) : null}
-              <p className="mt-1 text-base font-medium text-slate-500 dark:text-slate-400 sm:text-[17px]">
+              <p className="mt-1 text-base font-medium text-slate-500 sm:text-[17px]">
                 {'\u00BFQu\u00E9 vas a estudiar hoy?'}
               </p>
             </div>
 
             {isSaving ? (
               <div className="flex w-full items-start justify-end">
-                <span className="pl-1 text-xs text-slate-500 dark:text-slate-400">Sincronizando cambios...</span>
+                <span className="pl-1 text-xs text-slate-500">Sincronizando cambios...</span>
               </div>
             ) : null}
           </div>
           {dashboardError ? (
-            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               {dashboardError}
             </div>
           ) : null}
 
-          <div ref={heroTourRef} data-tour-target-hero className="animate-study-reveal mb-5 overflow-hidden rounded-[30px] bg-[linear-gradient(135deg,#2563EB_0%,#4F46E5_45%,#6366F1_100%)] px-4.5 py-4 text-white shadow-[0_22px_50px_rgba(37,99,235,0.22)] sm:px-6 sm:py-4">
+          <div
+            ref={heroTourRef}
+            data-tour-target-hero
+            className="animate-study-reveal mb-5 overflow-hidden rounded-[30px] bg-[linear-gradient(135deg,var(--brand)_0%,#4F46E5_45%,var(--brand-2)_100%)] px-4.5 py-4 text-white shadow-[0_22px_50px_rgba(37,99,235,0.22)] sm:px-6 sm:py-4"
+          >
             <div className="mx-auto grid max-w-[1000px] gap-5 xl:grid-cols-[1.18fr_0.82fr] xl:items-center">
-              <div className={isNewUser ? 'min-w-0' : 'grid gap-4 lg:grid-cols-[0.52fr_0.95fr] lg:items-center'}>
+              <div
+                className={
+                  isNewUser ? 'min-w-0' : 'grid gap-4 lg:grid-cols-[0.52fr_0.95fr] lg:items-center'
+                }
+              >
                 {isNewUser ? (
-                  <div className="min-w-0 max-w-[620px]">
-                    <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-white/85 dark:text-white">
+                  <div className="max-w-[620px] min-w-0">
+                    <p className="text-[12px] font-bold tracking-[0.14em] text-white/85 uppercase">
                       Primeros pasos
                     </p>
-                    <h2 className="mt-2 text-[1.5rem] font-bold leading-[1.08] tracking-[-0.05em] text-white sm:text-[1.85rem]">
+                    <h2 className="mt-2 text-[1.5rem] leading-[1.08] font-bold tracking-[-0.05em] text-white sm:text-[1.85rem]">
                       Armemos tu espacio de estudio
                     </h2>
-                    <p className="mt-3 max-w-[500px] text-[0.95rem] font-medium leading-6 text-white/85 dark:text-white">
+                    <p className="mt-3 max-w-[500px] text-[0.95rem] leading-6 font-medium text-white/85">
                       Elegí tu primera materia y activá resúmenes, pregunteros y simulacros de tu
                       cátedra. Te acompañamos con 3 pasos para que arranques desde hoy.
                     </p>
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <Button
                         onClick={() => setShowAddModal(true)}
-                        className="h-12 w-full rounded-xl bg-white px-6 text-[13px] font-semibold text-[#2563EB] shadow-[0_12px_24px_rgba(17,24,39,0.16)] hover:bg-white/95 sm:w-auto"
+                        className="text-brand h-12 w-full rounded-xl bg-white px-6 text-[13px] font-semibold shadow-[0_12px_24px_rgba(17,24,39,0.16)] hover:bg-white/95 sm:w-auto"
                       >
                         Elegir mi primera materia
                       </Button>
@@ -1247,90 +1220,105 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   </div>
                 ) : (
                   <>
-                <div className="min-w-0 max-w-[520px]">
-                  <h2 className="max-w-full text-[1.48rem] font-bold leading-[1.06] tracking-[-0.05em] text-white sm:max-w-[230px] sm:text-[1.62rem]">
-                    {hasStartedPracticing
-                      ? 'Segu\u00ED as\u00ED, vas por muy buen camino'
-                      : 'Arranc\u00E1 a practicar'}
-                  </h2>
-                  <p className="mt-3 max-w-full text-[0.9rem] font-medium leading-6 text-white/88 dark:text-white sm:max-w-[230px]">
-                    {hasStartedPracticing
-                      ? 'Cada minuto que estudi\u00E1s, te acerca a tu pr\u00F3xima meta.'
-                      : 'Elegiste tu materia. Respond\u00E9 tus primeras preguntas para activar tu progreso.'}
-                  </p>
-                  <Button
-                    onClick={heroPrimaryAction}
-                    className="mt-4 h-10 w-full rounded-xl bg-white px-4.5 text-[12.5px] font-semibold text-[#2563EB] shadow-[0_12px_24px_rgba(17,24,39,0.14)] hover:bg-white/95 sm:h-9 sm:w-auto"
-                  >
-                    {heroPrimaryLabel}
-                  </Button>
-                </div>
-                <div className="min-w-0 pl-0 sm:pl-4 lg:pl-6">
-                  <div className="flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center">
-                    <div className="relative flex h-[88px] w-[88px] shrink-0 items-center justify-center">
-                      <div
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                          background: `conic-gradient(#FFFFFF 0deg ${heroCoverage * 3.6}deg, rgba(255,255,255,0.2) ${heroCoverage * 3.6}deg 360deg)`,
-                        }}
-                      />
-                      <div className="relative flex h-[76px] w-[76px] items-center justify-center rounded-full bg-[#2563EB]">
-                        <p className="text-[24px] font-bold leading-none text-white">{heroCoverage}%</p>
-                      </div>
+                    <div className="max-w-[520px] min-w-0">
+                      <h2 className="max-w-full text-[1.48rem] leading-[1.06] font-bold tracking-[-0.05em] text-white sm:max-w-[230px] sm:text-[1.62rem]">
+                        {hasStartedPracticing
+                          ? 'Segu\u00ED as\u00ED, vas por muy buen camino'
+                          : 'Arranc\u00E1 a practicar'}
+                      </h2>
+                      <p className="mt-3 max-w-full text-[0.9rem] leading-6 font-medium text-white/88 sm:max-w-[230px]">
+                        {hasStartedPracticing
+                          ? 'Cada minuto que estudi\u00E1s, te acerca a tu pr\u00F3xima meta.'
+                          : 'Elegiste tu materia. Respond\u00E9 tus primeras preguntas para activar tu progreso.'}
+                      </p>
+                      <Button
+                        onClick={heroPrimaryAction}
+                        className="text-brand mt-4 h-10 w-full rounded-xl bg-white px-4.5 text-[12.5px] font-semibold shadow-[0_12px_24px_rgba(17,24,39,0.14)] hover:bg-white/95 sm:h-9 sm:w-auto"
+                      >
+                        {heroPrimaryLabel}
+                      </Button>
                     </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="max-w-[300px] text-[12px] font-semibold uppercase leading-5 tracking-[0.01em] text-white/90 sm:max-w-[330px]">{heroSubjectName}</p>
-                      <div className="mt-2 rounded-full bg-white/10 p-[3px] shadow-inner shadow-black/10">
-                        <div className="h-[9px] overflow-hidden rounded-full bg-white/15">
+                    <div className="min-w-0 pl-0 sm:pl-4 lg:pl-6">
+                      <div className="flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center">
+                        <div className="relative flex h-[88px] w-[88px] shrink-0 items-center justify-center">
                           <div
-                            className="h-full rounded-full bg-[linear-gradient(90deg,#FFFFFF_0%,#D7DEFF_50%,#93C5FD_100%)] transition-all"
-                            style={{ width: `${heroCoverage}%` }}
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              background: `conic-gradient(#FFFFFF 0deg ${heroCoverage * 3.6}deg, rgba(255,255,255,0.2) ${heroCoverage * 3.6}deg 360deg)`,
+                            }}
                           />
+                          <div className="bg-brand relative flex h-[76px] w-[76px] items-center justify-center rounded-full">
+                            <p className="text-[24px] leading-none font-bold text-white">
+                              {heroCoverage}%
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="max-w-[300px] text-[12px] leading-5 font-semibold tracking-[0.01em] text-white/90 uppercase sm:max-w-[330px]">
+                            {heroSubjectName}
+                          </p>
+                          <div className="mt-2 rounded-full bg-white/10 p-[3px] shadow-inner shadow-black/10">
+                            <div className="h-[9px] overflow-hidden rounded-full bg-white/15">
+                              <div
+                                className="h-full rounded-full bg-[linear-gradient(90deg,#FFFFFF_0%,#D7DEFF_50%,#93C5FD_100%)] transition-all"
+                                style={{ width: `${heroCoverage}%` }}
+                              />
+                            </div>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-5 text-white/88">
+                            <span>
+                              {heroCoverage > 0
+                                ? '\u00A1Vas muy bien!'
+                                : 'Arranc\u00E1 practicando para activar tu progreso'}
+                            </span>
+                            {partialInsights ? (
+                              <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[12px] font-semibold tracking-[0.08em] text-white/88 uppercase">
+                                Parcial {partialInsights.parcial}
+                              </span>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-5 text-white/88 dark:text-white">
-                        <span>{heroCoverage > 0 ? '\u00A1Vas muy bien!' : 'Arranc\u00E1 practicando para activar tu progreso'}</span>
+
+                      <div
+                        className={`mt-3.5 grid max-w-[360px] gap-2 min-[480px]:max-w-[430px] sm:gap-2 ${partialInsights ? 'grid-cols-3' : 'grid-cols-2'}`}
+                      >
+                        <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
+                          <p className="text-[15px] font-bold text-white sm:text-[17px]">
+                            {partialInsights?.preguntasRespondidasParcial?.toLocaleString(
+                              'es-AR'
+                            ) ?? 0}
+                          </p>
+                          <p className="mt-0.5 text-[12px] leading-4 text-white/85 sm:mt-1 sm:text-[12px] sm:leading-4">
+                            Preguntas practicadas
+                          </p>
+                        </div>
+                        <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
+                          <p className="text-[15px] font-bold text-white sm:text-[17px]">
+                            {partialInsights?.preguntasAcertadasParcial?.toLocaleString('es-AR') ??
+                              0}
+                          </p>
+                          <p className="mt-0.5 text-[12px] leading-4 text-white/85 sm:mt-1 sm:text-[12px] sm:leading-4">
+                            Preguntas acertadas
+                          </p>
+                        </div>
                         {partialInsights ? (
-                          <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/88 dark:text-white">
-                            Parcial {partialInsights.parcial}
-                          </span>
+                          <div className="rounded-[18px] border border-emerald-300/40 bg-emerald-400/15 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
+                            <p className="text-[15px] font-bold text-white sm:text-[17px]">
+                              {partialInsights.probabilidadAprobar}%
+                            </p>
+                            <p className="mt-0.5 text-[12px] leading-4 text-white/88 sm:mt-1 sm:text-[12px] sm:leading-4">
+                              Probabilidad de aprobar
+                            </p>
+                          </div>
                         ) : null}
                       </div>
-                    </div>
-                  </div>
 
-                  <div className={`mt-3.5 grid max-w-[360px] gap-2 min-[480px]:max-w-[430px] sm:gap-2 ${partialInsights ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                    <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
-                      <p className="text-[15px] font-bold text-white sm:text-[17px]">
-                        {partialInsights?.preguntasRespondidasParcial?.toLocaleString('es-AR') ?? 0}
-                      </p>
-                      <p className="mt-0.5 text-[12px] leading-4 text-white/85 dark:text-white sm:mt-1 sm:text-[12px] sm:leading-4">
-                        Preguntas practicadas
+                      <p className="mt-3.5 max-w-[430px] text-[12px] leading-5 text-white/85">
+                        {heroProgressLabel}
                       </p>
                     </div>
-                    <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
-                      <p className="text-[15px] font-bold text-white sm:text-[17px]">
-                        {partialInsights?.preguntasAcertadasParcial?.toLocaleString('es-AR') ?? 0}
-                      </p>
-                      <p className="mt-0.5 text-[12px] leading-4 text-white/85 dark:text-white sm:mt-1 sm:text-[12px] sm:leading-4">
-                        Preguntas acertadas
-                      </p>
-                    </div>
-                    {partialInsights ? (
-                      <div className="rounded-[18px] border border-emerald-300/40 bg-emerald-400/15 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
-                        <p className="text-[15px] font-bold text-white sm:text-[17px]">
-                          {partialInsights.probabilidadAprobar}%
-                        </p>
-                        <p className="mt-0.5 text-[12px] leading-4 text-white/88 dark:text-white sm:mt-1 sm:text-[12px] sm:leading-4">
-                          Probabilidad de aprobar
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <p className="mt-3.5 max-w-[430px] text-[12px] leading-5 text-white/85 dark:text-white">{heroProgressLabel}</p>
-                </div>
                   </>
                 )}
               </div>
@@ -1352,28 +1340,34 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
           <div className="animate-study-reveal mb-5 flex items-start justify-between gap-4">
             {showOnboardingChecklist ? (
-              <Card ref={checklistTourRef} data-tour-target-checklist className="ml-auto w-full max-w-[400px] rounded-2xl border-slate-200 bg-white/90 p-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
+              <Card
+                ref={checklistTourRef}
+                data-tour-target-checklist
+                className="ml-auto w-full max-w-[400px] rounded-2xl border-slate-200 bg-white/90 p-4 backdrop-blur"
+              >
                 <div className="flex items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <h2 className="truncate text-sm font-bold text-slate-950 dark:text-slate-100">
+                      <h2 className="truncate text-sm font-bold text-slate-950">
                         Completá tu primer recorrido
                       </h2>
                       <span
                         role="status"
                         aria-live="polite"
-                        className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[12px] font-bold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+                        className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[12px] font-bold text-blue-700"
                       >
                         Paso {onboardingProgress + 1}/{onboardingMilestones.length}
                       </span>
                     </div>
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full bg-[linear-gradient(90deg,#2563EB,#6366F1)] transition-all duration-500"
-                        style={{ width: `${(onboardingProgress / onboardingMilestones.length) * 100}%` }}
+                        className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand),var(--brand-2))] transition-all duration-500"
+                        style={{
+                          width: `${(onboardingProgress / onboardingMilestones.length) * 100}%`,
+                        }}
                       />
                     </div>
-                    <p className="mt-1.5 truncate text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <p className="mt-1.5 truncate text-xs font-semibold text-slate-700">
                       {currentMilestone.label}
                     </p>
                   </div>
@@ -1386,7 +1380,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-                <p className="mt-2 truncate text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-2 truncate text-xs text-slate-500">
                   {currentMilestone.description}
                 </p>
               </Card>
@@ -1395,16 +1389,16 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
           {resumeSimulator ? (
             <div className="animate-study-reveal mb-5">
-              <div className="flex flex-col gap-3 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-white to-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-indigo-500/25 dark:from-indigo-500/10 dark:via-slate-900 dark:to-slate-900">
+              <div className="flex flex-col gap-3 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-white to-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
                     <PlayCircle className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Retomá donde quedaste</p>
-                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                      {resumeSimulator.subjectName ?? 'Simulador'} · Parcial {resumeSimulator.parcial} ·
-                      Pregunta {resumeSimulator.questionLabel}
+                    <p className="text-sm font-semibold text-slate-900">Retomá donde quedaste</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {resumeSimulator.subjectName ?? 'Simulador'} · Parcial{' '}
+                      {resumeSimulator.parcial} · Pregunta {resumeSimulator.questionLabel}
                     </p>
                   </div>
                 </div>
@@ -1420,24 +1414,28 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
             </div>
           ) : null}
 
+          <div className="animate-study-reveal mb-5">
+            <StreakCard />
+          </div>
+
           <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
             <Card
               id="materias-favoritas"
-              className="surface-card rounded-[var(--radius-card)] bg-white/90 backdrop-blur dark:bg-slate-900/90"
+              className="surface-card rounded-[var(--radius-card)] bg-white/90 backdrop-blur"
             >
               <CardHeader className="flex flex-col gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                 <div>
-                  <CardTitle className="text-xl font-semibold text-slate-950 dark:text-slate-100">
+                  <CardTitle className="text-xl font-semibold text-slate-950">
                     Tu espacio de estudio
                   </CardTitle>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-xs text-slate-500">
                     Recientes, favoritas y últimos recursos en un solo lugar.
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 text-xs shadow-sm sm:h-9 sm:w-auto dark:border-slate-800 dark:bg-slate-900"
+                  className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 text-xs shadow-sm sm:h-9 sm:w-auto"
                   onClick={() => setShowAddModal(true)}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -1459,7 +1457,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                         {Array.from({ length: 4 }).map((_, index) => (
                           <div
                             key={index}
-                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50"
+                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
                           />
                         ))}
                       </div>
@@ -1470,41 +1468,44 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                           const lastAttempt = lastAttempts[subject.id] ?? null;
                           const lastAttemptNota =
                             lastAttempt && lastAttempt.totalQuestions > 0
-                              ? Math.round((lastAttempt.correctAnswers / lastAttempt.totalQuestions) * 100) / 10
+                              ? Math.round(
+                                  (lastAttempt.correctAnswers / lastAttempt.totalQuestions) * 100
+                                ) / 10
                               : null;
-                          const lastAttemptAprobado = lastAttemptNota !== null && lastAttemptNota >= 7;
+                          const lastAttemptAprobado =
+                            lastAttemptNota !== null && lastAttemptNota >= 7;
                           const hasErrores =
                             (insight?.preguntasRespondidasParcial ?? 0) >
                             (insight?.preguntasAcertadasParcial ?? 0);
                           return (
                             <div
                               key={subject.id}
-                              className="flex flex-col rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50"
+                              className="flex flex-col rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm"
                             >
                               {insight ? (
                                 <>
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                      <h4 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                      <h4 className="truncate text-sm font-semibold text-slate-900">
                                         {subject.name}
                                       </h4>
-                                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                      <p className="mt-0.5 text-xs text-slate-500">
                                         Parcial {insight.parcial}
                                       </p>
                                     </div>
                                     <span
                                       className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-semibold ${
                                         insight.probabilidadAprobar >= 70
-                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300'
+                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                                           : insight.probabilidadAprobar >= 40
-                                            ? 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300'
-                                            : 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300'
+                                            ? 'border-amber-200 bg-amber-50 text-amber-700'
+                                            : 'border-rose-200 bg-rose-50 text-rose-700'
                                       }`}
                                     >
                                       {insight.probabilidadAprobar}% de aprobar
                                     </span>
                                   </div>
-                                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                                     <div
                                       className={`h-full rounded-full ${
                                         insight.coberturaPorcentaje >= 70
@@ -1516,12 +1517,12 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                       style={{ width: `${insight.coberturaPorcentaje}%` }}
                                     />
                                   </div>
-                                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                                  <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
                                     <span>
                                       {insight.preguntasRespondidasParcial} de{' '}
                                       {insight.totalPreguntasParcial} preguntas
                                     </span>
-                                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                    <span className="font-semibold text-slate-700">
                                       {insight.coberturaPorcentaje}% cubierto
                                     </span>
                                   </div>
@@ -1529,8 +1530,8 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                     <div
                                       className={`mt-3 flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs ${
                                         lastAttemptAprobado
-                                          ? 'border-emerald-200 bg-emerald-50/60 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300'
-                                          : 'border-rose-200 bg-rose-50/60 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300'
+                                          ? 'border-emerald-200 bg-emerald-50/60 text-emerald-700'
+                                          : 'border-rose-200 bg-rose-50/60 text-rose-700'
                                       }`}
                                     >
                                       <span>Último simulacro</span>
@@ -1541,45 +1542,51 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                     </div>
                                   ) : null}
                                   {lastAttempt?.previousAttempt &&
-                                  lastAttempt.previousAttempt.totalQuestions > 0 ? (() => {
-                                    const currentScore =
-                                      lastAttempt.totalQuestions > 0
-                                        ? (lastAttempt.correctAnswers / lastAttempt.totalQuestions) * 100
-                                        : 0;
-                                    const previousScore =
-                                      (lastAttempt.previousAttempt.correctAnswers /
-                                        lastAttempt.previousAttempt.totalQuestions) *
-                                      100;
-                                    const diff = currentScore - previousScore;
-                                    const improved = diff > 0;
-                                    const unchanged = Math.abs(diff) < 1;
-                                    return (
-                                      <div
-                                        className={`mt-1.5 flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs ${
-                                          improved
-                                            ? 'bg-emerald-50/60 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
-                                            : unchanged
-                                              ? 'bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-300'
-                                              : 'bg-rose-50/60 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300'
-                                        }`}
-                                      >
-                                        <span>Vs. tu práctica anterior</span>
-                                        <span className="font-semibold">
-                                          {unchanged
-                                            ? 'Sin cambios'
-                                            : `${improved ? '+' : ''}${diff.toFixed(0)}% ${
-                                                improved ? 'mejor' : 'menos'
-                                              }`}
-                                        </span>
-                                      </div>
-                                    );
-                                  })() : null}
+                                  lastAttempt.previousAttempt.totalQuestions > 0
+                                    ? (() => {
+                                        const currentScore =
+                                          lastAttempt.totalQuestions > 0
+                                            ? (lastAttempt.correctAnswers /
+                                                lastAttempt.totalQuestions) *
+                                              100
+                                            : 0;
+                                        const previousScore =
+                                          (lastAttempt.previousAttempt.correctAnswers /
+                                            lastAttempt.previousAttempt.totalQuestions) *
+                                          100;
+                                        const diff = currentScore - previousScore;
+                                        const improved = diff > 0;
+                                        const unchanged = Math.abs(diff) < 1;
+                                        return (
+                                          <div
+                                            className={`mt-1.5 flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs ${
+                                              improved
+                                                ? 'bg-emerald-50/60 text-emerald-700'
+                                                : unchanged
+                                                  ? 'bg-slate-50 text-slate-600'
+                                                  : 'bg-rose-50/60 text-rose-700'
+                                            }`}
+                                          >
+                                            <span>Vs. tu práctica anterior</span>
+                                            <span className="font-semibold">
+                                              {unchanged
+                                                ? 'Sin cambios'
+                                                : `${improved ? '+' : ''}${diff.toFixed(0)}% ${
+                                                    improved ? 'mejor' : 'menos'
+                                                  }`}
+                                            </span>
+                                          </div>
+                                        );
+                                      })()
+                                    : null}
                                   <div className="mt-auto flex flex-col gap-2 pt-4">
                                     <Button
                                       size="sm"
                                       className="w-full rounded-xl"
                                       onClick={() =>
-                                        router.push(getSimulatorRoute(insight.materiaId, insight.parcial))
+                                        router.push(
+                                          getSimulatorRoute(insight.materiaId, insight.parcial)
+                                        )
                                       }
                                     >
                                       Seguir practicando
@@ -1589,7 +1596,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="w-full rounded-xl border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                                        className="w-full rounded-xl border-slate-200 bg-white"
                                         onClick={() =>
                                           router.push(
                                             `/simulador/errores/${insight.materiaId}?parcial=${insight.parcial}`
@@ -1605,10 +1612,10 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                               ) : (
                                 <>
                                   <div className="min-w-0">
-                                    <h4 className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                    <h4 className="truncate text-sm font-semibold text-slate-900">
                                       {subject.name}
                                     </h4>
-                                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                    <p className="mt-0.5 text-xs text-slate-500">
                                       Todavía no practicaste preguntas de esta materia.
                                     </p>
                                   </div>
@@ -1616,7 +1623,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="w-full rounded-xl border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
+                                      className="w-full rounded-xl border-slate-200 bg-white"
                                       onClick={() => router.push(getSimulatorRoute(subject.id, 1))}
                                     >
                                       Empezar a practicar
@@ -1640,7 +1647,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                         {Array.from({ length: 3 }).map((_, index) => (
                           <div
                             key={index}
-                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50"
+                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
                           />
                         ))}
                       </div>
@@ -1662,7 +1669,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                             className={`animate-study-reveal flex h-full min-h-[176px] cursor-pointer flex-col rounded-2xl border bg-gradient-to-br p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[188px] ${index === 0 ? 'animate-study-float' : ''} ${subjectAccentStyles[index % subjectAccentStyles.length]}`}
                           >
                             <div className="flex items-start justify-between gap-3">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 text-slate-700 shadow-sm dark:bg-slate-800/80 dark:text-slate-200">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/80 text-slate-700 shadow-sm">
                                 <GraduationCap className="h-4 w-4" />
                               </div>
                               <button
@@ -1671,19 +1678,19 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                   event.stopPropagation();
                                   removeMateria(subject.id, subject.name);
                                 }}
-                                className="rounded-lg p-2 text-slate-500 dark:text-slate-400 transition hover:bg-white/70 hover:text-slate-700 dark:hover:bg-slate-800/70 dark:hover:text-slate-200"
+                                className="rounded-lg p-2 text-slate-500 transition hover:bg-white/70 hover:text-slate-700"
                                 aria-label={`Eliminar ${subject.name}`}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
-                            <h3 className="mt-4 line-clamp-2 text-[1.05rem] font-semibold text-slate-950 dark:text-slate-100 sm:text-lg">
+                            <h3 className="mt-4 line-clamp-2 text-[1.05rem] font-semibold text-slate-950 sm:text-lg">
                               {subject.name}
                             </h3>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            <p className="mt-1 text-xs text-slate-500">
                               {materiaDetails[subject.id]?.careerName ?? 'Carrera'}
                             </p>
-                            <div className="mt-auto pt-5 inline-flex items-center gap-1 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                            <div className="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-semibold text-slate-700">
                               Abrir materia
                               <ArrowUpRight className="h-4 w-4" />
                             </div>
@@ -1701,7 +1708,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                         {Array.from({ length: 3 }).map((_, index) => (
                           <div
                             key={index}
-                            className="h-16 animate-pulse rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/50"
+                            className="h-16 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
                           />
                         ))}
                       </div>
@@ -1712,27 +1719,33 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                             key={materia.id}
                             type="button"
                             onClick={() => router.push(getMateriaRoute(materia.id))}
-                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-rose-50/30 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 dark:border-slate-800 dark:from-slate-900 dark:to-rose-950/30 dark:hover:border-slate-700"
+                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-rose-50/30 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300"
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
                               <Heart className="h-4 w-4 fill-current" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{materia.nombre}</p>
-                              <p className="truncate text-xs text-slate-500 dark:text-slate-400">{materia.carreraNombre}</p>
+                              <p className="truncate text-sm font-semibold text-slate-900">
+                                {materia.nombre}
+                              </p>
+                              <p className="truncate text-xs text-slate-500">
+                                {materia.carreraNombre}
+                              </p>
                             </div>
                             <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400" />
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
-                        <Heart className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
-                        <h3 className="mt-3 text-base font-semibold text-slate-900 dark:text-slate-100">
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center">
+                        <Heart className="mx-auto h-8 w-8 text-slate-300" />
+                        <h3 className="mt-3 text-base font-semibold text-slate-900">
                           {'A\u00FAn no ten\u00E9s materias favoritas'}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                          {'Te sugerimos estas materias seg\u00FAn la carrera que m\u00E1s us\u00E1s.'}
+                        <p className="mt-1 text-sm text-slate-500">
+                          {
+                            'Te sugerimos estas materias seg\u00FAn la carrera que m\u00E1s us\u00E1s.'
+                          }
                         </p>
                         {favoriteSuggestions.length > 0 ? (
                           <div className="mt-5 grid gap-2">
@@ -1741,9 +1754,11 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                                 key={materia.id}
                                 type="button"
                                 onClick={() => router.push(getMateriaRoute(materia.id))}
-                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
                               >
-                                <span className="truncate font-medium text-slate-800 dark:text-slate-200">{materia.nombre}</span>
+                                <span className="truncate font-medium text-slate-800">
+                                  {materia.nombre}
+                                </span>
                                 <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400" />
                               </button>
                             ))}
@@ -1762,28 +1777,30 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                             href={resource.href ?? getDashboardMateriaRoute(resource.subjectId)}
                             target={resource.href ? '_blank' : undefined}
                             rel={resource.href ? 'noreferrer' : undefined}
-                            className="animate-study-reveal flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50 dark:hover:border-slate-700"
+                            className="animate-study-reveal flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300"
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
                               <FileText className="h-4 w-4" />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-slate-950 dark:text-slate-100">
+                              <p className="text-sm font-semibold text-slate-950">
                                 {getResourceTypeLabel(resource.type)}
                               </p>
-                              <p className="truncate text-sm text-slate-500 dark:text-slate-400">{resource.subjectName}</p>
+                              <p className="truncate text-sm text-slate-500">
+                                {resource.subjectName}
+                              </p>
                             </div>
                             <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400" />
                           </a>
                         ))}
                       </div>
                     ) : (
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center dark:border-slate-800 dark:from-slate-900 dark:to-slate-800/50">
-                        <FileText className="mx-auto h-8 w-8 text-slate-300 dark:text-slate-600" />
-                        <h3 className="mt-3 text-base font-semibold text-slate-900 dark:text-slate-100">
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 text-center">
+                        <FileText className="mx-auto h-8 w-8 text-slate-300" />
+                        <h3 className="mt-3 text-base font-semibold text-slate-900">
                           Aún no abriste archivos
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        <p className="mt-1 text-sm text-slate-500">
                           Cuando abras resúmenes o recursos, aparecerán acá.
                         </p>
                       </div>
@@ -1801,16 +1818,16 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
           <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
             <DialogContent className="max-w-3xl rounded-xl px-4 sm:px-6">
               <DialogHeader>
-                <DialogTitle className="text-2xl font-semibold tracking-[-0.03em] text-slate-950 dark:text-slate-100">
+                <DialogTitle className="text-2xl font-semibold tracking-[-0.03em] text-slate-950">
                   Agregá una materia
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     placeholder="Buscar materias..."
-                    className="h-12 rounded-xl border-slate-200 bg-white pl-10 dark:border-slate-800 dark:bg-slate-900"
+                    className="h-12 rounded-xl border-slate-200 bg-white pl-10"
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                   />
@@ -1818,11 +1835,11 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
 
                 <div className="grid max-h-96 grid-cols-1 gap-3 overflow-y-auto md:grid-cols-2">
                   {allMateriasLoading ? (
-                    <div className="col-span-full py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+                    <div className="col-span-full py-10 text-center text-sm text-slate-500">
                       Buscando materias...
                     </div>
                   ) : allMaterias.length === 0 ? (
-                    <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+                    <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
                       {searchTerm.trim().length > 0
                         ? 'No encontramos materias con ese nombre.'
                         : 'Empezá escribiendo o usá el listado sugerido.'}
@@ -1833,10 +1850,10 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                         key={materia.id}
                         type="button"
                         onClick={() => addMateria(materia)}
-                        className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+                        className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
                       >
-                        <h3 className="text-base font-semibold text-slate-950 dark:text-slate-100">{materia.nombre}</h3>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{materia.carreraNombre}</p>
+                        <h3 className="text-base font-semibold text-slate-950">{materia.nombre}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{materia.carreraNombre}</p>
                       </button>
                     ))
                   )}
@@ -1854,7 +1871,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
           </Dialog>
 
           <Dialog open={showWelcomeModal} onOpenChange={setShowWelcomeModal}>
-            <DialogContent className="max-w-md overflow-hidden rounded-[28px] border-slate-200 p-0 dark:border-slate-800">
+            <DialogContent className="max-w-md overflow-hidden rounded-[28px] border-slate-200 p-0">
               <div className="bg-gradient-to-br from-indigo-600 via-indigo-500 to-blue-500 px-6 py-8 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 text-white">
                   <GraduationCap className="h-7 w-7" />
@@ -1863,34 +1880,36 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                   ¡Ya arrancaste tu preparación!
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-indigo-100">
-                  Guardamos tu simulador en tu cuenta. Acá vas a ver tu racha, tu progreso y todo tu material de estudio.
+                  Guardamos tu simulador en tu cuenta. Acá vas a ver tu racha, tu progreso y todo tu
+                  material de estudio.
                 </p>
               </div>
               <div className="space-y-3 px-6 py-6">
-                <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3 dark:border-orange-500/25 dark:bg-orange-500/10">
+                <div className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 px-4 py-3">
                   <Flame className="h-5 w-5 shrink-0 text-orange-500" />
                   <div>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                    <p className="text-sm font-semibold text-slate-800">
                       {streakDays > 0
                         ? `Racha de ${streakDays} ${streakDays === 1 ? 'día' : 'días'}`
                         : 'Empezá tu racha hoy'}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Estudiá cada día para mantenerla.</p>
+                    <p className="text-xs text-slate-500">Estudiá cada día para mantenerla.</p>
                   </div>
                 </div>
                 {resumeSimulator ? (
-                  <div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3 dark:border-indigo-500/25 dark:bg-indigo-500/10">
-                    <PlayCircle className="h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-300" />
+                  <div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3">
+                    <PlayCircle className="h-5 w-5 shrink-0 text-indigo-600" />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Retomá donde quedaste</p>
-                      <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                        {resumeSimulator.subjectName ?? 'Simulador'} · Parcial {resumeSimulator.parcial} · Pregunta {resumeSimulator.questionLabel}
+                      <p className="text-sm font-semibold text-slate-800">Retomá donde quedaste</p>
+                      <p className="truncate text-xs text-slate-500">
+                        {resumeSimulator.subjectName ?? 'Simulador'} · Parcial{' '}
+                        {resumeSimulator.parcial} · Pregunta {resumeSimulator.questionLabel}
                       </p>
                     </div>
                   </div>
                 ) : null}
                 <Button
-                  className="h-11 w-full rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] text-sm font-bold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)]"
+                  className="from-brand to-brand-2 h-11 w-full rounded-xl bg-gradient-to-r text-sm font-bold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)]"
                   onClick={() => {
                     const destination = resumeSimulator ? resumeSimulator.href : '/explorar';
                     trackMarketingEvent('post_signup_landing_cta_clicked', {
@@ -1906,7 +1925,7 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-11 w-full rounded-xl border-slate-200 bg-white text-sm font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="h-11 w-full rounded-xl border-slate-200 bg-white text-sm font-semibold text-slate-700"
                   onClick={() => {
                     trackMarketingEvent('post_signup_landing_cta_clicked', {
                       cta: 'dismiss',
@@ -1935,7 +1954,3 @@ export function DashboardContent({ initialBootstrap }: { initialBootstrap?: Dash
     </div>
   );
 }
-
-
-
-

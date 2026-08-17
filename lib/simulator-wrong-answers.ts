@@ -9,6 +9,7 @@ import {
 } from '@/lib/rag';
 import { buildStudentMaterialContextsForQuestions } from '@/lib/student-materials/simulator-context';
 import { recordExplanationsHistory } from '@/lib/explanations-history';
+import { checkDailyLimit, incrementDailyUsage } from '@/lib/ai/daily-limit';
 
 export type WrongAnswerExplanation = {
   preguntaId: string;
@@ -186,128 +187,155 @@ export async function buildWrongAnswersExplanations(input: {
     }
   }
 
+  let dailyLimitReached = false;
+
   if (missing.length > 0) {
-    const questionMap = await fetchQuestionsByIds(missing);
-    const questions = Array.from(questionMap.values());
-    const { data: chunks } = await admin
-      .from('rag_document_chunks')
-      .select('chunk_text, source_title')
-      .eq('materia_id', input.materiaId)
-      .limit(250);
+    // Check daily AI limit before generating new explanations (skip for demo).
+    if (!isDemo && input.userId) {
+      const limit = await checkDailyLimit(input.userId);
+      if (!limit.allowed) {
+        dailyLimitReached = true;
+        // Return cached explanations only; skip all AI generation.
+      }
+    }
 
-    const studentMaterialContextByQuestion = await buildStudentMaterialContextsForQuestions({
-      admin,
-      materiaId: input.materiaId,
-      userId: input.userId ?? '',
-      questions,
-    });
+    if (!dailyLimitReached) {
+      const questionMap = await fetchQuestionsByIds(missing);
+      const questions = Array.from(questionMap.values());
+      const { data: chunks } = await admin
+        .from('rag_document_chunks')
+        .select('chunk_text, source_title')
+        .eq('materia_id', input.materiaId)
+        .limit(250);
 
-    const processQuestion = async (
-      question: (typeof questions)[number]
-    ): Promise<WrongAnswerExplanation | null> => {
-      try {
-        const enunciado = isDemo
-          ? truncateUtf8Text(question.enunciado, DEMO_MAX_ENUNCIADO_CHARS)
-          : question.enunciado;
-        const joinedQuery = `${enunciado} ${question.respuesta_correcta}`;
-        const studentMaterialContext = studentMaterialContextByQuestion.get(question.id);
-        const materiaTopChunks = selectTopRagContextChunks(
-          (chunks ?? []) as RagChunkRow[],
-          joinedQuery
-        );
-        let topChunks =
-          studentMaterialContext?.context.length
-            ? [...studentMaterialContext.context, ...materiaTopChunks].slice(0, 6)
-            : materiaTopChunks;
+      const studentMaterialContextByQuestion = await buildStudentMaterialContextsForQuestions({
+        admin,
+        materiaId: input.materiaId,
+        userId: input.userId ?? '',
+        questions,
+      });
 
-        if (isDemo) {
-          topChunks = capDemoContextChunks(topChunks);
-        }
+      const processQuestion = async (
+        question: (typeof questions)[number]
+      ): Promise<WrongAnswerExplanation | null> => {
+        try {
+          // Per-question daily limit check (for logged-in non-demo users).
+          if (!isDemo && input.userId) {
+            const limit = await checkDailyLimit(input.userId);
+            if (!limit.allowed) {
+              dailyLimitReached = true;
+              return null;
+            }
+          }
 
-        const optionsArray = Array.isArray(question.opciones)
-          ? (question.opciones.filter((option) => typeof option === 'string') as string[])
-          : [];
+          const enunciado = isDemo
+            ? truncateUtf8Text(question.enunciado, DEMO_MAX_ENUNCIADO_CHARS)
+            : question.enunciado;
+          const joinedQuery = `${enunciado} ${question.respuesta_correcta}`;
+          const studentMaterialContext = studentMaterialContextByQuestion.get(question.id);
+          const materiaTopChunks = selectTopRagContextChunks(
+            (chunks ?? []) as RagChunkRow[],
+            joinedQuery
+          );
+          let topChunks =
+            studentMaterialContext?.context.length
+              ? [...studentMaterialContext.context, ...materiaTopChunks].slice(0, 6)
+              : materiaTopChunks;
 
-        const generated = await generateTutorExplanation({
-          question: enunciado,
-          options: optionsArray,
-          correctAnswer: question.respuesta_correcta,
-          context: topChunks,
-        });
+          if (isDemo) {
+            topChunks = capDemoContextChunks(topChunks);
+          }
 
-        await admin.from('rag_explanations_cache').upsert(
-          {
+          const optionsArray = Array.isArray(question.opciones)
+            ? (question.opciones.filter((option) => typeof option === 'string') as string[])
+            : [];
+
+          const generated = await generateTutorExplanation({
+            question: enunciado,
+            options: optionsArray,
+            correctAnswer: question.respuesta_correcta,
+            context: topChunks,
+          });
+
+          // Increment daily usage after successful AI call.
+          if (input.userId) {
+            await incrementDailyUsage(input.userId);
+          }
+
+          await admin.from('rag_explanations_cache').upsert(
+            {
+              pregunta_id: question.id,
+              materia_id: question.materia_id,
+              parcial: input.parcial,
+              explicacion: generated.text,
+              provider: generated.provider,
+              source_used: studentMaterialContext?.context.length
+                ? 'student-material-rag'
+                : topChunks.length > 0
+                  ? 'supabase-rag'
+                  : 'general-academic-fallback',
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'pregunta_id' }
+          );
+
+          const { data: currentStat } = await admin
+            .from('rag_question_stats')
+            .select('id, veces_fallada')
+            .eq('pregunta_id', question.id)
+            .maybeSingle();
+
+          if (currentStat?.id) {
+            await admin
+              .from('rag_question_stats')
+              .update({
+                veces_fallada: (currentStat.veces_fallada ?? 0) + 1,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', currentStat.id);
+          } else {
+            await admin.from('rag_question_stats').insert({
+              pregunta_id: question.id,
+              materia_id: question.materia_id,
+              veces_fallada: 1,
+              updated_at: new Date().toISOString(),
+            });
+          }
+
+          await admin.from('rag_generation_logs').insert({
             pregunta_id: question.id,
             materia_id: question.materia_id,
-            parcial: input.parcial,
+            provider: generated.provider,
+            status: 'ok',
+            metadata: {
+              context_chunks: topChunks.length,
+              student_material_chunks: studentMaterialContext?.context.length ?? 0,
+              linked_student_material_ids: studentMaterialContext?.matchedMaterialIds ?? [],
+            },
+          });
+
+          return {
+            preguntaId: question.id,
+            enunciado: question.enunciado,
             explicacion: generated.text,
             provider: generated.provider,
-            source_used: studentMaterialContext?.context.length
-              ? 'student-material-rag'
-              : topChunks.length > 0
-                ? 'supabase-rag'
-                : 'general-academic-fallback',
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: 'pregunta_id' }
-        );
-
-        const { data: currentStat } = await admin
-          .from('rag_question_stats')
-          .select('id, veces_fallada')
-          .eq('pregunta_id', question.id)
-          .maybeSingle();
-
-        if (currentStat?.id) {
-          await admin
-            .from('rag_question_stats')
-            .update({
-              veces_fallada: (currentStat.veces_fallada ?? 0) + 1,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', currentStat.id);
-        } else {
-          await admin.from('rag_question_stats').insert({
-            pregunta_id: question.id,
-            materia_id: question.materia_id,
-            veces_fallada: 1,
-            updated_at: new Date().toISOString(),
-          });
+            source: 'generated',
+            opciones: extractStringOptions(question.opciones),
+            respuestaCorrecta: includeCorrectAnswer ? question.respuesta_correcta : undefined,
+            opcionElegida: normalizeChosenAnswer(input.chosenAnswers?.[question.id]),
+          };
+        } catch (error) {
+          logError('simulatorWrongAnswers.question', error, { preguntaId: question.id });
+          return null;
         }
+      };
 
-        await admin.from('rag_generation_logs').insert({
-          pregunta_id: question.id,
-          materia_id: question.materia_id,
-          provider: generated.provider,
-          status: 'ok',
-          metadata: {
-            context_chunks: topChunks.length,
-            student_material_chunks: studentMaterialContext?.context.length ?? 0,
-            linked_student_material_ids: studentMaterialContext?.matchedMaterialIds ?? [],
-          },
-        });
-
-        return {
-          preguntaId: question.id,
-          enunciado: question.enunciado,
-          explicacion: generated.text,
-          provider: generated.provider,
-          source: 'generated',
-          opciones: extractStringOptions(question.opciones),
-          respuestaCorrecta: includeCorrectAnswer ? question.respuesta_correcta : undefined,
-          opcionElegida: normalizeChosenAnswer(input.chosenAnswers?.[question.id]),
-        };
-      } catch (error) {
-        logError('simulatorWrongAnswers.question', error, { preguntaId: question.id });
-        return null;
+      const generatedResults = await mapWithConcurrency(questions, 3, processQuestion);
+      for (const result of generatedResults) {
+        if (!result) continue;
+        results.push(result);
+        generatedCount += 1;
       }
-    };
-
-    const generatedResults = await mapWithConcurrency(questions, 3, processQuestion);
-    for (const result of generatedResults) {
-      if (!result) continue;
-      results.push(result);
-      generatedCount += 1;
     }
   }
 
@@ -328,5 +356,5 @@ export async function buildWrongAnswersExplanations(input: {
     });
   }
 
-  return { explanations: results, metrics: { cacheHits, generatedCount } };
+  return { explanations: results, metrics: { cacheHits, generatedCount }, dailyLimitReached };
 }

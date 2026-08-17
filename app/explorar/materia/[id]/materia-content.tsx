@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase-client';
 import Link from 'next/link';
 import { useUser } from '@/hooks/useUser';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import {
   getCareerRoute,
   getMateriaRoute,
@@ -13,14 +13,13 @@ import {
   getStudentMaterialRoute,
   getUniversityRoute,
 } from '@/lib/routes';
+import { getDashboardState, saveDashboardState } from '@/lib/actions/dashboard';
 import {
-  getDashboardState,
   getSimulatorRatingsSummaryByMateria,
   getSimulatorUsageSummaryByMateria,
-  saveDashboardState,
   type SimulatorRatingSummary,
   type SimulatorUsageSummary,
-} from '@/app/actions';
+} from '@/lib/actions/simulador';
 import { pushActivityHit, pushRecentResource } from '@/lib/dashboard-client';
 import {
   fetchSharedStudentMaterialsByMateria,

@@ -1,4 +1,4 @@
-import type { GradedPreguntaResult, Pregunta } from '@/app/actions';
+import type { GradedPreguntaResult, Pregunta } from '@/lib/actions/simulador';
 
 export type SimuladorPersistedState = {
   version: 2;

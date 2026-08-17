@@ -13,6 +13,10 @@ import {
   updateStudentMaterialProcessing,
 } from '@/lib/repositories/student-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { evaluateChunks, buildChunkEvaluationReport } from '@/lib/student-materials/chunk-evaluator';
+import { checkDuplicate } from '@/lib/student-materials/dedup';
+import { buildSummaryChunks } from '@/lib/student-materials/text';
+import { logError, logInfo } from '@/lib/observability';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
 
 export type StudentMaterialProcessingStage =
@@ -62,6 +66,25 @@ export async function processStudentMaterial(input: {
   const { text, pageCount } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, text, pageCount);
 
+  // --- Dedup check (best-effort, never blocks processing) ---
+  try {
+    const dedupResult = await checkDuplicate(
+      text,
+      material.materia_id,
+      material.user_id,
+      material.id
+    );
+    if (dedupResult.isDuplicate) {
+      logInfo('processStudentMaterial.dedup', {
+        materialId: material.id,
+        similarity: dedupResult.similarity,
+        similarMaterialId: dedupResult.similarMaterialId,
+      });
+    }
+  } catch (dedupError) {
+    logError('processStudentMaterial.dedup', dedupError, { materialId: material.id });
+  }
+
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing', processingStage: 'extracting', processingProgress: 34,
     processingMessage: buildAnalysisMessage(documentAnalysis), pageCount,
@@ -82,6 +105,28 @@ export async function processStudentMaterial(input: {
   await persistStudentMaterialSummaryFromComputed({
     admin, studentMaterialId: material.id, text, summary, persistChunks: true,
   });
+
+  // --- Chunk quality evaluation (best-effort, never blocks processing) ---
+  try {
+    const chunks = buildSummaryChunks(text);
+    const evaluations = await evaluateChunks(
+      chunks,
+      context.materiaName ?? material.title,
+      material.id
+    );
+    const report = buildChunkEvaluationReport(evaluations);
+    if (report.flaggedChunks.length > 0) {
+      logInfo('processStudentMaterial.chunkQuality', {
+        materialId: material.id,
+        totalChunks: report.totalChunks,
+        averageScore: report.averageScore,
+        flaggedCount: report.flaggedChunks.length,
+        actionCounts: report.actionCounts,
+      });
+    }
+  } catch (chunkEvalError) {
+    logError('processStudentMaterial.chunkQuality', chunkEvalError, { materialId: material.id });
+  }
 
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing', processingStage: 'glossary', processingProgress: 78,

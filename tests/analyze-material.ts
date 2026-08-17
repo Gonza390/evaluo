@@ -5,7 +5,6 @@ import {
   buildSummaryChunks,
   buildStudyDocumentModel,
   extractPdfTextAndPageCount,
-  prepareTextForSummary,
 } from '@/lib/student-materials/text';
 import { generateStudentMaterialSummary } from '@/lib/student-materials/summary';
 import { generateStudentMaterialGlossary } from '@/lib/student-materials/glossary';

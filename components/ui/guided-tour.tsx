@@ -80,10 +80,44 @@ export function GuidedTour({
   const cardRef = useRef<HTMLDivElement | null>(null);
   const stepsRef = useRef(steps);
   const scrollAdjustedRef = useRef(false);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     setMounted(true);
     stepsRef.current = steps;
   }, [steps]);
+
+  // ACC-06: Escape to close + focus trap (save/restore)
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) {
+      previousFocusRef.current = document.activeElement as HTMLElement | null;
+      // Move focus to the tour card after render
+      requestAnimationFrame(() => {
+        const closeButton = cardRef.current?.querySelector<HTMLButtonElement>(
+          'button[aria-label="Cerrar guía"]'
+        );
+        if (closeButton) {
+          closeButton.focus();
+        } else {
+          cardRef.current?.focus();
+        }
+      });
+    } else if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
+    }
+  }, [open]);
 
   const resolveTargetElement = useCallback((): HTMLElement | null => {
     const target = stepsRef.current[stepIndex]?.target;
@@ -217,7 +251,7 @@ export function GuidedTour({
   const ringRadius = getRingRadius(targetRadius, RING_PADDING);
 
   const overlay = (
-    <div aria-label={ariaLabel} role="dialog" aria-modal="false" className="pointer-events-none fixed inset-0 z-[90]">
+    <div aria-label={ariaLabel} role="dialog" aria-modal="false" aria-live="assertive" className="pointer-events-none fixed inset-0 z-[90]">
       <div
         data-tour-overlay
         className="absolute inset-0"
@@ -242,7 +276,8 @@ export function GuidedTour({
       <div
         data-tour-card
         ref={cardRef}
-        className="pointer-events-auto absolute"
+        tabIndex={-1}
+        className="pointer-events-auto absolute outline-none"
         style={{ left: left / zoom, top: top / zoom, width: cardWidth / zoom }}
       >
         <div className="relative">
