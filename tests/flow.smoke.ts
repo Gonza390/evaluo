@@ -13,6 +13,13 @@ import {
   getModuleNumber,
 } from '../app/explorar/materia/[id]/materia-content.helpers.ts';
 import { resolveProfileSettingsState } from '../lib/profile-settings.ts';
+import { isAllowedAnalyticsEventName } from '../lib/analytics-events.ts';
+import { sanitizeAnalyticsMetadata } from '../lib/analytics-metadata.ts';
+import {
+  hasPremiumSubscriptionAccess,
+  isPremiumSubscriptionStatus,
+  subscriptionStatusForPayment,
+} from '../lib/payments/status.ts';
 import {
   dedupeOptionsForView,
   isMultiAnswer,
@@ -53,6 +60,77 @@ assert.deepEqual(dedupeOptionsForView([' A ', 'a', 'B', 'B  ', '']), ['A', 'B'])
 assert.deepEqual(parseCorrectAnswers('Uno | Dos; Tres'), ['Uno', 'Dos', 'Tres']);
 assert.equal(isMultiAnswer('Uno | Dos'), true);
 assert.equal(normalizeForCompare('  Hola   Mundo '), 'hola mundo');
+assert.equal(isPremiumSubscriptionStatus('active'), true);
+assert.equal(isPremiumSubscriptionStatus('past_due'), false);
+assert.equal(subscriptionStatusForPayment('approved'), 'active');
+assert.equal(subscriptionStatusForPayment('rejected'), 'past_due');
+assert.equal(subscriptionStatusForPayment('pending'), null);
+assert.equal(
+  hasPremiumSubscriptionAccess('canceled', '2026-07-01T00:00:00.000Z', Date.UTC(2026, 5, 1)),
+  true
+);
+assert.equal(
+  hasPremiumSubscriptionAccess('canceled', '2026-05-01T00:00:00.000Z', Date.UTC(2026, 5, 1)),
+  false
+);
+
+assert.equal(isAllowedAnalyticsEventName('simulator_ready'), true);
+assert.equal(isAllowedAnalyticsEventName('simulator_progress_checkpoint'), true);
+assert.equal(isAllowedAnalyticsEventName('simulator_needs_feedback'), true);
+assert.equal(isAllowedAnalyticsEventName('preguntero_shared'), true);
+assert.equal(isAllowedAnalyticsEventName('premium_gate_viewed'), true);
+assert.equal(isAllowedAnalyticsEventName('premium_checkout_clicked'), true);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('premium_checkout_clicked', {
+    source: 'simulator_explanations',
+    materia_id: 'mat-1',
+    plan_context: 'premium_founders',
+    provider_secret: 'must-not-be-stored',
+  }),
+  {
+    source: 'simulator_explanations',
+    materia_id: 'mat-1',
+    plan_context: 'premium_founders',
+  }
+);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('simulator_progress_checkpoint', {
+    materia_id: 'mat-1',
+    checkpoint: 5,
+    correct_count: 3,
+    raw_answer: 'must-not-be-stored',
+  }),
+  { materia_id: 'mat-1', checkpoint: 5, correct_count: 3 }
+);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('preguntero_shared', {
+    materia_id: 'mat-1',
+    parcial: 1,
+    share_id: 'share-1',
+    share_method: 'copy_link',
+    share_kind: 'preguntero',
+    destination: '/pregunteros/materia--mat-1/parcial/1',
+    email: 'must-not-be-stored@example.com',
+  }),
+  {
+    materia_id: 'mat-1',
+    parcial: 1,
+    share_id: 'share-1',
+    share_method: 'copy_link',
+    share_kind: 'preguntero',
+    destination: '/pregunteros/materia--mat-1/parcial/1',
+  }
+);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('simulator_needs_feedback', {
+    materia_id: 'mat-1',
+    parcial: 1,
+    reason: 'better_explanations',
+    phase: 'finished',
+    comment: 'free text must not be stored',
+  }),
+  { materia_id: 'mat-1', parcial: 1, reason: 'better_explanations', phase: 'finished' }
+);
 
 assert.equal(getModuleNumber('Resumen Modulo 3'), 3);
 assert.equal(formatResumenModulesLabel([2, 1, 2]), 'Corresponde a los módulos 1 y 2.');

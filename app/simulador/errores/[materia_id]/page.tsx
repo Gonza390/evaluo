@@ -11,8 +11,8 @@ const SimuladorExamen = dynamic(() => import('@/components/simulador/SimuladorEx
     <div className="flex min-h-screen items-center justify-center bg-indigo-50 p-6">
       <div className="w-full max-w-5xl rounded-[28px] border border-indigo-100 bg-white p-8 shadow-sm">
         <div className="h-8 w-56 animate-pulse rounded-full bg-indigo-100" />
-        <div className="mt-6 h-4 w-full animate-pulse rounded-full bg-slate-100" />
-        <div className="mt-3 h-4 w-2/3 animate-pulse rounded-full bg-slate-100" />
+        <div className="mt-6 h-4 w-full animate-pulse rounded-full bg-white" />
+        <div className="mt-3 h-4 w-2/3 animate-pulse rounded-full bg-white" />
       </div>
     </div>
   ),

@@ -1,4 +1,4 @@
-﻿import * as React from 'react';
+import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 
@@ -11,7 +11,7 @@ const badgeVariants = cva(
  variant: {
  default: 'border-transparent bg-primary text-primary-foreground [a&]:hover:bg-primary/90',
  secondary:
- 'border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
+ 'border-transparent bg-white text-secondary-foreground [a&]:hover:bg-white/90',
  destructive:
  'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20',
  outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',

@@ -123,7 +123,7 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
             onClick={() => void save('up')}
             disabled={saving || loading}
             className={cn(
-              'h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50',
+              'h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white',
               rating === 'up' && 'border-[#A7F3D0] bg-[#ECFDF5] text-emerald-700 hover:bg-[#ECFDF5]'
             )}
           >
@@ -137,7 +137,7 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
             onClick={() => void save('down')}
             disabled={saving || loading}
             className={cn(
-              'h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50',
+              'h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white',
               rating === 'down' && 'border-[#FECACA] bg-[#FEF2F2] text-rose-700 hover:bg-[#FEF2F2]'
             )}
           >
@@ -166,7 +166,7 @@ export function MaterialFeedback({ materialId }: { materialId: string }) {
       </div>
 
       {reportOpen ? (
-        <div className="space-y-3 rounded-[16px] border border-slate-200 bg-slate-50 px-3.5 py-3.5">
+        <div className="space-y-3 rounded-[16px] border border-slate-200 bg-white px-3.5 py-3.5">
           <p className="text-[12.5px] font-semibold text-slate-800">¿Que salio mal?</p>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
             <Select value={reportReason} onValueChange={setReportReason}>

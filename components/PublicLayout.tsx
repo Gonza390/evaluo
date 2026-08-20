@@ -20,7 +20,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 bg-[#F5F7FB]">{children}</main>
+      <main className="flex-1 bg-white">{children}</main>
       <Footer />
     </div>
   );

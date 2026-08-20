@@ -55,6 +55,7 @@ assert.equal(truncateUtf8Text(null as unknown as string, 10), '');
 assert.ok(getGeminiSummaryModels().length >= 1);
 assert.ok(getGeminiSummaryModels().every((model) => typeof model === 'string'));
 assert.ok(getGroqSummaryModels().length >= 1);
+assert.ok(!getGroqSummaryModels().includes('llama-3.1-8b-instant'));
 assert.ok(getGithubModelsSummaryModels().length >= 1);
 
 // Defaults de Gemini no usan modelos deprecados/retirados.

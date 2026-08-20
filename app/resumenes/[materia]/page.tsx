@@ -38,6 +38,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical: buildResumenesHref(bootstrap.materiaNombre, bootstrap.materiaId),
     },
+    robots: {
+      index: bootstrap.initialResumenes.length > 0,
+      follow: true,
+    },
     openGraph: {
       title: `Resúmenes de ${bootstrap.materiaNombre} | Evaluo`,
       description: buildSummaryLandingDescription({
@@ -66,7 +70,7 @@ export default async function SummaryIntentPage({ params }: PageProps) {
     : `/explorar/materia/${bootstrap.materiaId}`;
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC]">
+    <main className="min-h-screen bg-white">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
@@ -77,7 +81,7 @@ export default async function SummaryIntentPage({ params }: PageProps) {
 
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold tracking-[0.18em] text-[#2563EB] uppercase">
             <FileText className="h-4 w-4" />
             Resúmenes
           </p>
@@ -101,7 +105,7 @@ export default async function SummaryIntentPage({ params }: PageProps) {
               Material disponible para estudiar
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <BookOpen className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">
                   {bootstrap.initialResumenes.length} resúmenes iniciales
@@ -110,14 +114,15 @@ export default async function SummaryIntentPage({ params }: PageProps) {
                   Primer material cargado para ayudarte a empezar más rápido.
                 </p>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <Sparkles className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">Vista por materia</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Entrá al espacio completo de la materia para combinar resúmenes, recursos y práctica.
+                  Entrá al espacio completo de la materia para combinar resúmenes, recursos y
+                  práctica.
                 </p>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <FileText className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">Contexto académico</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -147,7 +152,9 @@ export default async function SummaryIntentPage({ params }: PageProps) {
           </div>
 
           <aside className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">Resúmenes destacados</h2>
+            <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">
+              Resúmenes destacados
+            </h2>
             <div className="mt-5 space-y-3">
               {bootstrap.initialResumenes.slice(0, 6).map((resumen) => (
                 <article key={resumen.id} className="rounded-2xl border border-slate-200 px-4 py-3">
@@ -159,8 +166,8 @@ export default async function SummaryIntentPage({ params }: PageProps) {
               ))}
               {bootstrap.initialResumenes.length === 0 ? (
                 <p className="text-sm leading-7 text-slate-600">
-                  Todavía no hay resúmenes iniciales visibles en esta landing, pero podés entrar a la
-                  materia para revisar recursos y actualizaciones.
+                  Todavía no hay resúmenes iniciales visibles en esta landing, pero podés entrar a
+                  la materia para revisar recursos y actualizaciones.
                 </p>
               ) : null}
             </div>

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { extractTextFromPdfBuffer } from '@/lib/student-materials/pdf-extract';
 import { splitIntoChunks } from '@/lib/rag';
 import type {
@@ -14,6 +15,25 @@ const DIRECT_SUMMARY_TEXT_LIMIT = 14_000;
 const SUMMARY_CHUNK_PREVIEW_LIMIT = 10;
 const DIRECT_GLOSSARY_TEXT_LIMIT = 24_000;
 const GLOSSARY_CHUNK_PREVIEW_LIMIT = 18;
+const MAX_DOCUMENT_SECTIONS = 24;
+const MAX_SUMMARY_CHUNKS = 120;
+
+/** Conserva inicio, centro y final cuando hay que reducir una colección. */
+function sampleEvenly<T>(items: T[], limit: number) {
+  if (items.length <= limit) return items;
+  if (limit <= 1) return items.slice(0, Math.max(0, limit));
+
+  const selected: T[] = [];
+  const used = new Set<number>();
+  for (let slot = 0; slot < limit; slot += 1) {
+    const index = Math.round((slot * (items.length - 1)) / (limit - 1));
+    if (!used.has(index) && items[index] !== undefined) {
+      selected.push(items[index]);
+      used.add(index);
+    }
+  }
+  return selected;
+}
 
 export function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -129,18 +149,11 @@ function isLikelyHeading(line: string) {
   if (/^[\d\s./-]+$/.test(clean)) return false;
   if (/^(?:[-*]|\u2022)\s+/.test(clean)) return false;
   if (/[.!?:;]$/.test(clean) && clean.length > 70) return false;
-  return (
-    /^(\d+([.)-]|\.\d+)\s+)/.test(clean) ||
-    /^\p{Lu}[\p{L}\p{N}\s:()/,.-]{6,}$/u.test(clean)
-  );
+  return /^(\d+([.)-]|\.\d+)\s+)/.test(clean) || /^\p{Lu}[\p{L}\p{N}\s:()/,.-]{6,}$/u.test(clean);
 }
 
 function normalizeHeading(line: string) {
-  return cleanLine(
-    line
-      .replace(/^[\d.()\-]+\s*/, '')
-      .replace(/\s+/g, ' ')
-  );
+  return cleanLine(line.replace(/^[\d.()\-]+\s*/, '').replace(/\s+/g, ' '));
 }
 
 function pickConceptKind(term: string, detail: string): StudyDocumentConcept['kind'] {
@@ -173,7 +186,9 @@ function extractConceptsFromLines(lines: string[]): StudyDocumentConcept[] {
       continue;
     }
 
-    const definitionMatch = clean.match(/^(.{4,72}?)\s+(?:es|son|se define como|consiste en|se caracteriza por)\s+(.{18,})$/i);
+    const definitionMatch = clean.match(
+      /^(.{4,72}?)\s+(?:es|son|se define como|consiste en|se caracteriza por)\s+(.{18,})$/i
+    );
     if (definitionMatch) {
       const term = cleanLine(definitionMatch[1] ?? '');
       const detail = truncateAtWord(cleanLine(definitionMatch[2] ?? ''), 240);
@@ -233,7 +248,10 @@ function splitIntoSemanticBlocks(text: string) {
   return blocks;
 }
 
-function buildSubsectionsFromBlock(block: { heading: string | null; lines: string[] }, sectionTitle: string): StudyDocumentSubsection[] {
+function buildSubsectionsFromBlock(
+  block: { heading: string | null; lines: string[] },
+  sectionTitle: string
+): StudyDocumentSubsection[] {
   const subsections: StudyDocumentSubsection[] = [];
   let currentTitle = block.heading || sectionTitle;
   let currentLines: string[] = [];
@@ -294,22 +312,20 @@ export function buildStudyDocumentModel(text: string, fallbackTitle: string): St
     900
   );
 
-  const sections: StudyDocumentSection[] = blocks.slice(0, 8).map((block, index) => {
+  const selectedBlocks = sampleEvenly(blocks, MAX_DOCUMENT_SECTIONS);
+  const sections: StudyDocumentSection[] = selectedBlocks.map((block, index) => {
     const title = block.heading || buildFallbackSectionTitle(index);
     const subsectionModels = buildSubsectionsFromBlock(block, title);
-    const blockText = truncateAtWord(
-      block.lines
-        .map(cleanLine)
-        .filter(Boolean)
-        .join(' '),
-      650
-    );
+    const blockText = truncateAtWord(block.lines.map(cleanLine).filter(Boolean).join(' '), 650);
 
     const concepts = extractConceptsFromLines(block.lines)
       .concat(subsectionModels.flatMap((subsection) => subsection.concepts))
       .filter((concept, conceptIndex, array) => {
         const key = normalizeForDedupe(`${concept.term} ${concept.detail}`);
-        return array.findIndex((item) => normalizeForDedupe(`${item.term} ${item.detail}`) === key) === conceptIndex;
+        return (
+          array.findIndex((item) => normalizeForDedupe(`${item.term} ${item.detail}`) === key) ===
+          conceptIndex
+        );
       })
       .slice(0, 8);
 
@@ -322,10 +338,16 @@ export function buildStudyDocumentModel(text: string, fallbackTitle: string): St
   });
 
   const conceptIndex = sections
-    .flatMap((section) => [...section.concepts, ...section.subsections.flatMap((subsection) => subsection.concepts)])
+    .flatMap((section) => [
+      ...section.concepts,
+      ...section.subsections.flatMap((subsection) => subsection.concepts),
+    ])
     .filter((concept, index, array) => {
       const key = normalizeForDedupe(`${concept.term} ${concept.detail}`);
-      return array.findIndex((item) => normalizeForDedupe(`${item.term} ${item.detail}`) === key) === index;
+      return (
+        array.findIndex((item) => normalizeForDedupe(`${item.term} ${item.detail}`) === key) ===
+        index
+      );
     })
     .slice(0, 36);
 
@@ -340,13 +362,15 @@ export function buildStudyDocumentModel(text: string, fallbackTitle: string): St
 }
 
 export function buildSummarySourceFromModel(model: StudyDocumentModel) {
-  return model.sections
-    .slice(0, 6)
+  return sampleEvenly(model.sections, 10)
     .map((section, index) => {
       const subsectionText = section.subsections
         .slice(0, 3)
         .map((subsection, subsectionIndex) => {
-          const points = subsection.points.slice(0, 3).map((point) => `- ${point}`).join('\n');
+          const points = subsection.points
+            .slice(0, 3)
+            .map((point) => `- ${point}`)
+            .join('\n');
           return `${index + 1}.${subsectionIndex + 1} ${subsection.title}\n${points}`;
         })
         .join('\n\n');
@@ -375,8 +399,7 @@ export function buildGlossarySourceFromModel(model: StudyDocumentModel) {
       .map((concept) => `${concept.term}: ${truncateAtWord(concept.detail, 160)}`)
   ).join('\n');
 
-  return model.sections
-    .slice(0, 5)
+  return sampleEvenly(model.sections, 10)
     .map((section) => {
       const concepts = section.concepts
         .slice(0, 3)
@@ -487,7 +510,8 @@ function buildParagraphAwareChunks(text: string, maxChars = 1200, overlapParagra
       continue;
     }
 
-    const nextLength = currentLength === 0 ? paragraph.length : currentLength + 2 + paragraph.length;
+    const nextLength =
+      currentLength === 0 ? paragraph.length : currentLength + 2 + paragraph.length;
     if (nextLength > maxChars && currentChunk.length > 0) {
       chunks.push(currentChunk.join('\n\n'));
       currentChunk = overlapParagraphs > 0 ? currentChunk.slice(-overlapParagraphs) : [];
@@ -506,7 +530,10 @@ function buildParagraphAwareChunks(text: string, maxChars = 1200, overlapParagra
 }
 
 export function mapLocalSummaryToView(
-  summary: Omit<StudentMaterialSummary, 'status' | 'provider' | 'errorMessage' | 'sourceChunksCount'>,
+  summary: Omit<
+    StudentMaterialSummary,
+    'status' | 'provider' | 'errorMessage' | 'sourceChunksCount'
+  >,
   sourceChunksCount: number,
   provider = 'fallback-local'
 ): StudentMaterialSummary {
@@ -557,14 +584,67 @@ export function prepareTextForSummary(text: string) {
     dedupedLines.push(line);
   }
 
-  return dedupedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return dedupedLines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 export function buildSummaryChunks(text: string) {
   return buildParagraphAwareChunks(prepareTextForSummary(text), 1200, 1)
     .map((chunk) => chunk.replace(/\n{3,}/g, '\n\n').trim())
     .filter((chunk) => chunk.length >= 120)
-    .slice(0, 36);
+    .slice(0, MAX_SUMMARY_CHUNKS);
+}
+
+export type TraceableStudentMaterialChunk = {
+  chunkIndex: number;
+  text: string;
+  pageStart: number | null;
+  pageEnd: number | null;
+  sectionTitle: string | null;
+  contentHash: string;
+};
+
+export function buildTraceableSummaryChunks(
+  pages: string[] | null,
+  fallbackText: string
+): TraceableStudentMaterialChunk[] {
+  const rows: Omit<TraceableStudentMaterialChunk, 'chunkIndex'>[] = [];
+  let currentSection: string | null = null;
+
+  if (pages) {
+    pages.forEach((pageText, pageIndex) => {
+      const cleanedPage = prepareTextForSummary(pageText);
+      if (!cleanedPage) return;
+      const heading = cleanedPage.split(/\r?\n/).map(cleanLine).find(isLikelyHeading);
+      if (heading) currentSection = normalizeHeading(heading);
+
+      for (const chunk of buildSummaryChunks(cleanedPage)) {
+        rows.push({
+          text: chunk,
+          pageStart: pageIndex + 1,
+          pageEnd: pageIndex + 1,
+          sectionTitle: currentSection,
+          contentHash: createHash('sha256').update(chunk).digest('hex'),
+        });
+      }
+    });
+  }
+
+  if (rows.length === 0) {
+    for (const chunk of buildSummaryChunks(fallbackText)) {
+      rows.push({
+        text: chunk,
+        pageStart: null,
+        pageEnd: null,
+        sectionTitle: null,
+        contentHash: createHash('sha256').update(chunk).digest('hex'),
+      });
+    }
+  }
+
+  return rows.map((row, chunkIndex) => ({ ...row, chunkIndex }));
 }
 
 function buildChunkSynopsis(chunk: string) {
@@ -578,10 +658,9 @@ export function buildSummarySourceText(text: string, chunks: string[]) {
     return truncateAtWord(text, DIRECT_SUMMARY_TEXT_LIMIT);
   }
 
-  return chunks
+  return sampleEvenly(chunks, SUMMARY_CHUNK_PREVIEW_LIMIT)
     .map(buildChunkSynopsis)
     .filter(Boolean)
-    .slice(0, SUMMARY_CHUNK_PREVIEW_LIMIT)
     .map((chunk, index) => `Fragmento ${index + 1}: ${chunk}`)
     .join('\n\n');
 }
@@ -591,8 +670,7 @@ export function buildGlossarySourceText(text: string, chunks: string[]) {
     return truncateAtWord(text, DIRECT_GLOSSARY_TEXT_LIMIT);
   }
 
-  return chunks
-    .slice(0, GLOSSARY_CHUNK_PREVIEW_LIMIT)
+  return sampleEvenly(chunks, GLOSSARY_CHUNK_PREVIEW_LIMIT)
     .map((chunk, index) => `Fragmento ${index + 1}:\n${truncateAtWord(chunk, 1_500)}`)
     .join('\n\n');
 }
@@ -727,24 +805,27 @@ export function analyzePdfDocument(
   pageCount: number | null
 ): StudyDocumentAnalysis {
   const text = prepareTextForSummary(extractedText);
-  const lines = text
-    .split(/\r?\n/)
-    .map(cleanLine)
-    .filter(Boolean);
+  const lines = text.split(/\r?\n/).map(cleanLine).filter(Boolean);
   const paragraphs = text
     .split(/\n\s*\n/)
     .map(cleanLine)
     .filter((paragraph) => paragraph.length >= 40);
   const headingCount = lines.filter(isLikelyHeading).length;
   const bulletCount = lines.filter((line) => /^(?:[-*]|\u2022|\d+[.)-])\s+/i.test(line)).length;
-  const tableLineCount = lines.filter((line) => isTableRowLine(line) || /(?:\S+\s{2,}\S+\s{2,}\S+)/.test(line)).length;
+  const tableLineCount = lines.filter(
+    (line) => isTableRowLine(line) || /(?:\S+\s{2,}\S+\s{2,}\S+)/.test(line)
+  ).length;
   const rawPdf = buffer.toString('latin1');
   const imageCountEstimate = countRegexMatches(rawPdf, /\/Subtype\s*\/Image\b/g);
   const resolvedPageCount =
-    pageCount && pageCount > 0 ? pageCount : Math.max(1, countRegexMatches(rawPdf, /\/Type\s*\/Page\b/g));
+    pageCount && pageCount > 0
+      ? pageCount
+      : Math.max(1, countRegexMatches(rawPdf, /\/Type\s*\/Page\b/g));
   const textLength = text.length;
-  const averageCharsPerPage = resolvedPageCount > 0 ? Math.round(textLength / resolvedPageCount) : textLength;
-  const averageLinesPerPage = resolvedPageCount > 0 ? Math.round(lines.length / resolvedPageCount) : lines.length;
+  const averageCharsPerPage =
+    resolvedPageCount > 0 ? Math.round(textLength / resolvedPageCount) : textLength;
+  const averageLinesPerPage =
+    resolvedPageCount > 0 ? Math.round(lines.length / resolvedPageCount) : lines.length;
   const hasSelectableText = textLength >= Math.max(220, resolvedPageCount * 90);
   const hasEmbeddedImages = imageCountEstimate > 0;
   const hasTables = tableLineCount >= 3;
@@ -819,6 +900,7 @@ export async function extractPdfTextAndPageCount(buffer: Buffer) {
   return {
     text: prepareTextForSummary(extracted.text ?? ''),
     pageCount: extracted.pageCount,
+    pages: extracted.pages?.map((page) => prepareTextForSummary(page)) ?? null,
   };
 }
 
@@ -828,7 +910,8 @@ export function parseSections(value: unknown): StudySummarySection[] {
   return value
     .map((item, index) => {
       if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
-      const title = 'title' in item ? cleanLine(String(item.title ?? '')) : buildFallbackSectionTitle(index);
+      const title =
+        'title' in item ? cleanLine(String(item.title ?? '')) : buildFallbackSectionTitle(index);
       const body = 'body' in item ? cleanMultilineBlock(String(item.body ?? '')) : '';
       if (!body) return null;
       return { title: title || buildFallbackSectionTitle(index), body };

@@ -8,8 +8,8 @@ export function ErrorsReviewLimit({ materiaId }: { materiaId: string }) {
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <PremiumUpsell
-          title="Alcanzaste tu repaso semanal de errores"
-          description="El plan gratis incluye 1 repaso de errores por semana. Con Premium repasá tus errores todas las veces que quieras y prepará cada parcial sin límites."
+          title="Ya detectamos qué necesitás reforzar"
+          description="Desbloqueá el repaso completo para entender estos errores, practicar los temas débiles y llegar al parcial con un plan claro."
           source="errores_review"
           materiaId={materiaId}
           features={[
@@ -17,6 +17,7 @@ export function ErrorsReviewLimit({ materiaId }: { materiaId: string }) {
             'Explicaciones IA en todas tus respuestas',
             'Recordatorios de parciales',
           ]}
+          ctaLabel="Reforzar mis errores con Premium"
         />
         <div className="mt-4 text-center">
           <Link

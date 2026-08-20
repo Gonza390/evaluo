@@ -51,7 +51,7 @@ export type UploadStudentMaterialResult = ActionResult & {
 };
 
 const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = 3;
-const MAX_PENDING_STUDENT_MATERIALS = 2;
+const MAX_PENDING_STUDENT_MATERIALS = 1;
 const FREE_MATERIAL_UPLOAD_INTERVAL_DAYS = 15;
 
 function isMissingStudentMaterialsTableError(error: unknown) {
@@ -108,6 +108,24 @@ async function requireAuthenticatedUser() {
   return user;
 }
 
+async function assertOwnedStudentMaterial(materialId: string, userId: string) {
+  const supabase = await createClientServer();
+  const { data, error } = await supabase
+    .from('student_materials')
+    .select('id')
+    .eq('id', materialId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error('No encontramos el material solicitado.');
+  }
+}
+
 async function assertStudentMaterialQuota(userId: string) {
   const admin = createAdminClient();
   const now = new Date();
@@ -153,7 +171,9 @@ async function assertStudentMaterialQuota(userId: string) {
   }
 
   if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
-    throw new Error('Ya tenés 2 materiales en procesamiento. Espera a que finalice uno antes de subir otro.');
+    throw new Error(
+      'Ya tenés 1 material en procesamiento. Esperá a que finalice antes de subir otro.'
+    );
   }
 }
 
@@ -204,7 +224,9 @@ async function updateStudentMaterialProcessing(
   }
 }
 
-export async function uploadStudentMaterialAction(formData: FormData): Promise<UploadStudentMaterialResult> {
+export async function uploadStudentMaterialAction(
+  formData: FormData
+): Promise<UploadStudentMaterialResult> {
   try {
     const user = await requireAuthenticatedUser();
     const admin = createAdminClient();
@@ -252,7 +274,12 @@ export async function uploadStudentMaterialAction(formData: FormData): Promise<U
     const [{ data: carrera }, { data: materia }, { data: relation }] = await Promise.all([
       admin.from('carreras').select('id, universidad_id, nombre').eq('id', carreraId).maybeSingle(),
       admin.from('materias').select('id, carrera_id, nombre').eq('id', materiaId).maybeSingle(),
-      admin.from('carrera_materias').select('id').eq('carrera_id', carreraId).eq('materia_id', materiaId).maybeSingle(),
+      admin
+        .from('carrera_materias')
+        .select('id')
+        .eq('carrera_id', carreraId)
+        .eq('materia_id', materiaId)
+        .maybeSingle(),
     ]);
 
     if (!carrera || carrera.universidad_id !== universidadId) {
@@ -281,10 +308,12 @@ export async function uploadStudentMaterialAction(formData: FormData): Promise<U
     const filePath = `student-materials/${user.id}/${Date.now()}-${safeName}`;
     const materialTitle = buildMaterialTitle(parsedMetadata.data.title, fileEntry.name);
 
-    const { error: uploadError } = await admin.storage.from('biblioteca').upload(filePath, fileBuffer, {
-      contentType: fileEntry.type || 'application/pdf',
-      upsert: false,
-    });
+    const { error: uploadError } = await admin.storage
+      .from('biblioteca')
+      .upload(filePath, fileBuffer, {
+        contentType: fileEntry.type || 'application/pdf',
+        upsert: false,
+      });
 
     if (uploadError) {
       throw uploadError;
@@ -306,14 +335,18 @@ export async function uploadStudentMaterialAction(formData: FormData): Promise<U
         processing_status: 'uploaded',
         processing_stage: 'uploaded',
         processing_progress: 10,
-        processing_message: 'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
+        processing_message:
+          'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
         processing_error: null,
       })
       .select('id')
       .single();
 
     if (insertError) {
-      await admin.storage.from('biblioteca').remove([filePath]).catch(() => undefined);
+      await admin.storage
+        .from('biblioteca')
+        .remove([filePath])
+        .catch(() => undefined);
       throw insertError;
     }
 
@@ -324,14 +357,13 @@ export async function uploadStudentMaterialAction(formData: FormData): Promise<U
     return {
       success: true,
       materialId: insertedMaterial.id,
-      message:
-        !shareWithCatalog
-          ? jobId
-            ? 'PDF subido a tu espacio privado. Ahora lo dejamos en cola para procesarlo.'
-            : 'PDF subido a tu espacio privado. Ahora empezamos a procesarlo.'
-          : jobId
-            ? 'PDF subido y compartido. Ahora lo dejamos en cola para generar el espacio de estudio.'
-            : 'PDF subido y compartido. Ahora empezamos a generar el espacio de estudio.',
+      message: !shareWithCatalog
+        ? jobId
+          ? 'PDF subido a tu espacio privado. Ahora lo dejamos en cola para procesarlo.'
+          : 'PDF subido a tu espacio privado. Ahora empezamos a procesarlo.'
+        : jobId
+          ? 'PDF subido y compartido. Ahora lo dejamos en cola para generar el espacio de estudio.'
+          : 'PDF subido y compartido. Ahora empezamos a generar el espacio de estudio.',
     };
   } catch (error) {
     return {
@@ -353,6 +385,7 @@ export async function processStudentMaterialAction(materialId: string): Promise<
       return { success: false, message: 'El identificador del material no es valido.' };
     }
     const user = await requireAuthenticatedUser();
+    await assertOwnedStudentMaterial(materialId, user.id);
     const admin = createAdminClient();
     const queuedJobId = await enqueueStudentMaterialJob(admin, materialId);
     const claimedJob = await claimStudentMaterialJob(admin, materialId);
@@ -398,7 +431,8 @@ export async function processStudentMaterialAction(materialId: string): Promise<
 
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos procesar el PDF en este momento.',
+      message:
+        error instanceof Error ? error.message : 'No pudimos procesar el PDF en este momento.',
     };
   }
 }
@@ -444,7 +478,8 @@ export async function processNextStudentMaterialJobAction(): Promise<ActionResul
           processingStage: 'failed',
           processingProgress: 0,
           processingMessage: 'No pudimos terminar el procesamiento del PDF.',
-          processingError: error instanceof Error ? error.message : 'Error desconocido al procesar el PDF.',
+          processingError:
+            error instanceof Error ? error.message : 'Error desconocido al procesar el PDF.',
         });
       }
     } catch (updateError) {
@@ -461,7 +496,9 @@ export async function processNextStudentMaterialJobAction(): Promise<ActionResul
   }
 }
 
-export async function regenerateStudentMaterialStudyAction(materialId: string): Promise<ActionResult> {
+export async function regenerateStudentMaterialStudyAction(
+  materialId: string
+): Promise<ActionResult> {
   try {
     if (!studentMaterialIdSchema.safeParse(materialId).success) {
       return { success: false, message: 'El identificador del material no es valido.' };
@@ -522,7 +559,8 @@ export async function regenerateStudentMaterialStudyAction(materialId: string): 
         processingStage: 'failed',
         processingProgress: 0,
         processingMessage: 'No pudimos regenerar el material.',
-        processingError: error instanceof Error ? error.message : 'Error desconocido al regenerar el material.',
+        processingError:
+          error instanceof Error ? error.message : 'Error desconocido al regenerar el material.',
       });
     } catch (updateError) {
       logError('studentMaterials.regenerateStatusUpdate', updateError, { materialId });
@@ -530,7 +568,10 @@ export async function regenerateStudentMaterialStudyAction(materialId: string): 
 
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos regenerar el material en este momento.',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'No pudimos regenerar el material en este momento.',
     };
   }
 }
@@ -593,14 +634,20 @@ export async function updateStudentMaterialVisibilityAction(input: {
     const user = await requireAuthenticatedUser();
     const supabase = await createClientServer();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('student_materials')
       .update({ visibility: parsedInput.data.visibility })
       .eq('id', parsedInput.data.materialId)
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .select('id')
+      .maybeSingle();
 
     if (error) {
       throw error;
+    }
+
+    if (!data) {
+      return { success: false, message: 'No encontramos el material solicitado.' };
     }
 
     revalidatePath('/dashboard/materiales');
@@ -620,6 +667,65 @@ export async function updateStudentMaterialVisibilityAction(input: {
         : error instanceof Error
           ? error.message
           : 'No pudimos actualizar la visibilidad del material.',
+    };
+  }
+}
+
+export async function deleteStudentMaterialAction(materialId: string): Promise<ActionResult> {
+  try {
+    if (!studentMaterialIdSchema.safeParse(materialId).success) {
+      return { success: false, message: 'El identificador del material no es valido.' };
+    }
+
+    const user = await requireAuthenticatedUser();
+    const admin = createAdminClient();
+
+    const { data: material, error: fetchError } = await admin
+      .from('student_materials')
+      .select('id, file_path')
+      .eq('id', materialId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    if (!material) {
+      return { success: false, message: 'No encontramos el material solicitado.' };
+    }
+
+    const { error: deleteError } = await admin
+      .from('student_materials')
+      .delete()
+      .eq('id', material.id)
+      .eq('user_id', user.id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    if (material.file_path) {
+      await admin.storage
+        .from('biblioteca')
+        .remove([material.file_path])
+        .catch(() => undefined);
+    }
+
+    revalidatePath('/dashboard/materiales');
+
+    return {
+      success: true,
+      message: 'El PDF y su espacio de estudio se eliminaron correctamente.',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: isMissingStudentMaterialsTableError(error)
+        ? getStudentMaterialsSetupMessage()
+        : error instanceof Error
+          ? error.message
+          : 'No pudimos eliminar el material en este momento.',
     };
   }
 }

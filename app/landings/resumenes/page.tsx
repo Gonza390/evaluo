@@ -155,7 +155,7 @@ export default function ResumenesLanding() {
       </section>
 
       {/* CÓMO COMBINAR */}
-      <section className="bg-slate-50 border-y border-slate-100 py-16 sm:py-24">
+      <section className="bg-white border-y border-slate-100 py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">

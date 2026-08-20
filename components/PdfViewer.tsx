@@ -461,7 +461,7 @@ export default function PdfViewer({
               onClick={zoomOut}
               disabled={zoomIndex === 0}
               className={cn(
-                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
               aria-label="Alejar zoom"
@@ -473,7 +473,7 @@ export default function PdfViewer({
               onClick={zoomIn}
               disabled={zoomIndex === ZOOM_LEVELS.length - 1}
               className={cn(
-                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
               aria-label="Acercar zoom"
@@ -499,7 +499,7 @@ export default function PdfViewer({
               }}
               disabled={!canGoPrev}
               className={cn(
-                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
               aria-label="Pagina anterior"
@@ -515,7 +515,7 @@ export default function PdfViewer({
               }}
               disabled={!canGoNext}
               className={cn(
-                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
                 isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
               )}
               aria-label="Pagina siguiente"
@@ -528,7 +528,7 @@ export default function PdfViewer({
                 type="button"
                 onClick={() => void toggleFullscreen()}
                 className={cn(
-                  'inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 sm:h-10 sm:w-10',
+                  'inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-white sm:h-10 sm:w-10',
                   isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
                 )}
                 aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
@@ -544,7 +544,7 @@ export default function PdfViewer({
         {showSidebarThumbnails ? (
           <aside
             className={cn(
-              'hidden border-r border-slate-200 bg-[#f8fafc] lg:block',
+              'hidden border-r border-slate-200 bg-white lg:block',
               isStudyTheme && 'border-white/8 bg-[#111214]'
             )}
           >
@@ -568,7 +568,7 @@ export default function PdfViewer({
                           'w-full rounded-2xl border p-2 text-left transition',
                           active
                             ? 'border-indigo-300 bg-indigo-50'
-                            : 'border-slate-200 bg-white hover:bg-slate-50',
+                            : 'border-slate-200 bg-white hover:bg-white',
                           isStudyTheme &&
                             (active
                               ? 'border-amber-500/30 bg-[#2A2118]'
@@ -591,7 +591,7 @@ export default function PdfViewer({
                           ) : (
                             <div
                               className={cn(
-                                'flex h-[170px] items-center justify-center bg-slate-50 text-[12px] font-medium text-slate-500',
+                                'flex h-[170px] items-center justify-center bg-white text-[12px] font-medium text-slate-500',
                                 isStudyTheme && 'bg-[#18191C] text-slate-500'
                               )}
                             >
@@ -616,7 +616,7 @@ export default function PdfViewer({
           </aside>
         ) : null}
 
-        <div className={cn('bg-[#eef2f7] p-2 sm:p-3', isStudyTheme && 'bg-[#17181C]')}>
+        <div className={cn('bg-white p-2 sm:p-3', isStudyTheme && 'bg-[#17181C]')}>
           <div
             ref={pageViewportRef}
             className={cn(
@@ -759,7 +759,7 @@ export default function PdfViewer({
                                 destination: '/login',
                               })
                             }
-                            className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                            className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                           >
                             Iniciar sesión
                           </Link>

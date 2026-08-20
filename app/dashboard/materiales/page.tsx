@@ -17,7 +17,12 @@ function isMissingStudentMaterialsTableError(error: unknown) {
   return code === '42P01' || message.toLowerCase().includes('student_materials');
 }
 
-export default async function DashboardMaterialsPage() {
+export default async function DashboardMaterialsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ openUpload?: string }>;
+}) {
+  const { openUpload } = await searchParams;
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -30,14 +35,25 @@ export default async function DashboardMaterialsPage() {
   try {
     const publicClient = createPublicClient();
 
-    const [materials, universidadesResult, carrerasResult, materiasResult, carreraMateriasResult] =
-      await Promise.all([
-        fetchStudentMaterialsByUser(supabase, user.id),
-        publicClient.from('universidades').select('id, nombre').order('nombre'),
-        publicClient.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-        publicClient.from('materias').select('id, nombre, carrera_id').order('nombre'),
-        publicClient.from('carrera_materias').select('carrera_id, materia_id'),
-      ]);
+    const [
+      materials,
+      universidadesResult,
+      carrerasResult,
+      materiasResult,
+      carreraMateriasResult,
+      profileResult,
+    ] = await Promise.all([
+      fetchStudentMaterialsByUser(supabase, user.id),
+      publicClient.from('universidades').select('id, nombre').order('nombre'),
+      publicClient.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+      publicClient.from('materias').select('id, nombre, carrera_id').order('nombre'),
+      publicClient.from('carrera_materias').select('carrera_id, materia_id'),
+      supabase
+        .from('profiles')
+        .select('universidad_id, carrera_id')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ]);
 
     if (universidadesResult.error) {
       throw universidadesResult.error;
@@ -55,8 +71,12 @@ export default async function DashboardMaterialsPage() {
       throw carreraMateriasResult.error;
     }
 
+    if (profileResult.error) {
+      throw profileResult.error;
+    }
+
     return (
-      <div className="animate-page-enter min-h-screen bg-gradient-to-br from-background/95 via-white/80 to-emerald-50/20 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="animate-page-enter from-background/95 min-h-screen bg-gradient-to-br via-white/80 to-emerald-50/20 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <StudentMaterialsWorkspace
             initialMaterials={materials}
@@ -64,6 +84,9 @@ export default async function DashboardMaterialsPage() {
             carreras={carrerasResult.data ?? []}
             materias={materiasResult.data ?? []}
             carreraMaterias={carreraMateriasResult.data ?? []}
+            initialUniversidadId={profileResult.data?.universidad_id ?? ''}
+            initialCarreraId={profileResult.data?.carrera_id ?? ''}
+            initialOpenUpload={openUpload === '1'}
           />
         </div>
       </div>
@@ -84,8 +107,8 @@ export default async function DashboardMaterialsPage() {
               Falta activar el espacio de materiales
             </h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              La tabla `student_materials` todavía no existe en la base de datos remota, así que esta
-              sección no puede cargar ni guardar PDFs todavía.
+              La tabla `student_materials` todavía no existe en la base de datos remota, así que
+              esta sección no puede cargar ni guardar PDFs todavía.
             </p>
             <p className="mt-3 text-xs leading-5 text-slate-500">
               Aplicá la migración nueva de Supabase y volvé a entrar a esta pantalla.
@@ -100,7 +123,7 @@ export default async function DashboardMaterialsPage() {
             </Link>
             <Link
               href="/materias"
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
             >
               Ir a materias
             </Link>

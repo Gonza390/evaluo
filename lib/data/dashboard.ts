@@ -122,9 +122,31 @@ export async function fetchDashboardMateriaSummaries(): Promise<DashboardMateria
 
 export async function searchDashboardMateriaSummaries(
   query: string,
-  limit = 24
+  limit = 24,
+  carreraId?: string | null
 ): Promise<DashboardMateriaSummary[]> {
   const trimmedQuery = query.trim();
+
+  let careerMateriaIds: string[] = [];
+  if (carreraId) {
+    const { data: relations, error: relationsError } = await supabase
+      .from('carrera_materias')
+      .select('materia_id')
+      .eq('carrera_id', carreraId);
+
+    if (relationsError) {
+      throw relationsError;
+    }
+
+    careerMateriaIds = Array.from(
+      new Set(
+        (relations ?? [])
+          .map((relation) => relation.materia_id)
+          .filter((id): id is string => typeof id === 'string' && id.length > 0)
+      )
+    );
+  }
+
   let request = supabase.from('materias').select('id, nombre, carrera_id');
 
   if (trimmedQuery.length > 0) {
@@ -141,7 +163,17 @@ export async function searchDashboardMateriaSummaries(
     (materias ?? []).map((materia) => materia.carrera_id).filter(Boolean) as string[]
   );
 
-  return mapMateriaSummaries(materias ?? [], carrerasMap);
+  const summaries = mapMateriaSummaries(materias ?? [], carrerasMap);
+
+  if (careerMateriaIds.length === 0) {
+    return summaries;
+  }
+
+  const careerIdSet = new Set(careerMateriaIds);
+  const careerMaterias = summaries.filter((materia) => careerIdSet.has(materia.id));
+  const otherMaterias = summaries.filter((materia) => !careerIdSet.has(materia.id));
+
+  return [...careerMaterias, ...otherMaterias];
 }
 
 export async function fetchDashboardMateriaDetailsByIds(

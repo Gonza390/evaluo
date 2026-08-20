@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { getMateriaRoute } from '@/lib/routes';
 import { isUuid } from '@/lib/uuid';
 import {
+  buildPedagogicalArtifacts,
   ensureStudentMaterialStudyArtifacts,
 } from '@/lib/student-material-summary';
 import { createClientServer } from '@/lib/supabase-server';
@@ -63,7 +64,11 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
     const [{ data: carrera }, { data: universidad }, { data: materia }, signedUrlResult] =
       await Promise.all([
         admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
-        admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
+        admin
+          .from('universidades')
+          .select('nombre')
+          .eq('id', material.universidad_id)
+          .maybeSingle(),
         admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
         admin.storage.from('biblioteca').createSignedUrl(material.file_path, 60 * 15),
       ]);
@@ -85,25 +90,31 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
             </div>
             <div>
               <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">
-                {material.processing_status === 'failed' ? 'Este material tuvo un error' : 'Estamos preparando este material'}
+                {material.processing_status === 'failed'
+                  ? 'Este material tuvo un error'
+                  : 'Estamos preparando este material'}
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {material.processing_status === 'failed'
-                  ? material.processing_error ?? 'No pudimos generar el espacio de estudio del PDF.'
-                  : material.processing_message ?? 'Seguimos generando el resumen y el glosario del documento.'}
+                  ? (material.processing_error ??
+                    'No pudimos generar el espacio de estudio del PDF.')
+                  : (material.processing_message ??
+                    'Seguimos generando el resumen y el glosario del documento.')}
               </p>
               <p className="mt-3 text-xs leading-5 text-slate-500">
                 Progreso actual: {material.processing_progress ?? 0}%.
               </p>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-2 overflow-hidden rounded-full bg-white">
               <div
                 className={`h-full rounded-full ${
                   material.processing_status === 'failed'
                     ? 'bg-red-400'
                     : 'bg-[linear-gradient(90deg,#F59E0B_0%,#FB923C_45%,#2563EB_100%)]'
                 }`}
-                style={{ width: `${Math.min(100, Math.max(0, material.processing_progress ?? 0))}%` }}
+                style={{
+                  width: `${Math.min(100, Math.max(0, material.processing_progress ?? 0))}%`,
+                }}
               />
             </div>
             <div className="flex flex-wrap gap-3">
@@ -114,8 +125,12 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
                 Volver a materiales
               </Link>
               <Link
-                href={isOwner ? '/dashboard/materiales' : getMateriaRoute(material.materia_id, material.carrera_id)}
-                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                href={
+                  isOwner
+                    ? '/dashboard/materiales'
+                    : getMateriaRoute(material.materia_id, material.carrera_id)
+                }
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-white"
               >
                 Actualizar luego
               </Link>
@@ -148,13 +163,18 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
                 Estamos sincronizando el material
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                El PDF ya figura como listo, pero todavía no encontramos todos los artefactos persistidos.
-                En breve debería aparecer el resumen y el glosario sin reprocesar desde esta vista.
+                El PDF ya figura como listo, pero todavía no encontramos todos los artefactos
+                persistidos. En breve debería aparecer el resumen y el glosario sin reprocesar desde
+                esta vista.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link
-                href={isOwner ? '/dashboard/materiales' : getMateriaRoute(material.materia_id, material.carrera_id)}
+                href={
+                  isOwner
+                    ? '/dashboard/materiales'
+                    : getMateriaRoute(material.materia_id, material.carrera_id)
+                }
                 className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
               >
                 Volver
@@ -165,9 +185,30 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       );
     }
 
+    const { data: sourceChunks } = await admin
+      .from('student_material_chunks')
+      .select('chunk_text, page_start, page_end, section_title')
+      .eq('student_material_id', material.id)
+      .order('chunk_index', { ascending: true });
+    const pedagogicalArtifacts = buildPedagogicalArtifacts({
+      summary: studySummary,
+      glossary: studyGlossary,
+      chunks: (sourceChunks ?? []).map((chunk) => ({
+        text: chunk.chunk_text,
+        pageStart: chunk.page_start,
+        pageEnd: chunk.page_end,
+        sectionTitle: chunk.section_title,
+        excerpt: '',
+      })),
+    });
+
     return (
       <MaterialStudyWorkspace
-        backHref={isOwner ? '/dashboard/materiales' : getMateriaRoute(material.materia_id, material.carrera_id)}
+        backHref={
+          isOwner
+            ? '/dashboard/materiales'
+            : getMateriaRoute(material.materia_id, material.carrera_id)
+        }
         canRegenerate={canRegenerate}
         carreraName={carrera?.nombre ?? 'Carrera'}
         fileName={material.file_name}
@@ -181,6 +222,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
         visibility={normalizeMaterialVisibility(material.visibility)}
         studyGlossary={studyGlossary}
         studySummary={studySummary}
+        pedagogicalArtifacts={pedagogicalArtifacts}
       />
     );
   } catch (error) {

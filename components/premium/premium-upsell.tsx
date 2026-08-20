@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -21,12 +22,21 @@ export function PremiumUpsell({
   ctaLabel = 'Quiero pasarme a Premium',
   materiaId,
 }: PremiumUpsellProps) {
+  useEffect(() => {
+    trackMarketingEvent('premium_gate_viewed', {
+      source,
+      materia_id: materiaId ?? undefined,
+    });
+  }, [materiaId, source]);
+
   const handleUpgrade = () => {
     trackMarketingEvent('premium_cta_clicked', {
       source,
       materia_id: materiaId ?? undefined,
     });
-    window.location.assign('/pricing');
+    const params = new URLSearchParams({ source });
+    if (materiaId) params.set('materia', materiaId);
+    window.location.assign(`/pricing?${params.toString()}#elegir-plan`);
   };
 
   return (
@@ -36,7 +46,7 @@ export function PremiumUpsell({
           <Sparkles className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base font-bold leading-snug text-slate-950">{title}</h3>
+          <h3 className="text-base leading-snug font-bold text-slate-950">{title}</h3>
           <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
         </div>
       </div>

@@ -90,11 +90,11 @@ export function ExamRemindersPanel() {
         {loading ? (
           <div className="space-y-2.5">
             {Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="h-16 animate-pulse rounded-xl border border-slate-200 bg-slate-50" />
+              <div key={index} className="h-16 animate-pulse rounded-xl border border-slate-200 bg-white" />
             ))}
           </div>
         ) : reminders.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center">
+          <div className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center">
             <CalendarDays className="mx-auto h-7 w-7 text-slate-300" />
             <p className="mt-2 text-sm font-medium text-slate-600">
               No hay parciales próximos con recordatorios
@@ -125,7 +125,7 @@ export function ExamRemindersPanel() {
               <button
                 type="button"
                 onClick={() => void handleDismiss(reminder)}
-                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-white hover:text-slate-600"
                 aria-label="Descartar recordatorio"
               >
                 <X className="h-4 w-4" />

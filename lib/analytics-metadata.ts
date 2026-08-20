@@ -10,6 +10,7 @@ const ATTRIBUTION_KEYS = new Set([
   'utm_content',
   'utm_term',
   'ref_user',
+  'share_id',
   'landing_path',
   'captured_at',
   'latest_utm_source',
@@ -18,6 +19,7 @@ const ATTRIBUTION_KEYS = new Set([
   'latest_utm_content',
   'latest_utm_term',
   'latest_ref_user',
+  'latest_share_id',
 ]);
 
 const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
@@ -43,6 +45,27 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'destination',
     'plan_context',
   ],
+  premium_preview_viewed: ['attribution', 'anonymous_id', 'page_type', 'source'],
+  premium_preview_interacted: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'source',
+    'preview_step',
+  ],
+  premium_checkout_clicked: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'source',
+    'materia_id',
+    'plan_context',
+  ],
+  premium_checkout_created: ['source', 'materia_id', 'plan_context', 'amount_ars'],
+  premium_checkout_failed: ['source', 'materia_id', 'plan_context', 'reason'],
+  premium_checkout_returned: ['attribution', 'anonymous_id', 'page_type', 'status'],
+  premium_subscription_activated: ['provider', 'amount_ars', 'promotion'],
+  premium_onboarding_started: ['attribution', 'anonymous_id', 'page_type', 'destination'],
   login_started: ['attribution', 'anonymous_id', 'page_type', 'location', 'provider'],
   login_success: ['source_path', 'attribution', 'anonymous_id', 'page_type'],
   login_error: ['attribution', 'anonymous_id', 'page_type', 'location', 'provider', 'error_code'],
@@ -57,8 +80,22 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'cta',
     'destination',
   ],
-  auth_mode_switch: ['attribution', 'anonymous_id', 'page_type', 'location', 'current_mode', 'next_mode'],
-  pdf_gate_viewed: ['attribution', 'anonymous_id', 'page_type', 'location', 'resource_title', 'preview_pages'],
+  auth_mode_switch: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'location',
+    'current_mode',
+    'next_mode',
+  ],
+  pdf_gate_viewed: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'location',
+    'resource_title',
+    'preview_pages',
+  ],
   pdf_gate_cta_clicked: [
     'attribution',
     'anonymous_id',
@@ -69,7 +106,14 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'cta_name',
     'destination',
   ],
-  materia_tab_viewed: ['attribution', 'materia_id', 'carrera_id', 'universidad_id', 'tab', 'source'],
+  materia_tab_viewed: [
+    'attribution',
+    'materia_id',
+    'carrera_id',
+    'universidad_id',
+    'tab',
+    'source',
+  ],
   materia_resumen_opened: [
     'attribution',
     'materia_id',
@@ -101,6 +145,27 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'parcial',
     'label',
   ],
+  preguntero_shared: [
+    'attribution',
+    'materia_id',
+    'parcial',
+    'carrera_id',
+    'universidad_id',
+    'share_id',
+    'share_method',
+    'share_kind',
+    'destination',
+  ],
+  simulator_ready: [
+    'attribution',
+    'materia_id',
+    'parcial',
+    'carrera_id',
+    'universidad_id',
+    'mode',
+    'premium_only',
+    'available_questions',
+  ],
   simulator_started: [
     'attribution',
     'materia_id',
@@ -113,6 +178,32 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'answered_count',
     'progress_pct',
     'time_left_sec',
+  ],
+  simulator_progress_checkpoint: [
+    'attribution',
+    'materia_id',
+    'parcial',
+    'carrera_id',
+    'universidad_id',
+    'mode',
+    'premium_only',
+    'answered_count',
+    'progress_pct',
+    'time_left_sec',
+    'checkpoint',
+    'correct_count',
+  ],
+  simulator_needs_feedback: [
+    'attribution',
+    'materia_id',
+    'parcial',
+    'mode',
+    'premium_only',
+    'answered_count',
+    'progress_pct',
+    'time_left_sec',
+    'reason',
+    'phase',
   ],
   simulator_resumed: [
     'attribution',
@@ -187,10 +278,15 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'mode',
     'premium_only',
     'result_pct',
+    'share_id',
+    'share_method',
+    'share_kind',
+    'destination',
   ],
   simulator_rating: ['materia_id', 'parcial', 'vote_type', 'rating', 'liked', 'source'],
   demo_checkpoint_reached: ['attribution', 'anonymous_id', 'page_type', 'materia_id', 'parcial'],
   premium_cta_clicked: ['attribution', 'anonymous_id', 'page_type', 'source', 'materia_id'],
+  premium_gate_viewed: ['attribution', 'anonymous_id', 'page_type', 'source', 'materia_id'],
   limit_reached_explanations: ['materia_id', 'parcial', 'wrong_answers_count', 'limit'],
   limit_reached_errores_review: ['materia_id', 'parcial', 'weekly_reviews', 'limit'],
   limit_reached_calendar_exam: ['exam_event_count', 'limit'],
@@ -206,7 +302,9 @@ function sanitizeAttribution(value: Json): Json | undefined {
   const sanitizedEntries = Object.entries(value as JsonRecord).filter(
     ([key, nestedValue]) =>
       ATTRIBUTION_KEYS.has(key) &&
-      (typeof nestedValue === 'string' || typeof nestedValue === 'number' || typeof nestedValue === 'boolean')
+      (typeof nestedValue === 'string' ||
+        typeof nestedValue === 'number' ||
+        typeof nestedValue === 'boolean')
   );
 
   if (sanitizedEntries.length === 0) return undefined;

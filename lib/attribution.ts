@@ -7,6 +7,7 @@ export type AttributionSnapshot = {
   utm_content?: string;
   utm_term?: string;
   ref_user?: string;
+  share_id?: string;
   landing_path?: string;
   captured_at?: string;
 };
@@ -59,6 +60,7 @@ export function captureAttributionFromLocation(
     utm_content: normalizeValue(params.get('utm_content')),
     utm_term: normalizeValue(params.get('utm_term')),
     ref_user: normalizeValue(params.get('ref_user')),
+    share_id: normalizeValue(params.get('share_id')),
     landing_path: pathname,
     captured_at: new Date().toISOString(),
   };
@@ -93,16 +95,30 @@ export function getAttributionSnapshot(): AttributionSnapshot | null {
     latest_utm_content: latestTouch?.utm_content,
     latest_utm_term: latestTouch?.utm_term,
     latest_ref_user: latestTouch?.ref_user,
+    latest_share_id: latestTouch?.share_id,
   } as AttributionSnapshot & Record<string, string | undefined>;
 }
 
-export function buildShareReferralUrl(path: string, userId: string) {
+export function createShareTrackingId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `share_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+}
+
+export function buildShareReferralUrl(
+  path: string,
+  userId?: string | null,
+  options: { campaign?: string; shareId?: string } = {}
+) {
   if (typeof window === 'undefined') return path;
 
   const url = new URL(path, window.location.origin);
   url.searchParams.set('utm_source', 'share');
   url.searchParams.set('utm_medium', 'referral');
-  url.searchParams.set('utm_campaign', 'resultado_simulador');
-  url.searchParams.set('ref_user', userId);
+  url.searchParams.set('utm_campaign', options.campaign ?? 'resultado_simulador');
+  if (userId) url.searchParams.set('ref_user', userId);
+  if (options.shareId) url.searchParams.set('share_id', options.shareId);
   return url.toString();
 }

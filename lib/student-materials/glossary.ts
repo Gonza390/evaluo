@@ -1,6 +1,12 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
-import { requestGeminiImagesJson, requestGeminiJson, requestGeminiPdfJson, requestGroqJson, requestNvidiaJson } from '@/lib/ai/providers';
+import {
+  requestGeminiImagesJson,
+  requestGeminiJson,
+  requestGeminiPdfJson,
+  requestGroqJson,
+  requestNvidiaJson,
+} from '@/lib/ai/providers';
 import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 import { extractJsonObject } from '@/lib/ai/json';
 import {
@@ -38,21 +44,29 @@ function buildGlossaryStrategyInstructions(input: GenerateSummaryInput) {
 
   if (analysis.processingStrategy === 'slide_layout') {
     lines.push('El PDF se parece a una presentacion o diapositiva.');
-    lines.push('Extrae terminos desde titulos, subtitulos, bullets, siglas, etiquetas y conceptos repetidos entre diapositivas.');
+    lines.push(
+      'Extrae terminos desde titulos, subtitulos, bullets, siglas, etiquetas y conceptos repetidos entre diapositivas.'
+    );
   }
 
   if (analysis.processingStrategy === 'hybrid_text') {
     lines.push('El PDF mezcla texto e imagenes.');
-    lines.push('Prioriza conceptos visibles, definiciones, modelos, etapas, clasificaciones y autores nombrados en el texto extraido.');
+    lines.push(
+      'Prioriza conceptos visibles, definiciones, modelos, etapas, clasificaciones y autores nombrados en el texto extraido.'
+    );
   }
 
   if (analysis.processingStrategy === 'ocr_recommended') {
     lines.push('El PDF parece escaneado o con texto parcial.');
-    lines.push('No inventes terminos no visibles. Recupera la mayor cobertura posible a partir de encabezados, listas y definiciones explicitamente extraidas.');
+    lines.push(
+      'No inventes terminos no visibles. Recupera la mayor cobertura posible a partir de encabezados, listas y definiciones explicitamente extraidas.'
+    );
   }
 
   if (analysis.hasTables) {
-    lines.push('Se detectaron posibles tablas: incluye categorias, tipos, ambitos y comparaciones si aparecen en el contenido.');
+    lines.push(
+      'Se detectaron posibles tablas: incluye categorias, tipos, ambitos y comparaciones si aparecen en el contenido.'
+    );
   }
 
   return lines;
@@ -121,14 +135,33 @@ function isNoisyGlossaryTerm(term: string) {
 
 function filterSectionTitleTerms(items: StudyGlossaryItem[], sectionTitles: string[]) {
   const stripNumbering = (value: string) =>
-    stripLeadingArticle(value).replace(/^\d+(?:\.\d+)*\.?\s+/, '').trim();
+    stripLeadingArticle(value)
+      .replace(/^\d+(?:\.\d+)*\.?\s+/, '')
+      .trim();
   const normalizedTitles = new Set(
     sectionTitles.map((title) => normalizeForDedupe(stripNumbering(title)))
   );
-  return items.filter((item) => !normalizedTitles.has(normalizeForDedupe(stripNumbering(item.term))));
+  return items.filter(
+    (item) => !normalizedTitles.has(normalizeForDedupe(stripNumbering(item.term)))
+  );
 }
 
-function sanitizeGlossaryItems(items: StudyGlossaryItem[]): StudyGlossaryItem[] {
+function isMaterialMetadataTerm(term: string, input?: GenerateSummaryInput) {
+  const normalized = normalizeForDedupe(term);
+  if (!normalized) return true;
+  if (/universidad.+carrera.+materia/i.test(term)) return true;
+  if (!input) return false;
+
+  return [input.title, input.universidadName, input.carreraName, input.materiaName]
+    .filter((value): value is string => Boolean(value))
+    .map(normalizeForDedupe)
+    .some((metadata) => metadata.length >= 4 && normalized === metadata);
+}
+
+function sanitizeGlossaryItems(
+  items: StudyGlossaryItem[],
+  input?: GenerateSummaryInput
+): StudyGlossaryItem[] {
   return items
     .map((item) => ({
       term: stripLeadingArticle(sentenceCase(item.term)),
@@ -141,6 +174,7 @@ function sanitizeGlossaryItems(items: StudyGlossaryItem[]): StudyGlossaryItem[] 
       (item) =>
         isGoodGlossaryTerm(item.term) &&
         !isNoisyGlossaryTerm(item.term) &&
+        !isMaterialMetadataTerm(item.term, input) &&
         item.definition.length >= 20
     )
     .sort((a, b) => a.term.localeCompare(b.term, 'es', { sensitivity: 'base' }))
@@ -159,10 +193,7 @@ function normalizeGlossaryTerm(term: string) {
 }
 
 function extractGlossaryCandidatesFromText(text: string) {
-  const lines = text
-    .split(/\r?\n/)
-    .map(cleanLine)
-    .filter(Boolean);
+  const lines = text.split(/\r?\n/).map(cleanLine).filter(Boolean);
 
   const paragraphs = text
     .split(/\n\s*\n/)
@@ -170,10 +201,19 @@ function extractGlossaryCandidatesFromText(text: string) {
     .filter((paragraph) => paragraph.length >= 50);
 
   let currentHeading = '';
-  const candidates: Array<{ term: string; definition: string; context: string; importance: 'alta' | 'media' }> = [];
+  const candidates: Array<{
+    term: string;
+    definition: string;
+    context: string;
+    importance: 'alta' | 'media';
+  }> = [];
 
   for (const line of lines) {
-    if (/^(\d+([.)-])\s+|\p{Lu}[\p{L}\p{N}\s/-]{4,})$/u.test(line) && line.length <= 80 && !line.includes(':')) {
+    if (
+      /^(\d+([.)-])\s+|\p{Lu}[\p{L}\p{N}\s/-]{4,})$/u.test(line) &&
+      line.length <= 80 &&
+      !line.includes(':')
+    ) {
       currentHeading = normalizeGlossaryTerm(line.replace(/^\d+([.)-])\s+/, ''));
       continue;
     }
@@ -187,9 +227,10 @@ function extractGlossaryCandidatesFromText(text: string) {
           term: rawTerm,
           definition,
           context: currentHeading || 'Concepto del documento',
-          importance: /(defin|tipolog|modelo|etapa|dimension|teor|paradigma|revoluci|sistema)/i.test(rawTerm)
-            ? 'alta'
-            : 'media',
+          importance:
+            /(defin|tipolog|modelo|etapa|dimension|teor|paradigma|revoluci|sistema)/i.test(rawTerm)
+              ? 'alta'
+              : 'media',
         });
       }
 
@@ -223,7 +264,9 @@ function extractGlossaryCandidatesFromText(text: string) {
   }
 
   for (const paragraph of paragraphs) {
-    const defineMatch = paragraph.match(/^(.{4,72}?)\s+(?:se define como|es|consiste en|se caracteriza por)\s+(.{25,})$/i);
+    const defineMatch = paragraph.match(
+      /^(.{4,72}?)\s+(?:se define como|es|consiste en|se caracteriza por)\s+(.{25,})$/i
+    );
     if (defineMatch) {
       const term = normalizeGlossaryTerm(defineMatch[1] ?? '');
       const definition = truncateAtWord(cleanLine(defineMatch[2] ?? ''), 360);
@@ -245,10 +288,7 @@ function extractGlossaryCandidatesFromSections(sections: StudySummarySection[]) 
   const candidates: StudyGlossaryItem[] = [];
 
   for (const section of sections) {
-    const lines = section.body
-      .split('\n')
-      .map(cleanLine)
-      .filter(Boolean);
+    const lines = section.body.split('\n').map(cleanLine).filter(Boolean);
 
     let currentSubheading = section.title;
 
@@ -276,10 +316,15 @@ function extractGlossaryCandidatesFromSections(sections: StudySummarySection[]) 
         continue;
       }
 
-      const leadingConceptMatch = bullet.match(/^([\p{Lu}][^,.();:]{3,64})\s+(?:es|son|se define|se entiende|implica|incluye|permite)\s+(.{18,})$/iu);
+      const leadingConceptMatch = bullet.match(
+        /^([\p{Lu}][^,.();:]{3,64})\s+(?:es|son|se define|se entiende|implica|incluye|permite)\s+(.{18,})$/iu
+      );
       if (leadingConceptMatch) {
         const term = normalizeGlossaryTerm(leadingConceptMatch[1] ?? '');
-        const definition = truncateAtWord(cleanLine(`${leadingConceptMatch[1] ?? ''} ${leadingConceptMatch[2] ?? ''}`), 360);
+        const definition = truncateAtWord(
+          cleanLine(`${leadingConceptMatch[1] ?? ''} ${leadingConceptMatch[2] ?? ''}`),
+          360
+        );
         if (isGoodGlossaryTerm(term) && definition.length >= 24) {
           candidates.push({
             term,
@@ -308,7 +353,10 @@ export function buildStudentMaterialGlossary(
       term: normalizeGlossaryTerm(concept.term),
       definition: truncateAtWord(cleanLine(concept.detail), 320),
       context: buildGlossaryContext(model.sectionTitles, index),
-      importance: concept.kind === 'definicion' || concept.kind === 'clasificacion' ? ('alta' as const) : ('media' as const),
+      importance:
+        concept.kind === 'definicion' || concept.kind === 'clasificacion'
+          ? ('alta' as const)
+          : ('media' as const),
     })),
   ];
   const glossaryFromSections = extractGlossaryCandidatesFromSections(summary.sections);
@@ -343,10 +391,17 @@ export function buildStudentMaterialGlossary(
     ...glossaryFromSummary.map((item) => item.term),
   ])
     .map((term, index) => {
-      const fromText = glossaryFromText.find((item) => normalizeForDedupe(item.term) === normalizeForDedupe(term));
-      const fromSection = glossaryFromSections.find((item) => normalizeForDedupe(item.term) === normalizeForDedupe(term));
-      const fromSummary = glossaryFromSummary.find((item) => normalizeForDedupe(item.term) === normalizeForDedupe(term));
-      const definition = fromText?.definition ?? fromSection?.definition ?? fromSummary?.definition ?? '';
+      const fromText = glossaryFromText.find(
+        (item) => normalizeForDedupe(item.term) === normalizeForDedupe(term)
+      );
+      const fromSection = glossaryFromSections.find(
+        (item) => normalizeForDedupe(item.term) === normalizeForDedupe(term)
+      );
+      const fromSummary = glossaryFromSummary.find(
+        (item) => normalizeForDedupe(item.term) === normalizeForDedupe(term)
+      );
+      const definition =
+        fromText?.definition ?? fromSection?.definition ?? fromSummary?.definition ?? '';
       if (!definition) return null;
 
       return {
@@ -492,7 +547,10 @@ export async function generateStudentMaterialGlossary(
   summary: StudentMaterialSummary
 ): Promise<StudyGlossaryItem[]> {
   const chunks = buildSummaryChunks(input.text);
-  const fallbackGlossary = buildStudentMaterialGlossary(input.text, summary);
+  const fallbackGlossary = sanitizeGlossaryItems(
+    buildStudentMaterialGlossary(input.text, summary),
+    input
+  );
   if (chunks.length === 0) {
     return fallbackGlossary;
   }
@@ -526,13 +584,18 @@ export async function generateStudentMaterialGlossary(
         parseGlossaryPayload(content),
         summary.sections.map((section) => section.title)
       );
-      return sanitizeGlossaryItems([
-        ...glossary,
-        ...fallbackGlossary.filter(
-          (item) =>
-            !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
-        ),
-      ]).filter((item) => !/[\p{L}]{14,}/u.test(item.definition));
+      return sanitizeGlossaryItems(
+        [
+          ...glossary,
+          ...fallbackGlossary.filter(
+            (item) =>
+              !glossary.some(
+                (existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term)
+              )
+          ),
+        ],
+        input
+      ).filter((item) => !/[\p{L}]{35,}/u.test(item.definition));
     };
 
     try {
@@ -576,64 +639,6 @@ export async function generateStudentMaterialGlossary(
   }
 
   try {
-    const groqResult = await requestGroqJson({
-      prompt,
-      system:
-        'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
-      temperature: 0.08,
-      maxTokens: 2400,
-    });
-    if (groqResult) {
-      const glossary = filterSectionTitleTerms(
-        parseGlossaryPayload(groqResult.content),
-        summary.sections.map((section) => section.title)
-      );
-      const mergedGlossary = sanitizeGlossaryItems([
-        ...glossary,
-        ...fallbackGlossary.filter(
-          (item) =>
-            !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
-        ),
-      ]);
-
-      if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
-        return mergedGlossary;
-      }
-    }
-  } catch (error) {
-    logError('studentMaterialGlossary.groq', error, { title: input.title });
-  }
-
-  try {
-    const nvidiaResult = await requestNvidiaJson({
-      prompt,
-      system:
-        'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
-      temperature: 0.08,
-      maxTokens: 2400,
-    });
-    if (nvidiaResult) {
-      const glossary = filterSectionTitleTerms(
-        parseGlossaryPayload(nvidiaResult.content),
-        summary.sections.map((section) => section.title)
-      );
-      const mergedGlossary = sanitizeGlossaryItems([
-        ...glossary,
-        ...fallbackGlossary.filter(
-          (item) =>
-            !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
-        ),
-      ]);
-
-      if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
-        return mergedGlossary;
-      }
-    }
-  } catch (error) {
-    logError('studentMaterialGlossary.nvidia', error, { title: input.title });
-  }
-
-  try {
     const geminiResult = await requestGeminiJson({
       prompt,
       temperature: 0.14,
@@ -664,13 +669,18 @@ export async function generateStudentMaterialGlossary(
         parseGlossaryPayload(geminiResult.content),
         summary.sections.map((section) => section.title)
       );
-      const mergedGlossary = sanitizeGlossaryItems([
-        ...glossary,
-        ...fallbackGlossary.filter(
-          (item) =>
-            !glossary.some((existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term))
-        ),
-      ]);
+      const mergedGlossary = sanitizeGlossaryItems(
+        [
+          ...glossary,
+          ...fallbackGlossary.filter(
+            (item) =>
+              !glossary.some(
+                (existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term)
+              )
+          ),
+        ],
+        input
+      );
 
       if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
         return mergedGlossary;
@@ -678,6 +688,74 @@ export async function generateStudentMaterialGlossary(
     }
   } catch (error) {
     logError('studentMaterialGlossary.gemini', error, { title: input.title });
+  }
+
+  try {
+    const groqResult = await requestGroqJson({
+      prompt,
+      system:
+        'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
+      temperature: 0.08,
+      maxTokens: 2400,
+    });
+    if (groqResult) {
+      const glossary = filterSectionTitleTerms(
+        parseGlossaryPayload(groqResult.content),
+        summary.sections.map((section) => section.title)
+      );
+      const mergedGlossary = sanitizeGlossaryItems(
+        [
+          ...glossary,
+          ...fallbackGlossary.filter(
+            (item) =>
+              !glossary.some(
+                (existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term)
+              )
+          ),
+        ],
+        input
+      );
+
+      if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
+        return mergedGlossary;
+      }
+    }
+  } catch (error) {
+    logError('studentMaterialGlossary.groq', error, { title: input.title });
+  }
+
+  try {
+    const nvidiaResult = await requestNvidiaJson({
+      prompt,
+      system:
+        'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
+      temperature: 0.08,
+      maxTokens: 2400,
+    });
+    if (nvidiaResult) {
+      const glossary = filterSectionTitleTerms(
+        parseGlossaryPayload(nvidiaResult.content),
+        summary.sections.map((section) => section.title)
+      );
+      const mergedGlossary = sanitizeGlossaryItems(
+        [
+          ...glossary,
+          ...fallbackGlossary.filter(
+            (item) =>
+              !glossary.some(
+                (existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term)
+              )
+          ),
+        ],
+        input
+      );
+
+      if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
+        return mergedGlossary;
+      }
+    }
+  } catch (error) {
+    logError('studentMaterialGlossary.nvidia', error, { title: input.title });
   }
 
   return fallbackGlossary;

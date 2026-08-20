@@ -16,6 +16,7 @@ const LINE_Y_TOLERANCE = 3;
 const COLUMN_SPLIT_MIN_WIDTH = 18;
 const CELL_GAP_PX = 14;
 const TABLE_MIN_ROWS = 3;
+const TABLE_MIN_CELLS = 2;
 const TABLE_MAX_CELLS = 9;
 const COLUMN_MIN_LINE_START_MASS = 40;
 
@@ -28,9 +29,10 @@ const COLUMN_MIN_LINE_START_MASS = 40;
 export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<{
   text: string;
   pageCount: number | null;
+  pages: string[] | null;
 }> {
   if (!buffer || buffer.length === 0) {
-    return { text: '', pageCount: null };
+    return { text: '', pageCount: null, pages: null };
   }
 
   try {
@@ -45,10 +47,11 @@ export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<{
     return {
       text: parsed.text ?? '',
       pageCount: typeof parsed.numpages === 'number' ? parsed.numpages : null,
+      pages: null,
     };
   } catch (error) {
     logError('studentMaterialPdfExtract.pdfParseFork', error);
-    return { text: '', pageCount: null };
+    return { text: '', pageCount: null, pages: null };
   }
 }
 
@@ -90,7 +93,8 @@ async function extractWithPdfjs(buffer: Buffer) {
       pages.push(buildPageText(fragments, viewport.width));
     }
 
-    return { text: pages.filter((pageText) => pageText.trim().length > 0).join('\n\n'), pageCount };
+    const cleanedPages = cleanRepeatedPageChrome(pages);
+    return { text: cleanedPages.filter(Boolean).join('\n\n'), pageCount, pages: cleanedPages };
   } finally {
     if (documentHandle) {
       void documentHandle.destroy().catch(() => undefined);
@@ -98,13 +102,70 @@ async function extractWithPdfjs(buffer: Buffer) {
   }
 }
 
+/**
+ * Quita encabezados y pies que se repiten en la misma posición de muchas
+ * páginas. La posición importa: una definición repetida dentro del cuerpo no
+ * debe desaparecer solo por aparecer varias veces en el apunte.
+ */
+export function cleanRepeatedPageChrome(pages: string[]) {
+  const nonEmptyPages = pages.map((page) =>
+    page
+      .split(/\r?\n/)
+      .map((line) => line.replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+  );
+  const minimumOccurrences = Math.max(3, Math.ceil(nonEmptyPages.length * 0.5));
+  const positionalFrequency = new Map<string, number>();
+
+  for (const lines of nonEmptyPages) {
+    const candidates = [
+      ...lines.slice(0, 2).map((line) => `header:${normalizeChromeLine(line)}`),
+      ...lines.slice(-2).map((line) => `footer:${normalizeChromeLine(line)}`),
+    ];
+    for (const candidate of new Set(candidates)) {
+      if (!candidate.endsWith(':')) {
+        positionalFrequency.set(candidate, (positionalFrequency.get(candidate) ?? 0) + 1);
+      }
+    }
+  }
+
+  return nonEmptyPages.map((lines) =>
+    lines
+      .filter((line, index) => {
+        if (line.length > 120) return true;
+        const position = index < 2 ? 'header' : index >= lines.length - 2 ? 'footer' : null;
+        if (!position) return true;
+        return (
+          (positionalFrequency.get(`${position}:${normalizeChromeLine(line)}`) ?? 0) <
+          minimumOccurrences
+        );
+      })
+      .join('\n')
+      .trim()
+  );
+}
+
+function normalizeChromeLine(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\b\d+\b/g, '#')
+    .replace(/[^a-z#]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function buildLines(fragments: TextFragment[]): Line[] {
-  const sorted = [...fragments].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+  const sorted = [...fragments].sort((a, b) => a.y - b.y || a.x - b.x);
   const lines: Line[] = [];
 
   for (const fragment of sorted) {
     const lastLine = lines[lines.length - 1];
-    if (lastLine && Math.abs(fragment.y - (lastLine.fragments[0]?.y ?? fragment.y)) <= LINE_Y_TOLERANCE) {
+    if (
+      lastLine &&
+      Math.abs(fragment.y - (lastLine.fragments[0]?.y ?? fragment.y)) <= LINE_Y_TOLERANCE
+    ) {
       lastLine.fragments.push(fragment);
     } else {
       lines.push({ fragments: [fragment] });
@@ -142,7 +203,10 @@ function detectColumnSplit(lines: Line[], pageWidth: number): { rightStart: numb
   }
 
   const meaningful = clusters
-    .filter((cluster) => cluster.mass >= COLUMN_MIN_LINE_START_MASS && cluster.end - cluster.start < pageWidth * 0.4)
+    .filter(
+      (cluster) =>
+        cluster.mass >= COLUMN_MIN_LINE_START_MASS && cluster.end - cluster.start < pageWidth * 0.4
+    )
     .sort((a, b) => a.start - b.start);
 
   if (meaningful.length < 2) return null;
@@ -226,61 +290,62 @@ function renderLine(line: Line) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-function splitCells(fragments: TextFragment[]) {
+function splitCellsWithPositions(fragments: TextFragment[]) {
   const sorted = [...fragments]
     .sort((a, b) => a.x - b.x)
     .filter((fragment) => fragment.text.trim());
 
-  const cells: string[] = [];
-  let current: string[] = [];
+  const cells: Array<{ text: string; start: number }> = [];
+  let current: TextFragment[] = [];
   let previousEnd = -Infinity;
 
   for (const fragment of sorted) {
     if (current.length > 0 && fragment.x - previousEnd > CELL_GAP_PX) {
-      cells.push(current.join(' '));
+      cells.push({
+        text: current.map((item) => item.text.trim()).join(' '),
+        start: current[0]?.x ?? 0,
+      });
       current = [];
     }
-    current.push(fragment.text.trim());
+    current.push(fragment);
     previousEnd = fragment.x + fragment.width;
   }
 
   if (current.length > 0) {
-    cells.push(current.join(' '));
+    cells.push({
+      text: current.map((item) => item.text.trim()).join(' '),
+      start: current[0]?.x ?? 0,
+    });
   }
 
-  return cells.filter((cell) => cell.length > 0);
+  return cells.filter((cell) => cell.text.length > 0);
 }
 
 function tryReadTableBlock(lines: Line[], startIndex: number) {
-  const firstCells = splitCells(lines[startIndex]?.fragments ?? []);
+  const firstCells = splitCellsWithPositions(lines[startIndex]?.fragments ?? []);
   const cellCount = firstCells.length;
-  if (cellCount < 3 || cellCount > TABLE_MAX_CELLS) return null;
+  if (cellCount < TABLE_MIN_CELLS || cellCount > TABLE_MAX_CELLS) return null;
 
-  const anchorStarts = (lines[startIndex]?.fragments ?? [])
-    .filter((fragment) => fragment.text.trim())
-    .sort((a, b) => a.x - b.x)
-    .map((fragment) => Math.round(fragment.x));
+  // Comparamos el comienzo de las celdas, no cada item de pdf.js. Una misma
+  // celda puede llegar como una palabra, una frase o muchos glifos según cómo
+  // fue exportado el PDF.
+  const anchorStarts = firstCells.map((cell) => cell.start);
 
-  const rows: string[][] = [firstCells];
+  const rows: string[][] = [firstCells.map((cell) => cell.text)];
   let cursor = startIndex + 1;
 
   while (cursor < lines.length) {
     const line = lines[cursor];
-    const cells = splitCells(line.fragments ?? []);
+    const cells = splitCellsWithPositions(line.fragments ?? []);
     if (cells.length !== cellCount) break;
 
-    const sortedFragments = line.fragments
-      .filter((fragment) => fragment.text.trim())
-      .sort((a, b) => a.x - b.x);
-    if (sortedFragments.length !== anchorStarts.length) break;
-
-    const aligned = sortedFragments.every((fragment, fragmentIndex) => {
-      const anchor = anchorStarts[fragmentIndex];
-      return typeof anchor === 'number' && Math.abs(Math.round(fragment.x) - anchor) <= 12;
+    const aligned = cells.every((cell, cellIndex) => {
+      const anchor = anchorStarts[cellIndex];
+      return typeof anchor === 'number' && Math.abs(cell.start - anchor) <= 20;
     });
     if (!aligned) break;
 
-    rows.push(cells);
+    rows.push(cells.map((cell) => cell.text));
     cursor += 1;
   }
 

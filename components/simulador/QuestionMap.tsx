@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Flag, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,7 +26,7 @@ interface QuestionMapProps {
  * the mobile bottom bar. Preserves the exact markup and Tailwind classes from
  * the original inline rendering in SimuladorExamen.
  */
-export function QuestionMap({
+export const QuestionMap = memo(function QuestionMap({
   questionLimit,
   currentQuestionIndex,
   selectedAnswers,
@@ -88,7 +89,7 @@ export function QuestionMap({
                 isDesktop && 'transition',
                 !isDesktop && 'min-w-8 shrink-0 px-1',
                 isDisabled &&
-                  'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300',
+                  'cursor-not-allowed border-slate-100 bg-white text-slate-300',
                 !isDisabled &&
                   'border-slate-200 bg-white text-slate-700',
                 !isDisabled && isDesktop && 'hover:border-slate-300',
@@ -120,4 +121,4 @@ export function QuestionMap({
       </div>
     </>
   );
-}
+});

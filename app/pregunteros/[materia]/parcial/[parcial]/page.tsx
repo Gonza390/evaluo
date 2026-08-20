@@ -5,6 +5,7 @@ import { ArrowRight, BookOpen, HelpCircle, ListChecks, Sparkles, Target } from '
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { appendPregunteroAttribution } from '@/lib/preguntero-attribution';
 import {
   buildParcialHref,
   getPregunteroParcialData,
@@ -19,6 +20,7 @@ type PageProps = {
     materia: string;
     parcial: string;
   }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function buildParcialTitle(materiaNombre: string, parcial: '1' | '2' | 'integrador') {
@@ -35,15 +37,16 @@ function buildParcialDescription(input: {
   totalPreguntas: number;
 }) {
   const context = [input.carreraNombre, input.universidadNombre].filter(Boolean).join(' en ');
-  const parcialLabel = input.parcial === 'integrador' ? 'examen integrador' : `parcial ${input.parcial}`;
+  const parcialLabel =
+    input.parcial === 'integrador' ? 'examen integrador' : `parcial ${input.parcial}`;
   const base =
     input.totalPreguntas > 0
       ? `Practicá con ${input.totalPreguntas} preguntas del ${parcialLabel} de ${input.materiaNombre}`
       : `Practicá el ${parcialLabel} de ${input.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}, con simulador de parcial y feedback en Evaluo.`
-    : `${base}, con simulador de parcial y feedback en Evaluo.`;
+    ? `${base} para ${context}. Descubrí qué reforzar y entendé por qué te equivocaste.`
+    : `${base}. Descubrí qué reforzar y entendé por qué te equivocaste.`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -73,6 +76,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: buildParcialTitle(data.materiaNombre, data.parcial),
     description,
     alternates: { canonical: canonicalHref },
+    robots: {
+      index: data.totalPreguntas > 0,
+      follow: true,
+    },
     openGraph: {
       title: `${buildParcialTitle(data.materiaNombre, data.parcial)} | Evaluo`,
       description,
@@ -82,8 +89,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PregunteroParcialPage({ params }: PageProps) {
-  const resolvedParams = await params;
+export default async function PregunteroParcialPage({ params, searchParams }: PageProps) {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
   const materiaId = parseSeoEntitySlug(resolvedParams.materia).id;
   const parcial = parsePregunteroParcial(resolvedParams.parcial);
 
@@ -99,53 +106,53 @@ export default async function PregunteroParcialPage({ params }: PageProps) {
   const canonicalHref = buildParcialHref(data.materiaNombre, data.materiaId, data.parcial);
   const expectedMateriaSlug = buildSeoEntitySlug(data.materiaNombre, data.materiaId);
   if (resolvedParams.materia !== expectedMateriaSlug) {
-    redirect(canonicalHref);
+    redirect(appendPregunteroAttribution(canonicalHref, resolvedSearchParams));
   }
 
   const { label } = parcialToPreguntaFilter(data.parcial);
-  const simuladorHref = `/simulador/${data.materiaId}/${data.parcialNumero}`;
+  const simuladorHref = appendPregunteroAttribution(
+    `/simulador/${data.materiaId}/${data.parcialNumero}`,
+    resolvedSearchParams
+  );
   const materiaHref = `/explorar/materia/${data.materiaId}`;
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="bg-background min-h-screen">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
           { name: 'Pregunteros', path: '/pregunteros' },
-          { name: `Preguntero de ${data.materiaNombre}`, path: `/pregunteros/${expectedMateriaSlug}` },
+          {
+            name: `Preguntero de ${data.materiaNombre}`,
+            path: `/pregunteros/${expectedMateriaSlug}`,
+          },
           { name: buildParcialTitle(data.materiaNombre, data.parcial), path: canonicalHref },
         ])}
       />
 
-      <section className="border-b border-border bg-card">
+      <section className="border-border bg-card border-b">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand">
+          <p className="bg-brand/10 text-brand inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
             <ListChecks className="h-4 w-4" />
             Preguntero · {label}
           </p>
-          <h1 className="mt-5 text-4xl font-bold tracking-[-0.06em] text-foreground sm:text-5xl">
+          <h1 className="text-foreground mt-5 text-4xl font-bold tracking-[-0.06em] sm:text-5xl">
             {buildParcialTitle(data.materiaNombre, data.parcial)}
             {data.universidadNombre ? (
-              <span className="block text-2xl font-semibold text-muted-foreground sm:text-3xl">
+              <span className="text-muted-foreground block text-2xl font-semibold sm:text-3xl">
                 ({data.universidadNombre})
               </span>
             ) : null}
           </h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-muted-foreground">
-            {buildParcialDescription({
-              materiaNombre: data.materiaNombre,
-              parcial: data.parcial,
-              carreraNombre: data.carreraNombre,
-              universidadNombre: data.universidadNombre,
-              totalPreguntas: data.totalPreguntas,
-            })}
+          <p className="text-muted-foreground mt-5 max-w-3xl text-lg leading-8">
+            Practicá tu parcial, descubrí qué necesitás reforzar y entendé por qué te equivocaste.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             {data.totalPreguntas > 0 ? (
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3">
-                <HelpCircle className="h-5 w-5 text-brand" />
-                <span className="text-sm font-semibold text-foreground">
+              <div className="border-border bg-card inline-flex items-center gap-2 rounded-2xl border px-4 py-3">
+                <HelpCircle className="text-brand h-5 w-5" />
+                <span className="text-foreground text-sm font-semibold">
                   {data.totalPreguntas.toLocaleString('es-AR')} preguntas del {label.toLowerCase()}
                 </span>
               </div>
@@ -153,10 +160,10 @@ export default async function PregunteroParcialPage({ params }: PageProps) {
 
             <Link
               href={simuladorHref}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-brand-2 px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
+              className="from-brand to-brand-2 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
             >
               <Sparkles className="h-5 w-5" />
-              Iniciar pregunteo {label.toLowerCase()}
+              Practicar ahora
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -165,20 +172,24 @@ export default async function PregunteroParcialPage({ params }: PageProps) {
 
       <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-            <h2 className="text-2xl font-bold tracking-[-0.04em] text-foreground">
+          <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+            <h2 className="text-foreground text-2xl font-bold tracking-[-0.04em]">
               Preguntas de muestra del {label.toLowerCase()}
             </h2>
             {data.samplePreguntas.length === 0 ? (
-              <p className="mt-5 text-sm leading-7 text-muted-foreground">
-                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al simulador para ver las preguntas disponibles.
+              <p className="text-muted-foreground mt-5 text-sm leading-7">
+                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al simulador
+                para ver las preguntas disponibles.
               </p>
             ) : (
               <ul className="mt-5 space-y-4">
                 {data.samplePreguntas.map((question) => (
-                  <li key={question.id} className="rounded-2xl border border-border bg-card px-4 py-4">
-                    <p className="text-sm leading-6 text-foreground">{question.enunciado}</p>
-                    <p className="mt-2 text-xs font-semibold text-muted-foreground">
+                  <li
+                    key={question.id}
+                    className="border-border bg-card rounded-2xl border px-4 py-4"
+                  >
+                    <p className="text-foreground text-sm leading-6">{question.enunciado}</p>
+                    <p className="text-muted-foreground mt-2 text-xs font-semibold">
                       {question.opcionesCount} opciones
                     </p>
                   </li>
@@ -221,40 +232,42 @@ export default async function PregunteroParcialPage({ params }: PageProps) {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-xl font-bold tracking-[-0.04em] text-foreground">
-                Simulá el {label.toLowerCase()}
+            <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+              <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
+                Conocé cómo venís
               </h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Respondé las preguntas con tiempo límite, corregí al instante y recibí explicaciones paso a paso de la IA en cada error.
+              <p className="text-muted-foreground mt-3 text-sm leading-7">
+                Practicá en condiciones similares al parcial, recibí una corrección clara y entendé
+                cada error antes de volver a intentarlo.
               </p>
               <Link
                 href={simuladorHref}
-                className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-brand-2 px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
+                className="from-brand to-brand-2 mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
               >
                 <Target className="h-5 w-5" />
-                Iniciar pregunteo {label.toLowerCase()}
+                Practicar ahora
               </Link>
             </div>
 
-            <div className="rounded-[28px] border border-border bg-card p-6 shadow-sm">
-              <h2 className="text-xl font-bold tracking-[-0.04em] text-foreground">
+            <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+              <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
                 Ver la materia completa
               </h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Accedé a los resúmenes por módulo, otros parciales y el material completo de la materia.
+              <p className="text-muted-foreground mt-3 text-sm leading-7">
+                Accedé a los resúmenes por módulo, otros parciales y el material completo de la
+                materia.
               </p>
               <div className="mt-5 flex flex-col gap-3">
                 <Link
                   href={materiaHref}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:underline"
+                  className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
                 >
                   <BookOpen className="h-5 w-5" />
                   Entrar a {data.materiaNombre}
                 </Link>
                 <Link
                   href={`/resumenes/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:underline"
+                  className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
                 >
                   <BookOpen className="h-5 w-5" />
                   Ver resúmenes
@@ -267,4 +280,3 @@ export default async function PregunteroParcialPage({ params }: PageProps) {
     </main>
   );
 }
-

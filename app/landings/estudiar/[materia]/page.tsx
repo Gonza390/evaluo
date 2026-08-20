@@ -6,6 +6,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { buildCourseJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { createPublicClient } from '@/lib/supabase-public';
+import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 
 interface PageProps {
   params: Promise<{ materia: string }>;
@@ -29,30 +30,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id: materiaId } = parseSeoEntitySlug(resolvedParams.materia);
 
   const client = createPublicClient();
-  const { data: materia } = await client
-    .from('materias')
-    .select('id, nombre')
-    .eq('id', materiaId)
-    .maybeSingle();
+  const [{ data: materia }, contentSignals] = await Promise.all([
+    client.from('materias').select('id, nombre').eq('id', materiaId).maybeSingle(),
+    getMateriaSeoContentSignals(materiaId),
+  ]);
 
   if (!materia) {
     return { title: 'Materia no encontrada' };
   }
 
   return {
-    title: `Estudiar ${materia.nombre} — Parciales, ejercicios y resúmenes`,
-    description: `Encontrá parciales resueltos, ejercicios y resúmenes de ${materia.nombre}. Estudiá con material adaptado a tu materia con Evaluo.`,
+    title: `Cómo estudiar ${materia.nombre}: guía práctica`,
+    description: `Conocé un método para preparar ${materia.nombre}, organizar el repaso y pasar de la teoría a la práctica con Evaluo.`,
     alternates: {
       canonical: `/landings/estudiar/${resolvedParams.materia}`,
     },
     openGraph: {
-      title: `Estudiar ${materia.nombre} | Evaluo`,
-      description: `Parciales, ejercicios y resúmenes de ${materia.nombre} para estudiar mejor.`,
+      title: `Cómo estudiar ${materia.nombre} | Evaluo`,
+      description: `Guía práctica para organizar el estudio de ${materia.nombre} y preparar el próximo parcial.`,
       url: `/landings/estudiar/${resolvedParams.materia}`,
       images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
     },
     robots: {
-      index: true,
+      index: contentSignals.hasAcademicContent,
       follow: true,
     },
   };
@@ -114,26 +114,26 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
 
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_25%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
-        <div className="mx-auto w-full max-w-[1240px] px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-20">
+        <div className="mx-auto w-full max-w-[1240px] px-4 pt-10 pb-16 sm:px-8 sm:pt-20 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50/80 px-3 py-1.5 text-[12px] font-bold text-indigo-700 ring-1 ring-indigo-200/50">
               <FileText className="h-4 w-4 text-indigo-600" />
               Material de estudio
             </span>
 
-            <h1 className="mt-4 text-[2rem] font-bold leading-[1.04] tracking-[-0.05em] text-foreground sm:text-5xl lg:text-[56px]">
+            <h1 className="text-foreground mt-4 text-[2rem] leading-[1.04] font-bold tracking-[-0.05em] sm:text-5xl lg:text-[56px]">
               Estudiar {materiaNombre}
             </h1>
 
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:mt-5 sm:text-base sm:leading-8">
-              Parciales resueltos, ejercicios y resúmenes de {materiaNombre}. Encontrá el
-              material de estudio que necesitás para preparar tu parcial.
+              Organizá el repaso de {materiaNombre}, practicá lo aprendido y prepará tu próximo
+              parcial con un recorrido claro.
             </p>
 
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 href={`/explorar/materia/${materiaId}`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-brand-2 px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_32px_rgba(37,99,235,0.26)] sm:h-13 sm:px-8"
+                className="from-brand to-brand-2 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_32px_rgba(37,99,235,0.26)] sm:h-13 sm:px-8"
               >
                 <PlayCircle className="h-5 w-5" />
                 Ir a la materia
@@ -151,7 +151,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
               <Sparkles className="h-3.5 w-3.5" />
               Todo lo que necesitás
             </span>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
               ¿Qué encontrás en {materiaNombre}?
             </h2>
           </div>
@@ -160,35 +160,33 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             {[
               {
                 icon: FileText,
-                title: 'Resúmenes',
-                description: `Resúmenes claros y ordenados de los temas de ${materiaNombre} para que estudies de forma más eficiente.`,
+                title: 'Comprendé la teoría',
+                description: `Revisá los recursos disponibles de ${materiaNombre} y ordená los conceptos antes de practicar.`,
               },
               {
                 icon: CheckCircle2,
-                title: 'Pregunteros',
-                description: `Preguntas de práctica de ${materiaNombre} con explicaciones paso a paso para que afiances cada concepto.`,
+                title: 'Practicá activamente',
+                description: `Usá las preguntas disponibles de ${materiaNombre} para comprobar qué recordás y qué necesitás reforzar.`,
               },
               {
                 icon: Sparkles,
-                title: 'Simuladores',
-                description: `Simulacros de examen de ${materiaNombre} con cronómetro y formato similar al de un parcial real.`,
+                title: 'Medí tu preparación',
+                description: `Completá actividades de práctica y revisá tus errores antes de volver a intentarlo.`,
               },
             ].map((item) => {
               const Icon = item.icon;
               return (
                 <article
                   key={item.title}
-                  className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:border-indigo-300 hover:-translate-y-1 hover:shadow-md"
+                  className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md"
                 >
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="mt-5 text-[15px] font-bold text-slate-800 tracking-tight">
+                  <h3 className="mt-5 text-[15px] font-bold tracking-tight text-slate-800">
                     {item.title}
                   </h3>
-                  <p className="mt-3 text-xs leading-5 text-slate-600">
-                    {item.description}
-                  </p>
+                  <p className="mt-3 text-xs leading-5 text-slate-600">{item.description}</p>
                 </article>
               );
             })}
@@ -197,10 +195,10 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
       </section>
 
       {/* CONSEJOS */}
-      <section className="bg-slate-50 border-y border-slate-100 py-16 sm:py-24">
+      <section className="border-y border-slate-100 bg-white py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
               Tips para estudiar {materiaNombre}
             </h2>
           </div>
@@ -232,12 +230,10 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                 key={item.title}
                 className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
               >
-                <h3 className="text-[15px] font-bold text-slate-800 tracking-tight">
+                <h3 className="text-[15px] font-bold tracking-tight text-slate-800">
                   {item.title}
                 </h3>
-                <p className="mt-3 text-xs leading-5 text-slate-600">
-                  {item.description}
-                </p>
+                <p className="mt-3 text-xs leading-5 text-slate-600">{item.description}</p>
               </div>
             ))}
           </div>
@@ -245,10 +241,10 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 sm:py-24 border-t border-slate-100">
+      <section className="border-t border-slate-100 py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-3xl text-center mb-10">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
               Preguntas frecuentes sobre {materiaNombre}
             </h2>
           </div>
@@ -262,9 +258,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                 <summary className="cursor-pointer list-none text-[15px] font-bold text-slate-800">
                   {item.question}
                 </summary>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {item.answer}
-                </p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.answer}</p>
               </details>
             ))}
           </div>
@@ -272,20 +266,20 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
       </section>
 
       {/* CTA */}
-      <section className="py-16 sm:py-24 bg-white">
+      <section className="bg-white py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,rgba(99,102,241,0.03)_0%,rgba(37,99,235,0.03)_100%)] p-8 text-center shadow-xl md:p-14">
-            <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
               Entrá a {materiaNombre} y empezá a estudiar
             </h2>
-            <p className="mt-4 max-w-xl mx-auto text-sm leading-6 text-slate-600">
-              Accedé a resúmenes, pregunteros y simuladores de {materiaNombre}. Todo el
-              material que necesitás para aprobar tu parcial.
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600">
+              Accedé a resúmenes, pregunteros y simuladores de {materiaNombre}. Todo el material que
+              necesitás para aprobar tu parcial.
             </p>
             <div className="mt-8">
               <Link
                 href={`/explorar/materia/${materiaId}`}
-                className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand to-brand-2 px-8 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60"
+                className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-8 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60"
               >
                 <PlayCircle className="h-4.5 w-4.5" />
                 Ir a {materiaNombre}

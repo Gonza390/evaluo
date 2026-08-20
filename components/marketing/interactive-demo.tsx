@@ -171,9 +171,9 @@ export function InteractiveDemo() {
           <span className="text-sm font-bold text-slate-800">Demo interactiva</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
-          <span className={`rounded-full px-2 py-0.5 transition ${step === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}>1. Universidad</span>
+          <span className={`rounded-full px-2 py-0.5 transition ${step === 0 ? 'bg-indigo-600 text-white' : 'bg-white'}`}>1. Universidad</span>
           <ChevronRight className="h-3 w-3 text-slate-300" />
-          <span className={`rounded-full px-2 py-0.5 transition ${step === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}>2. Práctica</span>
+          <span className={`rounded-full px-2 py-0.5 transition ${step === 1 ? 'bg-indigo-600 text-white' : 'bg-white'}`}>2. Práctica</span>
         </div>
       </div>
 
@@ -191,7 +191,7 @@ export function InteractiveDemo() {
               <button
                 key={key}
                 onClick={() => handleSelectUni(key)}
-                className={`group flex flex-col items-center justify-between rounded-2xl border bg-slate-50/50 p-6 text-center transition-all hover:border-indigo-400 hover:bg-white hover:shadow-lg hover:-translate-y-0.5`}
+                className={`group flex flex-col items-center justify-between rounded-2xl border bg-white p-6 text-center transition-all hover:border-indigo-400 hover:bg-white hover:shadow-lg hover:-translate-y-0.5`}
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1B3D] to-[#2563EB] text-xl font-bold text-white shadow-md group-hover:scale-110 transition-transform">
                   {uni.shortName}
@@ -208,7 +208,7 @@ export function InteractiveDemo() {
             ))}
           </div>
 
-          <div className="mt-8 rounded-2xl bg-slate-50 p-4 border border-slate-100 flex items-center gap-3">
+          <div className="mt-8 rounded-2xl bg-white p-4 border border-slate-100 flex items-center gap-3">
             <GraduationCap className="h-6 w-6 text-indigo-500 shrink-0" />
             <p className="text-xs text-slate-600 leading-relaxed">
               <strong>¿Tu universidad no está listada?</strong> No te preocupes. Evaluo está pensado para todas las facultades del país. Podés subir el programa de tu materia y la plataforma generará resúmenes y simuladores personalizados para vos.
@@ -218,7 +218,7 @@ export function InteractiveDemo() {
       ) : (
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
           {/* Columna Izquierda: El Resumen Adaptado */}
-          <div className="flex flex-col justify-between rounded-2xl border-b border-slate-200 bg-slate-50/60 p-5 md:p-6 lg:rounded-none lg:border-b-0 lg:border-r">
+          <div className="flex flex-col justify-between rounded-2xl border-b border-slate-200 bg-white p-5 md:p-6 lg:rounded-none lg:border-b-0 lg:border-r">
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${currentUni.badgeBg} ${currentUni.textColor} border ${currentUni.borderColor}`}>
@@ -343,7 +343,7 @@ export function InteractiveDemo() {
             <div className="mt-6 flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
               <button
                 onClick={handleReset}
-                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-3 px-4 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+                className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-3 px-4 text-xs font-bold text-slate-700 hover:bg-white transition"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Cambiar Universidad

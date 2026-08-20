@@ -36,7 +36,7 @@ export function StudyRichText({ body }: { body: string }) {
     content.push(
       <div key={key} className="overflow-x-auto rounded-[16px] border border-slate-200">
         <table className="min-w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50 text-slate-700">
+          <thead className="bg-white text-slate-700">
             <tr>
               {header.map((column, index) => (
                 <th key={`${column}-${index}`} className="border-b border-slate-200 px-3 py-2 font-semibold">
@@ -106,7 +106,7 @@ export function StudyRichText({ body }: { body: string }) {
       content.push(
         <div
           key={`important-${index}`}
-          className="rounded-[16px] border border-[#DBEAFE] bg-[#F8FBFF] px-3.5 py-3 text-[13px] leading-6 text-slate-700"
+          className="rounded-[16px] border border-[#DBEAFE] bg-white px-3.5 py-3 text-[13px] leading-6 text-slate-700"
         >
           <span className="font-semibold text-[#2563EB]">Importante:</span>{' '}
           {line.replace(/^Importante:\s*/i, '')}

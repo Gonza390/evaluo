@@ -1,6 +1,12 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
-import { requestGeminiImagesJson, requestGeminiJson, requestGeminiPdfJson, requestGroqJson, requestNvidiaJson } from '@/lib/ai/providers';
+import {
+  requestGeminiImagesJson,
+  requestGeminiJson,
+  requestGeminiPdfJson,
+  requestGroqJson,
+  requestNvidiaJson,
+} from '@/lib/ai/providers';
 import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 import { extractJsonObject } from '@/lib/ai/json';
 import {
@@ -87,23 +93,35 @@ function buildSummaryStrategyInstructions(input: GenerateSummaryInput) {
 
   if (analysis.processingStrategy === 'slide_layout') {
     lines.push('El material se parece a una presentación o diapositiva.');
-    lines.push('Prioriza títulos, subtítulos, bullets, definiciones cortas, comparaciones y relaciones entre bloques.');
-    lines.push('No esperes párrafos largos: reconstruye el sentido académico uniendo encabezados y listas del PDF.');
+    lines.push(
+      'Prioriza títulos, subtítulos, bullets, definiciones cortas, comparaciones y relaciones entre bloques.'
+    );
+    lines.push(
+      'No esperes párrafos largos: reconstruye el sentido académico uniendo encabezados y listas del PDF.'
+    );
   }
 
   if (analysis.processingStrategy === 'hybrid_text') {
     lines.push('El PDF mezcla texto e imágenes.');
-    lines.push('Da prioridad a conceptos, definiciones, clasificaciones, ejemplos y etiquetas explícitas del contenido textual extraído.');
+    lines.push(
+      'Da prioridad a conceptos, definiciones, clasificaciones, ejemplos y etiquetas explícitas del contenido textual extraído.'
+    );
   }
 
   if (analysis.processingStrategy === 'ocr_recommended') {
     lines.push('El PDF parece escaneado o con poco texto seleccionable.');
-    lines.push('Si faltan datos en el texto base, no los inventes. Trabaja solo con lo extraído y explicita la estructura de la forma más útil posible.');
-    lines.push('Prioriza toda definición, término visible, encabezado, lista o fragmento útil aunque el contenido sea parcial.');
+    lines.push(
+      'Si faltan datos en el texto base, no los inventes. Trabaja solo con lo extraído y explicita la estructura de la forma más útil posible.'
+    );
+    lines.push(
+      'Prioriza toda definición, término visible, encabezado, lista o fragmento útil aunque el contenido sea parcial.'
+    );
   }
 
   if (analysis.hasTables) {
-    lines.push('Se detectaron posibles tablas o cuadros comparativos: preserva esas clasificaciones dentro del resumen cuando sea posible.');
+    lines.push(
+      'Se detectaron posibles tablas o cuadros comparativos: preserva esas clasificaciones dentro del resumen cuando sea posible.'
+    );
   }
 
   return lines;
@@ -136,6 +154,9 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
     '- summary_short: un único párrafo conciso de 4 a 6 líneas que sintetice globalmente el contenido del PDF, explicando su propósito principal y su alcance.',
     '- key_points: exactamente 5 puntos clave. DEBEN ser ideas específicas (hechos, definiciones, conclusiones o implicancias), NO títulos de sección ni encabezados. Si no tenés 5 ideas sólidas, usá las más importantes del documento.',
     '- sections: lista ordenada por temas principales del documento.',
+    '- Genera entre 6 y 10 secciones cuando el documento cubra muchos temas.',
+    '- Distribuye las secciones a lo largo de TODO el documento; no concentres el resultado en los primeros fragmentos.',
+    '- No uses como títulos "Tema", "Objetivo", nombres de columnas de tablas ni frases descriptivas completas.',
     '- Cada section.title debe venir numerado, por ejemplo: "1. Nombre del Tema Principal".',
     '- Cada section.body DEBE seguir este formato interno, con saltos de línea reales y jerarquía clara:',
     '  1.1 Subtema 1',
@@ -176,7 +197,12 @@ function buildSummaryPrompt(input: GenerateSummaryInput, sourceText: string) {
   ].join('\n');
 }
 
-function buildSummaryChunkPrompt(input: GenerateSummaryInput, chunkText: string, chunkIndex: number, totalChunks: number) {
+function buildSummaryChunkPrompt(
+  input: GenerateSummaryInput,
+  chunkText: string,
+  chunkIndex: number,
+  totalChunks: number
+) {
   const context = [
     input.universidadName ? `Universidad: ${input.universidadName}` : null,
     input.carreraName ? `Carrera: ${input.carreraName}` : null,
@@ -217,7 +243,9 @@ function fallbackParseModelJson(raw: string) {
   const sectionsBlock = candidate.match(/"sections"\s*:\s*\[([\s\S]*?)\]/i);
 
   const keyPoints = keyPointsBlock
-    ? Array.from(keyPointsBlock[1].matchAll(/"([\s\S]*?)"/g)).map((match) => cleanLine(match[1] ?? ''))
+    ? Array.from(keyPointsBlock[1].matchAll(/"([\s\S]*?)"/g)).map((match) =>
+        cleanLine(match[1] ?? '')
+      )
     : [];
 
   const sections = sectionsBlock
@@ -251,10 +279,7 @@ function parseModelSummaryPayload(raw: string) {
 }
 
 function splitBodyIntoBulletLines(body: string) {
-  return cleanMultilineBlock(body)
-    .split('\n')
-    .map(cleanLine)
-    .filter(Boolean);
+  return cleanMultilineBlock(body).split('\n').map(cleanLine).filter(Boolean);
 }
 
 function ensureBulletPrefix(line: string) {
@@ -267,10 +292,7 @@ function ensureBulletPrefix(line: string) {
 
 function coerceSectionBodyLines(value: unknown): string[] {
   if (typeof value === 'string') {
-    return cleanMultilineBlock(value)
-      .split('\n')
-      .map(cleanLine)
-      .filter(Boolean);
+    return cleanMultilineBlock(value).split('\n').map(cleanLine).filter(Boolean);
   }
 
   if (Array.isArray(value)) {
@@ -287,12 +309,18 @@ function coerceSectionBodyLines(value: unknown): string[] {
       ...coerceSectionBodyLines(record.content),
       ...coerceSectionBodyLines(record.text),
       ...(Array.isArray(record.points)
-        ? (record.points as unknown[]).map((item) => ensureBulletPrefix(cleanLine(String(item ?? ''))))
+        ? (record.points as unknown[]).map((item) =>
+            ensureBulletPrefix(cleanLine(String(item ?? '')))
+          )
         : []),
       ...(Array.isArray(record.items)
-        ? (record.items as unknown[]).map((item) => ensureBulletPrefix(cleanLine(String(item ?? ''))))
+        ? (record.items as unknown[]).map((item) =>
+            ensureBulletPrefix(cleanLine(String(item ?? '')))
+          )
         : []),
-      ...(Array.isArray(record.rows) ? (record.rows as unknown[]).flatMap((row) => coerceSectionBodyLines(row)) : []),
+      ...(Array.isArray(record.rows)
+        ? (record.rows as unknown[]).flatMap((row) => coerceSectionBodyLines(row))
+        : []),
     ].filter(Boolean);
 
     if (collected.length > 0) {
@@ -312,11 +340,7 @@ function looksLikeSubheading(line: string) {
   if (/^(?:[-*]|\u2022|\d+\.\d+\s+)/.test(clean)) return false;
   if (/^Importante:|^Clave de estudio:|^Ejemplo aplicado:/i.test(clean)) return false;
   if (/[.:;]$/.test(clean)) return false;
-  return (
-    /^[A-ZÁÉÍÓÚÑ]/.test(clean) &&
-    !/[.?!]/.test(clean) &&
-    clean.split(' ').length <= 8
-  );
+  return /^[A-ZÁÉÍÓÚÑ]/.test(clean) && !/[.?!]/.test(clean) && clean.split(' ').length <= 8;
 }
 
 function looksLikeAppliedExample(line: string) {
@@ -332,7 +356,9 @@ function tryBuildComparativeTable(lines: string[]) {
       const detail = cleanLine(match[2] ?? '');
       const exampleMatch = detail.match(/(?:ej\.?|ejemplo(?:s)?|como)\s+(.+)$/i);
       const examples = exampleMatch ? cleanLine(exampleMatch[1] ?? '') : '-';
-      const description = exampleMatch ? cleanLine(detail.replace(exampleMatch[0], '').replace(/[,(]\s*$/, '')) : detail;
+      const description = exampleMatch
+        ? cleanLine(detail.replace(exampleMatch[0], '').replace(/[,(]\s*$/, ''))
+        : detail;
       return {
         label,
         description: description || detail,
@@ -390,7 +416,9 @@ function normalizeSectionBody(body: string, sectionNumber: string) {
       flushComparisonBuffer();
       const importantText = clean.replace(/^Importante:\s*/i, '');
       content.push(
-        importantText.length <= 200 ? `Importante: ${importantText}` : ensureBulletPrefix(importantText)
+        importantText.length <= 200
+          ? `Importante: ${importantText}`
+          : ensureBulletPrefix(importantText)
       );
       continue;
     }
@@ -401,7 +429,9 @@ function normalizeSectionBody(body: string, sectionNumber: string) {
         .replace(/^Ejemplo aplicado:\s*/i, '')
         .replace(/^(?:[-*]|\u2022)\s*/, '');
       content.push(
-        exampleText.length <= 200 ? `Ejemplo aplicado: ${exampleText}` : ensureBulletPrefix(exampleText)
+        exampleText.length <= 200
+          ? `Ejemplo aplicado: ${exampleText}`
+          : ensureBulletPrefix(exampleText)
       );
       continue;
     }
@@ -424,13 +454,12 @@ function normalizeSectionBody(body: string, sectionNumber: string) {
 
 function buildStudyAidLines(text: string) {
   const normalized = cleanMultilineBlock(text);
-  const lines = normalized
-    .split('\n')
-    .map(cleanLine)
-    .filter(Boolean);
+  const lines = normalized.split('\n').map(cleanLine).filter(Boolean);
 
   const classificationLine = lines.find((line) =>
-    /(tipos|clasificacion|clasificación|dimensiones|fases|etapas|componentes|paradigmas)/i.test(line)
+    /(tipos|clasificacion|clasificación|dimensiones|fases|etapas|componentes|paradigmas)/i.test(
+      line
+    )
   );
 
   if (!classificationLine) {
@@ -564,13 +593,18 @@ function sanitizeAiSummaryResponse(
   const localFallback = summarizeExtractedText(sourceText, fallbackTitle);
   const shortSummary = truncateAtWord(cleanLine(payload.summary_short ?? ''), 1_400);
   const aiKeyPoints = dedupeStrings(
-    Array.isArray(payload.key_points) ? payload.key_points.map((item) => truncateAtWord(cleanLine(item), 220)) : []
+    Array.isArray(payload.key_points)
+      ? payload.key_points.map((item) => truncateAtWord(cleanLine(item), 220))
+      : []
   );
 
   const aiSections = (Array.isArray(payload.sections) ? payload.sections : [])
     .map((section, index) => ({
       title: cleanLine(section.title ?? '') || buildFallbackSectionTitle(index),
-      body: truncateAtWord(cleanMultilineBlock(coerceSectionBodyLines(section.body).join('\n')), 3_600),
+      body: truncateAtWord(
+        cleanMultilineBlock(coerceSectionBodyLines(section.body).join('\n')),
+        3_600
+      ),
     }))
     .filter((section) => section.body.length > 0)
     .slice(0, 18);
@@ -607,7 +641,10 @@ type JsonProviderResult = {
 
 type JsonProviderCall = () => Promise<JsonProviderResult | null>;
 
-const PROVIDER_ORDER = ['groq', 'nvidia', 'gemini'] as const;
+// Gemini ofrece structured output nativo y es el proveedor verificado para
+// materiales. Los compatibles quedan como fallback, sin bloquear el camino
+// feliz con sus timeouts.
+const PROVIDER_ORDER = ['gemini', 'groq', 'nvidia'] as const;
 type ProviderName = (typeof PROVIDER_ORDER)[number];
 
 async function runJsonProviderChain(
@@ -635,7 +672,10 @@ function buildJsonProviderCalls(options: {
   responseSchema?: Record<string, unknown>;
 }): Array<{ name: ProviderName; call: JsonProviderCall }> {
   const order: ProviderName[] = options.preferredProvider
-    ? [options.preferredProvider, ...PROVIDER_ORDER.filter((name) => name !== options.preferredProvider)]
+    ? [
+        options.preferredProvider,
+        ...PROVIDER_ORDER.filter((name) => name !== options.preferredProvider),
+      ]
     : [...PROVIDER_ORDER];
 
   return order.map((name) => ({
@@ -709,7 +749,10 @@ function sanitizeAiChunkSummary(payload: SummaryPayload): ChunkPartial {
   const sections = (Array.isArray(payload.sections) ? payload.sections : [])
     .map((section, index) => ({
       title: cleanLine(section.title ?? '') || buildFallbackSectionTitle(index),
-      body: truncateAtWord(cleanMultilineBlock(coerceSectionBodyLines(section.body).join('\n')), 1_800),
+      body: truncateAtWord(
+        cleanMultilineBlock(coerceSectionBodyLines(section.body).join('\n')),
+        1_800
+      ),
     }))
     .filter((section) => section.body.length > 0)
     .slice(0, 4);
@@ -721,7 +764,9 @@ function buildPartialSummaryDigest(partials: ChunkPartial[]) {
   const blocks: string[] = [];
 
   partials.forEach((partial, index) => {
-    const sectionText = partial.sections.map((section) => `${section.title}\n${section.body}`).join('\n\n');
+    const sectionText = partial.sections
+      .map((section) => `${section.title}\n${section.body}`)
+      .join('\n\n');
     const keyPointText = partial.keyPoints.map((point) => `- ${point}`).join('\n');
     const block = [sectionText, keyPointText].filter(Boolean).join('\n\n');
     if (block) {
@@ -736,7 +781,7 @@ async function mapChunksToPartialSummaries(
   input: GenerateSummaryInput,
   groups: string[]
 ): Promise<{ partials: ChunkPartial[]; preferredProvider: ProviderName | null }> {
-  const partials: ChunkPartial[] = [];
+  const partials: Array<ChunkPartial | null> = Array.from({ length: groups.length }, () => null);
   let preferredProvider: ProviderName | null = null;
 
   const processGroup = async (group: string, groupIndex: number) => {
@@ -759,12 +804,15 @@ async function mapChunksToPartialSummaries(
     preferredProvider = result.provider as ProviderName;
     const partial = sanitizeAiChunkSummary(parseModelSummaryPayload(result.content));
     if (partial.keyPoints.length > 0 || partial.sections.length > 0) {
-      partials.push(partial);
+      partials[groupIndex] = partial;
     }
   };
 
   await mapWithConcurrency(groups, SUMMARY_MAP_CONCURRENCY, processGroup);
-  return { partials, preferredProvider };
+  return {
+    partials: partials.filter((partial): partial is ChunkPartial => Boolean(partial)),
+    preferredProvider,
+  };
 }
 
 async function generateAiSummary(input: GenerateSummaryInput, sourceChunksCount: number) {
@@ -791,7 +839,8 @@ async function generateAiSummary(input: GenerateSummaryInput, sourceChunksCount:
       maxTokens: SUMMARY_REDUCE_MAX_TOKENS,
       responseSchema: SUMMARY_RESPONSE_SCHEMA,
     }),
-    (name, error) => logError(`studentMaterialSummary.reduce.${name}`, error, { title: input.title })
+    (name, error) =>
+      logError(`studentMaterialSummary.reduce.${name}`, error, { title: input.title })
   );
 
   if (!result) {
@@ -842,7 +891,9 @@ function isSummaryDegraded(summary: StudentMaterialSummary) {
     ...summary.keyPoints,
     ...summary.sections.map((section) => `${section.title} ${section.body}`),
   ].join('\n');
-  return /[\p{L}]{14,}/u.test(texts);
+  // Detecta palabras realmente pegadas por un parser roto sin rechazar
+  // vocabulario académico legítimo como "responsabilidad".
+  return /[\p{L}]{35,}/u.test(texts);
 }
 
 async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
@@ -909,7 +960,9 @@ async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
   }
 }
 
-export async function generateStudentMaterialSummary(input: GenerateSummaryInput): Promise<StudentMaterialSummary> {
+export async function generateStudentMaterialSummary(
+  input: GenerateSummaryInput
+): Promise<StudentMaterialSummary> {
   if (input.pdfBuffer) {
     const pdfSummary = await generatePdfSummaryWithGemini(input);
     if (pdfSummary) {
@@ -939,7 +992,11 @@ export async function generateStudentMaterialSummary(input: GenerateSummaryInput
     return aiSummary;
   }
 
-  return mapLocalSummaryToView(summarizeExtractedText(text, input.title), chunks.length, 'fallback-local');
+  return mapLocalSummaryToView(
+    summarizeExtractedText(text, input.title),
+    chunks.length,
+    'fallback-local'
+  );
 }
 
 export async function buildStudentMaterialSummary(

@@ -98,8 +98,8 @@ function MetricFilter({
           href={hrefBuilder(filterKey, option.value)}
           className={`rounded-full px-2 py-1 text-[12px] font-medium transition ${
             activeValue === option.value
-              ? 'bg-[#eef3ff] text-[#2563EB]'
-              : 'text-[#7f8aa3] hover:bg-[#f5f7fb] hover:text-[#1d2a44]'
+              ? 'bg-white text-[#2563EB]'
+              : 'text-[#7f8aa3] hover:bg-white hover:text-[#1d2a44]'
           }`}
         >
           {option.label}
@@ -127,7 +127,7 @@ function MiniStat({
   hrefBuilder?: (key: MetricFilterKey, value: 1 | 7 | 30) => string;
 }) {
   return (
-    <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+    <div className="rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <p className="text-[12px] font-medium text-[#7f8aa3]">{label}</p>
         {filterKey && filterValue && hrefBuilder ? (
@@ -235,7 +235,7 @@ export function AnalyticsPanel({
         </div>
 
         <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-4">
-          <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+          <div className="rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
             <p className="text-[12px] font-medium text-[#7f8aa3]">Top 3 lugares de login</p>
             <div className="mt-3 space-y-2">
               {stats.loginTopSources.length === 0 ? (
@@ -252,7 +252,7 @@ export function AnalyticsPanel({
           </div>
         </div>
 
-        <div className="mt-4 rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+        <div className="mt-4 rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
           <p className="text-[12px] font-medium text-[#7f8aa3]">Dispositivo de nuevos logins</p>
           <div className="mt-3 space-y-2">
             {stats.loginDevices.length === 0 ? (
@@ -281,7 +281,7 @@ export function AnalyticsPanel({
                     {item.value.toLocaleString('es-AR')} · {pct(item.value, funnelBase)}
                   </span>
                 </div>
-                <div className="h-2 rounded-full bg-[#edf1f7]">
+                <div className="h-2 rounded-full bg-white">
                   <div
                     className="h-2 rounded-full bg-[#2f66ea]"
                     style={{ width: `${funnelBase > 0 ? Math.max((item.value / funnelBase) * 100, 4) : 0}%` }}
@@ -319,8 +319,8 @@ export function AnalyticsPanel({
                     href={buildAnalyticsHref({ analyticsMateria: item.id })}
                     className={`flex items-center justify-between rounded-[12px] border px-3 py-2 text-[12px] transition ${
                       selectedMateriaId === item.id
-                        ? 'border-[#cfd9f7] bg-[#f5f8ff]'
-                        : 'border-transparent hover:border-[#e5ebf8] hover:bg-[#fbfcff]'
+                        ? 'border-[#cfd9f7] bg-white'
+                        : 'border-transparent hover:border-[#e5ebf8] hover:bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -358,7 +358,7 @@ export function AnalyticsPanel({
         >
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-4">
-              <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+              <div className="rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[12px] font-medium text-[#7f8aa3]">Origen por carrera</p>
                   <span className="text-[12px] font-semibold text-[#1d2a44]">
@@ -377,7 +377,7 @@ export function AnalyticsPanel({
                             {item.pct.toFixed(1)}% · {item.value}
                           </span>
                         </div>
-                        <div className="h-2 rounded-full bg-[#edf1f7]">
+                        <div className="h-2 rounded-full bg-white">
                           <div
                             className="h-2 rounded-full bg-[#2f66ea]"
                             style={{ width: `${Math.max(item.pct, item.pct > 0 ? 4 : 0)}%` }}
@@ -389,7 +389,7 @@ export function AnalyticsPanel({
                 </div>
               </div>
 
-              <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+              <div className="rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
                 <p className="text-[12px] font-medium text-[#7f8aa3]">Qué hicieron después de entrar</p>
                 <div className="mt-3 space-y-2">
                   {materiaDetail.actions.map((item) => (
@@ -400,7 +400,7 @@ export function AnalyticsPanel({
                           {item.pct.toFixed(1)}% · {item.value}
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-[#edf1f7]">
+                      <div className="h-2 rounded-full bg-white">
                         <div
                           className="h-2 rounded-full bg-[#9b5de5]"
                           style={{ width: `${Math.max(item.pct, item.pct > 0 ? 4 : 0)}%` }}
@@ -411,7 +411,7 @@ export function AnalyticsPanel({
                 </div>
               </div>
 
-              <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+              <div className="rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-[12px] font-medium text-[#7f8aa3]">Entradas por link directo a la materia</p>
                   <span className="text-[12px] font-semibold text-[#1d2a44]">
@@ -432,7 +432,7 @@ export function AnalyticsPanel({
                             {item.pct.toFixed(1)}% · {item.value}
                           </span>
                         </div>
-                        <div className="h-2 rounded-full bg-[#edf1f7]">
+                        <div className="h-2 rounded-full bg-white">
                           <div
                             className="h-2 rounded-full bg-[#16a34a]"
                             style={{ width: `${Math.max(item.pct, item.pct > 0 ? 4 : 0)}%` }}
@@ -452,7 +452,7 @@ export function AnalyticsPanel({
                 <MiniStat label="Anónimos" value={`${materiaDetail.anonymousPct.toFixed(1)}%`} trend="del total de visitas" />
               </div>
 
-              <div className="rounded-[16px] border border-[#edf1f7] bg-[#fbfcff] px-4 py-4">
+              <div className="rounded-[16px] border border-[#edf1f7] bg-white px-4 py-4">
                 <p className="text-[12px] font-medium text-[#7f8aa3]">Rendimiento por parcial</p>
                 <div className="mt-3 space-y-2">
                   {materiaDetail.partials.map((item) => (

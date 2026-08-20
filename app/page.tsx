@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase-public';
@@ -303,7 +303,7 @@ export default function Home() {
                     cta_name: 'crear_cuenta_gratis',
                     destination: primaryHref,
                   }}
-                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-[0_6px_20px_rgba(0,0,0,0.03)] transition hover:translate-y-[-1px] hover:bg-slate-50 sm:h-13 sm:px-8"
+                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-[0_6px_20px_rgba(0,0,0,0.03)] transition hover:translate-y-[-1px] hover:bg-white sm:h-13 sm:px-8"
                 >
                   Crear cuenta gratis
                 </TrackedLink>
@@ -456,7 +456,7 @@ export default function Home() {
       </section>
 
       {/* --- TRUST SECTION --- */}
-      <section className="border-b border-slate-100 bg-slate-50 py-10 sm:py-12">
+      <section className="border-b border-slate-100 bg-white py-10 sm:py-12">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {trustSignals.map((signal) => (
@@ -510,7 +510,7 @@ export default function Home() {
                 >
                   {/* Conector visual entre pasos */}
                   {index < 3 && (
-                    <div className="absolute top-12 right-[-16px] z-10 hidden h-[2px] w-[32px] bg-slate-100 group-hover:bg-indigo-200 lg:block" />
+                    <div className="absolute top-12 right-[-16px] z-10 hidden h-[2px] w-[32px] bg-white group-hover:bg-indigo-200 lg:block" />
                   )}
 
                   <div>
@@ -537,7 +537,7 @@ export default function Home() {
       </section>
 
       {/* --- QUÉ ENCONTRÁS EN EVALUO (VALUE GRID) --- */}
-      <section id="features" className="border-y border-slate-100 bg-slate-50/60 py-16 sm:py-24">
+      <section id="features" className="border-y border-slate-100 bg-white py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
@@ -658,7 +658,7 @@ export default function Home() {
       </section>
 
       {/* --- DEMO INTERACTIVA SECTION --- */}
-      <section id="demo" className="bg-slate-50 py-16 sm:py-24">
+      <section id="demo" className="bg-white py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
@@ -678,7 +678,7 @@ export default function Home() {
         </div>
       </section>
       {/* --- FAQ SECTION --- */}
-      <section id="faq" className="border-t border-slate-100 bg-slate-50 py-16 sm:py-24">
+      <section id="faq" className="border-t border-slate-100 bg-white py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
@@ -725,7 +725,7 @@ export default function Home() {
                     cta_name: 'buscar_universidad_final',
                     destination: '/explorar',
                   }}
-                  className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-bold text-slate-900 shadow-md transition hover:translate-y-[-1px] hover:bg-slate-50"
+                  className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-bold text-slate-900 shadow-md transition hover:translate-y-[-1px] hover:bg-white"
                 >
                   <PlayCircle className="h-4.5 w-4.5 text-indigo-600" />
                   Buscar mi universidad

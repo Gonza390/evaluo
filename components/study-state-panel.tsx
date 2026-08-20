@@ -88,7 +88,7 @@ export function StudyStatePanel({
               ? (
                 <Link
                   href={secondaryActionHref}
-                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                 >
                   {secondaryActionLabel}
                 </Link>
@@ -97,7 +97,7 @@ export function StudyStatePanel({
                 <button
                   type="button"
                   onClick={onSecondaryAction}
-                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                 >
                   {secondaryActionLabel}
                 </button>

@@ -1,14 +1,6 @@
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
-
-const ACTIVE_STATUSES = new Set(['active', 'trialing', 'approved']);
-
-function isSubscriptionCurrentlyValid(expiresAt: string | null) {
-  if (!expiresAt) return true;
-  const expiresAtMs = new Date(expiresAt).getTime();
-  if (Number.isNaN(expiresAtMs)) return false;
-  return expiresAtMs > Date.now();
-}
+import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
 
 export async function hasPremiumAccess(userId: string): Promise<boolean> {
   if (!userId) return false;
@@ -30,11 +22,10 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
       .map((p) => p.id)
   );
 
-  return ((subs ?? []) as Array<{ plan_id: string; status: string | null; expires_at: string | null }>).some(
-    (s) =>
-      premiumPlanIds.has(s.plan_id) &&
-      ACTIVE_STATUSES.has((s.status ?? '').toLowerCase()) &&
-      isSubscriptionCurrentlyValid(s.expires_at)
+  return (
+    (subs ?? []) as Array<{ plan_id: string; status: string | null; expires_at: string | null }>
+  ).some(
+    (s) => premiumPlanIds.has(s.plan_id) && hasPremiumSubscriptionAccess(s.status, s.expires_at)
   );
 }
 
@@ -47,7 +38,11 @@ export async function requirePremiumUser() {
 
   const premium = await hasPremiumAccess(user.id);
   if (!premium) {
-    return { ok: false as const, user, message: 'Esta funcion es exclusiva para usuarios premium.' };
+    return {
+      ok: false as const,
+      user,
+      message: 'Esta funcion es exclusiva para usuarios premium.',
+    };
   }
 
   return { ok: true as const, user, message: '' };

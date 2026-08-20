@@ -120,6 +120,7 @@ if (aiMode) {
     materiaName: 'Materia de Prueba',
     text,
     documentAnalysis,
+    pdfBuffer: documentAnalysis.requiresOcr ? buffer : undefined,
   };
 
   section('7. RESUMEN CON IA (llamada real)');

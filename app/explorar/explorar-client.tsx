@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -121,7 +121,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
  className={`rounded-xl px-2.5 py-2 text-[12px] font-semibold transition sm:px-3 sm:text-sm ${
  isActive
  ? 'bg-indigo-600 text-white shadow-sm'
- : 'text-slate-600 hover:bg-slate-50'
+ : 'text-slate-600 hover:bg-white'
  }`}
  >
  {filter.label}
@@ -171,7 +171,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
  <Building2 className="h-5 w-5" />
  </div>
- <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">
+ <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">
  {universidad.carrerasCount} carreras
  </span>
  </div>

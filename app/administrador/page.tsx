@@ -7,10 +7,8 @@ import {
 } from './shared-actions';
 import {
   ArrowLeft,
-  BarChart3,
   BookOpen,
   Bot,
-  LayoutDashboard,
   LineChart,
   Megaphone,
   ShieldAlert,
@@ -24,25 +22,32 @@ import {
   obtenerDetalleMateriaAnaliticaAdministrador,
   obtenerLogsAdministrador,
   obtenerResumenAdministrador,
+  obtenerSegmentacionUsuariosAdministrador,
   obtenerUsuariosAdministrador,
 } from './actions';
 import dynamic from 'next/dynamic';
 
-const DashboardInsights = dynamic(() => import('./dashboard-insights').then(mod => mod.DashboardInsights));
-const AnalyticsPanel = dynamic(() => import('./analytics-panel').then(mod => mod.AnalyticsPanel));
-const ConversionPanel = dynamic(() => import('./conversion-panel').then(mod => mod.ConversionPanel));
-const BibliotecaPanel = dynamic(() => import('./biblioteca-panel').then(mod => mod.BibliotecaPanel));
-const IAPanel = dynamic(() => import('./ia-panel').then(mod => mod.IAPanel));
-const LogsPanel = dynamic(() => import('./logs-panel').then(mod => mod.LogsPanel));
-const UsersPanel = dynamic(() => import('./users-panel').then(mod => mod.UsersPanel));
+const DashboardInsights = dynamic(() =>
+  import('./dashboard-insights').then((mod) => mod.DashboardInsights)
+);
+const AnalyticsPanel = dynamic(() => import('./analytics-panel').then((mod) => mod.AnalyticsPanel));
+const ConversionPanel = dynamic(() =>
+  import('./conversion-panel').then((mod) => mod.ConversionPanel)
+);
+const BibliotecaPanel = dynamic(() =>
+  import('./biblioteca-panel').then((mod) => mod.BibliotecaPanel)
+);
+const IAPanel = dynamic(() => import('./ia-panel').then((mod) => mod.IAPanel));
+const LogsPanel = dynamic(() => import('./logs-panel').then((mod) => mod.LogsPanel));
+const UsersPanel = dynamic(() => import('./users-panel').then((mod) => mod.UsersPanel));
 import { getAdminAccessContext } from '@/lib/access-control';
 
 type PanelKey =
+  | 'marketing'
   | 'dashboard'
+  | 'analiticas'
   | 'biblioteca'
   | 'usuarios'
-  | 'analiticas'
-  | 'marketing'
   | 'logs'
   | 'ia';
 
@@ -51,11 +56,9 @@ const PANELS: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { key: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { key: 'marketing', label: 'Producto', icon: Megaphone },
   { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
-  { key: 'analiticas', label: 'Analíticas', icon: BarChart3 },
-  { key: 'marketing', label: 'Marketing', icon: Megaphone },
   { key: 'logs', label: 'Logs', icon: Waypoints },
   { key: 'ia', label: 'IA', icon: Bot },
 ];
@@ -110,11 +113,13 @@ function MetricCard({
 
   return (
     <article className="rounded-[16px] border border-[#e8ebf3] bg-white px-3.5 py-3 shadow-[0_6px_18px_rgba(15,23,42,0.045)]">
-      <div className={`mb-3 flex h-8 w-8 items-center justify-center rounded-full ${tones[tone].halo}`}>
+      <div
+        className={`mb-3 flex h-8 w-8 items-center justify-center rounded-full ${tones[tone].halo}`}
+      >
         <LineChart className="h-3.5 w-3.5" />
       </div>
       <p className="text-[12px] font-medium text-[#7f8aa3]">{label}</p>
-      <p className="mt-1.5 text-[1.4rem] font-semibold leading-none tracking-[-0.04em] text-[#1d2a44]">
+      <p className="mt-1.5 text-[1.4rem] leading-none font-semibold tracking-[-0.04em] text-[#1d2a44]">
         {value}
       </p>
       <p className={`mt-2.5 text-[12px] font-semibold ${trendClass}`}>{trend}</p>
@@ -126,7 +131,7 @@ function MetricCard({
 function EmptyPanel({ title }: { title: string }) {
   return (
     <section className="rounded-[22px] border border-dashed border-[#d8deea] bg-white px-6 py-10 text-center">
-      <p className="text-[12px] font-medium uppercase tracking-[0.22em] text-[#667085]">{title}</p>
+      <p className="text-[12px] font-medium tracking-[0.22em] text-[#667085] uppercase">{title}</p>
       <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
         Panel en construcción
       </h2>
@@ -148,7 +153,7 @@ function AdminAccessState({
     reason === 'unauthenticated'
       ? 'Iniciá sesión para entrar al panel'
       : reason === 'forbidden'
-        ?               'No tenés acceso a este panel'
+        ? 'No tenés acceso a este panel'
         : 'No pudimos validar tu acceso';
   const description =
     reason === 'unauthenticated'
@@ -163,12 +168,12 @@ function AdminAccessState({
         <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-amber-50 text-amber-600">
           <ShieldAlert className="h-7 w-7" />
         </div>
-        <p className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
+        <p className="mt-6 text-xs font-bold tracking-[0.22em] text-slate-500 uppercase">
           Acceso restringido
         </p>
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.05em] text-slate-950">{title}</h1>
         <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
-        <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <p className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
           {message}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -180,7 +185,7 @@ function AdminAccessState({
           </Link>
           <Link
             href="/"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Ir al inicio
@@ -227,11 +232,13 @@ export default async function AdministradorPage({
   const requestedPanel = resolvedSearchParams.panel;
   const showAllUsers = resolvedSearchParams.users === 'all';
   const selectedAnalyticsMateriaId = String(resolvedSearchParams.analyticsMateria ?? '').trim();
-  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'dashboard';
+  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'marketing';
   const activePanelMeta = PANELS.find((panel) => panel.key === activePanel) ?? PANELS[0];
-  const requestedPeriod = Number(resolvedSearchParams.period ?? 1);
-  const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 1;
-  const activePeriodLabel = PERIOD_OPTIONS.find((option) => option.value === activePeriod)?.label ?? 'Hoy';
+  const requestedPeriod = Number(resolvedSearchParams.period ?? 7);
+  const activePeriod =
+    PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
+  const activePeriodLabel =
+    PERIOD_OPTIONS.find((option) => option.value === activePeriod)?.label ?? 'Hoy';
   const metricPeriods = {
     newRegistrations: normalizeMetricPeriod(
       resolvedSearchParams.analyticsNewRegistrations,
@@ -244,8 +251,7 @@ export default async function AdministradorPage({
     ),
   } as const;
   const needsBiblioteca = activePanel === 'biblioteca';
-  const needsStats =
-    activePanel === 'dashboard' || activePanel === 'analiticas';
+  const needsStats = false;
   const needsConversion = activePanel === 'marketing';
   const needsUsers = activePanel === 'usuarios';
   const needsLogs = activePanel === 'logs';
@@ -253,6 +259,7 @@ export default async function AdministradorPage({
   const [
     statsResult,
     usersResult,
+    segmentacionResult,
     bibliotecaResult,
     bibliotecaStatsResult,
     logsResult,
@@ -262,26 +269,26 @@ export default async function AdministradorPage({
     iaRankingResult,
     iaFeedbackStatsResult,
     iaFeedbackReviewResult,
-  ] =
-    await Promise.all([
-      needsStats ? obtenerResumenAdministrador(activePeriod, metricPeriods) : Promise.resolve(null),
-      needsUsers ? obtenerUsuariosAdministrador(250) : Promise.resolve(null),
-      needsBiblioteca ? obtenerBibliotecaFormularioAdministrador() : Promise.resolve(null),
-      needsBiblioteca ? obtenerBibliotecaResumenAdministrador() : Promise.resolve(null),
-      needsLogs ? obtenerLogsAdministrador() : Promise.resolve(null),
-      activePanel === 'analiticas' && selectedAnalyticsMateriaId
-        ? obtenerDetalleMateriaAnaliticaAdministrador(selectedAnalyticsMateriaId, activePeriod)
-        : Promise.resolve(null),
-      needsConversion ? obtenerConversionAdministrador() : Promise.resolve(null),
-      needsIA ? obtenerPromptSistema() : Promise.resolve(null),
-      needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
-      needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
-      needsIA ? obtenerFeedbackRevisionAdmin(40) : Promise.resolve(null),
-    ]);
+  ] = await Promise.all([
+    needsStats ? obtenerResumenAdministrador(activePeriod, metricPeriods) : Promise.resolve(null),
+    needsUsers ? obtenerUsuariosAdministrador(250) : Promise.resolve(null),
+    needsUsers ? obtenerSegmentacionUsuariosAdministrador() : Promise.resolve(null),
+    needsBiblioteca ? obtenerBibliotecaFormularioAdministrador() : Promise.resolve(null),
+    needsBiblioteca ? obtenerBibliotecaResumenAdministrador() : Promise.resolve(null),
+    needsLogs ? obtenerLogsAdministrador() : Promise.resolve(null),
+    activePanel === 'analiticas' && selectedAnalyticsMateriaId
+      ? obtenerDetalleMateriaAnaliticaAdministrador(selectedAnalyticsMateriaId, activePeriod)
+      : Promise.resolve(null),
+    needsConversion ? obtenerConversionAdministrador(activePeriod) : Promise.resolve(null),
+    needsIA ? obtenerPromptSistema() : Promise.resolve(null),
+    needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
+    needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
+    needsIA ? obtenerFeedbackRevisionAdmin(40) : Promise.resolve(null),
+  ]);
 
   if (needsStats && (!statsResult?.success || !statsResult.stats)) {
     return (
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+      <main className="min-h-screen bg-white px-5 py-8">
         <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
             No pudimos cargar el panel
@@ -296,7 +303,7 @@ export default async function AdministradorPage({
 
   if (needsUsers && (!usersResult?.success || !usersResult.stats || !usersResult.rows)) {
     return (
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+      <main className="min-h-screen bg-white px-5 py-8">
         <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
             No pudimos cargar el panel
@@ -319,7 +326,7 @@ export default async function AdministradorPage({
       !bibliotecaStatsResult.stats)
   ) {
     return (
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+      <main className="min-h-screen bg-white px-5 py-8">
         <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
             No pudimos cargar el panel
@@ -332,12 +339,9 @@ export default async function AdministradorPage({
     );
   }
 
-  if (
-    needsLogs &&
-    (!logsResult?.success || !logsResult.data)
-  ) {
+  if (needsLogs && (!logsResult?.success || !logsResult.data)) {
     return (
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+      <main className="min-h-screen bg-white px-5 py-8">
         <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
             No pudimos cargar el panel
@@ -358,7 +362,7 @@ export default async function AdministradorPage({
       !iaFeedbackReviewResult?.success)
   ) {
     return (
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+      <main className="min-h-screen bg-white px-5 py-8">
         <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
             No pudimos cargar el panel
@@ -374,12 +378,9 @@ export default async function AdministradorPage({
     );
   }
 
-  if (
-    needsConversion &&
-    (!conversionResult?.success || !conversionResult.stats)
-  ) {
+  if (needsConversion && (!conversionResult?.success || !conversionResult.stats)) {
     return (
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+      <main className="min-h-screen bg-white px-5 py-8">
         <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
           <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
             No pudimos cargar el panel de conversión
@@ -404,16 +405,17 @@ export default async function AdministradorPage({
 
   return (
     <>
-      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8 text-[#1d2a44] lg:hidden">
+      <main className="min-h-screen bg-white px-5 py-8 text-[#1d2a44] lg:hidden">
         <div className="mx-auto max-w-md rounded-[28px] border border-[#e7ebf4] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#667085]">
+          <p className="text-[12px] font-semibold tracking-[0.18em] text-[#667085] uppercase">
             Panel administrador
           </p>
           <h1 className="mt-3 text-[1.7rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">
             Mejor en desktop
           </h1>
           <p className="mt-3 text-sm leading-6 text-[#6f7c96]">
-            Este panel todavía no está optimizado para mobile. Para revisar métricas, gestión y configuración sin errores visuales, abre esta sección desde desktop o una tablet amplia.
+            Este panel todavía no está optimizado para mobile. Para revisar métricas, gestión y
+            configuración sin errores visuales, abre esta sección desde desktop o una tablet amplia.
           </p>
           <Link
             href="/dashboard"
@@ -424,11 +426,13 @@ export default async function AdministradorPage({
         </div>
       </main>
 
-      <main className="hidden min-h-screen bg-[#f6f8fc] text-[#1d2a44] lg:block">
-        <header className="fixed left-[184px] right-0 top-0 z-40 border-b border-[#e7ebf4] bg-white/95 backdrop-blur">
+      <main className="hidden min-h-screen bg-white text-[#1d2a44] lg:block">
+        <header className="fixed top-0 right-0 left-[184px] z-40 border-b border-[#e7ebf4] bg-white/95 backdrop-blur">
           <div className="flex h-[64px] items-center justify-between px-6">
             <div>
-              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#667085]">Panel actual</p>
+              <p className="text-[12px] font-semibold tracking-[0.18em] text-[#667085] uppercase">
+                Panel actual
+              </p>
               <h1 className="mt-0.5 text-[1.1rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
                 {activePanelMeta.label}
               </h1>
@@ -441,7 +445,7 @@ export default async function AdministradorPage({
           </div>
         </header>
 
-        <aside className="fixed left-0 top-[64px] z-30 h-[calc(100vh-64px)] w-[184px] overflow-y-auto border-r border-[#e7ebf4] bg-white px-4 py-5">
+        <aside className="fixed top-[64px] left-0 z-30 h-[calc(100vh-64px)] w-[184px] overflow-y-auto border-r border-[#e7ebf4] bg-white px-4 py-5">
           <div className="mb-6">
             <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Evaluo</p>
           </div>
@@ -457,8 +461,8 @@ export default async function AdministradorPage({
                   href={`/administrador?panel=${panel.key}&period=${activePeriod}`}
                   className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium transition ${
                     isActive
-                      ? 'bg-[#eef3ff] text-[#2563EB]'
-                      : 'text-[#6f7c96] hover:bg-[#f5f7fb] hover:text-[#1d2a44]'
+                      ? 'bg-white text-[#2563EB]'
+                      : 'text-[#6f7c96] hover:bg-white hover:text-[#1d2a44]'
                   }`}
                 >
                   <Icon className="h-[15px] w-[15px]" />
@@ -469,13 +473,15 @@ export default async function AdministradorPage({
           </nav>
         </aside>
 
-        <div className="pl-[184px] pt-[64px]">
+        <div className="pt-[64px] pl-[184px]">
           <div className="px-6 py-6">
             {activePanel === 'dashboard' && stats ? (
               <section>
                 <div className="mb-5 flex items-center justify-between">
                   <div>
-                    <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Resumen general</p>
+                    <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">
+                      Resumen general
+                    </p>
                   </div>
                   <div className="flex items-center gap-1 rounded-lg border border-[#e7ebf4] bg-white p-1">
                     {PERIOD_OPTIONS.map((option) => {
@@ -486,8 +492,8 @@ export default async function AdministradorPage({
                           href={`/administrador?panel=${activePanel}&period=${option.value}`}
                           className={`rounded-md px-2.5 py-1.5 text-[12px] font-medium transition ${
                             isActive
-                              ? 'bg-[#eef3ff] text-[#2563EB]'
-                              : 'text-[#6f7c96] hover:bg-[#f5f7fb] hover:text-[#1d2a44]'
+                              ? 'bg-white text-[#2563EB]'
+                              : 'text-[#6f7c96] hover:bg-white hover:text-[#1d2a44]'
                           }`}
                         >
                           {option.label}
@@ -532,21 +538,27 @@ export default async function AdministradorPage({
                 />
 
                 <div className="mt-6 rounded-[22px] border border-dashed border-[#d8deea] bg-white px-6 py-12 text-center">
-                  <p className="text-[12px] font-medium uppercase tracking-[0.2em] text-[#667085]">Siguiente bloque</p>
+                  <p className="text-[12px] font-medium tracking-[0.2em] text-[#667085] uppercase">
+                    Siguiente bloque
+                  </p>
                   <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
                     Dejamos el resto vacío por ahora
                   </h2>
                   <p className="mx-auto mt-3 max-w-2xl text-[14px] leading-6 text-[#7f8aa3]">
-                    Mostrando datos de {activePeriodLabel.toLowerCase()}. El resto del dashboard lo vamos completando bloque por bloque.
+                    Mostrando datos de {activePeriodLabel.toLowerCase()}. El resto del dashboard lo
+                    vamos completando bloque por bloque.
                   </p>
                 </div>
               </section>
             ) : activePanel === 'analiticas' && stats ? (
               <section>
                 <div className="mb-5">
-                  <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Analíticas</p>
+                  <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">
+                    Analíticas
+                  </p>
                   <p className="mt-1 text-[14px] text-[#7f8aa3]">
-                    Vista de uso, funnel y concentración de demanda para tomar decisiones de producto y contenido.
+                    Vista de uso, funnel y concentración de demanda para tomar decisiones de
+                    producto y contenido.
                   </p>
                 </div>
 
@@ -572,43 +584,83 @@ export default async function AdministradorPage({
                     devices: stats.devices,
                     funnel: stats.funnel,
                   }}
-                  materiaDetail={analyticsMateriaResult?.success ? analyticsMateriaResult.detail ?? null : null}
+                  materiaDetail={
+                    analyticsMateriaResult?.success ? (analyticsMateriaResult.detail ?? null) : null
+                  }
                 />
               </section>
-            ) : activePanel === 'marketing' && conversionResult?.success && conversionResult.stats ? (
+            ) : activePanel === 'marketing' &&
+              conversionResult?.success &&
+              conversionResult.stats ? (
               <section>
-                <div className="mb-5">
-                  <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">Conversión</p>
-                  <p className="mt-1 text-[14px] text-[#7f8aa3]">
-                    El recorrido del simulador de muestra al registro, la retoma del examen y la retención temprana, día a día en los últimos 30 días.
-                  </p>
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[1.35rem] font-semibold tracking-[-0.05em] text-[#1d2a44]">
+                      Producto
+                    </p>
+                    <p className="mt-1 text-[14px] text-[#7f8aa3]">
+                      Activación, conversión y retención de las dos materias prioritarias.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 rounded-lg border border-[#e7ebf4] bg-white p-1">
+                    {PERIOD_OPTIONS.map((option) => (
+                      <Link
+                        key={option.value}
+                        href={`/administrador?panel=marketing&period=${option.value}`}
+                        className={`rounded-md px-2.5 py-1.5 text-[12px] font-medium transition ${option.value === activePeriod ? 'bg-white text-[#2563EB]' : 'text-[#6f7c96] hover:bg-white'}`}
+                      >
+                        {option.label}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-
-                <ConversionPanel stats={conversionResult.stats} />
+                <ConversionPanel stats={conversionResult.stats} periodLabel={activePeriodLabel} />
               </section>
             ) : activePanel === 'biblioteca' &&
               bibliotecaResult?.universidades &&
               bibliotecaResult.carreras &&
               bibliotecaResult.materias ? (
               <BibliotecaPanel
-                overview={bibliotecaStatsResult?.stats ?? { carrerasTotal: 0, materiasTotal: 0, preguntasTotal: 0 }}
+                overview={
+                  bibliotecaStatsResult?.stats ?? {
+                    carrerasTotal: 0,
+                    materiasTotal: 0,
+                    preguntasTotal: 0,
+                  }
+                }
                 universidades={bibliotecaResult.universidades}
                 carreras={bibliotecaResult.carreras}
                 materias={bibliotecaResult.materias}
                 carrerasSimuladores={bibliotecaResult.carrerasSimuladores ?? []}
               />
             ) : activePanel === 'usuarios' && usersResult?.stats && usersResult.rows ? (
-              <UsersPanel stats={usersResult.stats} rows={usersResult.rows} showAll={showAllUsers} />
+              <UsersPanel
+                stats={usersResult.stats}
+                rows={usersResult.rows}
+                showAll={showAllUsers}
+                segmentacionStats={segmentacionResult?.stats ?? null}
+                segmentacionRows={segmentacionResult?.rows ?? []}
+              />
             ) : activePanel === 'logs' && logsResult?.data ? (
               <LogsPanel data={logsResult.data} />
-            ) : activePanel === 'ia' && iaPromptResult?.success && iaRankingResult?.success && iaFeedbackReviewResult?.success ? (
+            ) : activePanel === 'ia' &&
+              iaPromptResult?.success &&
+              iaRankingResult?.success &&
+              iaFeedbackReviewResult?.success ? (
               <IAPanel
                 initialPrompt={iaPromptResult.data ?? ''}
                 initialRankingRows={iaRankingResult.rows ?? []}
                 initialFeedbackStats={
-                  (iaFeedbackStatsResult as {
-                    stats?: { total: number; positive: number; negative: number; generatedCount: number };
-                  } | null)?.stats ?? null
+                  (
+                    iaFeedbackStatsResult as {
+                      stats?: {
+                        total: number;
+                        positive: number;
+                        negative: number;
+                        generatedCount: number;
+                      };
+                    } | null
+                  )?.stats ?? null
                 }
                 initialFeedbackReviewRows={iaFeedbackReviewResult.rows ?? []}
               />
@@ -621,5 +673,3 @@ export default async function AdministradorPage({
     </>
   );
 }
-
-

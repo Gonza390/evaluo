@@ -19,6 +19,7 @@ const collectedDataItems = [
   'Datos de registro básicos, como nombre, correo electrónico y credenciales de acceso.',
   'Información académica que completás dentro de la plataforma, como universidad, carrera, materias de interés y perfil de estudio.',
   'Actividad dentro de Evaluo, incluyendo uso del dashboard, simuladores, recursos abiertos, respuestas registradas, favoritos y progreso de estudio.',
+  'Actividad de enlaces compartidos, incluyendo quién comparte cuando tiene una cuenta, qué materia y parcial comparte, y cuántas visitas, prácticas o registros se originan desde ese enlace.',
   'Datos técnicos necesarios para operar la web, como navegador, dispositivo, dirección IP aproximada, idioma y eventos de sesión.',
   'Datos de pago procesados por terceros (por ejemplo, Mercado Pago), como estado de la suscripción y referencia de la transacción. Evaluo no almacena datos de tarjetas de crédito ni claves de pago.',
 ];
@@ -62,15 +63,15 @@ export default function PrivacyPage() {
             </Link>
 
             <div className="mt-8 border-b border-slate-200 pb-8">
-              <p className="text-xs font-bold uppercase tracking-[0.26em] text-indigo-600">Legal</p>
+              <p className="text-xs font-bold tracking-[0.26em] text-indigo-600 uppercase">Legal</p>
               <h1 className="mt-4 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
                 Política de privacidad
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
                 Última actualización: agosto de 2026. En Evaluo tratamos la información personal con
-                un criterio de necesidad, confidencialidad y respeto por tus derechos, de acuerdo con
-                la Ley N° 25.326 de Protección de los Datos Personales de la República Argentina y sus
-                normas complementarias.
+                un criterio de necesidad, confidencialidad y respeto por tus derechos, de acuerdo
+                con la Ley N° 25.326 de Protección de los Datos Personales de la República Argentina
+                y sus normas complementarias.
               </p>
             </div>
 
@@ -82,7 +83,8 @@ export default function PrivacyPage() {
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
                     Recopilamos únicamente la información necesaria para que la cuenta funcione,
-                    puedas estudiar dentro de la plataforma y podamos mejorar la experiencia general.
+                    puedas estudiar dentro de la plataforma y podamos mejorar la experiencia
+                    general.
                   </p>
                   <ol className="mt-5 space-y-4 pl-6 text-[15px] leading-8 text-slate-600 marker:font-semibold marker:text-slate-900">
                     {collectedDataItems.map((item) => (
@@ -96,9 +98,9 @@ export default function PrivacyPage() {
                     Cómo usamos esa información
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
-                    La información se utiliza principalmente para operar Evaluo, adaptar el contenido
-                    al contexto académico del usuario, medir qué partes del sistema necesitan mejoras
-                    y entrenar nuestros modelos de forma anónima.
+                    La información se utiliza principalmente para operar Evaluo, adaptar el
+                    contenido al contexto académico del usuario, medir qué partes del sistema
+                    necesitan mejoras y entrenar nuestros modelos de forma anónima.
                   </p>
                   <ol className="mt-5 space-y-4 pl-6 text-[15px] leading-8 text-slate-600 marker:font-semibold marker:text-slate-900">
                     {usageItems.map((item) => (
@@ -119,8 +121,9 @@ export default function PrivacyPage() {
                   </p>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
                     Los datos anonimizados pueden utilizarse para ajustar el comportamiento de la
-                    plataforma, evaluar la precisión de las explicaciones y mejorar el rendimiento de
-                    los simuladores, sin que ello implique tratar información personal identificable.
+                    plataforma, evaluar la precisión de las explicaciones y mejorar el rendimiento
+                    de los simuladores, sin que ello implique tratar información personal
+                    identificable.
                   </p>
                 </section>
 
@@ -145,11 +148,11 @@ export default function PrivacyPage() {
                     Seguridad y retención
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
-                    Adoptamos medidas técnicas y organizativas razonables para proteger la información
-                    personal contra el acceso no autorizado, la pérdida, la alteración o la difusión
-                    indebida. La información se conserva únicamente durante el tiempo necesario para
-                    cumplir las finalidades descritas en esta política y para dar cumplimiento a
-                    obligaciones legales o contables.
+                    Adoptamos medidas técnicas y organizativas razonables para proteger la
+                    información personal contra el acceso no autorizado, la pérdida, la alteración o
+                    la difusión indebida. La información se conserva únicamente durante el tiempo
+                    necesario para cumplir las finalidades descritas en esta política y para dar
+                    cumplimiento a obligaciones legales o contables.
                   </p>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
                     Los datos de pago son procesados por la pasarela de pagos correspondiente (por
@@ -162,9 +165,10 @@ export default function PrivacyPage() {
                     Tus derechos y controles
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
-                    Conforme a la Ley N° 25.326, tenés derecho a solicitar información, rectificación,
-                    supresión, actualización o confidencialidad de tus datos personales. Podés ejercer
-                    estos derechos escribiéndonos a privacidad@evaluo.com.ar.
+                    Conforme a la Ley N° 25.326, tenés derecho a solicitar información,
+                    rectificación, supresión, actualización o confidencialidad de tus datos
+                    personales. Podés ejercer estos derechos escribiéndonos a
+                    privacidad@evaluo.com.ar.
                   </p>
                   <ol className="mt-5 space-y-4 pl-6 text-[15px] leading-8 text-slate-600 marker:font-semibold marker:text-slate-900">
                     {rightsItems.map((item) => (
@@ -174,8 +178,8 @@ export default function PrivacyPage() {
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
                     También podés eliminar tu cuenta o ajustar tus preferencias desde la
                     configuración de la plataforma. Ante la denegación de un derecho, podés
-                    presentar una denuncia ante la Agencia de Acceso a la Información Pública (AAIP),
-                    autoridad de aplicación de la Ley N° 25.326.
+                    presentar una denuncia ante la Agencia de Acceso a la Información Pública
+                    (AAIP), autoridad de aplicación de la Ley N° 25.326.
                   </p>
                 </section>
 
@@ -184,8 +188,8 @@ export default function PrivacyPage() {
                     Menores y cambios en esta política
                   </h2>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
-                    Evaluo está orientada a estudiantes universitarios y personas mayores de edad. No
-                    recopilamos deliberadamente información personal de menores de edad sin la
+                    Evaluo está orientada a estudiantes universitarios y personas mayores de edad.
+                    No recopilamos deliberadamente información personal de menores de edad sin la
                     intervención de un padre, madre o tutor.
                   </p>
                   <p className="mt-4 text-[15px] leading-8 text-slate-600">
@@ -198,9 +202,9 @@ export default function PrivacyPage() {
               </div>
 
               <aside className="lg:pt-1">
-                <div className="sticky top-8 space-y-8 border-t border-slate-200 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+                <div className="sticky top-8 space-y-8 border-t border-slate-200 pt-8 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
+                    <p className="text-xs font-bold tracking-[0.26em] text-slate-500 uppercase">
                       En la práctica
                     </p>
                     <div className="mt-4 space-y-5 text-[15px] leading-8 text-slate-600">
@@ -217,14 +221,17 @@ export default function PrivacyPage() {
                   </div>
 
                   <div className="border-t border-slate-200 pt-8">
-                    <p className="text-xs font-bold uppercase tracking-[0.26em] text-slate-500">
+                    <p className="text-xs font-bold tracking-[0.26em] text-slate-500 uppercase">
                       Resumen
                     </p>
                     <div className="mt-4 space-y-3 text-sm text-slate-600">
                       <p>Recopilación acotada a la operación de la cuenta y el producto.</p>
                       <p>Uso orientado a personalización, progreso, analítica y soporte.</p>
                       <p>Entrenamiento de algoritmos solo con datos anonimizados y agregados.</p>
-                      <p>Derechos de acceso, rectificación, supresión, actualización y confidencialidad.</p>
+                      <p>
+                        Derechos de acceso, rectificación, supresión, actualización y
+                        confidencialidad.
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 :root {
-  --background: oklch(0.985 0.002 210);
+  --background: oklch(1 0 0);
   --foreground: oklch(0.15 0.01 230);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.01 230);
@@ -11,8 +11,8 @@
   --primary-foreground: oklch(1 0 0);
   --brand: #2563eb;
   --brand-2: #6366f1;
-  --heading: #0F1B3D;
-  --accent-violet: #5B5FEF;
+  --heading: #0f1b3d;
+  --accent-violet: #5b5fef;
   --secondary: oklch(0.96 0.005 210);
   --secondary-foreground: oklch(0.15 0.01 230);
   --muted: oklch(0.95 0.005 210);
@@ -72,8 +72,10 @@
   }
 
   body {
-    @apply min-h-screen bg-background font-sans text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground min-h-screen font-sans antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
   }
 
   p {
@@ -104,7 +106,7 @@
     @apply font-semibold;
   }
 
-  [class*="lucide-"] {
+  [class*='lucide-'] {
     stroke-width: 1.5px !important;
   }
 }
@@ -146,7 +148,7 @@
   }
 
   .eyebrow-label {
-    @apply text-[0.68rem] font-bold uppercase tracking-[0.22em] text-slate-500;
+    @apply text-[0.68rem] font-bold tracking-[0.22em] text-slate-500 uppercase;
   }
 
   .section-title {
@@ -310,11 +312,21 @@
   }
 }
 
-@utility bg-brand { background-color: #2563EB; }
-@utility bg-brand-2 { background-color: #6366F1; }
-@utility text-brand { color: #2563EB; }
-@utility text-brand-2 { color: #6366F1; }
-@utility text-heading { color: #0F1B3D; }
+@utility bg-brand {
+  background-color: #2563eb;
+}
+@utility bg-brand-2 {
+  background-color: #6366f1;
+}
+@utility text-brand {
+  color: #2563eb;
+}
+@utility text-brand-2 {
+  color: #6366f1;
+}
+@utility text-heading {
+  color: #0f1b3d;
+}
 
 @layer utilities {
   .animate-study-float {
@@ -354,10 +366,15 @@
   }
 
   .animate-progress-sheen::after {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 48%, transparent 100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.14) 48%,
+      transparent 100%
+    );
     transform: translateX(-120%);
     animation: progressSheen 2.8s ease-in-out infinite;
   }

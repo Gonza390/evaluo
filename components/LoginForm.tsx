@@ -26,9 +26,7 @@ const loginFormSchema = z.object({
     .string()
     .min(1, 'Ingresá tu correo electrónico')
     .email('Ingresá un correo electrónico válido'),
-  password: z
-    .string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   acceptLegal: z.boolean(),
 });
 
@@ -109,8 +107,7 @@ export default function LoginForm() {
 
     if (isSignUp && !form.getValues('acceptLegal')) {
       form.setError('acceptLegal', {
-        message:
-          'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
+        message: 'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
       });
       setLoading(false);
       return;
@@ -159,8 +156,7 @@ export default function LoginForm() {
   const handleEmailAuth = form.handleSubmit(async (values) => {
     if (isSignUp && !values.acceptLegal) {
       form.setError('acceptLegal', {
-        message:
-          'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
+        message: 'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
       });
       return;
     }
@@ -194,11 +190,10 @@ export default function LoginForm() {
         return;
       }
 
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email: values.email,
-          password: values.password,
-        });
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
       if (signInError) {
         trackMarketingEvent('login_error', {
@@ -236,7 +231,7 @@ export default function LoginForm() {
       <div className="mx-auto w-full max-w-[320px]">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
+          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver
@@ -244,7 +239,7 @@ export default function LoginForm() {
 
         <div className="mt-8 text-center lg:text-left">
           {intent === 'premium' && isSignUp ? (
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-indigo-700">
+            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">
               Acceso premium
             </div>
           ) : null}
@@ -255,11 +250,11 @@ export default function LoginForm() {
             {isSignUp
               ? intent === 'premium'
                 ? 'Creá tu cuenta para reservar tu acceso premium, guardar tu prioridad y entrar antes a la beta.'
-                : 'Registrate con Google para empezar a estudiar con Evaluo y guardar tu progreso.'
-              : 'Entrá a tus materias, retomá tus PDFs, seguí el simulador y mantené tu avance siempre a mano desde un mismo lugar.'}
+                : 'Creá tu espacio y prepará tu primer parcial.'
+              : 'Volvé a tu materia y continuá donde dejaste.'}
           </p>
           {nextPath !== '/dashboard' ? (
-            <p className="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            <p className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
               Iniciá sesión para continuar a {loginContextLabel}.
             </p>
           ) : null}
@@ -294,9 +289,7 @@ export default function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-slate-600">
-                    Contraseña
-                  </FormLabel>
+                  <FormLabel className="text-sm font-medium text-slate-600">Contraseña</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input
@@ -310,16 +303,10 @@ export default function LoginForm() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-600"
-                      aria-label={
-                        showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
-                      }
+                      className="absolute top-1/2 right-3 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-slate-500 transition hover:text-slate-600"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                   <FormMessage />
@@ -332,15 +319,13 @@ export default function LoginForm() {
                 control={form.control}
                 name="acceptLegal"
                 render={({ field }) => (
-                  <FormItem className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <FormItem className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                     <div className="flex items-start gap-3">
                       <FormControl>
                         <Checkbox
                           id="accept-legal"
                           checked={field.value}
-                          onCheckedChange={(checked) =>
-                            field.onChange(Boolean(checked))
-                          }
+                          onCheckedChange={(checked) => field.onChange(Boolean(checked))}
                           className="mt-0.5"
                         />
                       </FormControl>
@@ -366,8 +351,7 @@ export default function LoginForm() {
                           .
                         </FormLabel>
                         <p className="text-xs leading-5 text-slate-500">
-                          Necesitamos tu aceptación para crear tu cuenta y guardar
-                          tu progreso.
+                          Necesitamos tu aceptación para crear tu cuenta y guardar tu progreso.
                         </p>
                       </div>
                     </div>
@@ -380,7 +364,7 @@ export default function LoginForm() {
             <Button
               type="submit"
               loading={loading}
-              className="h-11 w-full rounded-xl bg-gradient-to-r from-brand to-brand-2 text-sm font-bold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95"
+              className="from-brand to-brand-2 h-11 w-full rounded-xl bg-gradient-to-r text-sm font-bold text-white shadow-[0_10px_30px_rgba(37,99,235,0.20)] transition hover:opacity-95"
             >
               {isSignUp
                 ? intent === 'premium'
@@ -393,18 +377,18 @@ export default function LoginForm() {
 
         <div className="mt-4">
           <div className="flex items-center gap-4 py-1">
-            <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div className="h-px flex-1 bg-white" />
+            <span className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
               o continúa con
             </span>
-            <div className="h-px flex-1 bg-slate-200" />
+            <div className="h-px flex-1 bg-white" />
           </div>
 
           <Button
             type="button"
             onClick={handleGoogleAuth}
             loading={loading}
-            className="mt-4 h-11 w-full rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            className="mt-4 h-11 w-full rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-white"
           >
             <span className="inline-flex items-center gap-3">
               <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
@@ -425,11 +409,7 @@ export default function LoginForm() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1c-4.3 0-7.99 2.47-9.8 6.17l3.13 2.44c.87-2.6 3.3-4.57 6.1-4.57z"
                 />
               </svg>
-              {isSignUp
-                ? intent === 'premium'
-                  ? 'Reservarme con Google'
-                  : 'Registrarme con Google'
-                : 'Iniciar sesión con Google'}
+              Continuar con Google
             </span>
           </Button>
 
@@ -462,7 +442,7 @@ export default function LoginForm() {
               setMode(nextMode);
             }}
             disabled={loading}
-            className="font-semibold text-brand transition hover:text-brand-2 hover:underline disabled:opacity-60"
+            className="text-brand hover:text-brand-2 font-semibold transition hover:underline disabled:opacity-60"
           >
             {isSignUp ? 'Iniciar sesión' : 'Registrarte'}
           </button>

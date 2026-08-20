@@ -13,7 +13,7 @@ export async function PublicHeaderActions() {
       <nav className="flex items-center gap-2 sm:gap-3">
         <Link
           href="/explorar"
-          className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
+          className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
         >
           Explorar
         </Link>
@@ -32,7 +32,7 @@ export async function PublicHeaderActions() {
     <nav className="flex items-center gap-2 sm:gap-3">
       <Link
         href="/explorar"
-        className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
+        className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
       >
         Explorar
       </Link>

@@ -32,7 +32,7 @@ export function AdminAccessState({
         </p>
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.05em] text-slate-950">{title}</h1>
         <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
-        <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+        <p className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
           {message}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -44,7 +44,7 @@ export function AdminAccessState({
           </Link>
           <Link
             href="/"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Ir al inicio

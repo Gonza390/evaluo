@@ -2,16 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Save, Search, Settings } from 'lucide-react';
+import { CheckCircle2, Globe2, GraduationCap, MapPin, Phone, Save, School, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { useUser } from '@/hooks/useUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { logError } from '@/lib/observability';
 import { resolveProfileSettingsState } from '@/lib/profile-settings';
+import { SubscriptionSettings } from '@/components/pricing/SubscriptionSettings';
 
 type Universidad = {
   id: string;
@@ -24,6 +26,12 @@ type Carrera = {
   universidad_id: string | null;
 };
 
+const ANIOS_CARRERA = ['1', '2', '3', '4', '5', '6'] as const;
+
+function anioCarreraLabel(value: string) {
+  return value === '6' ? '6to o más' : `${value}° año`;
+}
+
 export default function ConfiguracionPage() {
   const router = useRouter();
   const { user, loading, getUserName } = useUser();
@@ -34,6 +42,8 @@ export default function ConfiguracionPage() {
   const [loadingCarreras, setLoadingCarreras] = useState(false);
   const [nombre, setNombre] = useState('');
   const [pais, setPais] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [anioCarrera, setAnioCarrera] = useState('');
   const [universidadId, setUniversidadId] = useState('');
   const [carreraId, setCarreraId] = useState('');
   const [universidadSearch, setUniversidadSearch] = useState('');
@@ -62,7 +72,7 @@ export default function ConfiguracionPage() {
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('nombre, universidad_id, carrera_id')
+          .select('nombre, pais, telefono, anio_carrera, universidad_id, carrera_id')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -82,6 +92,8 @@ export default function ConfiguracionPage() {
 
         setNombre(resolvedProfileState.nombre);
         setPais(resolvedProfileState.pais);
+        setTelefono(resolvedProfileState.telefono);
+        setAnioCarrera(resolvedProfileState.anioCarrera);
         setUniversidadId(resolvedProfileState.universidadId);
         setCarreraId(resolvedProfileState.carreraId);
 
@@ -240,10 +252,15 @@ export default function ConfiguracionPage() {
     try {
       const cleanNombre = nombre.trim();
       const cleanPais = pais.trim();
+      const cleanTelefono = telefono.trim();
+      const cleanAnioCarrera = anioCarrera.trim();
 
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id,
         nombre: cleanNombre,
+        pais: cleanPais,
+        telefono: cleanTelefono || null,
+        anio_carrera: cleanAnioCarrera || null,
         universidad_id: universidadId,
         carrera_id: carreraId,
         updated_at: new Date().toISOString(),
@@ -259,6 +276,8 @@ export default function ConfiguracionPage() {
           name: cleanNombre,
           country: cleanPais,
           pais: cleanPais,
+          telefono: cleanTelefono,
+          anio_carrera: cleanAnioCarrera,
         },
       });
 
@@ -290,7 +309,7 @@ export default function ConfiguracionPage() {
 
   if (loading || loadingProfile) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+      <div className="flex min-h-[70vh] items-center justify-center rounded-[var(--radius-panel)] border border-slate-200/85 bg-white shadow-[var(--shadow-panel)]">
         <div className="flex items-center gap-3 text-slate-600">
           <Spinner size="sm" />
           <span className="text-sm font-medium">Cargando tu configuración...</span>
@@ -304,36 +323,36 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
-      <section className="rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.14),transparent_28%),linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
-        <div className="flex flex-col gap-4">
-          <div className="space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-[#2563EB] to-[#6366F1] text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
-                <Settings className="h-7 w-7" />
-              </div>
-              <div>
-                <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-[#2563EB]">
-                  Perfil
-                </p>
-                <h1 className="mt-1 text-3xl font-bold tracking-[-0.05em] text-slate-950 sm:text-4xl">
-                  Configura tu cuenta
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-[15px]">
-                  Actualizá tu nombre, tu universidad, tu carrera y el país desde el que estudiás para
-                  que Evaluo pueda personalizar mejor tu experiencia.
-                </p>
-              </div>
+    <div className="animate-page-enter mx-auto w-full max-w-6xl space-y-6">
+      <section className="surface-panel relative overflow-hidden p-6 sm:p-8">
+        <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-52 w-52 rounded-full bg-brand-2/10 blur-3xl" />
+        <div className="relative flex flex-col gap-4">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
+              <Settings className="h-7 w-7" />
+            </div>
+            <div>
+              <p className="eyebrow-label text-brand">Perfil</p>
+              <h1 className="text-heading mt-1 text-3xl font-bold tracking-[-0.05em] sm:text-4xl">
+                Configura tu cuenta
+              </h1>
+              <p className="section-copy mt-3 max-w-2xl">
+                Actualizá tus datos de contacto y tu recorrido académico para que Evaluo pueda
+                personalizar mejor tu experiencia.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
+      <SubscriptionSettings />
+
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_380px]">
-        <div className="space-y-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="surface-panel space-y-8 p-6 sm:p-8">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="nombre" className="font-medium text-slate-700">
+              <Label htmlFor="nombre" className="font-medium text-foreground">
                 Nombre
               </Label>
               <Input
@@ -341,25 +360,12 @@ export default function ConfiguracionPage() {
                 value={nombre}
                 onChange={(event) => setNombre(event.target.value)}
                 placeholder="Tu nombre completo"
-                className="h-12 rounded-2xl border-slate-200 bg-white"
+                className="h-12 rounded-xl border-input bg-card"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pais" className="font-medium text-slate-700">
-                Pais
-              </Label>
-              <Input
-                id="pais"
-                value={pais}
-                onChange={(event) => setPais(event.target.value)}
-                placeholder="Ej: Argentina"
-                className="h-12 rounded-2xl border-slate-200 bg-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="font-medium text-slate-700">
+              <Label htmlFor="email" className="font-medium text-foreground">
                 Email registrado
               </Label>
               <Input
@@ -367,18 +373,62 @@ export default function ConfiguracionPage() {
                 value={user.email ?? ''}
                 readOnly
                 disabled
-                className="h-12 rounded-2xl border-slate-200 bg-slate-50 text-slate-500 disabled:opacity-100"
+                className="h-12 rounded-xl border-input bg-card text-muted-foreground disabled:opacity-100"
               />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-brand" />
+              <h2 className="text-sm font-bold text-foreground">De dónde sos</h2>
+            </div>
+            <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
+              Contanos tu país de residencia y un teléfono de contacto.
+            </p>
+            <div className="mt-4 grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="pais" className="font-medium text-foreground">
+                  País
+                </Label>
+                <div className="relative">
+                  <MapPin className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="pais"
+                    value={pais}
+                    onChange={(event) => setPais(event.target.value)}
+                    placeholder="Ej: Argentina"
+                    className="h-12 rounded-xl border-input bg-card pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="telefono" className="font-medium text-foreground">
+                  Teléfono <span className="font-normal text-muted-foreground">(opcional)</span>
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="telefono"
+                    type="tel"
+                    value={telefono}
+                    onChange={(event) => setTelefono(event.target.value)}
+                    placeholder="Ej: +54 9 11 1234 5678"
+                    className="h-12 rounded-xl border-input bg-card pl-10"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="universidad-search" className="font-medium text-slate-700">
+              <Label htmlFor="universidad-search" className="font-medium text-foreground">
                 Universidad
               </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-4 h-4 w-4 text-slate-400" />
+                <School className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="universidad-search"
                   value={universidadSearch}
@@ -389,16 +439,16 @@ export default function ConfiguracionPage() {
                     setCarreraSearch('');
                   }}
                   placeholder="Buscá tu universidad"
-                  className="h-12 rounded-2xl border-slate-200 bg-white pl-10"
+                  className="h-12 rounded-xl border-input bg-card pl-10"
                 />
               </div>
-              <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+              <div className="border-border max-h-72 overflow-y-auto rounded-2xl border bg-card">
                 {loadingUniversidades ? (
                   <div className="flex items-center justify-center p-4">
                     <Spinner size="sm" />
                   </div>
                 ) : universidades.length === 0 ? (
-                  <div className="px-4 py-4 text-sm text-slate-500">
+                  <div className="px-4 py-4 text-sm text-muted-foreground">
                     {hasLoadedUniversidades
                       ? 'No encontramos esa universidad.'
                       : 'Escribí al menos 2 letras para buscar tu universidad.'}
@@ -414,8 +464,10 @@ export default function ConfiguracionPage() {
                         setCarreraId('');
                         setCarreraSearch('');
                       }}
-                      className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-indigo-50 ${
-                        universidadId === universidad.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'
+                      className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-primary/5 ${
+                        universidadId === universidad.id
+                          ? 'bg-primary/5 text-primary'
+                          : 'text-foreground'
                       }`}
                     >
                       <span>{universidad.nombre}</span>
@@ -432,11 +484,11 @@ export default function ConfiguracionPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="carrera-search" className="font-medium text-slate-700">
+              <Label htmlFor="carrera-search" className="font-medium text-foreground">
                 Carrera
               </Label>
               <div className="relative">
-                <Search className="absolute left-3 top-4 h-4 w-4 text-slate-400" />
+                <GraduationCap className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="carrera-search"
                   value={carreraSearch}
@@ -450,20 +502,20 @@ export default function ConfiguracionPage() {
                       ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
                       : 'Primero selecciona una universidad'
                   }
-                  className="h-12 rounded-2xl border-slate-200 bg-white pl-10"
+                  className="h-12 rounded-xl border-input bg-card pl-10 disabled:opacity-60"
                 />
               </div>
-              <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white">
+              <div className="border-border max-h-72 overflow-y-auto rounded-2xl border bg-card">
                 {loadingCarreras ? (
                   <div className="flex items-center justify-center p-4">
                     <Spinner size="sm" />
                   </div>
                 ) : !universidadId ? (
-                  <div className="px-4 py-4 text-sm text-slate-500">
+                  <div className="px-4 py-4 text-sm text-muted-foreground">
                     Primero selecciona una universidad.
                   </div>
                 ) : carreras.length === 0 ? (
-                  <div className="px-4 py-4 text-sm text-slate-500">
+                  <div className="px-4 py-4 text-sm text-muted-foreground">
                     No encontramos carreras para esa busqueda.
                   </div>
                 ) : (
@@ -475,8 +527,8 @@ export default function ConfiguracionPage() {
                         setCarreraId(carrera.id);
                         setCarreraSearch(carrera.nombre);
                       }}
-                      className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-indigo-50 ${
-                        carreraId === carrera.id ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700'
+                      className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-primary/5 ${
+                        carreraId === carrera.id ? 'bg-primary/5 text-primary' : 'text-foreground'
                       }`}
                     >
                       <span>{carrera.nombre}</span>
@@ -492,37 +544,57 @@ export default function ConfiguracionPage() {
               </div>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="anio-carrera" className="font-medium text-foreground">
+              Año de carrera que cursás <span className="font-normal text-muted-foreground">(opcional)</span>
+            </Label>
+            <Select value={anioCarrera || undefined} onValueChange={setAnioCarrera}>
+              <SelectTrigger id="anio-carrera" className="h-12 w-full rounded-xl border-input bg-card">
+                <SelectValue placeholder="Seleccioná tu año" />
+              </SelectTrigger>
+              <SelectContent>
+                {ANIOS_CARRERA.map((value) => (
+                  <SelectItem key={value} value={value}>
+                    {anioCarreraLabel(value)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <aside className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
-          <h2 className="text-lg font-bold text-slate-900">Resumen de tu perfil</h2>
+        <aside className="surface-panel h-fit p-6 sm:p-8">
+          <h2 className="text-lg font-bold text-foreground">Resumen de tu perfil</h2>
           <div className="mt-5 space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Nombre
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">{nombre || 'Sin completar'}</p>
+            <div className="border-border rounded-2xl border bg-card px-4 py-3">
+              <p className="eyebrow-label">Nombre</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{nombre || 'Sin completar'}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Pais
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">{pais || 'Sin completar'}</p>
+            <div className="border-border rounded-2xl border bg-card px-4 py-3">
+              <p className="eyebrow-label">País</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{pais || 'Sin completar'}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Universidad
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
+            <div className="border-border rounded-2xl border bg-card px-4 py-3">
+              <p className="eyebrow-label">Teléfono</p>
+              <p className="mt-1 text-sm font-medium text-foreground">{telefono || 'Sin completar'}</p>
+            </div>
+            <div className="border-border rounded-2xl border bg-card px-4 py-3">
+              <p className="eyebrow-label">Universidad</p>
+              <p className="mt-1 text-sm font-medium text-foreground">
                 {universidadSearch || 'Sin completar'}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Carrera
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
+            <div className="border-border rounded-2xl border bg-card px-4 py-3">
+              <p className="eyebrow-label">Carrera</p>
+              <p className="mt-1 text-sm font-medium text-foreground">
                 {carreraSearch || 'Sin completar'}
+              </p>
+            </div>
+            <div className="border-border rounded-2xl border bg-card px-4 py-3">
+              <p className="eyebrow-label">Año de carrera</p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {anioCarrera ? anioCarreraLabel(anioCarrera) : 'Sin completar'}
               </p>
             </div>
           </div>
@@ -531,7 +603,7 @@ export default function ConfiguracionPage() {
             type="button"
             onClick={handleSave}
             disabled={!canSave || saving}
-            className="mt-6 h-12 w-full rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] hover:opacity-95"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 mt-6 h-12 w-full rounded-xl text-sm font-semibold shadow-[0_14px_30px_rgba(37,99,235,0.24)]"
           >
             {saving ? (
               <>

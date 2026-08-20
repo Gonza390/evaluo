@@ -144,11 +144,10 @@ async function selectDiverseSimulatorQuestions(
 
   const { data: seenRows, error: seenError } = await supabase
     .from('historial_respuestas')
-    .select('pregunta_id, fecha_respuesta')
+    .select('pregunta_id')
     .eq('usuario_id', user.id)
     .eq('materia_id', materiaId)
     .in('pregunta_id', poolIds)
-    .order('fecha_respuesta', { ascending: false })
     .limit(5000);
 
   if (seenError) {
@@ -222,28 +221,20 @@ function buildPreguntasBancoQuery(
 }
 
 /**
- * Obtiene 30 preguntas aleatorias de la base de datos para una materia y parcial específicos.
+ * Pool de preguntas del banco para una materia/parcial/scope. Es casi estático
+ * (cambia solo cuando se cargan preguntas nuevas), así que se cachea con el
+ * Data Cache de Next. La diversificación por usuario queda fuera de la caché
+ * (ver `selectDiverseSimulatorQuestions`).
  */
-export async function getPreguntasSimulador(
-  materiaId: string,
-  parcial: number,
-  universidadId?: string,
-  carreraId?: string
-): Promise<Pregunta[]> {
-  try {
-    const clientKey = await getServerActionClientKey();
-    const rateResult = await enforceServerActionRateLimit({
-      key: `sim:get:${clientKey}`,
-      limit: 30,
-      windowMs: 60_000,
-    });
-    if (!rateResult.allowed) {
-      return [];
-    }
-
+const loadPreguntasBancoPool = unstable_cache(
+  async (
+    materiaId: string,
+    parcial: number,
+    universidadId: string | undefined,
+    carreraId: string | undefined
+  ): Promise<Pregunta[]> => {
     // El banco se lee con service_role: nunca viaja la respuesta_correcta al cliente.
     const admin = createAdminClient();
-    const supabase = await createClientServer();
 
     const runQuery = async (scope: 'strict' | 'university' | 'shared') =>
       buildPreguntasBancoQuery(admin, materiaId, parcial, universidadId, carreraId, scope);
@@ -272,7 +263,35 @@ export async function getPreguntasSimulador(
       return [];
     }
 
-    const sanitized = (data as PreguntaBancoRow[]).map(sanitizePreguntaRow);
+    return (data as PreguntaBancoRow[]).map(sanitizePreguntaRow);
+  },
+  ['preguntas-banco-pool'],
+  { revalidate: 300, tags: ['preguntas-banco-pool'] }
+);
+
+/**
+ * Obtiene 30 preguntas aleatorias de la base de datos para una materia y parcial específicos.
+ */
+export async function getPreguntasSimulador(
+  materiaId: string,
+  parcial: number,
+  universidadId?: string,
+  carreraId?: string
+): Promise<Pregunta[]> {
+  try {
+    const clientKey = await getServerActionClientKey();
+    const rateResult = await enforceServerActionRateLimit({
+      key: `sim:get:${clientKey}`,
+      limit: 30,
+      windowMs: 60_000,
+    });
+    if (!rateResult.allowed) {
+      return [];
+    }
+
+    const supabase = await createClientServer();
+
+    const sanitized = await loadPreguntasBancoPool(materiaId, parcial, universidadId, carreraId);
 
     const questionLimit = parcial === 3 ? 50 : 30;
     const diversified = await selectDiverseSimulatorQuestions(

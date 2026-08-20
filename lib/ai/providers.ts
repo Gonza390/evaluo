@@ -15,7 +15,10 @@ export type ProviderResult = {
   usage?: AiUsage;
 };
 
-const AI_REQUEST_TIMEOUT_MS = 45_000;
+const AI_REQUEST_TIMEOUT_MS = Math.max(
+  5_000,
+  Number(process.env.AI_REQUEST_TIMEOUT_MS ?? 12_000) || 12_000
+);
 const GITHUB_MODELS_ENDPOINT =
   process.env.GITHUB_MODELS_URL ?? 'https://models.github.ai/inference/chat/completions';
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -33,8 +36,9 @@ const GEMINI_FALLBACK_SUMMARY_MODEL =
   process.env.GEMINI_FALLBACK_SUMMARY_MODEL ?? 'gemini-flash-lite-latest';
 const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'llama-3.3-70b-versatile';
-const GROQ_FALLBACK_SUMMARY_MODEL =
-  process.env.GROQ_FALLBACK_MODEL ?? 'llama-3.1-8b-instant';
+// No mantenemos un fallback Groq hardcodeado: los modelos retirados generaban
+// un 404 en cada artefacto antes de llegar al proveedor sano.
+const GROQ_FALLBACK_SUMMARY_MODEL = process.env.GROQ_FALLBACK_MODEL;
 const NVIDIA_PRIMARY_SUMMARY_MODEL =
   process.env.NVIDIA_SUMMARY_MODEL ?? 'meta/llama-3.3-70b-instruct';
 const NVIDIA_FALLBACK_SUMMARY_MODEL =
@@ -45,7 +49,9 @@ export function getGeminiSummaryModels() {
 }
 
 export function getGroqSummaryModels() {
-  return uniqueConfiguredValues([GROQ_PRIMARY_SUMMARY_MODEL, GROQ_FALLBACK_SUMMARY_MODEL]);
+  return uniqueConfiguredValues([GROQ_PRIMARY_SUMMARY_MODEL, GROQ_FALLBACK_SUMMARY_MODEL]).filter(
+    (model) => model !== 'llama-3.1-8b-instant'
+  );
 }
 
 export function getGithubModelsSummaryModels() {
@@ -56,10 +62,7 @@ export function getGithubModelsSummaryModels() {
 }
 
 export function getNvidiaSummaryModels() {
-  return uniqueConfiguredValues([
-    NVIDIA_PRIMARY_SUMMARY_MODEL,
-    NVIDIA_FALLBACK_SUMMARY_MODEL,
-  ]);
+  return uniqueConfiguredValues([NVIDIA_PRIMARY_SUMMARY_MODEL, NVIDIA_FALLBACK_SUMMARY_MODEL]);
 }
 
 async function fetchWithTimeout(
@@ -105,8 +108,7 @@ function parseGeminiUsage(json: Record<string, unknown>): AiUsage | undefined {
   if (!usage || typeof usage !== 'object') return undefined;
 
   const record = usage as Record<string, unknown>;
-  const promptTokens =
-    typeof record.promptTokenCount === 'number' ? record.promptTokenCount : null;
+  const promptTokens = typeof record.promptTokenCount === 'number' ? record.promptTokenCount : null;
   const completionTokens =
     typeof record.candidatesTokenCount === 'number' ? record.candidatesTokenCount : null;
   const totalTokens = typeof record.totalTokenCount === 'number' ? record.totalTokenCount : null;
@@ -194,17 +196,20 @@ async function requestOpenAiCompatibleJson(
           continue;
         }
 
-        throw new Error(`${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`);
+        throw new Error(
+          `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
+        );
       }
 
       const json = (await response.json()) as Record<string, unknown>;
       const choices = json?.choices;
-      const content =
-        Array.isArray(choices)
-          ? ((choices[0] as Record<string, unknown> | undefined)?.message as
+      const content = Array.isArray(choices)
+        ? (
+            (choices[0] as Record<string, unknown> | undefined)?.message as
               | Record<string, unknown>
-              | undefined)?.content
-          : undefined;
+              | undefined
+          )?.content
+        : undefined;
 
       const normalized = typeof content === 'string' ? content.trim() : '';
       if (!normalized) continue;
@@ -263,17 +268,20 @@ async function requestOpenAiCompatibleText(
           continue;
         }
 
-        throw new Error(`${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`);
+        throw new Error(
+          `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
+        );
       }
 
       const json = (await response.json()) as Record<string, unknown>;
       const choices = json?.choices;
-      const content =
-        Array.isArray(choices)
-          ? ((choices[0] as Record<string, unknown> | undefined)?.message as
+      const content = Array.isArray(choices)
+        ? (
+            (choices[0] as Record<string, unknown> | undefined)?.message as
               | Record<string, unknown>
-              | undefined)?.content
-          : undefined;
+              | undefined
+          )?.content
+        : undefined;
 
       const normalized = typeof content === 'string' ? content.trim() : '';
       if (!normalized) continue;
@@ -465,9 +473,9 @@ async function requestGeminiCommon(input: GeminiRequest) {
       const json = (await response.json()) as Record<string, unknown>;
       const candidates = json?.candidates;
       const content = Array.isArray(candidates)
-        ? (candidates[0] as Record<string, unknown> | undefined)?.content as
+        ? ((candidates[0] as Record<string, unknown> | undefined)?.content as
             | Record<string, unknown>
-            | undefined
+            | undefined)
         : undefined;
       const parts = content?.parts;
       const text = Array.isArray(parts)
@@ -592,9 +600,9 @@ async function runGeminiInlineJson(input: {
       const json = (await response.json()) as Record<string, unknown>;
       const candidates = json?.candidates;
       const content = Array.isArray(candidates)
-        ? (candidates[0] as Record<string, unknown> | undefined)?.content as
+        ? ((candidates[0] as Record<string, unknown> | undefined)?.content as
             | Record<string, unknown>
-            | undefined
+            | undefined)
         : undefined;
       const parts = content?.parts;
       const text = Array.isArray(parts)

@@ -176,7 +176,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
           </div>
 
           {lastCleanupCount !== null ? (
-            <div className="mb-3 rounded-[12px] border border-[#e7ebf4] bg-[#fbfcff] px-3 py-2 text-[12px] text-[#5f6d86]">
+            <div className="mb-3 rounded-[12px] border border-[#e7ebf4] bg-white px-3 py-2 text-[12px] text-[#5f6d86]">
               Última limpieza ejecutada desde este panel: {lastCleanupCount.toLocaleString('es-AR')} archivos.
             </div>
           ) : null}
@@ -188,7 +188,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
               </p>
             ) : (
               data.orphanSample.map((path) => (
-                <div key={path} className="rounded-[12px] border border-[#e7ebf4] bg-[#fbfcff] px-3 py-2 text-[12px] text-[#42506a]">
+                <div key={path} className="rounded-[12px] border border-[#e7ebf4] bg-white px-3 py-2 text-[12px] text-[#42506a]">
                   {path}
                 </div>
               ))
@@ -210,12 +210,12 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
               </p>
             ) : (
               data.failuresByPath.map((row) => (
-                <div key={row.path} className="rounded-[14px] border border-[#e7ebf4] bg-[#fbfcff] px-4 py-3">
+                <div key={row.path} className="rounded-[14px] border border-[#e7ebf4] bg-white px-4 py-3">
                   <div className="mb-2 flex items-center justify-between gap-3 text-[12px] text-[#7f8aa3]">
                     <span className="truncate">{row.path}</span>
                     <span className="font-semibold text-[#1d2a44]">{row.count.toLocaleString('es-AR')}</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-[#e8edf7]">
+                  <div className="h-2 overflow-hidden rounded-full bg-white">
                     <div
                       className="h-full rounded-full bg-[#2563EB]"
                       style={{
@@ -246,7 +246,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
               </p>
             ) : (
               data.duplicateRows.map((group, index) => (
-                <div key={`${group.normalized_name}-${index}`} className="rounded-[14px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+                <div key={`${group.normalized_name}-${index}`} className="rounded-[14px] border border-[#e7ebf4] bg-white p-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-[13px] font-semibold text-[#1d2a44]">
                       Grupo #{index + 1}
@@ -282,7 +282,7 @@ export function LogsPanel({ data }: { data: AdministradorLogsData }) {
             </p>
           ) : (
             data.recentErrors.map((row, index) => (
-              <div key={`${row.path}-${row.created_at ?? index}`} className="rounded-[14px] border border-[#e7ebf4] bg-[#fbfcff] px-4 py-3">
+              <div key={`${row.path}-${row.created_at ?? index}`} className="rounded-[14px] border border-[#e7ebf4] bg-white px-4 py-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-[13px] font-semibold text-[#1d2a44]">{row.path}</p>
                   <p className="text-[12px] text-[#7f8aa3]">

@@ -172,7 +172,7 @@ export function IAPanel({
           <Textarea
             value={promptSistema}
             onChange={(event) => setPromptSistema(event.target.value)}
-            className="min-h-[220px] rounded-[16px] border-[#dbe2f0] bg-[#fbfcff] px-4 py-3 text-[14px] leading-6 text-[#1d2a44] shadow-none"
+            className="min-h-[220px] rounded-[16px] border-[#dbe2f0] bg-white px-4 py-3 text-[14px] leading-6 text-[#1d2a44] shadow-none"
             placeholder="Escribí aquí la configuración del sistema de IA..."
           />
         </div>
@@ -213,7 +213,7 @@ export function IAPanel({
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-[#e8edf5] bg-[#fbfcff] px-4 py-4 text-[13px] text-[#5f6d86]">
+          <div className="rounded-[16px] border border-[#e8edf5] bg-white px-4 py-4 text-[13px] text-[#5f6d86]">
             Recomendacion inicial: 30 preguntas por dia con un tope de 65.000 tokens estimados. Si el costo queda comodo,
             luego podés subir a 40-50 por corrida.
           </div>
@@ -227,7 +227,7 @@ export function IAPanel({
                 <MiniStat label="Tokens estimados" value={warmupResult.totalEstimatedTokens} tone="slate" />
               </div>
 
-              <div className="rounded-[14px] border border-[#e8edf5] bg-[#fbfcff] p-3">
+              <div className="rounded-[14px] border border-[#e8edf5] bg-white p-3">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#667085]">
                   {warmupResult.dryRun ? 'Cobertura prevista' : 'Última corrida generada'}
                 </p>
@@ -285,7 +285,7 @@ export function IAPanel({
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-[#2563EB]" />
             <p className="text-[14px] font-semibold text-[#1d2a44]">Ranking de errores explicados por IA</p>
-            <span className="rounded-full border border-[#dbe2f0] bg-[#f5f7fb] px-2 py-0.5 text-[12px] font-medium text-[#5f6d86]">
+            <span className="rounded-full border border-[#dbe2f0] bg-white px-2 py-0.5 text-[12px] font-medium text-[#5f6d86]">
               {feedbackStats?.generatedCount?.toLocaleString('es-AR') ?? 0} generadas
             </span>
           </div>
@@ -311,7 +311,7 @@ export function IAPanel({
             <p className="text-[14px] text-[#7f8aa3]">Todavía no hay errores de IA para mostrar.</p>
           ) : (
             visibleRankingRows.map((row) => (
-              <article key={row.pregunta_id} className="rounded-[16px] border border-[#e8edf5] bg-[#fbfcff] p-4">
+              <article key={row.pregunta_id} className="rounded-[16px] border border-[#e8edf5] bg-white p-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <p className="text-[14px] font-semibold text-[#1d2a44]">{row.enunciado}</p>

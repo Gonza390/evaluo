@@ -60,7 +60,7 @@ export function DashboardInsights({
         {visitorLoginSeries.length === 0 ? (
           <p className="text-[13px] text-[#7f8aa3]">Todavía no hay datos suficientes para este período.</p>
         ) : (
-          <div className="h-[320px] rounded-[18px] border border-[#edf1f7] bg-[#fbfcff] px-3 py-3">
+          <div className="h-[320px] rounded-[18px] border border-[#edf1f7] bg-white px-3 py-3">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={visitorLoginSeries}>
                 <CartesianGrid vertical={false} stroke="#e9edf5" strokeDasharray="3 3" />
@@ -103,7 +103,7 @@ export function DashboardInsights({
           <p className="text-[13px] text-[#7f8aa3]">Todavía no hay actividad reciente para mostrar.</p>
         ) : (
           <div className="overflow-hidden rounded-[14px] border border-[#edf1f7]">
-            <div className="grid grid-cols-[140px_minmax(0,1fr)_140px_140px] border-b border-[#edf1f7] bg-[#fafbfd] px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#8c97ad]">
+            <div className="grid grid-cols-[140px_minmax(0,1fr)_140px_140px] border-b border-[#edf1f7] bg-white px-4 py-3 text-[12px] font-semibold uppercase tracking-[0.14em] text-[#8c97ad]">
               <span>Acción</span>
               <span>Detalles</span>
               <span>Administrador</span>

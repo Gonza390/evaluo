@@ -7,9 +7,12 @@ type SimulatorLifecycleEvent =
   | 'simulator_finished'
   | 'simulator_abandoned';
 
-type SimulatorLoginGateEvent =
-  | 'simulator_login_gate_viewed'
-  | 'simulator_login_gate_cta_clicked';
+type SimulatorLoginGateEvent = 'simulator_login_gate_viewed' | 'simulator_login_gate_cta_clicked';
+
+type SimulatorFunnelEvent =
+  | 'simulator_ready'
+  | 'simulator_progress_checkpoint'
+  | 'simulator_needs_feedback';
 
 type SimulatorAnalyticsPayload = {
   session_key: string;
@@ -133,6 +136,20 @@ export async function trackSimulatorLoginGateEvent(
       },
       cta ? { cta } : undefined
     ),
+  });
+}
+
+export async function trackSimulatorFunnelEvent(
+  eventName: SimulatorFunnelEvent,
+  context: SimulatorEventContext,
+  progress: SimulatorProgressSnapshot,
+  extra?: Record<string, unknown>
+) {
+  await trackSimulatorAnalyticsEvent(eventName, {
+    session_key: getSimulatorAnalyticsSessionKey(),
+    user_id: context.userId,
+    path: context.path,
+    metadata: buildSimulatorMetadata(context, progress, extra),
   });
 }
 

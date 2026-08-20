@@ -34,6 +34,10 @@ function enforceProxyApiProtection(request: NextRequest, pathname: string): Next
   const isInternalApi = pathname.startsWith('/api/internal');
   if (isInternalApi) return null;
 
+  // Mercado Pago autentica este endpoint mediante x-signature. No debe pasar
+  // por el filtro de user-agent destinado a navegadores y bots publicos.
+  if (pathname === '/api/webhooks/mercadopago') return null;
+
   const userAgent = request.headers.get('user-agent') ?? '';
   if (isLikelyBotUserAgent(userAgent)) {
     return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
@@ -104,7 +108,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

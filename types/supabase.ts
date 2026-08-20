@@ -609,6 +609,7 @@ export type Database = {
       profiles: {
         Row: {
           active_subjects: Json;
+          anio_carrera: string | null;
           carrera_id: string | null;
           creado_at: string | null;
           dashboard_analytics: Json;
@@ -617,13 +618,16 @@ export type Database = {
           last_subject_id: string | null;
           last_subject_name: string | null;
           nombre: string | null;
+          pais: string | null;
           role: string | null;
+          telefono: string | null;
           universidad_id: string | null;
           updated_at: string | null;
           whatsapp: string | null;
         };
         Insert: {
           active_subjects?: Json;
+          anio_carrera?: string | null;
           carrera_id?: string | null;
           creado_at?: string | null;
           dashboard_analytics?: Json;
@@ -632,13 +636,16 @@ export type Database = {
           last_subject_id?: string | null;
           last_subject_name?: string | null;
           nombre?: string | null;
+          pais?: string | null;
           role?: string | null;
+          telefono?: string | null;
           universidad_id?: string | null;
           updated_at?: string | null;
           whatsapp?: string | null;
         };
         Update: {
           active_subjects?: Json;
+          anio_carrera?: string | null;
           carrera_id?: string | null;
           creado_at?: string | null;
           dashboard_analytics?: Json;
@@ -647,7 +654,9 @@ export type Database = {
           last_subject_id?: string | null;
           last_subject_name?: string | null;
           nombre?: string | null;
+          pais?: string | null;
           role?: string | null;
+          telefono?: string | null;
           universidad_id?: string | null;
           updated_at?: string | null;
           whatsapp?: string | null;
@@ -1610,22 +1619,34 @@ export type Database = {
         Row: {
           chunk_index: number;
           chunk_text: string;
+          content_hash: string | null;
           created_at: string;
           id: string;
+          page_end: number | null;
+          page_start: number | null;
+          section_title: string | null;
           student_material_id: string;
         };
         Insert: {
           chunk_index: number;
           chunk_text: string;
+          content_hash?: string | null;
           created_at?: string;
           id?: string;
+          page_end?: number | null;
+          page_start?: number | null;
+          section_title?: string | null;
           student_material_id: string;
         };
         Update: {
           chunk_index?: number;
           chunk_text?: string;
+          content_hash?: string | null;
           created_at?: string;
           id?: string;
+          page_end?: number | null;
+          page_start?: number | null;
+          section_title?: string | null;
           student_material_id?: string;
         };
         Relationships: [

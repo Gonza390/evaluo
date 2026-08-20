@@ -13,9 +13,17 @@ import {
   updateStudentMaterialProcessing,
 } from '@/lib/repositories/student-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
-import { evaluateChunks, buildChunkEvaluationReport } from '@/lib/student-materials/chunk-evaluator';
+import {
+  evaluateChunks,
+  buildChunkEvaluationReport,
+} from '@/lib/student-materials/chunk-evaluator';
 import { checkDuplicate } from '@/lib/student-materials/dedup';
-import { buildSummaryChunks } from '@/lib/student-materials/text';
+import {
+  buildSummaryChunks,
+  buildTraceableSummaryChunks,
+  mapLocalSummaryToView,
+  summarizeExtractedText,
+} from '@/lib/student-materials/text';
 import { logError, logInfo } from '@/lib/observability';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
 
@@ -51,20 +59,30 @@ export async function processStudentMaterial(input: {
   ownerUserId?: string;
   jobId?: string | null;
 }): Promise<StudentMaterialProcessingResult> {
+  const processingStartedAt = Date.now();
   const admin = createAdminClient();
-  const material = await findStudentMaterialForProcessing(admin, input.materialId, input.ownerUserId);
+  const material = await findStudentMaterialForProcessing(
+    admin,
+    input.materialId,
+    input.ownerUserId
+  );
 
   if (!material) throw new Error('No encontramos el material que queres procesar.');
 
   await updateStudentMaterialProcessing(admin, material.id, {
-    processingStatus: 'processing', processingStage: 'extracting', processingProgress: 18,
+    processingStatus: 'processing',
+    processingStage: 'extracting',
+    processingProgress: 18,
     processingMessage: 'Analizando el PDF para clasificar su estructura y estrategia de lectura.',
   });
 
+  const extractionStartedAt = Date.now();
   const context = await loadStudentMaterialProcessingContext(admin, material);
   const buffer = Buffer.from(await context.file.arrayBuffer());
-  const { text, pageCount } = await extractPdfTextAndPageCount(buffer);
+  const { text, pageCount, pages } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, text, pageCount);
+  const extractionMs = Date.now() - extractionStartedAt;
+  const traceableChunks = buildTraceableSummaryChunks(pages, text);
 
   // --- Dedup check (best-effort, never blocks processing) ---
   try {
@@ -86,24 +104,53 @@ export async function processStudentMaterial(input: {
   }
 
   await updateStudentMaterialProcessing(admin, material.id, {
-    processingStatus: 'processing', processingStage: 'extracting', processingProgress: 34,
-    processingMessage: buildAnalysisMessage(documentAnalysis), pageCount,
-    processingStrategy: documentAnalysis.processingStrategy, documentAnalysis,
+    processingStatus: 'processing',
+    processingStage: 'extracting',
+    processingProgress: 34,
+    processingMessage: buildAnalysisMessage(documentAnalysis),
+    pageCount,
+    processingStrategy: documentAnalysis.processingStrategy,
+    documentAnalysis,
   });
   await updateStudentMaterialProcessing(admin, material.id, {
-    processingStatus: 'processing', processingStage: 'summarizing', processingProgress: 52,
-    processingMessage: documentAnalysis.processingStrategy === 'slide_layout'
-      ? 'Generando resumen estructurado a partir de bloques visuales y temas detectados.'
-      : 'Generando resumen estructurado del PDF.',
-    pageCount, processingStrategy: documentAnalysis.processingStrategy,
+    processingStatus: 'processing',
+    processingStage: 'summarizing',
+    processingProgress: 52,
+    processingMessage:
+      documentAnalysis.processingStrategy === 'slide_layout'
+        ? 'Generando resumen y glosario a partir de bloques visuales y temas detectados.'
+        : 'Generando resumen y glosario en paralelo.',
+    pageCount,
+    processingStrategy: documentAnalysis.processingStrategy,
   });
 
-  const summary = await generateStudentMaterialSummary({
-    title: material.title, universidadName: context.universidadName, carreraName: context.carreraName,
-    materiaName: context.materiaName, text, documentAnalysis, pdfBuffer: buffer,
-  });
+  const generationStartedAt = Date.now();
+  const generationInput = {
+    title: material.title,
+    universidadName: context.universidadName,
+    carreraName: context.carreraName,
+    materiaName: context.materiaName,
+    text,
+    documentAnalysis,
+    pdfBuffer: documentAnalysis.requiresOcr ? buffer : undefined,
+  };
+  const glossarySeed = mapLocalSummaryToView(
+    summarizeExtractedText(text, material.title),
+    buildSummaryChunks(text).length,
+    'parallel-local-seed'
+  );
+  const [summary, glossary] = await Promise.all([
+    generateStudentMaterialSummary(generationInput),
+    generateStudentMaterialGlossary(generationInput, glossarySeed),
+  ]);
+  const generationMs = Date.now() - generationStartedAt;
   await persistStudentMaterialSummaryFromComputed({
-    admin, studentMaterialId: material.id, text, summary, persistChunks: true,
+    admin,
+    studentMaterialId: material.id,
+    text,
+    summary,
+    persistChunks: true,
+    traceableChunks,
   });
 
   // --- Chunk quality evaluation (best-effort, never blocks processing) ---
@@ -112,7 +159,8 @@ export async function processStudentMaterial(input: {
     const evaluations = await evaluateChunks(
       chunks,
       context.materiaName ?? material.title,
-      material.id
+      material.id,
+      { useLlm: false }
     );
     const report = buildChunkEvaluationReport(evaluations);
     if (report.flaggedChunks.length > 0) {
@@ -129,33 +177,58 @@ export async function processStudentMaterial(input: {
   }
 
   await updateStudentMaterialProcessing(admin, material.id, {
-    processingStatus: 'processing', processingStage: 'glossary', processingProgress: 78,
-    processingMessage: 'Generando glosario y conceptos clave para estudiar.', pageCount,
+    processingStatus: 'processing',
+    processingStage: 'glossary',
+    processingProgress: 78,
+    processingMessage: 'Generando glosario y conceptos clave para estudiar.',
+    pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
   });
-  const glossary = await generateStudentMaterialGlossary({
-    title: material.title, universidadName: context.universidadName, carreraName: context.carreraName,
-    materiaName: context.materiaName, text, documentAnalysis, pdfBuffer: buffer,
-  }, summary);
   await persistStudentMaterialGlossaryArtifacts({
-    admin, studentMaterialId: material.id, glossary, provider: summary.provider, errorMessage: summary.errorMessage,
+    admin,
+    studentMaterialId: material.id,
+    glossary,
+    provider: summary.provider,
+    errorMessage: summary.errorMessage,
   });
 
   await updateStudentMaterialProcessing(admin, material.id, {
-    processingStatus: 'ready', processingStage: 'ready', processingProgress: 100,
-    processingMessage: 'Material listo para estudiar.', processingError: null, pageCount,
+    processingStatus: 'ready',
+    processingStage: 'ready',
+    processingProgress: 100,
+    processingMessage: 'Material listo para estudiar.',
+    processingError: null,
+    pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
   });
   if (input.jobId) await completeStudentMaterialJob(admin, input.jobId);
 
-  return { success: true, materialId: material.id, message: 'El PDF ya quedo listo con su resumen y glosario.' };
+  logInfo('processStudentMaterial.performance', {
+    materialId: material.id,
+    pageCount,
+    chunkCount: traceableChunks.length,
+    extractionMs,
+    generationMs,
+    totalMs: Date.now() - processingStartedAt,
+    summaryProvider: summary.provider,
+    processingStrategy: documentAnalysis.processingStrategy,
+  });
+
+  return {
+    success: true,
+    materialId: material.id,
+    message: 'El PDF ya quedo listo con su resumen y glosario.',
+  };
 }
 
 export async function markStudentMaterialProcessingFailed(materialId: string, error: unknown) {
   const admin = createAdminClient();
   await updateStudentMaterialProcessing(admin, materialId, {
-    processingStatus: 'failed', processingStage: 'failed', processingProgress: 0,
+    processingStatus: 'failed',
+    processingStage: 'failed',
+    processingProgress: 0,
     processingMessage: 'No pudimos terminar el procesamiento del PDF.',
-    processingError: error instanceof Error ? error.message : 'Error desconocido al procesar el PDF.',
+    processingError:
+      error instanceof Error ? error.message : 'Error desconocido al procesar el PDF.',
   });
 }

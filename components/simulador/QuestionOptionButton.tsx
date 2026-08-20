@@ -49,7 +49,7 @@ export function QuestionOptionButton({
       className={cn(
         'w-full rounded-lg border p-3.5 text-left transition',
         !questionAnswered &&
-          'border-slate-200 bg-[#FBFCFF] hover:border-slate-300 hover:bg-white',
+          'border-slate-200 bg-white hover:border-slate-300 hover:bg-white',
         questionAnswered &&
           'border-slate-200 bg-white',
         selected &&

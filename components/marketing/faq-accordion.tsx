@@ -48,12 +48,12 @@ export function FaqAccordion() {
                 {item.question}
               </span>
             </div>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition-all group-open:rotate-180 group-open:bg-indigo-50 group-open:text-indigo-600">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 transition-all group-open:rotate-180 group-open:bg-indigo-50 group-open:text-indigo-600">
               <ChevronDown className="h-4 w-4" />
             </span>
           </summary>
 
-          <div className="border-t border-slate-50 bg-slate-50/30 p-5 text-xs leading-6 text-slate-500 sm:text-sm">
+          <div className="border-t border-slate-50 bg-white p-5 text-xs leading-6 text-slate-500 sm:text-sm">
             {item.answer}
           </div>
         </details>

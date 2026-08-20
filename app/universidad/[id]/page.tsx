@@ -135,12 +135,19 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   }
 
   const universidad = data.universidad;
+  const hasAcademicCatalog =
+    data.allCarreras.length > 0 &&
+    Object.values(data.materiaCountByCarrera).some((count) => count > 0);
 
   return {
     title: `${universidad.nombre} | Universidad`,
     description: `Explorá carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
     alternates: {
       canonical: `/universidad/${universidad.id}`,
+    },
+    robots: {
+      index: hasAcademicCatalog,
+      follow: true,
     },
     openGraph: {
       title: `${universidad.nombre} | Evaluo`,
@@ -167,10 +174,13 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
   const materiaCountByCarrera = new Map(Object.entries(data.materiaCountByCarrera));
 
   const universityProfile = getUniversityProfile(universidad.nombre);
-  const totalMaterias = Array.from(materiaCountByCarrera.values()).reduce((acc, count) => acc + count, 0);
+  const totalMaterias = Array.from(materiaCountByCarrera.values()).reduce(
+    (acc, count) => acc + count,
+    0
+  );
 
   return (
-    <div className="animate-page-enter min-h-full bg-[#F8FAFC]">
+    <div className="animate-page-enter min-h-full bg-white">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
@@ -178,7 +188,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
           { name: universidad.nombre, path: `/universidad/${id}` },
         ])}
       />
-      <div className="w-full border-b border-[#E8EDF5] bg-[#F8FAFC]">
+      <div className="w-full border-b border-[#E8EDF5] bg-white">
         <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
           <Link
             href="/explorar"
@@ -197,7 +207,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
 
         <div className="relative mx-auto max-w-7xl px-4 py-4 sm:py-6 lg:px-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
-            <div className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 lg:flex sm:h-24 sm:w-24">
+            <div className="hidden h-20 w-20 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24 lg:flex">
               <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/20 text-center text-[24px] font-bold tracking-[-0.08em] text-white sm:h-[80px] sm:w-[80px] sm:text-[28px]">
                 {getUniversityInitials(universidad.nombre)}
               </div>
@@ -205,7 +215,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[20px] font-bold leading-tight tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
+                <h1 className="text-[20px] leading-tight font-bold tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
                   {universidad.nombre}
                 </h1>
               </div>
@@ -229,7 +239,9 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 <div className="flex items-start gap-3 rounded-2xl bg-white/8 px-3 py-3 backdrop-blur-sm">
                   <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-white/90" />
                   <div>
-                    <p className="text-sm font-semibold text-white drop-shadow">{allCarreras.length} Carreras</p>
+                    <p className="text-sm font-semibold text-white drop-shadow">
+                      {allCarreras.length} Carreras
+                    </p>
                     <p className="mt-0.5 text-xs text-white/60">Disponibles</p>
                   </div>
                 </div>
@@ -258,7 +270,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 className={`relative rounded-xl px-3 py-2.5 text-center transition-all duration-300 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 ${
                   activeTab === 'informacion'
                     ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none'
-                    : 'bg-slate-50 text-[#7C879C] hover:bg-slate-100 hover:text-[#475569] sm:bg-transparent'
+                    : 'bg-white text-[#7C879C] hover:bg-white hover:text-[#475569] sm:bg-transparent'
                 }`}
               >
                 Información
@@ -271,7 +283,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 className={`relative rounded-xl px-3 py-2.5 text-center transition-all duration-300 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 ${
                   activeTab === 'carreras'
                     ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none'
-                    : 'bg-slate-50 text-[#7C879C] hover:bg-slate-100 hover:text-[#475569] sm:bg-transparent'
+                    : 'bg-white text-[#7C879C] hover:bg-white hover:text-[#475569] sm:bg-transparent'
                 }`}
               >
                 Carreras
@@ -288,10 +300,10 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 <div className="grid gap-6 p-6 lg:grid-cols-[1.3fr_0.9fr] lg:p-8">
                   <div className="space-y-5">
                     <div className="flex flex-wrap items-center gap-3">
-                      <span className="rounded-full border border-[#C7D2FE] bg-white/90 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">
+                      <span className="rounded-full border border-[#C7D2FE] bg-white/90 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-[#2563EB] uppercase">
                         Universidad
                       </span>
-                      <span className="rounded-full border border-[#E2E8F0] bg-white/90 px-3 py-1 text-[12px] font-medium uppercase tracking-[0.18em] text-[#64748B]">
+                      <span className="rounded-full border border-[#E2E8F0] bg-white/90 px-3 py-1 text-[12px] font-medium tracking-[0.18em] text-[#64748B] uppercase">
                         {allCarreras.length} carreras activas
                       </span>
                     </div>
@@ -301,22 +313,24 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                         Sobre {universidad.nombre}
                       </h2>
                       <p className="section-copy mt-3 max-w-3xl text-[#475569] sm:text-[15px]">
-                        {universidad.nombre} reúne una propuesta académica pensada para avanzar
-                        con orden, criterio práctico y una experiencia de estudio más simple.
-                        En Evaluo podés entrar directo a cada carrera, encontrar sus materias y
-                        estudiar desde un mismo lugar sin perder continuidad.
+                        {universidad.nombre} reúne una propuesta académica pensada para avanzar con
+                        orden, criterio práctico y una experiencia de estudio más simple. En Evaluo
+                        podés entrar directo a cada carrera, encontrar sus materias y estudiar desde
+                        un mismo lugar sin perder continuidad.
                       </p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                        <p className="text-[12px] font-bold tracking-[0.18em] text-[#94A3B8] uppercase">
                           Carreras visibles
                         </p>
-                        <p className="mt-2 text-base font-semibold text-[#0F172A]">{allCarreras.length}</p>
+                        <p className="mt-2 text-base font-semibold text-[#0F172A]">
+                          {allCarreras.length}
+                        </p>
                       </div>
                       <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                        <p className="text-[12px] font-bold tracking-[0.18em] text-[#94A3B8] uppercase">
                           Materias visibles
                         </p>
                         <p className="mt-2 text-base font-semibold text-[#0F172A]">
@@ -328,19 +342,21 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
 
                   <div className="space-y-4">
                     <div className="surface-card rounded-[var(--radius-panel)] border-white/80 bg-white/88 p-5 backdrop-blur">
-                      <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
+                      <p className="text-[12px] font-bold tracking-[0.18em] text-[#94A3B8] uppercase">
                         Datos rápidos
                       </p>
                       <div className="mt-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 text-sm">
                           <span className="text-[#64748B]">Carreras visibles</span>
                           <span className="font-semibold text-[#0F172A]">{allCarreras.length}</span>
                         </div>
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 text-sm">
                           <span className="text-[#64748B]">Modelo académico</span>
-                          <span className="font-semibold text-[#0F172A]">Organizado por carreras</span>
+                          <span className="font-semibold text-[#0F172A]">
+                            Organizado por carreras
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
+                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 text-sm">
                           <span className="text-[#64748B]">Estudio en Evaluo</span>
                           <span className="font-semibold text-[#0F172A]">Materias compartidas</span>
                         </div>
@@ -348,7 +364,9 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                     </div>
 
                     <div className="rounded-[28px] border border-[#D9E2FF] bg-[linear-gradient(135deg,#EEF2FF_0%,#FFFFFF_100%)] p-5">
-                      <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-[#2563EB]">En Evaluo</p>
+                      <p className="text-[12px] font-bold tracking-[0.18em] text-[#2563EB] uppercase">
+                        En Evaluo
+                      </p>
                       <p className="mt-3 text-sm leading-7 text-[#475569]">
                         El contenido se organiza por materia y se comparte entre carreras cuando
                         corresponde. Eso evita duplicaciones y te deja una experiencia más clara,
@@ -361,10 +379,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
             </div>
           ) : (
             <div className="animate-tab-panel pt-6">
-              <CareerListClient
-                initialCarreras={allCarreras}
-                universityName={universidad.nombre}
-              />
+              <CareerListClient initialCarreras={allCarreras} universityName={universidad.nombre} />
             </div>
           )}
         </section>

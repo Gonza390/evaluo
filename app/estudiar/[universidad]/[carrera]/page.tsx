@@ -21,7 +21,12 @@ type PageProps = {
   }>;
 };
 
-function buildCareerHref(universidadId: string, universidadNombre: string, carreraId: string, carreraNombre: string) {
+function buildCareerHref(
+  universidadId: string,
+  universidadNombre: string,
+  carreraId: string,
+  carreraNombre: string
+) {
   return `/estudiar/${buildSeoEntitySlug(universidadNombre, universidadId)}/${buildSeoEntitySlug(carreraNombre, carreraId)}`;
 }
 
@@ -31,9 +36,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const carreraId = parseSeoEntitySlug(resolvedParams.carrera).id;
 
   try {
-    const [universidad, carrera] = await Promise.all([
+    const [universidad, carrera, materias] = await Promise.all([
       getUniversidadById(universidadId),
       getCarreraById(carreraId),
+      getMateriasByCarrera(carreraId),
     ]);
 
     if (!universidad || !carrera) {
@@ -62,6 +68,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       alternates: {
         canonical: buildCareerHref(universidad.id, universidad.nombre, carrera.id, carrera.nombre),
+      },
+      robots: {
+        index: materias.length > 0,
+        follow: true,
       },
       openGraph: {
         title: `Estudiar ${carrera.nombre} en ${universidad.nombre} | Evaluo`,
@@ -100,7 +110,12 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
     notFound();
   }
 
-  const canonicalHref = buildCareerHref(universidad.id, universidad.nombre, carrera.id, carrera.nombre);
+  const canonicalHref = buildCareerHref(
+    universidad.id,
+    universidad.nombre,
+    carrera.id,
+    carrera.nombre
+  );
   if (
     resolvedParams.universidad !== buildSeoEntitySlug(universidad.nombre, universidad.id) ||
     resolvedParams.carrera !== buildSeoEntitySlug(carrera.nombre, carrera.id)
@@ -116,7 +131,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
   const highlightedMaterias = materias.slice(0, 8);
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC]">
+    <main className="min-h-screen bg-white">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
@@ -129,7 +144,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="max-w-4xl">
-            <p className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#2563EB]">
+            <p className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold tracking-[0.18em] text-[#2563EB] uppercase">
               <GraduationCap className="h-4 w-4" />
               Guía de carrera
             </p>
@@ -146,25 +161,30 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <article className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5">
+            <article className="rounded-3xl border border-slate-200 bg-white px-5 py-5">
               <BookOpen className="h-5 w-5 text-[#2563EB]" />
-              <p className="mt-3 text-sm font-semibold text-slate-950">{materias.length} materias visibles</p>
+              <p className="mt-3 text-sm font-semibold text-slate-950">
+                {materias.length} materias visibles
+              </p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Recorre el plan disponible y entra directo a las materias más buscadas.
               </p>
             </article>
-            <article className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5">
+            <article className="rounded-3xl border border-slate-200 bg-white px-5 py-5">
               <Target className="h-5 w-5 text-[#2563EB]" />
               <p className="mt-3 text-sm font-semibold text-slate-950">
-                {officialProfile?.level ?? 'Grado'} {officialProfile?.duration ? `· ${officialProfile.duration}` : ''}
+                {officialProfile?.level ?? 'Grado'}{' '}
+                {officialProfile?.duration ? `· ${officialProfile.duration}` : ''}
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Información útil para entender el perfil académico y planificar tu recorrido.
               </p>
             </article>
-            <article className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-5">
+            <article className="rounded-3xl border border-slate-200 bg-white px-5 py-5">
               <Sparkles className="h-5 w-5 text-[#2563EB]" />
-              <p className="mt-3 text-sm font-semibold text-slate-950">Resúmenes, recursos y simuladores</p>
+              <p className="mt-3 text-sm font-semibold text-slate-950">
+                Resúmenes, recursos y simuladores
+              </p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Usá Evaluo para estudiar con más claridad y practicar antes de rendir.
               </p>
@@ -182,18 +202,21 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             <div className="mt-5 space-y-4">
               <p className="text-sm leading-7 text-slate-600">
                 Esta guía reúne una entrada clara para quienes buscan estudiar {carrera.nombre} en{' '}
-                {universidad.nombre}. Desde aquí podés pasar al catálogo de materias, revisar recursos
-                de estudio y descubrir cómo practicar con el simulador.
+                {universidad.nombre}. Desde aquí podés pasar al catálogo de materias, revisar
+                recursos de estudio y descubrir cómo practicar con el simulador.
               </p>
               {officialProfile ? (
                 <p className="text-sm leading-7 text-slate-600">
-                  Según la información oficial disponible, el enfoque principal de la carrera está puesto en{' '}
-                  {officialProfile.description.charAt(0).toLowerCase() + officialProfile.description.slice(1)}
+                  Según la información oficial disponible, el enfoque principal de la carrera está
+                  puesto en{' '}
+                  {officialProfile.description.charAt(0).toLowerCase() +
+                    officialProfile.description.slice(1)}
                 </p>
               ) : null}
               {officialProfile?.title ? (
                 <p className="text-sm leading-7 text-slate-600">
-                  Título orientativo: <strong className="text-slate-900">{officialProfile.title}</strong>
+                  Título orientativo:{' '}
+                  <strong className="text-slate-900">{officialProfile.title}</strong>
                 </p>
               ) : null}
             </div>
@@ -215,13 +238,15 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
           </div>
 
           <aside className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">Materias para empezar</h2>
+            <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">
+              Materias para empezar
+            </h2>
             <div className="mt-5 space-y-3">
               {highlightedMaterias.map((materia) => (
                 <Link
                   key={materia.id}
                   href={`/explorar/materia/${materia.id}?carreraId=${encodeURIComponent(carrera.id)}`}
-                  className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF]"
+                  className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-white"
                 >
                   <p className="text-sm font-semibold text-slate-900">{materia.nombre}</p>
                   <p className="mt-1 text-xs text-slate-500">Ver resúmenes, recursos y simulador</p>

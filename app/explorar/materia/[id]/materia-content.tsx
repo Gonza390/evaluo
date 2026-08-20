@@ -35,6 +35,9 @@ import {
   type ResourceVoteSummaryMap,
 } from '@/lib/data/resources';
 import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { buildSeoEntitySlug } from '@/lib/seo-intents';
+import { buildShareReferralUrl, createShareTrackingId } from '@/lib/attribution';
 import { logError } from '@/lib/observability';
 import {
   ArrowLeft,
@@ -54,6 +57,7 @@ import {
   Eye,
   Download,
   Share2,
+  Globe,
 } from 'lucide-react';
 import {
   buildResumenKey,
@@ -97,11 +101,7 @@ function getSeededRating(materiaId: string, parcial: number) {
   return Number((4.2 + normalized * 0.7).toFixed(1));
 }
 
-function getDisplayRating(
-  materiaId: string,
-  parcial: number,
-  rating?: SimulatorRatingSummary
-) {
+function getDisplayRating(materiaId: string, parcial: number, rating?: SimulatorRatingSummary) {
   if (!rating || rating.total < 10) {
     const fallbackReviews = 10;
     return {
@@ -151,7 +151,9 @@ export default function MateriaContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const syncedDashboardRef = useRef<string | null>(null);
-  const skipInitialResumenesRef = useRef(initialResumenes.length > 0 || Boolean(initialResumenesError));
+  const skipInitialResumenesRef = useRef(
+    initialResumenes.length > 0 || Boolean(initialResumenesError)
+  );
   const skipInitialSimulatorMetricsRef = useRef(
     Object.keys(initialSimulatorRatings).length > 0 || Object.keys(initialSimulatorUsage).length > 0
   );
@@ -178,13 +180,13 @@ export default function MateriaContent({
   const [resourceVotes, setResourceVotes] = useState<ResourceVoteSummaryMap>({});
   const [resumenesError, setResumenesError] = useState<string | null>(initialResumenesError);
   const [recursosError, setRecursosError] = useState<string | null>(null);
-  const [sharedStudentMaterialsError, setSharedStudentMaterialsError] = useState<string | null>(null);
-  const [simulatorRatings, setSimulatorRatings] = useState<Record<number, SimulatorRatingSummary>>(
-    initialSimulatorRatings
+  const [sharedStudentMaterialsError, setSharedStudentMaterialsError] = useState<string | null>(
+    null
   );
-  const [simulatorUsage, setSimulatorUsage] = useState<Record<number, SimulatorUsageSummary>>(
-    initialSimulatorUsage
-  );
+  const [simulatorRatings, setSimulatorRatings] =
+    useState<Record<number, SimulatorRatingSummary>>(initialSimulatorRatings);
+  const [simulatorUsage, setSimulatorUsage] =
+    useState<Record<number, SimulatorUsageSummary>>(initialSimulatorUsage);
 
   const getResumenModuleId = useCallback((resumen: Resumen) => {
     const rawModuleId = resumen.module_id;
@@ -207,50 +209,71 @@ export default function MateriaContent({
     () =>
       [...recursosPdf].sort(
         (a, b) =>
-          ((resourceVotes[b.id]?.likes ?? 0) - (resourceVotes[b.id]?.dislikes ?? 0)) -
+          (resourceVotes[b.id]?.likes ?? 0) -
+          (resourceVotes[b.id]?.dislikes ?? 0) -
           ((resourceVotes[a.id]?.likes ?? 0) - (resourceVotes[a.id]?.dislikes ?? 0))
       )[0] ?? null,
     [recursosPdf, resourceVotes]
   );
   const handleSharePreguntero = useCallback(
     async (targetParcial: number) => {
-      const shareUrl =
-        typeof window !== 'undefined'
-          ? `${window.location.origin}/simulador/${materiaId}/${targetParcial}`
-          : `/simulador/${materiaId}/${targetParcial}`;
+      const parcialSlug = targetParcial === 3 ? 'integrador' : String(targetParcial);
+      const destination = `/pregunteros/${buildSeoEntitySlug(nombre, materiaId)}/parcial/${parcialSlug}`;
+      const shareId = createShareTrackingId();
+      const shareUrl = buildShareReferralUrl(destination, null, {
+        campaign: 'preguntero_materia',
+        shareId,
+      });
       const shareTitle =
         targetParcial === 3
           ? `Examen Integrador de ${nombre}`
           : `Preguntero Parcial ${targetParcial} de ${nombre}`;
       const shareText =
         targetParcial === 3
-          ? `Te comparto el examen integrador de ${nombre} en Evaluo.`
-          : `Te comparto el preguntero del Parcial ${targetParcial} de ${nombre} en Evaluo.`;
+          ? `Practicá el integrador de ${nombre} en Evaluo, descubrí qué necesitás reforzar y entendé tus errores.`
+          : `Practicá el Parcial ${targetParcial} de ${nombre} en Evaluo, descubrí qué necesitás reforzar y entendé tus errores.`;
 
       try {
+        let shareMethod: 'native_share' | 'copy_link';
         if (typeof navigator !== 'undefined' && navigator.share) {
           await navigator.share({
             title: shareTitle,
             text: shareText,
             url: shareUrl,
           });
+          shareMethod = 'native_share';
         } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
-          await navigator.clipboard.writeText(shareUrl);
+          await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+          shareMethod = 'copy_link';
           toast({
             title: 'Link copiado',
-                        description: 'Ya podés compartir este preguntero.',
+            description: 'Copiamos el mensaje y el link del preguntero.',
           });
+        } else {
+          throw new Error('El navegador no permite compartir ni copiar el enlace.');
         }
-    } catch (error) {
-      logError('materia.sharePreguntero', error, { materiaId, targetParcial });
-      toast({
+
+        trackMarketingEvent('preguntero_shared', {
+          materia_id: materiaId,
+          parcial: targetParcial,
+          carrera_id: carreraId,
+          universidad_id: universidadId,
+          share_id: shareId,
+          share_method: shareMethod,
+          share_kind: 'preguntero',
+          destination,
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        logError('materia.sharePreguntero', error, { materiaId, targetParcial });
+        toast({
           title: 'No pudimos compartirlo',
           description: 'Intenta nuevamente en unos segundos.',
           variant: 'destructive',
         });
       }
     },
-    [materiaId, nombre, toast]
+    [carreraId, materiaId, nombre, toast, universidadId]
   );
   const emitMateriaEvent = useCallback(
     async (
@@ -302,7 +325,10 @@ export default function MateriaContent({
       }
 
       if (recursosResult.error) {
-        logError('materia.loadResumenes.recursos', recursosResult.error, { materiaId, activeUnidad });
+        logError('materia.loadResumenes.recursos', recursosResult.error, {
+          materiaId,
+          activeUnidad,
+        });
       }
 
       const recursosResumenSource = recursosResult.data ?? [];
@@ -311,7 +337,8 @@ export default function MateriaContent({
       for (const recurso of recursosResumenSource) {
         const moduleNumber = recurso.etiqueta ? getModuleNumber(recurso.etiqueta) : null;
         if (!moduleNumber) continue;
-        const key = recurso.url_archivo?.trim().toLowerCase() || recurso.nombre.trim().toLowerCase();
+        const key =
+          recurso.url_archivo?.trim().toLowerCase() || recurso.nombre.trim().toLowerCase();
         if (!key) continue;
         const currentModules = moduleMap.get(key) ?? [];
         moduleMap.set(key, [...currentModules, moduleNumber]);
@@ -323,19 +350,20 @@ export default function MateriaContent({
           return String(moduleNumber ?? '') === activeUnidad;
         })
         .map((recurso: RecursoResumenRow): Resumen => {
-          const key = recurso.url_archivo?.trim().toLowerCase() || recurso.nombre.trim().toLowerCase();
+          const key =
+            recurso.url_archivo?.trim().toLowerCase() || recurso.nombre.trim().toLowerCase();
           const modulesLabel = formatResumenModulesLabel(moduleMap.get(key) ?? []);
 
           return {
             id: `recurso-${recurso.id}`,
             title: recurso.nombre,
             author_name: modulesLabel,
-              file_url: recurso.url_archivo,
-              module_id: activeUnidad,
-              score: null,
-              created_at: recurso.creado_at,
-              pages: recurso.paginas,
-            };
+            file_url: recurso.url_archivo,
+            module_id: activeUnidad,
+            score: null,
+            created_at: recurso.creado_at,
+            pages: recurso.paginas,
+          };
         });
 
       const dedupedResumenes = new Map<string, Resumen>();
@@ -394,14 +422,20 @@ export default function MateriaContent({
 
     try {
       if (nextValue) {
-        await supabase.from('user_favorites').insert({ user_id: authUser.id, materia_id: materiaId });
+        await supabase
+          .from('user_favorites')
+          .insert({ user_id: authUser.id, materia_id: materiaId });
         toast({
           title: 'Materia guardada',
           description: 'La agregamos a tus favoritos.',
           duration: 2500,
         });
       } else {
-        await supabase.from('user_favorites').delete().eq('user_id', authUser.id).eq('materia_id', materiaId);
+        await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('user_id', authUser.id)
+          .eq('materia_id', materiaId);
         toast({
           title: 'Materia removida',
           description: 'Ya no aparece en tus favoritos.',
@@ -519,7 +553,11 @@ export default function MateriaContent({
 
   useEffect(() => {
     const tabFromQuery = searchParams.get('tab');
-    if (tabFromQuery === 'resumenes' || tabFromQuery === 'trabajos' || tabFromQuery === 'pregunteros') {
+    if (
+      tabFromQuery === 'resumenes' ||
+      tabFromQuery === 'trabajos' ||
+      tabFromQuery === 'pregunteros'
+    ) {
       setActiveTab(tabFromQuery);
     }
 
@@ -541,9 +579,12 @@ export default function MateriaContent({
       }
 
       const query = params.toString();
-      router.replace(query ? `/explorar/materia/${materiaId}?${query}` : `/explorar/materia/${materiaId}`, {
-        scroll: false,
-      });
+      router.replace(
+        query ? `/explorar/materia/${materiaId}?${query}` : `/explorar/materia/${materiaId}`,
+        {
+          scroll: false,
+        }
+      );
     },
     [carreraId, emitMateriaEvent, materiaId, router, searchParams]
   );
@@ -710,54 +751,51 @@ export default function MateriaContent({
           ? (resourceVotes[resourceId] ?? getDefaultResourceVoteSummary())
           : null;
 
-          return (
-            <article
-              key={resumen.id}
-              className="surface-card overflow-hidden p-4 sm:p-5"
-            >
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 rounded-[22px] bg-[#eef4ff] p-2.5">
-                  <PdfCardThumbnail
-                    resourcePath={resumen.file_url}
-                    title={resumen.title}
-                    shouldLoad={index < 2}
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563eb]">
-                        {resumen.title}
-                      </h3>
-                    </div>
-                    <div className="flex shrink-0 gap-1">
-                      {getResumenRating(
-                        resumen.score,
-                        `${resumen.id}:${resumen.title}:${resumen.file_url ?? ''}`
-                      ).map((filled, index) => (
-                        <Star
-                          key={index}
-                          className={`h-4 w-4 ${filled ? 'fill-current text-yellow-400' : 'text-slate-200'}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-                    {resumen.created_at ? (
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4" />
-                        <span>{new Date(resumen.created_at).toLocaleDateString('es-AR')}</span>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
+        return (
+          <article key={resumen.id} className="surface-card overflow-hidden p-4 sm:p-5">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 rounded-[22px] bg-[#eef4ff] p-2.5">
+                <PdfCardThumbnail
+                  resourcePath={resumen.file_url}
+                  title={resumen.title}
+                  shouldLoad={index < 2}
+                />
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-slate-500">
-                {resumen.author_name || 'Resumen disponible para esta materia.'}
-              </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563eb]">
+                      {resumen.title}
+                    </h3>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    {getResumenRating(
+                      resumen.score,
+                      `${resumen.id}:${resumen.title}:${resumen.file_url ?? ''}`
+                    ).map((filled, index) => (
+                      <Star
+                        key={index}
+                        className={`h-4 w-4 ${filled ? 'fill-current text-yellow-400' : 'text-slate-200'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-500">
+                  {resumen.created_at ? (
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4" />
+                      <span>{new Date(resumen.created_at).toLocaleDateString('es-AR')}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-slate-500">
+              {resumen.author_name || 'Resumen disponible para esta materia.'}
+            </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               {resumenUrl ? (
@@ -784,7 +822,7 @@ export default function MateriaContent({
                       const separator = baseRoute.includes('?') ? '&' : '?';
                       router.push(`${baseRoute}${separator}modulo=${activeUnidad}`);
                     }}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                   >
                     <Eye className="h-4 w-4" />
                     Leer
@@ -825,14 +863,16 @@ export default function MateriaContent({
               {isUserLogged ? (
                 <div className="ml-auto flex items-center gap-2">
                   {resourceVoteSummary ? (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
+                    <span className="rounded-full bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                       {resourceVoteSummary.score >= 0 ? '+' : ''}
                       {resourceVoteSummary.score} ranking
                     </span>
                   ) : null}
                   <button
                     onClick={() =>
-                      resourceId ? void voteResource(resourceId, 1) : void voteResumen(resumen.id, 1)
+                      resourceId
+                        ? void voteResource(resourceId, 1)
+                        : void voteResumen(resumen.id, 1)
                     }
                     disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
                     className={`rounded-full border p-2 transition disabled:opacity-60 ${
@@ -845,7 +885,9 @@ export default function MateriaContent({
                   </button>
                   <button
                     onClick={() =>
-                      resourceId ? void voteResource(resourceId, -1) : void voteResumen(resumen.id, -1)
+                      resourceId
+                        ? void voteResource(resourceId, -1)
+                        : void voteResumen(resumen.id, -1)
                     }
                     disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
                     className={`rounded-full border p-2 transition disabled:opacity-60 ${
@@ -870,10 +912,7 @@ export default function MateriaContent({
       {recursosFiltrados.map((recurso, index) => {
         const voteSummary = resourceVotes[recurso.id] ?? getDefaultResourceVoteSummary();
         return (
-          <article
-            key={recurso.id}
-            className="surface-card overflow-hidden p-4"
-          >
+          <article key={recurso.id} className="surface-card overflow-hidden p-4">
             <div className="flex items-start gap-4">
               <div className="shrink-0 rounded-[22px] bg-[#eef4ff] p-2.5">
                 <PdfCardThumbnail
@@ -890,7 +929,7 @@ export default function MateriaContent({
                       {recurso.nombre}
                     </p>
                   </div>
-                  <div className="inline-flex items-center justify-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
+                  <div className="inline-flex items-center justify-center gap-1 rounded-full bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                     <ThumbsUp className="h-3 w-3" />
                     <span>{voteSummary.likes}</span>
                     <ThumbsDown className="ml-1 h-3 w-3" />
@@ -937,7 +976,8 @@ export default function MateriaContent({
                 <button
                   type="button"
                   onClick={() => {
-                    const tipoRuta = recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1');
+                    const tipoRuta =
+                      recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1');
                     void emitMateriaEvent('materia_resource_opened', {
                       tab: activeTab,
                       resource_id: recurso.id,
@@ -947,7 +987,7 @@ export default function MateriaContent({
                     });
                     router.push(getResourceRoute(materiaId, tipoRuta, nombre, recurso.id));
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                 >
                   <Eye className="h-3.5 w-3.5" />
                   Leer
@@ -959,7 +999,8 @@ export default function MateriaContent({
                       tab: activeTab,
                       resource_id: recurso.id,
                       resource_name: recurso.nombre,
-                      resource_tipo: recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1'),
+                      resource_tipo:
+                        recurso.tipo ?? (activeTab === 'trabajos' ? 'tp-p1' : 'preguntero-p1'),
                       action: 'download',
                     });
                     void handleSecureDownload(recurso);
@@ -1004,7 +1045,9 @@ export default function MateriaContent({
   const handleShareMateria = async () => {
     const sharePath = getMateriaRoute(materiaId, carreraId);
     const shareUrl =
-      typeof window !== 'undefined' ? new URL(sharePath, window.location.origin).toString() : sharePath;
+      typeof window !== 'undefined'
+        ? new URL(sharePath, window.location.origin).toString()
+        : sharePath;
 
     try {
       if (navigator.share) {
@@ -1017,7 +1060,7 @@ export default function MateriaContent({
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: 'Link copiado',
-                        description: 'Ya podés compartir esta materia con quien quieras.',
+          description: 'Ya podés compartir esta materia con quien quieras.',
           duration: 2500,
         });
       }
@@ -1030,7 +1073,7 @@ export default function MateriaContent({
         await navigator.clipboard.writeText(shareUrl);
         toast({
           title: 'Link copiado',
-                        description: 'Ya podés compartir esta materia con quien quieras.',
+          description: 'Ya podés compartir esta materia con quien quieras.',
           duration: 2500,
         });
       } catch {
@@ -1172,9 +1215,9 @@ export default function MateriaContent({
   };
 
   return (
-    <div className="animate-page-enter min-h-full bg-[#F5F7FB]">
-      <div className="w-full border-b border-[#E8EDF5] bg-[#F8FAFC]">
-      <div className="mx-auto flex min-h-14 max-w-7xl overflow-x-hidden px-4 py-2.5 lg:px-8">
+    <div className="animate-page-enter min-h-full bg-white">
+      <div className="w-full border-b border-[#E8EDF5] bg-white">
+        <div className="mx-auto flex min-h-14 max-w-7xl overflow-x-hidden px-4 py-2.5 lg:px-8">
           <nav className="flex flex-wrap items-center gap-1.5 text-sm leading-6">
             <Link
               href="/explorar"
@@ -1237,7 +1280,9 @@ export default function MateriaContent({
                 <p className="text-xs text-white/70 sm:text-sm">Materia</p>
                 <h1
                   className={`tracking-[-0.05em] text-white drop-shadow-lg ${
-                    isLongTitle ? 'text-[20px] font-bold leading-tight sm:text-[34px]' : 'text-[22px] font-bold leading-tight sm:text-[42px]'
+                    isLongTitle
+                      ? 'text-[20px] leading-tight font-bold sm:text-[34px]'
+                      : 'text-[22px] leading-tight font-bold sm:text-[42px]'
                   }`}
                 >
                   {nombre}
@@ -1305,10 +1350,10 @@ export default function MateriaContent({
               <button
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id as typeof activeTab)}
-                className={`relative min-h-[48px] rounded-xl px-2 py-2 text-[12px] font-medium leading-4 transition-all duration-300 sm:min-h-0 sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
+                className={`relative min-h-[48px] rounded-xl px-2 py-2 text-[12px] leading-4 font-medium transition-all duration-300 sm:min-h-0 sm:rounded-none sm:px-0 sm:py-4 sm:text-sm ${
                   activeTab === tab.id
                     ? 'bg-[#EEF2FF] text-[#2563EB] shadow-[0_12px_30px_rgba(37,99,235,0.12)] sm:bg-transparent sm:shadow-none sm:after:absolute sm:after:bottom-0 sm:after:left-0 sm:after:h-0.5 sm:after:w-full sm:after:bg-[#2563EB] sm:after:content-[""]'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700 sm:hover:bg-transparent'
+                    : 'text-slate-500 hover:bg-white hover:text-slate-700 sm:hover:bg-transparent'
                 }`}
               >
                 <span className="sm:hidden">{tab.mobileLabel}</span>
@@ -1329,7 +1374,9 @@ export default function MateriaContent({
           <div className="animate-tab-panel space-y-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="section-title text-[1.55rem] text-slate-900 sm:text-[2rem]">Biblioteca de resúmenes</h2>
+                <h2 className="section-title text-[1.55rem] text-slate-900 sm:text-[2rem]">
+                  Biblioteca de resúmenes
+                </h2>
                 <p className="section-copy mt-1 text-sm text-slate-500">
                   Material curado por módulo para estudiar con más claridad.
                 </p>
@@ -1337,34 +1384,36 @@ export default function MateriaContent({
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="relative w-full sm:w-auto">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     value={busqueda}
                     onChange={(event) => setBusqueda(event.target.value)}
                     placeholder="Buscar resumen..."
-                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:outline-none focus:ring-2 focus:ring-[#4F5DFF]/20 sm:h-10 sm:w-72"
+                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pr-4 pl-10 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:ring-2 focus:ring-[#4F5DFF]/20 focus:outline-none sm:h-10 sm:w-72"
                   />
                 </div>
               </div>
             </div>
 
-	            <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4">
-	              {unidades.map((unidad) => {
-	                const realResumenesCount = resumenesCountByUnidad.get(unidad.id) ?? 0;
+            <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-4">
+              {unidades.map((unidad) => {
+                const realResumenesCount = resumenesCountByUnidad.get(unidad.id) ?? 0;
 
-	                return (
-	                  <button
-	                    key={unidad.id}
-	                    onClick={() => setActiveUnidad(String(unidad.id))}
-	                    className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
-	                  >
-	                    <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
-	                    <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
-	                    <p className="mt-3 text-xs font-medium text-[#4F5DFF]">{realResumenesCount} resúmenes</p>
-	                  </button>
-	                );
-	              })}
-	            </div>
+                return (
+                  <button
+                    key={unidad.id}
+                    onClick={() => setActiveUnidad(String(unidad.id))}
+                    className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
+                  >
+                    <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
+                    <p className="mt-3 text-xs font-medium text-[#4F5DFF]">
+                      {realResumenesCount} resúmenes
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
 
             <div className="space-y-3 sm:hidden">
               <div className="surface-card overflow-hidden rounded-[var(--radius-card)] border-slate-200/90 bg-white px-4 py-3 shadow-none">
@@ -1373,22 +1422,22 @@ export default function MateriaContent({
                   Cambia de módulo para ver solo los resúmenes que necesitas ahora.
                 </p>
               </div>
-	              {unidades.map((unidad) => {
-	                const isActiveModule = activeUnidad === String(unidad.id);
-	                const realResumenesCount = resumenesCountByUnidad.get(unidad.id) ?? 0;
+              {unidades.map((unidad) => {
+                const isActiveModule = activeUnidad === String(unidad.id);
+                const realResumenesCount = resumenesCountByUnidad.get(unidad.id) ?? 0;
 
-	                return (
-	                  <div key={unidad.id} className="space-y-3">
+                return (
+                  <div key={unidad.id} className="space-y-3">
                     <button
                       onClick={() => setActiveUnidad(String(unidad.id))}
                       className={`surface-card w-full rounded-[var(--radius-card)] p-4 text-left transition ${isActiveModule ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
                     >
-	                      <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
-	                      <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
-	                      <p className="mt-3 text-xs font-medium text-[#4F5DFF]">
-	                        {realResumenesCount} resúmenes
-	                      </p>
-	                    </button>
+                      <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
+                      <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
+                      <p className="mt-3 text-xs font-medium text-[#4F5DFF]">
+                        {realResumenesCount} resúmenes
+                      </p>
+                    </button>
 
                     {isActiveModule ? (
                       resumenesLoading ? (
@@ -1420,28 +1469,28 @@ export default function MateriaContent({
             </div>
 
             <div className="hidden sm:block">
-            {resumenesLoading ? (
-              <div className="surface-panel p-10 text-center text-slate-500">
-                Estamos preparando tus resúmenes...
-              </div>
-            ) : resumenesError ? (
-              <MateriaSectionState
-                icon={FileText}
-                title="No pudimos cargar este módulo"
-                description={resumenesError}
-                tone="warning"
-                actionLabel="Reintentar carga"
-                onAction={() => void loadResumenes()}
-              />
-            ) : resumenesFiltrados.length === 0 ? (
-              <MateriaSectionState
-                icon={FileText}
-                title="Todavía no hay resúmenes para este módulo"
-                description="Probá con otro módulo o volvé más tarde cuando terminemos de publicar este contenido."
-              />
-            ) : (
-              renderResumenCards()
-            )}
+              {resumenesLoading ? (
+                <div className="surface-panel p-10 text-center text-slate-500">
+                  Estamos preparando tus resúmenes...
+                </div>
+              ) : resumenesError ? (
+                <MateriaSectionState
+                  icon={FileText}
+                  title="No pudimos cargar este módulo"
+                  description={resumenesError}
+                  tone="warning"
+                  actionLabel="Reintentar carga"
+                  onAction={() => void loadResumenes()}
+                />
+              ) : resumenesFiltrados.length === 0 ? (
+                <MateriaSectionState
+                  icon={FileText}
+                  title="Todavía no hay resúmenes para este módulo"
+                  description="Probá con otro módulo o volvé más tarde cuando terminemos de publicar este contenido."
+                />
+              ) : (
+                renderResumenCards()
+              )}
             </div>
 
             <section className="space-y-4">
@@ -1451,7 +1500,12 @@ export default function MateriaContent({
                     Apuntes compartidos por estudiantes
                   </h3>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    PDFs subidos desde el espacio personal de alumnos y clasificados en esta materia.
+                    PDFs subidos desde el espacio personal de alumnos y clasificados en esta
+                    materia.
+                  </p>
+                  <p className="mt-1.5 text-[12px] leading-5 text-slate-400">
+                    Los materiales son aportados por estudiantes. Si creés que uno infringe
+                    derechos, avisanos y lo retiraremos.
                   </p>
                 </div>
 
@@ -1485,21 +1539,22 @@ export default function MateriaContent({
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {sharedStudentMaterials.map((material) => (
-                    <article
-                      key={material.id}
-                      className="surface-card overflow-hidden p-4 sm:p-5"
-                    >
+                    <article key={material.id} className="surface-card overflow-hidden p-4 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563EB]">
-                            {material.title}
-                          </h3>
-                          <p className="mt-2 text-sm text-slate-500">
-                            {material.file_name}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563EB]">
+                              {material.title}
+                            </h3>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                              <Globe className="h-3 w-3" />
+                              Colaborador
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-slate-500">{material.file_name}</p>
                         </div>
                         {material.page_count ? (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
+                          <span className="rounded-full bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                             {material.page_count} páginas
                           </span>
                         ) : null}
@@ -1546,13 +1601,15 @@ export default function MateriaContent({
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <p className="text-sm font-medium text-slate-500">Preguntero</p>
-                          <h3 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">{simulador.titulo}</h3>
+                          <h3 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                            {simulador.titulo}
+                          </h3>
                           <p className="mt-3 text-sm leading-6 text-slate-600">
                             {simulador.parcial === 3
-                               ? `Preguntero completo del examen integrador ${nombre} con todos los modelos de exámenes que podés llegar a rendir.`
+                              ? `Preguntero completo del examen integrador ${nombre} con todos los modelos de exámenes que podés llegar a rendir.`
                               : 'Preguntero de examen con 30 preguntas por modelo.'}
                           </p>
-                          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
                             <Star className="h-3.5 w-3.5 text-amber-500" />
                             {displayRating.value.toFixed(1)}/5 · {displayRating.reviews} reseñas
                           </div>
@@ -1599,7 +1656,9 @@ export default function MateriaContent({
 
             <section className="space-y-4">
               <h2 className="text-2xl font-bold text-slate-900">
-                {activeTab === 'trabajos' ? 'Trabajos prácticos PDF' : 'Modelos de examen y pregunteros PDF'}
+                {activeTab === 'trabajos'
+                  ? 'Trabajos prácticos PDF'
+                  : 'Modelos de examen y pregunteros PDF'}
               </h2>
 
               {recursosLoading ? (
@@ -1609,7 +1668,11 @@ export default function MateriaContent({
               ) : recursosError ? (
                 <MateriaSectionState
                   icon={FileText}
-                  title={activeTab === 'trabajos' ? 'No pudimos cargar los trabajos prácticos' : 'No pudimos cargar los pregunteros'}
+                  title={
+                    activeTab === 'trabajos'
+                      ? 'No pudimos cargar los trabajos prácticos'
+                      : 'No pudimos cargar los pregunteros'
+                  }
                   description={recursosError}
                   tone="warning"
                   actionLabel="Reintentar carga"
@@ -1618,7 +1681,11 @@ export default function MateriaContent({
               ) : recursosFiltrados.length === 0 ? (
                 <MateriaSectionState
                   icon={FileText}
-                  title={activeTab === 'trabajos' ? 'Todavía no hay trabajos prácticos publicados' : 'Todavía no hay pregunteros publicados'}
+                  title={
+                    activeTab === 'trabajos'
+                      ? 'Todavía no hay trabajos prácticos publicados'
+                      : 'Todavía no hay pregunteros publicados'
+                  }
                   description={
                     activeTab === 'trabajos'
                       ? 'Cuando publiquemos trabajos prácticos para esta materia, los vas a ver acá.'
@@ -1635,4 +1702,3 @@ export default function MateriaContent({
     </div>
   );
 }
-

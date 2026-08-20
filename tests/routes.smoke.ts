@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { appendPregunteroAttribution } from '../lib/preguntero-attribution.ts';
 import {
   getCareerRoute,
   getDashboardMateriaRoute,
@@ -21,6 +22,14 @@ assert.equal(getSimulatorRoute('mat-1', 2), '/simulador/mat-1/2');
 assert.equal(
   getSimulatorRoute('mat-1', 1, 'uni-1', 'car-1'),
   '/simulador/mat-1/1?universidad_id=uni-1&carrera_id=car-1'
+);
+assert.equal(
+  appendPregunteroAttribution('/simulador/materia/1', {
+    utm_source: 'whatsapp',
+    utm_campaign: 'tecnologia_p1',
+    ignored: 'secret',
+  }),
+  '/simulador/materia/1?utm_source=whatsapp&utm_campaign=tecnologia_p1'
 );
 
 console.log('Route smoke tests passed.');

@@ -41,7 +41,10 @@ const NOISE_PATTERNS =
 // Heuristic evaluation
 // ---------------------------------------------------------------------------
 
-function evaluateHeuristics(chunk: string, allChunks: string[]): {
+function evaluateHeuristics(
+  chunk: string,
+  allChunks: string[]
+): {
   score: number;
   issues: string[];
   suggestedAction: SuggestedAction;
@@ -77,10 +80,7 @@ function evaluateHeuristics(chunk: string, allChunks: string[]): {
   }
 
   // --- Coherence: mostly non-letter characters or single repeated word ---
-  const letterRatio =
-    chunk.length > 0
-      ? (chunk.match(/[\p{L}]/gu)?.length ?? 0) / chunk.length
-      : 0;
+  const letterRatio = chunk.length > 0 ? (chunk.match(/[\p{L}]/gu)?.length ?? 0) / chunk.length : 0;
   if (letterRatio < 0.5) {
     issues.push('Baja proporcion de caracteres con sentido (posible ruido de formato)');
     penalty += 0.25;
@@ -140,10 +140,7 @@ function evaluateHeuristics(chunk: string, allChunks: string[]): {
 const EVAL_SYSTEM_PROMPT =
   'Sos un evaluador de calidad de fragmentos de texto para material de estudio universitario. Responde unicamente con JSON valido.';
 
-const EVAL_PROMPT_TEMPLATE = (
-  chunks: Array<{ index: number; text: string }>,
-  materia: string
-) =>
+const EVAL_PROMPT_TEMPLATE = (chunks: Array<{ index: number; text: string }>, materia: string) =>
   [
     `Evalua la calidad pedagogica de ${chunks.length} fragmentos de texto para la materia "${materia}".`,
     'Para cada fragmento, asigna un score entre 0 y 1, lista los problemas encontrados, y sugiere una accion:',
@@ -168,7 +165,10 @@ async function evaluateChunksWithLlm(
   chunks: Array<{ index: number; text: string }>,
   materia: string
 ): Promise<Map<number, { score: number; issues: string[]; suggestedAction: SuggestedAction }>> {
-  const resultMap = new Map<number, { score: number; issues: string[]; suggestedAction: SuggestedAction }>();
+  const resultMap = new Map<
+    number,
+    { score: number; issues: string[]; suggestedAction: SuggestedAction }
+  >();
 
   // Batch chunks to avoid overly large prompts (max 8 per call)
   const batchSize = 8;
@@ -200,16 +200,19 @@ async function evaluateChunksWithLlm(
       for (const eval_ of evaluations) {
         if (!eval_ || typeof eval_ !== 'object') continue;
         const record = eval_ as RawLlmEvaluation;
-        const index = typeof (eval_ as Record<string, unknown>).index === 'number'
-          ? ((eval_ as Record<string, unknown>).index as number)
-          : -1;
+        const index =
+          typeof (eval_ as Record<string, unknown>).index === 'number'
+            ? ((eval_ as Record<string, unknown>).index as number)
+            : -1;
         if (index < 0) continue;
 
-        const score = typeof record.score === 'number' ? Math.max(0, Math.min(1, record.score)) : 0.5;
+        const score =
+          typeof record.score === 'number' ? Math.max(0, Math.min(1, record.score)) : 0.5;
         const issues = Array.isArray(record.issues)
           ? record.issues.filter((i): i is string => typeof i === 'string')
           : [];
-        const actionRaw = typeof record.suggested_action === 'string' ? record.suggested_action : 'keep';
+        const actionRaw =
+          typeof record.suggested_action === 'string' ? record.suggested_action : 'keep';
         const suggestedAction: SuggestedAction =
           actionRaw === 'split' || actionRaw === 'merge' || actionRaw === 'discard'
             ? actionRaw
@@ -280,7 +283,8 @@ async function persistEvaluations(
 export async function evaluateChunks(
   chunks: string[],
   materia: string,
-  materialId?: string
+  materialId?: string,
+  options: { useLlm?: boolean } = {}
 ): Promise<ChunkEvaluation[]> {
   if (chunks.length === 0) return [];
 
@@ -296,8 +300,11 @@ export async function evaluateChunks(
     .filter((result) => result.suggestedAction !== 'discard')
     .map((result) => ({ index: result.index, text: chunks[result.index] ?? '' }));
 
-  let llmResults = new Map<number, { score: number; issues: string[]; suggestedAction: SuggestedAction }>();
-  if (llmCandidates.length > 0) {
+  let llmResults = new Map<
+    number,
+    { score: number; issues: string[]; suggestedAction: SuggestedAction }
+  >();
+  if (options.useLlm !== false && llmCandidates.length > 0) {
     try {
       llmResults = await evaluateChunksWithLlm(llmCandidates, materia);
     } catch (error) {
@@ -393,9 +400,8 @@ export function buildChunkEvaluationReport(evaluations: ChunkEvaluation[]): {
 
   return {
     totalChunks: evaluations.length,
-    averageScore: evaluations.length > 0
-      ? Math.round((totalScore / evaluations.length) * 100) / 100
-      : 0,
+    averageScore:
+      evaluations.length > 0 ? Math.round((totalScore / evaluations.length) * 100) / 100 : 0,
     actionCounts,
     flaggedChunks,
   };

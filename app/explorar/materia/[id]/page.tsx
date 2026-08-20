@@ -6,6 +6,7 @@ import { isUuid } from '@/lib/uuid';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildLearningResourceJsonLd } from '@/lib/seo';
+import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 
 const MateriaContent = dynamic(() => import('./materia-content'), {
   loading: () => (
@@ -29,32 +30,34 @@ export const revalidate = 600;
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const canonicalMateriaId = getCanonicalMateriaId(resolvedParams.id);
-  const bootstrap = await getMateriaBootstrap({
-    materiaId: canonicalMateriaId,
-    requestedCarreraId: '',
-  });
+  const [bootstrap, contentSignals] = await Promise.all([
+    getMateriaBootstrap({
+      materiaId: canonicalMateriaId,
+      requestedCarreraId: '',
+    }),
+    getMateriaSeoContentSignals(canonicalMateriaId),
+  ]);
   const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
   const carreraNombre = bootstrap.carreraNombre?.trim();
 
   return {
-    title: `Preguntero y simulador de ${materiaNombre}`,
-    description:
-      carreraNombre
-        ? `Estudiá ${materiaNombre} de ${carreraNombre} con resúmenes, pregunteros y simuladores en Evaluo.`
-        : `Estudiá ${materiaNombre} con resúmenes, pregunteros y simuladores en Evaluo.`,
+    title: `Guía y recursos de ${materiaNombre}`,
+    description: carreraNombre
+      ? `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} de ${carreraNombre} en Evaluo.`
+      : `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`,
     alternates: {
       canonical: `/explorar/materia/${canonicalMateriaId}`,
     },
     openGraph: {
-      title: `Preguntero y simulador de ${materiaNombre} | Evaluo`,
+      title: `Guía y recursos de ${materiaNombre} | Evaluo`,
       description: carreraNombre
-        ? `Preguntero y simulador para estudiar ${materiaNombre} en ${carreraNombre}.`
-        : `Preguntero y simulador para estudiar ${materiaNombre} en Evaluo.`,
+        ? `Recursos y actividades para estudiar ${materiaNombre} en ${carreraNombre}.`
+        : `Recursos y actividades para estudiar ${materiaNombre} en Evaluo.`,
       url: `/explorar/materia/${canonicalMateriaId}`,
       images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
     },
     robots: {
-      index: true,
+      index: bootstrap.materiaFound !== false && contentSignals.hasAcademicContent,
       follow: true,
     },
   };
@@ -105,18 +108,18 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
         })}
       />
       <MateriaContent
-      materiaId={materiaId}
-      materiaNombre={bootstrap.materiaNombre}
-      carreraId={bootstrap.carreraId || requestedCarreraId || undefined}
-      carreraNombre={bootstrap.carreraNombre}
-      universidadId={bootstrap.universidadId}
-      universidadNombre={bootstrap.universidadNombre}
-      initialContextError={bootstrap.contextError}
-      initialResumenes={bootstrap.initialResumenes}
-      initialResumenesError={bootstrap.initialResumenesError}
-      initialSimulatorRatings={bootstrap.initialSimulatorRatings}
-      initialSimulatorUsage={bootstrap.initialSimulatorUsage}
-    />
+        materiaId={materiaId}
+        materiaNombre={bootstrap.materiaNombre}
+        carreraId={bootstrap.carreraId || requestedCarreraId || undefined}
+        carreraNombre={bootstrap.carreraNombre}
+        universidadId={bootstrap.universidadId}
+        universidadNombre={bootstrap.universidadNombre}
+        initialContextError={bootstrap.contextError}
+        initialResumenes={bootstrap.initialResumenes}
+        initialResumenesError={bootstrap.initialResumenesError}
+        initialSimulatorRatings={bootstrap.initialSimulatorRatings}
+        initialSimulatorUsage={bootstrap.initialSimulatorUsage}
+      />
     </>
   );
 }

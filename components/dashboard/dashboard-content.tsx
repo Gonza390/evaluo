@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import {
   useCallback,
@@ -68,10 +68,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import type { DashboardMateriaState } from '@/lib/dashboard-state';
-import { ExamRemindersPanel } from '@/components/dashboard/exam-reminders-panel';
 import { StudyRecommendationsPanel } from '@/components/dashboard/study-recommendations-panel';
 import { GuidedTour, type GuidedTourStep } from '@/components/ui/guided-tour';
-import { StreakCard } from '@/components/dashboard/StreakCard';
 
 type MateriaSummary = DashboardMateriaSummary;
 type MateriaDetailsMap = DashboardMateriaDetailsMap;
@@ -210,6 +208,8 @@ export function DashboardContent({
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showDashboardTour, setShowDashboardTour] = useState(false);
   const [dashboardTourStepIndex, setDashboardTourStepIndex] = useState(0);
+  const [heroNavigationPending, setHeroNavigationPending] = useState(false);
+  const dashboardTourDismissedRef = useRef(false);
   const heroTourRef = useRef<HTMLDivElement | null>(null);
   const checklistTourRef = useRef<HTMLDivElement | null>(null);
   const tabsTourRef = useRef<HTMLDivElement | null>(null);
@@ -702,7 +702,7 @@ export function DashboardContent({
   const loadAllMaterias = async (query = '') => {
     setAllMateriasLoading(true);
     try {
-      const summaries = await searchDashboardMateriaSummaries(query, 24);
+      const summaries = await searchDashboardMateriaSummaries(query, 24, academicProfile?.carreraId);
       setAllMaterias(summaries);
     } catch (error) {
       logError('dashboard.loadMaterias', error, { query });
@@ -782,18 +782,18 @@ export function DashboardContent({
           : `/simulador/${simuladorInProgress.materiaId}/${simuladorInProgress.parcial}`;
 
       return {
-        title: 'Retoma tu simulador',
+        title: 'Retomá donde dejaste',
         description: 'Tenés un intento en curso. Volvé exactamente donde lo dejaste.',
-        cta: 'Continuar simulador',
+        cta: 'Continuar preparación',
         onClick: () => router.push(href),
       };
     }
 
     if (dashboardState.lastSubject) {
       return {
-        title: 'Sigue con tu última materia',
-        description: `Volvé a ${dashboardState.lastSubject.name} y continúa leyendo o practicando.`,
-        cta: 'Abrir materia',
+        title: 'Continuá con tu última materia',
+        description: `Volvé a ${dashboardState.lastSubject.name} y elegí la próxima actividad de estudio.`,
+        cta: 'Continuar preparación',
         onClick: () => goToMateria(dashboardState.lastSubject as DashboardMateriaState),
       };
     }
@@ -878,7 +878,7 @@ export function DashboardContent({
     {
       title: 'Este es tu tablero',
       description:
-        'Acá ves tu cobertura de estudio y tu racha de días seguidos. Cuanto más practicás, más avanzás.',
+        'Acá ves tu cobertura de estudio y tu próxima actividad. Cuanto más practicás, más avanzás.',
       target: { type: 'ref', ref: heroTourRef },
     },
     {
@@ -900,12 +900,13 @@ export function DashboardContent({
     {
       title: 'Tu progreso en detalle',
       description:
-        'En Progreso ves el detalle de cada materia y tu % de aprobar. También tenés Recientes, Favoritas y Recursos.',
+        'En Progreso ves el detalle de cada materia y tu nivel de preparación. También tenés Recientes, Favoritas y Recursos.',
       target: { type: 'ref', ref: tabsTourRef },
     },
   ];
 
   const closeDashboardTour = useCallback(() => {
+    dashboardTourDismissedRef.current = true;
     setShowDashboardTour(false);
     if (typeof window !== 'undefined' && user) {
       window.localStorage.setItem(getDashboardTourStorageKey(user.id), 'done');
@@ -928,7 +929,13 @@ export function DashboardContent({
   }, [dashboardTourStepIndex]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !user || dashboardLoading || showWelcomeModal) {
+    if (
+      typeof window === 'undefined' ||
+      !user ||
+      dashboardLoading ||
+      showWelcomeModal ||
+      dashboardTourDismissedRef.current
+    ) {
       return;
     }
     if (onboardingProgress >= onboardingMilestones.length) {
@@ -952,16 +959,38 @@ export function DashboardContent({
   );
   const heroCoverage = Math.max(0, Math.min(100, partialInsights?.coberturaPorcentaje ?? 0));
   const hasStartedPracticing = (partialInsights?.preguntasRespondidasParcial ?? 0) > 0;
-  const heroProgressLabel =
-    partialInsights && partialInsights.totalPreguntasParcial > 0
-      ? `${partialInsights.preguntasRespondidasParcial} de ${partialInsights.totalPreguntasParcial} preguntas trabajadas`
-      : 'Todavía no hay respuestas suficientes para medir tu progreso.';
-  const heroPrimaryAction = partialInsights
-    ? () => router.push(`/simulador/${partialInsights.materiaId}/${partialInsights.parcial}`)
-    : nextStudyAction.onClick;
-  const heroPrimaryLabel = hasStartedPracticing
-    ? 'Continuar con el simulador'
-    : nextStudyAction.cta;
+  const heroPrimaryAction = simuladorInProgress
+    ? nextStudyAction.onClick
+    : partialInsights
+      ? () => router.push(`/simulador/${partialInsights.materiaId}/${partialInsights.parcial}`)
+      : nextStudyAction.onClick;
+  const heroPrimaryLabel = simuladorInProgress
+    ? 'Continuar preparación'
+    : hasStartedPracticing
+      ? 'Seguir practicando'
+      : nextStudyAction.cta;
+  const heroPrimaryDestination = simuladorInProgress
+    ? simuladorInProgress.mode === 'errores'
+      ? 'error_practice'
+      : 'simulator_resume'
+    : partialInsights
+      ? 'simulator_practice'
+      : dashboardState.lastSubject
+        ? 'subject'
+        : 'explore';
+  const handleHeroPrimaryAction = useCallback(() => {
+    if (heroNavigationPending) {
+      return;
+    }
+    setHeroNavigationPending(true);
+    trackMarketingEvent('cta_click', {
+      location: 'dashboard_hero',
+      cta_name: heroPrimaryLabel,
+      destination: heroPrimaryDestination,
+    });
+    heroPrimaryAction();
+    window.setTimeout(() => setHeroNavigationPending(false), 8_000);
+  }, [heroNavigationPending, heroPrimaryAction, heroPrimaryDestination, heroPrimaryLabel]);
   const subjectAccentStyles = [
     'from-blue-500/15 to-cyan-500/10 border-blue-200/70',
     'from-indigo-500/15 to-violet-500/10 border-indigo-200/70',
@@ -1113,13 +1142,13 @@ export function DashboardContent({
 
   if (dashboardLoading && recentSubjects.length === 0) {
     return (
-      <div className="animate-page-enter flex-1 overflow-auto bg-[#f7f9fc] font-sans">
+      <div className="animate-page-enter flex-1 overflow-auto bg-white font-sans">
         <div className="w-full p-2 md:p-3">
           <div className="mx-auto max-w-6xl">
             <div className={`${DASHBOARD_PANEL_CLASS} mb-4 px-5 py-5`}>
-              <div className="h-7 w-56 animate-pulse rounded-lg bg-slate-100" />
-              <div className="mt-3 h-4 w-80 animate-pulse rounded-lg bg-slate-100" />
-              <div className="mt-5 h-10 animate-pulse rounded-xl bg-slate-100" />
+              <div className="h-7 w-56 animate-pulse rounded-lg bg-white" />
+              <div className="mt-3 h-4 w-80 animate-pulse rounded-lg bg-white" />
+              <div className="mt-5 h-10 animate-pulse rounded-xl bg-white" />
             </div>
             <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -1144,7 +1173,7 @@ export function DashboardContent({
   }
 
   return (
-    <div className="animate-page-enter flex-1 overflow-x-hidden overflow-y-auto bg-[#f7f9fc] font-sans">
+    <div className="animate-page-enter flex-1 overflow-x-hidden overflow-y-auto bg-white font-sans">
       <div className="w-full px-2.5 py-2 sm:p-3">
         <div className="mx-auto max-w-6xl">
           <div className="animate-study-reveal mb-5 grid gap-4 px-1 py-1 sm:px-0 sm:py-0 xl:grid-cols-[1fr_minmax(320px,460px)] xl:items-start">
@@ -1222,20 +1251,26 @@ export function DashboardContent({
                   <>
                     <div className="max-w-[520px] min-w-0">
                       <h2 className="max-w-full text-[1.48rem] leading-[1.06] font-bold tracking-[-0.05em] text-white sm:max-w-[230px] sm:text-[1.62rem]">
-                        {hasStartedPracticing
-                          ? 'Segu\u00ED as\u00ED, vas por muy buen camino'
-                          : 'Arranc\u00E1 a practicar'}
+                        {simuladorInProgress
+                          ? 'Retomá donde dejaste'
+                          : hasStartedPracticing
+                            ? 'Tu próxima actividad'
+                            : nextStudyAction.title}
                       </h2>
                       <p className="mt-3 max-w-full text-[0.9rem] leading-6 font-medium text-white/88 sm:max-w-[230px]">
-                        {hasStartedPracticing
-                          ? 'Cada minuto que estudi\u00E1s, te acerca a tu pr\u00F3xima meta.'
-                          : 'Elegiste tu materia. Respond\u00E9 tus primeras preguntas para activar tu progreso.'}
+                        {simuladorInProgress
+                          ? 'Tenés un intento en curso. Tu progreso está guardado y podés continuar desde la última pregunta.'
+                          : hasStartedPracticing
+                            ? `Seguí practicando ${heroSubjectName} para reforzar lo que todavía te cuesta.`
+                            : nextStudyAction.description}
                       </p>
                       <Button
-                        onClick={heroPrimaryAction}
+                        onClick={handleHeroPrimaryAction}
+                        disabled={heroNavigationPending}
+                        aria-busy={heroNavigationPending}
                         className="text-brand mt-4 h-10 w-full rounded-xl bg-white px-4.5 text-[12.5px] font-semibold shadow-[0_12px_24px_rgba(17,24,39,0.14)] hover:bg-white/95 sm:h-9 sm:w-auto"
                       >
-                        {heroPrimaryLabel}
+                        {heroNavigationPending ? 'Preparando simulador…' : heroPrimaryLabel}
                       </Button>
                     </div>
                     <div className="min-w-0 pl-0 sm:pl-4 lg:pl-6">
@@ -1258,26 +1293,13 @@ export function DashboardContent({
                           <p className="max-w-[300px] text-[12px] leading-5 font-semibold tracking-[0.01em] text-white/90 uppercase sm:max-w-[330px]">
                             {heroSubjectName}
                           </p>
-                          <div className="mt-2 rounded-full bg-white/10 p-[3px] shadow-inner shadow-black/10">
-                            <div className="h-[9px] overflow-hidden rounded-full bg-white/15">
-                              <div
-                                className="h-full rounded-full bg-[linear-gradient(90deg,#FFFFFF_0%,#D7DEFF_50%,#93C5FD_100%)] transition-all"
-                                style={{ width: `${heroCoverage}%` }}
-                              />
-                            </div>
-                          </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] leading-5 text-white/88">
-                            <span>
-                              {heroCoverage > 0
-                                ? '\u00A1Vas muy bien!'
-                                : 'Arranc\u00E1 practicando para activar tu progreso'}
-                            </span>
-                            {partialInsights ? (
+                          {partialInsights ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
                               <span className="rounded-full border border-white/14 bg-white/10 px-2 py-0.5 text-[12px] font-semibold tracking-[0.08em] text-white/88 uppercase">
                                 Parcial {partialInsights.parcial}
                               </span>
-                            ) : null}
-                          </div>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
 
@@ -1293,6 +1315,9 @@ export function DashboardContent({
                           <p className="mt-0.5 text-[12px] leading-4 text-white/85 sm:mt-1 sm:text-[12px] sm:leading-4">
                             Preguntas practicadas
                           </p>
+                          <p className="mt-1 text-[10.5px] leading-3.5 text-white/70">
+                            Respondé más para subir tu cobertura
+                          </p>
                         </div>
                         <div className="rounded-[18px] border border-white/12 bg-white/8 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
                           <p className="text-[15px] font-bold text-white sm:text-[17px]">
@@ -1302,6 +1327,9 @@ export function DashboardContent({
                           <p className="mt-0.5 text-[12px] leading-4 text-white/85 sm:mt-1 sm:text-[12px] sm:leading-4">
                             Preguntas acertadas
                           </p>
+                          <p className="mt-1 text-[10.5px] leading-3.5 text-white/70">
+                            Repasá tus errores para acertar más
+                          </p>
                         </div>
                         {partialInsights ? (
                           <div className="rounded-[18px] border border-emerald-300/40 bg-emerald-400/15 px-2.5 py-1.5 text-center backdrop-blur sm:rounded-2xl sm:px-3 sm:py-2">
@@ -1309,15 +1337,14 @@ export function DashboardContent({
                               {partialInsights.probabilidadAprobar}%
                             </p>
                             <p className="mt-0.5 text-[12px] leading-4 text-white/88 sm:mt-1 sm:text-[12px] sm:leading-4">
-                              Probabilidad de aprobar
+                              Nivel de preparación
+                            </p>
+                            <p className="mt-1 text-[10.5px] leading-3.5 text-emerald-100/80">
+                              Cubrí los temas del parcial para subirlo
                             </p>
                           </div>
                         ) : null}
                       </div>
-
-                      <p className="mt-3.5 max-w-[430px] text-[12px] leading-5 text-white/85">
-                        {heroProgressLabel}
-                      </p>
                     </div>
                   </>
                 )}
@@ -1359,7 +1386,7 @@ export function DashboardContent({
                         Paso {onboardingProgress + 1}/{onboardingMilestones.length}
                       </span>
                     </div>
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white">
                       <div
                         className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand),var(--brand-2))] transition-all duration-500"
                         style={{
@@ -1385,37 +1412,6 @@ export function DashboardContent({
                 </p>
               </Card>
             ) : null}
-          </div>
-
-          {resumeSimulator ? (
-            <div className="animate-study-reveal mb-5">
-              <div className="flex flex-col gap-3 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50/80 via-white to-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-                    <PlayCircle className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">Retomá donde quedaste</p>
-                    <p className="truncate text-xs text-slate-500">
-                      {resumeSimulator.subjectName ?? 'Simulador'} · Parcial{' '}
-                      {resumeSimulator.parcial} · Pregunta {resumeSimulator.questionLabel}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="rounded-xl"
-                  onClick={() => router.push(resumeSimulator.href)}
-                >
-                  Continuar simulador
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="animate-study-reveal mb-5">
-            <StreakCard />
           </div>
 
           <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
@@ -1457,7 +1453,7 @@ export function DashboardContent({
                         {Array.from({ length: 4 }).map((_, index) => (
                           <div
                             key={index}
-                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
+                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-white"
                           />
                         ))}
                       </div>
@@ -1502,10 +1498,10 @@ export function DashboardContent({
                                             : 'border-rose-200 bg-rose-50 text-rose-700'
                                       }`}
                                     >
-                                      {insight.probabilidadAprobar}% de aprobar
+                                      {insight.probabilidadAprobar}% de preparación
                                     </span>
                                   </div>
-                                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                  <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white">
                                     <div
                                       className={`h-full rounded-full ${
                                         insight.coberturaPorcentaje >= 70
@@ -1563,7 +1559,7 @@ export function DashboardContent({
                                               improved
                                                 ? 'bg-emerald-50/60 text-emerald-700'
                                                 : unchanged
-                                                  ? 'bg-slate-50 text-slate-600'
+                                                  ? 'bg-white text-slate-600'
                                                   : 'bg-rose-50/60 text-rose-700'
                                             }`}
                                           >
@@ -1647,7 +1643,7 @@ export function DashboardContent({
                         {Array.from({ length: 3 }).map((_, index) => (
                           <div
                             key={index}
-                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
+                            className="h-36 animate-pulse rounded-xl border border-slate-200 bg-white"
                           />
                         ))}
                       </div>
@@ -1708,7 +1704,7 @@ export function DashboardContent({
                         {Array.from({ length: 3 }).map((_, index) => (
                           <div
                             key={index}
-                            className="h-16 animate-pulse rounded-xl border border-slate-200 bg-slate-50"
+                            className="h-16 animate-pulse rounded-xl border border-slate-200 bg-white"
                           />
                         ))}
                       </div>
@@ -1754,7 +1750,7 @@ export function DashboardContent({
                                 key={materia.id}
                                 type="button"
                                 onClick={() => router.push(getMateriaRoute(materia.id))}
-                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50"
+                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
                               >
                                 <span className="truncate font-medium text-slate-800">
                                   {materia.nombre}
@@ -1779,7 +1775,7 @@ export function DashboardContent({
                             rel={resource.href ? 'noreferrer' : undefined}
                             className="animate-study-reveal flex items-center gap-3 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-2.5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300"
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-700">
                               <FileText className="h-4 w-4" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -1811,8 +1807,6 @@ export function DashboardContent({
             </Card>
 
             <StudyRecommendationsPanel />
-
-            <ExamRemindersPanel />
           </div>
 
           <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
@@ -1823,6 +1817,19 @@ export function DashboardContent({
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
+                {academicProfile?.carreraNombre ? (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3">
+                    <p className="text-[12px] font-semibold tracking-[0.14em] text-blue-700 uppercase">
+                      Tu carrera
+                    </p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-900">
+                      {academicProfile.carreraNombre}
+                    </p>
+                    <p className="mt-0.5 text-[12.5px] text-slate-600">
+                      Las materias de tu carrera aparecen primero.
+                    </p>
+                  </div>
+                ) : null}
                 <div className="relative">
                   <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -1839,23 +1846,38 @@ export function DashboardContent({
                       Buscando materias...
                     </div>
                   ) : allMaterias.length === 0 ? (
-                    <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-sm text-slate-500">
+                    <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
                       {searchTerm.trim().length > 0
                         ? 'No encontramos materias con ese nombre.'
                         : 'Empezá escribiendo o usá el listado sugerido.'}
                     </div>
                   ) : (
-                    allMaterias.map((materia) => (
-                      <button
-                        key={materia.id}
-                        type="button"
-                        onClick={() => addMateria(materia)}
-                        className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
-                      >
-                        <h3 className="text-base font-semibold text-slate-950">{materia.nombre}</h3>
-                        <p className="mt-1 text-sm text-slate-500">{materia.carreraNombre}</p>
-                      </button>
-                    ))
+                    allMaterias.map((materia) => {
+                      const isFromCareer =
+                        academicProfile?.carreraId != null &&
+                        materia.carreraId === academicProfile.carreraId;
+
+                      return (
+                        <button
+                          key={materia.id}
+                          type="button"
+                          onClick={() => addMateria(materia)}
+                          className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-slate-300 hover:bg-white"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="text-base font-semibold text-slate-950">
+                              {materia.nombre}
+                            </h3>
+                            {isFromCareer ? (
+                              <span className="shrink-0 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                                Tu carrera
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 text-sm text-slate-500">{materia.carreraNombre}</p>
+                        </button>
+                      );
+                    })
                   )}
                 </div>
 

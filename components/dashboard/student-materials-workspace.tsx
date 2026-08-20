@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
-  Clipboard,
+  BookOpenCheck,
   Clock3,
   Eye,
   FileText,
@@ -15,9 +15,11 @@ import {
   Loader2,
   Lock,
   Plus,
+  Trash2,
   Upload,
 } from 'lucide-react';
 import {
+  deleteStudentMaterialAction,
   getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
   type StudentMaterialProcessingState,
@@ -25,7 +27,7 @@ import {
   updateStudentMaterialVisibilityAction,
 } from '@/app/dashboard/materiales/actions';
 import type { StudentMaterial } from '@/lib/data/student-materials';
-import { getMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
+import { getCareerRoute, getMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -74,9 +76,12 @@ interface StudentMaterialsWorkspaceProps {
   carreras: CarreraOption[];
   materias: MateriaOption[];
   carreraMaterias: CarreraMateriaRelation[];
+  initialUniversidadId?: string;
+  initialCarreraId?: string;
+  initialOpenUpload?: boolean;
 }
 
-const SUPPORTED_FILE_TYPES = ['PDF', 'PPTX', 'DOCX', 'TXT'] as const;
+const STUDY_OUTPUTS = ['Resumen', 'Glosario', 'Tarjetas', 'Ejercicios'] as const;
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('es-AR', {
@@ -100,6 +105,9 @@ export function StudentMaterialsWorkspace({
   carreras,
   materias,
   carreraMaterias,
+  initialUniversidadId = '',
+  initialCarreraId = '',
+  initialOpenUpload = false,
 }: StudentMaterialsWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -108,22 +116,39 @@ export function StudentMaterialsWorkspace({
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [showMaterialsTour, setShowMaterialsTour] = useState(false);
   const [materialsTourStepIndex, setMaterialsTourStepIndex] = useState(0);
+  const materialsTourDismissedRef = useRef(false);
   const uploadHeroTourRef = useRef<HTMLElement | null>(null);
   const libraryTourRef = useRef<HTMLElement | null>(null);
   const materialEntryTourRef = useRef<HTMLElement | null>(null);
   const [title, setTitle] = useState('');
-  const [universidadId, setUniversidadId] = useState('');
-  const [carreraId, setCarreraId] = useState('');
+  const [universidadId, setUniversidadId] = useState(initialUniversidadId);
+  const [carreraId, setCarreraId] = useState(initialCarreraId);
   const [materiaId, setMateriaId] = useState('');
   const [shareWithCatalog, setShareWithCatalog] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
-  const [activeProcessing, setActiveProcessing] = useState<StudentMaterialProcessingState | null>(null);
+  const [activeProcessing, setActiveProcessing] = useState<StudentMaterialProcessingState | null>(
+    null
+  );
   const [displayProgress, setDisplayProgress] = useState(0);
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
+  const hasAcademicProfile = Boolean(initialUniversidadId && initialCarreraId);
 
   const featuredMaterial = initialMaterials[0] ?? null;
+
+  const sharedMaterialsCount = useMemo(
+    () => initialMaterials.filter((material) => material.visibility === 'shared').length,
+    [initialMaterials]
+  );
+  const isContributor = sharedMaterialsCount > 0;
+
+  useEffect(() => {
+    if (initialOpenUpload) {
+      setIsUploadDialogOpen(true);
+    }
+  }, [initialOpenUpload]);
 
   const universityNameById = useMemo(
     () => new Map(universidades.map((universidad) => [universidad.id, universidad.nombre])),
@@ -165,8 +190,8 @@ export function StudentMaterialsWorkspace({
 
   const resetForm = () => {
     setTitle('');
-    setUniversidadId('');
-    setCarreraId('');
+    setUniversidadId(initialUniversidadId);
+    setCarreraId(initialCarreraId);
     setMateriaId('');
     setShareWithCatalog(true);
     setSelectedFile(null);
@@ -294,7 +319,9 @@ export function StudentMaterialsWorkspace({
       if (!result.success) {
         const message = result.message.toLowerCase();
         isQuotaError =
-          message.includes('limite') || message.includes('límite') || message.includes('plan gratis');
+          message.includes('limite') ||
+          message.includes('límite') ||
+          message.includes('plan gratis');
 
         if (isQuotaError) {
           trackMarketingEvent('limit_reached_material_upload', {
@@ -352,6 +379,27 @@ export function StudentMaterialsWorkspace({
     });
   };
 
+  const handleDeleteMaterial = () => {
+    if (!materialToDelete) {
+      return;
+    }
+
+    const materialId = materialToDelete.id;
+    startTransition(async () => {
+      const result = await deleteStudentMaterialAction(materialId);
+
+      toast({
+        description: result.message,
+        variant: result.success ? 'default' : 'destructive',
+      });
+
+      if (result.success) {
+        setMaterialToDelete(null);
+        router.refresh();
+      }
+    });
+  };
+
   const materialsTourSteps: GuidedTourStep[] = [
     {
       title: 'Subí el PDF de tu materia',
@@ -376,6 +424,7 @@ export function StudentMaterialsWorkspace({
   ];
 
   const closeMaterialsTour = useCallback(() => {
+    materialsTourDismissedRef.current = true;
     setShowMaterialsTour(false);
     if (typeof window !== 'undefined' && user) {
       window.localStorage.setItem(getMaterialsTourStorageKey(user.id), 'done');
@@ -398,7 +447,7 @@ export function StudentMaterialsWorkspace({
   }, [materialsTourStepIndex]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !user) {
+    if (typeof window === 'undefined' || !user || materialsTourDismissedRef.current) {
       return;
     }
     if (window.localStorage.getItem(getMaterialsTourStorageKey(user.id)) === 'done') {
@@ -413,33 +462,48 @@ export function StudentMaterialsWorkspace({
 
   return (
     <>
-      <div className="space-y-4">
-        <section ref={uploadHeroTourRef} className="overflow-hidden rounded-[1.6rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,250,252,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-5">
+      <div className="min-w-0 space-y-4 overflow-x-clip">
+        <section
+          ref={uploadHeroTourRef}
+          className="overflow-hidden rounded-[1.6rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,250,252,0.98)_100%)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-5"
+        >
           <div className="text-center">
-            <h1 className="text-[1.9rem] font-bold tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
+            <h1 className="text-[1.7rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.15rem]">
               Tu espacio de estudio
             </h1>
             <p className="mx-auto mt-2 max-w-md text-[13px] leading-5 text-slate-500">
-              Subí tus materiales y convertilos en resúmenes, glosario, tarjetas y ejercicios con IA.
+              Subí tus materiales y convertilos en resúmenes, glosario, tarjetas y ejercicios con
+              IA.
             </p>
+            {isContributor ? (
+              <div className="mx-auto mt-3 flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 sm:inline-flex sm:rounded-full">
+                <Globe className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="text-[12.5px] font-semibold text-emerald-700">
+                  Colaborador de la comunidad
+                </span>
+                <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                  {sharedMaterialsCount} {sharedMaterialsCount === 1 ? 'aporte' : 'aportes'}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-6 grid gap-3 lg:grid-cols-[1.05fr_1fr]">
-            <div className="relative overflow-hidden rounded-[1.35rem] border border-amber-200/70 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFF1E6_52%,#FEF3C7_100%)] p-4 shadow-[0_16px_38px_rgba(245,158,11,0.09)] sm:p-[1.05rem]">
-              <div className="absolute -bottom-10 -right-8 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.28),transparent_72%)]" />
+            <div className="relative order-2 overflow-hidden rounded-[1.35rem] border border-amber-200/70 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFF1E6_52%,#FEF3C7_100%)] p-4 shadow-[0_16px_38px_rgba(245,158,11,0.09)] sm:p-[1.05rem] lg:order-1">
+              <div className="absolute -right-8 -bottom-10 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.28),transparent_72%)]" />
               <div className="relative flex h-full flex-col justify-between gap-4">
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-[0_10px_24px_rgba(245,158,11,0.18)]">
                     <GraduationCap className="h-4.5 w-4.5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-amber-700/80">
+                    <p className="text-[12px] font-semibold tracking-[0.16em] text-amber-700/80 uppercase">
                       {getFeaturedMaterialLabel(featuredMaterial)}
                     </p>
-                    <h2 className="mt-1.5 break-words text-[1.3rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[1.45rem]">
+                    <h2 className="mt-1.5 text-[1.3rem] font-bold tracking-[-0.05em] break-words text-slate-950 sm:text-[1.45rem]">
                       {featuredMaterial?.title ?? 'Tu primer material'}
                     </h2>
-                    <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                    <p className="mt-1.5 text-[13px] leading-5 break-all text-slate-600">
                       {featuredMaterial
                         ? featuredMaterial.file_name
                         : 'Subí un documento y tendrás un espacio ordenado para estudiar, resumir y repasar.'}
@@ -450,14 +514,27 @@ export function StudentMaterialsWorkspace({
                 <div className="relative flex flex-wrap items-center gap-2.5">
                   {featuredMaterial ? (
                     <>
-                      <Button asChild className="bg-[#F59E0B] from-[#F59E0B] to-[#FB923C] text-white hover:opacity-95">
+                      <Button
+                        asChild
+                        className="bg-[#F59E0B] from-[#F59E0B] to-[#FB923C] text-white hover:opacity-95"
+                      >
                         <Link href={getStudentMaterialRoute(featuredMaterial.id)}>
                           Continuar
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button asChild size="sm" variant="outline" className="border-amber-200 bg-white/70 backdrop-blur">
-                        <Link href={getMateriaRoute(featuredMaterial.materia_id, featuredMaterial.carrera_id)}>
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="border-amber-200 bg-white/70 backdrop-blur"
+                      >
+                        <Link
+                          href={getMateriaRoute(
+                            featuredMaterial.materia_id,
+                            featuredMaterial.carrera_id
+                          )}
+                        >
                           Ver materia
                           <ArrowRight className="h-4 w-4" />
                         </Link>
@@ -473,8 +550,15 @@ export function StudentMaterialsWorkspace({
                         Subir primer PDF
                         <ArrowRight className="h-4 w-4" />
                       </Button>
-                      <Button asChild size="sm" variant="outline" className="border-amber-200 bg-white/70 backdrop-blur">
-                        <Link href="/materias">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="border-amber-200 bg-white/70 backdrop-blur"
+                      >
+                        <Link
+                          href={initialCarreraId ? getCareerRoute(initialCarreraId) : '/explorar'}
+                        >
                           Ver materias
                           <ArrowRight className="h-4 w-4" />
                         </Link>
@@ -485,7 +569,7 @@ export function StudentMaterialsWorkspace({
               </div>
             </div>
 
-            <div className="rounded-[1.35rem] border border-slate-200/80 bg-[#FCFCFE] p-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:p-[1.05rem]">
+            <div className="order-1 rounded-[1.35rem] border border-slate-200/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:p-[1.05rem] lg:order-2">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-[1rem] bg-[#EEF4FF] text-[#2563EB]">
                   <Files className="h-4.5 w-4.5" />
@@ -495,53 +579,85 @@ export function StudentMaterialsWorkspace({
                     Subí tu material del curso
                   </h2>
                   <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                    Mantendremos una estructura simple para que después puedas convertir cada PDF en un
-                    espacio de estudio más completo.
+                    Mantendremos una estructura simple para que después puedas convertir cada PDF en
+                    un espacio de estudio más completo.
                   </p>
                 </div>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-1.5">
-                {SUPPORTED_FILE_TYPES.map((type) => (
+                {STUDY_OUTPUTS.map((type) => (
                   <span
                     key={type}
-                    className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-500"
+                    className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[12px] font-semibold tracking-[0.14em] text-slate-500 uppercase"
                   >
                     {type}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
-                <Button type="button" size="sm" onClick={() => setIsUploadDialogOpen(true)} className="justify-center">
-                  <Upload className="h-4 w-4" />
-                  Subir documento
-                </Button>
-                <Button
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    toast({
-                      description: 'La opción para pegar enlaces o texto la dejamos preparada para la siguiente etapa.',
-                    })
-                  }
+                  onClick={() => setIsUploadDialogOpen(true)}
+                  className="group hover:border-primary/35 hover:bg-primary/5 focus-visible:ring-primary rounded-[1rem] border border-slate-200 bg-white p-3.5 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
-                  <Clipboard className="h-4 w-4" />
-                  Pegar
-                </Button>
+                  <span className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-xl shadow-sm">
+                    <Upload className="h-4 w-4" />
+                  </span>
+                  <span className="text-primary mt-3 block text-[12px] font-semibold tracking-[0.14em] uppercase">
+                    Tu material
+                  </span>
+                  <span className="mt-1 block text-sm font-semibold text-slate-950">
+                    Subir un PDF
+                  </span>
+                  <span className="mt-1 block text-[12.5px] leading-5 text-slate-500">
+                    Convertí tu apunte en un espacio de estudio.
+                  </span>
+                </button>
+
+                <Link
+                  href="/demo/material-estudio"
+                  className="group focus-visible:ring-primary rounded-[1rem] border border-blue-200 bg-blue-50/70 p-3.5 text-left transition hover:border-blue-300 hover:bg-blue-50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                >
+                  <span className="text-primary flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm">
+                    <BookOpenCheck className="h-4 w-4" />
+                  </span>
+                  <span className="text-primary mt-3 block text-[12px] font-semibold tracking-[0.14em] uppercase">
+                    PDF de prueba
+                  </span>
+                  <span className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-slate-950">
+                    Ver cómo funciona
+                    <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
+                  </span>
+                  <span className="mt-1 block text-[12.5px] leading-5 text-slate-500">
+                    Explorá el PDF ya procesado con resumen, glosario, flashcards y ejercicios.
+                  </span>
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
-        <section ref={libraryTourRef} className="rounded-[1.6rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.05)] sm:p-5">
+        <section
+          ref={libraryTourRef}
+          className="rounded-[1.6rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.05)] sm:p-5"
+        >
           <div className="flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500">Biblioteca personal</p>
-              <h2 className="mt-1.5 text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">Tus materiales</h2>
+              <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
+                Biblioteca personal
+              </p>
+              <h2 className="mt-1.5 text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
+                Tus materiales
+              </h2>
             </div>
-            <Button type="button" size="sm" variant="outline" onClick={() => setIsUploadDialogOpen(true)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setIsUploadDialogOpen(true)}
+            >
               <Plus className="h-4 w-4" />
               Nuevo material
             </Button>
@@ -549,9 +665,11 @@ export function StudentMaterialsWorkspace({
 
           <div className="mt-4 space-y-2.5">
             {initialMaterials.length === 0 ? (
-              <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
+              <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
                 <FileText className="mx-auto h-8 w-8 text-slate-300" />
-                <p className="mt-3 text-sm font-semibold text-slate-900">Todavía no subiste materiales</p>
+                <p className="mt-3 text-sm font-semibold text-slate-900">
+                  Todavía no subiste materiales
+                </p>
                 <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
                   Cuando cargues tu primer PDF, aparecerá acá con su categoría y accesos rápidos.
                 </p>
@@ -570,13 +688,21 @@ export function StudentMaterialsWorkspace({
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-slate-950">{material.title}</h3>
+                          <h3 className="text-[15px] font-semibold tracking-[-0.03em] text-slate-950">
+                            {material.title}
+                          </h3>
                           <span
                             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[12px] font-semibold ${
-                              isShared ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'
+                              isShared
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-white text-slate-600'
                             }`}
                           >
-                            {isShared ? <Globe className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                            {isShared ? (
+                              <Globe className="h-3.5 w-3.5" />
+                            ) : (
+                              <Lock className="h-3.5 w-3.5" />
+                            )}
                             {isShared ? 'Compartido' : 'Privado'}
                           </span>
                           {material.processing_status !== 'ready' ? (
@@ -586,9 +712,13 @@ export function StudentMaterialsWorkspace({
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1.5 text-[13px] text-slate-500">{material.file_name}</p>
+                        <p className="mt-1.5 text-[13px] break-all text-slate-500">
+                          {material.file_name}
+                        </p>
                         <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1.5 text-[12px] font-medium text-slate-500">
-                          <span>{universityNameById.get(material.universidad_id) ?? 'Universidad'}</span>
+                          <span>
+                            {universityNameById.get(material.universidad_id) ?? 'Universidad'}
+                          </span>
                           <span>{careerNameById.get(material.carrera_id) ?? 'Carrera'}</span>
                           <span>{materiaNameById.get(material.materia_id) ?? 'Materia'}</span>
                           <span>{formatDate(material.created_at)}</span>
@@ -616,6 +746,20 @@ export function StudentMaterialsWorkspace({
                             {material.processing_status === 'ready' ? 'Abrir' : 'Ver estado'}
                           </Link>
                         </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-slate-400 hover:bg-red-50 hover:text-red-600"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setMaterialToDelete(material);
+                          }}
+                          disabled={isPending}
+                          aria-label={`Eliminar ${material.title}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </article>
@@ -634,15 +778,17 @@ export function StudentMaterialsWorkspace({
                 Subí tu material
               </DialogTitle>
               <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                Completá la estructura base del documento antes de cargarlo. Después podremos trabajar el
-                resumen y el espacio de estudio sobre este mismo PDF.
+                Completá la estructura base del documento antes de cargarlo. Después podremos
+                trabajar el resumen y el espacio de estudio sobre este mismo PDF.
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="grid gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Titulo</p>
+              <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                Titulo
+              </p>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -650,53 +796,75 @@ export function StudentMaterialsWorkspace({
               />
             </div>
 
-            <div>
-              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Universidad</p>
-              <select
-                value={universidadId}
-                onChange={(event) => {
-                  setUniversidadId(event.target.value);
-                  setCarreraId('');
-                  setMateriaId('');
-                }}
-                className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
-              >
-                <option value="">Seleccionar universidad</option>
-                {universidades.map((universidad) => (
-                  <option key={universidad.id} value={universidad.id}>
-                    {universidad.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {hasAcademicProfile ? (
+              <div className="rounded-[1rem] border border-blue-100 bg-blue-50/70 px-4 py-3 sm:col-span-2">
+                <p className="text-[12px] font-semibold tracking-[0.16em] text-blue-700 uppercase">
+                  Tu contexto académico
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">
+                  {universityNameById.get(universidadId) ?? 'Tu universidad'}
+                </p>
+                <p className="mt-0.5 text-[13px] text-slate-600">
+                  {careerNameById.get(carreraId) ?? 'Tu carrera'}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                    Universidad
+                  </p>
+                  <select
+                    value={universidadId}
+                    onChange={(event) => {
+                      setUniversidadId(event.target.value);
+                      setCarreraId('');
+                      setMateriaId('');
+                    }}
+                    className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
+                  >
+                    <option value="">Seleccionar universidad</option>
+                    {universidades.map((universidad) => (
+                      <option key={universidad.id} value={universidad.id}>
+                        {universidad.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <div>
-              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Carrera</p>
-              <select
-                value={carreraId}
-                onChange={(event) => {
-                  setCarreraId(event.target.value);
-                  setMateriaId('');
-                }}
-                disabled={!universidadId}
-                className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-slate-50"
-              >
-                <option value="">Seleccionar carrera</option>
-                {filteredCarreras.map((carrera) => (
-                  <option key={carrera.id} value={carrera.id}>
-                    {carrera.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div>
+                  <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                    Carrera
+                  </p>
+                  <select
+                    value={carreraId}
+                    onChange={(event) => {
+                      setCarreraId(event.target.value);
+                      setMateriaId('');
+                    }}
+                    disabled={!universidadId}
+                    className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
+                  >
+                    <option value="">Seleccionar carrera</option>
+                    {filteredCarreras.map((carrera) => (
+                      <option key={carrera.id} value={carrera.id}>
+                        {carrera.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
 
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Materia</p>
+              <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                Materia
+              </p>
               <select
                 value={materiaId}
                 onChange={(event) => setMateriaId(event.target.value)}
                 disabled={!carreraId}
-                className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-slate-50"
+                className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
               >
                 <option value="">Seleccionar materia</option>
                 {filteredMaterias.map((materia) => (
@@ -708,7 +876,9 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">Archivo PDF</p>
+              <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                Archivo PDF
+              </p>
               <Input
                 key={fileInputKey}
                 type="file"
@@ -723,15 +893,25 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <label className="flex items-start gap-3 rounded-[1rem] border border-slate-200 bg-slate-50 px-3.5 py-3 text-[13px] text-slate-700">
+              <label className="flex items-start gap-3 rounded-[1rem] border border-slate-200 bg-white px-3.5 py-3 text-[13px] text-slate-700">
                 <input
                   type="checkbox"
                   checked={shareWithCatalog}
                   onChange={(event) => setShareWithCatalog(event.target.checked)}
                   className="mt-1"
                 />
-                <span>Compartí este PDF en la materia y la carrera para que otros alumnos también lo vean.</span>
+                <span>
+                  Compartir públicamente en esta materia y carrera. Otros alumnos podrán abrir el
+                  documento y su contenido procesado. Dejalo desmarcado para mantenerlo privado.
+                </span>
               </label>
+              {shareWithCatalog ? (
+                <p className="mt-2 rounded-[1rem] border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-[12px] leading-5 text-amber-800">
+                  Al compartir declarás que tenés derecho a publicar este material (es tuyo, de tu
+                  cátedra con autorización, o de dominio público) y que no infringe derechos de
+                  terceros. Si no estás seguro, mantenelo privado.
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -751,9 +931,15 @@ export function StudentMaterialsWorkspace({
               type="button"
               size="sm"
               onClick={handleUpload}
-              disabled={isPending || !title || !universidadId || !carreraId || !materiaId || !selectedFile}
+              disabled={
+                isPending || !title || !universidadId || !carreraId || !materiaId || !selectedFile
+              }
             >
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
               Subir PDF
             </Button>
           </DialogFooter>
@@ -784,7 +970,9 @@ export function StudentMaterialsWorkspace({
                   </div>
                   <div className="min-w-0">
                     <DialogTitle className="text-[1.2rem] font-bold tracking-[-0.05em] text-slate-950">
-                      {activeProcessing.status === 'failed' ? 'No pudimos terminar el PDF' : 'Estamos preparando tu material'}
+                      {activeProcessing.status === 'failed'
+                        ? 'No pudimos terminar el PDF'
+                        : 'Estamos preparando tu material'}
                     </DialogTitle>
                     <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
                       {activeProcessing.fileName}
@@ -795,23 +983,27 @@ export function StudentMaterialsWorkspace({
 
               <div className="space-y-5 px-5 py-5 sm:px-6">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[12px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  <div className="flex items-center justify-between text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
                     <span>Progreso</span>
-                    <span>{Math.min(100, Math.max(displayProgress, activeProcessing.progress))}%</span>
+                    <span>
+                      {Math.min(100, Math.max(displayProgress, activeProcessing.progress))}%
+                    </span>
                   </div>
-                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-3 overflow-hidden rounded-full bg-white">
                     <div
                       className={`h-full rounded-full transition-[width] duration-500 ${
                         activeProcessing.status === 'failed'
                           ? 'bg-red-400'
                           : 'bg-[linear-gradient(90deg,#F59E0B_0%,#FB923C_45%,#2563EB_100%)]'
                       }`}
-                      style={{ width: `${Math.min(100, Math.max(displayProgress, activeProcessing.progress))}%` }}
+                      style={{
+                        width: `${Math.min(100, Math.max(displayProgress, activeProcessing.progress))}%`,
+                      }}
                     />
                   </div>
                 </div>
 
-                <div className="grid gap-2 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="grid gap-2 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
                   {[
                     ['uploaded', 'PDF subido'],
                     ['extracting', 'Extrayendo texto y paginas'],
@@ -821,18 +1013,29 @@ export function StudentMaterialsWorkspace({
                   ].map(([stageId, label]) => {
                     const isActive = activeProcessing.stage === stageId;
                     const isDone =
-                      ['uploaded', 'extracting', 'summarizing', 'glossary', 'ready'].indexOf(activeProcessing.stage) >
-                      ['uploaded', 'extracting', 'summarizing', 'glossary', 'ready'].indexOf(stageId);
+                      ['uploaded', 'extracting', 'summarizing', 'glossary', 'ready'].indexOf(
+                        activeProcessing.stage
+                      ) >
+                      ['uploaded', 'extracting', 'summarizing', 'glossary', 'ready'].indexOf(
+                        stageId
+                      );
 
                     return (
-                      <div key={stageId} className="flex items-center justify-between gap-3 text-[13px]">
+                      <div
+                        key={stageId}
+                        className="flex items-center justify-between gap-3 text-[13px]"
+                      >
                         <div className="flex items-center gap-2">
                           <span
                             className={`h-2.5 w-2.5 rounded-full ${
                               isDone ? 'bg-emerald-500' : isActive ? 'bg-[#F59E0B]' : 'bg-slate-300'
                             }`}
                           />
-                          <span className={isActive ? 'font-semibold text-slate-950' : 'text-slate-600'}>{label}</span>
+                          <span
+                            className={isActive ? 'font-semibold text-slate-950' : 'text-slate-600'}
+                          >
+                            {label}
+                          </span>
                         </div>
                         {isActive && activeProcessing.status !== 'failed' ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" />
@@ -851,18 +1054,24 @@ export function StudentMaterialsWorkspace({
 
                 <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
                   <p className="text-[13px] font-semibold text-slate-950">
-                    {activeProcessing.status === 'failed' ? 'Se interrumpió el procesamiento' : activeProcessing.message}
+                    {activeProcessing.status === 'failed'
+                      ? 'Se interrumpió el procesamiento'
+                      : activeProcessing.message}
                   </p>
                   <p className="mt-1.5 text-[12.5px] leading-5 text-slate-500">
                     {activeProcessing.status === 'failed'
-                      ? activeProcessing.error ?? 'No recibimos más detalle del error.'
+                      ? (activeProcessing.error ?? 'No recibimos más detalle del error.')
                       : 'Podés dejar esta ventana abierta mientras armamos el resumen y el glosario del PDF.'}
                   </p>
                 </div>
 
                 {activeProcessing.status === 'failed' ? (
                   <div className="flex justify-end">
-                    <Button type="button" variant="outline" onClick={() => setActiveProcessing(null)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveProcessing(null)}
+                    >
                       Cerrar
                     </Button>
                   </div>
@@ -873,18 +1082,80 @@ export function StudentMaterialsWorkspace({
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={Boolean(materialToDelete)}
+        onOpenChange={(open) => !open && setMaterialToDelete(null)}
+      >
+        <DialogContent className="w-[min(calc(100vw-1.5rem),440px)] rounded-[1.5rem] border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+          <div className="px-5 py-5 sm:px-6">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] bg-red-50 text-red-600">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-[1.15rem] font-bold tracking-[-0.05em] text-slate-950">
+                  ¿Eliminar este material?
+                </DialogTitle>
+                <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                  Se borrará el PDF y todo su espacio de estudio (resumen, glosario, tarjetas y
+                  ejercicios). Esta acción no se puede deshacer.
+                </DialogDescription>
+              </div>
+            </div>
+
+            {materialToDelete ? (
+              <div className="mt-4 rounded-[1rem] border border-slate-200 bg-white px-3.5 py-3">
+                <p className="text-sm font-semibold break-words text-slate-950">
+                  {materialToDelete.title}
+                </p>
+                <p className="mt-0.5 text-[12.5px] break-all text-slate-500">
+                  {materialToDelete.file_name}
+                </p>
+              </div>
+            ) : null}
+
+            <DialogFooter className="mt-5 gap-2 sm:justify-end">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setMaterialToDelete(null)}
+                disabled={isPending}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={handleDeleteMaterial}
+                disabled={isPending}
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Eliminar
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showPremiumUpsell} onOpenChange={setShowPremiumUpsell}>
         <DialogContent className="w-[min(calc(100vw-1.5rem),420px)] rounded-[24px] border border-slate-200 bg-white p-0 text-slate-900 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="px-4 py-4 sm:px-5 sm:py-5">
             <PremiumUpsell
-              title="Alcanzaste el límite de subida de materiales"
-              description="El plan gratis permite 1 material cada 15 días. Con Premium subí hasta 3 por día y estudiá sin esperas."
+              title="Convertí tu próximo apunte en un plan de estudio"
+              description="Ya usaste la generación gratuita. Con Premium podés subir este material, detectar los temas clave y practicar antes del parcial."
               source="materiales_upload_limit"
               features={[
                 'Hasta 3 materiales por día',
                 'Resúmenes y glosarios automáticos',
                 'Repaso con IA sobre tus apuntes',
               ]}
+              ctaLabel="Estudiar este material con Premium"
             />
           </div>
         </DialogContent>

@@ -59,8 +59,8 @@ function FileDrop({
   return (
     <div>
       <FieldLabel>{label}</FieldLabel>
-      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#cfd8ea] bg-[#fbfcff] px-5 py-6 text-center transition hover:border-[#2563EB] hover:bg-[#f6f9ff]">
-        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#eef3ff] text-[#2563EB]">
+      <label className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center rounded-[16px] border border-dashed border-[#cfd8ea] bg-white px-5 py-6 text-center transition hover:border-[#2563EB] hover:bg-[#f6f9ff]">
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#2563EB]">
           <FileUp className="h-5 w-5" />
         </div>
         <p className="text-[14px] font-medium text-[#1d2a44]">
@@ -536,7 +536,7 @@ export function BibliotecaPanel({
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[300px_minmax(0,1fr)]">
-          <div className="rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+          <div className="rounded-[16px] border border-[#e7ebf4] bg-white p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[13px] font-semibold text-[#1d2a44]">Carreras</p>
               <span className="text-[12px] text-[#7f8aa3]">
@@ -565,7 +565,7 @@ export function BibliotecaPanel({
                       setSimuladorMateriaSearch('');
                     }}
                     className={`w-full rounded-[12px] border px-3 py-3 text-left transition ${
-                      isActive ? 'border-[#2563EB] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
+                      isActive ? 'border-[#2563EB] bg-white' : 'border-[#e7ebf4] bg-white'
                     }`}
                   >
                     <p className={`text-[13px] font-semibold ${isActive ? 'text-[#2148d8]' : 'text-[#1d2a44]'}`}>
@@ -587,7 +587,7 @@ export function BibliotecaPanel({
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+          <div className="rounded-[16px] border border-[#e7ebf4] bg-white p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <p className="text-[13px] font-semibold text-[#1d2a44]">
@@ -609,7 +609,7 @@ export function BibliotecaPanel({
                 onChange={(event) => setSimuladorMateriaSearch(event.target.value)}
                 disabled={!carreraSimuladoresActiva}
                 placeholder={carreraSimuladoresActiva ? 'Buscar materia...' : 'Primero elige una carrera'}
-                className="h-10 flex-1 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba]"
+                className="h-10 flex-1 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-white disabled:text-[#9aa4ba]"
               />
               <select
                 value={simuladorMateriaFilter}
@@ -617,7 +617,7 @@ export function BibliotecaPanel({
                   setSimuladorMateriaFilter(event.target.value as 'all' | 'without_questions')
                 }
                 disabled={!carreraSimuladoresActiva}
-                className="h-10 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[12px] text-[#1d2a44] outline-none disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba] md:w-[180px]"
+                className="h-10 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[12px] text-[#1d2a44] outline-none disabled:bg-white disabled:text-[#9aa4ba] md:w-[180px]"
               >
                 <option value="all">Todas</option>
                 <option value="without_questions">Sin preguntas</option>
@@ -656,7 +656,7 @@ export function BibliotecaPanel({
                           className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${
                             hasSimulator
                               ? 'bg-[#e9fbf4] text-[#10936f]'
-                              : 'bg-[#f4f6fb] text-[#7f8aa3]'
+                              : 'bg-white text-[#7f8aa3]'
                           }`}
                         >
                           {hasSimulator ? 'Con simulador' : 'Sin simulador'}
@@ -664,13 +664,13 @@ export function BibliotecaPanel({
                       </div>
 
                       <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-                        <div className="rounded-[10px] border border-[#eef2f8] bg-[#fafcff] px-3 py-2">
+                        <div className="rounded-[10px] border border-[#eef2f8] bg-white px-3 py-2">
                           <p className="text-[12px] uppercase tracking-[0.14em] text-[#667085]">Parcial 1</p>
                           <p className="mt-1 text-[15px] font-semibold text-[#2148d8]">
                             {materia.parcial1Preguntas.toLocaleString('es-AR')} preguntas
                           </p>
                         </div>
-                        <div className="rounded-[10px] border border-[#eef2f8] bg-[#fafcff] px-3 py-2">
+                        <div className="rounded-[10px] border border-[#eef2f8] bg-white px-3 py-2">
                           <p className="text-[12px] uppercase tracking-[0.14em] text-[#667085]">Parcial 2</p>
                           <p className="mt-1 text-[15px] font-semibold text-[#6f42ff]">
                             {materia.parcial2Preguntas.toLocaleString('es-AR')} preguntas
@@ -695,7 +695,7 @@ export function BibliotecaPanel({
         </div>
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <div className="rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+          <div className="rounded-[16px] border border-[#e7ebf4] bg-white p-4">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[13px] font-semibold text-[#1d2a44]">Universidades</p>
               <span className="text-[12px] text-[#7f8aa3]">{universidades.length.toLocaleString('es-AR')}</span>
@@ -735,7 +735,7 @@ export function BibliotecaPanel({
                   <div
                     key={universidad.id}
                     className={`flex items-center justify-between rounded-[12px] border px-3 py-2.5 transition ${
-                      isActive ? 'border-[#2563EB] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
+                      isActive ? 'border-[#2563EB] bg-white' : 'border-[#e7ebf4] bg-white'
                     }`}
                   >
                     <button
@@ -766,7 +766,7 @@ export function BibliotecaPanel({
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+          <div className="rounded-[16px] border border-[#e7ebf4] bg-white p-4">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[13px] font-semibold text-[#1d2a44]">Carreras</p>
               <span className="text-[12px] text-[#7f8aa3]">{carrerasFiltradas.length.toLocaleString('es-AR')}</span>
@@ -779,7 +779,7 @@ export function BibliotecaPanel({
                 onChange={(event) => setNuevaCarrera(event.target.value)}
                 placeholder={universidadId ? 'Nueva carrera' : 'Primero elige universidad'}
                 disabled={!universidadId}
-                className="h-10 flex-1 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba]"
+                className="h-10 flex-1 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-white disabled:text-[#9aa4ba]"
               />
               <Button
                 type="button"
@@ -815,7 +815,7 @@ export function BibliotecaPanel({
                     <div
                       key={carrera.id}
                       className={`flex items-center justify-between rounded-[12px] border px-3 py-2.5 transition ${
-                        isActive ? 'border-[#2563EB] bg-[#eef3ff]' : 'border-[#e7ebf4] bg-white'
+                        isActive ? 'border-[#2563EB] bg-white' : 'border-[#e7ebf4] bg-white'
                       }`}
                     >
                       <button
@@ -846,7 +846,7 @@ export function BibliotecaPanel({
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+          <div className="rounded-[16px] border border-[#e7ebf4] bg-white p-4">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[13px] font-semibold text-[#1d2a44]">Materias</p>
               <span className="text-[12px] text-[#7f8aa3]">{materiasPorCarrera.length.toLocaleString('es-AR')}</span>
@@ -859,7 +859,7 @@ export function BibliotecaPanel({
                 onChange={(event) => setCatalogSearch(event.target.value)}
                 placeholder={carreraId ? 'Buscar materia...' : 'Primero elige carrera'}
                 disabled={!carreraId}
-                className="h-10 w-full rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba]"
+                className="h-10 w-full rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-white disabled:text-[#9aa4ba]"
               />
             </div>
 
@@ -870,7 +870,7 @@ export function BibliotecaPanel({
                 onChange={(event) => setNuevaMateria(event.target.value)}
                 placeholder={carreraId ? 'Nueva materia' : 'Primero elige carrera'}
                 disabled={!carreraId}
-                className="h-10 flex-1 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba]"
+                className="h-10 flex-1 rounded-[12px] border border-[#dbe2f0] bg-white px-3 text-[13px] text-[#1d2a44] outline-none disabled:bg-white disabled:text-[#9aa4ba]"
               />
               <Button
                 type="button"
@@ -934,7 +934,7 @@ export function BibliotecaPanel({
           </div>
         </div>
 
-        <div className="mt-4 rounded-[16px] border border-dashed border-[#dbe2f0] bg-[#fbfcff] p-4">
+        <div className="mt-4 rounded-[16px] border border-dashed border-[#dbe2f0] bg-white p-4">
           <div className="space-y-1">
             <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#667085]">
               Importacion masiva Excel
@@ -1030,13 +1030,13 @@ export function BibliotecaPanel({
               onChange={(event) => setMateriaSearch(event.target.value)}
               disabled={!universidadId}
               placeholder={universidadId ? 'Buscar materia...' : 'Primero elige una universidad'}
-              className="mb-2 h-11 w-full rounded-[14px] border border-[#dbe2f0] bg-white px-3 text-[14px] text-[#1d2a44] outline-none placeholder:text-[#9aa4ba] disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba]"
+              className="mb-2 h-11 w-full rounded-[14px] border border-[#dbe2f0] bg-white px-3 text-[14px] text-[#1d2a44] outline-none placeholder:text-[#9aa4ba] disabled:bg-white disabled:text-[#9aa4ba]"
             />
             <select
               value={materiaId}
               onChange={(event) => setMateriaId(event.target.value)}
               disabled={!universidadId}
-              className="h-11 w-full rounded-[14px] border border-[#dbe2f0] bg-white px-3 text-[14px] text-[#1d2a44] outline-none disabled:bg-[#f5f7fb] disabled:text-[#9aa4ba]"
+              className="h-11 w-full rounded-[14px] border border-[#dbe2f0] bg-white px-3 text-[14px] text-[#1d2a44] outline-none disabled:bg-white disabled:text-[#9aa4ba]"
             >
               <option value="">{universidadId ? 'Seleccionar materia' : 'Primero elige una universidad'}</option>
               {filteredMaterias.map((materia) => (
@@ -1093,7 +1093,7 @@ export function BibliotecaPanel({
           ) : null}
 
           {isResumen ? (
-            <div className="xl:col-span-2 rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4">
+            <div className="xl:col-span-2 rounded-[16px] border border-[#e7ebf4] bg-white p-4">
               <FieldLabel>Módulos del resumen</FieldLabel>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                 {['1', '2', '3', '4'].map((module) => (
@@ -1153,7 +1153,7 @@ export function BibliotecaPanel({
 
               <div className="xl:col-span-2">
                 <div className="space-y-2">
-                  <label className="flex min-h-[44px] items-center gap-2 rounded-[14px] border border-[#dbe2f0] bg-[#fbfcff] px-3 py-2.5 text-[13px] text-[#1d2a44]">
+                  <label className="flex min-h-[44px] items-center gap-2 rounded-[14px] border border-[#dbe2f0] bg-white px-3 py-2.5 text-[13px] text-[#1d2a44]">
                     <input
                       type="checkbox"
                       checked={usarIAEnCarga}
@@ -1163,7 +1163,7 @@ export function BibliotecaPanel({
                     Procesar con IA si el archivo es PDF
                   </label>
                   {pregunteroDestino === 'solo_simulador' ? (
-                    <label className="flex min-h-[44px] items-center gap-2 rounded-[14px] border border-[#dbe2f0] bg-[#fbfcff] px-3 py-2.5 text-[13px] text-[#1d2a44]">
+                    <label className="flex min-h-[44px] items-center gap-2 rounded-[14px] border border-[#dbe2f0] bg-white px-3 py-2.5 text-[13px] text-[#1d2a44]">
                       <input
                         type="checkbox"
                         checked={eliminarArchivoTrasProcesar}
@@ -1213,7 +1213,7 @@ export function BibliotecaPanel({
                 }}
               />
 
-              <div className="flex flex-col gap-3 rounded-[16px] border border-[#e7ebf4] bg-[#fbfcff] p-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-3 rounded-[16px] border border-[#e7ebf4] bg-white p-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-[13px] font-semibold text-[#1d2a44]">Armar lote</p>
                   <p className="mt-1 text-[12px] text-[#7f8aa3]">

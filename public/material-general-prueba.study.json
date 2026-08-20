@@ -1,0 +1,561 @@
+{
+  "pageCount": 15,
+  "summary": {
+    "shortSummary": "El material explica cómo la inteligencia artificial y otras tecnologías transforman actividades cotidianas, productivas y sociales. Recorre los fundamentos de IA, machine learning y modelos generativos; su relación con datos, nube, edge, IoT, 5G, robótica y ciberseguridad; y tecnologías como blockchain, realidad extendida, impresión 3D y computación cuántica. También analiza límites, riesgos, impacto laboral, privacidad, equidad y criterios para adoptar tecnología responsablemente.",
+    "keyPoints": [
+      "La IA reconoce patrones, predice o genera contenido, pero no toda automatización es inteligencia artificial.",
+      "Machine learning aprende de datos; deep learning es una familia basada en redes neuronales profundas.",
+      "Entrenamiento e inferencia son etapas distintas y la generalización debe comprobarse con datos no utilizados para aprender.",
+      "IoT, redes, cloud, edge, robótica e IA se combinan para construir sistemas inteligentes.",
+      "La adopción tecnológica debe evaluar utilidad, seguridad, privacidad, sesgos, impacto social y supervisión humana."
+    ],
+    "sections": [
+      {
+        "title": "1. Fundamentos de inteligencia artificial",
+        "body": "La IA desarrolla sistemas capaces de reconocer patrones, interpretar lenguaje, predecir, recomendar, optimizar o generar contenido. La mayoría de los sistemas actuales son IA estrecha: resuelven tareas específicas y no poseen una comprensión general comparable con la humana.\n\nImportante: no debe confundirse IA con cualquier programa, automatización o robot."
+      },
+      {
+        "title": "2. Machine learning y deep learning",
+        "body": "El aprendizaje automático ajusta parámetros a partir de ejemplos. Puede ser supervisado, no supervisado o por refuerzo. El deep learning utiliza redes neuronales con múltiples capas.\n\nConceptos clave: dato, característica, parámetro, entrenamiento, inferencia, sobreajuste y generalización."
+      },
+      {
+        "title": "3. Datos, modelos generativos y lenguaje",
+        "body": "La calidad de un sistema depende de la relevancia, diversidad y representatividad de sus datos. Los modelos generativos producen texto, imágenes, audio o código estimando patrones aprendidos.\n\nImportante: pueden alucinar, reproducir sesgos o entregar información desactualizada; sus respuestas deben verificarse."
+      },
+      {
+        "title": "4. IoT, conectividad, nube y edge",
+        "body": "IoT conecta sensores y objetos; 5G y otras redes transportan datos; cloud ofrece recursos remotos y edge procesa cerca del origen para reducir latencia. Estas tecnologías forman infraestructuras que permiten servicios y decisiones en tiempo real."
+      },
+      {
+        "title": "5. Robótica y automatización",
+        "body": "Un robot combina percepción, decisión y acción física. La automatización puede ejecutar tareas repetitivas o adaptarse mediante software y sensores. Los cobots colaboran con personas.\n\nImportante: un robot puede usar IA, pero robótica e inteligencia artificial no son sinónimos."
+      },
+      {
+        "title": "6. Ciberseguridad e identidad digital",
+        "body": "La ciberseguridad protege confidencialidad, integridad y disponibilidad. Los riesgos incluyen phishing, malware, robo de credenciales, ingeniería social y deepfakes. La protección requiere contraseñas seguras, autenticación multifactor, actualizaciones, copias de seguridad y criterio humano."
+      },
+      {
+        "title": "7. Tecnologías emergentes",
+        "body": "Blockchain permite registros distribuidos y verificables; realidad virtual y aumentada modifican la interacción con entornos digitales; los gemelos digitales simulan objetos o procesos; la impresión 3D conecta diseño y fabricación; la computación cuántica propone un paradigma especializado de cálculo."
+      },
+      {
+        "title": "8. Impacto y adopción responsable",
+        "body": "La tecnología puede elevar productividad, acceso y capacidad de análisis, pero también transformar empleos, ampliar brechas, afectar privacidad y consumir recursos. Una adopción responsable comienza por definir el problema, comparar alternativas, evaluar riesgos y mantener supervisión humana."
+      }
+    ],
+    "hasContent": true,
+    "status": "ready",
+    "provider": "curated-official-demo-v1",
+    "errorMessage": null,
+    "sourceChunksCount": 45
+  },
+  "glossary": [
+    {
+      "term": "Alucinación",
+      "englishTerm": "Hallucination",
+      "definition": "Respuesta plausible en apariencia pero incorrecta, inventada o no respaldada por datos fiables.",
+      "context": "Sección de IA generativa y modelos de lenguaje",
+      "importance": "alta"
+    },
+    {
+      "term": "Aprendizaje automático",
+      "englishTerm": "Machine learning",
+      "definition": "Métodos que permiten aprender reglas a partir de ejemplos en lugar de programarlas una a una.",
+      "context": "Sección de fundamentos de inteligencia artificial",
+      "importance": "alta"
+    },
+    {
+      "term": "Aprendizaje por refuerzo",
+      "englishTerm": "Reinforcement learning",
+      "definition": "Forma de aprendizaje donde un agente aprende mediante recompensas y penalizaciones.",
+      "context": "Sección de machine learning y deep learning",
+      "importance": "media"
+    },
+    {
+      "term": "Ataques de contraseña",
+      "englishTerm": null,
+      "definition": "robo, reutilización o prueba automatizada de credenciales.",
+      "context": "COMPARACIÓN DE EXAMEN",
+      "importance": "media"
+    },
+    {
+      "term": "Automatización flexible",
+      "englishTerm": null,
+      "definition": "Tipología de automatización que puede adaptarse a diferentes productos o configuraciones mediante software y sensores.",
+      "context": "Sección de robótica y automatización",
+      "importance": "media"
+    },
+    {
+      "term": "Brecha digital",
+      "englishTerm": "Digital divide",
+      "definition": "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+      "context": "Sección de impacto social, económico, ambiental y ético",
+      "importance": "alta"
+    },
+    {
+      "term": "Característica o feature",
+      "englishTerm": null,
+      "definition": "propiedad relevante utilizada por el modelo para hacer una predicción.",
+      "context": "Tipo Cómo funciona y ejemplos",
+      "importance": "media"
+    },
+    {
+      "term": "Ciberseguridad",
+      "englishTerm": "Cybersecurity",
+      "definition": "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+      "context": "Sección de ciberseguridad e identidad digital",
+      "importance": "alta"
+    },
+    {
+      "term": "Cobot",
+      "englishTerm": "Cobot",
+      "definition": "Robot colaborativo diseñado para compartir espacio de trabajo con personas bajo condiciones de seguridad.",
+      "context": "Sección de robótica y automatización",
+      "importance": "media"
+    },
+    {
+      "term": "Computación cuántica",
+      "englishTerm": "Quantum computing",
+      "definition": "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados.",
+      "context": "Sección de computación cuántica y biotecnología",
+      "importance": "alta"
+    },
+    {
+      "term": "Dataset",
+      "englishTerm": "Dataset",
+      "definition": "Conjunto organizado de datos usado para entrenar o evaluar un sistema.",
+      "context": "Sección de datos, entrenamiento y evaluación",
+      "importance": "media"
+    },
+    {
+      "term": "Dato",
+      "englishTerm": null,
+      "definition": "unidad de información usada para entrenar o evaluar un sistema.",
+      "context": "Tipo Cómo funciona y ejemplos",
+      "importance": "media"
+    },
+    {
+      "term": "Deep learning",
+      "englishTerm": "Deep learning",
+      "definition": "Aprendizaje profundo que utiliza redes neuronales artificiales con muchas capas para aprender representaciones abstractas.",
+      "context": "Sección de machine learning y deep learning",
+      "importance": "alta"
+    },
+    {
+      "term": "Deepfake",
+      "englishTerm": "Deepfake",
+      "definition": "Contenido sintético o manipulado que imita de forma realista a una persona o situación.",
+      "context": "Sección de ciberseguridad e identidad digital",
+      "importance": "alta"
+    },
+    {
+      "term": "Edge computing",
+      "englishTerm": "Edge computing",
+      "definition": "Procesamiento de datos cerca del lugar donde se generan para reducir el tiempo de respuesta y la latencia.",
+      "context": "Sección de cloud, edge computing y big data",
+      "importance": "alta"
+    },
+    {
+      "term": "Entrenamiento",
+      "englishTerm": null,
+      "definition": "proceso de aprendizaje a partir de ejemplos.",
+      "context": "Tipo Cómo funciona y ejemplos",
+      "importance": "media"
+    },
+    {
+      "term": "Fine-tuning",
+      "englishTerm": "Fine-tuning",
+      "definition": "Ajuste adicional de un modelo para una tarea, estilo o dominio concreto.",
+      "context": "Sección de IA generativa y modelos de lenguaje",
+      "importance": "media"
+    },
+    {
+      "term": "Gemelo digital",
+      "englishTerm": "Digital twin",
+      "definition": "Representación virtual de un objeto, instalación o proceso real que se actualiza con datos.",
+      "context": "Sección de realidad virtual, realidad aumentada y gemelos digitales",
+      "importance": "alta"
+    },
+    {
+      "term": "Generalización",
+      "englishTerm": null,
+      "definition": "capacidad de funcionar correctamente con datos no vistos previamente.",
+      "context": "Tipo Cómo funciona y ejemplos",
+      "importance": "media"
+    },
+    {
+      "term": "Hash",
+      "englishTerm": "Hash",
+      "definition": "Huella digital calculada a partir de datos donde un pequeño cambio produce un resultado diferente.",
+      "context": "Sección de blockchain y tecnologías distribuidas",
+      "importance": "media"
+    },
+    {
+      "term": "IA generativa",
+      "englishTerm": "Generative AI",
+      "definition": "Modelos capaces de producir texto, imágenes, audio, vídeo, código u otros contenidos a partir de patrones aprendidos.",
+      "context": "Sección de IA generativa y modelos de lenguaje",
+      "importance": "alta"
+    },
+    {
+      "term": "Impacto laboral",
+      "englishTerm": null,
+      "definition": "desaparecen algunas tareas, aparecen funciones de programación, mantenimiento, supervisión, integración y seguridad.",
+      "context": "Cobot Robot colaborativo diseñado para compartir espacio de trabajo con",
+      "importance": "media"
+    },
+    {
+      "term": "Impresión 3D",
+      "englishTerm": "3D printing",
+      "definition": "Fabricación aditiva que crea piezas añadiendo material capa a capa a partir de un modelo digital.",
+      "context": "Sección de realidad virtual, realidad aumentada y gemelos digitales",
+      "importance": "media"
+    },
+    {
+      "term": "Inferencia",
+      "englishTerm": "Inference",
+      "definition": "Uso del modelo ya entrenado para producir una salida ante una entrada nueva.",
+      "context": "Sección de machine learning y deep learning",
+      "importance": "alta"
+    },
+    {
+      "term": "Ingeniería social",
+      "englishTerm": null,
+      "definition": "manipulación psicológica para que una persona revele información o salte controles.",
+      "context": "COMPARACIÓN DE EXAMEN",
+      "importance": "media"
+    },
+    {
+      "term": "Inteligencia artificial",
+      "englishTerm": "Artificial intelligence",
+      "definition": "Campo de la informática que desarrolla sistemas capaces de realizar tareas asociadas a capacidades cognitivas humanas.",
+      "context": "Sección de fundamentos de inteligencia artificial",
+      "importance": "alta"
+    }
+  ],
+  "pedagogicalArtifacts": {
+    "flashcards": [
+      {
+        "front": "¿Qué significa Aprendizaje automático?",
+        "back": "Métodos que permiten aprender reglas a partir de ejemplos en lugar de programarlas una a una.",
+        "level": "recordar",
+        "reference": {
+          "pageStart": 2,
+          "pageEnd": 2,
+          "sectionTitle": "Qué es, qué no es y cómo se clasifican los sistemas de IA",
+          "excerpt": "a teórica, un sistema con capacidades amplias y flexibles comparables a las humanas en muchos dominios. No debe confundirse con los modelos actuales. 3. Sistemas basados en reglas y sistemas que aprenden En la..."
+        }
+      },
+      {
+        "front": "Brecha digital",
+        "back": "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 14,
+          "pageEnd": 14,
+          "sectionTitle": "Qué problemas aparecen cuando una tecnología pasa del laboratorio a la sociedad",
+          "excerpt": "14 IMPACTO SOCIAL, ECONOMICO, AMBIENTAL Y ETICO Qué problemas aparecen cuando una tecnología pasa del laboratorio a la sociedad 1. Empleo y transformación del trabajo La tecnología suele automatizar tareas antes que..."
+        }
+      },
+      {
+        "front": "Ciberseguridad",
+        "back": "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "liza sensores del Internet de las Cosas, visión artificial, redes de comunicación, mapas digitales, sistemas de IA y gran capacidad de procesamiento. Por eso, para entender la transformación digital no basta con..."
+        }
+      },
+      {
+        "front": "¿Qué significa Computación cuántica?",
+        "back": "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados.",
+        "level": "recordar",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "liza sensores del Internet de las Cosas, visión artificial, redes de comunicación, mapas digitales, sistemas de IA y gran capacidad de procesamiento. Por eso, para entender la transformación digital no basta con..."
+        }
+      },
+      {
+        "front": "Deep learning",
+        "back": "Aprendizaje profundo que utiliza redes neuronales artificiales con muchas capas para aprender representaciones abstractas.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 3,
+          "pageEnd": 3,
+          "sectionTitle": "Cómo aprende una máquina a partir de datos",
+          "excerpt": "03 MACHINE LEARNING Y DEEP LEARNING Cómo aprende una máquina a partir de datos 1. Machine learning El machine learning o aprendizaje automático es una parte de la IA. Su objetivo es construir modelos capaces de detectar..."
+        }
+      },
+      {
+        "front": "Edge computing",
+        "back": "Procesamiento de datos cerca del lugar donde se generan para reducir el tiempo de respuesta y la latencia.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "liza sensores del Internet de las Cosas, visión artificial, redes de comunicación, mapas digitales, sistemas de IA y gran capacidad de procesamiento. Por eso, para entender la transformación digital no basta con..."
+        }
+      },
+      {
+        "front": "¿Qué significa IA generativa?",
+        "back": "Modelos capaces de producir texto, imágenes, audio, vídeo, código u otros contenidos a partir de patrones aprendidos.",
+        "level": "recordar",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "liza sensores del Internet de las Cosas, visión artificial, redes de comunicación, mapas digitales, sistemas de IA y gran capacidad de procesamiento. Por eso, para entender la transformación digital no basta con..."
+        }
+      },
+      {
+        "front": "Inferencia",
+        "back": "Uso del modelo ya entrenado para producir una salida ante una entrada nueva.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 3,
+          "pageEnd": 3,
+          "sectionTitle": "Cómo aprende una máquina a partir de datos",
+          "excerpt": "la información y aprende representaciones cada vez más abstractas. En visión artificial, por ejemplo, las primeras capas pueden detectar bordes y colores; otras combinan esos rasgos para reconocer formas; y capas..."
+        }
+      },
+      {
+        "front": "Inteligencia artificial",
+        "back": "Campo de la informática que desarrolla sistemas capaces de realizar tareas asociadas a capacidades cognitivas humanas.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS Dossier de estudio - conceptos, funcionamiento, aplicaciones, riesgos e impacto Material pensado para estudiar y repasar antes de una prueba o..."
+        }
+      },
+      {
+        "front": "¿Qué significa Dataset?",
+        "back": "Conjunto organizado de datos usado para entrenar o evaluar un sistema.",
+        "level": "recordar",
+        "reference": {
+          "pageStart": 15,
+          "pageEnd": 15,
+          "sectionTitle": "Ideas que debes poder explicar sin mirar los apuntes",
+          "excerpt": "onectan diseño digital, simulación y mundo físico. • El impacto de la tecnología debe analizarse desde la productividad, el empleo, la privacidad, la equidad, la seguridad y la sostenibilidad. 2. Mini glosario | Término..."
+        }
+      },
+      {
+        "front": "Automatización flexible",
+        "back": "Tipología de automatización que puede adaptarse a diferentes productos o configuraciones mediante software y sensores.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 7,
+          "pageEnd": 7,
+          "sectionTitle": "Cuando el software inteligente actúa sobre el mundo físico",
+          "excerpt": "07 ROBOTICA Y AUTOMATIZACION Cuando el software inteligente actúa sobre el mundo físico 1. Qué es un robot Un robot es una máquina programable capaz de percibir su entorno, procesar información y realizar acciones..."
+        }
+      },
+      {
+        "front": "Entrenamiento",
+        "back": "proceso de aprendizaje a partir de ejemplos.",
+        "level": "comprender",
+        "reference": {
+          "pageStart": 2,
+          "pageEnd": 2,
+          "sectionTitle": "Qué es, qué no es y cómo se clasifican los sistemas de IA",
+          "excerpt": "entos o señales. • Lenguaje: clasificar textos, traducir, resumir, responder preguntas o mantener conversaciones. • Predicción: estimar demanda, riesgo, tiempo, probabilidad de fallo o comportamiento futuro. •..."
+        }
+      }
+    ],
+    "questions": [
+      {
+        "id": "mc-1",
+        "type": "multiple_choice",
+        "level": "recordar",
+        "prompt": "¿Cuál es la explicación correcta de “Aprendizaje automático” según el material?",
+        "options": [
+          "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+          "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+          "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados.",
+          "Métodos que permiten aprender reglas a partir de ejemplos en lugar de programarlas una a una."
+        ],
+        "answer": "Métodos que permiten aprender reglas a partir de ejemplos en lugar de programarlas una a una.",
+        "explanation": "La respuesta se apoya en la definición y el contexto que el documento presenta para Aprendizaje automático.",
+        "reference": {
+          "pageStart": 2,
+          "pageEnd": 2,
+          "sectionTitle": "Qué es, qué no es y cómo se clasifican los sistemas de IA",
+          "excerpt": "a teórica, un sistema con capacidades amplias y flexibles comparables a las humanas en muchos dominios. No debe confundirse con los modelos actuales. 3. Sistemas basados en reglas y sistemas que aprenden En la..."
+        }
+      },
+      {
+        "id": "mc-2",
+        "type": "multiple_choice",
+        "level": "recordar",
+        "prompt": "¿Cuál es la explicación correcta de “Brecha digital” según el material?",
+        "options": [
+          "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+          "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados.",
+          "Aprendizaje profundo que utiliza redes neuronales artificiales con muchas capas para aprender representaciones abstractas.",
+          "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología."
+        ],
+        "answer": "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+        "explanation": "La respuesta se apoya en la definición y el contexto que el documento presenta para Brecha digital.",
+        "reference": {
+          "pageStart": 14,
+          "pageEnd": 14,
+          "sectionTitle": "Qué problemas aparecen cuando una tecnología pasa del laboratorio a la sociedad",
+          "excerpt": "14 IMPACTO SOCIAL, ECONOMICO, AMBIENTAL Y ETICO Qué problemas aparecen cuando una tecnología pasa del laboratorio a la sociedad 1. Empleo y transformación del trabajo La tecnología suele automatizar tareas antes que..."
+        }
+      },
+      {
+        "id": "mc-3",
+        "type": "multiple_choice",
+        "level": "comprender",
+        "prompt": "¿Cuál es la explicación correcta de “Ciberseguridad” según el material?",
+        "options": [
+          "Métodos que permiten aprender reglas a partir de ejemplos en lugar de programarlas una a una.",
+          "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+          "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados.",
+          "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños."
+        ],
+        "answer": "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+        "explanation": "La respuesta se apoya en la definición y el contexto que el documento presenta para Ciberseguridad.",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "liza sensores del Internet de las Cosas, visión artificial, redes de comunicación, mapas digitales, sistemas de IA y gran capacidad de procesamiento. Por eso, para entender la transformación digital no basta con..."
+        }
+      },
+      {
+        "id": "mc-4",
+        "type": "multiple_choice",
+        "level": "comprender",
+        "prompt": "¿Cuál es la explicación correcta de “Computación cuántica” según el material?",
+        "options": [
+          "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+          "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+          "Aprendizaje profundo que utiliza redes neuronales artificiales con muchas capas para aprender representaciones abstractas.",
+          "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados."
+        ],
+        "answer": "Nuevo paradigma de cálculo que utiliza qubits y estados cuánticos para resolver problemas especializados.",
+        "explanation": "La respuesta se apoya en la definición y el contexto que el documento presenta para Computación cuántica.",
+        "reference": {
+          "pageStart": 1,
+          "pageEnd": 1,
+          "sectionTitle": "MATERIAL DE ESTUDIO IA Y NUEVAS TECNOLOGIAS 01 IA Y NUEVAS TECNOLOGIAS",
+          "excerpt": "liza sensores del Internet de las Cosas, visión artificial, redes de comunicación, mapas digitales, sistemas de IA y gran capacidad de procesamiento. Por eso, para entender la transformación digital no basta con..."
+        }
+      },
+      {
+        "id": "mc-5",
+        "type": "multiple_choice",
+        "level": "comprender",
+        "prompt": "¿Cuál es la explicación correcta de “Deep learning” según el material?",
+        "options": [
+          "Métodos que permiten aprender reglas a partir de ejemplos en lugar de programarlas una a una.",
+          "Desigualdad en acceso, habilidades y capacidad de aprovechar la tecnología.",
+          "Protección de dispositivos, redes, cuentas, sistemas y datos frente a accesos no autorizados o daños.",
+          "Aprendizaje profundo que utiliza redes neuronales artificiales con muchas capas para aprender representaciones abstractas."
+        ],
+        "answer": "Aprendizaje profundo que utiliza redes neuronales artificiales con muchas capas para aprender representaciones abstractas.",
+        "explanation": "La respuesta se apoya en la definición y el contexto que el documento presenta para Deep learning.",
+        "reference": {
+          "pageStart": 3,
+          "pageEnd": 3,
+          "sectionTitle": "Cómo aprende una máquina a partir de datos",
+          "excerpt": "03 MACHINE LEARNING Y DEEP LEARNING Cómo aprende una máquina a partir de datos 1. Machine learning El machine learning o aprendizaje automático es una parte de la IA. Su objetivo es construir modelos capaces de detectar..."
+        }
+      },
+      {
+        "id": "open-1",
+        "type": "open",
+        "level": "comprender",
+        "prompt": "Explicá con tus palabras la idea central de “1. Fundamentos de inteligencia artificial” y relacioná al menos dos conceptos.",
+        "options": [],
+        "answer": "La IA desarrolla sistemas capaces de reconocer patrones, interpretar lenguaje, predecir, recomendar, optimizar o generar contenido. La mayoría de los sistemas actuales son IA estrecha: resuelven tareas específicas y no poseen una comprensión general comparable con la humana.\n\nImportante: no debe confundirse IA con cualquier programa, automatización o robot.",
+        "explanation": "Una respuesta sólida debe definir la idea central, conectar conceptos y evitar limitarse a copiar frases.",
+        "reference": {
+          "pageStart": 2,
+          "pageEnd": 2,
+          "sectionTitle": "Qué es, qué no es y cómo se clasifican los sistemas de IA",
+          "excerpt": "02 FUNDAMENTOS DE INTELIGENCIA ARTIFICIAL Qué es, qué no es y cómo se clasifican los sistemas de IA 1. Definición La inteligencia artificial (IA) es el campo de la informática que desarrolla sistemas capaces de realizar..."
+        }
+      },
+      {
+        "id": "open-2",
+        "type": "open",
+        "level": "aplicar",
+        "prompt": "Aplicá las ideas de “2. Machine learning y deep learning” a una situación nueva y justificá cada decisión con el material.",
+        "options": [],
+        "answer": "El aprendizaje automático ajusta parámetros a partir de ejemplos. Puede ser supervisado, no supervisado o por refuerzo. El deep learning utiliza redes neuronales con múltiples capas.\n\nConceptos clave: dato, característica, parámetro, entrenamiento, inferencia, sobreajuste y generalización.",
+        "explanation": "La aplicación debe usar criterios del documento, explicar por qué corresponden al caso y anticipar consecuencias.",
+        "reference": {
+          "pageStart": 3,
+          "pageEnd": 3,
+          "sectionTitle": "Cómo aprende una máquina a partir de datos",
+          "excerpt": "03 MACHINE LEARNING Y DEEP LEARNING Cómo aprende una máquina a partir de datos 1. Machine learning El machine learning o aprendizaje automático es una parte de la IA. Su objetivo es construir modelos capaces de detectar..."
+        }
+      },
+      {
+        "id": "open-3",
+        "type": "open",
+        "level": "aplicar",
+        "prompt": "Aplicá las ideas de “3. Datos, modelos generativos y lenguaje” a una situación nueva y justificá cada decisión con el material.",
+        "options": [],
+        "answer": "La calidad de un sistema depende de la relevancia, diversidad y representatividad de sus datos. Los modelos generativos producen texto, imágenes, audio o código estimando patrones aprendidos.\n\nImportante: pueden alucinar, reproducir sesgos o entregar información desactualizada; sus respuestas deben verificarse.",
+        "explanation": "La aplicación debe usar criterios del documento, explicar por qué corresponden al caso y anticipar consecuencias.",
+        "reference": {
+          "pageStart": null,
+          "pageEnd": null,
+          "sectionTitle": "3. Datos, modelos generativos y lenguaje",
+          "excerpt": "La calidad de un sistema depende de la relevancia, diversidad y representatividad de sus datos. Los modelos generativos producen texto, imágenes, audio o código estimando patrones aprendidos.\n\nImportante: pueden..."
+        }
+      },
+      {
+        "id": "open-4",
+        "type": "open",
+        "level": "aplicar",
+        "prompt": "Aplicá las ideas de “4. IoT, conectividad, nube y edge” a una situación nueva y justificá cada decisión con el material.",
+        "options": [],
+        "answer": "IoT conecta sensores y objetos; 5G y otras redes transportan datos; cloud ofrece recursos remotos y edge procesa cerca del origen para reducir latencia. Estas tecnologías forman infraestructuras que permiten servicios y decisiones en tiempo real.",
+        "explanation": "La aplicación debe usar criterios del documento, explicar por qué corresponden al caso y anticipar consecuencias.",
+        "reference": {
+          "pageStart": null,
+          "pageEnd": null,
+          "sectionTitle": "4. IoT, conectividad, nube y edge",
+          "excerpt": "IoT conecta sensores y objetos; 5G y otras redes transportan datos; cloud ofrece recursos remotos y edge procesa cerca del origen para reducir latencia. Estas tecnologías forman infraestructuras que permiten servicios y..."
+        }
+      },
+      {
+        "id": "open-5",
+        "type": "open",
+        "level": "aplicar",
+        "prompt": "Aplicá las ideas de “5. Robótica y automatización” a una situación nueva y justificá cada decisión con el material.",
+        "options": [],
+        "answer": "Un robot combina percepción, decisión y acción física. La automatización puede ejecutar tareas repetitivas o adaptarse mediante software y sensores. Los cobots colaboran con personas.\n\nImportante: un robot puede usar IA, pero robótica e inteligencia artificial no son sinónimos.",
+        "explanation": "La aplicación debe usar criterios del documento, explicar por qué corresponden al caso y anticipar consecuencias.",
+        "reference": {
+          "pageStart": 7,
+          "pageEnd": 7,
+          "sectionTitle": "Cuando el software inteligente actúa sobre el mundo físico",
+          "excerpt": "07 ROBOTICA Y AUTOMATIZACION Cuando el software inteligente actúa sobre el mundo físico 1. Qué es un robot Un robot es una máquina programable capaz de percibir su entorno, procesar información y realizar acciones..."
+        }
+      }
+    ],
+    "miniExamQuestionIds": [
+      "mc-1",
+      "mc-3",
+      "open-1",
+      "open-2"
+    ],
+    "coverage": {
+      "conceptsUsed": 12,
+      "sectionsUsed": 5,
+      "referencedItems": 22,
+      "totalItems": 22
+    }
+  }
+}

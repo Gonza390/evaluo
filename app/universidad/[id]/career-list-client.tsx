@@ -131,7 +131,7 @@ export default function CareerListClient({
             placeholder="Buscar carrera..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-[#F8FAFC] pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 sm:h-10"
+            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 sm:h-10"
           />
         </div>
       </div>

@@ -18,15 +18,15 @@ function sanitizeNextPath(value: string | null) {
 
 function ProfileSetupSkeleton({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F5F7FB] px-4">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className={`w-full ${compact ? 'max-w-3xl' : 'max-w-6xl'} rounded-[32px] border border-white/80 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]`}>
-        <div className="h-4 w-32 animate-pulse rounded-full bg-slate-200/90" />
-        <div className="mt-4 h-10 w-3/4 animate-pulse rounded-2xl bg-slate-200/80" />
-        <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-slate-200/70" />
-        <div className="mt-2 h-4 w-5/6 animate-pulse rounded-full bg-slate-200/60" />
+        <div className="h-4 w-32 animate-pulse rounded-full bg-white" />
+        <div className="mt-4 h-10 w-3/4 animate-pulse rounded-2xl bg-white" />
+        <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-white" />
+        <div className="mt-2 h-4 w-5/6 animate-pulse rounded-full bg-white" />
         <div className="mt-8 grid gap-3 sm:grid-cols-2">
-          <div className="h-32 animate-pulse rounded-[28px] bg-slate-200/70" />
-          <div className="h-32 animate-pulse rounded-[28px] bg-slate-200/60" />
+          <div className="h-32 animate-pulse rounded-[28px] bg-white" />
+          <div className="h-32 animate-pulse rounded-[28px] bg-white" />
         </div>
         <p className="mt-6 text-sm font-semibold text-slate-700">Estamos preparando tu experiencia académica</p>
         <p className="mt-1 text-sm text-slate-500">
@@ -118,7 +118,7 @@ function CompletarPerfilContent() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#F5F7FB]">
+    <div className="relative min-h-screen overflow-hidden bg-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.10),transparent_22%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)]" />
       <div className="absolute left-[6%] top-[10%] h-44 w-44 rounded-full bg-indigo-200/40 blur-3xl" />
       <div className="absolute bottom-[8%] right-[8%] h-56 w-56 rounded-full bg-sky-200/35 blur-3xl" />
@@ -127,13 +127,13 @@ function CompletarPerfilContent() {
         <div className="grid w-full gap-5 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-5">
             <div className="rounded-[32px] border border-white/70 bg-white/72 p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
-              <div className="h-5 w-24 rounded-full bg-slate-200/90" />
-              <div className="mt-4 h-10 w-3/4 rounded-2xl bg-slate-200/90" />
-              <div className="mt-3 h-4 w-full rounded-full bg-slate-200/80" />
-              <div className="mt-2 h-4 w-5/6 rounded-full bg-slate-200/70" />
+              <div className="h-5 w-24 rounded-full bg-white" />
+              <div className="mt-4 h-10 w-3/4 rounded-2xl bg-white" />
+              <div className="mt-3 h-4 w-full rounded-full bg-white" />
+              <div className="mt-2 h-4 w-5/6 rounded-full bg-white" />
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div className="h-24 rounded-3xl bg-slate-200/75" />
-                <div className="h-24 rounded-3xl bg-slate-200/65" />
+                <div className="h-24 rounded-3xl bg-white" />
+                <div className="h-24 rounded-3xl bg-white" />
               </div>
             </div>
 

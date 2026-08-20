@@ -97,7 +97,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
   });
 
   return (
-    <main className="min-h-screen bg-[#F8FAFC]">
+    <main className="min-h-screen bg-white">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
@@ -138,21 +138,21 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
               Cómo aprovechar esta ruta de práctica
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <Clock3 className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">Práctica con tiempo real</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   Entrena con una lógica cercana al examen y toma decisiones bajo presión.
                 </p>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <BookOpen className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">{materias.length} materias para revisar</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   Entrá a cada materia y buscá parciales, errores frecuentes y materiales complementarios.
                 </p>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <article className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
                 <Target className="h-5 w-5 text-[#2563EB]" />
                 <p className="mt-3 text-sm font-semibold text-slate-950">Ruta de mejora continua</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -186,7 +186,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
                 <Link
                   key={materia.id}
                   href={`/explorar/materia/${materia.id}?carreraId=${encodeURIComponent(carrera.id)}`}
-                  className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF]"
+                  className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-white"
                 >
                   <p className="text-sm font-semibold text-slate-900">{materia.nombre}</p>
                   <p className="mt-1 text-xs text-slate-500">Ir a recursos, resúmenes y simulador</p>

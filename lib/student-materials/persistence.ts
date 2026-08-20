@@ -2,9 +2,11 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
 import {
   buildSummaryChunks,
+  buildTraceableSummaryChunks,
   cleanLine,
   extractPdfTextAndPageCount,
   parseSections,
+  type TraceableStudentMaterialChunk,
 } from '@/lib/student-materials/text';
 import { generateStudentMaterialGlossary } from '@/lib/student-materials/glossary';
 import { generateStudentMaterialSummary } from '@/lib/student-materials/summary';
@@ -67,17 +69,20 @@ function parseGlossaryItems(value: unknown) {
   if (!Array.isArray(value)) return [];
 
   const items: StudyGlossaryItem[] = value
-      .map((item) => {
-        if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
+    .map((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return null;
 
-        return {
-          term: 'term' in item ? String(item.term ?? '') : '',
-          definition: 'definition' in item ? String(item.definition ?? '') : '',
-          context: 'context' in item ? String(item.context ?? '') : '',
-          importance: 'importance' in item && item.importance === 'alta' ? ('alta' as const) : ('media' as const),
-        } satisfies StudyGlossaryItem;
-      })
-      .filter((item): item is StudyGlossaryItem => Boolean(item));
+      return {
+        term: 'term' in item ? String(item.term ?? '') : '',
+        definition: 'definition' in item ? String(item.definition ?? '') : '',
+        context: 'context' in item ? String(item.context ?? '') : '',
+        importance:
+          'importance' in item && item.importance === 'alta'
+            ? ('alta' as const)
+            : ('media' as const),
+      } satisfies StudyGlossaryItem;
+    })
+    .filter((item): item is StudyGlossaryItem => Boolean(item));
 
   return sanitizeGlossaryItems(items);
 }
@@ -97,19 +102,17 @@ export async function persistStudentMaterialGlossaryArtifacts(input: {
   provider: string;
   errorMessage?: string | null;
 }) {
-  const { error } = await input.admin
-    .from('student_material_glossaries')
-    .upsert(
-      {
-        student_material_id: input.studentMaterialId,
-        status: input.glossary.length > 0 ? 'ready' : 'error',
-        glossary_items: input.glossary,
-        provider: input.provider,
-        error_message: input.errorMessage ?? null,
-        generated_at: new Date().toISOString(),
-      },
-      { onConflict: 'student_material_id' }
-    );
+  const { error } = await input.admin.from('student_material_glossaries').upsert(
+    {
+      student_material_id: input.studentMaterialId,
+      status: input.glossary.length > 0 ? 'ready' : 'error',
+      glossary_items: input.glossary,
+      provider: input.provider,
+      error_message: input.errorMessage ?? null,
+      generated_at: new Date().toISOString(),
+    },
+    { onConflict: 'student_material_id' }
+  );
 
   if (error) {
     throw error;
@@ -137,7 +140,10 @@ export async function persistStudentMaterialSummaryArtifacts(input: PersistSumma
   );
 
   try {
-    await input.admin.from('student_material_chunks').delete().eq('student_material_id', input.studentMaterialId);
+    await input.admin
+      .from('student_material_chunks')
+      .delete()
+      .eq('student_material_id', input.studentMaterialId);
 
     if (chunks.length > 0) {
       const rows = chunks.map((chunk, index) => ({
@@ -146,7 +152,9 @@ export async function persistStudentMaterialSummaryArtifacts(input: PersistSumma
         chunk_text: chunk,
       }));
 
-      const { error: chunkInsertError } = await input.admin.from('student_material_chunks').insert(rows);
+      const { error: chunkInsertError } = await input.admin
+        .from('student_material_chunks')
+        .insert(rows);
 
       if (chunkInsertError) {
         throw chunkInsertError;
@@ -248,20 +256,30 @@ export async function persistStudentMaterialSummaryFromComputed(input: {
   text: string;
   summary: StudentMaterialSummary;
   persistChunks: boolean;
+  traceableChunks?: TraceableStudentMaterialChunk[];
 }) {
   try {
     if (input.persistChunks) {
-      const chunks = buildSummaryChunks(input.text);
-      await input.admin.from('student_material_chunks').delete().eq('student_material_id', input.studentMaterialId);
+      const chunks = input.traceableChunks ?? buildTraceableSummaryChunks(null, input.text);
+      await input.admin
+        .from('student_material_chunks')
+        .delete()
+        .eq('student_material_id', input.studentMaterialId);
 
       if (chunks.length > 0) {
-        const rows = chunks.map((chunk, index) => ({
+        const rows = chunks.map((chunk) => ({
           student_material_id: input.studentMaterialId,
-          chunk_index: index,
-          chunk_text: chunk,
+          chunk_index: chunk.chunkIndex,
+          chunk_text: chunk.text,
+          page_start: chunk.pageStart,
+          page_end: chunk.pageEnd,
+          section_title: chunk.sectionTitle,
+          content_hash: chunk.contentHash,
         }));
 
-        const { error: chunkInsertError } = await input.admin.from('student_material_chunks').insert(rows);
+        const { error: chunkInsertError } = await input.admin
+          .from('student_material_chunks')
+          .insert(rows);
         if (chunkInsertError) {
           throw chunkInsertError;
         }
@@ -335,7 +353,9 @@ export async function ensureStudentMaterialStudyArtifacts(input: {
     };
   }
 
-  const { data: fileData, error } = await input.admin.storage.from('biblioteca').download(input.filePath);
+  const { data: fileData, error } = await input.admin.storage
+    .from('biblioteca')
+    .download(input.filePath);
 
   if (error || !fileData) {
     return {

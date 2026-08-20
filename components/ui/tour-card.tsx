@@ -44,7 +44,7 @@ export function TourCard({
         </button>
       </div>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
         <div
           className="h-full rounded-full bg-gradient-to-r from-brand to-brand-2 transition-all duration-300"
           style={{ width: `${((stepIndex + 1) / totalSteps) * 100}%` }}
@@ -59,14 +59,14 @@ export function TourCard({
             type="button"
             onClick={onPrevious}
             disabled={stepIndex === 0}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:border-input hover:bg-muted disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:border-input hover:bg-white disabled:cursor-not-allowed disabled:opacity-45"
           >
             Anterior
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:border-input hover:bg-muted"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-sm font-semibold text-foreground transition hover:border-input hover:bg-white"
           >
             Cerrar
           </button>

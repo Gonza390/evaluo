@@ -109,7 +109,7 @@ export function PricingWaitlistCard() {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
 
-          <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/90 px-4 py-4">
+          <div className="mt-4 rounded-2xl border border-slate-100 bg-white px-4 py-4">
             <p className="text-sm font-semibold text-[#0F1B3D]">¿Qué pasa después?</p>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Asociamos tu prioridad a una cuenta para que, cuando abramos Premium, ya tengas el acceso listo.
