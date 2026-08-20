@@ -26,12 +26,28 @@ import {
   truncateAtWord,
 } from '@/lib/student-materials/text';
 import { generateStudentMaterialSummary } from '@/lib/student-materials/summary';
+import { recordAiUsage } from '@/lib/student-materials/ai-usage';
 import type {
   GenerateSummaryInput,
   StudyGlossaryItem,
   StudySummarySection,
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
+
+const VISION_BATCH_SIZE = 10;
+
+function mergeGlossaryItemsByTerm(items: StudyGlossaryItem[]): StudyGlossaryItem[] {
+  const merged = new Map<string, StudyGlossaryItem>();
+  for (const item of items) {
+    const key = normalizeForDedupe(item.term);
+    if (!key) continue;
+    const existing = merged.get(key);
+    if (!existing || (item.definition?.length ?? 0) > (existing.definition?.length ?? 0)) {
+      merged.set(key, item);
+    }
+  }
+  return Array.from(merged.values());
+}
 
 function buildGlossaryStrategyInstructions(input: GenerateSummaryInput) {
   const analysis = input.documentAnalysis;
@@ -579,17 +595,17 @@ export async function generateStudentMaterialGlossary(
       required: ['items'],
     };
 
-    const mergeAiGlossary = (content: string) => {
-      const glossary = filterSectionTitleTerms(
-        parseGlossaryPayload(content),
+    const mergeAiGlossary = (glossary: StudyGlossaryItem[]) => {
+      const filtered = filterSectionTitleTerms(
+        glossary,
         summary.sections.map((section) => section.title)
       );
       return sanitizeGlossaryItems(
         [
-          ...glossary,
+          ...filtered,
           ...fallbackGlossary.filter(
             (item) =>
-              !glossary.some(
+              !filtered.some(
                 (existing) => normalizeForDedupe(existing.term) === normalizeForDedupe(item.term)
               )
           ),
@@ -599,17 +615,41 @@ export async function generateStudentMaterialGlossary(
     };
 
     try {
-      const pages = await renderPdfPagesToPngs(input.pdfBuffer);
-      if (pages.length > 0) {
-        const geminiVisionResult = await requestGeminiImagesJson({
-          prompt,
-          images: pages,
-          temperature: 0.1,
-          maxOutputTokens: 2600,
-          responseSchema: glossarySchema,
-        });
-        if (geminiVisionResult) {
-          const mergedGlossary = mergeAiGlossary(geminiVisionResult.content);
+      const renderResult = await renderPdfPagesToPngs(input.pdfBuffer);
+      if (renderResult.images.length > 0) {
+        const visionItems: StudyGlossaryItem[] = [];
+
+        for (let index = 0; index < renderResult.images.length; index += VISION_BATCH_SIZE) {
+          const batch = renderResult.images.slice(index, index + VISION_BATCH_SIZE);
+          try {
+            const geminiVisionResult = await requestGeminiImagesJson({
+              prompt,
+              images: batch,
+              temperature: 0.1,
+              maxOutputTokens: 2600,
+              responseSchema: glossarySchema,
+            });
+            if (geminiVisionResult) {
+              await recordAiUsage({
+                materialId: input.materialId,
+                userId: input.userId,
+                provider: 'gemini',
+                model: geminiVisionResult.model,
+                operation: 'glossary_vision',
+                usage: geminiVisionResult.usage,
+              });
+              visionItems.push(...parseGlossaryPayload(geminiVisionResult.content));
+            }
+          } catch (batchError) {
+            logError('studentMaterialGlossary.geminiVisionBatch', batchError, {
+              title: input.title,
+              batch: Math.floor(index / VISION_BATCH_SIZE) + 1,
+            });
+          }
+        }
+
+        if (visionItems.length > 0) {
+          const mergedGlossary = mergeAiGlossary(mergeGlossaryItemsByTerm(visionItems));
           if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
             return mergedGlossary;
           }
@@ -628,7 +668,15 @@ export async function generateStudentMaterialGlossary(
         responseSchema: glossarySchema,
       });
       if (geminiPdfResult) {
-        const mergedGlossary = mergeAiGlossary(geminiPdfResult.content);
+        await recordAiUsage({
+          materialId: input.materialId,
+          userId: input.userId,
+          provider: 'gemini',
+          model: geminiPdfResult.model,
+          operation: 'glossary_pdf',
+          usage: geminiPdfResult.usage,
+        });
+        const mergedGlossary = mergeAiGlossary(parseGlossaryPayload(geminiPdfResult.content));
         if (mergedGlossary.length >= Math.min(12, Math.max(8, fallbackGlossary.length))) {
           return mergedGlossary;
         }
@@ -665,6 +713,14 @@ export async function generateStudentMaterialGlossary(
       },
     });
     if (geminiResult) {
+      await recordAiUsage({
+        materialId: input.materialId,
+        userId: input.userId,
+        provider: 'gemini',
+        model: geminiResult.model,
+        operation: 'glossary',
+        usage: geminiResult.usage,
+      });
       const glossary = filterSectionTitleTerms(
         parseGlossaryPayload(geminiResult.content),
         summary.sections.map((section) => section.title)
@@ -699,6 +755,14 @@ export async function generateStudentMaterialGlossary(
       maxTokens: 2400,
     });
     if (groqResult) {
+      await recordAiUsage({
+        materialId: input.materialId,
+        userId: input.userId,
+        provider: 'groq',
+        model: groqResult.model,
+        operation: 'glossary',
+        usage: groqResult.usage,
+      });
       const glossary = filterSectionTitleTerms(
         parseGlossaryPayload(groqResult.content),
         summary.sections.map((section) => section.title)
@@ -733,6 +797,14 @@ export async function generateStudentMaterialGlossary(
       maxTokens: 2400,
     });
     if (nvidiaResult) {
+      await recordAiUsage({
+        materialId: input.materialId,
+        userId: input.userId,
+        provider: 'nvidia',
+        model: nvidiaResult.model,
+        operation: 'glossary',
+        usage: nvidiaResult.usage,
+      });
       const glossary = filterSectionTitleTerms(
         parseGlossaryPayload(nvidiaResult.content),
         summary.sections.map((section) => section.title)

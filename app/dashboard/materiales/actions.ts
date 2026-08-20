@@ -729,3 +729,92 @@ export async function deleteStudentMaterialAction(materialId: string): Promise<A
     };
   }
 }
+
+export type FlashcardRecall = 'known' | 'unknown';
+export type FlashcardVote = 'up' | 'down';
+
+export type FlashcardProgress = {
+  recall: Record<number, FlashcardRecall>;
+  votes: Record<number, FlashcardVote>;
+};
+
+export async function getFlashcardProgressAction(
+  materialId: string
+): Promise<{ success: boolean; progress: FlashcardProgress }> {
+  try {
+    if (!studentMaterialIdSchema.safeParse(materialId).success) {
+      return { success: false, progress: { recall: {}, votes: {} } };
+    }
+
+    const user = await requireAuthenticatedUser();
+    const supabase = await createClientServer();
+
+    const { data, error } = await supabase
+      .from('student_material_flashcard_progress')
+      .select('card_index, recall, vote')
+      .eq('user_id', user.id)
+      .eq('student_material_id', materialId);
+
+    if (error) {
+      throw error;
+    }
+
+    const recall: Record<number, FlashcardRecall> = {};
+    const votes: Record<number, FlashcardVote> = {};
+    for (const row of data ?? []) {
+      if (row.recall === 'known' || row.recall === 'unknown') {
+        recall[row.card_index] = row.recall;
+      }
+      if (row.vote === 'up' || row.vote === 'down') {
+        votes[row.card_index] = row.vote;
+      }
+    }
+
+    return { success: true, progress: { recall, votes } };
+  } catch (error) {
+    logError('flashcard_progress_load', { error, materialId });
+    return { success: false, progress: { recall: {}, votes: {} } };
+  }
+}
+
+export async function saveFlashcardProgressAction(
+  materialId: string,
+  entries: Array<{
+    cardIndex: number;
+    recall?: FlashcardRecall | null;
+    vote?: FlashcardVote | null;
+  }>
+): Promise<ActionResult> {
+  try {
+    if (!studentMaterialIdSchema.safeParse(materialId).success) {
+      return { success: false, message: 'El identificador del material no es valido.' };
+    }
+
+    const user = await requireAuthenticatedUser();
+    const supabase = await createClientServer();
+
+    const rows = entries.map((entry) => ({
+      user_id: user.id,
+      student_material_id: materialId,
+      card_index: entry.cardIndex,
+      recall: entry.recall ?? null,
+      vote: entry.vote ?? null,
+    }));
+
+    const { error } = await supabase
+      .from('student_material_flashcard_progress')
+      .upsert(rows, { onConflict: 'user_id,student_material_id,card_index' });
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true, message: 'Progreso guardado.' };
+  } catch (error) {
+    logError('flashcard_progress_save', { error, materialId });
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No pudimos guardar el progreso.',
+    };
+  }
+}

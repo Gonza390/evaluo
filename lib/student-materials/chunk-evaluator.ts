@@ -2,6 +2,7 @@ import { logError } from '@/lib/observability';
 import { requestGroqJson } from '@/lib/ai/providers';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { normalizeForDedupe } from '@/lib/student-materials/text';
+import { recordAiUsage } from '@/lib/student-materials/ai-usage';
 import type { AdminClient } from '@/lib/student-materials/types';
 
 // ---------------------------------------------------------------------------
@@ -163,7 +164,8 @@ const EVAL_PROMPT_TEMPLATE = (chunks: Array<{ index: number; text: string }>, ma
 
 async function evaluateChunksWithLlm(
   chunks: Array<{ index: number; text: string }>,
-  materia: string
+  materia: string,
+  materialId?: string
 ): Promise<Map<number, { score: number; issues: string[]; suggestedAction: SuggestedAction }>> {
   const resultMap = new Map<
     number,
@@ -185,6 +187,14 @@ async function evaluateChunksWithLlm(
       });
 
       if (!result) continue;
+
+      await recordAiUsage({
+        materialId,
+        provider: 'groq',
+        model: result.model,
+        operation: 'chunk_evaluation',
+        usage: result.usage,
+      });
 
       const parsed = (() => {
         try {
@@ -306,7 +316,7 @@ export async function evaluateChunks(
   >();
   if (options.useLlm !== false && llmCandidates.length > 0) {
     try {
-      llmResults = await evaluateChunksWithLlm(llmCandidates, materia);
+      llmResults = await evaluateChunksWithLlm(llmCandidates, materia, materialId);
     } catch (error) {
       logError('chunkEvaluator.llmPhase', error, { materia, materialId });
     }

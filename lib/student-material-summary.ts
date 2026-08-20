@@ -33,4 +33,5 @@ export {
 
 export { analyzePdfDocument, extractPdfTextAndPageCount } from '@/lib/student-materials/text';
 export { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+export { generatePedagogicalModel } from '@/lib/student-materials/pedagogy-ai';
 export type { PedagogicalArtifacts, PedagogicalChunk } from '@/lib/student-materials/pedagogy';

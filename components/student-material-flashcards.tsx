@@ -18,6 +18,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
+import {
+  getFlashcardProgressAction,
+  saveFlashcardProgressAction,
+} from '@/app/dashboard/materiales/actions';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 type RecallResult = 'known' | 'unknown';
@@ -56,6 +60,7 @@ export function StudentMaterialFlashcards({
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
+  const [hasLoadedServer, setHasLoadedServer] = useState(false);
   const storageKey = `evaluo:flashcards:${materialId}`;
 
   const currentCardIndex = order[position] ?? 0;
@@ -133,6 +138,45 @@ export function StudentMaterialFlashcards({
       // Persistencia opcional: nunca debe bloquear una sesión.
     }
   }, [hasLoadedProgress, recallByCard, storageKey, voteByCard]);
+
+  useEffect(() => {
+    let active = true;
+    void getFlashcardProgressAction(materialId)
+      .then((result) => {
+        if (!active || !result.success) return;
+        // El servidor es la fuente de verdad: sus valores prevalecen sobre el caché local.
+        setRecallByCard((current) => ({ ...current, ...result.progress.recall }));
+        setVoteByCard((current) => ({ ...current, ...result.progress.votes }));
+      })
+      .finally(() => {
+        if (active) setHasLoadedServer(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [materialId]);
+
+  useEffect(() => {
+    if (!hasLoadedProgress || !hasLoadedServer) return;
+
+    const indexes = new Set<number>([
+      ...Object.keys(recallByCard).map(Number),
+      ...Object.keys(voteByCard).map(Number),
+    ]);
+    if (indexes.size === 0) return;
+
+    const entries = [...indexes].map((cardIndex) => ({
+      cardIndex,
+      recall: recallByCard[cardIndex] ?? null,
+      vote: voteByCard[cardIndex] ?? null,
+    }));
+
+    const timer = window.setTimeout(() => {
+      void saveFlashcardProgressAction(materialId, entries);
+    }, 800);
+
+    return () => window.clearTimeout(timer);
+  }, [hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
 
   const navigate = useCallback(
     (direction: -1 | 1) => {

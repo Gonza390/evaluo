@@ -5,6 +5,8 @@ import {
   generateStudentMaterialSummary,
   persistStudentMaterialGlossaryArtifacts,
   persistStudentMaterialSummaryFromComputed,
+  buildPedagogicalArtifacts,
+  generatePedagogicalModel,
 } from '@/lib/student-material-summary';
 import { completeStudentMaterialJob } from '@/lib/student-material-jobs';
 import {
@@ -25,7 +27,9 @@ import {
   summarizeExtractedText,
 } from '@/lib/student-materials/text';
 import { logError, logInfo } from '@/lib/observability';
-import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
+import type { StudyDocumentAnalysis, StudyDocumentModel } from '@/lib/student-materials/types';
+import type { Json } from '@/types/supabase';
+import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
 
 export type StudentMaterialProcessingStage =
   | 'uploaded'
@@ -34,6 +38,7 @@ export type StudentMaterialProcessingStage =
   | 'glossary'
   | 'ready'
   | 'failed';
+
 
 export type StudentMaterialProcessingResult = {
   success: boolean;
@@ -81,6 +86,11 @@ export async function processStudentMaterial(input: {
   const buffer = Buffer.from(await context.file.arrayBuffer());
   const { text, pageCount, pages } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, text, pageCount);
+  const pagesProcessed = Array.isArray(pages)
+    ? pages.filter((page) => page.trim().length > 0).length
+    : 0;
+  const coverageRatio =
+    pageCount && pageCount > 0 ? Math.round((pagesProcessed / pageCount) * 100) / 100 : 0;
   const extractionMs = Date.now() - extractionStartedAt;
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
 
@@ -111,20 +121,20 @@ export async function processStudentMaterial(input: {
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     documentAnalysis,
+    pagesProcessed,
+    coverageRatio,
   });
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing',
-    processingStage: 'summarizing',
-    processingProgress: 52,
-    processingMessage:
-      documentAnalysis.processingStrategy === 'slide_layout'
-        ? 'Generando resumen y glosario a partir de bloques visuales y temas detectados.'
-        : 'Generando resumen y glosario en paralelo.',
+    processingStage: 'extracting',
+    processingProgress: 45,
+    processingMessage: 'Construyendo el modelo pedagógico canónico del material.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
+    pagesProcessed,
+    coverageRatio,
   });
 
-  const generationStartedAt = Date.now();
   const generationInput = {
     title: material.title,
     universidadName: context.universidadName,
@@ -133,7 +143,36 @@ export async function processStudentMaterial(input: {
     text,
     documentAnalysis,
     pdfBuffer: documentAnalysis.requiresOcr ? buffer : undefined,
+    materialId: material.id,
+    userId: material.user_id,
   };
+
+  const pedagogicalModel = await generatePedagogicalModel(generationInput);
+  if (pedagogicalModel) {
+    try {
+      await admin
+        .from('student_materials')
+        .update({ pedagogical_model: pedagogicalModel as unknown as Json } as never)
+        .eq('id', material.id);
+    } catch (modelErr) {
+      logError('processStudentMaterial.pedagogicalModelPersist', modelErr, { materialId: material.id });
+    }
+  }
+
+  await updateStudentMaterialProcessing(admin, material.id, {
+    processingStatus: 'processing',
+    processingStage: 'summarizing',
+    processingProgress: 65,
+    processingMessage:
+      documentAnalysis.processingStrategy === 'slide_layout'
+        ? 'Generando resumen y glosario a partir de bloques visuales y temas detectados.'
+        : 'Generando resumen y glosario en paralelo.',
+    pageCount,
+    processingStrategy: documentAnalysis.processingStrategy,
+    pagesProcessed,
+    coverageRatio,
+  });
+  const generationStartedAt = Date.now();
   const glossarySeed = mapLocalSummaryToView(
     summarizeExtractedText(text, material.title),
     buildSummaryChunks(text).length,
@@ -144,6 +183,7 @@ export async function processStudentMaterial(input: {
     generateStudentMaterialGlossary(generationInput, glossarySeed),
   ]);
   const generationMs = Date.now() - generationStartedAt;
+  const aiUsage = await aggregateAiUsageForMaterial(admin, material.id);
   await persistStudentMaterialSummaryFromComputed({
     admin,
     studentMaterialId: material.id,
@@ -200,18 +240,30 @@ export async function processStudentMaterial(input: {
     processingError: null,
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
+    pagesProcessed,
+    coverageRatio,
   });
   if (input.jobId) await completeStudentMaterialJob(admin, input.jobId);
 
   logInfo('processStudentMaterial.performance', {
     materialId: material.id,
     pageCount,
+    pagesProcessed,
+    coverageRatio,
     chunkCount: traceableChunks.length,
     extractionMs,
     generationMs,
     totalMs: Date.now() - processingStartedAt,
     summaryProvider: summary.provider,
     processingStrategy: documentAnalysis.processingStrategy,
+    totalAiTokens: aiUsage.totalAiTokens,
+    promptTokens: aiUsage.promptTokens,
+    completionTokens: aiUsage.completionTokens,
+    aiCallCount: aiUsage.aiCallCount,
+    tokensPerPage:
+      pageCount && pageCount > 0 && aiUsage.totalAiTokens
+        ? Math.round(aiUsage.totalAiTokens / pageCount)
+        : null,
   });
 
   return {

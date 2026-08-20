@@ -11,6 +11,8 @@ export type GenerateSummaryInput = {
   text: string;
   documentAnalysis?: StudyDocumentAnalysis;
   pdfBuffer?: Buffer;
+  materialId?: string;
+  userId?: string;
 };
 
 export type PersistSummaryArtifactsInput = {
@@ -53,6 +55,40 @@ export type StudyDocumentModel = {
   sectionTitles: string[];
   sections: StudyDocumentSection[];
   conceptIndex: StudyDocumentConcept[];
+  chunkCount: number;
+};
+
+export type CanonicalPedagogicalModel = {
+  title: string;
+  overview: string;
+  topics: Array<{
+    title: string;
+    description: string;
+    relevance: 'alta' | 'media';
+    pageReferences: number[];
+  }>;
+  concepts: StudyDocumentConcept[];
+  relationships: Array<{
+    source: string;
+    target: string;
+    description: string;
+  }>;
+  classifications: Array<{
+    title: string;
+    items: string[];
+  }>;
+  processes: Array<{
+    title: string;
+    steps: string[];
+  }>;
+  formulas: Array<{
+    expression: string;
+    description: string;
+  }>;
+  authorsOrTheories: string[];
+  examples: string[];
+  examRelevantClaims: string[];
+  confusions: string[];
   chunkCount: number;
 };
 

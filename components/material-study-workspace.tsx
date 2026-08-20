@@ -10,6 +10,7 @@ import {
   Clock3,
   ChevronLeft,
   ChevronRight,
+  Crown,
   FileText,
   Loader2,
   Map,
@@ -20,6 +21,7 @@ import {
 import { MaterialFeedback } from '@/components/material-feedback';
 import { StudyRichText } from '@/components/study-rich-text';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
 import { Button } from '@/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
@@ -38,6 +40,7 @@ type MaterialStudyWorkspaceProps = {
   carreraName?: string;
   fileName: string;
   canRegenerate: boolean;
+  isPremium: boolean;
   materialId: string;
   isOwner: boolean;
   materiaName?: string;
@@ -57,12 +60,13 @@ const STUDY_TABS: Array<{
   id: StudyTabId;
   label: string;
   icon: typeof BookOpenText;
+  premium?: boolean;
 }> = [
   { id: 'resumen', label: 'Resumen', icon: BookOpenText },
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'tarjetas', label: 'Tarjetas', icon: Sparkles },
   { id: 'ejercicios', label: 'Ejercicios', icon: BrainCircuit },
-  { id: 'mapa', label: 'Mapa mental', icon: Map },
+  { id: 'mapa', label: 'Mapa mental', icon: Map, premium: true },
 ];
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
@@ -258,6 +262,7 @@ export function MaterialStudyWorkspace({
   canRegenerate,
   carreraName,
   fileName,
+  isPremium,
   materialId,
   isOwner: _isOwner,
   materiaName,
@@ -387,6 +392,12 @@ export function MaterialStudyWorkspace({
             >
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {tab.label}
+              {tab.premium ? (
+                <span className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-[#EEF4FF] px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.08em] text-[#2563EB] uppercase sm:text-[10px]">
+                  <Crown className="h-2.5 w-2.5" />
+                  Premium
+                </span>
+              ) : null}
             </TabsTrigger>
           );
         })}
@@ -529,7 +540,7 @@ export function MaterialStudyWorkspace({
   ) : null;
 
   const tabPanels = (
-    <div className="overflow-y-auto px-2.5 pb-2.5 sm:px-4 sm:pb-4">
+    <div className="h-full overflow-y-auto px-2.5 pb-2.5 sm:px-4 sm:pb-4">
       {commentsOpen ? (
         <WorkspaceCard className="mb-3 border-[#BFDBFE] bg-white">
           <MaterialFeedback materialId={materialId} />
@@ -695,50 +706,66 @@ export function MaterialStudyWorkspace({
       </TabsContent>
 
       <TabsContent value="mapa" className="animate-tab-panel">
-        <StudyDocumentShell
-          title="Mapa mental"
-          description="Vista de los temas y conceptos principales detectados en este PDF."
-        >
-          <div className="grid gap-4 xl:grid-cols-[1fr_220px_1fr] xl:items-center">
-            <div className="space-y-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4">
-              <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                Temas principales
-              </p>
-              {fullSummarySections.slice(0, 4).map((section, index) => (
-                <div key={section.title} className="space-y-3">
-                  <p className="text-[13px] font-medium text-slate-700">{section.title}</p>
-                  {index < Math.min(3, fullSummarySections.length - 1) ? (
-                    <div className="h-px bg-slate-100" />
-                  ) : null}
-                </div>
-              ))}
-            </div>
+        {isPremium ? (
+          <StudyDocumentShell
+            title="Mapa mental"
+            description="Vista de los temas y conceptos principales detectados en este PDF."
+          >
+            <div className="grid gap-4 xl:grid-cols-[1fr_220px_1fr] xl:items-center">
+              <div className="space-y-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4">
+                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                  Temas principales
+                </p>
+                {fullSummarySections.slice(0, 4).map((section, index) => (
+                  <div key={section.title} className="space-y-3">
+                    <p className="text-[13px] font-medium text-slate-700">{section.title}</p>
+                    {index < Math.min(3, fullSummarySections.length - 1) ? (
+                      <div className="h-px bg-slate-100" />
+                    ) : null}
+                  </div>
+                ))}
+              </div>
 
-            <div className="rounded-[22px] border border-[#BFDBFE] bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.55),transparent_70%),linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-5 text-center shadow-[0_14px_32px_rgba(37,99,235,0.10)]">
-              <p className="text-xs font-semibold tracking-[0.18em] text-[#2563EB]/80 uppercase">
-                Nodo central
-              </p>
-              <p className="mt-2.5 text-base font-semibold tracking-[-0.03em] text-slate-950">
-                {title}
-              </p>
-              <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">{materiaName}</p>
-            </div>
+              <div className="rounded-[22px] border border-[#BFDBFE] bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.55),transparent_70%),linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-5 text-center shadow-[0_14px_32px_rgba(37,99,235,0.10)]">
+                <p className="text-xs font-semibold tracking-[0.18em] text-[#2563EB]/80 uppercase">
+                  Nodo central
+                </p>
+                <p className="mt-2.5 text-base font-semibold tracking-[-0.03em] text-slate-950">
+                  {title}
+                </p>
+                <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">{materiaName}</p>
+              </div>
 
-            <div className="space-y-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4">
-              <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                Conceptos clave
-              </p>
-              {usefulGlossary.slice(0, 4).map((item, index) => (
-                <div key={item.term} className="space-y-3">
-                  <p className="text-[13px] font-medium text-slate-700">{item.term}</p>
-                  {index < Math.min(3, usefulGlossary.length - 1) ? (
-                    <div className="h-px bg-slate-100" />
-                  ) : null}
-                </div>
-              ))}
+              <div className="space-y-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4">
+                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                  Conceptos clave
+                </p>
+                {usefulGlossary.slice(0, 4).map((item, index) => (
+                  <div key={item.term} className="space-y-3">
+                    <p className="text-[13px] font-medium text-slate-700">{item.term}</p>
+                    {index < Math.min(3, usefulGlossary.length - 1) ? (
+                      <div className="h-px bg-slate-100" />
+                    ) : null}
+                  </div>
+                ))}
+              </div>
             </div>
+          </StudyDocumentShell>
+        ) : (
+          <div className="rounded-[20px] border border-slate-200 bg-white p-4 sm:p-5">
+            <PremiumUpsell
+              title="El mapa mental es exclusivo Premium"
+              description="Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."
+              source="material_mapa_mental"
+              features={[
+                'Mapa mental de cada PDF que subas',
+                'Temas y conceptos clave conectados',
+                'Todo tu espacio de estudio en un solo lugar',
+              ]}
+              ctaLabel="Desbloquear mapa mental con Premium"
+            />
           </div>
-        </StudyDocumentShell>
+        )}
       </TabsContent>
     </div>
   );
@@ -819,7 +846,7 @@ export function MaterialStudyWorkspace({
                     defaultSize={isViewerVisible ? 60 : 100}
                     minSize={42}
                   >
-                    <div className="h-full min-w-0 bg-white">{tabPanels}</div>
+                    <div className="h-full min-w-0 bg-white flex flex-col">{tabPanels}</div>
                   </ResizablePanel>
                   {isViewerVisible ? <ResizableHandle withHandle className="bg-white" /> : null}
                   {isViewerVisible ? (
@@ -863,7 +890,7 @@ export function MaterialStudyWorkspace({
         </div>
 
         <div className="space-y-4 xl:hidden">
-          <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
+          <div className="h-[75vh] flex flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
             {content}
           </div>
           {isViewerVisible ? (

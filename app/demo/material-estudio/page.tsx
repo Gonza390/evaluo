@@ -18,6 +18,7 @@ export default function DemoMaterialEstudioPage() {
           backHref="/dashboard/materiales"
           canRegenerate={false}
           fileName="IA y nuevas tecnologías - Material de estudio.pdf"
+          isPremium
           materialId="demo-material"
           isOwner
           pageCount={demoArtifacts.pageCount}

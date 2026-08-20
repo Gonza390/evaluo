@@ -9,6 +9,8 @@ export type StudentMaterialProcessingUpdate = {
   processingMessage: string;
   processingError?: string | null;
   pageCount?: number | null;
+  pagesProcessed?: number | null;
+  coverageRatio?: number | null;
   processingStrategy?: string | null;
   documentAnalysis?: StudyDocumentAnalysis | null;
 };
@@ -75,7 +77,7 @@ export async function updateStudentMaterialProcessing(
   materialId: string,
   input: StudentMaterialProcessingUpdate
 ) {
-  const payload: Database['public']['Tables']['student_materials']['Update'] = {
+  const payload: Record<string, any> = {
     processing_status: input.processingStatus,
     processing_stage: input.processingStage,
     processing_progress: input.processingProgress,
@@ -86,13 +88,17 @@ export async function updateStudentMaterialProcessing(
   if (typeof input.pageCount !== 'undefined') payload.page_count = input.pageCount;
   if (typeof input.processingStrategy !== 'undefined') payload.processing_strategy = input.processingStrategy;
   if (typeof input.documentAnalysis !== 'undefined') payload.document_analysis = input.documentAnalysis;
+  if (typeof input.pagesProcessed !== 'undefined') payload.pages_processed = input.pagesProcessed;
+  if (typeof input.coverageRatio !== 'undefined') payload.coverage_ratio = input.coverageRatio;
 
-  let { error } = await admin.from('student_materials').update(payload).eq('id', materialId);
+  let { error } = await admin.from('student_materials').update(payload as any).eq('id', materialId);
 
-  if (error && isMissingAnalysisColumns(error)) {
+  if (error && (isMissingAnalysisColumns(error) || error.code === 'PGRST204')) {
     delete payload.processing_strategy;
     delete payload.document_analysis;
-    ({ error } = await admin.from('student_materials').update(payload).eq('id', materialId));
+    delete payload.pages_processed;
+    delete payload.coverage_ratio;
+    ({ error } = await admin.from('student_materials').update(payload as any).eq('id', materialId));
   }
 
   if (error) throw error;

@@ -1700,6 +1700,97 @@ export type Database = {
           },
         ];
       };
+      student_material_ai_usage: {
+        Row: {
+          completion_tokens: number | null;
+          created_at: string;
+          id: string;
+          model: string;
+          operation: string;
+          prompt_tokens: number | null;
+          provider: string;
+          student_material_id: string;
+          total_tokens: number | null;
+          updated_at: string;
+          user_id: string | null;
+        };
+        Insert: {
+          completion_tokens?: number | null;
+          created_at?: string;
+          id?: string;
+          model: string;
+          operation: string;
+          prompt_tokens?: number | null;
+          provider: string;
+          student_material_id: string;
+          total_tokens?: number | null;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Update: {
+          completion_tokens?: number | null;
+          created_at?: string;
+          id?: string;
+          model?: string;
+          operation?: string;
+          prompt_tokens?: number | null;
+          provider?: string;
+          student_material_id?: string;
+          total_tokens?: number | null;
+          updated_at?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'student_material_ai_usage_student_material_id_fkey';
+            columns: ['student_material_id'];
+            isOneToOne: false;
+            referencedRelation: 'student_materials';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      student_material_flashcard_progress: {
+        Row: {
+          card_index: number;
+          created_at: string;
+          id: string;
+          recall: string | null;
+          student_material_id: string;
+          updated_at: string;
+          user_id: string;
+          vote: string | null;
+        };
+        Insert: {
+          card_index: number;
+          created_at?: string;
+          id?: string;
+          recall?: string | null;
+          student_material_id: string;
+          updated_at?: string;
+          user_id: string;
+          vote?: string | null;
+        };
+        Update: {
+          card_index?: number;
+          created_at?: string;
+          id?: string;
+          recall?: string | null;
+          student_material_id?: string;
+          updated_at?: string;
+          user_id?: string;
+          vote?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'student_material_flashcard_progress_student_material_id_fkey';
+            columns: ['student_material_id'];
+            isOneToOne: false;
+            referencedRelation: 'student_materials';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       student_material_glossaries: {
         Row: {
           created_at: string;
@@ -1850,6 +1941,8 @@ export type Database = {
           materia_id: string;
           mime_type: string | null;
           page_count: number | null;
+          pages_processed: number | null;
+          coverage_ratio: number | null;
           processing_error: string | null;
           processing_message: string | null;
           processing_progress: number;
@@ -1873,6 +1966,8 @@ export type Database = {
           materia_id: string;
           mime_type?: string | null;
           page_count?: number | null;
+          pages_processed?: number | null;
+          coverage_ratio?: number | null;
           processing_error?: string | null;
           processing_message?: string | null;
           processing_progress?: number;
@@ -1896,6 +1991,8 @@ export type Database = {
           materia_id?: string;
           mime_type?: string | null;
           page_count?: number | null;
+          pages_processed?: number | null;
+          coverage_ratio?: number | null;
           processing_error?: string | null;
           processing_message?: string | null;
           processing_progress?: number;

@@ -7,6 +7,8 @@ import {
   requestGroqJson,
   requestNvidiaJson,
 } from '@/lib/ai/providers';
+import type { AiUsage } from '@/lib/ai/providers';
+import { recordAiUsage } from '@/lib/student-materials/ai-usage';
 import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 import { extractJsonObject } from '@/lib/ai/json';
 import {
@@ -22,6 +24,7 @@ import {
   dedupeStrings,
   extractPdfTextAndPageCount,
   mapLocalSummaryToView,
+  normalizeForDedupe,
   prepareTextForSummary,
   summarizeExtractedText,
   truncateAtWord,
@@ -36,6 +39,7 @@ const SUMMARY_MAP_CONCURRENCY = 3;
 const SUMMARY_MAP_MAX_TOKENS = 1200;
 const SUMMARY_REDUCE_MAX_TOKENS = 1700;
 const SUMMARY_DIGEST_MAX_CHARS = 26_000;
+const VISION_BATCH_SIZE = 10;
 
 const SUMMARY_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -637,6 +641,7 @@ function sanitizeAiSummaryResponse(
 type JsonProviderResult = {
   content: string;
   model: string;
+  usage?: AiUsage | null;
 };
 
 type JsonProviderCall = () => Promise<JsonProviderResult | null>;
@@ -650,7 +655,7 @@ type ProviderName = (typeof PROVIDER_ORDER)[number];
 async function runJsonProviderChain(
   calls: Array<{ name: ProviderName; call: JsonProviderCall }>,
   onError: (name: string, error: unknown) => void
-): Promise<{ content: string; model: string; provider: string } | null> {
+): Promise<{ content: string; model: string; provider: string; usage?: AiUsage | null } | null> {
   for (const entry of calls) {
     try {
       const result = await entry.call();
@@ -802,6 +807,14 @@ async function mapChunksToPartialSummaries(
     }
 
     preferredProvider = result.provider as ProviderName;
+    await recordAiUsage({
+      materialId: input.materialId,
+      userId: input.userId,
+      provider: result.provider,
+      model: result.model,
+      operation: 'summary_map',
+      usage: result.usage,
+    });
     const partial = sanitizeAiChunkSummary(parseModelSummaryPayload(result.content));
     if (partial.keyPoints.length > 0 || partial.sections.length > 0) {
       partials[groupIndex] = partial;
@@ -846,6 +859,15 @@ async function generateAiSummary(input: GenerateSummaryInput, sourceChunksCount:
   if (!result) {
     return null;
   }
+
+  await recordAiUsage({
+    materialId: input.materialId,
+    userId: input.userId,
+    provider: result.provider,
+    model: result.model,
+    operation: 'summary_reduce',
+    usage: result.usage,
+  });
 
   return sanitizeAiSummaryResponse(
     parseModelSummaryPayload(result.content),
@@ -896,6 +918,34 @@ function isSummaryDegraded(summary: StudentMaterialSummary) {
   return /[\p{L}]{35,}/u.test(texts);
 }
 
+function mergeVisionSummaryPartials(partials: SummaryPayload[]): SummaryPayload {
+  const sections: Array<{ title?: string; body?: unknown }> = [];
+  const seenTitles = new Set<string>();
+
+  for (const partial of partials) {
+    for (const section of Array.isArray(partial.sections) ? partial.sections : []) {
+      const title = cleanLine(section.title ?? '');
+      const normalized = normalizeForDedupe(title);
+      if (!title || seenTitles.has(normalized)) continue;
+      seenTitles.add(normalized);
+      sections.push(section);
+    }
+  }
+
+  const keyPoints = dedupeStrings(
+    partials.flatMap((partial) =>
+      Array.isArray(partial.key_points)
+        ? partial.key_points.map((item) => cleanLine(item))
+        : []
+    )
+  ).slice(0, 5);
+
+  const summaryShort =
+    partials.map((partial) => cleanLine(partial.summary_short ?? '')).find(Boolean) ?? '';
+
+  return { summary_short: summaryShort, key_points: keyPoints, sections };
+}
+
 async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
   if (!input.pdfBuffer) {
     return null;
@@ -904,22 +954,48 @@ async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
   const prompt = buildPdfSummaryPrompt(input);
 
   try {
-    const pages = await renderPdfPagesToPngs(input.pdfBuffer);
-    if (pages.length > 0) {
-      const result = await requestGeminiImagesJson({
-        prompt,
-        images: pages,
-        temperature: 0.12,
-        maxOutputTokens: 2800,
-        responseSchema: SUMMARY_RESPONSE_SCHEMA,
-      });
-      if (result) {
+    const renderResult = await renderPdfPagesToPngs(input.pdfBuffer);
+    if (renderResult.images.length > 0) {
+      const visionPartials: SummaryPayload[] = [];
+      let visionModel: string | null = null;
+
+      for (let index = 0; index < renderResult.images.length; index += VISION_BATCH_SIZE) {
+        const batch = renderResult.images.slice(index, index + VISION_BATCH_SIZE);
+        try {
+          const result = await requestGeminiImagesJson({
+            prompt,
+            images: batch,
+            temperature: 0.12,
+            maxOutputTokens: 2800,
+            responseSchema: SUMMARY_RESPONSE_SCHEMA,
+          });
+          if (result) {
+            visionModel = result.model;
+            await recordAiUsage({
+              materialId: input.materialId,
+              userId: input.userId,
+              provider: 'gemini',
+              model: result.model,
+              operation: 'summary_vision',
+              usage: result.usage,
+            });
+            visionPartials.push(parseModelSummaryPayload(result.content));
+          }
+        } catch (batchError) {
+          logError('studentMaterialSummary.visionBatch', batchError, {
+            title: input.title,
+            batch: Math.floor(index / VISION_BATCH_SIZE) + 1,
+          });
+        }
+      }
+
+      if (visionPartials.length > 0) {
         const summary = sanitizeAiSummaryResponse(
-          parseModelSummaryPayload(result.content),
+          mergeVisionSummaryPartials(visionPartials),
           input.title,
           input.text,
           buildSummaryChunks(input.text).length,
-          `${result.model}-vision`,
+          `${visionModel ?? 'gemini'}-vision`,
           { trustAi: true }
         );
         if (summary.hasContent && !isSummaryDegraded(summary)) {
@@ -943,6 +1019,15 @@ async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
     if (!result) {
       return null;
     }
+
+    await recordAiUsage({
+      materialId: input.materialId,
+      userId: input.userId,
+      provider: 'gemini',
+      model: result.model,
+      operation: 'summary_pdf',
+      usage: result.usage,
+    });
 
     const summary = sanitizeAiSummaryResponse(
       parseModelSummaryPayload(result.content),

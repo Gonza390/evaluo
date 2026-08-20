@@ -4,6 +4,7 @@ import { FileText } from 'lucide-react';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { hasPremiumAccess } from '@/lib/premium';
 import { getMateriaRoute } from '@/lib/routes';
 import { isUuid } from '@/lib/uuid';
 import {
@@ -80,6 +81,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     const isOwner = user?.id === material.user_id;
     const canRegenerate = await resolveAdminActor(user);
+    const isPremium = await hasPremiumAccess(user?.id ?? '');
 
     if (material.processing_status !== 'ready') {
       return (
@@ -212,6 +214,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
         canRegenerate={canRegenerate}
         carreraName={carrera?.nombre ?? 'Carrera'}
         fileName={material.file_name}
+        isPremium={isPremium}
         materialId={material.id}
         isOwner={isOwner}
         materiaName={materia?.nombre ?? 'Materia'}
