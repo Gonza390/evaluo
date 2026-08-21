@@ -9,6 +9,7 @@ export type GenerateSummaryInput = {
   carreraName?: string;
   materiaName?: string;
   text: string;
+  pages?: string[] | null;
   documentAnalysis?: StudyDocumentAnalysis;
   pdfBuffer?: Buffer;
   materialId?: string;
@@ -34,6 +35,7 @@ export type StudyDocumentConcept = {
   term: string;
   detail: string;
   kind: 'definicion' | 'clasificacion' | 'autor' | 'ejemplo' | 'idea_clave';
+  pageReferences?: number[];
 };
 
 export type StudyDocumentSubsection = {
@@ -58,6 +60,31 @@ export type StudyDocumentModel = {
   chunkCount: number;
 };
 
+export type CanonicalPedagogicalSourceKind =
+  | 'topic'
+  | 'concept'
+  | 'relationship'
+  | 'classification'
+  | 'process'
+  | 'formula'
+  | 'author_or_theory'
+  | 'example'
+  | 'exam_relevant_claim'
+  | 'confusion';
+
+export type CanonicalPedagogicalSourceReference = {
+  pageStart: number | null;
+  pageEnd: number | null;
+  chunkIndexes: number[];
+  excerpt: string;
+};
+
+export type CanonicalPedagogicalSourceBinding = {
+  kind: CanonicalPedagogicalSourceKind;
+  key: string;
+  references: CanonicalPedagogicalSourceReference[];
+};
+
 export type CanonicalPedagogicalModel = {
   title: string;
   overview: string;
@@ -72,24 +99,29 @@ export type CanonicalPedagogicalModel = {
     source: string;
     target: string;
     description: string;
+    pageReferences?: number[];
   }>;
   classifications: Array<{
     title: string;
     items: string[];
+    pageReferences?: number[];
   }>;
   processes: Array<{
     title: string;
     steps: string[];
+    pageReferences?: number[];
   }>;
   formulas: Array<{
     expression: string;
     description: string;
+    pageReferences?: number[];
   }>;
   authorsOrTheories: string[];
   examples: string[];
   examRelevantClaims: string[];
   confusions: string[];
   chunkCount: number;
+  sourceBindings?: CanonicalPedagogicalSourceBinding[];
 };
 
 export type StudentMaterialDocumentType =

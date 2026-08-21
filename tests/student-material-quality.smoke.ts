@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
 import {
   analyzePdfDocument,
   buildStudyDocumentModel,
@@ -8,7 +9,10 @@ import {
   summarizeExtractedText,
 } from '../lib/student-materials/text.ts';
 import { buildStudentMaterialGlossary } from '../lib/student-materials/glossary.ts';
-import { cleanRepeatedPageChrome } from '../lib/student-materials/pdf-extract.ts';
+import {
+  cleanRepeatedPageChrome,
+  extractTextFromPdfBuffer,
+} from '../lib/student-materials/pdf-extract.ts';
 import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
 
 const sampleText = `
@@ -96,6 +100,165 @@ assert.ok(cleanedPages.every((page) => !/Página \d/.test(page)));
 assert.ok(
   cleanedPages.filter((page) => page.includes('La memoria de trabajo')).length === 2,
   'La limpieza no debe borrar contenido académico repetido dentro del cuerpo.'
+);
+
+async function buildPdfExtractionRegressionFixture() {
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const pageSize: [number, number] = [595, 842];
+  const header = 'UNIVERSIDAD EVALUO - MATERIAL DE ESTUDIO';
+
+  const addChrome = (
+    page: ReturnType<PDFDocument['addPage']>,
+    pageNumber: number
+  ) => {
+    page.drawText(header, { x: 40, y: 805, size: 10, font });
+    page.drawText(`Pagina ${pageNumber}`, { x: 40, y: 24, size: 10, font });
+  };
+
+  const page1 = pdf.addPage(pageSize);
+  addChrome(page1, 1);
+  page1.drawText('TABLA DE APRENDIZAJE', { x: 40, y: 760, size: 14, font });
+  page1.drawText('Tipo', { x: 40, y: 720, size: 10, font });
+  page1.drawText('Como funciona y ejemplos', { x: 260, y: 720, size: 10, font });
+
+  page1.drawText('Supervisado', { x: 40, y: 695, size: 10, font });
+  page1.drawText('Aprende con respuestas correctas.', { x: 260, y: 695, size: 10, font });
+  page1.drawText('Sirve para clasificacion y prediccion.', {
+    x: 260,
+    y: 681,
+    size: 10,
+    font,
+  });
+
+  page1.drawText('No supervisado', { x: 40, y: 650, size: 10, font });
+  page1.drawText('Busca grupos y estructuras.', { x: 260, y: 650, size: 10, font });
+  page1.drawText('Detecta patrones desconocidos.', {
+    x: 260,
+    y: 636,
+    size: 10,
+    font,
+  });
+
+  page1.drawText('Por refuerzo', { x: 40, y: 605, size: 10, font });
+  page1.drawText('Aprende mediante recompensas y penalizaciones.', {
+    x: 260,
+    y: 605,
+    size: 10,
+    font,
+  });
+  page1.drawText(
+    'La tabla debe conservar cada explicacion junto al tipo de aprendizaje correspondiente.',
+    { x: 40, y: 560, size: 10, font }
+  );
+
+  // Página física 2 intencionalmente vacía. Debe conservar su posición.
+  pdf.addPage(pageSize);
+
+  const page3 = pdf.addPage(pageSize);
+  addChrome(page3, 3);
+  page3.drawText('UNIDAD 3. GENERALIZACION', { x: 40, y: 760, size: 14, font });
+  page3.drawText(
+    'La generalizacion permite aplicar un modelo a ejemplos que no fueron utilizados durante el entrenamiento.',
+    { x: 40, y: 720, size: 10, font }
+  );
+  page3.drawText(
+    'Una evaluacion correcta separa los datos de entrenamiento de los datos empleados para comprobar rendimiento.',
+    { x: 40, y: 700, size: 10, font }
+  );
+  page3.drawText(
+    'La pagina debe conservar su numero fisico aunque la pagina anterior no contenga texto seleccionable.',
+    { x: 40, y: 680, size: 10, font }
+  );
+
+  const page4 = pdf.addPage(pageSize);
+  addChrome(page4, 4);
+  page4.drawText('UNIDAD 4. EVALUACION', { x: 40, y: 760, size: 14, font });
+  page4.drawText(
+    'La evaluacion analiza el rendimiento del modelo y los tipos de error que pueden aparecer en situaciones reales.',
+    { x: 40, y: 720, size: 10, font }
+  );
+  page4.drawText(
+    'La trazabilidad debe indicar que este contenido pertenece a la pagina fisica cuatro del documento original.',
+    { x: 40, y: 700, size: 10, font }
+  );
+  page4.drawText(
+    'Los encabezados y pies repetidos no deben formar parte del contenido academico persistido.',
+    { x: 40, y: 680, size: 10, font }
+  );
+
+  return Buffer.from(await pdf.save());
+}
+
+const extractionFixture = await extractTextFromPdfBuffer(
+  await buildPdfExtractionRegressionFixture()
+);
+
+assert.equal(extractionFixture.pageCount, 4, 'PDF.js debe conservar las cuatro páginas físicas.');
+assert.equal(
+  extractionFixture.pages?.length,
+  4,
+  'La extracción debe devolver una entrada por cada página física.'
+);
+assert.equal(
+  extractionFixture.pages?.[1] ?? '__missing__',
+  '',
+  'Una página sin texto debe mantenerse vacía sin desplazar la numeración posterior.'
+);
+
+const extractionPage1 = extractionFixture.pages?.[0] ?? '';
+assert.match(
+  extractionPage1,
+  /\| Supervisado \| Aprende con respuestas correctas\. Sirve para clasificacion y prediccion\. \|/,
+  'Una celda multilínea debe permanecer dentro de la fila Supervisado.'
+);
+assert.match(
+  extractionPage1,
+  /\| No supervisado \| Busca grupos y estructuras\. Detecta patrones desconocidos\. \|/,
+  'Una celda multilínea debe permanecer dentro de la fila No supervisado.'
+);
+assert.match(
+  extractionPage1,
+  /\| Por refuerzo \| Aprende mediante recompensas y penalizaciones\. \|/,
+  'La última fila de la tabla debe conservarse completa.'
+);
+assert.ok(
+  !extractionPage1.includes('UNIVERSIDAD EVALUO'),
+  'El encabezado repetido debe eliminarse del texto académico.'
+);
+assert.ok(
+  !/Pagina 1/.test(extractionPage1),
+  'El pie de página repetido debe eliminarse del texto académico.'
+);
+
+for (const pageIndex of [2, 3]) {
+  const page = extractionFixture.pages?.[pageIndex] ?? '';
+  assert.ok(
+    !page.includes('UNIVERSIDAD EVALUO'),
+    `El encabezado repetido debe eliminarse de la página ${pageIndex + 1}.`
+  );
+  assert.ok(
+    !new RegExp(`Pagina ${pageIndex + 1}`).test(page),
+    `El pie repetido debe eliminarse de la página ${pageIndex + 1}.`
+  );
+}
+
+const extractionTraceableChunks = buildTraceableSummaryChunks(
+  extractionFixture.pages,
+  extractionFixture.text
+);
+const extractionPhysicalPages = new Set(
+  extractionTraceableChunks
+    .map((chunk) => chunk.pageStart)
+    .filter((page): page is number => typeof page === 'number')
+);
+
+assert.ok(extractionPhysicalPages.has(1), 'Debe haber chunks trazables de la página 1.');
+assert.ok(extractionPhysicalPages.has(3), 'Debe conservarse la página física 3.');
+assert.ok(extractionPhysicalPages.has(4), 'Debe conservarse la página física 4.');
+assert.ok(
+  !extractionPhysicalPages.has(2),
+  'La página física 2 vacía no debe producir chunks ficticios.'
 );
 
 const traceableChunks = buildTraceableSummaryChunks(

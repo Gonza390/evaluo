@@ -6,6 +6,6 @@
 *.gif binary
 *.webp binary
 *.pdf binary
-*.mjs binary
+*.mjs text eol=lf
 *.min.mjs binary
 *.ico binary

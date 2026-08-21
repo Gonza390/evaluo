@@ -5,7 +5,6 @@ import {
   generateStudentMaterialSummary,
   persistStudentMaterialGlossaryArtifacts,
   persistStudentMaterialSummaryFromComputed,
-  buildPedagogicalArtifacts,
   generatePedagogicalModel,
 } from '@/lib/student-material-summary';
 import { completeStudentMaterialJob } from '@/lib/student-material-jobs';
@@ -27,7 +26,7 @@ import {
   summarizeExtractedText,
 } from '@/lib/student-materials/text';
 import { logError, logInfo } from '@/lib/observability';
-import type { StudyDocumentAnalysis, StudyDocumentModel } from '@/lib/student-materials/types';
+import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
 import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
 
@@ -38,7 +37,6 @@ export type StudentMaterialProcessingStage =
   | 'glossary'
   | 'ready'
   | 'failed';
-
 
 export type StudentMaterialProcessingResult = {
   success: boolean;
@@ -86,11 +84,25 @@ export async function processStudentMaterial(input: {
   const buffer = Buffer.from(await context.file.arrayBuffer());
   const { text, pageCount, pages } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, text, pageCount);
-  const pagesProcessed = Array.isArray(pages)
+
+  /**
+   * `pagesProcessed` mide páginas físicas procesadas por el extractor,
+   * no páginas que contienen texto seleccionable.
+   *
+   * Una página vacía, una página con sólo imágenes o una página visual puede
+   * haber sido procesada correctamente y conservar su posición física dentro
+   * de `pages[]` aunque su string sea vacío.
+   */
+  const pagesProcessed = Array.isArray(pages) ? pages.length : 0;
+  const pagesWithText = Array.isArray(pages)
     ? pages.filter((page) => page.trim().length > 0).length
     : 0;
+
   const coverageRatio =
-    pageCount && pageCount > 0 ? Math.round((pagesProcessed / pageCount) * 100) / 100 : 0;
+    pageCount && pageCount > 0
+      ? Math.min(1, Math.round((pagesProcessed / pageCount) * 100) / 100)
+      : 0;
+
   const extractionMs = Date.now() - extractionStartedAt;
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
 
@@ -124,6 +136,7 @@ export async function processStudentMaterial(input: {
     pagesProcessed,
     coverageRatio,
   });
+
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing',
     processingStage: 'extracting',
@@ -141,6 +154,7 @@ export async function processStudentMaterial(input: {
     carreraName: context.carreraName,
     materiaName: context.materiaName,
     text,
+    pages,
     documentAnalysis,
     pdfBuffer: documentAnalysis.requiresOcr ? buffer : undefined,
     materialId: material.id,
@@ -150,12 +164,19 @@ export async function processStudentMaterial(input: {
   const pedagogicalModel = await generatePedagogicalModel(generationInput);
   if (pedagogicalModel) {
     try {
-      await admin
+      const { error: pedagogicalModelPersistError } = await admin
         .from('student_materials')
         .update({ pedagogical_model: pedagogicalModel as unknown as Json } as never)
         .eq('id', material.id);
+
+      if (pedagogicalModelPersistError) {
+        throw pedagogicalModelPersistError;
+      }
     } catch (modelErr) {
-      logError('processStudentMaterial.pedagogicalModelPersist', modelErr, { materialId: material.id });
+      logError('processStudentMaterial.pedagogicalModelPersist', modelErr, {
+        materialId: material.id,
+      });
+      throw modelErr;
     }
   }
 
@@ -172,18 +193,22 @@ export async function processStudentMaterial(input: {
     pagesProcessed,
     coverageRatio,
   });
+
   const generationStartedAt = Date.now();
   const glossarySeed = mapLocalSummaryToView(
     summarizeExtractedText(text, material.title),
     buildSummaryChunks(text).length,
     'parallel-local-seed'
   );
+
   const [summary, glossary] = await Promise.all([
     generateStudentMaterialSummary(generationInput),
     generateStudentMaterialGlossary(generationInput, glossarySeed),
   ]);
+
   const generationMs = Date.now() - generationStartedAt;
   const aiUsage = await aggregateAiUsageForMaterial(admin, material.id);
+
   await persistStudentMaterialSummaryFromComputed({
     admin,
     studentMaterialId: material.id,
@@ -213,7 +238,9 @@ export async function processStudentMaterial(input: {
       });
     }
   } catch (chunkEvalError) {
-    logError('processStudentMaterial.chunkQuality', chunkEvalError, { materialId: material.id });
+    logError('processStudentMaterial.chunkQuality', chunkEvalError, {
+      materialId: material.id,
+    });
   }
 
   await updateStudentMaterialProcessing(admin, material.id, {
@@ -224,6 +251,7 @@ export async function processStudentMaterial(input: {
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
   });
+
   await persistStudentMaterialGlossaryArtifacts({
     admin,
     studentMaterialId: material.id,
@@ -243,12 +271,14 @@ export async function processStudentMaterial(input: {
     pagesProcessed,
     coverageRatio,
   });
+
   if (input.jobId) await completeStudentMaterialJob(admin, input.jobId);
 
   logInfo('processStudentMaterial.performance', {
     materialId: material.id,
     pageCount,
     pagesProcessed,
+    pagesWithText,
     coverageRatio,
     chunkCount: traceableChunks.length,
     extractionMs,

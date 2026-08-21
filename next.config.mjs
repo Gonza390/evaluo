@@ -71,7 +71,10 @@ const nextConfig = {
       },
     ],
   },
-  serverExternalPackages: ['@google/generative-ai'],
+  serverExternalPackages: [
+    '@google/generative-ai',
+    'pdfjs-dist',
+  ],
 };
 
 export default nextConfig;
