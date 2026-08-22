@@ -13,6 +13,10 @@ import {
   getModuleNumber,
 } from '../app/explorar/materia/[id]/materia-content.helpers.ts';
 import { resolveProfileSettingsState } from '../lib/profile-settings.ts';
+import {
+  getAcademicProfileActiveSubjectIds,
+  hasCompleteAcademicProfile,
+} from '../lib/profile-completion.ts';
 import { isAllowedAnalyticsEventName } from '../lib/analytics-events.ts';
 import { sanitizeAnalyticsMetadata } from '../lib/analytics-metadata.ts';
 import {
@@ -55,6 +59,36 @@ const profileState = resolveProfileSettingsState({
 assert.equal(profileState.nombre, 'Ada Lovelace');
 assert.equal(profileState.pais, 'AR');
 assert.equal(profileState.universidadId, 'uni-1');
+
+const activeSubjectsFixture = [
+  { id: 'mat-1', name: 'Derecho Constitucional' },
+  { id: 'mat-2', name: 'Derecho Civil' },
+];
+assert.deepEqual(getAcademicProfileActiveSubjectIds(activeSubjectsFixture), ['mat-1', 'mat-2']);
+assert.equal(
+  hasCompleteAcademicProfile({
+    universidadId: 'uni-1',
+    carreraId: 'car-1',
+    activeSubjects: activeSubjectsFixture,
+  }),
+  true
+);
+assert.equal(
+  hasCompleteAcademicProfile({
+    universidadId: 'uni-1',
+    carreraId: 'car-1',
+    activeSubjects: [],
+  }),
+  false
+);
+assert.equal(
+  hasCompleteAcademicProfile({
+    universidadId: 'uni-1',
+    carreraId: '',
+    activeSubjects: activeSubjectsFixture,
+  }),
+  false
+);
 
 assert.deepEqual(dedupeOptionsForView([' A ', 'a', 'B', 'B  ', '']), ['A', 'B']);
 assert.deepEqual(parseCorrectAnswers('Uno | Dos; Tres'), ['Uno', 'Dos', 'Tres']);

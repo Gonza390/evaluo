@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { redirect } from 'next/navigation';
 import { getDashboardBootstrap } from '@/lib/data/dashboard-bootstrap';
+import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
 
 const DashboardContent = dynamic(
   () => import('@/components/dashboard/dashboard-content').then((module) => module.DashboardContent),
@@ -24,7 +25,19 @@ export default async function DashboardPage() {
     redirect('/login?next=%2Fdashboard');
   }
 
-  if (bootstrap.status === 'complete-profile') {
+  const hasResolvedAcademicProfile = Boolean(
+    bootstrap.academicProfile?.universidadId && bootstrap.academicProfile?.carreraId
+  );
+  const needsSubjectCompletion =
+    bootstrap.status === 'ok' &&
+    hasResolvedAcademicProfile &&
+    !hasCompleteAcademicProfile({
+      universidadId: bootstrap.academicProfile?.universidadId,
+      carreraId: bootstrap.academicProfile?.carreraId,
+      activeSubjects: bootstrap.state.activeSubjects,
+    });
+
+  if (bootstrap.status === 'complete-profile' || needsSubjectCompletion) {
     redirect('/completar-perfil?next=%2Fdashboard');
   }
 

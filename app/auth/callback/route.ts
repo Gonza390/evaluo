@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
+import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -47,14 +48,17 @@ export async function GET(request: Request) {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('universidad_id, carrera_id')
+        .select('universidad_id, carrera_id, active_subjects')
         .eq('id', data.session.user.id)
         .maybeSingle();
 
-      const universidadId = String(profile?.universidad_id ?? '').trim();
-      const carreraId = String(profile?.carrera_id ?? '').trim();
-
-      if (!universidadId || !carreraId) {
+      if (
+        !hasCompleteAcademicProfile({
+          universidadId: profile?.universidad_id,
+          carreraId: profile?.carrera_id,
+          activeSubjects: profile?.active_subjects,
+        })
+      ) {
         return NextResponse.redirect(
           `${requestUrl.origin}/completar-perfil?next=${encodeURIComponent(nextPath)}`
         );

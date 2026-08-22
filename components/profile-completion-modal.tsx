@@ -20,7 +20,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
   ArrowLeft,
@@ -32,6 +31,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { logError } from '@/lib/observability';
+import { getAcademicProfileActiveSubjectIds } from '@/lib/profile-completion';
 import { useToast } from '@/components/ui/use-toast';
 import { Spinner } from '@/components/ui/spinner';
 import { getMateriasByCarrera } from '@/services/api';
@@ -183,7 +183,7 @@ export function ProfileCompletionModal({
         // 2. Also fetch profile from DB
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('universidad_id, carrera_id')
+          .select('universidad_id, carrera_id, active_subjects')
           .eq('id', userId)
           .maybeSingle();
 
@@ -192,10 +192,13 @@ export function ProfileCompletionModal({
 
         const dbUniId = String(profile?.universidad_id ?? '').trim();
         const dbCarreraId = String(profile?.carrera_id ?? '').trim();
+        const dbMateriaIds = getAcademicProfileActiveSubjectIds(profile?.active_subjects);
 
         // Use DB as source of truth, fallback to persisted
         const effectiveUniId = dbUniId || persisted?.universidadId || '';
         const effectiveCarreraId = dbCarreraId || persisted?.carreraId || '';
+        const effectiveMateriaIds =
+          dbMateriaIds.length > 0 ? dbMateriaIds : (persisted?.selectedMateriaIds ?? []);
 
         if (effectiveUniId) {
           setUniversidadId(effectiveUniId);
@@ -249,18 +252,17 @@ export function ProfileCompletionModal({
 
         // Determine starting step
         if (active) {
+          if (effectiveMateriaIds.length > 0) {
+            setSelectedMateriaIds(effectiveMateriaIds);
+          }
+
           if (persisted && persisted.step >= 1 && persisted.step <= TOTAL_STEPS) {
-            // Restore from persisted state
             setStep(persisted.step);
-            if (persisted.selectedMateriaIds.length > 0) {
-              setSelectedMateriaIds(persisted.selectedMateriaIds);
-            }
             if (persisted.universidadNombre) setUniversidadNombre(persisted.universidadNombre);
             if (persisted.universidadSearch) setUniversidadSearch(persisted.universidadSearch);
             if (persisted.carreraNombre) setCarreraNombre(persisted.carreraNombre);
             if (persisted.carreraSearch) setCarreraSearch(persisted.carreraSearch);
           } else if (effectiveUniId && effectiveCarreraId) {
-            // Already has profile — jump to step 3 or 4
             setStep(3);
           } else if (effectiveUniId) {
             setStep(2);
@@ -386,7 +388,7 @@ export function ProfileCompletionModal({
   }, [carreraSearch, hydratingProfile, initialized, isOpen, universidadId, userId]);
 
   /* ================================================================ */
-  /*  Fetch materias for step 3                                         */
+  /*  Fetch materias for step 3                                       */
   /* ================================================================ */
 
   useEffect(() => {
@@ -534,17 +536,18 @@ export function ProfileCompletionModal({
   /* ================================================================ */
 
   const handleSaveAndFinish = useCallback(async () => {
-    if (!universidadId || !carreraId) return;
+    if (!universidadId || !carreraId || selectedMateriaIds.length === 0) return;
 
     setSaving(true);
     try {
       const result = await updateProfile(userId, {
         universidad_id: universidadId,
         carrera_id: carreraId,
+        materia_ids: selectedMateriaIds,
       });
 
       if (!result.success) {
-        throw new Error('Error al actualizar el perfil');
+        throw new Error(result.message);
       }
 
       clearPersistedState(userId);
@@ -554,16 +557,20 @@ export function ProfileCompletionModal({
         userId,
         universidadId,
         carreraId,
+        selectedMaterias: selectedMateriaIds.length,
       });
       toast({
         title: 'Error',
-        description: 'No pudimos guardar tus datos. Por favor intentá de nuevo.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'No pudimos guardar tus datos. Por favor intentá de nuevo.',
         variant: 'destructive',
       });
     } finally {
       setSaving(false);
     }
-  }, [carreraId, goNext, toast, universidadId, userId]);
+  }, [carreraId, goNext, selectedMateriaIds, toast, universidadId, userId]);
 
   const handleGoToDashboard = useCallback(() => {
     router.refresh();
@@ -834,7 +841,9 @@ export function ProfileCompletionModal({
                         ¿Qué materias cursás?
                       </DialogTitle>
                       <DialogDescription className="mt-1 text-sm leading-5 text-slate-500">
-                        Seleccioná al menos 1 materia para empezar, o saltá este paso.
+                        {allowSkip
+                          ? 'Seleccioná al menos 1 materia para empezar, o saltá este paso.'
+                          : 'Seleccioná al menos 1 materia para continuar.'}
                       </DialogDescription>
                     </div>
                   </div>
@@ -863,7 +872,7 @@ export function ProfileCompletionModal({
                       No encontramos materias para esta carrera.
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Podés agregar materias más tarde desde el dashboard.
+                      Revisá la carrera elegida o intentá nuevamente más tarde.
                     </p>
                   </div>
                 ) : (
@@ -874,6 +883,7 @@ export function ProfileCompletionModal({
                         <button
                           key={materia.id}
                           type="button"
+                          aria-pressed={isSelected}
                           onClick={() => toggleMateria(materia.id)}
                           className={cn(
                             'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition',
@@ -882,11 +892,17 @@ export function ProfileCompletionModal({
                               : 'hover:bg-white text-slate-700'
                           )}
                         >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleMateria(materia.id)}
-                            className="shrink-0 border-slate-300 data-[state=checked]:border-[#2563EB] data-[state=checked]:bg-[#2563EB]"
-                          />
+                          <span
+                            aria-hidden="true"
+                            className={cn(
+                              'flex h-4 w-4 shrink-0 items-center justify-center rounded border',
+                              isSelected
+                                ? 'border-[#2563EB] bg-[#2563EB] text-white'
+                                : 'border-slate-300 bg-white'
+                            )}
+                          >
+                            {isSelected ? <Check className="h-3 w-3" strokeWidth={3} /> : null}
+                          </span>
                           <span className="font-medium">{materia.nombre}</span>
                         </button>
                       );
@@ -922,19 +938,15 @@ export function ProfileCompletionModal({
                   <p className="text-sm text-slate-600">
                     Vas a estudiar{' '}
                     <span className="font-bold text-slate-900">
-                      {selectedMateriaIds.length > 0
-                        ? `${selectedMateriaIds.length} ${selectedMateriaIds.length === 1 ? 'materia' : 'materias'}`
-                        : 'materias que agregues después'}
+                      {selectedMateriaIds.length}{' '}
+                      {selectedMateriaIds.length === 1 ? 'materia' : 'materias'}
                     </span>
                   </p>
                   <p className="text-sm text-slate-600">
-                    en{' '}
-                    <span className="font-bold text-[#2563EB]">{universidadNombre}</span>
+                    en <span className="font-bold text-[#2563EB]">{universidadNombre}</span>
                   </p>
                   {carreraNombre && (
-                    <p className="mt-1 text-xs text-slate-400">
-                      Carrera: {carreraNombre}
-                    </p>
+                    <p className="mt-1 text-xs text-slate-400">Carrera: {carreraNombre}</p>
                   )}
                 </div>
 

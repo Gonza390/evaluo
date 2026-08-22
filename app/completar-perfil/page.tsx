@@ -5,11 +5,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ProfileCompletionModal } from '@/components/profile-completion-modal';
 import { useUser } from '@/hooks/useUser';
 import { logError } from '@/lib/observability';
+import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
 import { DEMO_MIGRATION_FLAG_KEY } from '@/lib/simulator-persistence';
 import { supabase } from '@/lib/supabase-client';
 
 function sanitizeNextPath(value: string | null) {
-  if (!value || !value.startsWith('/')) {
+  if (
+    !value ||
+    !value.startsWith('/') ||
+    value.startsWith('//') ||
+    /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)
+  ) {
     return '/dashboard';
   }
 
@@ -19,7 +25,9 @@ function sanitizeNextPath(value: string | null) {
 function ProfileSetupSkeleton({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
-      <div className={`w-full ${compact ? 'max-w-3xl' : 'max-w-6xl'} rounded-[32px] border border-white/80 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]`}>
+      <div
+        className={`w-full ${compact ? 'max-w-3xl' : 'max-w-6xl'} rounded-[32px] border border-white/80 bg-white/78 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]`}
+      >
         <div className="h-4 w-32 animate-pulse rounded-full bg-white" />
         <div className="mt-4 h-10 w-3/4 animate-pulse rounded-2xl bg-white" />
         <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-white" />
@@ -28,9 +36,11 @@ function ProfileSetupSkeleton({ compact = false }: { compact?: boolean }) {
           <div className="h-32 animate-pulse rounded-[28px] bg-white" />
           <div className="h-32 animate-pulse rounded-[28px] bg-white" />
         </div>
-        <p className="mt-6 text-sm font-semibold text-slate-700">Estamos preparando tu experiencia académica</p>
+        <p className="mt-6 text-sm font-semibold text-slate-700">
+          Estamos preparando tu experiencia académica
+        </p>
         <p className="mt-1 text-sm text-slate-500">
-          Validamos tu sesión y revisamos si ya tenés universidad y carrera configuradas.
+          Validamos tu sesión y revisamos tu universidad, carrera y materias activas.
         </p>
         <p className="mt-3 text-xs text-slate-500">
           Si este paso tarda demasiado, recarga la página e intenta nuevamente.
@@ -73,17 +83,20 @@ function CompletarPerfilContent() {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('universidad_id, carrera_id')
+          .select('universidad_id, carrera_id, active_subjects')
           .eq('id', user.id)
           .maybeSingle();
 
         if (error) throw error;
         if (!active) return;
 
-        const hasUniversity = String(data?.universidad_id ?? '').trim().length > 0;
-        const hasCareer = String(data?.carrera_id ?? '').trim().length > 0;
-
-        if (hasUniversity && hasCareer) {
+        if (
+          hasCompleteAcademicProfile({
+            universidadId: data?.universidad_id,
+            carreraId: data?.carrera_id,
+            activeSubjects: data?.active_subjects,
+          })
+        ) {
           setRequiresCompletion(false);
           router.replace(nextPath);
           return;
