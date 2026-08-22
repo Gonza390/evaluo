@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 
 const trustSignals = [
   'Contenido ordenado por universidad, carrera y materia.',
-  'Resumenes, pregunteros y simuladores dentro del mismo flujo.',
+  'Resúmenes, pregunteros y simuladores dentro del mismo flujo.',
   'Experiencia pensada para estudiar mejor desde celular y desktop.',
   'Acceso rápido a lo importante sin perseguir PDFs ni links rotos.',
 ];

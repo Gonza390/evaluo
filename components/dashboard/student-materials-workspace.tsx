@@ -786,10 +786,11 @@ export function StudentMaterialsWorkspace({
 
           <div className="grid gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                Titulo
-              </p>
+              <label htmlFor="material-title" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                Título
+              </label>
               <Input
+                id="material-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Ej. Resumen completo para el primer parcial"
@@ -811,10 +812,11 @@ export function StudentMaterialsWorkspace({
             ) : (
               <>
                 <div>
-                  <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                  <label htmlFor="material-universidad" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
                     Universidad
-                  </p>
+                  </label>
                   <select
+                    id="material-universidad"
                     value={universidadId}
                     onChange={(event) => {
                       setUniversidadId(event.target.value);
@@ -833,10 +835,11 @@ export function StudentMaterialsWorkspace({
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                  <label htmlFor="material-carrera" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
                     Carrera
-                  </p>
+                  </label>
                   <select
+                    id="material-carrera"
                     value={carreraId}
                     onChange={(event) => {
                       setCarreraId(event.target.value);
@@ -857,10 +860,11 @@ export function StudentMaterialsWorkspace({
             )}
 
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <label htmlFor="material-materia" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
                 Materia
-              </p>
+              </label>
               <select
+                id="material-materia"
                 value={materiaId}
                 onChange={(event) => setMateriaId(event.target.value)}
                 disabled={!carreraId}
@@ -876,10 +880,11 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <label htmlFor="material-file" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
                 Archivo PDF
-              </p>
+              </label>
               <Input
+                id="material-file"
                 key={fileInputKey}
                 type="file"
                 accept=".pdf,application/pdf"

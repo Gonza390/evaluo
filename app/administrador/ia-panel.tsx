@@ -198,23 +198,29 @@ export function IAPanel({
           </div>
         </div>
         <div className="space-y-4 p-5">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+<div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <div>
-              <p className="mb-2 text-[12px] font-medium text-[#7f8aa3]">Preguntas por corrida</p>
-              <Input value={warmupBatchSize} onChange={(event) => setWarmupBatchSize(event.target.value)} inputMode="numeric" />
+              <label htmlFor="warmup-batch-size" className="mb-2 block text-[12px] font-medium text-[#7f8aa3]">
+                Preguntas por corrida
+              </label>
+              <Input id="warmup-batch-size" value={warmupBatchSize} onChange={(event) => setWarmupBatchSize(event.target.value)} inputMode="numeric" />
             </div>
             <div>
-              <p className="mb-2 text-[12px] font-medium text-[#7f8aa3]">Presupuesto máximo de tokens</p>
-              <Input value={warmupTokenBudget} onChange={(event) => setWarmupTokenBudget(event.target.value)} inputMode="numeric" />
+              <label htmlFor="warmup-token-budget" className="mb-2 block text-[12px] font-medium text-[#7f8aa3]">
+                Presupuesto máximo de tokens
+              </label>
+              <Input id="warmup-token-budget" value={warmupTokenBudget} onChange={(event) => setWarmupTokenBudget(event.target.value)} inputMode="numeric" />
             </div>
             <div>
-              <p className="mb-2 text-[12px] font-medium text-[#7f8aa3]">Ventana de análisis en días</p>
-              <Input value={warmupLookbackDays} onChange={(event) => setWarmupLookbackDays(event.target.value)} inputMode="numeric" />
+              <label htmlFor="warmup-lookback-days" className="mb-2 block text-[12px] font-medium text-[#7f8aa3]">
+                Ventana de análisis en días
+              </label>
+              <Input id="warmup-lookback-days" value={warmupLookbackDays} onChange={(event) => setWarmupLookbackDays(event.target.value)} inputMode="numeric" />
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-[#e8edf5] bg-white px-4 py-4 text-[13px] text-[#5f6d86]">
-            Recomendacion inicial: 30 preguntas por dia con un tope de 65.000 tokens estimados. Si el costo queda comodo,
+<div className="rounded-[16px] border border-[#e8edf5] bg-white px-4 py-4 text-[13px] text-[#5f6d86]">
+            Recomendación inicial: 30 preguntas por día con un tope de 65.000 tokens estimados. Si el costo queda cómodo,
             luego podés subir a 40-50 por corrida.
           </div>
 
