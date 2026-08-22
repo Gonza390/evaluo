@@ -29,10 +29,10 @@ function truncateAtWord(text: string, limit: number) {
   return `${partial.slice(0, Math.max(1, partial.lastIndexOf(' '))).trim()}...`;
 }
 
-const CORE_CONCEPT_PATTERN =
-  /inteligencia artificial|aprendizaje autom[aá]tico|machine learning|deep learning|entrenamiento|inferencia|generalizaci[oó]n|dataset|ia generativa|ciberseguridad|edge computing|computaci[oó]n cu[aá]ntica|brecha digital|automatizaci[oó]n|blockchain|internet de las cosas|iot|rob[oó]tica/i;
 const GENERIC_TERM_PATTERN =
   /^(?:idea general|buena pr[aá]ctica|comprender qu[eé]|definir el problema|desplegar|evaluar|generaci[oó]n|hogar|industria|educaci[oó]n|ciudades|arquitectura|agricultura)$/i;
+const FOUNDATIONAL_CONTEXT_PATTERN =
+  /fundamentos?|conceptos?|definici[oó]n|principios?|bases?\b|marco\b|teor[ií]a|modelos?|elementos?|componentes?|caracter[ií]sticas?/i;
 const UNDERSTANDING_SIGNAL_PATTERN =
   /clasificaci[oó]n|tipos?\b|incluye|se compone|relaci[oó]n|diferenc|compar|proceso|etapas?|fases?|pasos?|ventajas?|limitaciones?|criterios?|riesgos?/i;
 const APPLICATION_SIGNAL_PATTERN =
@@ -65,19 +65,35 @@ export function isPedagogicalGlossaryItem(item: StudyGlossaryItem) {
   return true;
 }
 
-function conceptScore(item: StudyGlossaryItem) {
-  let score = item.importance === 'alta' ? 4 : 1;
-  if (CORE_CONCEPT_PATTERN.test(`${item.term} ${item.definition}`)) score += 10;
-  if (item.englishTerm) score += 2;
-  if (/secci[oó]n|fundamentos|conceptos/i.test(item.context)) score += 2;
-  if (/d[oó]nde se utiliza|realidad mixta/i.test(item.context)) score -= 2;
+function conceptCentrality(item: StudyGlossaryItem, glossary: StudyGlossaryItem[]) {
+  const needle = normalizeForDedupe(item.term);
+  if (needle.length < 4) return 0;
+
+  let mentions = 0;
+  for (const candidate of glossary) {
+    if (candidate === item) continue;
+    const relatedText = normalizeForDedupe(`${candidate.definition} ${candidate.context}`);
+    if (relatedText.includes(needle)) mentions += 1;
+  }
+
+  return Math.min(3, mentions);
+}
+
+function conceptScore(item: StudyGlossaryItem, glossary: StudyGlossaryItem[]) {
+  let score = item.importance === 'alta' ? 6 : item.importance === 'media' ? 3 : 1;
+  const pedagogicalText = `${item.term} ${item.definition} ${item.context}`;
+
+  if (FOUNDATIONAL_CONTEXT_PATTERN.test(item.context)) score += 2;
+  if (UNDERSTANDING_SIGNAL_PATTERN.test(pedagogicalText)) score += 1;
+  score += conceptCentrality(item, glossary);
+
   return score;
 }
 
 export function selectPedagogicalConcepts(glossary: StudyGlossaryItem[], limit = 12) {
   return glossary
     .filter(isPedagogicalGlossaryItem)
-    .map((item, index) => ({ item, index, score: conceptScore(item) }))
+    .map((item, index) => ({ item, index, score: conceptScore(item, glossary) }))
     .sort((left, right) => right.score - left.score || left.index - right.index)
     .slice(0, limit)
     .map(({ item }) => item);
