@@ -6,6 +6,7 @@ import type { AdminClient } from '@/lib/student-materials/types';
 export type AiUsageOperation =
   | 'summary_map'
   | 'summary_reduce'
+  | 'summary_canonical'
   | 'summary_pdf'
   | 'summary_vision'
   | 'glossary'

@@ -14,6 +14,27 @@ import {
   extractTextFromPdfBuffer,
 } from '../lib/student-materials/pdf-extract.ts';
 import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
+import {
+  buildPedagogicalMapGroupFromIndexes,
+  expandCompactPedagogicalNode,
+  findMissingCompactChunkNumbers,
+  mergeCompactPedagogicalNodes,
+  normalizeCompactPedagogicalNode,
+} from '../lib/student-materials/pedagogy-ai.ts';
+import {
+  buildCanonicalSummarySource,
+  buildCanonicalSummarySourceText,
+} from '../lib/student-materials/canonical-summary-source.ts';
+import {
+  buildCanonicalStudentMaterialSummaryFallback,
+  buildCanonicalSummaryPrompt,
+} from '../lib/student-materials/canonical-summary.ts';
+import {
+  buildCanonicalStudentMaterialGlossary,
+  CANONICAL_GLOSSARY_PROVIDER,
+  resolveCanonicalGlossaryLimit,
+} from '../lib/student-materials/canonical-glossary.ts';
+import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
 
 const sampleText = `
 UNIDAD 1. APRENDIZAJE AUTORREGULADO
@@ -312,6 +333,590 @@ assert.match(
   coveredSource,
   /MARCA_30/,
   'La selección para IA debe incluir el final del documento.'
+);
+
+
+
+const compactNodeA = normalizeCompactPedagogicalNode(
+  {
+    t: 'Material compacto',
+    o: 'Primera parte del material.',
+    tp: [
+      {
+        n: 'Aprendizaje automático',
+        d: 'Los modelos aprenden patrones a partir de datos.',
+        v: 'alta',
+        s: [1],
+      },
+    ],
+    c: [
+      {
+        n: 'Machine learning',
+        d: 'Aprende patrones a partir de datos.',
+        k: 'definicion',
+        s: [1],
+      },
+    ],
+    r: [],
+    cl: [],
+    p: [],
+    f: [],
+    a: [],
+    e: [],
+    x: [],
+    cf: [],
+  },
+  new Set([1, 2, 3])
+);
+
+const compactNodeB = normalizeCompactPedagogicalNode(
+  {
+    t: 'Material compacto',
+    o: 'Segunda parte del material.',
+    tp: [
+      {
+        n: 'Aprendizaje automático',
+        d: 'Los modelos aprenden patrones a partir de datos y ejemplos.',
+        v: 'alta',
+        s: [3, 999],
+      },
+    ],
+    c: [
+      {
+        n: 'Machine learning',
+        d: 'Aprende patrones a partir de datos.',
+        k: 'definicion',
+        s: [3],
+      },
+    ],
+    r: [],
+    cl: [],
+    p: [],
+    f: [],
+    a: [],
+    e: [],
+    x: [],
+    cf: [],
+  },
+  new Set([1, 2, 3])
+);
+
+const compactMerged = mergeCompactPedagogicalNodes([
+  compactNodeA,
+  compactNodeB,
+]);
+assert.equal(
+  compactMerged.tp.length,
+  1,
+  'La compactación determinista debe fusionar topics duplicados exactos.'
+);
+assert.deepEqual(
+  compactMerged.tp[0]?.s,
+  [1, 3],
+  'Al fusionar duplicados debe unir todos los source chunks válidos.'
+);
+assert.equal(
+  compactMerged.c.length,
+  1,
+  'La compactación determinista debe fusionar conceptos equivalentes por clave.'
+);
+assert.deepEqual(
+  compactMerged.c[0]?.s,
+  [1, 3],
+  'La provenance de conceptos duplicados no puede perderse.'
+);
+
+const expandedCompact = expandCompactPedagogicalNode(compactMerged);
+const expandedTopics = Array.isArray(expandedCompact.topics)
+  ? expandedCompact.topics
+  : [];
+const expandedConcepts = Array.isArray(expandedCompact.concepts)
+  ? expandedCompact.concepts
+  : [];
+
+assert.deepEqual(
+  (expandedTopics[0] as { sourceChunkNumbers?: number[] } | undefined)
+    ?.sourceChunkNumbers,
+  [1, 3],
+  'La expansión al contrato canónico debe restaurar sourceChunkNumbers.'
+);
+assert.deepEqual(
+  (expandedConcepts[0] as { sourceChunkNumbers?: number[] } | undefined)
+    ?.sourceChunkNumbers,
+  [1, 3],
+  'La expansión debe conservar provenance de conceptos.'
+);
+assert.ok(
+  JSON.stringify(compactMerged).length <
+    JSON.stringify(expandedCompact).length,
+  'La representación intermedia compacta debe serializar menos caracteres que el contrato expandido.'
+);
+
+const recoveryChunks = [
+  {
+    text: 'Contenido del chunk uno.',
+    pageStart: 1,
+    pageEnd: 1,
+  },
+  {
+    text: 'Contenido del chunk dos.',
+    pageStart: 2,
+    pageEnd: 2,
+  },
+  {
+    text: 'Contenido del chunk tres.',
+    pageStart: 3,
+    pageEnd: 3,
+  },
+];
+
+const selectiveRecoveryGroup = buildPedagogicalMapGroupFromIndexes(
+  recoveryChunks,
+  [2, 1, 2, 999, -1]
+);
+assert.deepEqual(
+  selectiveRecoveryGroup.chunkIndexes,
+  [1, 2],
+  'La recuperación debe reenviar únicamente índices válidos, únicos y ordenados.'
+);
+assert.match(selectiveRecoveryGroup.text, /\[CHUNK 2 \| PAGINA 2\]/);
+assert.match(selectiveRecoveryGroup.text, /\[CHUNK 3 \| PAGINA 3\]/);
+assert.doesNotMatch(
+  selectiveRecoveryGroup.text,
+  /CHUNK 1/,
+  'La recuperación selectiva no debe volver a enviar chunks que ya tenían provenance.'
+);
+
+const partialRecoveryNode = normalizeCompactPedagogicalNode({
+  t: 'Recuperación',
+  o: '',
+  tp: [
+    {
+      n: 'Tema parcial',
+      d: 'Tema respaldado por dos de tres chunks.',
+      v: 'alta',
+      s: [1, 3],
+    },
+  ],
+  c: [],
+  r: [],
+  cl: [],
+  p: [],
+  f: [],
+  a: [],
+  e: [],
+  x: [],
+  cf: [],
+});
+assert.deepEqual(
+  findMissingCompactChunkNumbers([1, 2, 3], partialRecoveryNode),
+  [2],
+  'Debe identificar exactamente qué chunk quedó sin provenance.'
+);
+
+const recoveredMissingNode = normalizeCompactPedagogicalNode({
+  t: 'Recuperación',
+  o: '',
+  tp: [
+    {
+      n: 'Tema recuperado',
+      d: 'Contenido exclusivo del chunk faltante.',
+      v: 'media',
+      s: [2],
+    },
+  ],
+  c: [],
+  r: [],
+  cl: [],
+  p: [],
+  f: [],
+  a: [],
+  e: [],
+  x: [],
+  cf: [],
+});
+const recoveredCompleteNode = mergeCompactPedagogicalNodes([
+  partialRecoveryNode,
+  recoveredMissingNode,
+]);
+assert.deepEqual(
+  findMissingCompactChunkNumbers([1, 2, 3], recoveredCompleteNode),
+  [],
+  'Al unir el map parcial con la recuperación debe restablecerse la cobertura completa.'
+);
+
+const canonicalSummaryFixture: CanonicalPedagogicalModel = {
+  title: 'Material canónico de prueba',
+  overview: 'Panorama completo del material para estudiar.',
+  topics: [
+    {
+      title: 'Fundamentos de IA',
+      description: 'Define la IA y sus límites.',
+      relevance: 'alta',
+      pageReferences: [2, 1, 2],
+    },
+  ],
+  concepts: [
+    {
+      term: 'Machine learning',
+      detail: 'Aprende patrones a partir de datos.',
+      kind: 'definicion',
+      pageReferences: [2],
+    },
+  ],
+  relationships: [
+    {
+      source: 'Machine learning',
+      target: 'Inteligencia artificial',
+      description: 'Machine learning es una parte de la IA.',
+    },
+  ],
+  classifications: [
+    {
+      title: 'Tipos de aprendizaje',
+      items: ['Supervisado', 'No supervisado', 'Por refuerzo'],
+      pageReferences: [3],
+    },
+  ],
+  processes: [
+    {
+      title: 'Ciclo de entrenamiento',
+      steps: ['Preparar datos', 'Entrenar', 'Evaluar'],
+    },
+  ],
+  formulas: [],
+  authorsOrTheories: ['Teoría de prueba'],
+  examples: ['Clasificar correos como spam o no spam.'],
+  examRelevantClaims: [
+    'PREGUNTA TÍPICA DE EXAMEN: diferencia reglas y aprendizaje automático.',
+  ],
+  confusions: ['No confundir machine learning con deep learning.'],
+  chunkCount: 8,
+  sourceBindings: [
+    {
+      kind: 'topic',
+      key: 'Fundamentos de IA',
+      references: [
+        {
+          pageStart: 1,
+          pageEnd: 1,
+          chunkIndexes: [0],
+          excerpt: 'EXCERPT_INTERNO_QUE_NO_DEBE_LLEGAR_AL_RESUMEN',
+        },
+      ],
+    },
+    {
+      kind: 'relationship',
+      key: 'Machine learning → Inteligencia artificial',
+      references: [
+        {
+          pageStart: 2,
+          pageEnd: 2,
+          chunkIndexes: [1],
+          excerpt: 'Relación fuente.',
+        },
+      ],
+    },
+    {
+      kind: 'process',
+      key: 'Ciclo de entrenamiento',
+      references: [
+        {
+          pageStart: 4,
+          pageEnd: 4,
+          chunkIndexes: [3],
+          excerpt: 'Proceso fuente.',
+        },
+      ],
+    },
+    {
+      kind: 'author_or_theory',
+      key: 'Teoría de prueba',
+      references: [
+        {
+          pageStart: 4,
+          pageEnd: 4,
+          chunkIndexes: [3],
+          excerpt: 'Teoría fuente.',
+        },
+      ],
+    },
+    {
+      kind: 'example',
+      key: 'Clasificar correos como spam o no spam.',
+      references: [
+        {
+          pageStart: 5,
+          pageEnd: 5,
+          chunkIndexes: [4],
+          excerpt: 'Ejemplo fuente.',
+        },
+      ],
+    },
+    {
+      kind: 'confusion',
+      key: 'No confundir machine learning con deep learning.',
+      references: [
+        {
+          pageStart: 6,
+          pageEnd: 6,
+          chunkIndexes: [5],
+          excerpt: 'Confusión fuente.',
+        },
+      ],
+    },
+    {
+      kind: 'exam_relevant_claim',
+      key: 'PREGUNTA TÍPICA DE EXAMEN: diferencia reglas y aprendizaje automático.',
+      references: [
+        {
+          pageStart: 7,
+          pageEnd: 7,
+          chunkIndexes: [6],
+          excerpt: 'Consigna de práctica.',
+        },
+      ],
+    },
+  ],
+};
+
+const canonicalGlossaryFixture: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  concepts: [
+    ...canonicalSummaryFixture.concepts,
+    {
+      term: 'Aprendizaje supervisado',
+      detail: 'Aprendizaje a partir de ejemplos con una etiqueta conocida.',
+      kind: 'definicion',
+    },
+  ],
+  sourceBindings: [
+    ...(canonicalSummaryFixture.sourceBindings ?? []),
+    {
+      kind: 'concept',
+      key: 'Aprendizaje supervisado',
+      references: [
+        {
+          pageStart: 3,
+          pageEnd: 3,
+          chunkIndexes: [2],
+          excerpt: 'Aprendizaje supervisado con etiquetas.',
+        },
+      ],
+    },
+  ],
+};
+
+const canonicalGlossary = buildCanonicalStudentMaterialGlossary(
+  canonicalGlossaryFixture
+);
+
+assert.equal(
+  CANONICAL_GLOSSARY_PROVIDER,
+  'canonical-local',
+  'El glosario canónico debe identificarse como una proyección local, sin nueva llamada de IA.'
+);
+assert.ok(
+  canonicalGlossary.some((item) => item.term === 'Machine learning'),
+  'El glosario canónico debe derivar entradas directamente de concepts.'
+);
+assert.match(
+  canonicalGlossary.find((item) => item.term === 'Machine learning')?.context ?? '',
+  /Ver en PDF · página 2/,
+  'Los conceptos con pageReferences directas deben conservar trazabilidad física.'
+);
+assert.match(
+  canonicalGlossary.find((item) => item.term === 'Aprendizaje supervisado')?.context ?? '',
+  /Ver en PDF · página 3/,
+  'El glosario debe recuperar páginas desde sourceBindings cuando el concepto no las trae directamente.'
+);
+assert.ok(
+  canonicalGlossary.some((item) => item.term === 'Tipos de aprendizaje'),
+  'Las clasificaciones canónicas útiles deben poder convertirse en entradas del glosario.'
+);
+assert.doesNotMatch(
+  JSON.stringify(canonicalGlossary),
+  /PREGUNTA TÍPICA DE EXAMEN/,
+  'El glosario canónico no debe mezclar consignas o claims reservados para práctica.'
+);
+assert.doesNotMatch(
+  JSON.stringify(canonicalGlossary),
+  /EXCERPT_INTERNO_QUE_NO_DEBE_LLEGAR_AL_RESUMEN|chunkIndexes/,
+  'El glosario visible no debe exponer provenance interna.'
+);
+
+const denseGlossaryFixture: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  topics: [
+    {
+      title: 'Tema inicial',
+      description: 'Conceptos introductorios.',
+      relevance: 'alta',
+      pageReferences: [1],
+    },
+    {
+      title: 'Tema intermedio',
+      description: 'Conceptos del centro del material.',
+      relevance: 'media',
+      pageReferences: [8],
+    },
+    {
+      title: 'Tema final',
+      description: 'Conceptos del cierre del material.',
+      relevance: 'alta',
+      pageReferences: [15],
+    },
+  ],
+  concepts: [
+    ...Array.from({ length: 70 }, (_, index) => ({
+      term: `Concepto base ${String(index + 1).padStart(2, '0')}`,
+      detail: `Definición pedagógica suficientemente desarrollada para el concepto ${index + 1}.`,
+      kind: 'definicion' as const,
+      pageReferences: [1],
+    })),
+    {
+      term: 'Concepto representativo página 8',
+      detail: 'Concepto necesario para conservar cobertura temática de la página ocho.',
+      kind: 'definicion',
+      pageReferences: [8],
+    },
+    {
+      term: 'ZZZ concepto representativo página 15',
+      detail: 'Concepto necesario para conservar cobertura temática de la página quince.',
+      kind: 'definicion',
+      pageReferences: [15],
+    },
+  ],
+  classifications: [],
+  formulas: [],
+  sourceBindings: [],
+};
+
+assert.equal(
+  resolveCanonicalGlossaryLimit(denseGlossaryFixture),
+  45,
+  'Un material de 15 páginas debe usar como máximo tres términos por página, con techo global.'
+);
+
+const denseCanonicalGlossary = buildCanonicalStudentMaterialGlossary(
+  denseGlossaryFixture
+);
+
+assert.equal(
+  denseCanonicalGlossary.length,
+  45,
+  'El glosario denso de 15 páginas debe quedar limitado a 45 entradas.'
+);
+assert.ok(
+  denseCanonicalGlossary.some(
+    (item) => item.term === 'Concepto representativo página 8'
+  ),
+  'La selección debe reservar representación para temas intermedios antes de completar por prioridad global.'
+);
+assert.ok(
+  denseCanonicalGlossary.some(
+    (item) => item.term === 'ZZZ concepto representativo página 15'
+  ),
+  'La selección debe conservar cobertura del último tema aunque su término quede al final alfabéticamente.'
+);
+
+const canonicalSummarySource = buildCanonicalSummarySource(
+  canonicalSummaryFixture
+);
+const canonicalSummarySourceText = buildCanonicalSummarySourceText(
+  canonicalSummaryFixture
+);
+
+assert.deepEqual(
+  canonicalSummarySource.topics[0]?.pageReferences,
+  [1, 2],
+  'La proyección debe deduplicar y ordenar páginas físicas.'
+);
+assert.deepEqual(
+  canonicalSummarySource.relationships[0]?.pageReferences,
+  [2],
+  'Las relaciones deben recuperar páginas desde sourceBindings.'
+);
+assert.deepEqual(
+  canonicalSummarySource.processes[0]?.pageReferences,
+  [4],
+  'Los procesos deben recuperar páginas desde sourceBindings.'
+);
+assert.deepEqual(
+  canonicalSummarySource.authorsOrTheories[0]?.pageReferences,
+  [4],
+  'Autores y teorías deben conservar trazabilidad física.'
+);
+assert.deepEqual(
+  canonicalSummarySource.examples[0]?.pageReferences,
+  [5],
+  'Los ejemplos deben conservar trazabilidad física.'
+);
+assert.deepEqual(
+  canonicalSummarySource.confusions[0]?.pageReferences,
+  [6],
+  'Las confusiones útiles para estudiar deben conservar trazabilidad física.'
+);
+assert.equal(
+  'examRelevantClaims' in canonicalSummarySource,
+  false,
+  'Las consignas o claims de examen no deben formar parte de la fuente del resumen.'
+);
+assert.doesNotMatch(
+  canonicalSummarySourceText,
+  /PREGUNTA TÍPICA DE EXAMEN/,
+  'La fuente compacta del resumen no debe mezclar contenido reservado para práctica.'
+);
+assert.doesNotMatch(
+  canonicalSummarySourceText,
+  /sourceBindings|chunkIndexes|excerpt|EXCERPT_INTERNO/,
+  'La fuente compacta no debe reenviar provenance interna costosa a la IA.'
+);
+assert.match(canonicalSummarySourceText, /Fundamentos de IA/);
+assert.match(canonicalSummarySourceText, /Clasificar correos como spam o no spam/);
+
+
+const canonicalGuidePrompt = buildCanonicalSummaryPrompt(
+  {
+    title: 'Material canónico de prueba',
+    materiaName: 'Inteligencia Artificial',
+  },
+  canonicalSummaryFixture
+);
+assert.match(
+  canonicalGuidePrompt,
+  /source_topic_numbers/,
+  'La generación canónica debe referenciar topics canónicos, no páginas inventadas por IA.'
+);
+assert.doesNotMatch(
+  canonicalGuidePrompt,
+  /PREGUNTA TÍPICA DE EXAMEN/,
+  'Las consignas reservadas para práctica no deben llegar al prompt de la guía.'
+);
+assert.doesNotMatch(
+  canonicalGuidePrompt,
+  /chunkIndexes|EXCERPT_INTERNO_QUE_NO_DEBE_LLEGAR_AL_RESUMEN/,
+  'La nueva generación no debe reenviar provenance interna costosa.'
+);
+
+const canonicalGuideFallback =
+  buildCanonicalStudentMaterialSummaryFallback(canonicalSummaryFixture);
+assert.equal(canonicalGuideFallback.provider, 'canonical-local-fallback');
+assert.equal(canonicalGuideFallback.sourceChunksCount, canonicalSummaryFixture.chunkCount);
+assert.equal(
+  canonicalGuideFallback.sections.length,
+  canonicalSummaryFixture.topics.length,
+  'El fallback canónico debe representar todos los topics sin truncarlos.'
+);
+assert.match(
+  canonicalGuideFallback.sections[0]?.body ?? '',
+  /Ver en PDF · páginas 1, 2/,
+  'La guía canónica debe conservar referencias físicas derivadas del modelo.'
+);
+assert.doesNotMatch(
+  JSON.stringify(canonicalGuideFallback),
+  /PREGUNTA TÍPICA DE EXAMEN/,
+  'El fallback de guía tampoco debe mezclar consignas de práctica.'
 );
 
 const pedagogy = buildPedagogicalArtifacts({

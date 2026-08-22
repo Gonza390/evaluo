@@ -1,11 +1,252 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import {
+  BookOpenCheck,
+  CircleAlert,
+  FileText,
+  Lightbulb,
+  ListTree,
+  Sigma,
+  Sparkles,
+  Workflow,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type StudyCalloutKind =
+  | 'important'
+  | 'study-tip'
+  | 'example'
+  | 'definition'
+  | 'classification'
+  | 'process'
+  | 'formula'
+  | 'confusion';
+
+type StudyCalloutConfig = {
+  label: string;
+  icon: typeof Sparkles;
+  containerClassName: string;
+  iconClassName: string;
+  labelClassName: string;
+};
+
+const CALLOUT_CONFIG: Record<StudyCalloutKind, StudyCalloutConfig> = {
+  important: {
+    label: 'Importante',
+    icon: Sparkles,
+    containerClassName: 'border-blue-200 bg-blue-50/70',
+    iconClassName: 'bg-blue-100 text-blue-700',
+    labelClassName: 'text-blue-800',
+  },
+  'study-tip': {
+    label: 'Clave de estudio',
+    icon: Lightbulb,
+    containerClassName: 'border-amber-200 bg-amber-50/75',
+    iconClassName: 'bg-amber-100 text-amber-700',
+    labelClassName: 'text-amber-800',
+  },
+  example: {
+    label: 'Ejemplo aplicado',
+    icon: BookOpenCheck,
+    containerClassName: 'border-emerald-200 bg-emerald-50/70',
+    iconClassName: 'bg-emerald-100 text-emerald-700',
+    labelClassName: 'text-emerald-800',
+  },
+  definition: {
+    label: 'Definición',
+    icon: BookOpenCheck,
+    containerClassName: 'border-sky-200 bg-sky-50/65',
+    iconClassName: 'bg-sky-100 text-sky-700',
+    labelClassName: 'text-sky-800',
+  },
+  classification: {
+    label: 'Clasificación',
+    icon: ListTree,
+    containerClassName: 'border-violet-200 bg-violet-50/60',
+    iconClassName: 'bg-violet-100 text-violet-700',
+    labelClassName: 'text-violet-800',
+  },
+  process: {
+    label: 'Proceso',
+    icon: Workflow,
+    containerClassName: 'border-cyan-200 bg-cyan-50/60',
+    iconClassName: 'bg-cyan-100 text-cyan-700',
+    labelClassName: 'text-cyan-800',
+  },
+  formula: {
+    label: 'Fórmula',
+    icon: Sigma,
+    containerClassName: 'border-indigo-200 bg-indigo-50/60',
+    iconClassName: 'bg-indigo-100 text-indigo-700',
+    labelClassName: 'text-indigo-800',
+  },
+  confusion: {
+    label: 'Confusión frecuente',
+    icon: CircleAlert,
+    containerClassName: 'border-rose-200 bg-rose-50/60',
+    iconClassName: 'bg-rose-100 text-rose-700',
+    labelClassName: 'text-rose-800',
+  },
+};
+
+const PAGE_REFERENCE_PATTERN =
+  /\s*Ver en PDF\s*·\s*página(?:s)?\s+([0-9]+(?:\s*,\s*[0-9]+)*)\s*\.?\s*$/iu;
+
+function extractPageReference(value: string) {
+  const match = value.match(PAGE_REFERENCE_PATTERN);
+  if (!match) {
+    return {
+      text: value.trim(),
+      pageReference: null as string | null,
+    };
+  }
+
+  const pages = (match[1] ?? '')
+    .split(',')
+    .map((page) => page.trim())
+    .filter(Boolean);
+
+  return {
+    text: value.replace(PAGE_REFERENCE_PATTERN, '').trim(),
+    pageReference:
+      pages.length === 1
+        ? `Ver en PDF · pág. ${pages[0]}`
+        : `Ver en PDF · págs. ${pages.join(', ')}`,
+  };
+}
+
+function renderInlineMarkdown(value: string): ReactNode {
+  const tokens = value.split(/(\*\*[^*]+\*\*|`[^`]+`)/gu);
+
+  return tokens.map((token, index) => {
+    if (/^\*\*[^*]+\*\*$/u.test(token)) {
+      return (
+        <strong key={`${token}-${index}`} className="font-semibold text-slate-950">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    if (/^`[^`]+`$/u.test(token)) {
+      return (
+        <code
+          key={`${token}-${index}`}
+          className="rounded bg-slate-100 px-1.5 py-0.5 text-[0.92em] font-medium text-slate-800"
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+
+    return token;
+  });
+}
+
+function getCallout(line: string): {
+  kind: StudyCalloutKind;
+  content: string;
+} | null {
+  const definitions: Array<{
+    kind: StudyCalloutKind;
+    pattern: RegExp;
+  }> = [
+    { kind: 'important', pattern: /^Importante:\s*/iu },
+    { kind: 'study-tip', pattern: /^Clave de estudio:\s*/iu },
+    { kind: 'example', pattern: /^Ejemplo aplicado:\s*/iu },
+    { kind: 'definition', pattern: /^(?:Definición|Concepto clave):\s*/iu },
+    { kind: 'classification', pattern: /^(?:Clasificación|Tipos):\s*/iu },
+    { kind: 'process', pattern: /^(?:Proceso|Etapas|Pasos):\s*/iu },
+    { kind: 'formula', pattern: /^Fórmula:\s*/iu },
+    {
+      kind: 'confusion',
+      pattern: /^(?:Confusión frecuente|Error frecuente):\s*/iu,
+    },
+  ];
+
+  for (const definition of definitions) {
+    if (!definition.pattern.test(line)) continue;
+
+    return {
+      kind: definition.kind,
+      content: line.replace(definition.pattern, '').trim(),
+    };
+  }
+
+  return null;
+}
+
+function renderPageReference(pageReference: string | null, key: string) {
+  if (!pageReference) return null;
+
+  return (
+    <div key={`${key}-reference`} className="pt-1">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+        <FileText className="h-3 w-3 text-[#2563EB]" />
+        {pageReference}
+      </span>
+    </div>
+  );
+}
+
+function StudyCallout({
+  kind,
+  content,
+  pageReference,
+  itemKey,
+}: {
+  kind: StudyCalloutKind;
+  content: string;
+  pageReference: string | null;
+  itemKey: string;
+}) {
+  const config = CALLOUT_CONFIG[kind];
+  const Icon = config.icon;
+
+  return (
+    <div
+      className={cn(
+        'rounded-[17px] border px-3.5 py-3.5 sm:px-4',
+        config.containerClassName
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px]',
+            config.iconClassName
+          )}
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn(
+              'text-[11px] font-bold tracking-[0.11em] uppercase',
+              config.labelClassName
+            )}
+          >
+            {config.label}
+          </p>
+
+          <p className="mt-1.5 text-[13.5px] leading-6 text-slate-700">
+            {renderInlineMarkdown(content)}
+          </p>
+
+          {renderPageReference(pageReference, itemKey)}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
- * Renderiza texto estructurado generado por IA (subtítulos numerados, viñetas,
- * tablas Markdown, bloques "Importante:", "Clave de estudio:" y "Ejemplo aplicado:")
- * con estilos de lectura consistentes en toda la app.
+ * Renderiza contenido pedagógico estructurado del material de estudio.
+ *
+ * La generación sigue siendo responsabilidad del pipeline canónico.
+ * Este componente sólo interpreta la presentación: headings Markdown,
+ * negritas, listas, tablas, bloques pedagógicos y referencias físicas al PDF.
  */
 export function StudyRichText({ body }: { body: string }) {
   const lines = body
@@ -24,9 +265,11 @@ export function StudyRichText({ body }: { body: string }) {
     }
 
     const header = rows[0]?.columns ?? [];
-    const bodyRows = rows.slice(1).filter((row) =>
-      row.columns.some((column) => !/^:?-+:?$/i.test(column))
-    );
+    const bodyRows = rows
+      .slice(1)
+      .filter((row) =>
+        row.columns.some((column) => !/^:?-+:?$/i.test(column))
+      );
 
     if (header.length === 0 || bodyRows.length === 0) {
       rows.length = 0;
@@ -34,26 +277,35 @@ export function StudyRichText({ body }: { body: string }) {
     }
 
     content.push(
-      <div key={key} className="overflow-x-auto rounded-[16px] border border-slate-200">
+      <div
+        key={key}
+        className="overflow-x-auto rounded-[17px] border border-slate-200 bg-white"
+      >
         <table className="min-w-full border-collapse text-left text-[13px]">
-          <thead className="bg-white text-slate-700">
+          <thead className="bg-slate-50/90 text-slate-700">
             <tr>
               {header.map((column, index) => (
-                <th key={`${column}-${index}`} className="border-b border-slate-200 px-3 py-2 font-semibold">
-                  {column}
+                <th
+                  key={`${column}-${index}`}
+                  className="border-b border-slate-200 px-3.5 py-2.5 font-semibold text-slate-900"
+                >
+                  {renderInlineMarkdown(column)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {bodyRows.map((row, rowIndex) => (
-              <tr key={`${row.columns.join('|')}-${rowIndex}`} className="bg-white">
+              <tr
+                key={`${row.columns.join('|')}-${rowIndex}`}
+                className="odd:bg-white even:bg-slate-50/45"
+              >
                 {row.columns.map((column, columnIndex) => (
                   <td
                     key={`${column}-${columnIndex}`}
-                    className="border-t border-slate-200 px-3 py-2 align-top text-slate-600"
+                    className="border-t border-slate-100 px-3.5 py-2.5 align-top leading-5 text-slate-600"
                   >
-                    {column}
+                    {renderInlineMarkdown(column)}
                   </td>
                 ))}
               </tr>
@@ -66,11 +318,11 @@ export function StudyRichText({ body }: { body: string }) {
     rows.length = 0;
   };
 
-  lines.forEach((line, index) => {
-    if (line.includes('|')) {
+  lines.forEach((rawLine, index) => {
+    if (rawLine.includes('|')) {
       isCollectingTable = true;
       rows.push({
-        columns: line
+        columns: rawLine
           .split('|')
           .map((column) => column.trim())
           .filter(Boolean),
@@ -83,68 +335,107 @@ export function StudyRichText({ body }: { body: string }) {
       isCollectingTable = false;
     }
 
-    if (/^\d+\.\d+\s+/.test(line)) {
-      content.push(
-        <h5 key={`subheading-${index}`} className="pt-1 text-[0.95rem] font-semibold text-slate-950">
-          {line}
-        </h5>
-      );
+    const { text: line, pageReference } = extractPageReference(rawLine);
+    const itemKey = `content-${index}`;
+
+    if (!line && pageReference) {
+      content.push(renderPageReference(pageReference, itemKey));
       return;
     }
 
-    if (/^(?:[\u2022\-])\s+/.test(line)) {
+    const markdownHeading = line.match(/^(#{1,6})\s+(.+)$/u);
+    if (markdownHeading) {
+      const level = markdownHeading[1]?.length ?? 3;
+      const headingText = markdownHeading[2]?.trim() ?? '';
+
       content.push(
-        <div key={`bullet-${index}`} className="flex items-start gap-2 text-[13.5px] leading-6 text-slate-700">
-          <span className="mt-[0.42rem] text-[12px] text-[#2563EB]">•</span>
-          <p>{line.replace(/^(?:[\u2022\-])\s+/, '')}</p>
+        <div key={itemKey} className={level <= 2 ? 'pt-2' : 'pt-1'}>
+          {level <= 2 ? (
+            <h4 className="text-[1rem] font-bold tracking-[-0.025em] text-slate-950 sm:text-[1.04rem]">
+              {renderInlineMarkdown(headingText)}
+            </h4>
+          ) : (
+            <h5 className="text-[0.93rem] font-semibold tracking-[-0.015em] text-slate-900">
+              {renderInlineMarkdown(headingText)}
+            </h5>
+          )}
+          {renderPageReference(pageReference, itemKey)}
         </div>
       );
       return;
     }
 
-    if (/^Importante:/i.test(line)) {
+    if (/^\d+\.\d+(?:\.\d+)?\s+/.test(line)) {
       content.push(
-        <div
-          key={`important-${index}`}
-          className="rounded-[16px] border border-[#DBEAFE] bg-white px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-[#2563EB]">Importante:</span>{' '}
-          {line.replace(/^Importante:\s*/i, '')}
+        <div key={itemKey} className="pt-1">
+          <h5 className="text-[0.95rem] font-bold tracking-[-0.02em] text-slate-950">
+            {renderInlineMarkdown(line)}
+          </h5>
+          {renderPageReference(pageReference, itemKey)}
         </div>
       );
       return;
     }
 
-    if (/^Clave de estudio:/i.test(line)) {
+    const orderedListItem = line.match(/^(\d+)\.\s+(.+)$/u);
+    if (orderedListItem) {
+      const itemNumber = orderedListItem[1] ?? '';
+      const itemText = orderedListItem[2]?.trim() ?? '';
+
       content.push(
-        <div
-          key={`study-tip-${index}`}
-          className="rounded-[16px] border border-amber-200 bg-amber-50/80 px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-amber-700">Clave de estudio:</span>{' '}
-          {line.replace(/^Clave de estudio:\s*/i, '')}
+        <div key={itemKey} className="flex items-start gap-3 py-0.5">
+          <span className="mt-0.5 inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#EEF4FF] px-1.5 text-[11px] font-bold text-[#2563EB]">
+            {itemNumber}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] leading-6 text-slate-700">
+              {renderInlineMarkdown(itemText)}
+            </p>
+            {renderPageReference(pageReference, itemKey)}
+          </div>
         </div>
       );
       return;
     }
 
-    if (/^Ejemplo aplicado:/i.test(line)) {
+    if (/^(?:[\u2022\-*])\s+/.test(line)) {
+      const bulletText = line.replace(/^(?:[\u2022\-*])\s+/, '').trim();
+
       content.push(
-        <div
-          key={`example-${index}`}
-          className="rounded-[16px] border border-emerald-200 bg-emerald-50/80 px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-emerald-700">Ejemplo aplicado:</span>{' '}
-          {line.replace(/^Ejemplo aplicado:\s*/i, '')}
+        <div key={itemKey} className="flex items-start gap-2.5">
+          <span className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[#2563EB]" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[13.5px] leading-6 text-slate-700">
+              {renderInlineMarkdown(bulletText)}
+            </p>
+            {renderPageReference(pageReference, itemKey)}
+          </div>
         </div>
+      );
+      return;
+    }
+
+    const callout = getCallout(line);
+    if (callout) {
+      content.push(
+        <StudyCallout
+          key={itemKey}
+          kind={callout.kind}
+          content={callout.content}
+          pageReference={pageReference}
+          itemKey={itemKey}
+        />
       );
       return;
     }
 
     content.push(
-      <p key={`paragraph-${index}`} className="text-[13.5px] leading-6 text-slate-700">
-        {line}
-      </p>
+      <div key={itemKey} className="py-0.5">
+        <p className="text-[13.5px] leading-6 text-slate-700">
+          {renderInlineMarkdown(line)}
+        </p>
+        {renderPageReference(pageReference, itemKey)}
+      </div>
     );
   });
 
@@ -152,5 +443,5 @@ export function StudyRichText({ body }: { body: string }) {
     flushTable('table-final');
   }
 
-  return <div className="space-y-3">{content}</div>;
+  return <div className="space-y-3.5">{content}</div>;
 }

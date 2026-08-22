@@ -1,0 +1,335 @@
+import type {
+  CanonicalPedagogicalModel,
+  CanonicalPedagogicalSourceBinding,
+  CanonicalPedagogicalSourceKind,
+} from '@/lib/student-materials/types';
+
+export type CanonicalSummarySourceTopic = {
+  title: string;
+  description: string;
+  relevance: 'alta' | 'media';
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySourceConcept = {
+  term: string;
+  detail: string;
+  kind: CanonicalPedagogicalModel['concepts'][number]['kind'];
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySourceRelationship = {
+  source: string;
+  target: string;
+  description: string;
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySourceClassification = {
+  title: string;
+  items: string[];
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySourceProcess = {
+  title: string;
+  steps: string[];
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySourceFormula = {
+  expression: string;
+  description: string;
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySourceValue = {
+  value: string;
+  pageReferences: number[];
+};
+
+export type CanonicalSummarySource = {
+  title: string;
+  overview: string;
+  topics: CanonicalSummarySourceTopic[];
+  concepts: CanonicalSummarySourceConcept[];
+  relationships: CanonicalSummarySourceRelationship[];
+  classifications: CanonicalSummarySourceClassification[];
+  processes: CanonicalSummarySourceProcess[];
+  formulas: CanonicalSummarySourceFormula[];
+  authorsOrTheories: CanonicalSummarySourceValue[];
+  examples: CanonicalSummarySourceValue[];
+  confusions: CanonicalSummarySourceValue[];
+};
+
+type BindingPageIndex = Map<string, number[]>;
+
+/**
+ * Proyecta el modelo pedagógico canónico a una representación compacta y
+ * determinista pensada exclusivamente para generar la guía de estudio.
+ *
+ * La proyección:
+ * - conserva todos los elementos académicos del modelo canónico;
+ * - conserva páginas físicas sin enviar excerpts ni chunk indexes;
+ * - excluye examRelevantClaims, que pertenecen al artefacto de práctica;
+ * - no recorta por cantidad de elementos ni por caracteres.
+ *
+ * El modelo canónico ya hizo el trabajo costoso de comprender y consolidar el
+ * documento. Esta capa evita que el resumen vuelva a interpretar el PDF crudo.
+ */
+export function buildCanonicalSummarySource(
+  model: CanonicalPedagogicalModel
+): CanonicalSummarySource {
+  const bindingPages = buildBindingPageIndex(model.sourceBindings ?? []);
+
+  const resolvePages = (
+    kind: CanonicalPedagogicalSourceKind,
+    key: string,
+    explicitPages?: number[]
+  ) =>
+    normalizePageReferences([
+      ...(explicitPages ?? []),
+      ...(bindingPages.get(buildBindingIndexKey(kind, key)) ?? []),
+    ]);
+
+  return {
+    title: cleanText(model.title),
+    overview: cleanText(model.overview),
+
+    topics: model.topics
+      .map((topic) => {
+        const title = cleanText(topic.title);
+        const description = cleanText(topic.description);
+
+        return {
+          title,
+          description,
+          relevance: topic.relevance === 'alta' ? 'alta' : 'media',
+          pageReferences: resolvePages(
+            'topic',
+            title,
+            topic.pageReferences
+          ),
+        } satisfies CanonicalSummarySourceTopic;
+      })
+      .filter((topic) => topic.title && topic.description),
+
+    concepts: model.concepts
+      .map((concept) => {
+        const term = cleanText(concept.term);
+        const detail = cleanText(concept.detail);
+
+        return {
+          term,
+          detail,
+          kind: concept.kind,
+          pageReferences: resolvePages(
+            'concept',
+            term,
+            concept.pageReferences
+          ),
+        } satisfies CanonicalSummarySourceConcept;
+      })
+      .filter((concept) => concept.term && concept.detail),
+
+    relationships: model.relationships
+      .map((relationship) => {
+        const source = cleanText(relationship.source);
+        const target = cleanText(relationship.target);
+        const description = cleanText(relationship.description);
+
+        return {
+          source,
+          target,
+          description,
+          pageReferences: resolvePages(
+            'relationship',
+            buildRelationshipKey(source, target),
+            relationship.pageReferences
+          ),
+        } satisfies CanonicalSummarySourceRelationship;
+      })
+      .filter(
+        (relationship) =>
+          relationship.source &&
+          relationship.target &&
+          relationship.description
+      ),
+
+    classifications: model.classifications
+      .map((classification) => {
+        const title = cleanText(classification.title);
+
+        return {
+          title,
+          items: cleanTextList(classification.items),
+          pageReferences: resolvePages(
+            'classification',
+            title,
+            classification.pageReferences
+          ),
+        } satisfies CanonicalSummarySourceClassification;
+      })
+      .filter(
+        (classification) =>
+          classification.title && classification.items.length > 0
+      ),
+
+    processes: model.processes
+      .map((process) => {
+        const title = cleanText(process.title);
+
+        return {
+          title,
+          steps: cleanTextList(process.steps),
+          pageReferences: resolvePages(
+            'process',
+            title,
+            process.pageReferences
+          ),
+        } satisfies CanonicalSummarySourceProcess;
+      })
+      .filter((process) => process.title && process.steps.length > 0),
+
+    formulas: model.formulas
+      .map((formula) => {
+        const expression = cleanText(formula.expression);
+        const description = cleanText(formula.description);
+
+        return {
+          expression,
+          description,
+          pageReferences: resolvePages(
+            'formula',
+            expression,
+            formula.pageReferences
+          ),
+        } satisfies CanonicalSummarySourceFormula;
+      })
+      .filter((formula) => formula.expression && formula.description),
+
+    authorsOrTheories: cleanTextList(model.authorsOrTheories).map((value) => ({
+      value,
+      pageReferences: resolvePages('author_or_theory', value),
+    })),
+
+    examples: cleanTextList(model.examples).map((value) => ({
+      value,
+      pageReferences: resolvePages('example', value),
+    })),
+
+    confusions: cleanTextList(model.confusions).map((value) => ({
+      value,
+      pageReferences: resolvePages('confusion', value),
+    })),
+  };
+}
+
+/**
+ * Serializa sin indentación para reducir tokens de entrada en la futura llamada
+ * que convertirá esta fuente canónica en la Guía de estudio.
+ */
+export function buildCanonicalSummarySourceText(
+  model: CanonicalPedagogicalModel
+) {
+  return JSON.stringify(buildCanonicalSummarySource(model));
+}
+
+function buildBindingPageIndex(
+  bindings: CanonicalPedagogicalSourceBinding[]
+): BindingPageIndex {
+  const index: BindingPageIndex = new Map();
+
+  for (const binding of bindings) {
+    const key = buildBindingIndexKey(binding.kind, binding.key);
+    const pages = binding.references.flatMap((reference) =>
+      expandPageRange(reference.pageStart, reference.pageEnd)
+    );
+
+    index.set(
+      key,
+      normalizePageReferences([...(index.get(key) ?? []), ...pages])
+    );
+  }
+
+  return index;
+}
+
+function buildBindingIndexKey(
+  kind: CanonicalPedagogicalSourceKind,
+  key: string
+) {
+  return `${kind}:${normalizeLookupKey(key)}`;
+}
+
+function buildRelationshipKey(source: string, target: string) {
+  return `${source} → ${target}`;
+}
+
+function normalizeLookupKey(value: string) {
+  return cleanText(value).toLocaleLowerCase('es');
+}
+
+function cleanText(value: string) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function cleanTextList(values: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const rawValue of values) {
+    const value = cleanText(rawValue);
+    const key = normalizeLookupKey(value);
+
+    if (!value || seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+  }
+
+  return result;
+}
+
+function normalizePageReferences(values: number[]) {
+  return Array.from(
+    new Set(
+      values.filter(
+        (page) =>
+          Number.isInteger(page) &&
+          Number.isFinite(page) &&
+          page > 0
+      )
+    )
+  ).sort((a, b) => a - b);
+}
+
+function expandPageRange(
+  pageStart: number | null,
+  pageEnd: number | null
+) {
+  const start = normalizePageNumber(pageStart);
+  const end = normalizePageNumber(pageEnd);
+
+  if (start === null && end === null) return [];
+  if (start === null) return end === null ? [] : [end];
+  if (end === null) return [start];
+
+  const lower = Math.min(start, end);
+  const upper = Math.max(start, end);
+  const pages: number[] = [];
+
+  for (let page = lower; page <= upper; page += 1) {
+    pages.push(page);
+  }
+
+  return pages;
+}
+
+function normalizePageNumber(value: number | null) {
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    Number.isFinite(value) &&
+    value > 0
+    ? value
+    : null;
+}

@@ -7,6 +7,11 @@ import {
   persistStudentMaterialSummaryFromComputed,
   generatePedagogicalModel,
 } from '@/lib/student-material-summary';
+import { generateCanonicalStudentMaterialSummary } from '@/lib/student-materials/canonical-summary';
+import {
+  buildCanonicalStudentMaterialGlossary,
+  CANONICAL_GLOSSARY_PROVIDER,
+} from '@/lib/student-materials/canonical-glossary';
 import { completeStudentMaterialJob } from '@/lib/student-material-jobs';
 import {
   findStudentMaterialForProcessing,
@@ -185,9 +190,11 @@ export async function processStudentMaterial(input: {
     processingStage: 'summarizing',
     processingProgress: 65,
     processingMessage:
-      documentAnalysis.processingStrategy === 'slide_layout'
-        ? 'Generando resumen y glosario a partir de bloques visuales y temas detectados.'
-        : 'Generando resumen y glosario en paralelo.',
+      pedagogicalModel
+        ? 'Generando la guía de estudio desde el modelo pedagógico canónico.'
+        : documentAnalysis.processingStrategy === 'slide_layout'
+          ? 'Generando resumen y glosario a partir de bloques visuales y temas detectados.'
+          : 'Generando resumen y glosario en paralelo.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     pagesProcessed,
@@ -195,16 +202,37 @@ export async function processStudentMaterial(input: {
   });
 
   const generationStartedAt = Date.now();
-  const glossarySeed = mapLocalSummaryToView(
-    summarizeExtractedText(text, material.title),
-    buildSummaryChunks(text).length,
-    'parallel-local-seed'
-  );
+
+  const summaryPromise = pedagogicalModel
+    ? generateCanonicalStudentMaterialSummary(generationInput, pedagogicalModel)
+    : generateStudentMaterialSummary(generationInput);
+
+  const canonicalGlossary = pedagogicalModel
+    ? buildCanonicalStudentMaterialGlossary(pedagogicalModel)
+    : [];
+
+  const glossaryUsesCanonicalModel =
+    pedagogicalModel !== null && canonicalGlossary.length > 0;
+
+  const glossaryPromise = glossaryUsesCanonicalModel
+    ? Promise.resolve(canonicalGlossary)
+    : generateStudentMaterialGlossary(
+        generationInput,
+        mapLocalSummaryToView(
+          summarizeExtractedText(text, material.title),
+          buildSummaryChunks(text).length,
+          'parallel-local-seed'
+        )
+      );
 
   const [summary, glossary] = await Promise.all([
-    generateStudentMaterialSummary(generationInput),
-    generateStudentMaterialGlossary(generationInput, glossarySeed),
+    summaryPromise,
+    glossaryPromise,
   ]);
+
+  const glossaryProvider = glossaryUsesCanonicalModel
+    ? CANONICAL_GLOSSARY_PROVIDER
+    : summary.provider;
 
   const generationMs = Date.now() - generationStartedAt;
   const aiUsage = await aggregateAiUsageForMaterial(admin, material.id);
@@ -256,8 +284,8 @@ export async function processStudentMaterial(input: {
     admin,
     studentMaterialId: material.id,
     glossary,
-    provider: summary.provider,
-    errorMessage: summary.errorMessage,
+    provider: glossaryProvider,
+    errorMessage: glossary.length > 0 ? null : summary.errorMessage,
   });
 
   await updateStudentMaterialProcessing(admin, material.id, {
@@ -285,6 +313,8 @@ export async function processStudentMaterial(input: {
     generationMs,
     totalMs: Date.now() - processingStartedAt,
     summaryProvider: summary.provider,
+    glossaryProvider,
+    glossaryItemCount: glossary.length,
     processingStrategy: documentAnalysis.processingStrategy,
     totalAiTokens: aiUsage.totalAiTokens,
     promptTokens: aiUsage.promptTokens,
