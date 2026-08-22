@@ -131,9 +131,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (row.materia_id) materiasConResumenes.add(String(row.materia_id));
     }
   }
+
+  const materiasConRecursos = new Set<string>();
   if (isFulfilled(recursosResult)) {
     for (const row of recursosResult.value.data ?? []) {
-      if (row.materia_id) materiasConResumenes.add(String(row.materia_id));
+      if (row.materia_id) materiasConRecursos.add(String(row.materia_id));
     }
   }
 
@@ -153,7 +155,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const lastModified = materiaLastModified.get(materia.id) ?? now;
       const hasQuestions = materiasConPreguntas.has(materia.id);
       const hasSummaries = materiasConResumenes.has(materia.id);
-      const hasAcademicContent = hasQuestions || hasSummaries;
+      const hasResources = materiasConRecursos.has(materia.id);
+      const hasAcademicContent = hasQuestions || hasSummaries || hasResources;
 
       if (!hasAcademicContent) continue;
 
