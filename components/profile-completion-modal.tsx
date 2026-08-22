@@ -574,7 +574,7 @@ export function ProfileCompletionModal({
   /*  Step validity                                                    */
   /* ================================================================ */
 
-  const canSubmitStep3 = Boolean(universidadId && carreraId);
+  const canSubmitStep3 = Boolean(universidadId && carreraId && selectedMateriaIds.length > 0);
 
   /* ================================================================ */
   /*  Show skeleton while hydrating                                    */
