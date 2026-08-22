@@ -6,6 +6,7 @@ import {
  ArrowRight,
  Building2,
  GraduationCap,
+ PlusCircle,
  Search,
 } from 'lucide-react';
 import { getCareerRoute, getUniversityRoute } from '@/lib/routes';
@@ -131,6 +132,22 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
  </div>
  </div>
 
+ <div className="mt-3 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+ <div>
+ <p className="text-sm font-semibold text-slate-800">¿No encontrás tu universidad?</p>
+ <p className="mt-0.5 text-xs leading-5 text-slate-500">
+ Pedinos que la sumemos. Para enviar la solicitud necesitás crear una cuenta.
+ </p>
+ </div>
+ <Link
+ href="/solicitar-universidad"
+ className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100"
+ >
+ <PlusCircle className="h-4 w-4" />
+ Solicitar universidad
+ </Link>
+ </div>
+
  {showUniversidades ? (
  <section className="mt-6">
  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
@@ -156,6 +173,13 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
  <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
  <h3 className="text-xl font-semibold text-slate-900">No encontramos universidades</h3>
  <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
+ <Link
+ href="/solicitar-universidad"
+ className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+ >
+ Solicitar que la sumemos
+ <ArrowRight className="h-4 w-4" />
+ </Link>
  </CardContent>
  </Card>
  ) : (
@@ -272,6 +296,10 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
  )}
  </section>
  ) : null}
+
+ <p className="mt-8 text-center text-[11px] leading-5 text-slate-400">
+ Los nombres de universidades se utilizan únicamente para organizar e identificar el catálogo académico. Evaluo es una plataforma independiente y no representa ni está afiliada a las instituciones listadas.
+ </p>
  </>
  );
 }
