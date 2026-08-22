@@ -17,7 +17,16 @@ export const studentMaterialUploadMetadataSchema = z.object({
   universidadId: uuidSchema,
   carreraId: uuidSchema,
   materiaId: uuidSchema,
-  title: z.string().trim().max(180),
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Escribí un título para identificar el material.')
+    .max(180, 'El título no puede superar los 180 caracteres.'),
+  description: z
+    .string()
+    .trim()
+    .min(3, 'Indicá brevemente a qué parcial, módulos o temas corresponde el material.')
+    .max(240, 'La descripción no puede superar los 240 caracteres.'),
   shareWithCatalog: z.boolean(),
 });
 
