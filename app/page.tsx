@@ -259,12 +259,7 @@ export default function Home() {
           <div className="grid items-center gap-8 pt-8 sm:pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:pt-16">
             {/* Left Column: Text & CTAs */}
             <div className="animate-surface-reveal flex flex-col items-start text-left">
-              <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50/80 px-3 py-1.5 text-[12px] font-bold text-indigo-700 ring-1 ring-indigo-200/50 backdrop-blur-sm sm:px-3.5 sm:text-xs">
-                <Sparkles className="h-4 w-4 text-indigo-600" />
-                <span>Disponible hoy para Universidad Siglo 21</span>
-              </div>
-
-              <h1 className="text-foreground mt-4 text-[2.2rem] leading-[1.02] font-bold tracking-[-0.05em] sm:mt-5 sm:text-5xl lg:text-[62px]">
+              <h1 className="text-foreground text-[2.2rem] leading-[1.02] font-bold tracking-[-0.05em] sm:text-5xl lg:text-[62px]">
                 Tu materia, tus materiales y tu práctica,{' '}
                 <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">
                   en un solo lugar
@@ -471,9 +466,6 @@ export default function Home() {
           </div>
 
           <div className="mt-10 border-t border-slate-200/60 pt-8 text-center">
-            <p className="text-xs font-bold tracking-widest text-slate-500 uppercase">
-              Disponible hoy para Universidad Siglo 21
-            </p>
             <HomeUniversidadLinks />
             <p className="mt-4 text-xs text-slate-500">Más universidades próximamente.</p>
           </div>
