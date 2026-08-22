@@ -394,14 +394,14 @@ const rankingProbe: StudyGlossaryItem[] = [
     term: 'Inteligencia artificial',
     definition: 'Conjunto de técnicas computacionales utilizadas para automatizar tareas mediante modelos y datos.',
     context: 'Fundamentos y conceptos de tecnología.',
-    importance: 'baja',
+    importance: 'media',
     englishTerm: 'Artificial intelligence',
   },
 ];
 const topLegalConcepts = selectPedagogicalConcepts(rankingProbe, 4);
 assert.ok(
   topLegalConcepts.every((item) => item.term !== 'Inteligencia artificial'),
-  'Un término tecnológico de baja importancia no debe desplazar conceptos centrales de otro dominio.'
+  'Un término tecnológico de importancia media no debe desplazar conceptos centrales de otro dominio.'
 );
 
 console.log('PDF study artifacts smoke tests passed across academic domains.');
