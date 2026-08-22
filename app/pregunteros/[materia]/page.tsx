@@ -27,6 +27,7 @@ interface PregunteroData {
   carreraNombre?: string;
   universidadNombre?: string;
   totalPreguntas: number;
+  resumenesCount: number;
   preguntasPorParcial: Array<{ parcial: number; count: number }>;
   samplePreguntas: Array<{
     id: string;
@@ -72,6 +73,7 @@ const loadPregunteroData = unstable_cache(
         carreraNombre: bootstrap.carreraNombre,
         universidadNombre: bootstrap.universidadNombre,
         totalPreguntas: totalPreguntas ?? 0,
+        resumenesCount: bootstrap.initialResumenes.length,
         preguntasPorParcial: Array.from(parcialCounts.entries())
           .sort((a, b) => a[0] - b[0])
           .map(([parcial, count]) => ({ parcial, count })),
@@ -96,6 +98,7 @@ const loadPregunteroData = unstable_cache(
         carreraNombre: bootstrap.carreraNombre,
         universidadNombre: bootstrap.universidadNombre,
         totalPreguntas: 0,
+        resumenesCount: bootstrap.initialResumenes.length,
         preguntasPorParcial: [],
         samplePreguntas: [],
       };
@@ -110,7 +113,7 @@ function buildPregunteroDescription(data: PregunteroData) {
   const base =
     data.totalPreguntas > 0
       ? `Practicá con ${data.totalPreguntas} preguntas de ${data.materiaNombre}`
-      : `Practicá con preguntas reales de ${data.materiaNombre}`;
+      : `Practicá con preguntas disponibles de ${data.materiaNombre}`;
 
   return context
     ? `${base} para ${context}, con simulador de parcial y feedback en Evaluo.`
@@ -131,6 +134,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const canonicalHref = buildPregunteroHref(data.materiaNombre, data.materiaId);
   const description = buildPregunteroDescription(data);
+  const socialTitle = `Preguntero de ${data.materiaNombre} | Evaluo`;
 
   return {
     title: `Preguntero de ${data.materiaNombre}`,
@@ -141,9 +145,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       follow: true,
     },
     openGraph: {
-      title: `Preguntero de ${data.materiaNombre} | Evaluo`,
+      title: socialTitle,
       description,
       url: canonicalHref,
+      images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: socialTitle,
+      description,
+      images: ['/opengraph-image.png'],
     },
   };
 }
@@ -262,24 +273,25 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
               </Link>
             </div>
 
-            <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
-              <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
-                Estudiá con resúmenes
-              </h2>
-              <p className="text-muted-foreground mt-3 text-sm leading-7">
-                Complementá la práctica con resúmenes ordenados por módulo, directamente del
-                programa de la materia.
-              </p>
-              <div className="mt-5 flex items-center gap-2">
-                <BookOpen className="text-brand h-5 w-5" />
-                <Link
-                  href={`/resumenes/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`}
-                  className="text-brand text-sm font-semibold hover:underline"
-                >
-                  Ver resúmenes de {data.materiaNombre}
-                </Link>
+            {data.resumenesCount > 0 ? (
+              <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+                <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
+                  Estudiá con resúmenes
+                </h2>
+                <p className="text-muted-foreground mt-3 text-sm leading-7">
+                  Complementá la práctica con resúmenes disponibles para esta materia.
+                </p>
+                <div className="mt-5 flex items-center gap-2">
+                  <BookOpen className="text-brand h-5 w-5" />
+                  <Link
+                    href={`/resumenes/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`}
+                    className="text-brand text-sm font-semibold hover:underline"
+                  >
+                    Ver resúmenes de {data.materiaNombre}
+                  </Link>
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
         </div>
       </section>
