@@ -4,6 +4,7 @@ import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/r
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
+import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 
 function getStorageObjectPath(resourcePath: string) {
   if (!/^https?:\/\//i.test(resourcePath)) {
@@ -77,7 +78,21 @@ export async function GET(request: Request) {
     }
 
     const sourceBytes = Buffer.from(await fileData.arrayBuffer());
-    const thumbnail = await sharp(sourceBytes, { density: 160, page: 0 })
+    const rendered = await renderPdfPagesToPngs(sourceBytes, {
+      pageNumbers: [1],
+      batchSize: 1,
+    });
+    const firstPage = rendered.images[0];
+
+    if (!firstPage) {
+      // El cliente ya tiene un fallback visual para thumbnails no disponibles.
+      // 422 evita registrar como excepción un PDF válido que no pudo renderizarse.
+      return NextResponse.json({ error: 'Unable to render pdf thumbnail' }, { status: 422 });
+    }
+
+    // Sharp procesa PNG de forma nativa en Vercel. No le pasamos el PDF crudo:
+    // libvips puede compilarse sin soporte PDF y devolver "unsupported image format".
+    const thumbnail = await sharp(firstPage)
       .resize({ width: 192, height: 264, fit: 'inside', withoutEnlargement: true })
       .png()
       .toBuffer();

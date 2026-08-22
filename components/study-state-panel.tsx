@@ -1,10 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import type { LucideIcon } from 'lucide-react';
+import { BookOpen, type LucideIcon } from 'lucide-react';
+
+type StudyStateIconName = 'book-open';
 
 interface StudyStatePanelProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  iconName?: StudyStateIconName;
   title: string;
   description: string;
   tone?: 'default' | 'warning';
@@ -18,8 +21,14 @@ interface StudyStatePanelProps {
   className?: string;
 }
 
+function resolveSerializableIcon(iconName: StudyStateIconName | undefined) {
+  if (iconName === 'book-open') return BookOpen;
+  return null;
+}
+
 export function StudyStatePanel({
-  icon: Icon,
+  icon,
+  iconName,
   title,
   description,
   tone = 'default',
@@ -33,6 +42,7 @@ export function StudyStatePanel({
   className = '',
 }: StudyStatePanelProps) {
   const isWarning = tone === 'warning';
+  const Icon = resolveSerializableIcon(iconName) ?? icon ?? BookOpen;
 
   return (
     <div

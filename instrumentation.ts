@@ -5,6 +5,26 @@ const ERROR_REPORT_URL = process.env.ERROR_REPORT_URL;
 const AXIOM_INGEST_URL = process.env.AXIOM_INGEST_URL;
 const AXIOM_INGEST_TOKEN = process.env.AXIOM_INGEST_TOKEN;
 
+/**
+ * PDF.js 5 expects browser geometry globals during module evaluation. Vercel's
+ * Node runtime does not provide them, while node-canvas already ships compatible
+ * implementations for the geometry primitives it supports. Next runs `register`
+ * before application request handlers, so installing them here keeps every
+ * server-side PDF.js consumer safe without leaking browser shims into clients.
+ */
+export async function register() {
+  if (process.env.NEXT_RUNTIME !== 'nodejs') return;
+
+  const canvas = (await import('canvas')) as unknown as Record<string, unknown>;
+  const runtimeGlobals = globalThis as unknown as Record<string, unknown>;
+
+  for (const globalName of ['DOMMatrix', 'ImageData', 'Path2D']) {
+    if (runtimeGlobals[globalName] === undefined && canvas[globalName] !== undefined) {
+      runtimeGlobals[globalName] = canvas[globalName];
+    }
+  }
+}
+
 // Headers sensibles que jamás deben salir del servidor hacia terceros
 // (Sentry/Axiom/endpoint propio). La cookie de sesión de Supabase y
 // Authorization no pueden quedar en el envelope de error.

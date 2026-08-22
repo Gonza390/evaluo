@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { BookOpen } from 'lucide-react';
 import { fetchSharedStudentMaterialsByCarrera } from '@/lib/data/student-materials';
 import { createPublicClient } from '@/lib/supabase-public';
 import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
@@ -79,7 +78,7 @@ export default async function MateriasPage({
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
         <StudyStatePanel
-          icon={BookOpen}
+          iconName="book-open"
           className="w-full"
           title="Todavía no elegiste una carrera"
           description="Entrá desde explorar o desde una universidad para ver el plan de materias correcto."
@@ -117,7 +116,7 @@ export default async function MateriasPage({
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
         <StudyStatePanel
-          icon={BookOpen}
+          iconName="book-open"
           tone="warning"
           className="w-full"
           title="No pudimos cargar esta carrera"
