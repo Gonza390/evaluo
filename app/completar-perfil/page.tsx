@@ -174,7 +174,8 @@ function CompletarPerfilContent() {
           const cameFromDemo =
             typeof window !== 'undefined' &&
             window.localStorage.getItem(DEMO_MIGRATION_FLAG_KEY) === '1';
-          router.replace(cameFromDemo ? '/dashboard' : nextPath);
+          const completionDestination = nextPath === '/dashboard' ? '/empezar' : nextPath;
+          router.replace(cameFromDemo ? '/dashboard' : completionDestination);
           router.refresh();
         }}
       />
