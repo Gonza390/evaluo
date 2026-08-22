@@ -9,27 +9,27 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: '¿Qué universidades están disponibles en Evaluo?',
     answer:
-      'Actualizamos contenido de estudio de las principales universidades públicas y privadas de Argentina: UBA, UTN, UNC, UNLP, UADE, UCA, Universidad de San Andrés y Universidad Torcuato Di Tella. Evaluo no está afiliada a ninguna de estas instituciones. Si tu universidad no figura en la lista destacada, podés registrarte, subir tus propios apuntes o programas de estudio, y la plataforma organizará el contenido y la simulación a tu medida.',
+      'Hoy Evaluo está disponible para Universidad Siglo 21, con carreras y materias organizadas dentro del catálogo. Estamos preparando la incorporación de más universidades. Evaluo no está afiliada, patrocinada ni aprobada por Universidad Siglo 21 ni por ninguna institución educativa.',
   },
   {
     question: '¿El contenido de la plataforma es realmente gratuito?',
     answer:
-      'Sí. Evaluo ofrece un plan gratuito para explorar materias, consultar resúmenes esenciales y realizar prácticas iniciales. Si querés una preparación más profunda, el plan premium suma simulaciones ilimitadas, más explicación paso a paso, más analítica y más seguimiento.',
+      'Sí. Evaluo tiene un plan gratuito para explorar el catálogo y usar funciones iniciales de estudio. Premium amplía las herramientas de práctica, explicación y seguimiento según las condiciones vigentes del plan.',
   },
   {
     question: '¿Es obligatorio registrarse para ver los resúmenes y preguntas?',
     answer:
-      'No para la navegación inicial. Podés buscar tu universidad y recorrer carreras libremente. Para guardar progreso, usar simuladores completos, registrar respuestas y mantener tus materias favoritas, sí necesitas una cuenta.',
+      'No para la navegación inicial. Podés explorar Universidad Siglo 21, sus carreras y materias sin crear una cuenta. Para guardar progreso, personalizar tu espacio de estudio y usar funciones que necesitan identificarte, sí necesitás registrarte.',
   },
   {
-    question: '¿Cómo funciona el plan premium y qué métodos de pago acepta?',
+    question: '¿Cómo funciona el plan Premium y cómo se paga?',
     answer:
-      'El plan premium desbloquea simulacros ilimitados, explicaciones más completas de cada error, métricas de avance y herramientas extra de estudio. Los pagos se procesan en pesos argentinos a través de Mercado Pago y admiten dinero en cuenta, transferencia y tarjetas.',
+      'Premium amplía las herramientas de estudio y seguimiento disponibles en Evaluo. La suscripción se gestiona en pesos argentinos mediante Mercado Pago; al abrir el checkout, Mercado Pago te muestra los medios de pago disponibles para tu cuenta. Podés cancelar la renovación desde Mercado Pago.',
   },
   {
-    question: '¿Los simuladores de examen son parecidos a los parciales?',
+    question: '¿Los simuladores reproducen los parciales reales?',
     answer:
-      'Sí. Los simuladores se preparan a partir de los temas y el nivel de dificultad habitual de cada materia, usando programas de estudio, apuntes y material compartido por estudiantes. No reproducimos exámenes oficiales ni evaluaciones de ninguna universidad: son prácticas originales que te ayudan a familiarizarte con el formato y los contenidos que podés llegar a encontrar.',
+      'No. Los simuladores son prácticas originales construidas a partir de los materiales y temas disponibles en Evaluo. Sirven para practicar preguntas, administrar el tiempo y revisar errores, pero no reproducen exámenes oficiales ni garantizan el formato, la dificultad o los contenidos de un parcial real.',
   },
 ];
 
