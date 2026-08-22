@@ -28,7 +28,7 @@ const comparison = [
   ['Resúmenes y materiales', true, true],
   ['Pregunteros', true, true],
   ['Simuladores completos', false, true],
-  ['Explicaciones con IA sin límite', false, true],
+  ['Explicaciones con IA sin límite diario', false, true],
   ['Práctica personalizada de errores', false, true],
   ['Progreso avanzado por tema', false, true],
 ] as const;

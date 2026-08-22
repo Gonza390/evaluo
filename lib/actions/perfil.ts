@@ -5,6 +5,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 import { serializeDashboardMateriaStates } from '@/lib/dashboard-state';
 import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
+import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import { isUuid } from '@/lib/uuid';
 
 type UpdateProfileData = {
@@ -126,6 +127,15 @@ export async function updateProfile(userId: string, data: UpdateProfileData) {
       logError('actions.updateProfile.upsert', error, { userId });
       throw error;
     }
+
+    await trackServerAnalyticsEvent({
+      eventName: 'profile_completed',
+      userId,
+      path: '/completar-perfil',
+      metadata: {
+        active_subject_count: materiaIds.length,
+      },
+    });
 
     revalidatePath('/');
     revalidatePath('/dashboard');

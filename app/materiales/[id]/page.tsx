@@ -6,6 +6,7 @@ import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
 import { getMateriaRoute } from '@/lib/routes';
+import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import { isUuid } from '@/lib/uuid';
 import {
   buildPedagogicalArtifacts,
@@ -185,6 +186,19 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
           </div>
         </main>
       );
+    }
+
+    if (user?.id) {
+      await trackServerAnalyticsEvent({
+        eventName: 'student_material_study_opened',
+        userId: user.id,
+        path: `/materiales/${material.id}`,
+        metadata: {
+          material_id: material.id,
+          is_owner: isOwner,
+          visibility: normalizeMaterialVisibility(material.visibility),
+        },
+      });
     }
 
     const { data: sourceChunks } = await admin

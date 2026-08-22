@@ -31,6 +31,7 @@ import {
   summarizeExtractedText,
 } from '@/lib/student-materials/text';
 import { logError, logInfo } from '@/lib/observability';
+import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
 import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
@@ -301,6 +302,17 @@ export async function processStudentMaterial(input: {
   });
 
   if (input.jobId) await completeStudentMaterialJob(admin, input.jobId);
+
+  await trackServerAnalyticsEvent({
+    eventName: 'student_material_processing_ready',
+    userId: material.user_id,
+    path: '/dashboard/materiales',
+    metadata: {
+      material_id: material.id,
+      page_count: pageCount,
+      processing_strategy: documentAnalysis.processingStrategy,
+    },
+  });
 
   logInfo('processStudentMaterial.performance', {
     materialId: material.id,

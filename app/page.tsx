@@ -30,16 +30,16 @@ import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Todo lo que necesitás para aprobar tus parciales, en un solo lugar',
+  title: 'Tu materia, tus materiales y tu práctica, en un solo lugar',
   description:
-    'Encontrá tu universidad, estudiá con resúmenes claros y practicá con pregunteros y simuladores de examen de tus materias. Sin PDFs caóticos ni ChatGPT genérico.',
+    'Evaluo comienza en Universidad Siglo 21: encontrá tu carrera y materia, estudiá con materiales organizados y practicá con simuladores y guías creadas desde tus PDFs.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Evaluo | Plataforma para estudiar parciales universitarios',
+    title: 'Evaluo | Estudiá tus materias de Universidad Siglo 21',
     description:
-      'Resúmenes, pregunteros y simuladores adaptados a tu plan de estudio en Argentina.',
+      'Materiales, guías de estudio, preguntas y simuladores organizados por carrera y materia.',
     url: '/',
   },
 };
@@ -51,80 +51,77 @@ const trustSignals = [
   'Acceso rápido a lo importante sin perseguir PDFs ni links rotos.',
 ];
 
-const argentinianUnis = [
-  { name: 'UBA', longName: 'Universidad de Buenos Aires' },
-  { name: 'UTN', longName: 'Universidad Tecnológica Nacional' },
-  { name: 'UNC', longName: 'Universidad Nacional de Córdoba' },
-  { name: 'UNLP', longName: 'Universidad Nacional de La Plata' },
-  { name: 'UADE', longName: 'Universidad de la Empresa' },
-  { name: 'UCA', longName: 'Univ. Católica Argentina' },
-  { name: 'UdeSA', longName: 'Universidad de San Andrés' },
-  { name: 'UTDT', longName: 'Univ. Torcuato Di Tella' },
+const launchUniversities = [
+  {
+    name: 'Siglo 21',
+    longName: 'Universidad Siglo 21',
+    lookupName: 'Universidad Siglo 21',
+  },
 ];
 
 const steps = [
   {
     icon: UploadCloud,
-    title: 'Elegí tu universidad y carrera',
+    title: 'Elegí tu carrera y materia',
     description:
-      'Buscás tu facultad. Accedés al catálogo de materias adaptado exactamente a tu plan de estudio y cátedra.',
+      'Evaluo comienza en Universidad Siglo 21. Entrá a tu carrera, encontrá tus materias y armá tu espacio de estudio.',
   },
   {
     icon: FileText,
-    title: 'Estudiá con resúmenes claros',
+    title: 'Estudiá con materiales claros',
     description:
-      'Chau resúmenes eternos. Accedés a explicaciones bajadas a tierra, limpias y estructuradas por unidades de clase.',
+      'Abrí recursos por materia o convertí tus propios PDFs en guías de estudio con resumen, glosario, tarjetas y ejercicios.',
   },
   {
     icon: Bot,
-    title: 'Practicás con pregunteros',
+    title: 'Practicá con preguntas y simuladores',
     description:
-      'Respondés cientos de preguntas específicas. Si te equivocás, la IA te explica el paso a paso en el acto.',
+      'Respondé preguntas, practicá con tiempo y usá las explicaciones para entender por qué una respuesta está bien o mal.',
   },
   {
     icon: CheckCircle2,
-    title: 'Rendís simulacros de examen',
+    title: 'Reforzá lo que te cuesta',
     description:
-      'Hacés modelos de parcial cronometrados con el formato y la dificultad de un examen, para medir tu confianza antes del examen.',
+      'Revisá tus resultados y volvé sobre los temas donde necesitás más práctica antes del parcial.',
   },
 ];
 
 const features = [
   {
     icon: FileText,
-    title: 'Resúmenes claros y completos',
+    title: 'Materiales y guías de estudio',
     description:
-      'Elaborados por estudiantes destacados y revisados académicamente. Van directo al grano, con esquemas, fórmulas y ejemplos prácticos.',
+      'Estudiá recursos de tu materia o generá una guía estructurada a partir de tus propios apuntes en PDF.',
   },
   {
     icon: Bot,
-    title: 'Pregunteros inteligentes con feedback',
+    title: 'Pregunteros con feedback',
     description:
-      'No es solo responder un multiple choice. Cada error se transforma en una lección gracias a las explicaciones instantáneas del asistente de IA.',
+      'No es solo responder un multiple choice. Las explicaciones te ayudan a revisar el razonamiento detrás de cada respuesta.',
   },
   {
     icon: BarChart3,
-    title: 'Simuladores con formato de examen',
+    title: 'Simuladores con tiempo',
     description:
-      'Cronómetros, ponderación y estructura similares a los de un parcial universitario. Entrená con la presión del tiempo antes de rendir.',
+      'Practicá en sesiones cronometradas y medí cómo respondés bajo una dinámica parecida a la de rendir.',
   },
   {
     icon: Target,
     title: 'Contenido específico',
     description:
-      'Focalizá tu estudio en los temas relevantes. En Evaluo el contenido se organiza según el programa de tu propia universidad.',
+      'El catálogo se organiza por universidad, carrera y materia; tus guías generadas se construyen desde el PDF que subís.',
   },
   {
     icon: Brain,
-    title: 'Radar de progreso y confianza',
+    title: 'Progreso para decidir qué reforzar',
     description:
-      'Nuestra analítica te indica qué temas tenés dominados al 100% y en cuáles necesitás reforzar antes de que llegue la fecha del examen.',
+      'Usá tus resultados de práctica para identificar qué temas vienen mejor y cuáles necesitan otra vuelta.',
   },
   {
     icon: Zap,
     title: 'Todo unificado en un solo lugar',
     description:
-      'Se acabó el caos de saltar entre 5 grupos de WhatsApp, enlaces de Drive caídos, fotocopiadoras y PDFs escaneados borrosos.',
+      'Se acabó el caos de saltar entre grupos, enlaces de Drive, fotocopiadoras y PDFs difíciles de ordenar.',
   },
 ];
 
@@ -132,14 +129,14 @@ const comparison = {
   chaos: [
     'PDFs eternos, borrosos e imposibles de leer en el celular.',
     'Grupos de WhatsApp ruidosos con spam y apuntes viejos.',
-    'Drives desactualizados con links rotos y archivos de 2018.',
-    'ChatGPT genérico que desconoce tu programa y confunde conceptos locales.',
+    'Drives desactualizados con links rotos y archivos de años anteriores.',
+    'Herramientas genéricas sin el contexto del material que estás estudiando.',
   ],
   evaluo: [
     'Material estructurado, limpio y optimizado para cualquier pantalla.',
     'Espacio enfocado únicamente al estudio, sin distracciones de chat.',
-    'Catálogo actualizado con los temas que se evalúan en tu materia.',
-    'IA académica experta que te acompaña con explicaciones paso a paso.',
+    'Catálogo organizado por universidad, carrera y materia.',
+    'IA que trabaja sobre el material que subís para generar apoyo de estudio.',
   ],
 };
 
@@ -162,8 +159,8 @@ async function HomeUniversidadLinks() {
 
   return (
     <div className="mt-6 flex flex-wrap justify-center gap-3">
-      {argentinianUnis.map((uni) => {
-        const uniId = idByName[uni.name.toLowerCase()];
+      {launchUniversities.map((uni) => {
+        const uniId = idByName[uni.lookupName.toLowerCase()];
         const content = (
           <>
             <span>{uni.name}</span>
@@ -264,11 +261,11 @@ export default function Home() {
             <div className="animate-surface-reveal flex flex-col items-start text-left">
               <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50/80 px-3 py-1.5 text-[12px] font-bold text-indigo-700 ring-1 ring-indigo-200/50 backdrop-blur-sm sm:px-3.5 sm:text-xs">
                 <Sparkles className="h-4 w-4 text-indigo-600" />
-                <span>Estudiá con inteligencia, aprobá con confianza</span>
+                <span>Disponible hoy para Universidad Siglo 21</span>
               </div>
 
               <h1 className="text-foreground mt-4 text-[2.2rem] leading-[1.02] font-bold tracking-[-0.05em] sm:mt-5 sm:text-5xl lg:text-[62px]">
-                Todo lo que necesitás para aprobar tus parciales,{' '}
+                Tu materia, tus materiales y tu práctica,{' '}
                 <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">
                   en un solo lugar
                 </span>
@@ -276,8 +273,8 @@ export default function Home() {
               </h1>
 
               <p className="mt-4 max-w-[560px] text-[13px] leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-8">
-                Encontrá tu universidad, estudiá con resúmenes claros y practicá con simuladores de
-                examen de tus materias. Sin PDFs caóticos ni ChatGPT genérico.
+                Empezá por Universidad Siglo 21: encontrá tu carrera y materia, abrí recursos y
+                convertí tus propios PDFs en guías de estudio para practicar antes del parcial.
               </p>
 
               {/* CTAs */}
@@ -287,13 +284,13 @@ export default function Home() {
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
-                    cta_name: 'buscar_universidad',
+                    cta_name: 'explorar_siglo_21',
                     destination: '/explorar',
                   }}
                   className="from-brand to-brand-2 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_32px_rgba(37,99,235,0.26)] sm:h-13 sm:px-8"
                 >
                   <PlayCircle className="h-5 w-5" />
-                  Buscar mi universidad
+                  Explorar Siglo 21
                 </TrackedLink>
                 <TrackedLink
                   href={primaryHref}
@@ -313,7 +310,7 @@ export default function Home() {
               <div className="mt-6 grid w-full gap-3 border-t border-slate-100 pt-5 text-[12px] font-semibold text-slate-500 sm:mt-8 sm:flex sm:flex-wrap sm:gap-4 sm:pt-6 sm:text-xs">
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Cátedras de Argentina</span>
+                  <span>Universidad Siglo 21</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
@@ -321,7 +318,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Sin costo de registro</span>
+                  <span>Registro gratis</span>
                 </div>
               </div>
             </div>
@@ -337,9 +334,9 @@ export default function Home() {
                 <div className="mb-3 flex items-center justify-between rounded-xl border-b border-slate-800 bg-slate-900/60 px-4 py-2.5 text-[12px]">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-                    <span className="font-bold text-white/90">UTN FRBA &bull; Sistemas</span>
+                    <span className="font-bold text-white/90">Universidad Siglo 21 &bull; Tu carrera</span>
                   </div>
-                  <div className="font-medium text-white/60">Análisis Matemático I</div>
+                  <div className="font-medium text-white/60">Tu materia</div>
                   <div className="rounded bg-indigo-500/20 px-2 py-0.5 font-bold text-indigo-400">
                     28:14 min restantes
                   </div>
@@ -409,14 +406,13 @@ export default function Home() {
                     <div className="mb-1.5 flex items-center gap-1.5">
                       <Bot className="h-4 w-4 text-indigo-400" />
                       <span className="text-[12px] font-bold text-indigo-200">
-                        Explicación Paso a Paso &bull; Exclusivo Evaluo:
+                        Explicación paso a paso &bull; Evaluo
                       </span>
                     </div>
                     <p className="text-[12px] leading-5 text-indigo-200/80">
-                      ¡Excelente respuesta! Como f&apos;&apos;(c) &gt; 0, la función posee una
-                      concavidad hacia arriba en el entorno de c, lo cual geométricamente asegura
-                      que el valor de la función en f(c) corresponds a un mínimo local. Si
-                      f&apos;&apos;(c) hubiese dado 0, el criterio no definiría.
+                      Como f&apos;&apos;(c) &gt; 0, la función posee concavidad hacia arriba en el
+                      entorno de c, lo que permite identificar un mínimo local bajo las condiciones
+                      del criterio.
                     </p>
                   </div>
                 </div>
@@ -429,9 +425,9 @@ export default function Home() {
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[12px] font-bold text-slate-800">Cátedras locales</p>
+                    <p className="text-[12px] font-bold text-slate-800">Cobertura inicial</p>
                     <p className="text-[8px] leading-3 text-slate-500">
-                      UBA, UTN, UNC, UNLP, UADE y más.
+                      Universidad Siglo 21. Más universidades próximamente.
                     </p>
                   </div>
                 </div>
@@ -443,9 +439,9 @@ export default function Home() {
                     <CheckCircle2 className="h-4 w-4" />
                   </div>
                   <div>
-                    <p className="text-[12px] font-bold text-slate-800">Preparado específico</p>
+                    <p className="text-[12px] font-bold text-slate-800">Práctica enfocada</p>
                     <p className="text-[8px] leading-3 text-slate-500">
-                      Con el formato de un examen.
+                      Preguntas, tiempo y revisión de resultados.
                     </p>
                   </div>
                 </div>
@@ -476,9 +472,10 @@ export default function Home() {
 
           <div className="mt-10 border-t border-slate-200/60 pt-8 text-center">
             <p className="text-xs font-bold tracking-widest text-slate-500 uppercase">
-              Contenido adaptado para estudiantes de universidades argentinas
+              Disponible hoy para Universidad Siglo 21
             </p>
             <HomeUniversidadLinks />
+            <p className="mt-4 text-xs text-slate-500">Más universidades próximamente.</p>
           </div>
         </div>
       </section>
@@ -492,11 +489,10 @@ export default function Home() {
               Paso a paso
             </span>
             <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              ¿Cómo funciona el Método Evaluo?
+              ¿Cómo funciona Evaluo?
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Todo lo que necesitás para preparar tus parciales universitarios en 4 simples pasos
-              coordinados.
+              Un flujo simple para encontrar tu materia, estudiar mejor y practicar antes del parcial.
             </p>
           </div>
 
@@ -548,8 +544,8 @@ export default function Home() {
               Qué encontrás en la plataforma
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Una suite de herramientas académicas integradas diseñadas específicamente para el
-              ritmo de estudio universitario argentino.
+              Herramientas de estudio integradas para pasar de tus materiales a la práctica sin
+              cambiar de plataforma.
             </p>
           </div>
 
@@ -583,8 +579,8 @@ export default function Home() {
               Dejá de luchar contra el caos de estudio
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Estudiar para un examen universitario en Argentina ya es bastante complejo. Tu
-              plataforma de estudio no debería complicarlo más.
+              Preparar un parcial ya requiere suficiente energía. Tu espacio de estudio no debería
+              agregar más desorden.
             </p>
           </div>
 
@@ -595,10 +591,10 @@ export default function Home() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-red-100/70 px-3.5 py-1.5 text-xs font-bold text-red-700">
                   <X className="h-4 w-4 shrink-0" />
-                  <span>El caos tradicional de fotocopiadora y chat</span>
+                  <span>El caos tradicional de archivos y chat</span>
                 </div>
                 <p className="mt-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                  Estudiar a la vieja escuela
+                  Estudiar con todo separado
                 </p>
 
                 <ul className="mt-6 space-y-4">
@@ -615,9 +611,8 @@ export default function Home() {
               </div>
 
               <div className="mt-8 rounded-2xl border border-red-100 bg-red-50 p-4 text-[12px] leading-5 text-red-800">
-                <strong>Resultado habitual:</strong> Pérdida de horas preciosas ordenando archivos,
-                dudas sin responder, ansiedad antes del parcial y estudio a ciegas sin saber qué
-                nivel de práctica tenés.
+                <strong>El problema:</strong> perdés tiempo ordenando archivos y saltando entre
+                herramientas cuando podrías estar leyendo, practicando y revisando errores.
               </div>
             </div>
 
@@ -628,10 +623,10 @@ export default function Home() {
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3.5 py-1.5 text-xs font-bold text-indigo-700">
                   <Check className="h-4 w-4 shrink-0" />
-                  <span>El Método Evaluo centralizado</span>
+                  <span>Todo conectado en Evaluo</span>
                 </div>
                 <p className="mt-4 text-xs font-bold tracking-wider text-indigo-700 uppercase">
-                  Estudiar con Evaluo
+                  Estudiar con contexto
                 </p>
 
                 <ul className="mt-6 space-y-4">
@@ -648,9 +643,9 @@ export default function Home() {
               </div>
 
               <div className="mt-8 rounded-2xl bg-indigo-600 p-5 text-[12px] leading-5 text-white shadow-lg">
-                <strong>El beneficio Evaluo:</strong> Foco absoluto. Todo lo que necesitás reunido
-                en minutos. Practicás con el formato del profesor, ganás confianza y aprobás con
-                tranquilidad.
+                <strong>El beneficio Evaluo:</strong> todo reunido en un mismo flujo. Practicás con
+                material de tu materia, medís resultados y llegás al parcial con más contexto y
+                confianza.
               </div>
             </div>
           </div>
@@ -663,14 +658,14 @@ export default function Home() {
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
               <PlayCircle className="h-3.5 w-3.5" />
-              Interactúa en vivo
+              Probalo en vivo
             </span>
             <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
               Viví la experiencia de estudio
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Seleccioná tu universidad, recorré el plan de tu materia y probá una pregunta del
-              simulador. Sin registros obligatorios.
+              Recorré una materia, abrí materiales y probá una pregunta del simulador. Sin registro
+              obligatorio para explorar.
             </p>
           </div>
 
@@ -685,7 +680,7 @@ export default function Home() {
               Preguntas Frecuentes
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Todo lo que necesitás saber sobre la plataforma y cómo prepararte para tus parciales.
+              Todo lo que necesitás saber sobre la plataforma y cómo preparar tus parciales.
             </p>
           </div>
 
@@ -709,8 +704,8 @@ export default function Home() {
                 Dejá de estudiar a ciegas.
               </h2>
               <p className="mt-4 max-w-xl text-xs leading-6 text-white/80 sm:text-sm">
-                Unite a estudiantes de universidades argentinas que preparan sus parciales con
-                orden, practicidad y la estructura de sus materias.
+                Empezá por Universidad Siglo 21 y prepará tus parciales con materiales organizados,
+                práctica y una guía clara de qué reforzar.
               </p>
 
               <CatalogStats />
@@ -722,13 +717,13 @@ export default function Home() {
                   eventName="cta_click"
                   payload={{
                     location: 'home_final_cta',
-                    cta_name: 'buscar_universidad_final',
+                    cta_name: 'explorar_siglo_21_final',
                     destination: '/explorar',
                   }}
                   className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-white px-6 text-sm font-bold text-slate-900 shadow-md transition hover:translate-y-[-1px] hover:bg-white"
                 >
                   <PlayCircle className="h-4.5 w-4.5 text-indigo-600" />
-                  Buscar mi universidad
+                  Explorar Siglo 21
                 </TrackedLink>
                 <TrackedLink
                   href={primaryHref}

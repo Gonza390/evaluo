@@ -186,6 +186,10 @@ export default function LoginForm() {
           return;
         }
 
+        trackMarketingEvent('signup_completed', {
+          location,
+          provider: 'email',
+        });
         setError('Registro exitoso. Revisá tu correo para confirmar tu cuenta.');
         return;
       }
@@ -240,7 +244,7 @@ export default function LoginForm() {
         <div className="mt-8 text-center lg:text-left">
           {intent === 'premium' && isSignUp ? (
             <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">
-              Acceso premium
+              Evaluo Premium
             </div>
           ) : null}
           <h1 className="mt-2 text-[2rem] font-bold tracking-[-0.06em] text-slate-950 sm:text-[2.15rem]">
@@ -249,7 +253,7 @@ export default function LoginForm() {
           <p className="mt-3 text-sm leading-6 text-slate-500">
             {isSignUp
               ? intent === 'premium'
-                ? 'Creá tu cuenta para reservar tu acceso premium, guardar tu prioridad y entrar antes a la beta.'
+                ? 'Creá tu cuenta para continuar con Evaluo Premium y volver al paso que estabas haciendo.'
                 : 'Creá tu espacio y prepará tu primer parcial.'
               : 'Volvé a tu materia y continuá donde dejaste.'}
           </p>
@@ -368,7 +372,7 @@ export default function LoginForm() {
             >
               {isSignUp
                 ? intent === 'premium'
-                  ? 'Reservar mi acceso premium'
+                  ? 'Crear cuenta y continuar'
                   : 'Crear cuenta'
                 : 'Iniciar sesión'}
             </Button>
