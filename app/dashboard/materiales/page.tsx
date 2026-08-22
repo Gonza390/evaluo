@@ -29,7 +29,8 @@ export default async function DashboardMaterialsPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login?next=%2Fdashboard%2Fmateriales');
+    const nextPath = openUpload === '1' ? '/dashboard/materiales?openUpload=1' : '/dashboard/materiales';
+    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
 
   try {
