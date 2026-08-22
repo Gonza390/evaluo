@@ -5,6 +5,7 @@ import {
   obtenerPromptSistema,
   obtenerRankingErroresIA,
 } from './shared-actions';
+import { obtenerConsumoPdfIAAdministrador } from './ai-cost-data';
 import {
   ArrowLeft,
   BookOpen,
@@ -37,6 +38,7 @@ const ConversionPanel = dynamic(() =>
 const BibliotecaPanel = dynamic(() =>
   import('./biblioteca-panel').then((mod) => mod.BibliotecaPanel)
 );
+const AICostPanel = dynamic(() => import('./ai-cost-panel').then((mod) => mod.AICostPanel));
 const IAPanel = dynamic(() => import('./ia-panel').then((mod) => mod.IAPanel));
 const LogsPanel = dynamic(() => import('./logs-panel').then((mod) => mod.LogsPanel));
 const UsersPanel = dynamic(() => import('./users-panel').then((mod) => mod.UsersPanel));
@@ -269,6 +271,7 @@ export default async function AdministradorPage({
     iaRankingResult,
     iaFeedbackStatsResult,
     iaFeedbackReviewResult,
+    iaCostResult,
   ] = await Promise.all([
     needsStats ? obtenerResumenAdministrador(activePeriod, metricPeriods) : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministrador(250) : Promise.resolve(null),
@@ -284,6 +287,7 @@ export default async function AdministradorPage({
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
     needsIA ? obtenerFeedbackRevisionAdmin(40) : Promise.resolve(null),
+    needsIA ? obtenerConsumoPdfIAAdministrador() : Promise.resolve(null),
   ]);
 
   if (needsStats && (!statsResult?.success || !statsResult.stats)) {
@@ -647,23 +651,29 @@ export default async function AdministradorPage({
               iaPromptResult?.success &&
               iaRankingResult?.success &&
               iaFeedbackReviewResult?.success ? (
-              <IAPanel
-                initialPrompt={iaPromptResult.data ?? ''}
-                initialRankingRows={iaRankingResult.rows ?? []}
-                initialFeedbackStats={
-                  (
-                    iaFeedbackStatsResult as {
-                      stats?: {
-                        total: number;
-                        positive: number;
-                        negative: number;
-                        generatedCount: number;
-                      };
-                    } | null
-                  )?.stats ?? null
-                }
-                initialFeedbackReviewRows={iaFeedbackReviewResult.rows ?? []}
-              />
+              <>
+                <AICostPanel
+                  stats={iaCostResult?.success ? (iaCostResult.stats ?? null) : null}
+                  error={iaCostResult?.success ? null : iaCostResult?.message}
+                />
+                <IAPanel
+                  initialPrompt={iaPromptResult.data ?? ''}
+                  initialRankingRows={iaRankingResult.rows ?? []}
+                  initialFeedbackStats={
+                    (
+                      iaFeedbackStatsResult as {
+                        stats?: {
+                          total: number;
+                          positive: number;
+                          negative: number;
+                          generatedCount: number;
+                        };
+                      } | null
+                    )?.stats ?? null
+                  }
+                  initialFeedbackReviewRows={iaFeedbackReviewResult.rows ?? []}
+                />
+              </>
             ) : (
               <EmptyPanel title={activePanelMeta.label} />
             )}
