@@ -33,6 +33,26 @@ const CORE_CONCEPT_PATTERN =
   /inteligencia artificial|aprendizaje autom[aá]tico|machine learning|deep learning|entrenamiento|inferencia|generalizaci[oó]n|dataset|ia generativa|ciberseguridad|edge computing|computaci[oó]n cu[aá]ntica|brecha digital|automatizaci[oó]n|blockchain|internet de las cosas|iot|rob[oó]tica/i;
 const GENERIC_TERM_PATTERN =
   /^(?:idea general|buena pr[aá]ctica|comprender qu[eé]|definir el problema|desplegar|evaluar|generaci[oó]n|hogar|industria|educaci[oó]n|ciudades|arquitectura|agricultura)$/i;
+const UNDERSTANDING_SIGNAL_PATTERN =
+  /clasificaci[oó]n|tipos?\b|incluye|se compone|relaci[oó]n|diferenc|compar|proceso|etapas?|fases?|pasos?|ventajas?|limitaciones?|criterios?|riesgos?/i;
+const APPLICATION_SIGNAL_PATTERN =
+  /ejempl|caso|situaci[oó]n|aplic|estrateg|proceso|pasos?|etapas?|fases?|criterios?|decisi[oó]n|procedimiento|riesgos?|medidas?|consecuencias?|resolver|implement|utiliza|uso\b/i;
+const CONTEXT_STOP_WORDS = new Set([
+  'para',
+  'como',
+  'esta',
+  'este',
+  'estas',
+  'estos',
+  'desde',
+  'sobre',
+  'entre',
+  'segun',
+  'material',
+  'pagina',
+  'paginas',
+  'seccion',
+]);
 
 export function isPedagogicalGlossaryItem(item: StudyGlossaryItem) {
   const term = cleanLine(item.term);
@@ -122,6 +142,128 @@ function findReference(term: string, chunks: PedagogicalChunk[], fallback: Pedag
     : fallback;
 }
 
+function getContextWords(value: string) {
+  return new Set(
+    normalizeForDedupe(value)
+      .split(/\s+/)
+      .filter((word) => word.length >= 4 && !CONTEXT_STOP_WORDS.has(word))
+  );
+}
+
+function countSharedWords(left: Set<string>, right: Set<string>) {
+  let count = 0;
+  for (const word of left) {
+    if (right.has(word)) count += 1;
+  }
+  return count;
+}
+
+function selectDistractorDefinitions(
+  concept: StudyGlossaryItem,
+  concepts: StudyGlossaryItem[],
+  limit = 3
+) {
+  const targetContext = getContextWords(concept.context);
+  const targetDefinition = normalizeForDedupe(concept.definition);
+
+  return dedupeStrings(
+    concepts
+      .filter((candidate) => candidate.term !== concept.term)
+      .filter((candidate) => normalizeForDedupe(candidate.definition) !== targetDefinition)
+      .map((candidate, index) => {
+        const sharedContextWords = countSharedWords(
+          targetContext,
+          getContextWords(candidate.context)
+        );
+        const lengthDifference = Math.abs(
+          cleanLine(candidate.definition).length - cleanLine(concept.definition).length
+        );
+        const lengthSimilarity = Math.max(0, 3 - Math.floor(lengthDifference / 70));
+        const sameImportance = candidate.importance === concept.importance ? 2 : 0;
+
+        return {
+          definition: candidate.definition,
+          score: sharedContextWords * 4 + lengthSimilarity + sameImportance,
+          index,
+        };
+      })
+      .sort((left, right) => right.score - left.score || left.index - right.index)
+      .map(({ definition }) => definition)
+  ).slice(0, limit);
+}
+
+function placeCorrectOption(
+  correctAnswer: string,
+  distractors: string[],
+  preferredPosition: number
+) {
+  const cleanDistractors = dedupeStrings(distractors).filter(
+    (distractor) => normalizeForDedupe(distractor) !== normalizeForDedupe(correctAnswer)
+  );
+  const optionCount = cleanDistractors.length + 1;
+  const position = Math.min(Math.max(0, preferredPosition), optionCount - 1);
+
+  return [
+    ...cleanDistractors.slice(0, position),
+    correctAnswer,
+    ...cleanDistractors.slice(position),
+  ];
+}
+
+function resolveFlashcardLevel(concept: StudyGlossaryItem): StudyFlashcard['level'] {
+  return UNDERSTANDING_SIGNAL_PATTERN.test(
+    `${concept.term} ${concept.definition} ${concept.context}`
+  )
+    ? 'comprender'
+    : 'recordar';
+}
+
+function buildFlashcardFront(concept: StudyGlossaryItem, level: StudyFlashcard['level']) {
+  const term = cleanLine(concept.term);
+
+  if (level === 'recordar') {
+    return `¿Qué significa “${term}” según el material?`;
+  }
+
+  return `¿Cómo explicarías “${term}” con tus palabras según el material?`;
+}
+
+function sectionSupportsApplication(body: string) {
+  return APPLICATION_SIGNAL_PATTERN.test(body);
+}
+
+function cleanStudyUnit(value: string) {
+  return cleanLine(
+    value
+      .replace(/^#{1,6}\s+/g, '')
+      .replace(/^[-*•]\s+/g, '')
+      .replace(/\*\*/g, '')
+      .replace(/`/g, '')
+      .replace(/\|/g, ' ')
+  );
+}
+
+function buildExpectedSectionAnswer(body: string) {
+  const rawUnits = body
+    .split(/\n+/)
+    .map(cleanStudyUnit)
+    .filter(Boolean)
+    .filter((unit) => !/^ver en pdf\b/i.test(unit))
+    .filter((unit) => !/^[-:|\s]+$/.test(unit));
+
+  const units = rawUnits.flatMap((unit) => {
+    if (unit.length <= 240) return [unit];
+    return unit
+      .split(/(?<=[.!?])\s+/)
+      .map(cleanLine)
+      .filter(Boolean);
+  });
+  const selected = dedupeStrings(units).slice(0, 4);
+  const answer = selected.join(' ');
+
+  return truncateAtWord(answer || cleanStudyUnit(body), 480);
+}
+
 export function buildPedagogicalArtifacts(input: {
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
@@ -131,40 +273,48 @@ export function buildPedagogicalArtifacts(input: {
   const concepts = selectPedagogicalConcepts(input.glossary, 12);
   const sectionTitles = dedupeStrings(input.summary.sections.map((section) => section.title));
   const flashcards = concepts.slice(0, 12).map(
-    (concept, index): StudyFlashcard => ({
-      front: index % 3 === 0 ? `¿Qué significa ${concept.term}?` : concept.term,
-      back: concept.definition,
-      level: index % 3 === 0 ? 'recordar' : 'comprender',
-      reference: findReference(
-        concept.term,
-        chunks,
-        emptyReference(
-          sectionTitles[index % Math.max(1, sectionTitles.length)] ?? null,
-          concept.context || concept.definition
-        )
-      ),
-    })
+    (concept, index): StudyFlashcard => {
+      const level = resolveFlashcardLevel(concept);
+      return {
+        front: buildFlashcardFront(concept, level),
+        back: concept.definition,
+        level,
+        reference: findReference(
+          concept.term,
+          chunks,
+          emptyReference(
+            sectionTitles[index % Math.max(1, sectionTitles.length)] ?? null,
+            concept.context || concept.definition
+          )
+        ),
+      };
+    }
   );
   const multipleChoice = concepts
     .slice(0, 5)
     .map((concept, index): StudyQuestion => {
-      const distractors = concepts
-        .filter((candidate) => candidate.term !== concept.term)
-        .map((candidate) => candidate.definition)
-        .filter(
-          (definition) => normalizeForDedupe(definition) !== normalizeForDedupe(concept.definition)
-        )
-        .slice(index % 2, (index % 2) + 3);
-      const options = dedupeStrings([concept.definition, ...distractors]).slice(0, 4);
-      const rotated = options.length > 1 ? [...options.slice(1), options[0]!] : options;
+      const distractors = selectDistractorDefinitions(concept, concepts, 3);
+      const options = placeCorrectOption(
+        concept.definition,
+        distractors,
+        index % Math.max(1, distractors.length + 1)
+      ).slice(0, 4);
+      const level = index < 2 ? 'recordar' : 'comprender';
+
       return {
         id: `mc-${index + 1}`,
         type: 'multiple_choice',
-        level: index < 2 ? 'recordar' : 'comprender',
-        prompt: `¿Cuál es la explicación correcta de “${concept.term}” según el material?`,
-        options: rotated,
+        level,
+        prompt:
+          level === 'recordar'
+            ? `¿Cuál es la definición correcta de “${concept.term}” según el material?`
+            : `¿Cuál opción explica mejor “${concept.term}” según el material?`,
+        options,
         answer: concept.definition,
-        explanation: `La respuesta se apoya en la definición y el contexto que el documento presenta para ${concept.term}.`,
+        explanation:
+          level === 'recordar'
+            ? `La respuesta reproduce la definición que el material asigna a ${concept.term}.`
+            : `La respuesta conserva la idea central y el contexto con el que el material explica ${concept.term}.`,
         reference: findReference(
           concept.term,
           chunks,
@@ -174,21 +324,21 @@ export function buildPedagogicalArtifacts(input: {
     })
     .filter((question) => question.options.length >= 3);
   const openQuestions = input.summary.sections.slice(0, 5).map((section, index): StudyQuestion => {
-    const level = index < 1 ? 'comprender' : 'aplicar';
+    const canApply = index > 0 && sectionSupportsApplication(section.body);
+    const level: StudyQuestion['level'] = canApply ? 'aplicar' : 'comprender';
+
     return {
       id: `open-${index + 1}`,
       type: 'open',
       level,
-      prompt:
-        level === 'comprender'
-          ? `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos.`
-          : `Aplicá las ideas de “${section.title}” a una situación nueva y justificá cada decisión con el material.`,
+      prompt: canApply
+        ? `Planteá una situación concreta donde se puedan aplicar las ideas de “${section.title}” y justificá qué conceptos o criterios del material usarías.`
+        : `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos o ideas clave del material.`,
       options: [],
-      answer: truncateAtWord(section.body, 700),
-      explanation:
-        level === 'comprender'
-          ? 'Una respuesta sólida debe definir la idea central, conectar conceptos y evitar limitarse a copiar frases.'
-          : 'La aplicación debe usar criterios del documento, explicar por qué corresponden al caso y anticipar consecuencias.',
+      answer: buildExpectedSectionAnswer(section.body),
+      explanation: canApply
+        ? 'Una respuesta sólida debe aplicar criterios explícitos del material al caso, justificar por qué corresponden y evitar agregar supuestos innecesarios.'
+        : 'Una respuesta sólida debe explicar la idea central, conectar conceptos del material y evitar limitarse a copiar frases sin relación entre sí.',
       reference: findReference(section.title, chunks, emptyReference(section.title, section.body)),
     };
   });
