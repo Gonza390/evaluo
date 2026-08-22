@@ -9,7 +9,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: '¿Qué universidades están disponibles en Evaluo?',
     answer:
-      'Hoy Evaluo está disponible para Universidad Siglo 21, con carreras y materias organizadas dentro del catálogo. Estamos preparando la incorporación de más universidades. Evaluo no está afiliada, patrocinada ni aprobada por Universidad Siglo 21 ni por ninguna institución educativa.',
+      'El catálogo actual comienza con Universidad Siglo 21 y estamos preparando la incorporación de más universidades. Los nombres de instituciones se usan únicamente para organizar el catálogo académico. Evaluo es una plataforma independiente y no está afiliada, patrocinada ni aprobada por las universidades listadas.',
   },
   {
     question: '¿El contenido de la plataforma es realmente gratuito?',
@@ -19,7 +19,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: '¿Es obligatorio registrarse para ver los resúmenes y preguntas?',
     answer:
-      'No para la navegación inicial. Podés explorar Universidad Siglo 21, sus carreras y materias sin crear una cuenta. Para guardar progreso, personalizar tu espacio de estudio y usar funciones que necesitan identificarte, sí necesitás registrarte.',
+      'No para la navegación inicial. Podés explorar el catálogo, las carreras y las materias disponibles sin crear una cuenta. Para guardar progreso, personalizar tu espacio de estudio, solicitar una universidad y usar funciones que necesitan identificarte, sí necesitás registrarte.',
   },
   {
     question: '¿Cómo funciona el plan Premium y cómo se paga?',
