@@ -21,7 +21,11 @@ export function MateriaSectionState({
   onAction,
 }: MateriaSectionStateProps) {
   const isWarning = tone === 'warning';
-  const showCommunityContribution = !isWarning && !actionLabel && !onAction;
+  const showCommunityContribution =
+    !isWarning &&
+    !actionLabel &&
+    !onAction &&
+    title.toLocaleLowerCase('es-AR').includes('pdfs de estudiantes');
 
   return (
     <div
