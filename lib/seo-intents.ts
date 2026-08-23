@@ -1,3 +1,12 @@
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export const INVALID_SEO_ENTITY_ID = '00000000-0000-0000-0000-000000000000';
+
+export function isValidSeoEntityId(value: string) {
+  return UUID_PATTERN.test(value.trim());
+}
+
 export function slugifySeoSegment(value: string) {
   return value
     .toLowerCase()
@@ -14,14 +23,12 @@ export function buildSeoEntitySlug(name: string, id: string) {
 
 export function parseSeoEntitySlug(value: string) {
   const delimiterIndex = value.lastIndexOf('--');
-
-  if (delimiterIndex === -1) {
-    return { id: value, labelSlug: value };
-  }
+  const rawId = delimiterIndex === -1 ? value : value.slice(delimiterIndex + 2);
+  const labelSlug = delimiterIndex === -1 ? value : value.slice(0, delimiterIndex);
 
   return {
-    id: value.slice(delimiterIndex + 2),
-    labelSlug: value.slice(0, delimiterIndex),
+    id: isValidSeoEntityId(rawId) ? rawId : INVALID_SEO_ENTITY_ID,
+    labelSlug,
   };
 }
 
