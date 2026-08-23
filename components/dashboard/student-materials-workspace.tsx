@@ -23,9 +23,13 @@ import {
   getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
   type StudentMaterialProcessingState,
-  uploadStudentMaterialAction,
   updateStudentMaterialVisibilityAction,
 } from '@/app/dashboard/materiales/actions';
+import {
+  cancelStudentMaterialUploadAction,
+  finalizeStudentMaterialUploadAction,
+  prepareStudentMaterialUploadAction,
+} from '@/app/dashboard/materiales/upload-actions';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { getCareerRoute, getMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
@@ -44,6 +48,8 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { GuidedTour, type GuidedTourStep } from '@/components/ui/guided-tour';
 import { useUser } from '@/hooks/useUser';
+import { getSupabaseBrowserClient } from '@/lib/supabase-client';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
 
 function getMaterialsTourStorageKey(userId: string) {
   return `evaluo_mi_espacio_tour_seen:${userId}`;
@@ -98,6 +104,15 @@ function getFeaturedMaterialLabel(material: StudentMaterial | null) {
   }
 
   return material.visibility === 'shared' ? 'Compartido en tu materia' : 'Solo en tu espacio';
+}
+
+function isMaterialUploadQuotaMessage(message: string) {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('limite') ||
+    normalized.includes('límite') ||
+    normalized.includes('plan gratis')
+  );
 }
 
 export function StudentMaterialsWorkspace({
@@ -315,47 +330,102 @@ export function StudentMaterialsWorkspace({
       return;
     }
 
-    const formData = new FormData();
-    formData.set('title', title);
-    formData.set('description', description);
-    formData.set('universidadId', universidadId);
-    formData.set('carreraId', carreraId);
-    formData.set('materiaId', materiaId);
-    formData.set('shareWithCatalog', String(shareWithCatalog));
-    formData.set('file', selectedFile);
+    if (selectedFile.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
+      toast({
+        description: 'El PDF supera el limite de 20 MB. Reduce el archivo e intentalo nuevamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (
+      !selectedFile.name.toLowerCase().endsWith('.pdf') ||
+      (selectedFile.type && selectedFile.type !== 'application/pdf')
+    ) {
+      toast({
+        description: 'Por ahora solo aceptamos archivos PDF.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const file = selectedFile;
+    const metadata = {
+      title: title.trim(),
+      description: description.trim(),
+      universidadId,
+      carreraId,
+      materiaId,
+      shareWithCatalog,
+    };
+    const fileMetadata = {
+      name: file.name,
+      mimeType: file.type || 'application/pdf',
+      size: file.size,
+    };
+
+    const showUploadFailure = (message: string) => {
+      if (isMaterialUploadQuotaMessage(message)) {
+        trackMarketingEvent('limit_reached_material_upload', {
+          materia_id: materiaId || undefined,
+        });
+        setShowPremiumUpsell(true);
+        return;
+      }
+
+      toast({
+        description: message,
+        variant: 'destructive',
+      });
+    };
 
     startTransition(async () => {
-      const result = await uploadStudentMaterialAction(formData);
+      let preparedFilePath: string | null = null;
 
-      let isQuotaError = false;
-      if (!result.success) {
-        const message = result.message.toLowerCase();
-        isQuotaError =
-          message.includes('limite') ||
-          message.includes('límite') ||
-          message.includes('plan gratis');
-
-        if (isQuotaError) {
-          trackMarketingEvent('limit_reached_material_upload', {
-            materia_id: materiaId || undefined,
-          });
-          setShowPremiumUpsell(true);
-        }
-      }
-
-      if (!isQuotaError) {
-        toast({
-          description: result.message,
-          variant: result.success ? 'default' : 'destructive',
+      try {
+        const prepared = await prepareStudentMaterialUploadAction({
+          metadata,
+          file: fileMetadata,
         });
-      }
 
-      if (result.success) {
+        if (!prepared.success || !prepared.filePath || !prepared.token) {
+          showUploadFailure(prepared.message);
+          return;
+        }
+
+        preparedFilePath = prepared.filePath;
+        const supabase = getSupabaseBrowserClient();
+        const { error: uploadError } = await supabase.storage
+          .from('biblioteca')
+          .uploadToSignedUrl(prepared.filePath, prepared.token, file, {
+            contentType: fileMetadata.mimeType,
+          });
+
+        if (uploadError) {
+          await cancelStudentMaterialUploadAction(prepared.filePath);
+          showUploadFailure('No pudimos transferir el PDF al almacenamiento. Intentá nuevamente.');
+          return;
+        }
+
+        const result = await finalizeStudentMaterialUploadAction({
+          metadata,
+          file: fileMetadata,
+          filePath: prepared.filePath,
+        });
+
+        if (!result.success) {
+          await cancelStudentMaterialUploadAction(prepared.filePath);
+          showUploadFailure(result.message);
+          return;
+        }
+
+        toast({ description: result.message });
+
         if (result.materialId) {
           setActiveProcessing({
             materialId: result.materialId,
-            title: title.trim() || selectedFile.name.replace(/\.pdf$/i, ''),
-            fileName: selectedFile.name,
+            title: metadata.title || file.name.replace(/\.pdf$/i, ''),
+            fileName: file.name,
             status: 'uploaded',
             stage: 'uploaded',
             progress: 10,
@@ -366,9 +436,20 @@ export function StudentMaterialsWorkspace({
           setProcessingStartedAt(Date.now());
           void processStudentMaterialAction(result.materialId);
         }
+
         resetForm();
         setIsUploadDialogOpen(false);
         router.refresh();
+      } catch (error) {
+        if (preparedFilePath) {
+          await cancelStudentMaterialUploadAction(preparedFilePath).catch(() => undefined);
+        }
+
+        showUploadFailure(
+          error instanceof Error
+            ? error.message
+            : 'No pudimos completar la subida del PDF. Intentá nuevamente.'
+        );
       }
     });
   };
@@ -798,7 +879,10 @@ export function StudentMaterialsWorkspace({
 
           <div className="grid gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
             <div className="sm:col-span-2">
-              <label htmlFor="material-title" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <label
+                htmlFor="material-title"
+                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+              >
                 Título
               </label>
               <Input
@@ -811,7 +895,10 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="material-description" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <label
+                htmlFor="material-description"
+                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+              >
                 Descripción breve
               </label>
               <Textarea
@@ -843,7 +930,10 @@ export function StudentMaterialsWorkspace({
             ) : (
               <>
                 <div>
-                  <label htmlFor="material-universidad" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                  <label
+                    htmlFor="material-universidad"
+                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                  >
                     Universidad
                   </label>
                   <select
@@ -866,7 +956,10 @@ export function StudentMaterialsWorkspace({
                 </div>
 
                 <div>
-                  <label htmlFor="material-carrera" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                  <label
+                    htmlFor="material-carrera"
+                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                  >
                     Carrera
                   </label>
                   <select
@@ -891,7 +984,10 @@ export function StudentMaterialsWorkspace({
             )}
 
             <div className="sm:col-span-2">
-              <label htmlFor="material-materia" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <label
+                htmlFor="material-materia"
+                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+              >
                 Materia
               </label>
               <select
@@ -911,7 +1007,10 @@ export function StudentMaterialsWorkspace({
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="material-file" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+              <label
+                htmlFor="material-file"
+                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+              >
                 Archivo PDF
               </label>
               <Input
