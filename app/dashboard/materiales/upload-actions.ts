@@ -7,6 +7,7 @@ import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
+import { assertStudentMaterialPdfPageLimit } from '@/lib/student-materials/pdf-validation';
 import {
   buildStudentMaterialStoragePath,
   getValidationMessage,
@@ -308,6 +309,8 @@ export async function finalizeStudentMaterialUploadAction(
     if (!isPdfFileSignature(fileBytes)) {
       throw new Error('El archivo no contiene un PDF válido.');
     }
+
+    await assertStudentMaterialPdfPageLimit(fileBytes);
 
     const { data: insertedMaterial, error: insertError } = await admin
       .from('student_materials')
