@@ -5,7 +5,6 @@ import './globals.css';
 
 const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '900'],
   display: 'swap',
   preload: true,
   fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
@@ -83,11 +82,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR" className={inter.className}>
-      <body
-        className="bg-background text-foreground min-h-screen text-[0.92rem]"
-      >
-        {children}
-      </body>
+      <body className="bg-background text-foreground min-h-screen text-[0.92rem]">{children}</body>
     </html>
   );
 }
