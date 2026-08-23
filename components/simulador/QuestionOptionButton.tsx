@@ -24,13 +24,7 @@ interface QuestionOptionButtonProps {
   disabled: boolean;
 }
 
-/**
- * A single answer-option button for a simulator question.
- *
- * Handles all visual states: default, selected, correct, incorrect, and
- * disabled. Preserves the exact markup and Tailwind classes from the original
- * inline rendering in SimuladorExamen.
- */
+/** Answer option styled as an exam response row, with clear selected/graded states. */
 export function QuestionOptionButton({
   opcion,
   optionIndex,
@@ -43,45 +37,46 @@ export function QuestionOptionButton({
 }: QuestionOptionButtonProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       aria-pressed={selected}
       className={cn(
-        'w-full rounded-lg border p-3.5 text-left transition',
+        'min-h-[60px] w-full rounded-2xl border px-4 py-4 text-left transition-[border-color,background-color,box-shadow,transform] duration-150 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none sm:px-5',
         !questionAnswered &&
-          'border-slate-200 bg-white hover:border-slate-300 hover:bg-white',
-        questionAnswered &&
-          'border-slate-200 bg-white',
+          'border-border bg-card hover:-translate-y-px hover:border-primary/35 hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]',
+        questionAnswered && 'cursor-default border-border bg-card',
         selected &&
           !questionAnswered &&
-          'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100',
+          'border-primary bg-primary/5 text-foreground ring-2 ring-primary/10',
         questionAnswered &&
           optionIsCorrect &&
-          'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-100',
-        selectedIsWrong &&
-          'border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-100'
+          'border-emerald-500 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-100',
+        selectedIsWrong && 'border-rose-500 bg-rose-50 text-rose-950 ring-2 ring-rose-100'
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3.5">
         <span
           className={cn(
-            'mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold uppercase',
+            'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border text-xs font-bold uppercase transition-colors',
             selected
-              ? 'border-blue-500 bg-white text-blue-600'
-              : 'border-slate-300 bg-white text-slate-500'
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border bg-background text-muted-foreground'
           )}
         >
           {OPTION_LABELS[optionIndex] ?? optionIndex + 1}
         </span>
-        <span className="flex-1 text-sm leading-5 sm:text-[15px]">{opcion}</span>
+        <span className="flex-1 pt-1 text-[15px] leading-6 text-foreground sm:text-base sm:leading-7">
+          {opcion}
+        </span>
         {questionAnswered && optionIsCorrect ? (
-          <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
+          <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-800">
             <Check className="h-3 w-3" />
             Correcta
           </span>
         ) : null}
         {selectedIsWrong ? (
-          <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-bold text-rose-800">
+          <span className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold text-rose-800">
             <X className="h-3 w-3" />
             Incorrecta
           </span>
