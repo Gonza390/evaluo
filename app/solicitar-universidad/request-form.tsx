@@ -18,7 +18,7 @@ export function UniversityRequestForm() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!universityName.trim()) return;
+    if (!universityName.trim() || !careerName.trim()) return;
 
     setIsSubmitting(true);
     setErrorMessage('');
@@ -33,7 +33,7 @@ export function UniversityRequestForm() {
         p_university_name: universityName.trim(),
         p_country: country.trim() || 'Argentina',
         p_city: city.trim() || null,
-        p_career_name: careerName.trim() || null,
+        p_career_name: careerName.trim(),
         p_note: note.trim() || null,
       });
 
@@ -73,6 +73,7 @@ export function UniversityRequestForm() {
             value={universityName}
             onChange={(event) => setUniversityName(event.target.value)}
             placeholder="Nombre de tu universidad"
+            minLength={2}
             maxLength={160}
             required
           />
@@ -86,6 +87,7 @@ export function UniversityRequestForm() {
             id="university-country"
             value={country}
             onChange={(event) => setCountry(event.target.value)}
+            minLength={2}
             maxLength={100}
             required
           />
@@ -106,15 +108,20 @@ export function UniversityRequestForm() {
 
         <div className="sm:col-span-2">
           <label htmlFor="university-career" className="mb-1.5 block text-sm font-semibold text-slate-800">
-            Carrera <span className="font-normal text-slate-400">(opcional)</span>
+            Carrera
           </label>
           <Input
             id="university-career"
             value={careerName}
             onChange={(event) => setCareerName(event.target.value)}
             placeholder="¿Qué carrera estudiás?"
+            minLength={2}
             maxLength={160}
+            required
           />
+          <p className="mt-1.5 text-xs text-slate-400">
+            La necesitamos para crear la estructura correcta si aprobamos la solicitud.
+          </p>
         </div>
 
         <div className="sm:col-span-2">
@@ -149,7 +156,11 @@ export function UniversityRequestForm() {
         </div>
       </div>
 
-      <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || !universityName.trim()}>
+      <Button
+        type="submit"
+        className="w-full sm:w-auto"
+        disabled={isSubmitting || !universityName.trim() || !careerName.trim()}
+      >
         {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         Enviar solicitud
       </Button>
