@@ -45,25 +45,28 @@ export function ExamFocusControls() {
 
   useEffect(() => {
     setShellImmersive(false);
-
     document.addEventListener('fullscreenchange', syncFullscreenState);
     document.addEventListener('webkitfullscreenchange', syncFullscreenState as EventListener);
 
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState);
+      document.removeEventListener('webkitfullscreenchange', syncFullscreenState as EventListener);
+      setShellImmersive(false);
+    };
+  }, [syncFullscreenState]);
+
+  useEffect(() => {
+    if (!immersive) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || !immersive || getFullscreenElement()) return;
+      if (event.key !== 'Escape' || getFullscreenElement()) return;
       setImmersive(false);
       setShellImmersive(false);
     };
 
     document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', syncFullscreenState);
-      document.removeEventListener('webkitfullscreenchange', syncFullscreenState as EventListener);
-      document.removeEventListener('keydown', handleKeyDown);
-      setShellImmersive(false);
-    };
-  }, [immersive, syncFullscreenState]);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [immersive]);
 
   const leaveImmersive = useCallback(async () => {
     const legacyDocument = document as LegacyFullscreenDocument;
