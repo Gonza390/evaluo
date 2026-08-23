@@ -195,7 +195,7 @@ export function PaymentResult() {
         </div>
         <p className="text-muted-foreground mt-4 flex items-center justify-center gap-2 text-center text-xs">
           <ShieldCheck className="text-primary h-4 w-4" />
-          Tu material queda privado y solo se usa para generar tu estudio.
+          Al subir un material podés elegir si compartirlo con tu materia o mantenerlo privado.
         </p>
         <p className="text-muted-foreground mt-2 flex items-center justify-center gap-2 text-center text-xs">
           <ShieldCheck className="text-primary h-4 w-4" />

@@ -60,6 +60,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'source',
     'materia_id',
     'plan_context',
+    'displayed_amount_ars',
+    'founder_available',
   ],
   premium_checkout_created: ['source', 'materia_id', 'plan_context', 'amount_ars'],
   premium_checkout_failed: ['source', 'materia_id', 'plan_context', 'reason'],
@@ -88,6 +90,9 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'current_mode',
     'next_mode',
   ],
+  profile_completed: ['active_subject_count'],
+  student_material_processing_ready: ['material_id', 'page_count', 'processing_strategy'],
+  student_material_study_opened: ['material_id', 'is_owner', 'visibility'],
   pdf_gate_viewed: [
     'attribution',
     'anonymous_id',

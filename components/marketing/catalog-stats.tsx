@@ -9,9 +9,9 @@ interface CatalogCounts {
 }
 
 const FALLBACK: CatalogCounts = {
-  universidades: 2,
-  carreras: 10,
-  materias: 50,
+  universidades: 1,
+  carreras: 43,
+  materias: 770,
 };
 
 const loadCatalogCounts = unstable_cache(
@@ -77,9 +77,7 @@ export async function CatalogStats() {
               <span className="mr-2 hidden h-4 w-px bg-white/20 sm:block" aria-hidden="true" />
             )}
             <Icon className="h-4 w-4 text-indigo-300" />
-            <span className="text-sm font-bold text-white">
-              {item.value}
-            </span>
+            <span className="text-sm font-bold text-white">{item.value}</span>
             <span className="text-xs text-white/70">{item.label}</span>
           </div>
         );

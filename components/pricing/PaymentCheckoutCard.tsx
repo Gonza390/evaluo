@@ -26,6 +26,18 @@ type PaymentCheckoutCardProps = {
   materiaId?: string;
 };
 
+type PremiumOffer = {
+  founderAvailable: boolean;
+  founderPriceArs: number | null;
+  regularPriceArs: number;
+};
+
+const FALLBACK_OFFER: PremiumOffer = {
+  founderAvailable: false,
+  founderPriceArs: null,
+  regularPriceArs: 12990,
+};
+
 export function PaymentCheckoutCard({
   features,
   source = 'pricing_direct',
@@ -34,12 +46,14 @@ export function PaymentCheckoutCard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [offer, setOffer] = useState<PremiumOffer | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<
     'loading' | 'active' | 'attention' | 'inactive'
   >('loading');
 
   useEffect(() => {
     let cancelled = false;
+
     void fetch('/api/payments/status', { cache: 'no-store' })
       .then(async (response) => {
         if (response.status === 401) return 'inactive';
@@ -55,16 +69,49 @@ export function PaymentCheckoutCard({
       .catch(() => {
         if (!cancelled) setSubscriptionStatus('inactive');
       });
+
+    void fetch('/api/payments/offer', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return FALLBACK_OFFER;
+        const payload = (await response.json()) as Partial<PremiumOffer>;
+        const regularPriceArs = Number(payload.regularPriceArs);
+        const founderPriceArs =
+          payload.founderPriceArs == null ? null : Number(payload.founderPriceArs);
+        return {
+          founderAvailable: Boolean(payload.founderAvailable && founderPriceArs),
+          founderPriceArs:
+            founderPriceArs && Number.isFinite(founderPriceArs) ? founderPriceArs : null,
+          regularPriceArs:
+            Number.isFinite(regularPriceArs) && regularPriceArs > 0
+              ? regularPriceArs
+              : FALLBACK_OFFER.regularPriceArs,
+        } satisfies PremiumOffer;
+      })
+      .then((nextOffer) => {
+        if (!cancelled) setOffer(nextOffer);
+      })
+      .catch(() => {
+        if (!cancelled) setOffer(FALLBACK_OFFER);
+      });
+
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const displayedPrice = offer
+    ? offer.founderAvailable && offer.founderPriceArs
+      ? offer.founderPriceArs
+      : offer.regularPriceArs
+    : null;
 
   async function startCheckout() {
     trackMarketingEvent('premium_checkout_clicked', {
       source,
       materia_id: materiaId,
       plan_context: 'premium_founders',
+      displayed_amount_ars: displayedPrice,
+      founder_available: offer?.founderAvailable ?? null,
     });
     setLoading(true);
     setError(null);
@@ -127,21 +174,26 @@ export function PaymentCheckoutCard({
       <div>
         <span className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold">
           <Sparkles className="h-3.5 w-3.5" />
-          Primeros 100 usuarios
+          {offer?.founderAvailable ? 'Precio fundador · primeros 100' : 'Evaluo Premium'}
         </span>
         <h2 className="text-foreground mt-4 text-2xl font-bold tracking-tight">Premium</h2>
         <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
           <span className="text-foreground text-4xl font-bold tracking-tight">
-            {currency.format(9990)}
+            {displayedPrice ? currency.format(displayedPrice) : 'Consultando…'}
           </span>
-          <span className="text-muted-foreground pb-1 text-sm">/mes</span>
-          <span className="text-muted-foreground pb-1 text-xs line-through">
-            {currency.format(12990)}
-          </span>
+          {displayedPrice ? <span className="text-muted-foreground pb-1 text-sm">/mes</span> : null}
+          {offer?.founderAvailable && offer.founderPriceArs ? (
+            <span className="text-muted-foreground pb-1 text-xs line-through">
+              {currency.format(offer.regularPriceArs)}
+            </span>
+          ) : null}
         </div>
         <p className="text-muted-foreground mt-3 text-sm leading-6">
-          Precio fundador durante tus primeros seis meses. Después, continúa al precio mensual
-          vigente.
+          {!offer
+            ? 'Verificando la disponibilidad y el precio vigente.'
+            : offer.founderAvailable
+              ? 'Precio fundador durante tus primeros seis meses. Cupo limitado a los primeros 100 usuarios; el monto final se confirma al iniciar el checkout.'
+              : 'El cupo de precio fundador no está disponible. Se aplica el precio mensual vigente.'}
         </p>
       </div>
 
@@ -200,17 +252,17 @@ export function PaymentCheckoutCard({
           <Button
             className="h-12 w-full rounded-xl text-sm font-semibold"
             onClick={startCheckout}
-            disabled={loading || subscriptionStatus === 'loading'}
+            disabled={loading || subscriptionStatus === 'loading' || !offer}
           >
-            {loading || subscriptionStatus === 'loading' ? (
+            {loading || subscriptionStatus === 'loading' || !offer ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
             {loading
               ? 'Abriendo Mercado Pago…'
-              : subscriptionStatus === 'loading'
+              : subscriptionStatus === 'loading' || !offer
                 ? 'Verificando tu plan…'
                 : 'Suscribirme a Premium'}
-            {!loading && subscriptionStatus === 'inactive' ? (
+            {!loading && subscriptionStatus === 'inactive' && offer ? (
               <ArrowRight className="ml-2 h-4 w-4" />
             ) : null}
           </Button>

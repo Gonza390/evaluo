@@ -237,6 +237,7 @@ export async function uploadStudentMaterialAction(
       carreraId: String(formData.get('carreraId') ?? '').trim(),
       materiaId: String(formData.get('materiaId') ?? '').trim(),
       title: String(formData.get('title') ?? '').trim(),
+      description: String(formData.get('description') ?? '').trim(),
       shareWithCatalog: String(formData.get('shareWithCatalog') ?? 'true').trim() !== 'false',
     });
     const fileEntry = formData.get('file');
@@ -248,7 +249,7 @@ export async function uploadStudentMaterialAction(
       };
     }
 
-    const { universidadId, carreraId, materiaId, shareWithCatalog } = parsedMetadata.data;
+    const { universidadId, carreraId, materiaId, description, shareWithCatalog } = parsedMetadata.data;
 
     if (!(fileEntry instanceof File) || fileEntry.size === 0) {
       return {
@@ -327,6 +328,7 @@ export async function uploadStudentMaterialAction(
         carrera_id: carreraId,
         materia_id: materiaId,
         title: materialTitle,
+        description,
         file_name: fileEntry.name,
         file_path: filePath,
         mime_type: fileEntry.type || 'application/pdf',
@@ -338,7 +340,7 @@ export async function uploadStudentMaterialAction(
         processing_message:
           'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
         processing_error: null,
-      })
+      } as never)
       .select('id')
       .single();
 

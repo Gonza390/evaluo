@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
@@ -121,6 +122,7 @@ export function StudentMaterialsWorkspace({
   const libraryTourRef = useRef<HTMLElement | null>(null);
   const materialEntryTourRef = useRef<HTMLElement | null>(null);
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [universidadId, setUniversidadId] = useState(initialUniversidadId);
   const [carreraId, setCarreraId] = useState(initialCarreraId);
   const [materiaId, setMateriaId] = useState('');
@@ -190,6 +192,7 @@ export function StudentMaterialsWorkspace({
 
   const resetForm = () => {
     setTitle('');
+    setDescription('');
     setUniversidadId(initialUniversidadId);
     setCarreraId(initialCarreraId);
     setMateriaId('');
@@ -304,8 +307,17 @@ export function StudentMaterialsWorkspace({
       return;
     }
 
+    if (description.trim().length < 3) {
+      toast({
+        description: 'Indicá brevemente a qué parcial, módulos o temas corresponde el material.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.set('title', title);
+    formData.set('description', description);
     formData.set('universidadId', universidadId);
     formData.set('carreraId', carreraId);
     formData.set('materiaId', materiaId);
@@ -404,7 +416,7 @@ export function StudentMaterialsWorkspace({
     {
       title: 'Subí el PDF de tu materia',
       description:
-        'Acá cargás el documento de tu curso (PDF o Word). Solo completás título, universidad, carrera y materia.',
+        'Acá cargás el documento de tu curso. Completás título, alcance del material, universidad, carrera y materia.',
       target: { type: 'ref', ref: uploadHeroTourRef },
     },
     {
@@ -793,8 +805,27 @@ export function StudentMaterialsWorkspace({
                 id="material-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
+                maxLength={180}
                 placeholder="Ej. Resumen completo para el primer parcial"
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="material-description" className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                Descripción breve
+              </label>
+              <Textarea
+                id="material-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={240}
+                rows={3}
+                placeholder="Ej. Parcial 1 · Módulos 1 al 4 · incluye obligaciones y contratos"
+              />
+              <div className="mt-1.5 flex items-center justify-between gap-3 text-[11.5px] text-slate-500">
+                <span>Indicá a qué parcial, módulos o temas corresponde. Es obligatorio.</span>
+                <span>{description.length}/240</span>
+              </div>
             </div>
 
             {hasAcademicProfile ? (
@@ -937,7 +968,13 @@ export function StudentMaterialsWorkspace({
               size="sm"
               onClick={handleUpload}
               disabled={
-                isPending || !title || !universidadId || !carreraId || !materiaId || !selectedFile
+                isPending ||
+                !title.trim() ||
+                description.trim().length < 3 ||
+                !universidadId ||
+                !carreraId ||
+                !materiaId ||
+                !selectedFile
               }
             >
               {isPending ? (

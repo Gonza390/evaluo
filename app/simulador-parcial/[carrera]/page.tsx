@@ -49,18 +49,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       universidadNombre: universidad?.nombre ?? 'tu universidad',
       materiasCount: materias.length,
     });
+    const title = universidad?.nombre
+      ? `Simuladores de parcial de ${carrera.nombre} en ${universidad.nombre}`
+      : `Simuladores de parcial de ${carrera.nombre}`;
+    const canonicalHref = buildSimulatorHref(carrera.nombre, carrera.id);
 
     return {
-      title: `Pregunteros y simuladores de ${carrera.nombre}`,
+      title,
       description,
       alternates: {
-        canonical: buildSimulatorHref(carrera.nombre, carrera.id),
+        canonical: canonicalHref,
       },
       openGraph: {
-        title: `Pregunteros y simuladores de ${carrera.nombre} | Evaluo`,
+        title: `${title} | Evaluo`,
         description,
-        url: buildSimulatorHref(carrera.nombre, carrera.id),
+        url: canonicalHref,
         images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${title} | Evaluo`,
+        description,
+        images: ['/opengraph-image.png'],
       },
     };
   } catch {
@@ -102,7 +112,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
           { name: 'Explorar', path: '/explorar' },
-          { name: `Pregunteros y simuladores de ${carrera.nombre}`, path: canonicalHref },
+          { name: `Simuladores de parcial de ${carrera.nombre}`, path: canonicalHref },
         ])}
       />
 
@@ -113,7 +123,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
             Pregunteros y simuladores
           </p>
           <h1 className="mt-5 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
-            Pregunteros y simuladores de {carrera.nombre}
+            Simuladores de parcial y pregunteros de {carrera.nombre}
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">
             {buildSimulatorLandingDescription({

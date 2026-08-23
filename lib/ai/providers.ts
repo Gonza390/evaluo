@@ -26,14 +26,15 @@ const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const NVIDIA_ENDPOINT =
   process.env.NVIDIA_URL ?? 'https://integrate.api.nvidia.com/v1/chat/completions';
 
-// Modelos estandarizados por env. Un solo lugar para decidir primario/fallback.
+// Modelos estandarizados. Gemini queda fijado a una version estable para que
+// calidad, cuota y coste no cambien silenciosamente por un alias `latest`.
 const GITHUB_MODELS_PRIMARY_SUMMARY_MODEL =
   process.env.GITHUB_MODELS_SUMMARY_MODEL ?? 'openai/gpt-4o-mini';
 const GITHUB_MODELS_FALLBACK_SUMMARY_MODEL =
   process.env.GITHUB_MODELS_FALLBACK_MODEL ?? 'openai/gpt-4.1-mini';
-const GEMINI_PRIMARY_SUMMARY_MODEL = process.env.GEMINI_SUMMARY_MODEL ?? 'gemini-flash-lite-latest';
-const GEMINI_FALLBACK_SUMMARY_MODEL =
-  process.env.GEMINI_FALLBACK_SUMMARY_MODEL ?? 'gemini-flash-lite-latest';
+export const PINNED_GEMINI_SUMMARY_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_PRIMARY_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
+const GEMINI_FALLBACK_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
 const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'llama-3.3-70b-versatile';
 // No mantenemos un fallback Groq hardcodeado: los modelos retirados generaban
