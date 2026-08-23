@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
+import { PDFDocument } from 'pdf-lib';
 import { enqueueStudentMaterialJob } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
@@ -12,6 +13,7 @@ import {
   getValidationMessage,
   isOwnedStudentMaterialStoragePath,
   isPdfFileSignature,
+  MAX_STUDENT_MATERIAL_PDF_PAGES,
   studentMaterialUploadFileMetadataSchema,
   studentMaterialUploadMetadataSchema,
   type StudentMaterialUploadFileMetadata,
@@ -307,6 +309,24 @@ export async function finalizeStudentMaterialUploadAction(
 
     if (!isPdfFileSignature(fileBytes)) {
       throw new Error('El archivo no contiene un PDF válido.');
+    }
+
+    let pageCount: number;
+    try {
+      const pdfDocument = await PDFDocument.load(fileBytes, { updateMetadata: false });
+      pageCount = pdfDocument.getPageCount();
+    } catch {
+      throw new Error('El archivo no contiene un PDF válido.');
+    }
+
+    if (pageCount < 1) {
+      throw new Error('El PDF debe contener al menos una página.');
+    }
+
+    if (pageCount > MAX_STUDENT_MATERIAL_PDF_PAGES) {
+      throw new Error(
+        `El PDF tiene ${pageCount} páginas. El máximo permitido es de ${MAX_STUDENT_MATERIAL_PDF_PAGES} páginas.`
+      );
     }
 
     const { data: insertedMaterial, error: insertError } = await admin
