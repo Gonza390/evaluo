@@ -71,6 +71,8 @@ const COMPARISON = [
   ['Progreso avanzado por tema', false, true],
 ] as const;
 
+const PREMIUM_CHECKOUT_HREF = '/pricing?source=configuracion#elegir-plan';
+
 export function SubscriptionSettings() {
   const [data, setData] = useState<SubscriptionPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -200,7 +202,27 @@ export function SubscriptionSettings() {
         </>
       ) : (
         <>
-          <div className="border-border mt-6 overflow-hidden rounded-2xl border">
+          <div className="border-primary/20 bg-primary/5 mt-6 flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="from-brand to-brand-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white">
+                <Crown className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground">¿Querés activar Premium?</p>
+                <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
+                  Entrá directo al plan Premium y continuá con el checkout seguro de Mercado Pago.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="h-11 shrink-0 rounded-xl px-5">
+              <Link href={PREMIUM_CHECKOUT_HREF}>
+                Suscribirme a Premium
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="border-border mt-5 overflow-hidden rounded-2xl border">
             <div className="grid grid-cols-[1fr_68px_82px] items-center border-b bg-muted/40 px-4 py-3.5 text-xs font-bold sm:grid-cols-[1fr_120px_120px] sm:px-5 sm:text-sm">
               <span className="text-muted-foreground">Comparación de planes</span>
               <span className="text-center text-muted-foreground">Gratis</span>
@@ -242,8 +264,8 @@ export function SubscriptionSettings() {
                 </div>
               </div>
               <Button asChild className="h-11 shrink-0 rounded-xl px-5">
-                <Link href="/pricing">
-                  Pasar a Premium
+                <Link href={PREMIUM_CHECKOUT_HREF}>
+                  Suscribirme a Premium
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
