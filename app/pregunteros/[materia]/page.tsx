@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { BookOpen, HelpCircle, ListChecks, Sparkles, Target } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -165,11 +165,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
   const data = await loadPregunteroData(materiaId);
 
   if (!data) {
-    return (
-      <main className="bg-background min-h-screen px-4 py-16">
-        <p className="text-muted-foreground text-center text-sm">Este preguntero no existe.</p>
-      </main>
-    );
+    notFound();
   }
 
   const canonicalHref = buildPregunteroHref(data.materiaNombre, data.materiaId);
