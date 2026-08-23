@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { appendPregunteroAttribution } from '../lib/preguntero-attribution.ts';
 import {
+  INVALID_SEO_ENTITY_ID,
+  buildSeoEntitySlug,
+  isValidSeoEntityId,
+  parseSeoEntitySlug,
+} from '../lib/seo-intents.ts';
+import {
   getCareerRoute,
   getDashboardMateriaRoute,
   getMateriaRoute,
@@ -31,5 +37,29 @@ assert.equal(
   }),
   '/simulador/materia/1?utm_source=whatsapp&utm_campaign=tecnologia_p1'
 );
+
+const materiaId = 'eb923481-2207-4895-9ae4-2a0b984d9b99';
+assert.equal(isValidSeoEntityId(materiaId), true);
+assert.equal(isValidSeoEntityId('aprender-en-el-siglo-21-a37a41c2'), false);
+assert.equal(
+  buildSeoEntitySlug('APRENDER EN EL SIGLO 21', materiaId),
+  `aprender-en-el-siglo-21--${materiaId}`
+);
+assert.deepEqual(parseSeoEntitySlug(`aprender-en-el-siglo-21--${materiaId}`), {
+  id: materiaId,
+  labelSlug: 'aprender-en-el-siglo-21',
+});
+assert.deepEqual(parseSeoEntitySlug(materiaId), {
+  id: materiaId,
+  labelSlug: materiaId,
+});
+assert.deepEqual(parseSeoEntitySlug('aprender-en-el-siglo-21-a37a41c2'), {
+  id: INVALID_SEO_ENTITY_ID,
+  labelSlug: 'aprender-en-el-siglo-21-a37a41c2',
+});
+assert.deepEqual(parseSeoEntitySlug('aprender-en-el-siglo-21--a37a41c2'), {
+  id: INVALID_SEO_ENTITY_ID,
+  labelSlug: 'aprender-en-el-siglo-21',
+});
 
 console.log('Route smoke tests passed.');
