@@ -97,7 +97,13 @@ export function ExamFocusControls() {
 
     try {
       if (shell.requestFullscreen) {
-        await shell.requestFullscreen({ navigationUI: 'hide' });
+        try {
+          await shell.requestFullscreen({ navigationUI: 'hide' });
+        } catch {
+          // Safari y algunos WebViews implementan Fullscreen API pero no aceptan
+          // todas las opciones. Reintentamos la llamada estándar antes del fallback.
+          await shell.requestFullscreen();
+        }
         setNativeFullscreen(true);
       } else if (shell.webkitRequestFullscreen) {
         await shell.webkitRequestFullscreen();
