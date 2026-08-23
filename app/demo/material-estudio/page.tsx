@@ -3,16 +3,22 @@ import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
 import { PdfWorkerPreload } from '@/components/pdf/pdf-worker-preload';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
-import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { hasPremiumAccess } from '@/lib/premium';
+import { createClientServer } from '@/lib/supabase-server';
 import demoArtifacts from '@/public/material-general-prueba.study.json';
 
 const GENERAL_STUDY_SUMMARY = demoArtifacts.summary as StudentMaterialSummary;
 const GENERAL_STUDY_GLOSSARY = demoArtifacts.glossary as StudyGlossaryItem[];
-const GENERAL_PEDAGOGICAL_ARTIFACTS = demoArtifacts.pedagogicalArtifacts as PedagogicalArtifacts;
 const START_WITH_OWN_MATERIAL =
   '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
 
-export default function DemoMaterialEstudioPage() {
+export default async function DemoMaterialEstudioPage() {
+  const supabase = await createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isPremium = user?.id ? await hasPremiumAccess(user.id) : false;
+
   return (
     <>
       <PdfWorkerPreload />
@@ -40,12 +46,12 @@ export default function DemoMaterialEstudioPage() {
               Convertí tu PDF en una guía así
             </TrackedLink>
             <TrackedLink
-              href="/pricing?source=demo_material"
+              href="/pricing?source=demo_material#elegir-plan"
               eventName="cta_click"
               payload={{
                 location: 'demo_material_header',
                 cta_name: 'ver_premium',
-                destination: '/pricing',
+                destination: '/pricing?source=demo_material#elegir-plan',
               }}
               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300"
             >
@@ -56,10 +62,10 @@ export default function DemoMaterialEstudioPage() {
       </div>
       <AppShellProviders>
         <MaterialStudyWorkspace
-          backHref="/"
+          backHref={user ? '/dashboard/materiales' : '/'}
           canRegenerate={false}
           fileName="IA y nuevas tecnologías - Material de estudio.pdf"
-          isPremium
+          isPremium={isPremium}
           materialId="demo-material"
           isOwner
           pageCount={demoArtifacts.pageCount}
@@ -68,7 +74,6 @@ export default function DemoMaterialEstudioPage() {
           visibility="shared"
           studyGlossary={GENERAL_STUDY_GLOSSARY}
           studySummary={GENERAL_STUDY_SUMMARY}
-          pedagogicalArtifacts={GENERAL_PEDAGOGICAL_ARTIFACTS}
         />
       </AppShellProviders>
     </>
