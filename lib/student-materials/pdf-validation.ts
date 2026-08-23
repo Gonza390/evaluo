@@ -1,5 +1,5 @@
 import { PDFDocument } from 'pdf-lib';
-import { MAX_STUDENT_MATERIAL_PDF_PAGES } from './validation';
+import { MAX_STUDENT_MATERIAL_PDF_PAGES } from '@/lib/student-materials/validation';
 
 export async function getStudentMaterialPdfPageCount(bytes: Uint8Array) {
   try {
