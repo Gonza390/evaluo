@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   addMonths,
   buildEventPayload,
@@ -180,5 +182,24 @@ assert.equal(
   }),
   'resumen derecho::2'
 );
+
+const simulatorLayoutSource = readFileSync(resolve('app/simulador/layout.tsx'), 'utf8');
+const examFocusSource = readFileSync(resolve('components/simulador/ExamFocusControls.tsx'), 'utf8');
+const examModeCss = readFileSync(resolve('app/simulador/exam-mode.css'), 'utf8');
+const simulatorSource = readFileSync(resolve('components/simulador/SimuladorExamen.tsx'), 'utf8');
+
+assert.match(simulatorLayoutSource, /id="evaluo-simulator-shell"/);
+assert.match(simulatorLayoutSource, /<ExamFocusControls \/>/);
+assert.match(examFocusSource, /requestFullscreen/);
+assert.match(examFocusSource, /webkitRequestFullscreen/);
+assert.match(examFocusSource, /setShellImmersive\(true\)/);
+assert.match(examModeCss, /data-exam-immersive='true'/);
+assert.match(examModeCss, /button\[aria-pressed='true'\]/);
+assert.match(examModeCss, /span\.bg-emerald-100/);
+assert.match(examModeCss, /@media \(max-width: 639px\)/);
+assert.match(examModeCss, /@media \(max-width: 1023px\)/);
+assert.match(simulatorSource, /Pregunta \{currentQuestionIndex \+ 1\}/);
+assert.match(simulatorSource, /onClick=\{goPrevious\}/);
+assert.match(simulatorSource, /isLastQuestion \? requestFinalizar\(\) : goNext\(\)/);
 
 console.log('Flow smoke tests passed.');
