@@ -183,6 +183,60 @@ assert.equal(
   'resumen derecho::2'
 );
 
+const demoMaterialSource = readFileSync(resolve('app/demo/material-estudio/page.tsx'), 'utf8');
+assert.match(
+  demoMaterialSource,
+  /hasPremiumAccess\(user\.id\)/,
+  'El PDF demo debe resolver Premium desde el servidor y no simular acceso Premium.'
+);
+assert.match(
+  demoMaterialSource,
+  /isPremium=\{isPremium\}/,
+  'El workspace demo debe recibir el entitlement Premium real.'
+);
+assert.match(
+  demoMaterialSource,
+  /backHref=\{user \? '\/dashboard\/materiales' : '\/'\}/,
+  'Un usuario autenticado debe volver desde el PDF demo a sus materiales.'
+);
+assert.doesNotMatch(
+  demoMaterialSource,
+  /GENERAL_PEDAGOGICAL_ARTIFACTS|pedagogicalArtifacts=/,
+  'El PDF demo no debe reutilizar artefactos pedagógicos persistidos de una versión anterior.'
+);
+
+const subscriptionSettingsSource = readFileSync(
+  resolve('components/pricing/SubscriptionSettings.tsx'),
+  'utf8'
+);
+assert.match(
+  subscriptionSettingsSource,
+  /\/pricing\?source=configuracion#elegir-plan/,
+  'Configuración debe llevar de forma directa al checkout de Premium.'
+);
+assert.match(
+  subscriptionSettingsSource,
+  /Suscribirme a Premium/,
+  'La configuración del plan Free debe mostrar un CTA explícito de suscripción.'
+);
+
+const tourCardSource = readFileSync(resolve('components/ui/tour-card.tsx'), 'utf8');
+assert.match(
+  tourCardSource,
+  /backdrop-filter: none !important/,
+  'El tour no debe desenfocar el contenido que está explicando.'
+);
+
+const materialProcessingSource = readFileSync(
+  resolve('lib/student-materials/processing-service.ts'),
+  'utf8'
+);
+assert.doesNotMatch(
+  materialProcessingSource,
+  /generate(?:StudentMaterial)?MindMap|mind_map|mindMap|mapaMental/,
+  'Subir un PDF no debe ejecutar una generación dedicada de mapa mental.'
+);
+
 const simulatorLayoutSource = readFileSync(resolve('app/simulador/layout.tsx'), 'utf8');
 const examFocusSource = readFileSync(resolve('components/simulador/ExamFocusControls.tsx'), 'utf8');
 const examModeCss = readFileSync(resolve('app/simulador/exam-mode.css'), 'utf8');
