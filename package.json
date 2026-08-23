@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts"
+    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
