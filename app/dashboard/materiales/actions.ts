@@ -13,7 +13,6 @@ import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { resolveAdminActor } from '@/lib/access-control';
-import { hasPremiumAccess } from '@/lib/premium';
 import {
   markStudentMaterialProcessingFailed,
   processStudentMaterial,
@@ -21,10 +20,7 @@ import {
 } from '@/lib/student-materials/processing-service';
 import {
   getValidationMessage,
-  isPdfFileSignature,
-  MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
   studentMaterialIdSchema,
-  studentMaterialUploadMetadataSchema,
   studentMaterialVisibilityInputSchema,
 } from '@/lib/student-materials/validation';
 
@@ -45,14 +41,6 @@ export type StudentMaterialProcessingState = {
   message: string;
   error: string | null;
 };
-
-export type UploadStudentMaterialResult = ActionResult & {
-  materialId?: string;
-};
-
-const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = 3;
-const MAX_PENDING_STUDENT_MATERIALS = 1;
-const FREE_MATERIAL_UPLOAD_INTERVAL_DAYS = 15;
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -76,22 +64,6 @@ function isMissingStudentMaterialAnalysisColumnError(error: unknown) {
 
 function getStudentMaterialsSetupMessage() {
   return 'Falta aplicar la migración de student_materials en Supabase. Sin esa tabla, este espacio todavía no puede guardar ni listar PDFs.';
-}
-
-function sanitizeFileName(value: string) {
-  return value
-    .trim()
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .replace(/_+/g, '_');
-}
-
-function buildMaterialTitle(rawTitle: FormDataEntryValue | null, fileName: string) {
-  const title = typeof rawTitle === 'string' ? rawTitle.trim() : '';
-  if (title) {
-    return title;
-  }
-
-  return fileName.replace(/\.pdf$/i, '').trim() || 'Material de estudio';
 }
 
 async function requireAuthenticatedUser() {
@@ -123,57 +95,6 @@ async function assertOwnedStudentMaterial(materialId: string, userId: string) {
 
   if (!data) {
     throw new Error('No encontramos el material solicitado.');
-  }
-}
-
-async function assertStudentMaterialQuota(userId: string) {
-  const admin = createAdminClient();
-  const now = new Date();
-  const dayStart = new Date(now);
-  dayStart.setUTCHours(0, 0, 0, 0);
-  const intervalStart = new Date(now);
-  intervalStart.setUTCDate(intervalStart.getUTCDate() - (FREE_MATERIAL_UPLOAD_INTERVAL_DAYS - 1));
-
-  const [dailyResult, pendingResult, intervalResult] = await Promise.all([
-    admin
-      .from('student_materials')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', dayStart.toISOString()),
-    admin
-      .from('student_materials')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .in('processing_status', ['uploaded', 'processing']),
-    admin
-      .from('student_materials')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', intervalStart.toISOString()),
-  ]);
-
-  if (dailyResult.error) throw dailyResult.error;
-  if (pendingResult.error) throw pendingResult.error;
-  if (intervalResult.error) throw intervalResult.error;
-
-  const isPremium = await hasPremiumAccess(userId);
-
-  if (isPremium) {
-    if ((dailyResult.count ?? 0) >= MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY) {
-      throw new Error(
-        `Alcanzaste el limite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por dia. Intenta nuevamente mañana.`
-      );
-    }
-  } else if ((intervalResult.count ?? 0) >= 1) {
-    throw new Error(
-      'El plan gratis permite subir 1 material cada 15 dias. Sumate a Premium para subir hasta 3 por dia.'
-    );
-  }
-
-  if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
-    throw new Error(
-      'Ya tenés 1 material en procesamiento. Esperá a que finalice antes de subir otro.'
-    );
   }
 }
 
@@ -221,161 +142,6 @@ async function updateStudentMaterialProcessing(
 
   if (error) {
     throw error;
-  }
-}
-
-export async function uploadStudentMaterialAction(
-  formData: FormData
-): Promise<UploadStudentMaterialResult> {
-  try {
-    const user = await requireAuthenticatedUser();
-    const admin = createAdminClient();
-    await assertStudentMaterialQuota(user.id);
-
-    const parsedMetadata = studentMaterialUploadMetadataSchema.safeParse({
-      universidadId: String(formData.get('universidadId') ?? '').trim(),
-      carreraId: String(formData.get('carreraId') ?? '').trim(),
-      materiaId: String(formData.get('materiaId') ?? '').trim(),
-      title: String(formData.get('title') ?? '').trim(),
-      description: String(formData.get('description') ?? '').trim(),
-      shareWithCatalog: String(formData.get('shareWithCatalog') ?? 'true').trim() !== 'false',
-    });
-    const fileEntry = formData.get('file');
-
-    if (!parsedMetadata.success) {
-      return {
-        success: false,
-        message: getValidationMessage(parsedMetadata.error),
-      };
-    }
-
-    const { universidadId, carreraId, materiaId, description, shareWithCatalog } = parsedMetadata.data;
-
-    if (!(fileEntry instanceof File) || fileEntry.size === 0) {
-      return {
-        success: false,
-        message: 'Selecciona un PDF válido para continuar.',
-      };
-    }
-
-    if (fileEntry.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
-      return {
-        success: false,
-        message: 'El PDF supera el limite de 20 MB. Reduce el archivo e intentalo nuevamente.',
-      };
-    }
-
-    if (!fileEntry.name.toLowerCase().endsWith('.pdf')) {
-      return {
-        success: false,
-        message: 'Por ahora solo aceptamos archivos PDF.',
-      };
-    }
-
-    const [{ data: carrera }, { data: materia }, { data: relation }] = await Promise.all([
-      admin.from('carreras').select('id, universidad_id, nombre').eq('id', carreraId).maybeSingle(),
-      admin.from('materias').select('id, carrera_id, nombre').eq('id', materiaId).maybeSingle(),
-      admin
-        .from('carrera_materias')
-        .select('id')
-        .eq('carrera_id', carreraId)
-        .eq('materia_id', materiaId)
-        .maybeSingle(),
-    ]);
-
-    if (!carrera || carrera.universidad_id !== universidadId) {
-      return {
-        success: false,
-        message: 'La carrera elegida no coincide con la universidad seleccionada.',
-      };
-    }
-
-    if (!materia || (materia.carrera_id !== carreraId && !relation)) {
-      return {
-        success: false,
-        message: 'La materia elegida no pertenece a esa carrera.',
-      };
-    }
-
-    const fileBuffer = Buffer.from(await fileEntry.arrayBuffer());
-    if (!isPdfFileSignature(fileBuffer)) {
-      return {
-        success: false,
-        message: 'El archivo no contiene un PDF valido.',
-      };
-    }
-
-    const safeName = sanitizeFileName(fileEntry.name);
-    const filePath = `student-materials/${user.id}/${Date.now()}-${safeName}`;
-    const materialTitle = buildMaterialTitle(parsedMetadata.data.title, fileEntry.name);
-
-    const { error: uploadError } = await admin.storage
-      .from('biblioteca')
-      .upload(filePath, fileBuffer, {
-        contentType: fileEntry.type || 'application/pdf',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      throw uploadError;
-    }
-
-    const { data: insertedMaterial, error: insertError } = await admin
-      .from('student_materials')
-      .insert({
-        user_id: user.id,
-        universidad_id: universidadId,
-        carrera_id: carreraId,
-        materia_id: materiaId,
-        title: materialTitle,
-        description,
-        file_name: fileEntry.name,
-        file_path: filePath,
-        mime_type: fileEntry.type || 'application/pdf',
-        file_size_bytes: fileEntry.size,
-        visibility: shareWithCatalog ? 'shared' : 'private',
-        processing_status: 'uploaded',
-        processing_stage: 'uploaded',
-        processing_progress: 10,
-        processing_message:
-          'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
-        processing_error: null,
-      } as never)
-      .select('id')
-      .single();
-
-    if (insertError) {
-      await admin.storage
-        .from('biblioteca')
-        .remove([filePath])
-        .catch(() => undefined);
-      throw insertError;
-    }
-
-    const jobId = await enqueueStudentMaterialJob(admin, insertedMaterial.id);
-
-    revalidatePath('/dashboard/materiales');
-
-    return {
-      success: true,
-      materialId: insertedMaterial.id,
-      message: !shareWithCatalog
-        ? jobId
-          ? 'PDF subido a tu espacio privado. Ahora lo dejamos en cola para procesarlo.'
-          : 'PDF subido a tu espacio privado. Ahora empezamos a procesarlo.'
-        : jobId
-          ? 'PDF subido y compartido. Ahora lo dejamos en cola para generar el espacio de estudio.'
-          : 'PDF subido y compartido. Ahora empezamos a generar el espacio de estudio.',
-    };
-  } catch (error) {
-    return {
-      success: false,
-      message: isMissingStudentMaterialsTableError(error)
-        ? getStudentMaterialsSetupMessage()
-        : error instanceof Error
-          ? error.message
-          : 'No pudimos subir el PDF en este momento.',
-    };
   }
 }
 
