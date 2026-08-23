@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
+import { PDFDocument } from 'pdf-lib';
+import { assertStudentMaterialPdfPageLimit } from '../lib/student-materials/pdf-validation.ts';
 import {
   buildStudentMaterialStoragePath,
   isOwnedStudentMaterialStoragePath,
   isPdfFileSignature,
   MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
+  MAX_STUDENT_MATERIAL_PDF_PAGES,
   studentMaterialIdSchema,
   studentMaterialUploadFileMetadataSchema,
   studentMaterialUploadMetadataSchema,
@@ -25,7 +28,16 @@ const validFile = {
   size: 2 * 1024 * 1024,
 };
 
+async function createPdfWithPages(pageCount: number) {
+  const document = await PDFDocument.create();
+  for (let index = 0; index < pageCount; index += 1) {
+    document.addPage();
+  }
+  return document.save();
+}
+
 assert.equal(MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, 20 * 1024 * 1024);
+assert.equal(MAX_STUDENT_MATERIAL_PDF_PAGES, 30);
 assert.equal(isPdfFileSignature(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])), true);
 assert.equal(isPdfFileSignature(new Uint8Array([0x25, 0x50, 0x44, 0x46])), false);
 assert.equal(studentMaterialIdSchema.safeParse('not-an-id').success, false);
@@ -93,6 +105,26 @@ assert.equal(
   studentMaterialUploadFileMetadataSchema.safeParse({ ...validFile, mimeType: 'text/plain' }).success,
   false,
   'La subida firmada debe rechazar MIME types incompatibles.'
+);
+
+const thirtyPagePdf = await createPdfWithPages(30);
+assert.equal(
+  await assertStudentMaterialPdfPageLimit(thirtyPagePdf),
+  30,
+  'Un PDF de exactamente 30 páginas debe ser válido.'
+);
+
+const thirtyOnePagePdf = await createPdfWithPages(31);
+await assert.rejects(
+  () => assertStudentMaterialPdfPageLimit(thirtyOnePagePdf),
+  /31 páginas.*máximo permitido.*30 páginas/i,
+  'Un PDF de 31 páginas debe rechazarse.'
+);
+
+await assert.rejects(
+  () => assertStudentMaterialPdfPageLimit(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])),
+  /PDF válido/i,
+  'Un archivo con sólo la firma PDF pero estructura inválida debe rechazarse.'
 );
 
 const ownerId = '00000000-0000-4000-8000-000000000001';
