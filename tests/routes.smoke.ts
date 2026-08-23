@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { appendPregunteroAttribution } from '../lib/preguntero-attribution.ts';
 import {
   INVALID_SEO_ENTITY_ID,
@@ -61,5 +63,37 @@ assert.deepEqual(parseSeoEntitySlug('aprender-en-el-siglo-21--a37a41c2'), {
   id: INVALID_SEO_ENTITY_ID,
   labelSlug: 'aprender-en-el-siglo-21',
 });
+
+const materiaPageSource = readFileSync(resolve('app/explorar/materia/[id]/page.tsx'), 'utf8');
+const contentSignalsSource = readFileSync(resolve('lib/seo-content-signals.ts'), 'utf8');
+const notFoundSource = readFileSync(resolve('app/not-found.tsx'), 'utf8');
+const pregunteroSource = readFileSync(resolve('app/pregunteros/[materia]/page.tsx'), 'utf8');
+const clientLayoutSource = readFileSync(resolve('components/ClientLayout.tsx'), 'utf8');
+
+assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
+assert.match(
+  materiaPageSource,
+  /!contentSignals\.hasSummaries\s*&&\s*contentSignals\.hasQuestions/
+);
+assert.match(materiaPageSource, /params\.set\('tab', 'pregunteros'\)/);
+assert.match(materiaPageSource, /hasExplicitSupportedTab/);
+
+for (const href of ['/explorar', '/pregunteros', '/']) {
+  assert.ok(notFoundSource.includes(`href=\"${href}\"`));
+}
+assert.match(notFoundSource, /Explorar materias/);
+assert.match(notFoundSource, /Ir a Pregunteros/);
+assert.match(notFoundSource, /Volver al inicio/);
+assert.match(pregunteroSource, /if \(!data\) \{\s*notFound\(\);\s*\}/);
+assert.doesNotMatch(pregunteroSource, /Este preguntero no existe/);
+assert.match(clientLayoutSource, /\{ label: 'Inicio', href: '\/', icon: Home \}/);
+assert.match(
+  clientLayoutSource,
+  /\{ label: 'Pregunteros', href: '\/pregunteros', icon: GraduationCap \}/
+);
+assert.match(
+  clientLayoutSource,
+  /\{ label: 'Ingresar', href: '\/login', icon: LogIn, variant: 'cta' as const \}/
+);
 
 console.log('Route smoke tests passed.');
