@@ -24,7 +24,7 @@ export function UniversityRequestForm() {
     setErrorMessage('');
 
     try {
-      const rpc = supabase.rpc as unknown as (
+      const rpc = supabase.rpc.bind(supabase) as unknown as (
         name: string,
         args: Record<string, unknown>
       ) => Promise<{ data: unknown; error: { message?: string } | null }>;
@@ -39,7 +39,8 @@ export function UniversityRequestForm() {
 
       if (error) throw error;
       setSubmitted(true);
-    } catch {
+    } catch (error) {
+      console.error('[universityRequest.submit]', error);
       setErrorMessage('No pudimos enviar la solicitud. Intentá nuevamente en unos segundos.');
     } finally {
       setIsSubmitting(false);
