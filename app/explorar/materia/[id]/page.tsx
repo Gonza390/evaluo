@@ -22,7 +22,11 @@ const MateriaContent = dynamic(() => import('./materia-content'), {
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ carreraId?: string }>;
+  searchParams?: Promise<{
+    carreraId?: string;
+    tab?: string;
+    modulo?: string;
+  }>;
 }
 
 export const revalidate = 600;
@@ -66,15 +70,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function MateriaPage({ params, searchParams }: PageProps) {
   const [resolvedParams, resolvedSearchParams] = await Promise.all([
     params,
-    searchParams ?? Promise.resolve({} as { carreraId?: string }),
+    searchParams ??
+      Promise.resolve({} as {
+        carreraId?: string;
+        tab?: string;
+        modulo?: string;
+      }),
   ]);
   const canonicalMateriaId = getCanonicalMateriaId(resolvedParams.id);
 
   if (canonicalMateriaId !== resolvedParams.id) {
     const params = new URLSearchParams();
     const carreraId = resolvedSearchParams.carreraId?.trim();
+    const tab = resolvedSearchParams.tab?.trim();
+    const modulo = resolvedSearchParams.modulo?.trim();
     if (carreraId) {
       params.set('carreraId', carreraId);
+    }
+    if (tab) {
+      params.set('tab', tab);
+    }
+    if (modulo) {
+      params.set('modulo', modulo);
     }
     const target = params.toString()
       ? `/explorar/materia/${canonicalMateriaId}?${params.toString()}`
@@ -88,13 +105,29 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
   }
 
   const requestedCarreraId = resolvedSearchParams.carreraId?.trim() ?? '';
-  const bootstrap = await getMateriaBootstrap({
-    materiaId,
-    requestedCarreraId,
-  });
+  const [bootstrap, contentSignals] = await Promise.all([
+    getMateriaBootstrap({
+      materiaId,
+      requestedCarreraId,
+    }),
+    getMateriaSeoContentSignals(materiaId),
+  ]);
 
   if (bootstrap.materiaFound === false) {
     return notFound();
+  }
+
+  const requestedTab = resolvedSearchParams.tab?.trim();
+  const hasExplicitSupportedTab =
+    requestedTab === 'resumenes' || requestedTab === 'trabajos' || requestedTab === 'pregunteros';
+
+  if (!hasExplicitSupportedTab && !contentSignals.hasSummaries && contentSignals.hasQuestions) {
+    const params = new URLSearchParams();
+    params.set('tab', 'pregunteros');
+    if (requestedCarreraId) {
+      params.set('carreraId', requestedCarreraId);
+    }
+    redirect(`/explorar/materia/${materiaId}?${params.toString()}`);
   }
 
   return (

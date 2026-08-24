@@ -86,19 +86,19 @@ function BottomNav() {
   const materiasHref = profileSummary.carreraId
     ? getCareerRoute(profileSummary.carreraId)
     : '/explorar';
-  const bottomNavItems = [
-    { label: 'Inicio', href: '/dashboard', icon: Home },
-    { label: 'Explorar', href: '/explorar', icon: Search },
-    {
-      label: 'Materias',
-      href: materiasHref,
-      activePath: '/materias',
-      icon: GraduationCap,
-    },
-    user
-      ? { label: 'Premium', href: '/pricing', icon: Crown, variant: 'cta' as const }
-      : { label: 'Ingresar', href: '/login', icon: LogIn, variant: 'cta' as const },
-  ];
+  const bottomNavItems = user
+    ? [
+        { label: 'Inicio', href: '/dashboard', icon: Home },
+        { label: 'Explorar', href: '/explorar', icon: Search },
+        { label: 'Materias', href: materiasHref, icon: GraduationCap },
+        { label: 'Premium', href: '/pricing', icon: Crown, variant: 'cta' as const },
+      ]
+    : [
+        { label: 'Inicio', href: '/', icon: Home },
+        { label: 'Explorar', href: '/explorar', icon: Search },
+        { label: 'Pregunteros', href: '/pregunteros', icon: GraduationCap },
+        { label: 'Ingresar', href: '/login', icon: LogIn, variant: 'cta' as const },
+      ];
 
   return (
     <nav
@@ -109,10 +109,9 @@ function BottomNav() {
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =
-            item.href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname === ('activePath' in item ? item.activePath : item.href) ||
-                pathname.startsWith(`${'activePath' in item ? item.activePath : item.href}/`);
+            item.href === '/' || item.href === '/dashboard'
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
             <Link
