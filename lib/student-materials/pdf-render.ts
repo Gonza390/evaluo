@@ -1,5 +1,6 @@
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-import { createCanvas } from 'canvas';
 import { logError } from '@/lib/observability';
 
 const RENDER_SCALE = 1.6;
@@ -9,6 +10,37 @@ const DEFAULT_RENDER_BATCH_SIZE = 10;
 // NO es un límite normal de cobertura: el objetivo sigue siendo renderizar
 // todas las páginas solicitadas.
 const MAX_RENDER_PAGES_FALLBACK = 500;
+
+type PdfCanvas = {
+  width: number;
+  height: number;
+  getContext: (type: '2d') => {
+    fillStyle: string;
+    fillRect: (x: number, y: number, width: number, height: number) => void;
+  };
+  toBuffer: (mimeType: 'image/png') => Buffer;
+};
+
+type NapiCanvasModule = {
+  createCanvas: (width: number, height: number) => PdfCanvas;
+};
+
+const requireFromHere = createRequire(import.meta.url);
+let cachedNapiCanvas: NapiCanvasModule | null = null;
+
+function getPdfCanvasRuntime(): NapiCanvasModule {
+  if (cachedNapiCanvas) return cachedNapiCanvas;
+
+  // PDF.js 5 usa @napi-rs/canvas internamente en Node para ImageData/Path2D.
+  // Debemos renderizar sobre ESA MISMA implementación: mezclar sus imágenes
+  // con node-canvas provoca `Image or Canvas expected` al ejecutar drawImage.
+  const pdfjsEntry = requireFromHere.resolve('pdfjs-dist/legacy/build/pdf.mjs');
+  const pdfjsRoot = path.resolve(path.dirname(pdfjsEntry), '../..');
+  const napiCanvasPath = path.join(pdfjsRoot, 'node_modules', '@napi-rs', 'canvas');
+
+  cachedNapiCanvas = requireFromHere(napiCanvasPath) as NapiCanvasModule;
+  return cachedNapiCanvas;
+}
 
 export type PdfRenderResult = {
   images: Buffer[];
@@ -67,6 +99,7 @@ export async function renderPdfPagesToPngs(
     const pagesToRender = requestedPages.slice(0, MAX_RENDER_PAGES_FALLBACK);
     const images: Buffer[] = [];
     let pagesProcessed = 0;
+    const { createCanvas } = getPdfCanvasRuntime();
 
     for (
       let batchStart = 0;
