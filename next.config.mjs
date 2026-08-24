@@ -2,7 +2,10 @@
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR?.trim() || '.next',
   outputFileTracingIncludes: {
-    '/api/pdf-thumbnail': ['./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs'],
+    '/api/pdf-thumbnail': [
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
+    ],
   },
   async headers() {
     const isDevelopment = process.env.NODE_ENV !== 'production';

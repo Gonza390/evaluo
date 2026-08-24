@@ -73,6 +73,8 @@ const universityRequestFormSource = readFileSync(
   resolve('app/solicitar-universidad/request-form.tsx'),
   'utf8'
 );
+const nextConfigSource = readFileSync(resolve('next.config.mjs'), 'utf8');
+const pdfRenderSource = readFileSync(resolve('lib/student-materials/pdf-render.ts'), 'utf8');
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
 assert.match(
@@ -101,5 +103,12 @@ assert.match(
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);
+assert.match(nextConfigSource, /pdfjs-dist\/legacy\/build\/pdf\.worker\.mjs/);
+assert.match(nextConfigSource, /pdfjs-dist\/node_modules\/@napi-rs\/\*\*\/\*/);
+assert.match(pdfRenderSource, /documentHandle[\s\S]*canvasFactory/);
+assert.match(pdfRenderSource, /canvasFactory\.create/);
+assert.match(pdfRenderSource, /canvasFactory\.destroy/);
+assert.doesNotMatch(pdfRenderSource, /from ['"]canvas['"]/);
+assert.doesNotMatch(pdfRenderSource, /createRequire/);
 
 console.log('Route smoke tests passed.');
