@@ -1,5 +1,3 @@
-import { createRequire } from 'node:module';
-import path from 'node:path';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import { logError } from '@/lib/observability';
 
@@ -14,33 +12,18 @@ const MAX_RENDER_PAGES_FALLBACK = 500;
 type PdfCanvas = {
   width: number;
   height: number;
-  getContext: (type: '2d') => {
-    fillStyle: string;
-    fillRect: (x: number, y: number, width: number, height: number) => void;
-  };
   toBuffer: (mimeType: 'image/png') => Buffer;
 };
 
-type NapiCanvasModule = {
-  createCanvas: (width: number, height: number) => PdfCanvas;
+type PdfCanvasAndContext = {
+  canvas: PdfCanvas;
+  context: CanvasRenderingContext2D;
 };
 
-const requireFromHere = createRequire(import.meta.url);
-let cachedNapiCanvas: NapiCanvasModule | null = null;
-
-function getPdfCanvasRuntime(): NapiCanvasModule {
-  if (cachedNapiCanvas) return cachedNapiCanvas;
-
-  // PDF.js 5 usa @napi-rs/canvas internamente en Node para ImageData/Path2D.
-  // Debemos renderizar sobre ESA MISMA implementación: mezclar sus imágenes
-  // con node-canvas provoca `Image or Canvas expected` al ejecutar drawImage.
-  const pdfjsEntry = requireFromHere.resolve('pdfjs-dist/legacy/build/pdf.mjs');
-  const pdfjsRoot = path.resolve(path.dirname(pdfjsEntry), '../..');
-  const napiCanvasPath = path.join(pdfjsRoot, 'node_modules', '@napi-rs', 'canvas');
-
-  cachedNapiCanvas = requireFromHere(napiCanvasPath) as NapiCanvasModule;
-  return cachedNapiCanvas;
-}
+type PdfCanvasFactory = {
+  create: (width: number, height: number) => PdfCanvasAndContext;
+  destroy: (canvasAndContext: PdfCanvasAndContext) => void;
+};
 
 export type PdfRenderResult = {
   images: Buffer[];
@@ -99,7 +82,18 @@ export async function renderPdfPagesToPngs(
     const pagesToRender = requestedPages.slice(0, MAX_RENDER_PAGES_FALLBACK);
     const images: Buffer[] = [];
     let pagesProcessed = 0;
-    const { createCanvas } = getPdfCanvasRuntime();
+
+    // En Node, PDF.js 5 crea su propio canvasFactory respaldado por
+    // @napi-rs/canvas. Usarlo también para el canvas principal mantiene
+    // imágenes, Path2D, DOMMatrix y contexto dentro del mismo runtime.
+    // Mezclar este runtime con node-canvas provoca `Image or Canvas expected`.
+    const canvasFactory = (
+      documentHandle as pdfjs.PDFDocumentProxy & { canvasFactory: PdfCanvasFactory }
+    ).canvasFactory;
+
+    if (!canvasFactory?.create || !canvasFactory?.destroy) {
+      throw new Error('PDF.js canvasFactory is unavailable');
+    }
 
     for (
       let batchStart = 0;
@@ -113,6 +107,7 @@ export async function renderPdfPagesToPngs(
 
       for (const pageNumber of batch) {
         let page: pdfjs.PDFPageProxy | null = null;
+        let canvasAndContext: PdfCanvasAndContext | null = null;
 
         try {
           page = await documentHandle.getPage(pageNumber);
@@ -121,19 +116,18 @@ export async function renderPdfPagesToPngs(
             scale: RENDER_SCALE,
           });
 
-          const canvas = createCanvas(
+          canvasAndContext = canvasFactory.create(
             Math.ceil(viewport.width),
             Math.ceil(viewport.height)
           );
 
-          const context = canvas.getContext('2d');
+          const { canvas, context } = canvasAndContext;
 
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
           await page.render({
-            canvasContext:
-              context as unknown as CanvasRenderingContext2D,
+            canvasContext: context,
             canvas: canvas as unknown as HTMLCanvasElement,
             viewport,
           }).promise;
@@ -159,6 +153,14 @@ export async function renderPdfPagesToPngs(
               await page.cleanup();
             } catch {
               // Liberación de memoria best-effort por página.
+            }
+          }
+
+          if (canvasAndContext) {
+            try {
+              canvasFactory.destroy(canvasAndContext);
+            } catch {
+              // Liberación de memoria best-effort del canvas.
             }
           }
         }
