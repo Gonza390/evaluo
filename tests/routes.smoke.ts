@@ -105,7 +105,10 @@ assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);
 assert.match(nextConfigSource, /pdfjs-dist\/legacy\/build\/pdf\.worker\.mjs/);
 assert.match(nextConfigSource, /pdfjs-dist\/node_modules\/@napi-rs\/\*\*\/\*/);
-assert.match(pdfRenderSource, /pdfjs-dist\/node_modules.*@napi-rs.*canvas/);
+assert.match(pdfRenderSource, /documentHandle[\s\S]*canvasFactory/);
+assert.match(pdfRenderSource, /canvasFactory\.create/);
+assert.match(pdfRenderSource, /canvasFactory\.destroy/);
 assert.doesNotMatch(pdfRenderSource, /from ['"]canvas['"]/);
+assert.doesNotMatch(pdfRenderSource, /createRequire/);
 
 console.log('Route smoke tests passed.');
