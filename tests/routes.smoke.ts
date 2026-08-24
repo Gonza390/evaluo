@@ -69,6 +69,10 @@ const contentSignalsSource = readFileSync(resolve('lib/seo-content-signals.ts'),
 const notFoundSource = readFileSync(resolve('app/not-found.tsx'), 'utf8');
 const pregunteroSource = readFileSync(resolve('app/pregunteros/[materia]/page.tsx'), 'utf8');
 const clientLayoutSource = readFileSync(resolve('components/ClientLayout.tsx'), 'utf8');
+const universityRequestFormSource = readFileSync(
+  resolve('app/solicitar-universidad/request-form.tsx'),
+  'utf8'
+);
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
 assert.match(
@@ -79,7 +83,7 @@ assert.match(materiaPageSource, /params\.set\('tab', 'pregunteros'\)/);
 assert.match(materiaPageSource, /hasExplicitSupportedTab/);
 
 for (const href of ['/explorar', '/pregunteros', '/']) {
-  assert.ok(notFoundSource.includes(`href=\"${href}\"`));
+  assert.ok(notFoundSource.includes(`href="${href}"`));
 }
 assert.match(notFoundSource, /Explorar materias/);
 assert.match(notFoundSource, /Ir a Pregunteros/);
@@ -95,5 +99,7 @@ assert.match(
   clientLayoutSource,
   /\{ label: 'Ingresar', href: '\/login', icon: LogIn, variant: 'cta' as const \}/
 );
+assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
+assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);
 
 console.log('Route smoke tests passed.');
