@@ -114,6 +114,7 @@ export async function processStudentMaterial(input: {
   const extractionMs = Date.now() - extractionStartedAt;
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
   const useLargeNativePdfFastPath =
+    typeof pageCount === 'number' &&
     pageCount >= LARGE_NATIVE_PDF_FAST_PATH_PAGES &&
     !documentAnalysis.requiresOcr &&
     pagesWithText > 0;
