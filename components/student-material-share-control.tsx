@@ -22,13 +22,33 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
   const shareUrl = () => new URL(sharePath, window.location.origin).toString();
+
+  const copyLink = async (url: string) => {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+    toast({ description: 'Copiamos el enlace del material.' });
+  };
 
   const shareCurrentLink = async () => {
     const url = shareUrl();
 
-    if (navigator.share) {
+    if (canNativeShare) {
       try {
         await navigator.share({
           title: `${title} | Evaluo`,
@@ -41,10 +61,7 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
       }
     }
 
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
-    toast({ description: 'Copiamos el enlace del material.' });
+    await copyLink(url);
   };
 
   const enableSharing = async () => {
@@ -123,7 +140,7 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
       ) : null}
 
       <button type="button" onClick={handleShare} disabled={loading} className="from-brand to-brand-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-4 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.26)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60">
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : copied ? <Check className="h-4 w-4" /> : navigator && typeof navigator !== 'undefined' && navigator.share ? <Share2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : copied ? <Check className="h-4 w-4" /> : canNativeShare ? <Share2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
         {copied ? 'Enlace copiado' : 'Compartir PDF'}
       </button>
     </div>
