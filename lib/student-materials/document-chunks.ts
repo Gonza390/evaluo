@@ -1,8 +1,8 @@
 import { prepareTextForSummary } from '@/lib/student-materials/text';
 
-const DEFAULT_DOCUMENT_CHUNK_MAX_CHARS = 1_200;
+const DEFAULT_DOCUMENT_CHUNK_MAX_CHARS = 1_600;
 const DEFAULT_OVERLAP_PARAGRAPHS = 1;
-const OVERSIZED_CHUNK_OVERLAP_CHARS = 180;
+const OVERSIZED_CHUNK_OVERLAP_CHARS = 120;
 
 export type CompleteDocumentChunk = {
   text: string;
