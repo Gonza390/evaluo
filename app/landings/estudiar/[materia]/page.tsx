@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
+import { unstable_cache as nextCache } from 'next/cache';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { FileText, CheckCircle2, PlayCircle, Sparkles } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildCourseJsonLd, buildFaqJsonLd } from '@/lib/seo';
-import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { parseSeoEntitySlug } from '@/lib/seo-intents';
 import { createPublicClient } from '@/lib/supabase-public';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 
@@ -14,24 +15,32 @@ interface PageProps {
 
 export const revalidate = 600;
 
-export async function generateStaticParams() {
-  const client = createPublicClient();
-  const { data } = await client.from('materias').select('id, nombre');
-
-  if (!data) return [];
-
-  return data.map((materia) => ({
-    materia: buildSeoEntitySlug(materia.nombre, materia.id),
-  }));
+export function generateStaticParams() {
+  // Las landings se generan y cachean en su primera visita. Evita prerenderizar
+  // cientos de materias en cada deploy sin renunciar a ISR ni SEO.
+  return [];
 }
+
+const getLandingMateria = nextCache(
+  async (materiaId: string) => {
+    const client = createPublicClient();
+    const { data } = await client
+      .from('materias')
+      .select('id, nombre')
+      .eq('id', materiaId)
+      .maybeSingle();
+    return data;
+  },
+  ['landing-materia'],
+  { revalidate: 600, tags: ['catalog-materias'] }
+);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const { id: materiaId } = parseSeoEntitySlug(resolvedParams.materia);
 
-  const client = createPublicClient();
-  const [{ data: materia }, contentSignals] = await Promise.all([
-    client.from('materias').select('id, nombre').eq('id', materiaId).maybeSingle(),
+  const [materia, contentSignals] = await Promise.all([
+    getLandingMateria(materiaId),
     getMateriaSeoContentSignals(materiaId),
   ]);
 
@@ -62,12 +71,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
   const resolvedParams = await params;
   const { id: materiaId } = parseSeoEntitySlug(resolvedParams.materia);
 
-  const client = createPublicClient();
-  const { data: materia } = await client
-    .from('materias')
-    .select('id, nombre')
-    .eq('id', materiaId)
-    .maybeSingle();
+  const materia = await getLandingMateria(materiaId);
 
   if (!materia) {
     redirect('/explorar');

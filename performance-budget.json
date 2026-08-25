@@ -1,0 +1,12 @@
+{
+  "routes": [
+    { "label": "/", "appPath": "page", "maxGzipKb": 250 },
+    { "label": "/login", "appPath": "login/page", "maxGzipKb": 360 },
+    { "label": "/explorar", "appPath": "explorar/page", "maxGzipKb": 330 },
+    { "label": "/dashboard", "appPath": "dashboard/page", "maxGzipKb": 340 },
+    { "label": "/administrador", "appPath": "administrador/page", "maxGzipKb": 340 },
+    { "label": "/simulador", "appPath": "simulador/page", "maxGzipKb": 325 },
+    { "label": "/recursos/[id]", "appPath": "recursos/[id]/page", "maxGzipKb": 340 },
+    { "label": "/materiales/[id]", "appPath": "materiales/[id]/page", "maxGzipKb": 400 }
+  ]
+}

@@ -26,22 +26,16 @@ import {
   obtenerSegmentacionUsuariosAdministrador,
   obtenerUsuariosAdministrador,
 } from './actions';
-import dynamic from 'next/dynamic';
-
-const DashboardInsights = dynamic(() =>
-  import('./dashboard-insights').then((mod) => mod.DashboardInsights)
-);
-const AnalyticsPanel = dynamic(() => import('./analytics-panel').then((mod) => mod.AnalyticsPanel));
-const ConversionPanel = dynamic(() =>
-  import('./conversion-panel').then((mod) => mod.ConversionPanel)
-);
-const BibliotecaPanel = dynamic(() =>
-  import('./biblioteca-panel').then((mod) => mod.BibliotecaPanel)
-);
-const AICostPanel = dynamic(() => import('./ai-cost-panel').then((mod) => mod.AICostPanel));
-const IAPanel = dynamic(() => import('./ia-panel').then((mod) => mod.IAPanel));
-const LogsPanel = dynamic(() => import('./logs-panel').then((mod) => mod.LogsPanel));
-const UsersPanel = dynamic(() => import('./users-panel').then((mod) => mod.UsersPanel));
+import {
+  AICostPanel,
+  AnalyticsPanel,
+  BibliotecaPanel,
+  ConversionPanel,
+  DashboardInsights,
+  IAPanel,
+  LogsPanel,
+  UsersPanel,
+} from './lazy-panels';
 import { getAdminAccessContext } from '@/lib/access-control';
 
 type PanelKey =

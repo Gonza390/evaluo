@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
-import SimuladorExamen from '@/components/simulador/SimuladorExamen';
+import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
 
 async function SimuladorContent({
   searchParams,

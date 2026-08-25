@@ -2495,6 +2495,7 @@ export type Database = {
         Returns: {
           correctas: number;
           distintas_preguntas: number;
+          total_preguntas: number;
           total_respuestas: number;
         }[];
       };

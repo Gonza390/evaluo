@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import ClientLayout from '@/components/ClientLayout';
-import { PdfWorkerPreload } from '@/components/pdf/pdf-worker-preload';
 
 export const metadata: Metadata = {
   title: 'Lector de recursos',
@@ -12,10 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function ResourceLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <PdfWorkerPreload />
-      <ClientLayout>{children}</ClientLayout>
-    </>
-  );
+  return <ClientLayout>{children}</ClientLayout>;
 }

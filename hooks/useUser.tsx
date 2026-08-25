@@ -22,11 +22,13 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 interface UserProviderProps {
   children: ReactNode;
+  initialUser?: User | null;
 }
 
-export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function UserProvider({ children, initialUser }: UserProviderProps) {
+  const hasServerSnapshot = initialUser !== undefined;
+  const [user, setUser] = useState<User | null>(initialUser ?? null);
+  const [loading, setLoading] = useState(!hasServerSnapshot);
 
   const getUserName = useCallback((): string => {
     if (!user) return 'Estudiante';
@@ -50,14 +52,13 @@ export function UserProvider({ children }: UserProviderProps) {
   useEffect(() => {
     let isMounted = true;
 
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    if (!hasServerSnapshot) {
+      void supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!isMounted) return;
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
+    }
 
     const {
       data: { subscription },
@@ -74,7 +75,7 @@ export function UserProvider({ children }: UserProviderProps) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [hasServerSnapshot]);
 
   const value = useMemo<UserContextType>(
     () => ({

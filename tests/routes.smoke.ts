@@ -69,6 +69,7 @@ const contentSignalsSource = readFileSync(resolve('lib/seo-content-signals.ts'),
 const notFoundSource = readFileSync(resolve('app/not-found.tsx'), 'utf8');
 const pregunteroSource = readFileSync(resolve('app/pregunteros/[materia]/page.tsx'), 'utf8');
 const clientLayoutSource = readFileSync(resolve('components/ClientLayout.tsx'), 'utf8');
+const clientLayoutUiSource = readFileSync(resolve('components/ClientLayoutClient.tsx'), 'utf8');
 const universityRequestFormSource = readFileSync(
   resolve('app/solicitar-universidad/request-form.tsx'),
   'utf8'
@@ -92,13 +93,38 @@ assert.match(notFoundSource, /Ir a Pregunteros/);
 assert.match(notFoundSource, /Volver al inicio/);
 assert.match(pregunteroSource, /if \(!data\) \{\s*notFound\(\);\s*\}/);
 assert.doesNotMatch(pregunteroSource, /Este preguntero no existe/);
-assert.match(clientLayoutSource, /\{ label: 'Inicio', href: '\/', icon: Home \}/);
+assert.doesNotMatch(clientLayoutSource, /getRequestUser/);
+assert.doesNotMatch(clientLayoutSource, /getAppShellBootstrap/);
+const performanceBudget = readFileSync(resolve('performance-budget.json'), 'utf8');
+const performanceScript = readFileSync(resolve('scripts/check-performance-budget.mjs'), 'utf8');
+const ciSource = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
+const adminActionsSource = readFileSync(resolve('app/administrador/actions.ts'), 'utf8');
+const adminLoadingSource = readFileSync(resolve('app/administrador/loading.tsx'), 'utf8');
+const rootLayoutSource = readFileSync(resolve('app/layout.tsx'), 'utf8');
+const seoLandingSource = readFileSync(resolve('app/landings/estudiar/[materia]/page.tsx'), 'utf8');
+assert.match(performanceBudget, /"\/dashboard"/);
+assert.match(performanceBudget, /"\/administrador"/);
+assert.match(performanceScript, /gzipSync/);
+assert.match(performanceScript, /process\.exitCode = 1/);
+assert.match(ciSource, /npm run performance:budget/);
+assert.match(adminActionsSource, /\['admin-conversion-v2'\]/);
+assert.match(adminActionsSource, /revalidate: 60/);
 assert.match(
-  clientLayoutSource,
+  adminActionsSource,
+  /export async function obtenerConversionAdministrador[\s\S]*await requireAdminAccess\(\)[\s\S]*obtenerConversionAdministradorCached/
+);
+assert.match(adminLoadingSource, /aria-busy="true"/);
+assert.match(rootLayoutSource, /@vercel\/speed-insights\/next/);
+assert.match(rootLayoutSource, /<SpeedInsights\s*\/>/);
+assert.match(seoLandingSource, /generateStaticParams\(\)[\s\S]*return \[\]/);
+assert.match(seoLandingSource, /getLandingMateria/);
+assert.match(clientLayoutUiSource, /\{ label: 'Inicio', href: '\/', icon: Home \}/);
+assert.match(
+  clientLayoutUiSource,
   /\{ label: 'Pregunteros', href: '\/pregunteros', icon: GraduationCap \}/
 );
 assert.match(
-  clientLayoutSource,
+  clientLayoutUiSource,
   /\{ label: 'Ingresar', href: '\/login', icon: LogIn, variant: 'cta' as const \}/
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);

@@ -6,6 +6,8 @@ import {
   useEffect,
   useMemo,
   useRef,
+  use,
+  Suspense,
   useState,
   useTransition,
 } from 'react';
@@ -57,7 +59,7 @@ import {
   type DashboardMateriaDetailsMap,
   type DashboardMateriaSummary,
 } from '@/lib/data/dashboard';
-import type { DashboardBootstrapData } from '@/lib/data/dashboard-bootstrap';
+import type { DashboardBootstrapData, DashboardDeferredData } from '@/lib/data/dashboard-bootstrap';
 import { useShellData } from '@/components/ShellDataProvider';
 import { logError } from '@/lib/observability';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -159,10 +161,28 @@ function normalizeHeroTitle(value: string) {
 
 const DASHBOARD_PANEL_CLASS = 'surface-panel';
 
+function DeferredBootstrapHydrator({
+  dataPromise,
+  onResolve,
+}: {
+  dataPromise: Promise<DashboardDeferredData>;
+  onResolve: (data: DashboardDeferredData) => void;
+}) {
+  const data = use(dataPromise);
+
+  useEffect(() => {
+    onResolve(data);
+  }, [data, onResolve]);
+
+  return null;
+}
+
 export function DashboardContent({
   initialBootstrap,
+  deferredBootstrap,
 }: {
   initialBootstrap?: DashboardBootstrapData;
+  deferredBootstrap?: Promise<DashboardDeferredData>;
 }) {
   const { user, loading: userLoading, getUserName } = useUser();
   const router = useRouter();
@@ -227,6 +247,22 @@ export function DashboardContent({
   const [hasExamEvent, setHasExamEvent] = useState(false);
   const { streak } = useShellData();
   const streakDays = streak?.streakDays ?? 0;
+
+  const applyDeferredBootstrap = useCallback((data: DashboardDeferredData) => {
+    setMateriaDetails((current) => ({ ...current, ...data.materiaDetails }));
+    if (data.academicProfile) setAcademicProfile(data.academicProfile);
+    setRecommendedMaterias((current) => (current.length > 0 ? current : data.recommendedMaterias));
+    setFavoriteMaterias((current) => (current.length > 0 ? current : data.favoriteMaterias));
+    setFavoriteSuggestions((current) => (current.length > 0 ? current : data.favoriteSuggestions));
+    setPartialInsights(data.partialInsights);
+    setPartialInsightMateriaName(data.partialInsightMateriaName);
+    if (data.partialInsights) {
+      setSubjectInsights((current) => ({
+        ...current,
+        [data.partialInsights!.materiaId]: data.partialInsights,
+      }));
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -702,7 +738,11 @@ export function DashboardContent({
   const loadAllMaterias = async (query = '') => {
     setAllMateriasLoading(true);
     try {
-      const summaries = await searchDashboardMateriaSummaries(query, 24, academicProfile?.carreraId);
+      const summaries = await searchDashboardMateriaSummaries(
+        query,
+        24,
+        academicProfile?.carreraId
+      );
       setAllMaterias(summaries);
     } catch (error) {
       logError('dashboard.loadMaterias', error, { query });
@@ -1174,6 +1214,14 @@ export function DashboardContent({
 
   return (
     <div className="animate-page-enter flex-1 overflow-x-hidden overflow-y-auto bg-white font-sans">
+      {deferredBootstrap ? (
+        <Suspense fallback={null}>
+          <DeferredBootstrapHydrator
+            dataPromise={deferredBootstrap}
+            onResolve={applyDeferredBootstrap}
+          />
+        </Suspense>
+      ) : null}
       <div className="w-full px-2.5 py-2 sm:p-3">
         <div className="mx-auto max-w-6xl">
           <div className="animate-study-reveal mb-5 grid gap-4 px-1 py-1 sm:px-0 sm:py-0 xl:grid-cols-[1fr_minmax(320px,460px)] xl:items-start">

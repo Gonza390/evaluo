@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_cache as nextCache } from 'next/cache';
 import { listAdminUserIds } from '@/lib/admin-users';
 import { requireAdminAccess } from '@/lib/auth';
 import { logError } from '@/lib/observability';
@@ -997,13 +997,12 @@ function analyticsChannel(metadata: Record<string, unknown>) {
   return source;
 }
 
-export async function obtenerConversionAdministrador(rangeDays = 30): Promise<{
+async function obtenerConversionAdministradorRaw(rangeDays = 30): Promise<{
   success: boolean;
   stats?: AdministradorConversionStats;
   message?: string;
 }> {
   try {
-    await requireAdminAccess();
     const admin = createAdminClient();
     const paymentsAdmin = admin as unknown as SupabaseClient;
     const adminUserIds = await listAdminUserIds();
@@ -1667,6 +1666,20 @@ export async function obtenerConversionAdministrador(rangeDays = 30): Promise<{
           : 'No pudimos cargar la conversión del administrador.',
     };
   }
+}
+
+const obtenerConversionAdministradorCached = nextCache(
+  obtenerConversionAdministradorRaw,
+  ['admin-conversion-v2'],
+  {
+    revalidate: 60,
+    tags: ['admin-conversion', 'admin-analytics'],
+  }
+);
+
+export async function obtenerConversionAdministrador(rangeDays = 30) {
+  await requireAdminAccess();
+  return obtenerConversionAdministradorCached(rangeDays);
 }
 
 export async function obtenerDetalleMateriaAnaliticaAdministrador(
@@ -2412,7 +2425,10 @@ export async function obtenerSegmentacionUsuariosAdministrador(): Promise<{
     if (subsError) throw subsError;
 
     const profileById = new Map(
-      (profileRows ?? []).map((p) => [p.id, p as { universidad_id: string | null; carrera_id: string | null }])
+      (profileRows ?? []).map((p) => [
+        p.id,
+        p as { universidad_id: string | null; carrera_id: string | null },
+      ])
     );
     const simByUser = new Map<string, { intentos: number; preguntas: number; correctas: number }>();
     for (const a of attempts ?? []) {
@@ -2505,7 +2521,9 @@ export async function obtenerSegmentacionUsuariosAdministrador(): Promise<{
       rows,
     };
   } catch (error) {
-    logError('admin.obtenerSegmentacionUsuarios', error, { formattedError: formatAdminError(error) });
+    logError('admin.obtenerSegmentacionUsuarios', error, {
+      formattedError: formatAdminError(error),
+    });
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos cargar la segmentación.',

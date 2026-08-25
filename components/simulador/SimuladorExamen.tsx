@@ -94,7 +94,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-interface SimuladorExamenProps {
+export interface SimuladorExamenProps {
   materiaId: string;
   parcial: number;
   universidadId?: string;
@@ -1163,11 +1163,7 @@ export default function SimuladorExamen({
         // lanzan en paralelo para reducir la latencia de carga inicial.
         const [profileStatus, materiaResponse] = await Promise.all([
           !resolvedDemoMode && user ? checkProfileStatus(user.id) : Promise.resolve(null),
-          supabase
-            .from('materias')
-            .select('nombre')
-            .eq('id', materiaId)
-            .maybeSingle(),
+          supabase.from('materias').select('nombre').eq('id', materiaId).maybeSingle(),
         ]);
 
         if (!resolvedDemoMode && profileStatus && !profileStatus.isComplete) {

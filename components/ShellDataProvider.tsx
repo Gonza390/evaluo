@@ -35,13 +35,36 @@ const DEFAULT_PROFILE_SUMMARY: ShellProfileSummary = {
 
 const ShellDataContext = createContext<ShellDataContextValue | null>(null);
 
-export function ShellDataProvider({ children }: { children: ReactNode }) {
+function waitForIdle(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+
+  return new Promise((resolve) => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => resolve(), { timeout: 1500 });
+      return;
+    }
+
+    globalThis.setTimeout(resolve, 250);
+  });
+}
+
+export function ShellDataProvider({
+  children,
+  initialProfileSummary,
+}: {
+  children: ReactNode;
+  initialProfileSummary?: ShellProfileSummary;
+}) {
   const { user } = useUser();
-  const [profileSummary, setProfileSummary] =
-    useState<ShellProfileSummary>(DEFAULT_PROFILE_SUMMARY);
+  const [profileSummary, setProfileSummary] = useState<ShellProfileSummary>(
+    initialProfileSummary ?? DEFAULT_PROFILE_SUMMARY
+  );
   const [streak, setStreak] = useState<StreakSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [hasLoadedInitialSnapshot, setHasLoadedInitialSnapshot] = useState(
+    initialProfileSummary !== undefined
+  );
 
   useEffect(() => {
     let active = true;
@@ -59,10 +82,14 @@ export function ShellDataProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
 
       try {
-        const [summary, streakSnapshot] = await Promise.all([
-          getShellProfileSummary(user.id),
-          getCachedStreakSnapshot(user.id, getArgentinaDayKey, shiftDayKey),
-        ]);
+        const profilePromise =
+          hasLoadedInitialSnapshot && refreshKey === 0
+            ? Promise.resolve(initialProfileSummary ?? DEFAULT_PROFILE_SUMMARY)
+            : getShellProfileSummary(user.id);
+        const streakPromise = waitForIdle().then(() =>
+          getCachedStreakSnapshot(user.id, getArgentinaDayKey, shiftDayKey)
+        );
+        const [summary, streakSnapshot] = await Promise.all([profilePromise, streakPromise]);
 
         if (active) {
           setProfileSummary(summary);
@@ -86,15 +113,16 @@ export function ShellDataProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [user, refreshKey]);
+  }, [user, refreshKey, hasLoadedInitialSnapshot, initialProfileSummary]);
 
   const refresh = useCallback(() => {
+    setHasLoadedInitialSnapshot(false);
     setRefreshKey((prev) => prev + 1);
   }, []);
 
   const value = useMemo<ShellDataContextValue>(
     () => ({ profileSummary, streak, isLoading, refresh }),
-    [profileSummary, streak, isLoading, refresh],
+    [profileSummary, streak, isLoading, refresh]
   );
 
   return <ShellDataContext.Provider value={value}>{children}</ShellDataContext.Provider>;
