@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import {
   Bot,
   Brain,
   CheckCircle2,
   FileText,
-  GraduationCap,
   BarChart3,
   PlayCircle,
   Sparkles,
@@ -147,9 +147,17 @@ export default function Home() {
               href="/"
               className="text-foreground flex items-center gap-2 text-2xl font-bold tracking-[-0.04em]"
             >
-              <div className="from-brand to-brand-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md">
-                <GraduationCap className="h-5 w-5" />
-              </div>
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-slate-200/70">
+                <Image
+                  src="/icon.png"
+                  alt=""
+                  width={36}
+                  height={36}
+                  priority
+                  unoptimized
+                  className="h-full w-full object-contain"
+                />
+              </span>
               <span>Evaluo</span>
             </Link>
 
