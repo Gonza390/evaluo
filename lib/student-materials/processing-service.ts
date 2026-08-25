@@ -50,6 +50,8 @@ export type StudentMaterialProcessingResult = {
   materialId?: string;
 };
 
+const LARGE_NATIVE_PDF_FAST_PATH_PAGES = 20;
+
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
     return 'Detectamos un PDF escaneado o muy visual. Seguimos con extracción base y dejamos OCR recomendado.';
@@ -111,6 +113,10 @@ export async function processStudentMaterial(input: {
 
   const extractionMs = Date.now() - extractionStartedAt;
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
+  const useLargeNativePdfFastPath =
+    pageCount >= LARGE_NATIVE_PDF_FAST_PATH_PAGES &&
+    !documentAnalysis.requiresOcr &&
+    pagesWithText > 0;
 
   // Dedup es informativo: lo solapamos con la generación en lugar de frenar la IA.
   const dedupPromise = checkDuplicate(
@@ -148,7 +154,9 @@ export async function processStudentMaterial(input: {
     processingStatus: 'processing',
     processingStage: 'extracting',
     processingProgress: 45,
-    processingMessage: 'Construyendo el modelo pedagógico canónico del material.',
+    processingMessage: useLargeNativePdfFastPath
+      ? 'PDF extenso detectado. Activamos el modo rápido y preparamos resumen y glosario en paralelo.'
+      : 'Construyendo el modelo pedagógico canónico del material.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     pagesProcessed,
@@ -168,10 +176,20 @@ export async function processStudentMaterial(input: {
     userId: material.user_id,
   };
 
-  const [pedagogicalModel] = await Promise.all([
-    generatePedagogicalModel(generationInput),
-    dedupPromise,
-  ]);
+  if (useLargeNativePdfFastPath) {
+    logInfo('processStudentMaterial.fastPath', {
+      materialId: material.id,
+      pageCount,
+      pagesWithText,
+      chunkCount: traceableChunks.length,
+      strategy: 'large_native_pdf',
+    });
+  }
+
+  const pedagogicalModel = useLargeNativePdfFastPath
+    ? null
+    : await generatePedagogicalModel(generationInput);
+
   if (pedagogicalModel) {
     try {
       const { error: pedagogicalModelPersistError } = await admin
@@ -294,6 +312,7 @@ export async function processStudentMaterial(input: {
       errorMessage: glossary.length > 0 ? null : summary.errorMessage,
     }),
     chunkQualityPromise,
+    dedupPromise,
   ]);
 
   await updateStudentMaterialProcessing(admin, material.id, {
@@ -318,6 +337,7 @@ export async function processStudentMaterial(input: {
       material_id: material.id,
       page_count: pageCount,
       processing_strategy: documentAnalysis.processingStrategy,
+      fast_path: useLargeNativePdfFastPath,
     },
   });
 
@@ -335,6 +355,7 @@ export async function processStudentMaterial(input: {
     glossaryProvider,
     glossaryItemCount: glossary.length,
     processingStrategy: documentAnalysis.processingStrategy,
+    fastPath: useLargeNativePdfFastPath,
     totalAiTokens: aiUsage.totalAiTokens,
     promptTokens: aiUsage.promptTokens,
     completionTokens: aiUsage.completionTokens,
