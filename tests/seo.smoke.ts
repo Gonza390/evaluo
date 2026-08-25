@@ -44,26 +44,31 @@ for (const route of h1Contracts) {
   assert.equal(h1Count, 1, `${route} debe contener exactamente un H1`);
 }
 
-const breadcrumbRoutes = [
-  'app/explorar/materia/[id]/page.tsx',
-  'app/landings/estudiar/[materia]/page.tsx',
-  'app/pregunteros/[materia]/page.tsx',
-  'app/pregunteros/[materia]/parcial/[parcial]/page.tsx',
-  'app/resumenes/[materia]/page.tsx',
-  'app/estudiar/[universidad]/[carrera]/page.tsx',
-  'app/simulador-parcial/[carrera]/page.tsx',
+const breadcrumbLayouts = [
+  'app/universidad/[id]/layout.tsx',
+  'app/explorar/materia/[id]/layout.tsx',
+  'app/landings/estudiar/[materia]/layout.tsx',
+  'app/resumenes/[materia]/layout.tsx',
+  'app/estudiar/[universidad]/[carrera]/layout.tsx',
+  'app/simulador-parcial/[carrera]/layout.tsx',
 ];
 
-for (const route of breadcrumbRoutes) {
+for (const route of breadcrumbLayouts) {
   const source = read(route);
   assert.match(source, /SeoBreadcrumbs/, `${route} debe renderizar breadcrumbs visibles`);
 }
 
-const universityBreadcrumbLayout = read('app/universidad/[id]/layout.tsx');
+const pregunteroLayout = read('app/pregunteros/[materia]/layout.tsx');
 assert.match(
-  universityBreadcrumbLayout,
-  /SeoBreadcrumbs/,
-  'La universidad debe renderizar breadcrumbs visibles desde su layout'
+  pregunteroLayout,
+  /PregunteroVisibleBreadcrumbs/,
+  'Pregunteros debe renderizar su breadcrumb visible'
+);
+const pregunteroBreadcrumbs = read('components/seo/PregunteroVisibleBreadcrumbs.tsx');
+assert.match(
+  pregunteroBreadcrumbs,
+  /parcial\\\/(1\|2\|integrador)/,
+  'El breadcrumb de pregunteros debe distinguir parciales e integrador'
 );
 
 const breadcrumbs = read('components/seo/SeoBreadcrumbs.tsx');
