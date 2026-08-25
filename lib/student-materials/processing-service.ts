@@ -112,24 +112,25 @@ export async function processStudentMaterial(input: {
   const extractionMs = Date.now() - extractionStartedAt;
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
 
-  // --- Dedup check (best-effort, never blocks processing) ---
-  try {
-    const dedupResult = await checkDuplicate(
-      text,
-      material.materia_id,
-      material.user_id,
-      material.id
-    );
-    if (dedupResult.isDuplicate) {
-      logInfo('processStudentMaterial.dedup', {
-        materialId: material.id,
-        similarity: dedupResult.similarity,
-        similarMaterialId: dedupResult.similarMaterialId,
-      });
-    }
-  } catch (dedupError) {
-    logError('processStudentMaterial.dedup', dedupError, { materialId: material.id });
-  }
+  // Dedup es informativo: lo solapamos con la generación en lugar de frenar la IA.
+  const dedupPromise = checkDuplicate(
+    text,
+    material.materia_id,
+    material.user_id,
+    material.id
+  )
+    .then((dedupResult) => {
+      if (dedupResult.isDuplicate) {
+        logInfo('processStudentMaterial.dedup', {
+          materialId: material.id,
+          similarity: dedupResult.similarity,
+          similarMaterialId: dedupResult.similarMaterialId,
+        });
+      }
+    })
+    .catch((dedupError) => {
+      logError('processStudentMaterial.dedup', dedupError, { materialId: material.id });
+    });
 
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing',
@@ -167,7 +168,10 @@ export async function processStudentMaterial(input: {
     userId: material.user_id,
   };
 
-  const pedagogicalModel = await generatePedagogicalModel(generationInput);
+  const [pedagogicalModel] = await Promise.all([
+    generatePedagogicalModel(generationInput),
+    dedupPromise,
+  ]);
   if (pedagogicalModel) {
     try {
       const { error: pedagogicalModelPersistError } = await admin
@@ -236,58 +240,61 @@ export async function processStudentMaterial(input: {
     : summary.provider;
 
   const generationMs = Date.now() - generationStartedAt;
-  const aiUsage = await aggregateAiUsageForMaterial(admin, material.id);
-
-  await persistStudentMaterialSummaryFromComputed({
-    admin,
-    studentMaterialId: material.id,
-    text,
-    summary,
-    persistChunks: true,
-    traceableChunks,
-  });
-
-  // --- Chunk quality evaluation (best-effort, never blocks processing) ---
-  try {
-    const chunks = buildSummaryChunks(text);
-    const evaluations = await evaluateChunks(
-      chunks,
-      context.materiaName ?? material.title,
-      material.id,
-      { useLlm: false }
-    );
-    const report = buildChunkEvaluationReport(evaluations);
-    if (report.flaggedChunks.length > 0) {
-      logInfo('processStudentMaterial.chunkQuality', {
-        materialId: material.id,
-        totalChunks: report.totalChunks,
-        averageScore: report.averageScore,
-        flaggedCount: report.flaggedChunks.length,
-        actionCounts: report.actionCounts,
-      });
-    }
-  } catch (chunkEvalError) {
-    logError('processStudentMaterial.chunkQuality', chunkEvalError, {
-      materialId: material.id,
-    });
-  }
 
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing',
     processingStage: 'glossary',
     processingProgress: 78,
-    processingMessage: 'Generando glosario y conceptos clave para estudiar.',
+    processingMessage: 'Guardando la guía, el glosario y los conceptos clave.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
   });
 
-  await persistStudentMaterialGlossaryArtifacts({
-    admin,
-    studentMaterialId: material.id,
-    glossary,
-    provider: glossaryProvider,
-    errorMessage: glossary.length > 0 ? null : summary.errorMessage,
-  });
+  const chunkQualityPromise = (async () => {
+    try {
+      const chunks = buildSummaryChunks(text);
+      const evaluations = await evaluateChunks(
+        chunks,
+        context.materiaName ?? material.title,
+        material.id,
+        { useLlm: false }
+      );
+      const report = buildChunkEvaluationReport(evaluations);
+      if (report.flaggedChunks.length > 0) {
+        logInfo('processStudentMaterial.chunkQuality', {
+          materialId: material.id,
+          totalChunks: report.totalChunks,
+          averageScore: report.averageScore,
+          flaggedCount: report.flaggedChunks.length,
+          actionCounts: report.actionCounts,
+        });
+      }
+    } catch (chunkEvalError) {
+      logError('processStudentMaterial.chunkQuality', chunkEvalError, {
+        materialId: material.id,
+      });
+    }
+  })();
+
+  const [aiUsage] = await Promise.all([
+    aggregateAiUsageForMaterial(admin, material.id),
+    persistStudentMaterialSummaryFromComputed({
+      admin,
+      studentMaterialId: material.id,
+      text,
+      summary,
+      persistChunks: true,
+      traceableChunks,
+    }),
+    persistStudentMaterialGlossaryArtifacts({
+      admin,
+      studentMaterialId: material.id,
+      glossary,
+      provider: glossaryProvider,
+      errorMessage: glossary.length > 0 ? null : summary.errorMessage,
+    }),
+    chunkQualityPromise,
+  ]);
 
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'ready',
