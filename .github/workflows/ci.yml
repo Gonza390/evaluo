@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
@@ -40,3 +43,31 @@ jobs:
 
       - name: Performance budget
         run: npm run performance:budget
+
+  migrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Reproduce la cadena completa de migraciones contra Supabase local.
+      # Esto detecta SQL roto antes de desplegarlo.
+      - name: Start local Supabase
+        run: npx supabase start
+
+      - name: Replay migrations from zero
+        run: npx supabase db reset
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop --no-backup
