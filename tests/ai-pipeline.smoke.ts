@@ -57,6 +57,7 @@ assert.equal(PINNED_GEMINI_SUMMARY_MODEL, 'gemini-3.5-flash-lite');
 assert.deepEqual(getGeminiSummaryModels(), ['gemini-3.5-flash-lite']);
 assert.ok(getGroqSummaryModels().length >= 1);
 assert.ok(!getGroqSummaryModels().includes('llama-3.1-8b-instant'));
+assert.ok(!getGroqSummaryModels().includes('llama-3.3-70b-versatile'));
 assert.ok(getGithubModelsSummaryModels().length >= 1);
 
 // Defaults de Gemini no usan modelos deprecados/retirados.
