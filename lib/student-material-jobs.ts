@@ -32,36 +32,60 @@ function getStaleJobCutoffIso(now = Date.now()) {
 export async function recoverStaleStudentMaterialJobs(
   admin: AdminClient,
   studentMaterialId?: string
-): Promise<boolean> {
+): Promise<string[]> {
   try {
     const staleBefore = getStaleJobCutoffIso();
+    const recoveryMessage =
+      'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el PDF.';
     const payload = {
       status: 'failed',
       completed_at: new Date().toISOString(),
-      last_error:
-        'El worker excedió el tiempo máximo de procesamiento. El job fue liberado automáticamente para reintento.',
+      last_error: recoveryMessage,
     } as never;
 
     let query = admin
       .from(jobsTable())
       .update(payload)
       .eq('status', 'processing')
-      .lt('started_at', staleBefore)
-      .lt('attempts', MAX_STUDENT_MATERIAL_JOB_ATTEMPTS);
+      .lt('started_at', staleBefore);
 
     if (studentMaterialId) {
       query = query.eq('student_material_id', studentMaterialId);
     }
 
-    const { data, error } = await query.select('id');
+    const { data, error } = await query.select('student_material_id');
     if (error) {
       throw error;
     }
 
-    return (data?.length ?? 0) > 0;
+    const materialIds = Array.from(
+      new Set(
+        ((data ?? []) as Array<{ student_material_id?: string | null }>)
+          .map((row) => row.student_material_id)
+          .filter((value): value is string => Boolean(value))
+      )
+    );
+
+    if (materialIds.length > 0) {
+      const { error: materialError } = await admin
+        .from('student_materials')
+        .update({
+          processing_status: 'failed',
+          processing_stage: 'failed',
+          processing_message: 'El procesamiento se interrumpió por tiempo límite.',
+          processing_error: recoveryMessage,
+        } as never)
+        .in('id', materialIds);
+
+      if (materialError) {
+        throw materialError;
+      }
+    }
+
+    return materialIds;
   } catch (error) {
     if (isMissingJobsTableError(error)) {
-      return false;
+      return [];
     }
 
     logError('studentMaterialJobs.recoverStale', error, { studentMaterialId });
