@@ -76,4 +76,5 @@ no se eliminan índices recién creados sólo porque aún no tengan lecturas en 
 estadísticas.
 
 El Security Advisor aún recomienda activar `Leaked password protection`. Esa es
-una configuración de Auth de la plataforma, no una migración SQL del repositorio.
+una configuración de Auth de la plataforma y el conector actual no expone una
+operación segura para modificarla; debe activarse desde Supabase Auth settings.
