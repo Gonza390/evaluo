@@ -53,12 +53,13 @@ assert.equal(truncateUtf8Text('corto', 0), '...');
 assert.equal(truncateUtf8Text(null as unknown as string, 10), '');
 
 // Gemini queda fijado a un modelo estable; no dependemos de aliases `latest` ni de envs antiguas.
-assert.equal(PINNED_GEMINI_SUMMARY_MODEL, 'gemini-2.5-flash-lite');
-assert.deepEqual(getGeminiSummaryModels(), ['gemini-2.5-flash-lite']);
+assert.equal(PINNED_GEMINI_SUMMARY_MODEL, 'gemini-3.5-flash-lite');
+assert.deepEqual(getGeminiSummaryModels(), ['gemini-3.5-flash-lite']);
 assert.ok(getGroqSummaryModels().length >= 1);
 assert.ok(!getGroqSummaryModels().includes('llama-3.1-8b-instant'));
 assert.ok(getGithubModelsSummaryModels().length >= 1);
 
 // Defaults de Gemini no usan modelos deprecados/retirados.
 assert.ok(!getGeminiSummaryModels().includes('gemini-1.5-flash'));
+assert.ok(!getGeminiSummaryModels().includes('gemini-2.5-flash-lite'));
 assert.ok(!getGeminiSummaryModels().some((model) => model.includes('preview')));
