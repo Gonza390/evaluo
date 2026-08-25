@@ -20,8 +20,11 @@ supabase/.temp/
 backups/
 audit-report-*.md
 
-# Local diagnostics
+# Local diagnostics / generated artifacts
 dev-server.log
 test-data/
 tests/probe-results.json
+tmp/
+*.log
+
 .vercel

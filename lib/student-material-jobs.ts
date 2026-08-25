@@ -4,6 +4,7 @@ import type { AdminClient } from '@/lib/student-materials/types';
 export type StudentMaterialJobStatus = 'queued' | 'processing' | 'completed' | 'failed';
 
 const MAX_STUDENT_MATERIAL_JOB_ATTEMPTS = 3;
+const STUDENT_MATERIAL_JOB_LEASE_MS = 7 * 60 * 1000;
 
 export type StudentMaterialJobRow = {
   id: string;
@@ -24,13 +25,86 @@ function isMissingJobsTableError(error: unknown) {
   return code === '42P01' || /student_material_jobs/i.test(message);
 }
 
+function getStaleJobCutoffIso(now = Date.now()) {
+  return new Date(now - STUDENT_MATERIAL_JOB_LEASE_MS).toISOString();
+}
+
+export async function recoverStaleStudentMaterialJobs(
+  admin: AdminClient,
+  studentMaterialId?: string
+): Promise<string[]> {
+  try {
+    const staleBefore = getStaleJobCutoffIso();
+    const recoveryMessage =
+      'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el PDF.';
+    const payload = {
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+      last_error: recoveryMessage,
+    } as never;
+
+    let query = admin
+      .from(jobsTable())
+      .update(payload)
+      .eq('status', 'processing')
+      .lt('started_at', staleBefore);
+
+    if (studentMaterialId) {
+      query = query.eq('student_material_id', studentMaterialId);
+    }
+
+    const { data, error } = await query.select('student_material_id');
+    if (error) {
+      throw error;
+    }
+
+    const materialIds = Array.from(
+      new Set(
+        ((data ?? []) as Array<{ student_material_id?: string | null }>)
+          .map((row) => row.student_material_id)
+          .filter((value): value is string => Boolean(value))
+      )
+    );
+
+    if (materialIds.length > 0) {
+      const { error: materialError } = await admin
+        .from('student_materials')
+        .update({
+          processing_status: 'failed',
+          processing_stage: 'failed',
+          processing_message: 'El procesamiento se interrumpió por tiempo límite.',
+          processing_error: recoveryMessage,
+        } as never)
+        .in('id', materialIds);
+
+      if (materialError) {
+        throw materialError;
+      }
+    }
+
+    return materialIds;
+  } catch (error) {
+    if (isMissingJobsTableError(error)) {
+      return [];
+    }
+
+    logError('studentMaterialJobs.recoverStale', error, { studentMaterialId });
+    throw error;
+  }
+}
+
 export async function enqueueStudentMaterialJob(admin: AdminClient, studentMaterialId: string) {
   try {
+    await recoverStaleStudentMaterialJobs(admin, studentMaterialId);
+
     const { data: existing, error: existingError } = await admin
       .from(jobsTable())
-      .select('id, status')
+      .select('id, status, attempts')
       .eq('student_material_id', studentMaterialId)
-      .in('status', ['queued', 'processing'])
+      .in('status', ['queued', 'processing', 'failed'])
+      .lt('attempts', MAX_STUDENT_MATERIAL_JOB_ATTEMPTS)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .maybeSingle();
 
     if (existingError) {
@@ -68,11 +142,14 @@ export async function claimStudentMaterialJob(
   studentMaterialId: string
 ): Promise<StudentMaterialJobRow | null> {
   try {
+    await recoverStaleStudentMaterialJobs(admin, studentMaterialId);
+
     const { data: job, error } = await admin
       .from(jobsTable())
       .select('id, student_material_id, status, attempts, last_error')
       .eq('student_material_id', studentMaterialId)
       .in('status', ['queued', 'failed'])
+      .lt('attempts', MAX_STUDENT_MATERIAL_JOB_ATTEMPTS)
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -92,6 +169,7 @@ export async function claimStudentMaterialJob(
         status: 'processing',
         attempts,
         started_at: new Date().toISOString(),
+        completed_at: null,
         last_error: null,
       } as never)
       .eq('id', (job as { id: string }).id)
@@ -160,6 +238,8 @@ export async function failStudentMaterialJob(admin: AdminClient, jobId: string, 
 
 export async function claimNextQueuedStudentMaterialJob(admin: AdminClient): Promise<StudentMaterialJobRow | null> {
   try {
+    await recoverStaleStudentMaterialJobs(admin);
+
     const { data: job, error } = await admin
       .from(jobsTable())
       .select('id, student_material_id, status, attempts, last_error')

@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
@@ -40,3 +43,13 @@ jobs:
 
       - name: Performance budget
         run: npm run performance:budget
+
+# Nota: el repositorio todavía no contiene un baseline inicial reproducible de
+# Supabase. Las migraciones históricas más antiguas asumen tablas preexistentes
+# (por ejemplo public.profiles), por lo que `supabase db reset` desde una DB vacía
+# produce un falso negativo antes de llegar a las migraciones actuales.
+#
+# Las migraciones incrementales nuevas deben validarse contra el schema real y
+# mantener sus versiones alineadas con `supabase_migrations.schema_migrations`.
+# Cuando se incorpore un baseline completo, el replay desde cero debe volver a
+# activarse como job de CI.

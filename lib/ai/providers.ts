@@ -32,14 +32,16 @@ const GITHUB_MODELS_PRIMARY_SUMMARY_MODEL =
   process.env.GITHUB_MODELS_SUMMARY_MODEL ?? 'openai/gpt-4o-mini';
 const GITHUB_MODELS_FALLBACK_SUMMARY_MODEL =
   process.env.GITHUB_MODELS_FALLBACK_MODEL ?? 'openai/gpt-4.1-mini';
-export const PINNED_GEMINI_SUMMARY_MODEL = 'gemini-2.5-flash-lite';
+export const PINNED_GEMINI_SUMMARY_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_PRIMARY_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
 const GEMINI_FALLBACK_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
 const GROQ_PRIMARY_SUMMARY_MODEL =
-  process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'llama-3.3-70b-versatile';
-// No mantenemos un fallback Groq hardcodeado: los modelos retirados generaban
-// un 404 en cada artefacto antes de llegar al proveedor sano.
+  process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'openai/gpt-oss-20b';
 const GROQ_FALLBACK_SUMMARY_MODEL = process.env.GROQ_FALLBACK_MODEL;
+const RETIRED_GROQ_MODELS = new Set([
+  'llama-3.1-8b-instant',
+  'llama-3.3-70b-versatile',
+]);
 const NVIDIA_PRIMARY_SUMMARY_MODEL =
   process.env.NVIDIA_SUMMARY_MODEL ?? 'meta/llama-3.3-70b-instruct';
 const NVIDIA_FALLBACK_SUMMARY_MODEL =
@@ -50,9 +52,12 @@ export function getGeminiSummaryModels() {
 }
 
 export function getGroqSummaryModels() {
-  return uniqueConfiguredValues([GROQ_PRIMARY_SUMMARY_MODEL, GROQ_FALLBACK_SUMMARY_MODEL]).filter(
-    (model) => model !== 'llama-3.1-8b-instant'
-  );
+  const configured = uniqueConfiguredValues([GROQ_PRIMARY_SUMMARY_MODEL, GROQ_FALLBACK_SUMMARY_MODEL])
+    .filter((model) => !RETIRED_GROQ_MODELS.has(model));
+
+  // Si Vercel conserva una variable antigua con un modelo retirado, no dejamos
+  // la lista vacía: usamos el default de producción conocido.
+  return configured.length > 0 ? configured : ['openai/gpt-oss-20b'];
 }
 
 export function getGithubModelsSummaryModels() {
@@ -171,8 +176,6 @@ async function requestOpenAiCompatibleJson(
         body: JSON.stringify(body),
       });
 
-      // Algunos modelos no soportan JSON mode y responden 400. Reintentamos
-      // una sola vez sin response_format antes de descartar el modelo.
       if (response.status === 400) {
         const errorText = await response.text().catch(() => '');
         if (isJsonModeRejectedError(errorText)) {

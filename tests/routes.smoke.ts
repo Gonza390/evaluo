@@ -76,6 +76,14 @@ const universityRequestFormSource = readFileSync(
 );
 const nextConfigSource = readFileSync(resolve('next.config.mjs'), 'utf8');
 const pdfRenderSource = readFileSync(resolve('lib/student-materials/pdf-render.ts'), 'utf8');
+const footerHomeSource = readFileSync(resolve('components/footer-home.tsx'), 'utf8');
+const footerSource = readFileSync(resolve('components/footer.tsx'), 'utf8');
+const materialViewerSource = readFileSync(resolve('app/materiales/[id]/page.tsx'), 'utf8');
+const materialJobsSource = readFileSync(resolve('lib/student-material-jobs.ts'), 'utf8');
+const materialRetrySource = readFileSync(
+  resolve('components/student-material-processing-retry.tsx'),
+  'utf8'
+);
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
 assert.match(
@@ -136,5 +144,20 @@ assert.match(pdfRenderSource, /canvasFactory\.create/);
 assert.match(pdfRenderSource, /canvasFactory\.destroy/);
 assert.doesNotMatch(pdfRenderSource, /from ['"]canvas['"]/);
 assert.doesNotMatch(pdfRenderSource, /createRequire/);
+
+for (const source of [footerHomeSource, footerSource]) {
+  assert.ok(source.includes('https://www.instagram.com/evaluo.app/'));
+  assert.ok(source.includes('https://www.linkedin.com/company/evaluo-ar/'));
+  assert.doesNotMatch(source, /https:\/\/(www\.)?tiktok\.com/);
+  assert.doesNotMatch(source, /https:\/\/(www\.)?youtube\.com/);
+}
+
+assert.match(materialJobsSource, /STUDENT_MATERIAL_JOB_LEASE_MS = 7 \* 60 \* 1000/);
+assert.match(materialJobsSource, /processing_status: 'failed'/);
+assert.match(materialJobsSource, /procesamiento se interrumpió por tiempo límite/i);
+assert.match(materialViewerSource, /recoverStaleStudentMaterialJobs\(admin, id\)/);
+assert.match(materialViewerSource, /StudentMaterialProcessingRetry/);
+assert.match(materialRetrySource, /processStudentMaterialAction\(materialId\)/);
+assert.match(materialRetrySource, /Reintentar procesamiento/);
 
 console.log('Route smoke tests passed.');

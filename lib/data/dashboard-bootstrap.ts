@@ -449,15 +449,8 @@ export const getDashboardBootstrapStream = cache(async () => {
 
     return { initial, deferred };
   } catch (error) {
-    console.error('getDashboardBootstrapStream failed, falling back to degraded state', error);
-    return {
-      initial: {
-        status: 'ok' as const,
-        state: defaultDashboardState,
-        ...emptyDeferredData,
-      },
-      deferred: Promise.resolve(emptyDeferredData),
-    };
+    console.error('getDashboardBootstrapStream failed', error);
+    throw error;
   }
 });
 

@@ -2,11 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FileText } from 'lucide-react';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
+import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
 import { getMateriaRoute } from '@/lib/routes';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
+import { recoverStaleStudentMaterialJobs } from '@/lib/student-material-jobs';
 import { isUuid } from '@/lib/uuid';
 import {
   buildPedagogicalArtifacts,
@@ -46,6 +48,13 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
   } = await supabase.auth.getUser();
 
   try {
+    const admin = createAdminClient();
+
+    // Vercel puede cortar un worker largo antes de que llegue a ejecutar su catch.
+    // Antes de mostrar el estado, liberamos cualquier lease vencido y reflejamos
+    // el fallo en student_materials para que el usuario pueda reintentarlo.
+    await recoverStaleStudentMaterialJobs(admin, id);
+
     const { data: material, error } = await supabase
       .from('student_materials')
       .select(
@@ -62,7 +71,6 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       notFound();
     }
 
-    const admin = createAdminClient();
     const [{ data: carrera }, { data: universidad }, { data: materia }, signedUrlResult] =
       await Promise.all([
         admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
@@ -94,7 +102,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
             <div>
               <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">
                 {material.processing_status === 'failed'
-                  ? 'Este material tuvo un error'
+                  ? 'El procesamiento se interrumpió'
                   : 'Estamos preparando este material'}
               </h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -121,22 +129,27 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
               />
             </div>
             <div className="flex flex-wrap gap-3">
+              {material.processing_status === 'failed' && isOwner ? (
+                <StudentMaterialProcessingRetry materialId={material.id} />
+              ) : null}
               <Link
                 href="/dashboard/materiales"
-                className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
+                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
               >
                 Volver a materiales
               </Link>
-              <Link
-                href={
-                  isOwner
-                    ? '/dashboard/materiales'
-                    : getMateriaRoute(material.materia_id, material.carrera_id)
-                }
-                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-white"
-              >
-                Actualizar luego
-              </Link>
+              {material.processing_status !== 'failed' ? (
+                <Link
+                  href={
+                    isOwner
+                      ? '/dashboard/materiales'
+                      : getMateriaRoute(material.materia_id, material.carrera_id)
+                  }
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Actualizar luego
+                </Link>
+              ) : null}
             </div>
           </div>
         </main>
