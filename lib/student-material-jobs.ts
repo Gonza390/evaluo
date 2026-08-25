@@ -32,7 +32,7 @@ function getStaleJobCutoffIso(now = Date.now()) {
 export async function recoverStaleStudentMaterialJobs(
   admin: AdminClient,
   studentMaterialId?: string
-) {
+): Promise<boolean> {
   try {
     const staleBefore = getStaleJobCutoffIso();
     const payload = {
@@ -53,13 +53,15 @@ export async function recoverStaleStudentMaterialJobs(
       query = query.eq('student_material_id', studentMaterialId);
     }
 
-    const { error } = await query;
+    const { data, error } = await query.select('id');
     if (error) {
       throw error;
     }
+
+    return (data?.length ?? 0) > 0;
   } catch (error) {
     if (isMissingJobsTableError(error)) {
-      return;
+      return false;
     }
 
     logError('studentMaterialJobs.recoverStale', error, { studentMaterialId });
