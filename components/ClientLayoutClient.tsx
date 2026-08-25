@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { Suspense, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Crown,
   Flame,
@@ -218,8 +219,15 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               href={user ? '/dashboard' : '/'}
               className="flex min-w-0 items-center gap-2 transition hover:opacity-85"
             >
-              <span className="from-brand to-brand-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] sm:h-10 sm:w-10">
-                <GraduationCap className="h-5 w-5" aria-hidden="true" />
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-[0_8px_20px_rgba(37,99,235,0.20)] ring-1 ring-slate-200/70 sm:h-10 sm:w-10">
+                <Image
+                  src="/icon.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  priority
+                  className="h-full w-full object-cover"
+                />
               </span>
               <div>
                 <div className="text-foreground text-[1.05rem] font-bold tracking-tight sm:text-lg">

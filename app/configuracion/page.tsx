@@ -51,6 +51,9 @@ export default function ConfiguracionPage() {
   const [universidades, setUniversidades] = useState<Universidad[]>([]);
   const [carreras, setCarreras] = useState<Carrera[]>([]);
   const [hasLoadedUniversidades, setHasLoadedUniversidades] = useState(false);
+  const [initialProfileState, setInitialProfileState] = useState<
+    ReturnType<typeof resolveProfileSettingsState> | null
+  >(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -96,6 +99,7 @@ export default function ConfiguracionPage() {
         setAnioCarrera(resolvedProfileState.anioCarrera);
         setUniversidadId(resolvedProfileState.universidadId);
         setCarreraId(resolvedProfileState.carreraId);
+        setInitialProfileState(resolvedProfileState);
 
         if (resolvedProfileState.universidadId) {
           const { data: universidad } = await supabase
@@ -237,57 +241,103 @@ export default function ConfiguracionPage() {
     [universidadId, universidades]
   );
 
-  const canSave =
-    Boolean(user) &&
-    nombre.trim().length >= 2 &&
-    pais.trim().length >= 2 &&
-    universidadId.trim() !== '' &&
-    carreraId.trim() !== '';
+  const currentProfileState = {
+    nombre: nombre.trim(),
+    pais: pais.trim(),
+    telefono: telefono.trim(),
+    anioCarrera: anioCarrera.trim(),
+    universidadId: universidadId.trim(),
+    carreraId: carreraId.trim(),
+  };
+
+  const changedFields = initialProfileState
+    ? {
+        nombre: currentProfileState.nombre !== initialProfileState.nombre.trim(),
+        pais: currentProfileState.pais !== initialProfileState.pais.trim(),
+        telefono: currentProfileState.telefono !== initialProfileState.telefono.trim(),
+        anioCarrera:
+          currentProfileState.anioCarrera !== initialProfileState.anioCarrera.trim(),
+        universidadId:
+          currentProfileState.universidadId !== initialProfileState.universidadId.trim(),
+        carreraId: currentProfileState.carreraId !== initialProfileState.carreraId.trim(),
+      }
+    : null;
+
+  const hasChanges = Boolean(changedFields && Object.values(changedFields).some(Boolean));
+  const changedValuesAreValid =
+    Boolean(changedFields) &&
+    (!changedFields?.nombre || currentProfileState.nombre.length >= 2) &&
+    (!changedFields?.pais || currentProfileState.pais.length >= 2) &&
+    (!changedFields?.universidadId ||
+      universidadSearch.trim() === '' ||
+      currentProfileState.universidadId !== '') &&
+    (!changedFields?.carreraId ||
+      carreraSearch.trim() === '' ||
+      currentProfileState.carreraId !== '') &&
+    (!currentProfileState.carreraId || Boolean(currentProfileState.universidadId));
+
+  const canSave = Boolean(user) && hasChanges && changedValuesAreValid;
 
   const handleSave = async () => {
-    if (!user || !canSave) return;
+    if (!user || !canSave || !changedFields) return;
 
     setSaving(true);
 
     try {
-      const cleanNombre = nombre.trim();
-      const cleanPais = pais.trim();
-      const cleanTelefono = telefono.trim();
-      const cleanAnioCarrera = anioCarrera.trim();
+      const cleanNombre = currentProfileState.nombre;
+      const cleanPais = currentProfileState.pais;
+      const cleanTelefono = currentProfileState.telefono;
+      const cleanAnioCarrera = currentProfileState.anioCarrera;
 
       const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id,
-        nombre: cleanNombre,
-        pais: cleanPais,
-        telefono: cleanTelefono || null,
-        anio_carrera: cleanAnioCarrera || null,
-        universidad_id: universidadId,
-        carrera_id: carreraId,
         updated_at: new Date().toISOString(),
+        ...(changedFields.nombre ? { nombre: cleanNombre } : {}),
+        ...(changedFields.pais ? { pais: cleanPais } : {}),
+        ...(changedFields.telefono ? { telefono: cleanTelefono || null } : {}),
+        ...(changedFields.anioCarrera
+          ? { anio_carrera: cleanAnioCarrera || null }
+          : {}),
+        ...(changedFields.universidadId
+          ? { universidad_id: currentProfileState.universidadId || null }
+          : {}),
+        ...(changedFields.carreraId
+          ? { carrera_id: currentProfileState.carreraId || null }
+          : {}),
       });
 
       if (profileError) {
         throw profileError;
       }
 
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          full_name: cleanNombre,
-          name: cleanNombre,
-          country: cleanPais,
-          pais: cleanPais,
-          telefono: cleanTelefono,
-          anio_carrera: cleanAnioCarrera,
-        },
-      });
-
-      if (authError) {
-        throw authError;
+      const authData: Record<string, string> = {};
+      if (changedFields.nombre) {
+        authData.full_name = cleanNombre;
+        authData.name = cleanNombre;
       }
+      if (changedFields.pais) {
+        authData.country = cleanPais;
+        authData.pais = cleanPais;
+      }
+      if (changedFields.telefono) {
+        authData.telefono = cleanTelefono;
+      }
+      if (changedFields.anioCarrera) {
+        authData.anio_carrera = cleanAnioCarrera;
+      }
+
+      if (Object.keys(authData).length > 0) {
+        const { error: authError } = await supabase.auth.updateUser({ data: authData });
+        if (authError) {
+          throw authError;
+        }
+      }
+
+      setInitialProfileState({ ...currentProfileState });
 
       toast({
         title: 'Perfil actualizado',
-        description: 'Tus datos ya quedaron guardados en Evaluo.',
+        description: 'Guardamos únicamente los datos que modificaste.',
       });
 
       router.refresh();
@@ -299,7 +349,7 @@ export default function ConfiguracionPage() {
       });
       toast({
         title: 'No pudimos guardar los cambios',
-        description: 'Revisá los datos e intentá de nuevo.',
+        description: 'Revisá los datos que modificaste e intentá de nuevo.',
         variant: 'destructive',
       });
     } finally {
@@ -613,10 +663,13 @@ export default function ConfiguracionPage() {
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Guardar perfil
+                Guardar cambios
               </>
             )}
           </Button>
+          <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">
+            Podés guardar un solo cambio sin completar el resto del perfil.
+          </p>
         </aside>
       </section>
     </div>
