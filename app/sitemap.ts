@@ -8,6 +8,17 @@ function isFulfilled<T>(result: PromiseSettledResult<T>): result is PromiseFulfi
   return result.status === 'fulfilled';
 }
 
+function updateLatestDate(map: Map<string, Date>, key: string, value?: string | null) {
+  if (!key || !value) return;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return;
+
+  const current = map.get(key);
+  if (!current || date.getTime() > current.getTime()) {
+    map.set(key, date);
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = SITE_URL;
 
@@ -93,39 +104,52 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     client.from('materias').select('id, nombre'),
     fetchExplorarCatalogData(client),
     fetchAllQuestionFreshness(),
-    client.from('resumenes').select('materia_id').limit(10000),
-    client.from('recursos').select('materia_id').limit(10000),
+    client.from('resumenes').select('materia_id, created_at').limit(10000),
+    client.from('recursos').select('materia_id, creado_at').limit(10000),
   ]);
 
-  const materiaLastModified = new Map<string, Date>();
+  const materiaPageLastModified = new Map<string, Date>();
+  const pregunteroLastModified = new Map<string, Date>();
+  const resumenLastModified = new Map<string, Date>();
+  const parcialLastModified = new Map<string, Date>();
   const materiasConPreguntas = new Set<string>();
   const parcialesConPreguntas = new Set<string>();
+
   if (isFulfilled(frescuraResult)) {
     for (const row of frescuraResult.value.data ?? []) {
       const materiaId = String(row.materia_id ?? '');
-      const creadoAt = row.creado_at;
-      if (!materiaId || !creadoAt) continue;
+      if (!materiaId) continue;
+
+      const parcialKey = `${materiaId}:${Number(row.parcial ?? 1)}`;
       materiasConPreguntas.add(materiaId);
-      parcialesConPreguntas.add(`${materiaId}:${Number(row.parcial ?? 1)}`);
-      const date = new Date(creadoAt);
-      const current = materiaLastModified.get(materiaId);
-      if (!current || date.getTime() > current.getTime()) {
-        materiaLastModified.set(materiaId, date);
-      }
+      parcialesConPreguntas.add(parcialKey);
+      updateLatestDate(materiaPageLastModified, materiaId, row.creado_at);
+      updateLatestDate(pregunteroLastModified, materiaId, row.creado_at);
+      updateLatestDate(parcialLastModified, parcialKey, row.creado_at);
     }
   }
 
   const materiasConResumenes = new Set<string>();
   if (isFulfilled(resumenesResult)) {
     for (const row of resumenesResult.value.data ?? []) {
-      if (row.materia_id) materiasConResumenes.add(String(row.materia_id));
+      const materiaId = String(row.materia_id ?? '');
+      if (!materiaId) continue;
+
+      materiasConResumenes.add(materiaId);
+      updateLatestDate(materiaPageLastModified, materiaId, row.created_at);
+      updateLatestDate(pregunteroLastModified, materiaId, row.created_at);
+      updateLatestDate(resumenLastModified, materiaId, row.created_at);
     }
   }
 
   const materiasConRecursos = new Set<string>();
   if (isFulfilled(recursosResult)) {
     for (const row of recursosResult.value.data ?? []) {
-      if (row.materia_id) materiasConRecursos.add(String(row.materia_id));
+      const materiaId = String(row.materia_id ?? '');
+      if (!materiaId) continue;
+
+      materiasConRecursos.add(materiaId);
+      updateLatestDate(materiaPageLastModified, materiaId, row.creado_at);
     }
   }
 
@@ -141,7 +165,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   if (isFulfilled(materiasResult)) {
     for (const materia of materiasResult.value.data ?? []) {
-      const questionLastModified = materiaLastModified.get(materia.id);
+      const pageLastModified = materiaPageLastModified.get(materia.id);
+      const questionsLastModified = pregunteroLastModified.get(materia.id);
+      const summariesLastModified = resumenLastModified.get(materia.id);
       const hasQuestions = materiasConPreguntas.has(materia.id);
       const hasSummaries = materiasConResumenes.has(materia.id);
       const hasResources = materiasConRecursos.has(materia.id);
@@ -151,7 +177,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       routes.push({
         url: `${baseUrl}/explorar/materia/${materia.id}`,
-        ...(questionLastModified ? { lastModified: questionLastModified } : {}),
+        ...(pageLastModified ? { lastModified: pageLastModified } : {}),
         changeFrequency: 'weekly',
         priority: 0.7,
       });
@@ -160,23 +186,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (hasQuestions) {
         routes.push({
           url: `${baseUrl}/pregunteros/${materiaSlug}`,
-          ...(questionLastModified ? { lastModified: questionLastModified } : {}),
+          ...(questionsLastModified ? { lastModified: questionsLastModified } : {}),
           changeFrequency: 'weekly',
           priority: 0.75,
         });
 
         if (parcialesConPreguntas.has(`${materia.id}:1`)) {
+          const partialLastModified = parcialLastModified.get(`${materia.id}:1`);
           routes.push({
             url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/1`,
-            ...(questionLastModified ? { lastModified: questionLastModified } : {}),
+            ...(partialLastModified ? { lastModified: partialLastModified } : {}),
             changeFrequency: 'weekly',
             priority: 0.78,
           });
         }
         if (parcialesConPreguntas.has(`${materia.id}:2`)) {
+          const partialLastModified = parcialLastModified.get(`${materia.id}:2`);
           routes.push({
             url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/2`,
-            ...(questionLastModified ? { lastModified: questionLastModified } : {}),
+            ...(partialLastModified ? { lastModified: partialLastModified } : {}),
             changeFrequency: 'weekly',
             priority: 0.78,
           });
@@ -185,9 +213,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           parcialesConPreguntas.has(`${materia.id}:1`) &&
           parcialesConPreguntas.has(`${materia.id}:2`)
         ) {
+          const partial1LastModified = parcialLastModified.get(`${materia.id}:1`);
+          const partial2LastModified = parcialLastModified.get(`${materia.id}:2`);
+          const integradorLastModified = [partial1LastModified, partial2LastModified]
+            .filter((date): date is Date => Boolean(date))
+            .sort((a, b) => b.getTime() - a.getTime())[0];
+
           routes.push({
             url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/integrador`,
-            ...(questionLastModified ? { lastModified: questionLastModified } : {}),
+            ...(integradorLastModified ? { lastModified: integradorLastModified } : {}),
             changeFrequency: 'weekly',
             priority: 0.76,
           });
@@ -197,6 +231,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (hasSummaries) {
         routes.push({
           url: `${baseUrl}/resumenes/${materiaSlug}`,
+          ...(summariesLastModified ? { lastModified: summariesLastModified } : {}),
           changeFrequency: 'weekly',
           priority: 0.65,
         });
