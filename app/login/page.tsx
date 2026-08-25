@@ -1,44 +1,18 @@
-﻿import Image from 'next/image';
-import LoginFormGoogleFirst from '@/components/LoginFormGoogleFirst';
+﻿import LoginFormGoogleFirst from '@/components/LoginFormGoogleFirst';
 
 export default function LoginPage() {
- return (
- <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.12),transparent_18%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_24%),linear-gradient(180deg,#f7faff_0%,#eef4ff_100%)] px-4 py-6 sm:px-6 lg:px-8">
- <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-[1080px] items-center justify-center">
- <div className="grid w-full max-w-[980px] overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)] lg:grid-cols-[0.88fr_1.12fr]">
- <LoginFormGoogleFirst />
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(180deg,#F8FBFF_0%,#F4F7FC_45%,#FFFFFF_100%)] px-4 py-6 sm:px-6 sm:py-10">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-blue-100/55 blur-3xl" />
+        <div className="absolute bottom-[-120px] right-[-80px] h-80 w-80 rounded-full bg-indigo-100/45 blur-3xl" />
+      </div>
 
- <section className="relative hidden overflow-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(255,255,255,0.22),transparent_16%),radial-gradient(circle_at_78%_30%,rgba(129,140,248,0.22),transparent_20%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.12),transparent_22%),linear-gradient(160deg,#050B2C_0%,#0F1B3D_100%)] lg:block">
- <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.10)_0%,transparent_30%,transparent_68%,rgba(255,255,255,0.08)_100%)]" />
- <div className="absolute left-[14%] top-[18%] h-28 w-28 rounded-full bg-white/10 blur-2xl" />
- <div className="absolute right-[12%] top-[16%] h-16 w-16 rotate-12 rounded-2xl border border-white/12 bg-white/6 backdrop-blur-sm" />
- <div className="absolute right-[20%] top-[40%] h-10 w-10 -rotate-12 rounded-xl border border-white/12 bg-white/6 backdrop-blur-sm" />
- <div className="absolute left-[58%] top-[64%] h-3 w-3 rounded-full bg-white/30" />
- <div className="absolute inset-y-10 left-10 w-px bg-white/12" />
- <div className="absolute left-10 right-10 top-10 h-px bg-white/12" />
- <div className="absolute left-[10%] top-[12%] z-10 max-w-[360px] text-white">
- <p className="text-[12px] font-bold uppercase tracking-[0.2em] text-indigo-200">Tu espacio académico</p>
- <h2 className="mt-3 text-3xl font-bold tracking-[-0.05em]">Todo lo que estudiás, listo para continuar.</h2>
- <div className="mt-5 grid gap-2 text-sm text-white/75">
- <p>✓ Guardá tu progreso y tus materias.</p>
- <p>✓ Volvé a tus simuladores cuando quieras.</p>
- <p>✓ Organizá materiales y resúmenes en un solo lugar.</p>
- </div>
- </div>
- <div className="relative flex h-full min-h-[640px] items-end justify-center px-8 pb-0 pt-10">
- <Image
- src="/imagentarjetadashboard.webp"
- alt="Estudiante usando Evaluo"
- width={980}
- height={980}
- priority
- className="h-auto w-[86%] max-w-[650px] object-contain object-bottom"
- sizes="(max-width: 1024px) 0px, 50vw"
- />
- </div>
- </section>
- </div>
- </div>
- </div>
- );
+      <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-[520px] items-center justify-center sm:min-h-[calc(100vh-5rem)]">
+        <div className="w-full rounded-[28px] border border-slate-200/90 bg-white/95 p-5 shadow-[0_24px_70px_rgba(15,23,42,0.09)] backdrop-blur sm:p-7">
+          <LoginFormGoogleFirst />
+        </div>
+      </div>
+    </main>
+  );
 }
