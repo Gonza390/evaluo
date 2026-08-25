@@ -1,0 +1,100 @@
+name: Apply requested feature edits
+
+on:
+  push:
+    branches:
+      - feat/navbar-pdf-profile-20260825
+    paths:
+      - '.github/workflows/apply-feature-edits.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/navbar-pdf-profile-20260825
+          fetch-depth: 0
+
+      - name: Apply targeted source edits
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected exactly one match, got {count}")
+              p.write_text(text.replace(old, new, 1))
+
+          # Navbar: use the real Evaluo logo asset instead of the generic graduation-cap mark.
+          replace_once(
+              'components/ClientLayoutClient.tsx',
+              "import Link from 'next/link';\n",
+              "import Link from 'next/link';\nimport Image from 'next/image';\n",
+          )
+          replace_once(
+              'components/ClientLayoutClient.tsx',
+              '''              <span className="from-brand to-brand-2 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-[0_8px_20px_rgba(37,99,235,0.24)] sm:h-10 sm:w-10">\n                <GraduationCap className="h-5 w-5" aria-hidden="true" />\n              </span>''',
+              '''              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-[0_8px_20px_rgba(37,99,235,0.20)] ring-1 ring-slate-200/70 sm:h-10 sm:w-10">\n                <Image\n                  src="/icon.png"\n                  alt=""\n                  width={40}\n                  height={40}\n                  priority\n                  className="h-full w-full object-cover"\n                />\n              </span>''',
+          )
+
+          # Profile settings: remember loaded values and allow saving only the fields that changed.
+          replace_once(
+              'app/configuracion/page.tsx',
+              "  const [hasLoadedUniversidades, setHasLoadedUniversidades] = useState(false);\n",
+              "  const [hasLoadedUniversidades, setHasLoadedUniversidades] = useState(false);\n  const [initialProfileState, setInitialProfileState] = useState<\n    ReturnType<typeof resolveProfileSettingsState> | null\n  >(null);\n",
+          )
+          replace_once(
+              'app/configuracion/page.tsx',
+              "        setUniversidadId(resolvedProfileState.universidadId);\n        setCarreraId(resolvedProfileState.carreraId);\n",
+              "        setUniversidadId(resolvedProfileState.universidadId);\n        setCarreraId(resolvedProfileState.carreraId);\n        setInitialProfileState(resolvedProfileState);\n",
+          )
+          old_profile = '''  const canSave =\n    Boolean(user) &&\n    nombre.trim().length >= 2 &&\n    pais.trim().length >= 2 &&\n    universidadId.trim() !== '' &&\n    carreraId.trim() !== '';\n\n  const handleSave = async () => {\n    if (!user || !canSave) return;\n\n    setSaving(true);\n\n    try {\n      const cleanNombre = nombre.trim();\n      const cleanPais = pais.trim();\n      const cleanTelefono = telefono.trim();\n      const cleanAnioCarrera = anioCarrera.trim();\n\n      const { error: profileError } = await supabase.from('profiles').upsert({\n        id: user.id,\n        nombre: cleanNombre,\n        pais: cleanPais,\n        telefono: cleanTelefono || null,\n        anio_carrera: cleanAnioCarrera || null,\n        universidad_id: universidadId,\n        carrera_id: carreraId,\n        updated_at: new Date().toISOString(),\n      });\n\n      if (profileError) {\n        throw profileError;\n      }\n\n      const { error: authError } = await supabase.auth.updateUser({\n        data: {\n          full_name: cleanNombre,\n          name: cleanNombre,\n          country: cleanPais,\n          pais: cleanPais,\n          telefono: cleanTelefono,\n          anio_carrera: cleanAnioCarrera,\n        },\n      });\n\n      if (authError) {\n        throw authError;\n      }\n\n      toast({\n        title: 'Perfil actualizado',\n        description: 'Tus datos ya quedaron guardados en Evaluo.',\n      });\n\n      router.refresh();\n    } catch (error) {\n      logError('configuracion.saveProfile', error, {\n        userId: user.id,\n        universidadId,\n        carreraId,\n      });\n      toast({\n        title: 'No pudimos guardar los cambios',\n        description: 'Revisá los datos e intentá de nuevo.',\n        variant: 'destructive',\n      });\n    } finally {\n      setSaving(false);\n    }\n  };'''
+          new_profile = '''  const currentProfileState = {\n    nombre: nombre.trim(),\n    pais: pais.trim(),\n    telefono: telefono.trim(),\n    anioCarrera: anioCarrera.trim(),\n    universidadId: universidadId.trim(),\n    carreraId: carreraId.trim(),\n  };\n\n  const changedFields = initialProfileState\n    ? {\n        nombre: currentProfileState.nombre !== initialProfileState.nombre.trim(),\n        pais: currentProfileState.pais !== initialProfileState.pais.trim(),\n        telefono: currentProfileState.telefono !== initialProfileState.telefono.trim(),\n        anioCarrera:\n          currentProfileState.anioCarrera !== initialProfileState.anioCarrera.trim(),\n        universidadId:\n          currentProfileState.universidadId !== initialProfileState.universidadId.trim(),\n        carreraId: currentProfileState.carreraId !== initialProfileState.carreraId.trim(),\n      }\n    : null;\n\n  const hasChanges = Boolean(changedFields && Object.values(changedFields).some(Boolean));\n  const changedValuesAreValid =\n    Boolean(changedFields) &&\n    (!changedFields?.nombre || currentProfileState.nombre.length >= 2) &&\n    (!changedFields?.pais || currentProfileState.pais.length >= 2) &&\n    (!changedFields?.universidadId ||\n      universidadSearch.trim() === '' ||\n      currentProfileState.universidadId !== '') &&\n    (!changedFields?.carreraId ||\n      carreraSearch.trim() === '' ||\n      currentProfileState.carreraId !== '') &&\n    (!currentProfileState.carreraId || Boolean(currentProfileState.universidadId));\n\n  const canSave = Boolean(user) && hasChanges && changedValuesAreValid;\n\n  const handleSave = async () => {\n    if (!user || !canSave || !changedFields) return;\n\n    setSaving(true);\n\n    try {\n      const cleanNombre = currentProfileState.nombre;\n      const cleanPais = currentProfileState.pais;\n      const cleanTelefono = currentProfileState.telefono;\n      const cleanAnioCarrera = currentProfileState.anioCarrera;\n\n      const { error: profileError } = await supabase.from('profiles').upsert({\n        id: user.id,\n        updated_at: new Date().toISOString(),\n        ...(changedFields.nombre ? { nombre: cleanNombre } : {}),\n        ...(changedFields.pais ? { pais: cleanPais } : {}),\n        ...(changedFields.telefono ? { telefono: cleanTelefono || null } : {}),\n        ...(changedFields.anioCarrera\n          ? { anio_carrera: cleanAnioCarrera || null }\n          : {}),\n        ...(changedFields.universidadId\n          ? { universidad_id: currentProfileState.universidadId || null }\n          : {}),\n        ...(changedFields.carreraId\n          ? { carrera_id: currentProfileState.carreraId || null }\n          : {}),\n      });\n\n      if (profileError) {\n        throw profileError;\n      }\n\n      const authData: Record<string, string> = {};\n      if (changedFields.nombre) {\n        authData.full_name = cleanNombre;\n        authData.name = cleanNombre;\n      }\n      if (changedFields.pais) {\n        authData.country = cleanPais;\n        authData.pais = cleanPais;\n      }\n      if (changedFields.telefono) {\n        authData.telefono = cleanTelefono;\n      }\n      if (changedFields.anioCarrera) {\n        authData.anio_carrera = cleanAnioCarrera;\n      }\n\n      if (Object.keys(authData).length > 0) {\n        const { error: authError } = await supabase.auth.updateUser({ data: authData });\n        if (authError) {\n          throw authError;\n        }\n      }\n\n      setInitialProfileState({ ...currentProfileState });\n\n      toast({\n        title: 'Perfil actualizado',\n        description: 'Guardamos únicamente los datos que modificaste.',\n      });\n\n      router.refresh();\n    } catch (error) {\n      logError('configuracion.saveProfile', error, {\n        userId: user.id,\n        universidadId,\n        carreraId,\n      });\n      toast({\n        title: 'No pudimos guardar los cambios',\n        description: 'Revisá los datos que modificaste e intentá de nuevo.',\n        variant: 'destructive',\n      });\n    } finally {\n      setSaving(false);\n    }\n  };'''
+          replace_once('app/configuracion/page.tsx', old_profile, new_profile)
+
+          # PDF throughput: fewer map/reduce calls, bounded higher concurrency, less retry explosion.
+          replace_once(
+              'lib/student-materials/pedagogy-ai.ts',
+              '''const MAP_GROUP_MAX_CHARS = 6_500;\nconst MAP_CONCURRENCY = 3;\nconst MAP_MAX_OUTPUT_TOKENS = 1_900;\nconst MAP_RECOVERY_MAX_DEPTH = 4;\n\nconst REDUCE_GROUP_MAX_CHARS = 20_000;\nconst REDUCE_GROUP_MAX_ITEMS = 4;\nconst REDUCE_CONCURRENCY = 2;\nconst REDUCE_MAX_OUTPUT_TOKENS = 6_000;''',
+              '''const MAP_GROUP_MAX_CHARS = 10_000;\nconst MAP_CONCURRENCY = 4;\nconst MAP_MAX_OUTPUT_TOKENS = 2_300;\nconst MAP_RECOVERY_MAX_DEPTH = 3;\n\nconst REDUCE_GROUP_MAX_CHARS = 30_000;\nconst REDUCE_GROUP_MAX_ITEMS = 6;\nconst REDUCE_CONCURRENCY = 3;\nconst REDUCE_MAX_OUTPUT_TOKENS = 6_000;''',
+          )
+          replace_once(
+              'lib/student-materials/document-chunks.ts',
+              '''const DEFAULT_DOCUMENT_CHUNK_MAX_CHARS = 1_200;\nconst DEFAULT_OVERLAP_PARAGRAPHS = 1;\nconst OVERSIZED_CHUNK_OVERLAP_CHARS = 180;''',
+              '''const DEFAULT_DOCUMENT_CHUNK_MAX_CHARS = 1_600;\nconst DEFAULT_OVERLAP_PARAGRAPHS = 1;\nconst OVERSIZED_CHUNK_OVERLAP_CHARS = 120;''',
+          )
+
+          # Dedup is informative only: overlap it with the expensive pedagogical generation.
+          old_dedup = '''  // --- Dedup check (best-effort, never blocks processing) ---\n  try {\n    const dedupResult = await checkDuplicate(\n      text,\n      material.materia_id,\n      material.user_id,\n      material.id\n    );\n    if (dedupResult.isDuplicate) {\n      logInfo('processStudentMaterial.dedup', {\n        materialId: material.id,\n        similarity: dedupResult.similarity,\n        similarMaterialId: dedupResult.similarMaterialId,\n      });\n    }\n  } catch (dedupError) {\n    logError('processStudentMaterial.dedup', dedupError, { materialId: material.id });\n  }'''
+          new_dedup = '''  // --- Dedup check (best-effort). It is informative, so run it concurrently\n  // with the AI path instead of delaying generation. ---\n  const dedupPromise = checkDuplicate(\n    text,\n    material.materia_id,\n    material.user_id,\n    material.id\n  )\n    .then((dedupResult) => {\n      if (dedupResult.isDuplicate) {\n        logInfo('processStudentMaterial.dedup', {\n          materialId: material.id,\n          similarity: dedupResult.similarity,\n          similarMaterialId: dedupResult.similarMaterialId,\n        });\n      }\n    })\n    .catch((dedupError) => {\n      logError('processStudentMaterial.dedup', dedupError, { materialId: material.id });\n    });'''
+          replace_once('lib/student-materials/processing-service.ts', old_dedup, new_dedup)
+          replace_once(
+              'lib/student-materials/processing-service.ts',
+              '  const pedagogicalModel = await generatePedagogicalModel(generationInput);',
+              '''  const [pedagogicalModel] = await Promise.all([\n    generatePedagogicalModel(generationInput),\n    dedupPromise,\n  ]);''',
+          )
+          PY
+
+      - name: Verify targeted changes
+        run: |
+          grep -q 'src="/icon.png"' components/ClientLayoutClient.tsx
+          grep -q 'Guardamos únicamente los datos que modificaste' app/configuracion/page.tsx
+          grep -q 'MAP_GROUP_MAX_CHARS = 10_000' lib/student-materials/pedagogy-ai.ts
+          grep -q 'DEFAULT_DOCUMENT_CHUNK_MAX_CHARS = 1_600' lib/student-materials/document-chunks.ts
+          grep -q 'const dedupPromise = checkDuplicate' lib/student-materials/processing-service.ts
+
+      - name: Commit changes
+        run: |
+          git config user.name 'Gonza390'
+          git config user.email 'olmosgonza69@gmail.com'
+          git add components/ClientLayoutClient.tsx app/configuracion/page.tsx lib/student-materials/pedagogy-ai.ts lib/student-materials/document-chunks.ts lib/student-materials/processing-service.ts
+          git commit -m 'feat: improve navbar, pdf processing and profile saves'
+          git push origin HEAD:feat/navbar-pdf-profile-20260825
