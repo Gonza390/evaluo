@@ -76,6 +76,8 @@ const universityRequestFormSource = readFileSync(
 );
 const nextConfigSource = readFileSync(resolve('next.config.mjs'), 'utf8');
 const pdfRenderSource = readFileSync(resolve('lib/student-materials/pdf-render.ts'), 'utf8');
+const footerHomeSource = readFileSync(resolve('components/footer-home.tsx'), 'utf8');
+const footerSource = readFileSync(resolve('components/footer.tsx'), 'utf8');
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
 assert.match(
@@ -136,5 +138,12 @@ assert.match(pdfRenderSource, /canvasFactory\.create/);
 assert.match(pdfRenderSource, /canvasFactory\.destroy/);
 assert.doesNotMatch(pdfRenderSource, /from ['"]canvas['"]/);
 assert.doesNotMatch(pdfRenderSource, /createRequire/);
+
+for (const source of [footerHomeSource, footerSource]) {
+  assert.ok(source.includes('https://www.instagram.com/evaluo.app/'));
+  assert.ok(source.includes('https://www.linkedin.com/company/evaluo-ar/'));
+  assert.doesNotMatch(source, /https:\/\/(www\.)?tiktok\.com/);
+  assert.doesNotMatch(source, /https:\/\/(www\.)?youtube\.com/);
+}
 
 console.log('Route smoke tests passed.');
