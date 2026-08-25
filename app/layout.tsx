@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import SessionIdleGuard from '@/components/SessionIdleGuard';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-AR" className={inter.className}>
       <body className="bg-background text-foreground min-h-screen text-[0.92rem]">
+        <SessionIdleGuard />
         {children}
         <SpeedInsights />
       </body>
