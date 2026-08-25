@@ -8,6 +8,7 @@ import {
   claimStudentMaterialJob,
   enqueueStudentMaterialJob,
   failStudentMaterialJob,
+  recoverStaleStudentMaterialJobs,
 } from '@/lib/student-material-jobs';
 import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -352,6 +353,8 @@ export async function getStudentMaterialProcessingStateAction(
       return null;
     }
     const user = await requireAuthenticatedUser();
+    const admin = createAdminClient();
+    await recoverStaleStudentMaterialJobs(admin, materialId);
     const supabase = await createClientServer();
 
     const { data, error } = await supabase
