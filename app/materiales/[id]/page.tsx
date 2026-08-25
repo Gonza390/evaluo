@@ -1,8 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { FileText } from 'lucide-react';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
 import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
+import { StudentMaterialShareControl } from '@/components/student-material-share-control';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { hasPremiumAccess } from '@/lib/premium';
@@ -10,6 +12,8 @@ import { getMateriaRoute } from '@/lib/routes';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import { recoverStaleStudentMaterialJobs } from '@/lib/student-material-jobs';
 import { isUuid } from '@/lib/uuid';
+import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildShareCardPath } from '@/lib/share-card';
 import {
   buildPedagogicalArtifacts,
   ensureStudentMaterialStudyArtifacts,
@@ -19,6 +23,10 @@ import { createClientServer } from '@/lib/supabase-server';
 type PageProps = {
   params: Promise<{ id: string }>;
 };
+
+function resolveMaterialId(routeValue: string) {
+  return parseSeoEntitySlug(routeValue).id;
+}
 
 function normalizeMaterialVisibility(value: string | null | undefined): 'private' | 'shared' {
   return value === 'private' ? 'private' : 'shared';
@@ -35,10 +43,78 @@ function isMissingStudentMaterialsTableError(error: unknown) {
   return code === '42P01' || message.toLowerCase().includes('student_materials');
 }
 
-export default async function StudentMaterialViewerPage({ params }: PageProps) {
-  const { id } = await params;
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id: routeValue } = await params;
+  const materialId = resolveMaterialId(routeValue);
 
-  if (!isUuid(id)) {
+  const fallback: Metadata = {
+    title: 'Material de estudio',
+    description: 'Material de estudio preparado en Evaluo.',
+    robots: { index: false, follow: false },
+  };
+
+  if (!isUuid(materialId)) return fallback;
+
+  try {
+    const supabase = await createClientServer();
+    const { data: material } = await supabase
+      .from('student_materials')
+      .select('id, title, materia_id, carrera_id, universidad_id, visibility, processing_status, page_count')
+      .eq('id', materialId)
+      .maybeSingle();
+
+    if (!material || material.visibility !== 'shared' || material.processing_status !== 'ready') {
+      return fallback;
+    }
+
+    const admin = createAdminClient();
+    const [{ data: carrera }, { data: universidad }, { data: materia }] = await Promise.all([
+      admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
+      admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
+      admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
+    ]);
+
+    const canonicalHref = `/materiales/${buildSeoEntitySlug(material.title, material.id)}`;
+    const context = [materia?.nombre, carrera?.nombre, universidad?.nombre].filter(Boolean).join(' · ');
+    const pageDetail = material.page_count ? `${material.page_count} páginas · PDF, resumen y glosario` : 'PDF, resumen y glosario';
+    const description = materia?.nombre
+      ? `Material de ${materia.nombre} compartido en Evaluo. Abrí el PDF procesado junto con su resumen y glosario.`
+      : 'Material de estudio compartido en Evaluo con PDF procesado, resumen y glosario.';
+    const socialImage = buildShareCardPath({
+      kind: 'material',
+      title: material.title,
+      subtitle: context || 'Material de estudio compartido',
+      detail: pageDetail,
+    });
+
+    return {
+      title: material.title,
+      description,
+      alternates: { canonical: canonicalHref },
+      robots: { index: false, follow: false },
+      openGraph: {
+        title: `${material.title} | Evaluo`,
+        description,
+        url: canonicalHref,
+        images: [{ url: socialImage, width: 1200, height: 630, alt: `${material.title} en Evaluo` }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${material.title} | Evaluo`,
+        description,
+        images: [socialImage],
+      },
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export default async function StudentMaterialViewerPage({ params }: PageProps) {
+  const { id: routeValue } = await params;
+  const materialId = resolveMaterialId(routeValue);
+
+  if (!isUuid(materialId)) {
     notFound();
   }
 
@@ -53,14 +129,14 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
     // Vercel puede cortar un worker largo antes de que llegue a ejecutar su catch.
     // Antes de mostrar el estado, liberamos cualquier lease vencido y reflejamos
     // el fallo en student_materials para que el usuario pueda reintentarlo.
-    await recoverStaleStudentMaterialJobs(admin, id);
+    await recoverStaleStudentMaterialJobs(admin, materialId);
 
     const { data: material, error } = await supabase
       .from('student_materials')
       .select(
         'id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path, page_count, visibility, created_at, processing_status, processing_stage, processing_progress, processing_message, processing_error'
       )
-      .eq('id', id)
+      .eq('id', materialId)
       .maybeSingle();
 
     if (error) {
@@ -69,6 +145,11 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     if (!material) {
       notFound();
+    }
+
+    const canonicalSegment = buildSeoEntitySlug(material.title, material.id);
+    if (routeValue.includes('--') && routeValue !== canonicalSegment) {
+      redirect(`/materiales/${canonicalSegment}`);
     }
 
     const [{ data: carrera }, { data: universidad }, { data: materia }, signedUrlResult] =
@@ -231,29 +312,42 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       })),
     });
 
+    const visibility = normalizeMaterialVisibility(material.visibility);
+    const sharePath = `/materiales/${canonicalSegment}`;
+
     return (
-      <MaterialStudyWorkspace
-        backHref={
-          isOwner
-            ? '/dashboard/materiales'
-            : getMateriaRoute(material.materia_id, material.carrera_id)
-        }
-        canRegenerate={canRegenerate}
-        carreraName={carrera?.nombre ?? 'Carrera'}
-        fileName={material.file_name}
-        isPremium={isPremium}
-        materialId={material.id}
-        isOwner={isOwner}
-        materiaName={materia?.nombre ?? 'Materia'}
-        pageCount={material.page_count}
-        title={material.title}
-        universidadName={universidad?.nombre ?? 'Universidad'}
-        viewerUrl={viewerUrl}
-        visibility={normalizeMaterialVisibility(material.visibility)}
-        studyGlossary={studyGlossary}
-        studySummary={studySummary}
-        pedagogicalArtifacts={pedagogicalArtifacts}
-      />
+      <>
+        {isOwner ? (
+          <StudentMaterialShareControl
+            materialId={material.id}
+            title={material.title}
+            sharePath={sharePath}
+            initialVisibility={visibility}
+          />
+        ) : null}
+        <MaterialStudyWorkspace
+          backHref={
+            isOwner
+              ? '/dashboard/materiales'
+              : getMateriaRoute(material.materia_id, material.carrera_id)
+          }
+          canRegenerate={canRegenerate}
+          carreraName={carrera?.nombre ?? 'Carrera'}
+          fileName={material.file_name}
+          isPremium={isPremium}
+          materialId={material.id}
+          isOwner={isOwner}
+          materiaName={materia?.nombre ?? 'Materia'}
+          pageCount={material.page_count}
+          title={material.title}
+          universidadName={universidad?.nombre ?? 'Universidad'}
+          viewerUrl={viewerUrl}
+          visibility={visibility}
+          studyGlossary={studyGlossary}
+          studySummary={studySummary}
+          pedagogicalArtifacts={pedagogicalArtifacts}
+        />
+      </>
     );
   } catch (error) {
     if (!isMissingStudentMaterialsTableError(error)) {
