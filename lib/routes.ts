@@ -1,9 +1,38 @@
+import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+
 export function getUniversityRoute(universityId: string) {
   return `/universidad/${universityId}`;
 }
 
 export function getCareerRoute(careerId: string) {
   return `/materias?carreraId=${careerId}`;
+}
+
+function getClientMateriaRouteSegment(materiaId: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return materiaId;
+  }
+
+  const prefix = '/explorar/materia/';
+  if (!window.location.pathname.startsWith(prefix)) {
+    return materiaId;
+  }
+
+  const currentSegment = decodeURIComponent(
+    window.location.pathname.slice(prefix.length).split('/')[0] ?? ''
+  );
+  const currentMateriaId = parseSeoEntitySlug(currentSegment).id;
+
+  if (currentMateriaId !== materiaId) {
+    return materiaId;
+  }
+
+  if (currentSegment.includes('--')) {
+    return currentSegment;
+  }
+
+  const materiaNombre = document.querySelector('h1')?.textContent?.trim();
+  return materiaNombre ? buildSeoEntitySlug(materiaNombre, materiaId) : materiaId;
 }
 
 export function getMateriaRoute(materiaId: string, carreraId?: string | null) {
@@ -13,8 +42,11 @@ export function getMateriaRoute(materiaId: string, carreraId?: string | null) {
     params.set('carreraId', carreraId);
   }
 
+  const routeSegment = getClientMateriaRouteSegment(materiaId);
   const query = params.toString();
-  return query ? `/explorar/materia/${materiaId}?${query}` : `/explorar/materia/${materiaId}`;
+  return query
+    ? `/explorar/materia/${routeSegment}?${query}`
+    : `/explorar/materia/${routeSegment}`;
 }
 
 export function getDashboardMateriaRoute(materiaId: string) {
