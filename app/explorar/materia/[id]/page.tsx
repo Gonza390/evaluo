@@ -5,7 +5,8 @@ import { getCanonicalMateriaId } from '@/lib/materia-aliases';
 import { isUuid } from '@/lib/uuid';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildLearningResourceJsonLd } from '@/lib/seo';
+import { SeoBreadcrumbs } from '@/components/seo/SeoBreadcrumbs';
+import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildShareCardPath } from '@/lib/share-card';
@@ -165,13 +166,29 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
   return (
     <>
       <JsonLd
-        data={buildLearningResourceJsonLd({
-          name: bootstrap.materiaNombre,
-          universityName: bootstrap.universidadNombre,
-          careerName: bootstrap.carreraNombre,
-          url: canonicalHref,
-        })}
+        data={[
+          buildBreadcrumbJsonLd([
+            { name: 'Inicio', path: '/' },
+            { name: 'Explorar', path: '/explorar' },
+            { name: bootstrap.materiaNombre, path: canonicalHref },
+          ]),
+          buildLearningResourceJsonLd({
+            name: bootstrap.materiaNombre,
+            universityName: bootstrap.universidadNombre,
+            careerName: bootstrap.carreraNombre,
+            url: canonicalHref,
+          }),
+        ]}
       />
+      <div className="mx-auto w-full max-w-[1240px] px-4 pt-5 sm:px-8">
+        <SeoBreadcrumbs
+          items={[
+            { name: 'Inicio', href: '/' },
+            { name: 'Explorar', href: '/explorar' },
+            { name: bootstrap.materiaNombre },
+          ]}
+        />
+      </div>
       <MateriaContent
         materiaId={materiaId}
         materiaNombre={bootstrap.materiaNombre}
