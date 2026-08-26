@@ -331,15 +331,6 @@ export function StudentMaterialFlashcards({
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            onClick={startSession}
-            className="rounded-xl"
-          >
-            <RotateCcw className="h-4 w-4" /> Reordenar
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
             size="icon"
             onClick={() => setIsFullscreen((value) => !value)}
             aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}

@@ -8,6 +8,7 @@ import { createPublicClient } from '@/lib/supabase-public';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
+import { buildShareCardPath } from '@/lib/share-card';
 
 export const revalidate = 600;
 
@@ -135,6 +136,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonicalHref = buildPregunteroHref(data.materiaNombre, data.materiaId);
   const description = buildPregunteroDescription(data);
   const socialTitle = `Preguntero de ${data.materiaNombre} | Evaluo`;
+  const socialImage = buildShareCardPath({
+    kind: 'preguntero',
+    title: `Preguntero de ${data.materiaNombre}`,
+    subtitle: [data.carreraNombre, data.universidadNombre].filter(Boolean).join(' · ') || 'Práctica universitaria',
+    detail:
+      data.totalPreguntas > 0
+        ? `${data.totalPreguntas.toLocaleString('es-AR')} preguntas disponibles para practicar`
+        : 'Preguntas y simuladores para practicar',
+  });
 
   return {
     title: `Preguntero de ${data.materiaNombre}`,
@@ -148,13 +158,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: socialTitle,
       description,
       url: canonicalHref,
-      images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+      images: [{ url: socialImage, width: 1200, height: 630, alt: `Preguntero de ${data.materiaNombre} en Evaluo` }],
     },
     twitter: {
       card: 'summary_large_image',
       title: socialTitle,
       description,
-      images: ['/opengraph-image.png'],
+      images: [socialImage],
     },
   };
 }

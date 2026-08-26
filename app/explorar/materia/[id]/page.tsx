@@ -9,6 +9,7 @@ import { SeoBreadcrumbs } from '@/components/seo/SeoBreadcrumbs';
 import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildShareCardPath } from '@/lib/share-card';
 
 const MateriaContent = dynamic(() => import('./materia-content'), {
   loading: () => (
@@ -67,11 +68,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ]);
   const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
   const carreraNombre = bootstrap.carreraNombre?.trim();
+  const universidadNombre = bootstrap.universidadNombre?.trim();
   const canonicalHref = `/explorar/materia/${buildSeoEntitySlug(materiaNombre, canonicalMateriaId)}`;
   const description = carreraNombre
     ? `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} de ${carreraNombre} en Evaluo.`
     : `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`;
   const socialTitle = `${materiaNombre} | Evaluo`;
+  const socialImage = buildShareCardPath({
+    kind: 'materia',
+    title: materiaNombre,
+    subtitle: [carreraNombre, universidadNombre].filter(Boolean).join(' · ') || 'Recursos de estudio',
+    detail: 'Recursos, pregunteros y simuladores en un solo lugar',
+  });
 
   return {
     title: `Guía y recursos de ${materiaNombre}`,
@@ -85,13 +93,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         ? `Recursos y actividades para estudiar ${materiaNombre} en ${carreraNombre}.`
         : `Recursos y actividades para estudiar ${materiaNombre} en Evaluo.`,
       url: canonicalHref,
-      images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+      images: [{ url: socialImage, width: 1200, height: 630, alt: `${materiaNombre} en Evaluo` }],
     },
     twitter: {
       card: 'summary_large_image',
       title: socialTitle,
       description,
-      images: ['/opengraph-image.png'],
+      images: [socialImage],
     },
     robots: {
       index: bootstrap.materiaFound !== false && contentSignals.hasAcademicContent,
