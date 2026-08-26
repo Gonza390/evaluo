@@ -98,6 +98,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
   const availableMaterialCount = contentSignals.summaryCount + contentSignals.resourceCount;
   const availableItemsCount = availableMaterialCount + contentSignals.questionCount;
   const hasStudyMaterials = availableMaterialCount > 0;
+  const hasSummaries = contentSignals.summaryCount > 0;
 
   const faqItems = [
     {
@@ -113,8 +114,8 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
     {
       question: `¿Hay resúmenes o materiales de ${materiaNombre}?`,
       answer: hasStudyMaterials
-        ? `Sí. Actualmente hay ${availableMaterialCount.toLocaleString('es-AR')} materiales de estudio disponibles entre resúmenes y recursos de ${materiaNombre}.`
-        : `Todavía no hay resúmenes o recursos públicos disponibles para ${materiaNombre}. La página se mantiene fuera del índice de Google hasta contar con contenido académico útil.`,
+        ? `Sí. Actualmente hay ${availableMaterialCount.toLocaleString('es-AR')} materiales de estudio disponibles entre resúmenes y otros recursos de ${materiaNombre}.`
+        : `Todavía no hay resúmenes o recursos públicos disponibles para ${materiaNombre}. Cuando se publiquen, aparecerán en esta página.`,
     },
     {
       question: `¿Cómo preparar un parcial de ${materiaNombre}?`,
@@ -124,7 +125,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
       question: `¿Cuánto material hay disponible de ${materiaNombre}?`,
       answer: availableItemsCount > 0
         ? `Evaluo reúne actualmente ${availableItemsCount.toLocaleString('es-AR')} elementos públicos para ${materiaNombre}, contando preguntas, resúmenes y otros recursos.`
-        : `Todavía no hay material académico público suficiente para ${materiaNombre}. Esta landing no se indexa hasta que exista contenido útil para estudiar.`,
+        : `Todavía no hay material académico público disponible para ${materiaNombre}. El catálogo se actualiza a medida que se incorporan nuevos contenidos.`,
     },
   ];
 
@@ -272,7 +273,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             })}
           </div>
 
-          {(contentSignals.hasQuestions || contentSignals.hasSummaries) && (
+          {(contentSignals.hasQuestions || hasSummaries) && (
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               {contentSignals.hasQuestions ? (
                 <Link
@@ -282,12 +283,12 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                   Ver preguntas de {materiaNombre}
                 </Link>
               ) : null}
-              {contentSignals.hasSummaries ? (
+              {hasSummaries ? (
                 <Link
                   href={`/resumenes/${materiaSlug}`}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
                 >
-                  Ver resúmenes y materiales
+                  Ver resúmenes
                 </Link>
               ) : null}
             </div>
