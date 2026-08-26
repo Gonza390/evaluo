@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { unstable_cache as nextCache } from 'next/cache';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { FileText, CheckCircle2, PlayCircle, Sparkles } from 'lucide-react';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { CheckCircle2, FileText, HelpCircle, Library, PlayCircle, Sparkles } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildCourseJsonLd, buildFaqJsonLd } from '@/lib/seo';
-import { parseSeoEntitySlug } from '@/lib/seo-intents';
+import { SeoBreadcrumbs } from '@/components/seo/SeoBreadcrumbs';
+import { buildBreadcrumbJsonLd, buildCourseJsonLd, buildFaqJsonLd } from '@/lib/seo';
+import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { createPublicClient } from '@/lib/supabase-public';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 
@@ -45,20 +46,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ]);
 
   if (!materia) {
-    return { title: 'Materia no encontrada' };
+    return {
+      title: 'Materia no encontrada',
+      robots: { index: false, follow: false },
+    };
   }
+
+  const canonicalSlug = buildSeoEntitySlug(materia.nombre, materia.id);
+  const canonicalHref = `/landings/estudiar/${canonicalSlug}`;
+  const description = `Conocé un método para preparar ${materia.nombre}, organizar el repaso y pasar de la teoría a la práctica con los materiales disponibles en Evaluo.`;
+  const socialTitle = `Cómo estudiar ${materia.nombre} | Evaluo`;
 
   return {
     title: `Cómo estudiar ${materia.nombre}: guía práctica`,
-    description: `Conocé un método para preparar ${materia.nombre}, organizar el repaso y pasar de la teoría a la práctica con Evaluo.`,
+    description,
     alternates: {
-      canonical: `/landings/estudiar/${resolvedParams.materia}`,
+      canonical: canonicalHref,
     },
     openGraph: {
-      title: `Cómo estudiar ${materia.nombre} | Evaluo`,
-      description: `Guía práctica para organizar el estudio de ${materia.nombre} y preparar el próximo parcial.`,
-      url: `/landings/estudiar/${resolvedParams.materia}`,
+      title: socialTitle,
+      description,
+      url: canonicalHref,
       images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: socialTitle,
+      description,
+      images: ['/opengraph-image.png'],
     },
     robots: {
       index: contentSignals.hasAcademicContent,
@@ -71,35 +86,56 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
   const resolvedParams = await params;
   const { id: materiaId } = parseSeoEntitySlug(resolvedParams.materia);
 
-  const materia = await getLandingMateria(materiaId);
+  const [materia, contentSignals] = await Promise.all([
+    getLandingMateria(materiaId),
+    getMateriaSeoContentSignals(materiaId),
+  ]);
 
   if (!materia) {
-    redirect('/explorar');
+    notFound();
   }
 
   const materiaNombre = materia.nombre;
-  const materiaSlug = resolvedParams.materia;
+  const materiaSlug = buildSeoEntitySlug(materiaNombre, materia.id);
+  const canonicalHref = `/landings/estudiar/${materiaSlug}`;
+  const materiaHref = `/explorar/materia/${materiaSlug}`;
+
+  if (resolvedParams.materia !== materiaSlug) {
+    permanentRedirect(canonicalHref);
+  }
+
+  const availableMaterialCount = contentSignals.summaryCount + contentSignals.resourceCount;
+  const availableItemsCount = availableMaterialCount + contentSignals.questionCount;
+  const hasStudyMaterials = availableMaterialCount > 0;
 
   const faqItems = [
     {
       question: `¿Cómo estudiar ${materiaNombre}?`,
-      answer: `Para estudiar ${materiaNombre} de forma efectiva, empezá por leer los resúmenes de los temas principales, después practicá con pregunteros y finalizá con un simulacro de examen. En Evaluo tenés todo ordenado en un solo lugar.`,
+      answer: `Para estudiar ${materiaNombre}, empezá por ordenar los conceptos principales, repasá el material disponible y después practicá activamente. Evaluo reúne los recursos publicados para esta materia en un mismo recorrido.`,
     },
     {
-      question: `¿Dónde encontrar parciales resueltos de ${materiaNombre}?`,
-      answer: `En Evaluo podés encontrar parciales resueltos y pregunteros específicos de ${materiaNombre}. Explorá el catálogo para encontrar el material de tu universidad y tu cátedra.`,
+      question: `¿Hay preguntas para practicar ${materiaNombre}?`,
+      answer:
+        contentSignals.questionCount > 0
+          ? `Sí. Actualmente Evaluo tiene ${contentSignals.questionCount.toLocaleString('es-AR')} preguntas disponibles para practicar ${materiaNombre}.`
+          : `Todavía no hay preguntas públicas disponibles para ${materiaNombre}. Podés revisar los otros materiales publicados y volver a consultar cuando se agreguen nuevas prácticas.`,
     },
     {
-      question: `¿Qué temas se estudian en ${materiaNombre}?`,
-      answer: `Los temas de ${materiaNombre} varían según la universidad y la carrera. Encontrá el contenido específico de tu materia en Evaluo, donde el material está adaptado a tu plan de estudio.`,
+      question: `¿Hay resúmenes o materiales de ${materiaNombre}?`,
+      answer: hasStudyMaterials
+        ? `Sí. Actualmente hay ${availableMaterialCount.toLocaleString('es-AR')} materiales de estudio disponibles entre resúmenes y otros recursos de ${materiaNombre}.`
+        : `Todavía no hay resúmenes o recursos públicos disponibles para ${materiaNombre}. Cuando se publiquen, aparecerán en esta página.`,
     },
     {
       question: `¿Cómo preparar un parcial de ${materiaNombre}?`,
-      answer: `La mejor forma de preparar un parcial de ${materiaNombre} es practicar con preguntas reales, revisar tus errores y reforzar los temas débiles. Los simuladores de Evaluo te ayudan a medir tu nivel antes del examen.`,
+      answer: `Dividí el estudio en bloques: comprensión, repaso y práctica. Cuando haya preguntas disponibles, usalas para detectar errores y reforzar los temas que todavía no dominás.`,
     },
     {
-      question: `¿Hay ejercicios resueltos de ${materiaNombre}?`,
-      answer: `Sí, en Evaluo podés encontrar ejercicios y preguntas resueltas de ${materiaNombre}. Cada respuesta incluye una explicación paso a paso para que entiendas el proceso.`,
+      question: `¿Cuánto material hay disponible de ${materiaNombre}?`,
+      answer:
+        availableItemsCount > 0
+          ? `Evaluo reúne actualmente ${availableItemsCount.toLocaleString('es-AR')} elementos públicos para ${materiaNombre}, contando preguntas, resúmenes y otros recursos.`
+          : `Todavía no hay material académico público disponible para ${materiaNombre}. El catálogo se actualiza a medida que se incorporan nuevos contenidos.`,
     },
   ];
 
@@ -107,22 +143,42 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
     <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <JsonLd
         data={[
+          buildBreadcrumbJsonLd([
+            { name: 'Inicio', path: '/' },
+            { name: 'Explorar', path: '/explorar' },
+            { name: materiaNombre, path: materiaHref },
+            { name: `Cómo estudiar ${materiaNombre}`, path: canonicalHref },
+          ]),
           buildCourseJsonLd({
             name: `Estudiar ${materiaNombre}`,
-            description: `Parciales resueltos, ejercicios y resúmenes de ${materiaNombre}. Material de estudio ordenado con Evaluo.`,
-            url: `/landings/estudiar/${materiaSlug}`,
+            description:
+              availableItemsCount > 0
+                ? `Guía de estudio de ${materiaNombre} con ${availableItemsCount.toLocaleString('es-AR')} elementos académicos disponibles en Evaluo.`
+                : `Guía práctica para organizar el estudio de ${materiaNombre} con Evaluo.`,
+            url: canonicalHref,
           }),
           buildFaqJsonLd(faqItems),
         ]}
       />
 
+      <div className="mx-auto w-full max-w-[1240px] px-4 pt-5 sm:px-8">
+        <SeoBreadcrumbs
+          items={[
+            { name: 'Inicio', href: '/' },
+            { name: 'Explorar', href: '/explorar' },
+            { name: materiaNombre, href: materiaHref },
+            { name: 'Guía de estudio' },
+          ]}
+        />
+      </div>
+
       {/* HERO */}
       <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_25%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
-        <div className="mx-auto w-full max-w-[1240px] px-4 pt-10 pb-16 sm:px-8 sm:pt-20 sm:pb-24">
+        <div className="mx-auto w-full max-w-[1240px] px-4 pt-10 pb-16 sm:px-8 sm:pt-16 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50/80 px-3 py-1.5 text-[12px] font-bold text-indigo-700 ring-1 ring-indigo-200/50">
               <FileText className="h-4 w-4 text-indigo-600" />
-              Material de estudio
+              Guía de estudio
             </span>
 
             <h1 className="text-foreground mt-4 text-[2rem] leading-[1.04] font-bold tracking-[-0.05em] sm:text-5xl lg:text-[56px]">
@@ -130,18 +186,43 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             </h1>
 
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:mt-5 sm:text-base sm:leading-8">
-              Organizá el repaso de {materiaNombre}, practicá lo aprendido y prepará tu próximo
-              parcial con un recorrido claro.
+              Organizá el repaso de {materiaNombre}, usá el material realmente disponible y prepará
+              tu próximo parcial con un recorrido claro.
             </p>
+
+            {availableItemsCount > 0 ? (
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
+                {contentSignals.questionCount > 0 ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                    <HelpCircle className="h-4 w-4 text-indigo-600" />
+                    {contentSignals.questionCount.toLocaleString('es-AR')} preguntas
+                  </span>
+                ) : null}
+                {availableMaterialCount > 0 ? (
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700">
+                    <Library className="h-4 w-4 text-indigo-600" />
+                    {availableMaterialCount.toLocaleString('es-AR')} materiales
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
-                href={`/explorar/materia/${materiaId}`}
+                href={materiaHref}
                 className="from-brand to-brand-2 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_32px_rgba(37,99,235,0.26)] sm:h-13 sm:px-8"
               >
                 <PlayCircle className="h-5 w-5" />
                 Ir a la materia
               </Link>
+              {contentSignals.hasQuestions ? (
+                <Link
+                  href={`/pregunteros/${materiaSlug}`}
+                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700 sm:h-13"
+                >
+                  Practicar preguntas
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
@@ -153,10 +234,10 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
           <div className="mx-auto max-w-3xl text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
               <Sparkles className="h-3.5 w-3.5" />
-              Todo lo que necesitás
+              Recorrido recomendado
             </span>
             <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              ¿Qué encontrás en {materiaNombre}?
+              ¿Cómo aprovechar {materiaNombre}?
             </h2>
           </div>
 
@@ -165,17 +246,23 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
               {
                 icon: FileText,
                 title: 'Comprendé la teoría',
-                description: `Revisá los recursos disponibles de ${materiaNombre} y ordená los conceptos antes de practicar.`,
+                description:
+                  availableMaterialCount > 0
+                    ? `Revisá los ${availableMaterialCount.toLocaleString('es-AR')} materiales disponibles de ${materiaNombre} y ordená los conceptos antes de practicar.`
+                    : `Empezá por ordenar los conceptos principales de ${materiaNombre} y revisá el material cuando esté disponible.`,
               },
               {
                 icon: CheckCircle2,
                 title: 'Practicá activamente',
-                description: `Usá las preguntas disponibles de ${materiaNombre} para comprobar qué recordás y qué necesitás reforzar.`,
+                description:
+                  contentSignals.questionCount > 0
+                    ? `Usá las ${contentSignals.questionCount.toLocaleString('es-AR')} preguntas disponibles de ${materiaNombre} para comprobar qué recordás y qué necesitás reforzar.`
+                    : `Cuando se publiquen preguntas de ${materiaNombre}, usalas para comprobar qué recordás y qué necesitás reforzar.`,
               },
               {
                 icon: Sparkles,
                 title: 'Medí tu preparación',
-                description: `Completá actividades de práctica y revisá tus errores antes de volver a intentarlo.`,
+                description: `Volvé sobre tus errores, repetí los temas difíciles y comprobá tu progreso antes del parcial.`,
               },
             ].map((item) => {
               const Icon = item.icon;
@@ -195,6 +282,27 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
               );
             })}
           </div>
+
+          {(contentSignals.hasQuestions || contentSignals.hasSummaries) && (
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              {contentSignals.hasQuestions ? (
+                <Link
+                  href={`/pregunteros/${materiaSlug}`}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                >
+                  Ver preguntas de {materiaNombre}
+                </Link>
+              ) : null}
+              {contentSignals.hasSummaries ? (
+                <Link
+                  href={`/resumenes/${materiaSlug}`}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                >
+                  Ver resúmenes
+                </Link>
+              ) : null}
+            </div>
+          )}
         </div>
       </section>
 
@@ -210,24 +318,24 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
           <div className="mt-12 grid gap-6 sm:grid-cols-2">
             {[
               {
-                title: 'Empezá por lo básico',
+                title: 'Empezá por los conceptos centrales',
                 description:
-                  'Leé el resumen de cada tema antes de intentar resolver ejercicios. Asegurate de entender los conceptos fundamentales.',
+                  'Identificá definiciones, relaciones y temas que se repiten. Después conectalos con el material disponible de la materia.',
               },
               {
-                title: 'Practicá con preguntas',
+                title: 'Practicá recuperación activa',
                 description:
-                  'Respondé los pregunteros para verificar cuánto retuviste. Si te equivocás, leé la explicación detenidamente.',
+                  'Intentá responder sin mirar el material. Si hay preguntas disponibles en Evaluo, usalas para detectar qué temas necesitás repasar.',
               },
               {
                 title: 'Repetí los temas difíciles',
                 description:
-                  'No pases de largo en los temas que te cuestan. Volvé a leer el resumen y practicá más preguntas de ese tema.',
+                  'No pases de largo en los temas que te cuestan. Volvé al material, reformulá los conceptos y probá explicarlos con tus propias palabras.',
               },
               {
-                title: 'Simulá el examen',
+                title: 'Comprobá tu avance',
                 description:
-                  'Cuando te sientas preparado, hacé un simulacro completo para medir tu nivel y ganar confianza antes del día del parcial.',
+                  'Antes del parcial, hacé una práctica completa con el contenido disponible y registrá qué errores se repiten para enfocar el último repaso.',
               },
             ].map((item) => (
               <div
@@ -274,15 +382,16 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,rgba(99,102,241,0.03)_0%,rgba(37,99,235,0.03)_100%)] p-8 text-center shadow-xl md:p-14">
             <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl">
-              Entrá a {materiaNombre} y empezá a estudiar
+              Entrá a {materiaNombre} y seguí estudiando
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600">
-              Accedé a resúmenes, pregunteros y simuladores de {materiaNombre}. Todo el material que
-              necesitás para aprobar tu parcial.
+              {availableItemsCount > 0
+                ? `Accedé al contenido público disponible de ${materiaNombre} y usá las herramientas de Evaluo para organizar tu práctica.`
+                : `Entrá al espacio de ${materiaNombre} y revisá las herramientas y contenidos disponibles a medida que se incorporan.`}
             </p>
             <div className="mt-8">
               <Link
-                href={`/explorar/materia/${materiaId}`}
+                href={materiaHref}
                 className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-8 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60"
               >
                 <PlayCircle className="h-4.5 w-4.5" />
