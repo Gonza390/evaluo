@@ -5,7 +5,8 @@ import { getCanonicalMateriaId } from '@/lib/materia-aliases';
 import { isUuid } from '@/lib/uuid';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildLearningResourceJsonLd } from '@/lib/seo';
+import { SeoBreadcrumbs } from '@/components/seo/SeoBreadcrumbs';
+import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 
 const MateriaContent = dynamic(() => import('./materia-content'), {
@@ -39,22 +40,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   ]);
   const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
   const carreraNombre = bootstrap.carreraNombre?.trim();
+  const canonicalHref = `/explorar/materia/${canonicalMateriaId}`;
+  const description = carreraNombre
+    ? `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} de ${carreraNombre} en Evaluo.`
+    : `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`;
+  const socialTitle = `Guía y recursos de ${materiaNombre} | Evaluo`;
 
   return {
     title: `Guía y recursos de ${materiaNombre}`,
-    description: carreraNombre
-      ? `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} de ${carreraNombre} en Evaluo.`
-      : `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`,
+    description,
     alternates: {
-      canonical: `/explorar/materia/${canonicalMateriaId}`,
+      canonical: canonicalHref,
     },
     openGraph: {
-      title: `Guía y recursos de ${materiaNombre} | Evaluo`,
-      description: carreraNombre
-        ? `Recursos y actividades para estudiar ${materiaNombre} en ${carreraNombre}.`
-        : `Recursos y actividades para estudiar ${materiaNombre} en Evaluo.`,
-      url: `/explorar/materia/${canonicalMateriaId}`,
+      title: socialTitle,
+      description,
+      url: canonicalHref,
       images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: socialTitle,
+      description,
+      images: ['/opengraph-image.png'],
     },
     robots: {
       index: bootstrap.materiaFound !== false && contentSignals.hasAcademicContent,
@@ -97,16 +105,34 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
     return notFound();
   }
 
+  const canonicalHref = `/explorar/materia/${materiaId}`;
+
   return (
     <>
       <JsonLd
-        data={buildLearningResourceJsonLd({
-          name: bootstrap.materiaNombre,
-          universityName: bootstrap.universidadNombre,
-          careerName: bootstrap.carreraNombre,
-          url: `/explorar/materia/${materiaId}`,
-        })}
+        data={[
+          buildBreadcrumbJsonLd([
+            { name: 'Inicio', path: '/' },
+            { name: 'Explorar', path: '/explorar' },
+            { name: bootstrap.materiaNombre, path: canonicalHref },
+          ]),
+          buildLearningResourceJsonLd({
+            name: bootstrap.materiaNombre,
+            universityName: bootstrap.universidadNombre,
+            careerName: bootstrap.carreraNombre,
+            url: canonicalHref,
+          }),
+        ]}
       />
+      <div className="mx-auto w-full max-w-[1240px] px-4 pt-5 sm:px-8">
+        <SeoBreadcrumbs
+          items={[
+            { name: 'Inicio', href: '/' },
+            { name: 'Explorar', href: '/explorar' },
+            { name: bootstrap.materiaNombre },
+          ]}
+        />
+      </div>
       <MateriaContent
         materiaId={materiaId}
         materiaNombre={bootstrap.materiaNombre}
