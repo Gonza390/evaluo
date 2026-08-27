@@ -1,0 +1,49 @@
+.dashboard-responsive {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.dashboard-responsive > *,
+.dashboard-responsive .surface-card,
+.dashboard-responsive .surface-panel,
+.dashboard-responsive [data-tour-target-tabs] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* "Tu espacio de estudio" mantiene las cuatro vistas sin forzar el ancho de la página. */
+.dashboard-responsive [data-tour-target-tabs] {
+  width: 100%;
+  justify-content: flex-start !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex-wrap: nowrap;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-responsive [data-tour-target-tabs]::-webkit-scrollbar {
+  display: none;
+}
+
+.dashboard-responsive [data-tour-target-tabs] > * {
+  flex: 0 0 auto;
+  min-width: max-content;
+}
+
+.dashboard-responsive .surface-card p,
+.dashboard-responsive .surface-card h2,
+.dashboard-responsive .surface-card h3,
+.dashboard-responsive .surface-panel p,
+.dashboard-responsive .surface-panel h2,
+.dashboard-responsive .surface-panel h3 {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 639px) {
+  .dashboard-responsive [data-tour-target-tabs] {
+    padding-inline: 0.125rem;
+  }
+}
