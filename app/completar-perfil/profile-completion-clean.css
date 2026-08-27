@@ -1,0 +1,54 @@
+.profile-completion-editorial {
+  min-height: 100%;
+  background: var(--background);
+}
+
+/* El modal vive en un portal: :has mantiene el alcance solo en esta ruta. */
+html:has(.profile-completion-editorial) [data-slot='dialog-overlay'] {
+  background: color-mix(in oklch, var(--foreground) 12%, transparent) !important;
+  backdrop-filter: none !important;
+}
+
+html:has(.profile-completion-editorial) [data-slot='dialog-content'] {
+  border: 1px solid color-mix(in oklch, var(--border) 92%, transparent) !important;
+  border-radius: 16px !important;
+  background: var(--background) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Los íconos acompañan al título; no necesitan otra tarjeta. */
+html:has(.profile-completion-editorial)
+  [data-slot='dialog-content']
+  [class*='bg-gradient-to-br'][class*='rounded-2xl'] {
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  color: var(--primary) !important;
+  box-shadow: none !important;
+}
+
+html:has(.profile-completion-editorial) [data-slot='dialog-content'] [class*='rounded-2xl'].border,
+html:has(.profile-completion-editorial) [data-slot='dialog-content'] [class*='rounded-xl'].border {
+  box-shadow: none !important;
+}
+
+html:has(.profile-completion-editorial)
+  [data-slot='dialog-content']
+  [class*='bg-gradient-to-r'][class*='from-blue-50'] {
+  background-image: none !important;
+  background-color: color-mix(in oklch, var(--primary) 6%, var(--background)) !important;
+}
+
+html:has(.profile-completion-editorial) [data-slot='dialog-content'] button {
+  box-shadow: none !important;
+}
+
+@media (max-width: 639px) {
+  html:has(.profile-completion-editorial) [data-slot='dialog-content'] {
+    max-width: calc(100% - 1rem) !important;
+    border-radius: 12px !important;
+  }
+}
