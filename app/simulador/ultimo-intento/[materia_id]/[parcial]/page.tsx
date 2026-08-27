@@ -26,8 +26,11 @@ export default async function UltimoIntentoSimuladorPage({ params }: { params: P
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center font-bold text-indigo-600">
-          Cargando simulador de tus errores...
+        <div className="flex min-h-screen items-center justify-center bg-white px-6">
+          <div className="text-center">
+            <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
+            <p className="mt-4 text-sm font-semibold text-slate-700">Preparando tu último intento...</p>
+          </div>
         </div>
       }
     >
