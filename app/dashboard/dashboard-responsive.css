@@ -12,16 +12,22 @@
   max-width: 100%;
 }
 
-/* "Tu espacio de estudio" mantiene las cuatro vistas sin forzar el ancho de la página. */
+/* "Tu espacio de estudio" se comporta como navegación editorial, no como un control encapsulado. */
 .dashboard-responsive [data-tour-target-tabs] {
   width: 100%;
+  height: auto;
   justify-content: flex-start !important;
+  gap: 1.25rem;
   overflow-x: auto;
   overflow-y: hidden;
   flex-wrap: nowrap;
   overscroll-behavior-inline: contain;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  padding: 0;
+  border-radius: 0;
+  border-bottom: 1px solid rgb(226 232 240);
+  background: transparent;
 }
 
 .dashboard-responsive [data-tour-target-tabs]::-webkit-scrollbar {
@@ -29,8 +35,28 @@
 }
 
 .dashboard-responsive [data-tour-target-tabs] > * {
+  position: relative;
   flex: 0 0 auto;
   min-width: max-content;
+  height: auto;
+  padding: 0 0 0.8rem;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: rgb(100 116 139);
+}
+
+.dashboard-responsive [data-tour-target-tabs] > [data-state='active'] {
+  color: rgb(15 23 42);
+}
+
+.dashboard-responsive [data-tour-target-tabs] > [data-state='active']::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: rgb(37 99 235);
 }
 
 .dashboard-responsive .surface-card p,
@@ -44,6 +70,6 @@
 
 @media (max-width: 639px) {
   .dashboard-responsive [data-tour-target-tabs] {
-    padding-inline: 0.125rem;
+    gap: 1rem;
   }
 }
