@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ClientLayout from '@/components/ClientLayout';
+import './dashboard-responsive.css';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -10,5 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <ClientLayout>{children}</ClientLayout>;
+  return (
+    <ClientLayout>
+      <div className="dashboard-responsive">{children}</div>
+    </ClientLayout>
+  );
 }
