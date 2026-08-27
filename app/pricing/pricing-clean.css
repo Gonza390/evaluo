@@ -1,0 +1,55 @@
+.pricing-editorial {
+  min-height: 100%;
+  background: var(--background);
+}
+
+/* El hero se apoya en tipografía y propuesta de valor, no en halos decorativos. */
+.pricing-editorial main > section:first-of-type > .absolute {
+  display: none !important;
+}
+
+.pricing-editorial main > section:first-of-type a[href='#elegir-plan'] {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Los planes siguen siendo objetos comparables, pero sin elevación. */
+.pricing-editorial article.rounded-3xl,
+.pricing-editorial [class*='rounded-3xl'] {
+  border-radius: 18px !important;
+  box-shadow: none !important;
+}
+
+.pricing-editorial .shadow-xl,
+.pricing-editorial .shadow-lg,
+.pricing-editorial .shadow-sm,
+.pricing-editorial [class*='shadow-['] {
+  box-shadow: none !important;
+}
+
+.pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden {
+  border-radius: 16px !important;
+  box-shadow: none !important;
+}
+
+.pricing-editorial button,
+.pricing-editorial a {
+  box-shadow: none !important;
+}
+
+/* Componentes de valor previos al checkout se integran al flujo general. */
+.pricing-editorial [class*='rounded-[32px]'],
+.pricing-editorial [class*='rounded-[28px]'],
+.pricing-editorial [class*='rounded-[24px]'] {
+  border-radius: 18px !important;
+}
+
+@media (max-width: 639px) {
+  .pricing-editorial article.rounded-3xl,
+  .pricing-editorial [class*='rounded-3xl'],
+  .pricing-editorial [class*='rounded-[32px]'],
+  .pricing-editorial [class*='rounded-[28px]'],
+  .pricing-editorial [class*='rounded-[24px]'] {
+    border-radius: 14px !important;
+  }
+}
