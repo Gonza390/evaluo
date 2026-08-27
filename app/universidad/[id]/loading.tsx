@@ -1,48 +1,45 @@
+function Pulse({ className }: { className: string }) {
+  return <div className={`animate-pulse bg-slate-100 ${className}`} />;
+}
+
 export default function Loading() {
   return (
-    <div className="animate-page-enter min-h-full bg-white">
-      <div className="w-full border-b border-[#E8EDF5] bg-white">
-        <div className="mx-auto flex min-h-16 max-w-7xl items-center px-4 py-3 lg:px-8">
-          <div className="h-4 w-36 animate-pulse rounded-full bg-white" />
-        </div>
-      </div>
+    <main className="min-h-full bg-white">
+      <div className="mx-auto w-full max-w-[1240px] px-4 py-7 sm:px-6 sm:py-9 lg:px-10">
+        <Pulse className="h-4 w-32 rounded-full" />
 
-      <section className="relative min-h-[220px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
-        <div className="relative mx-auto max-w-7xl px-4 py-4 sm:py-6 lg:px-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
-            <div className="hidden h-24 w-24 animate-pulse rounded-full bg-white/10 lg:block" />
-            <div className="min-w-0 flex-1 space-y-4">
-              <div className="h-10 w-72 max-w-full animate-pulse rounded-full bg-white/15" />
-              <div className="h-4 w-[32rem] max-w-full animate-pulse rounded-full bg-white/10" />
-              <div className="flex flex-wrap gap-2">
-                <div className="h-8 w-36 animate-pulse rounded-full bg-white/10" />
-                <div className="h-8 w-40 animate-pulse rounded-full bg-white/10" />
-              </div>
-              <div className="grid grid-cols-2 gap-3 xl:max-w-xl">
-                <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
-                <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
-              </div>
+        <header className="mt-7 border-b border-slate-200 pb-7 sm:pb-9">
+          <Pulse className="h-3 w-24 rounded-full" />
+          <Pulse className="mt-3 h-10 w-80 max-w-full rounded-lg" />
+          <Pulse className="mt-4 h-4 w-[32rem] max-w-full rounded-full" />
+          <div className="mt-6 flex flex-wrap gap-5">
+            <Pulse className="h-4 w-28 rounded-full" />
+            <Pulse className="h-4 w-28 rounded-full" />
+            <Pulse className="h-4 w-32 rounded-full" />
+          </div>
+        </header>
+
+        <div className="flex gap-6 border-b border-slate-200 pt-5">
+          <Pulse className="h-8 w-20 rounded-md" />
+          <Pulse className="h-8 w-24 rounded-md" />
+        </div>
+
+        <section className="py-8 sm:py-10">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <Pulse className="h-6 w-44 rounded-md" />
+              <Pulse className="mt-2 h-3 w-64 max-w-full rounded-full" />
             </div>
+            <Pulse className="h-10 w-full rounded-lg sm:w-64" />
           </div>
-        </div>
-      </section>
 
-      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-5 lg:px-10">
-        <section className="surface-panel px-4 py-4 sm:px-6 sm:py-6">
-          <div className="flex items-center gap-2 border-b border-[#E8EDF5] pb-3">
-            <div className="h-10 w-28 animate-pulse rounded-xl bg-white" />
-            <div className="h-10 w-24 animate-pulse rounded-xl bg-white" />
-          </div>
-          <div className="grid grid-cols-1 gap-4 pt-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className="surface-card h-48 animate-pulse rounded-[28px] bg-white/90"
-              />
+              <div key={index} className="h-48 animate-pulse rounded-[28px] border border-slate-200 bg-slate-50" />
             ))}
           </div>
         </section>
       </div>
-    </div>
+    </main>
   );
 }
