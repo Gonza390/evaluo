@@ -1,0 +1,295 @@
+name: Apply live demo explanation patch
+
+on:
+  push:
+    branches:
+      - 'feat/evaluo-a0fc049-next-20260826'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/evaluo-a0fc049-next-20260826
+          fetch-depth: 0
+
+      - name: Patch simulator UX
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          simulator_path = Path('components/simulador/SimuladorExamen.tsx')
+          text = simulator_path.read_text()
+
+          old = """function getParcialLabel(parcial: number) {
+            return Number(parcial) === 3 ? 'Mixto (Parcial 1 + 2)' : `Parcial ${parcial}`;
+          }
+
+          function SimulatorTourCard({
+          """
+          new = """function getParcialLabel(parcial: number) {
+            return Number(parcial) === 3 ? 'Mixto (Parcial 1 + 2)' : `Parcial ${parcial}`;
+          }
+
+          function getBriefTutorExplanation(text: string) {
+            const normalized = text.replace(/\\s+/g, ' ').trim();
+            if (!normalized) return '';
+
+            const sentences = normalized.match(/[^.!?]+[.!?]+/g) ?? [];
+            if (sentences.length > 0) {
+              const brief = sentences.slice(0, 2).join(' ').trim();
+              if (brief.length <= 560) return brief;
+            }
+
+            if (normalized.length <= 560) return normalized;
+            const clipped = normalized.slice(0, 557);
+            const lastSpace = clipped.lastIndexOf(' ');
+            return `${clipped.slice(0, lastSpace > 360 ? lastSpace : 557).trim()}…`;
+          }
+
+          function SimulatorTourCard({
+          """
+          assert old in text, 'helper insertion anchor not found'
+          text = text.replace(old, new, 1)
+
+          old = """  const [feedbackByQuestion, setFeedbackByQuestion] = useState<
+            Record<number, GradedPreguntaResult>
+          >({});
+          const gradedQuestionRef = useRef<Set<number>>(new Set());
+          """
+          new = """  const [feedbackByQuestion, setFeedbackByQuestion] = useState<
+            Record<number, GradedPreguntaResult>
+          >({});
+          const [liveExplanationByQuestion, setLiveExplanationByQuestion] = useState<
+            Record<string, string>
+          >({});
+          const [liveExplanationLoading, setLiveExplanationLoading] = useState<Record<string, boolean>>(
+            {}
+          );
+          const [liveExplanationError, setLiveExplanationError] = useState<Record<string, string>>({});
+          const liveExplanationRequestedRef = useRef<Set<string>>(new Set());
+          const gradedQuestionRef = useRef<Set<number>>(new Set());
+          """
+          assert old in text, 'live explanation state anchor not found'
+          text = text.replace(old, new, 1)
+
+          old = """  }, [estado, preguntas, resolvedDemoMode, selectedAnswers, shuffledMetaByQuestion, userId]);
+
+          const finalizarExamen = useCallback(
+          """
+          new = """  }, [estado, preguntas, resolvedDemoMode, selectedAnswers, shuffledMetaByQuestion, userId]);
+
+          // En la demo, una respuesta incorrecta recibe una explicación breve en el momento.
+          // Se genera una sola vez por pregunta y se reutiliza si el alumno vuelve hacia atrás.
+          useEffect(() => {
+            if (!resolvedDemoMode || estado !== 'playing') return;
+
+            const pregunta = preguntas[currentQuestionIndex];
+            const feedback = feedbackByQuestion[currentQuestionIndex];
+            if (!pregunta || !feedback || feedback.correct) return;
+            if (liveExplanationRequestedRef.current.has(pregunta.id)) return;
+
+            liveExplanationRequestedRef.current.add(pregunta.id);
+            setLiveExplanationLoading((prev) => ({ ...prev, [pregunta.id]: true }));
+            setLiveExplanationError((prev) => {
+              const next = { ...prev };
+              delete next[pregunta.id];
+              return next;
+            });
+
+            void withUiTimeout(
+              getWrongAnswersExplanationsDemo({
+                materia_id: materiaId,
+                parcial,
+                wrong_question_ids: [pregunta.id],
+              }),
+              EXPLANATIONS_UI_TIMEOUT_MS
+            )
+              .then((response) => {
+                if (!response.success) {
+                  throw new Error(response.message || 'No pudimos generar la explicación.');
+                }
+
+                const explanation = response.explanations?.[0]?.explicacion?.trim() ?? '';
+                if (!explanation) {
+                  throw new Error('La explicación todavía no está disponible para esta pregunta.');
+                }
+
+                setLiveExplanationByQuestion((prev) => ({
+                  ...prev,
+                  [pregunta.id]: getBriefTutorExplanation(explanation),
+                }));
+              })
+              .catch((error) => {
+                logError('simulador.liveDemoExplanation', error, {
+                  materiaId,
+                  parcial,
+                  preguntaId: pregunta.id,
+                });
+                setLiveExplanationError((prev) => ({
+                  ...prev,
+                  [pregunta.id]:
+                    error instanceof Error
+                      ? error.message
+                      : 'No pudimos generar la explicación en este momento.',
+                }));
+              })
+              .finally(() => {
+                setLiveExplanationLoading((prev) => ({ ...prev, [pregunta.id]: false }));
+              });
+          }, [
+            currentQuestionIndex,
+            estado,
+            feedbackByQuestion,
+            materiaId,
+            parcial,
+            preguntas,
+            resolvedDemoMode,
+          ]);
+
+          const finalizarExamen = useCallback(
+          """
+          assert old in text, 'live explanation effect anchor not found'
+          text = text.replace(old, new, 1)
+
+          old = """      setSelectedAnswers({});
+              setFlaggedQuestions([]);
+              setFeedbackByQuestion({});
+              setHasStarted(false);
+          """
+          new = """      setSelectedAnswers({});
+              setFlaggedQuestions([]);
+              setFeedbackByQuestion({});
+              setLiveExplanationByQuestion({});
+              setLiveExplanationLoading({});
+              setLiveExplanationError({});
+              liveExplanationRequestedRef.current.clear();
+              setHasStarted(false);
+          """
+          assert old in text, 'fresh exam reset anchor not found'
+          text = text.replace(old, new, 1)
+
+          old = """            </div>
+
+                    <div
+                      ref={navigationTourTargetRef}
+          """
+          new = """            </div>
+
+                    {preguntaActual &&
+                    feedbackByQuestion[currentQuestionIndex] &&
+                    !feedbackByQuestion[currentQuestionIndex].correct ? (
+                      <div
+                        className=\"mt-5 rounded-2xl border border-indigo-200 bg-[linear-gradient(135deg,#EEF0FF_0%,#FFFFFF_100%)] p-4 shadow-[0_12px_28px_rgba(99,102,241,0.08)]\"
+                        role=\"status\"
+                        aria-live=\"polite\"
+                      >
+                        <div className=\"flex items-center gap-2\">
+                          <span className=\"inline-flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700\">
+                            <Sparkles className=\"h-4 w-4\" />
+                          </span>
+                          <div>
+                            <p className=\"text-sm font-bold text-slate-900\">¿Por qué?</p>
+                            <p className=\"text-xs text-slate-500\">
+                              Evaluo te explica brevemente el concepto detrás de la respuesta.
+                            </p>
+                          </div>
+                        </div>
+
+                        {liveExplanationLoading[preguntaActual.id] ? (
+                          <div className=\"mt-3 flex items-center gap-2 text-sm text-slate-600\">
+                            <Spinner size=\"sm\" className=\"text-indigo-600\" />
+                            Analizando tu respuesta...
+                          </div>
+                        ) : liveExplanationByQuestion[preguntaActual.id] ? (
+                          <p className=\"mt-3 text-sm leading-6 text-slate-700\">
+                            {liveExplanationByQuestion[preguntaActual.id]}
+                          </p>
+                        ) : liveExplanationError[preguntaActual.id] ? (
+                          <p className=\"mt-3 text-sm leading-6 text-slate-600\">
+                            La opción marcada en verde es la respuesta correcta. La explicación automática no
+                            pudo cargarse ahora; podés seguir con la práctica y volver a esta pregunta después.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    <div
+                      ref={navigationTourTargetRef}
+          """
+          assert old in text, 'playing explanation render anchor not found'
+          text = text.replace(old, new, 1)
+
+          old = """            <div className=\"mt-6 rounded-xl border border-slate-100 bg-white p-3.5\">
+                      <p className=\"text-[12px] leading-5 text-slate-600\">
+                        Esta práctica es un simulacro de estudio preparado por Evaluo a partir de temas
+                        habituales de la materia. No es un examen oficial ni reemplaza el criterio de tus
+                        docentes: Evaluo no está afiliada a ninguna universidad. Verificá los contenidos con
+                        la bibliografía y las guías de tu cátedra.
+                      </p>
+                    </div>
+          """
+          assert old in text, 'old disclaimer block not found'
+          text = text.replace(old, '', 1)
+
+          old = """          </aside>
+                </div>
+              </div>
+
+              <div className=\"fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-2.5 pt-2 pb-[max(env(safe-area-inset-bottom),0.45rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden\">
+          """
+          new = """          </aside>
+                </div>
+              </div>
+
+              <div className=\"mx-auto mt-10 max-w-6xl px-3 pb-6\">
+                <div className=\"rounded-xl border border-slate-100 bg-slate-50/60 p-4\">
+                  <p className=\"text-[12px] leading-5 text-slate-500\">
+                    Esta práctica es un simulacro de estudio preparado por Evaluo a partir de temas habituales
+                    de la materia. No es un examen oficial ni reemplaza el criterio de tus docentes: Evaluo no
+                    está afiliada a ninguna universidad. Verificá los contenidos con la bibliografía y las guías
+                    de tu cátedra.
+                  </p>
+                </div>
+              </div>
+
+              <div className=\"fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-2.5 pt-2 pb-[max(env(safe-area-inset-bottom),0.45rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur lg:hidden\">
+          """
+          assert old in text, 'bottom disclaimer anchor not found'
+          text = text.replace(old, new, 1)
+
+          simulator_path.write_text(text)
+
+          errors_path = Path('lib/actions/errores.ts')
+          errors = errors_path.read_text()
+          old = """      key: `demo:explanations:${clientKey}`,
+                limit: 5,
+                windowMs: 60_000,
+          """
+          new = """      key: `demo:explanations:${clientKey}`,
+                // La demo puede mostrar hasta 10 preguntas antes del gate. Dejamos un
+                // pequeño margen para reintentos sin permitir generación ilimitada.
+                limit: 12,
+                windowMs: 60_000,
+          """
+          assert old in errors, 'demo explanation rate-limit anchor not found'
+          errors = errors.replace(old, new, 1)
+          errors_path.write_text(errors)
+          PY
+
+      - name: Commit patch and remove temporary workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/patch-live-demo-explanations.yml
+          git add components/simulador/SimuladorExamen.tsx lib/actions/errores.ts
+          git commit -m "fix: explain demo mistakes inline"
+          git push origin HEAD:feat/evaluo-a0fc049-next-20260826
