@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { BookOpen, GraduationCap, Sparkles, Target } from 'lucide-react';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { getOfficialCareerProfile } from '@/lib/career-profiles';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -141,6 +142,10 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
         ])}
       />
 
+      <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+        <PublicSiteHeader trackingLocation="career_study_header" />
+      </div>
+
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="max-w-4xl">
@@ -224,13 +229,13 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={`/materias?carreraId=${encodeURIComponent(carrera.id)}`}
-                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
+                className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
               >
                 Ver materias de {carrera.nombre}
               </Link>
               <Link
                 href={`/simulador-parcial/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`}
-                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950"
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 Ir a la guía de simuladores
               </Link>
@@ -246,10 +251,10 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
                 <Link
                   key={materia.id}
                   href={`/explorar/materia/${materia.id}?carreraId=${encodeURIComponent(carrera.id)}`}
-                  className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-white"
+                  className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
                   <p className="text-sm font-semibold text-slate-900">{materia.nombre}</p>
-                  <p className="mt-1 text-xs text-slate-500">Ver resúmenes, recursos y simulador</p>
+                  <p className="mt-1 text-xs text-slate-600">Ver resúmenes, recursos y simulador</p>
                 </Link>
               ))}
             </div>
