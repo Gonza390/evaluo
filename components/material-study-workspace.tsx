@@ -540,7 +540,12 @@ export function MaterialStudyWorkspace({
   ) : null;
 
   const tabPanels = (
-    <div className="h-full overflow-y-auto px-2.5 pb-2.5 sm:px-4 sm:pb-4">
+    <div
+      role="region"
+      aria-label="Contenido de estudio"
+      tabIndex={0}
+      className="px-2.5 pb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-inset sm:px-4 sm:pb-4 xl:h-full xl:overflow-y-auto"
+    >
       {commentsOpen ? (
         <WorkspaceCard className="mb-3 border-[#BFDBFE] bg-white">
           <MaterialFeedback materialId={materialId} />
@@ -771,10 +776,10 @@ export function MaterialStudyWorkspace({
   );
 
   const content = (
-    <Tabs defaultValue="resumen" className="flex h-full min-w-0 flex-col gap-2.5 overflow-x-hidden">
+    <Tabs defaultValue="resumen" className="flex min-w-0 flex-col gap-2.5 overflow-x-hidden">
       {tabHeader}
       {regenerationOverlay}
-      <div className="min-h-0 flex-1">{tabPanels}</div>
+      <div>{tabPanels}</div>
     </Tabs>
   );
 
@@ -890,7 +895,7 @@ export function MaterialStudyWorkspace({
         </div>
 
         <div className="space-y-4 xl:hidden">
-          <div className="h-[75vh] flex flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
+          <div className="flex flex-col rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
             {content}
           </div>
           {isViewerVisible ? (
