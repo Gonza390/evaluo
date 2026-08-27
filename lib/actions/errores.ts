@@ -205,7 +205,7 @@ export async function getWrongAnswersExplanations(data: {
 /**
  * Versión demo: genera la explicación de IA de un único error SIN requerir login.
  * Es el "momento aha" que convierte al visitante anónimo: práctica + IA, sin cuenta.
- * Limitado a 1 explicación y con rate limit por IP.
+ * Limitado a una explicación por llamada y con rate limit por IP.
  */
 export async function getWrongAnswersExplanationsDemo(data: {
   materia_id: string;
@@ -217,7 +217,9 @@ export async function getWrongAnswersExplanationsDemo(data: {
     const clientKey = await getServerActionClientKey();
     const rateResult = await enforceStrictRateLimit({
       key: `demo:explanations:${clientKey}`,
-      limit: 5,
+      // La demo llega hasta 10 preguntas antes del gate. Dejamos un margen
+      // pequeño para reintentos sin permitir generación ilimitada.
+      limit: 12,
       windowMs: 60_000,
     });
     if (!rateResult.allowed) {
