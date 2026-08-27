@@ -1,0 +1,139 @@
+.career-editorial {
+  min-height: 100%;
+  background: var(--background);
+}
+
+/* La carrera se presenta como información de contexto, no como hero promocional. */
+.career-editorial .animate-page-enter > section:first-of-type {
+  min-height: 0 !important;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+  background: var(--background) !important;
+  box-shadow: none !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type > div.absolute {
+  display: none !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type > div.relative {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type .rounded-full {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type h1,
+.career-editorial .animate-page-enter > section:first-of-type p,
+.career-editorial .animate-page-enter > section:first-of-type span,
+.career-editorial .animate-page-enter > section:first-of-type svg {
+  color: var(--foreground) !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type p[class*='text-xs'] {
+  color: var(--muted-foreground) !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type button {
+  border: 1px solid color-mix(in oklch, var(--border) 92%, transparent) !important;
+  border-radius: 10px !important;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type button:hover {
+  border-color: color-mix(in oklch, var(--primary) 28%, var(--border)) !important;
+  background: color-mix(in oklch, var(--primary) 3%, var(--background)) !important;
+}
+
+.career-editorial .animate-page-enter > section:first-of-type button svg {
+  color: currentColor !important;
+}
+
+/* Navegación por pestañas plana también en mobile. */
+.career-editorial .animate-page-enter > section:first-of-type + div button {
+  border-radius: 0 !important;
+  border-bottom: 2px solid transparent;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.career-editorial
+  .animate-page-enter
+  > section:first-of-type
+  + div
+  button[class*='text-[#2563EB]'] {
+  border-bottom-color: #2563eb !important;
+}
+
+/* Información es contenido editorial: una sección con datos, no una card con mini-cards. */
+.career-editorial .animate-tab-panel > div[class*='max-w-5xl'] {
+  max-width: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:first-child {
+  padding-bottom: 1.5rem !important;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
+}
+
+.career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) {
+  margin-top: 0 !important;
+  gap: 0 !important;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+}
+
+.career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) > div {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 1rem 0 !important;
+  box-shadow: none !important;
+}
+
+/* No se modifican las cards del Plan de estudios: representan materias reales. */
+
+@media (min-width: 640px) {
+  .career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) > div {
+    padding-inline: 1.25rem !important;
+    border-right: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
+  }
+
+  .career-editorial
+    .animate-tab-panel
+    > div[class*='max-w-5xl']
+    > div:nth-child(2)
+    > div:first-child {
+    padding-left: 0 !important;
+  }
+
+  .career-editorial
+    .animate-tab-panel
+    > div[class*='max-w-5xl']
+    > div:nth-child(2)
+    > div:last-child {
+    border-right: 0 !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .career-editorial .animate-page-enter > section:first-of-type > div.relative {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) > div {
+    border-top: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
+  }
+}
