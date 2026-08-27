@@ -71,11 +71,11 @@ function NavItem({
   icon: typeof Home;
   dataTourAttr?: string;
 }) {
-  const baseClass = `group flex items-center rounded-xl text-[13px] font-medium transition-all duration-200 ${
+  const baseClass = `group flex items-center rounded-lg text-[13px] font-medium transition-colors duration-150 ${
     active
-      ? 'bg-[#EEF2FF] text-brand shadow-[0_10px_24px_rgba(37,99,235,0.12)]'
-      : 'text-slate-600 hover:bg-white hover:text-slate-900'
-  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'gap-2 px-3 py-2'}`;
+      ? 'bg-indigo-50/80 text-indigo-700'
+      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'gap-2.5 px-3 py-2.5'}`;
 
   if (disabled) {
     return (
@@ -116,7 +116,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
 
   return (
     <aside
-      className={`hidden border-r border-slate-100 bg-white transition-[width] duration-200 md:fixed md:top-[81px] md:bottom-0 md:left-0 md:z-20 md:block ${
+      className={`hidden border-r border-slate-200/80 bg-white transition-[width] duration-200 md:fixed md:top-[81px] md:bottom-0 md:left-0 md:z-20 md:block ${
         collapsed ? 'w-[76px]' : 'w-[248px]'
       }`}
       onClick={collapsed ? onToggleCollapsed : undefined}
@@ -143,7 +143,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   onClick={onToggleCollapsed}
                   aria-label="Ocultar barra lateral"
                   title="Ocultar barra lateral"
-                  className="flex h-11 w-11 items-center justify-center text-slate-500 transition hover:text-slate-900"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800"
                 >
                   <ToggleIcon className="h-4 w-4" />
                 </button>
@@ -167,16 +167,16 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
               <Link
                 href={getCareerRoute(careerShortcut.id)}
                 title={collapsed ? careerShortcut.nombre : undefined}
-                className={`flex items-center rounded-xl text-slate-600 transition hover:bg-white hover:text-slate-900 ${
-                  collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'mt-3 gap-2 px-2 py-2'
+                className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
+                  collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'mt-3 gap-2.5 px-3 py-2.5'
                 }`}
               >
-                <span className="text-brand inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#EEF2FF] text-[12px] font-bold">
+                <span className="text-brand inline-flex h-4 w-4 shrink-0 items-center justify-center text-[12px] font-bold">
                   {careerShortcut.nombre.charAt(0).toUpperCase()}
                 </span>
                 {!collapsed ? (
                   <div className="min-w-0">
-                    <p className="truncate text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
+                    <p className="truncate text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">
                       Tu carrera
                     </p>
                     <p className="truncate text-sm font-medium text-slate-800">
@@ -188,31 +188,29 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
             ) : null}
           </nav>
 
-          <div className="mt-auto border-t border-slate-100 pt-4">
+          <div className="mt-auto border-t border-slate-200/80 pt-3">
             {user ? (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Link
                   href="/pricing"
                   title={collapsed ? 'Planes y suscripción' : undefined}
-                  className={`border-brand/20 bg-brand/5 text-brand hover:border-brand/30 hover:bg-brand/10 flex items-center rounded-xl border shadow-[0_10px_24px_rgba(37,99,235,0.07)] transition ${
+                  className={`text-brand flex items-center rounded-lg transition-colors hover:bg-indigo-50/70 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : 'w-full gap-2 px-2.5 py-2'
+                      : 'w-full gap-2.5 px-3 py-2.5'
                   }`}
                 >
                   <Crown className="h-4 w-4 shrink-0" />
-                  {!collapsed ? (
-                    <p className="text-sm font-semibold">Planes y suscripción</p>
-                  ) : null}
+                  {!collapsed ? <p className="text-sm font-semibold">Planes y suscripción</p> : null}
                 </Link>
 
                 <Link
                   href="/configuracion"
                   title={collapsed ? 'Configuración' : undefined}
-                  className={`flex items-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition hover:border-slate-300 hover:bg-white hover:text-slate-900 ${
+                  className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : 'w-full gap-2 px-2.5 py-2'
+                      : 'w-full gap-2.5 px-3 py-2.5'
                   }`}
                 >
                   <Settings className="h-4 w-4 shrink-0" />
@@ -221,13 +219,13 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger
-                    className={`flex items-center rounded-[18px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] text-left shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:border-slate-300 hover:bg-white ${
+                    className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                       collapsed
                         ? 'mx-auto h-11 w-11 justify-center px-0 py-0'
-                        : 'w-full gap-2 px-2.5 py-2.5'
+                        : 'w-full gap-2.5 px-3 py-2.5'
                     }`}
                   >
-                    <Avatar className="h-9 w-9 ring-2 ring-white">
+                    <Avatar className="h-8 w-8">
                       <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -240,6 +238,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                         <p className="truncate text-sm font-semibold text-slate-900">
                           {getUserName()}
                         </p>
+                        <p className="truncate text-[11px] text-slate-400">Tu perfil</p>
                       </div>
                     ) : null}
                   </DropdownMenuTrigger>
@@ -264,10 +263,10 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
               <Link
                 href="/login"
                 title={collapsed ? 'Iniciar sesión' : undefined}
-                className={`flex items-center rounded-xl bg-white text-slate-700 transition hover:bg-white hover:text-slate-900 ${
+                className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
                   collapsed
                     ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                    : 'w-full gap-2 px-2 py-2'
+                    : 'w-full gap-2.5 px-3 py-2.5'
                 }`}
               >
                 <LogIn className="h-4 w-4 shrink-0" />
