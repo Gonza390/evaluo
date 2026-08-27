@@ -1,19 +1,12 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import {
   Bot,
-  Brain,
   CheckCircle2,
   FileText,
-  BarChart3,
   PlayCircle,
   Sparkles,
-  Target,
   UploadCloud,
-  Zap,
   ListFilter,
-  Check,
-  X,
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { CatalogStats } from '@/components/marketing/catalog-stats';
@@ -66,60 +59,6 @@ const steps = [
       'Revisá tus resultados y volvé sobre los temas donde necesitás más práctica antes del parcial.',
   },
 ];
-
-const features = [
-  {
-    icon: FileText,
-    title: 'Materiales y guías de estudio',
-    description:
-      'Estudiá recursos de tu materia o generá una guía estructurada a partir de tus propios apuntes en PDF.',
-  },
-  {
-    icon: Bot,
-    title: 'Pregunteros con feedback',
-    description:
-      'No es solo responder un multiple choice. Las explicaciones te ayudan a revisar el razonamiento detrás de cada respuesta.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Simuladores con tiempo',
-    description:
-      'Practicá en sesiones cronometradas y medí cómo respondés bajo una dinámica parecida a la de rendir.',
-  },
-  {
-    icon: Target,
-    title: 'Contenido específico',
-    description:
-      'El catálogo se organiza por universidad, carrera y materia; tus guías generadas se construyen desde el PDF que subís.',
-  },
-  {
-    icon: Brain,
-    title: 'Progreso para decidir qué reforzar',
-    description:
-      'Usá tus resultados de práctica para identificar qué temas vienen mejor y cuáles necesitan otra vuelta.',
-  },
-  {
-    icon: Zap,
-    title: 'Todo unificado en un solo lugar',
-    description:
-      'Se acabó el caos de saltar entre grupos, enlaces de Drive, fotocopiadoras y PDFs difíciles de ordenar.',
-  },
-];
-
-const comparison = {
-  chaos: [
-    'PDFs eternos, borrosos e imposibles de leer en el celular.',
-    'Grupos de WhatsApp ruidosos con spam y apuntes viejos.',
-    'Drives desactualizados con links rotos y archivos de años anteriores.',
-    'Herramientas genéricas sin el contexto del material que estás estudiando.',
-  ],
-  evaluo: [
-    'Material estructurado, limpio y optimizado para cualquier pantalla.',
-    'Espacio enfocado únicamente al estudio, sin distracciones de chat.',
-    'Catálogo organizado por universidad, carrera y materia.',
-    'IA que trabaja sobre el material que subís para generar apoyo de estudio.',
-  ],
-};
 
 export default function Home() {
   const primaryHref = '/login?mode=signup';
@@ -176,121 +115,6 @@ export default function Home() {
                 </article>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      <section id="features" className="border-y border-slate-100 bg-white py-16 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              ¿Por qué Evaluo?
-            </span>
-            <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              Qué encontrás en la plataforma
-            </h2>
-            <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Herramientas de estudio integradas para pasar de tus materiales a la práctica sin
-              cambiar de plataforma.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feat) => {
-              const Icon = feat.icon;
-              return (
-                <article
-                  key={feat.title}
-                  className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md"
-                >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-5 text-[15px] font-bold tracking-tight text-slate-800">
-                    {feat.title}
-                  </h3>
-                  <p className="mt-3 text-xs leading-5 text-slate-600">{feat.description}</p>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section id="comparativa" className="py-16 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              Dejá de luchar contra el caos de estudio
-            </h2>
-            <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Preparar un parcial ya requiere suficiente energía. Tu espacio de estudio no debería
-              agregar más desorden.
-            </p>
-          </div>
-
-          <div className="mt-12 grid items-stretch gap-8 lg:grid-cols-2">
-            <div className="flex flex-col justify-between rounded-3xl border border-red-100 bg-red-50/20 p-6 shadow-sm md:p-8">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-red-100/70 px-3.5 py-1.5 text-xs font-bold text-red-700">
-                  <X className="h-4 w-4 shrink-0" />
-                  <span>El caos tradicional de archivos y chat</span>
-                </div>
-                <p className="mt-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                  Estudiar con todo separado
-                </p>
-
-                <ul className="mt-6 space-y-4">
-                  {comparison.chaos.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-3 text-xs leading-5 text-slate-600"
-                    >
-                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-red-500" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-8 rounded-2xl border border-red-100 bg-red-50 p-4 text-[12px] leading-5 text-red-800">
-                <strong>El problema:</strong> perdés tiempo ordenando archivos y saltando entre
-                herramientas cuando podrías estar leyendo, practicando y revisando errores.
-              </div>
-            </div>
-
-            <div className="relative flex flex-col justify-between overflow-hidden rounded-3xl border border-indigo-200 bg-[linear-gradient(135deg,rgba(99,102,241,0.03)_0%,rgba(37,99,235,0.03)_100%)] p-6 shadow-md md:p-8">
-              <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-indigo-500/5 blur-3xl" />
-
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-3.5 py-1.5 text-xs font-bold text-indigo-700">
-                  <Check className="h-4 w-4 shrink-0" />
-                  <span>Todo conectado en Evaluo</span>
-                </div>
-                <p className="mt-4 text-xs font-bold tracking-wider text-indigo-700 uppercase">
-                  Estudiar con contexto
-                </p>
-
-                <ul className="mt-6 space-y-4">
-                  {comparison.evaluo.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-3 text-xs leading-5 font-medium text-slate-700"
-                    >
-                      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-600" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="mt-8 rounded-2xl bg-indigo-600 p-5 text-[12px] leading-5 text-white shadow-lg">
-                <strong>El beneficio Evaluo:</strong> todo reunido en un mismo flujo. Practicás con
-                material de tu materia, medís resultados y llegás al parcial con más contexto y
-                confianza.
-              </div>
-            </div>
           </div>
         </div>
       </section>
