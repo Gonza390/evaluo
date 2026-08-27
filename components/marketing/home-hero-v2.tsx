@@ -14,26 +14,26 @@ import {
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
 
-const artifactCards = [
+const studyCapabilities = [
   {
     icon: FileText,
-    label: 'Resumen',
-    description: 'Lo importante, ordenado para repasar.',
-  },
-  {
-    icon: BookOpen,
-    label: 'Glosario',
-    description: 'Conceptos y definiciones del material.',
-  },
-  {
-    icon: Brain,
-    label: 'Flashcards',
-    description: 'Repaso activo para fijar conceptos.',
+    title: 'Estudiá tus materiales',
+    description: 'Resumen, glosario, flashcards y ejercicios construidos desde el contenido que estás estudiando.',
   },
   {
     icon: ListChecks,
-    label: 'Ejercicios',
-    description: 'Comprobá si realmente lo entendiste.',
+    title: 'Practicá como vas a rendir',
+    description: 'Pasá del repaso a preguntas, pregunteros y simuladores sin salir de la misma materia.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Encontrá material de tu materia',
+    description: 'Entrá por universidad, carrera y materia y aprovechá recursos que otros estudiantes ya compartieron.',
+  },
+  {
+    icon: Brain,
+    title: 'Reforzá lo que te cuesta',
+    description: 'Usá tus resultados para volver sobre los temas donde todavía necesitás otra vuelta.',
   },
 ];
 
@@ -171,105 +171,153 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
         </div>
       </section>
 
-      <section className="border-b border-slate-100 bg-white py-16 sm:py-20">
+      <section className="border-b border-slate-100 bg-white py-20 sm:py-24 lg:py-28">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1.5 text-xs font-bold text-indigo-700">
-              <UploadCloud className="h-3.5 w-3.5" />
-              De tus apuntes a una forma de estudiar
-            </span>
-            <h2 className="text-foreground mt-5 text-3xl font-bold tracking-[-0.035em] sm:text-4xl lg:text-[44px]">
-              Un PDF. Cuatro formas de estudiarlo.
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-              Subí tus apuntes una vez. Evaluo organiza el contenido y construye herramientas para
-              entender, memorizar y practicar sin tener que empezar de cero en cada app.
+          <div className="grid gap-6 border-b border-slate-200 pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16 lg:pb-12">
+            <div>
+              <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase">
+                <span className="h-px w-8 bg-indigo-400" />
+                Todo para preparar una materia
+              </div>
+              <h2 className="mt-5 max-w-[620px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
+                Estudiá, practicá y reforzá sin cambiar de lugar.
+              </h2>
+            </div>
+            <p className="max-w-[620px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
+              Evaluo conecta el material que estás leyendo con las herramientas que necesitás después.
+              No son funciones sueltas: es un recorrido continuo desde tus apuntes hasta la práctica.
             </p>
           </div>
 
-          <div className="mt-10 grid items-stretch gap-4 lg:grid-cols-[0.9fr_auto_1.7fr] lg:gap-6">
-            <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
-              <div>
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200">
-                  <UploadCloud className="h-5 w-5" />
-                </span>
-                <p className="mt-5 text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">
-                  Paso 1
-                </p>
-                <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900">Subí tus apuntes</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600">
-                  Texto, tablas, fórmulas y páginas visuales se procesan antes de crear el material de estudio.
-                </p>
+          <div className="grid gap-12 pt-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-16 lg:pt-14">
+            <div>
+              <div className="border-t border-slate-200">
+                {studyCapabilities.map(({ icon: Icon, title, description }, index) => (
+                  <div key={title} className="grid grid-cols-[34px_1fr] gap-4 border-b border-slate-200 py-5 sm:grid-cols-[40px_1fr] sm:py-6">
+                    <div className="flex items-start justify-between pt-0.5">
+                      <Icon className="h-4.5 w-4.5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-baseline justify-between gap-4">
+                        <h3 className="text-sm font-bold tracking-tight text-slate-950 sm:text-[15px]">{title}</h3>
+                        <span className="text-[10px] font-semibold text-slate-300">0{index + 1}</span>
+                      </div>
+                      <p className="mt-2 max-w-[470px] text-xs leading-5 text-slate-500 sm:text-[13px] sm:leading-6">
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600">
-                    <FileText className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">Apuntes del parcial.pdf</p>
-                    <p className="mt-0.5 text-[10px] text-slate-400">Listo para procesar</p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs font-bold">
+                <TrackedLink
+                  href="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_product_overview',
+                    cta_name: 'subir_pdf',
+                    destination: '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1',
+                  }}
+                  className="inline-flex items-center gap-2 text-indigo-700 transition hover:text-indigo-900"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  Subir mi PDF
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </TrackedLink>
+                <TrackedLink
+                  href="/explorar"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_product_overview',
+                    cta_name: 'explorar_materias',
+                    destination: '/explorar',
+                  }}
+                  className="inline-flex items-center gap-2 text-slate-600 transition hover:text-slate-950"
+                >
+                  Explorar materias
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </TrackedLink>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="pointer-events-none absolute -inset-8 rounded-[42px] bg-[radial-gradient(circle_at_60%_35%,rgba(99,102,241,0.15),transparent_58%)] blur-2xl" />
+
+              <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.11)]">
+                <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                      <BookOpen className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-semibold text-slate-400">Tu materia</p>
+                      <p className="text-xs font-bold text-slate-900 sm:text-sm">Marketing I</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold text-emerald-600">Material listo para estudiar</span>
+                </div>
+
+                <div className="grid min-h-[350px] sm:grid-cols-[150px_1fr]">
+                  <aside className="hidden border-r border-slate-200 bg-slate-50/70 p-4 sm:block">
+                    <p className="mb-3 px-2 text-[9px] font-bold tracking-[0.14em] text-slate-400 uppercase">Estudio</p>
+                    {[
+                      ['Resumen', true],
+                      ['Glosario', false],
+                      ['Flashcards', false],
+                      ['Ejercicios', false],
+                    ].map(([label, active]) => (
+                      <div
+                        key={String(label)}
+                        className={`flex items-center gap-2 border-l-2 px-3 py-2.5 text-[10px] font-bold ${
+                          active ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500'
+                        }`}
+                      >
+                        {label}
+                      </div>
+                    ))}
+                    <div className="mt-5 border-t border-slate-200 pt-4">
+                      <p className="px-2 text-[9px] font-bold tracking-[0.14em] text-slate-400 uppercase">Práctica</p>
+                      <div className="mt-2 flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-500">Preguntero</div>
+                      <div className="flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-500">Simulador</div>
+                    </div>
+                  </aside>
+
+                  <div className="p-5 sm:p-6 lg:p-7">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-600 uppercase">Resumen</p>
+                        <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-950 sm:text-xl">Qué tenés que saber para el parcial</h3>
+                      </div>
+                      <span className="hidden text-[10px] font-semibold text-slate-400 md:block">10 temas</span>
+                    </div>
+
+                    <div className="mt-6 border-t border-slate-200">
+                      {[
+                        ['Segmentación de mercado', 'Cómo dividir el mercado y elegir segmentos relevantes.'],
+                        ['Posicionamiento', 'Qué lugar busca ocupar una marca frente a sus alternativas.'],
+                        ['Propuesta de valor', 'Por qué un cliente debería elegir una oferta sobre otra.'],
+                      ].map(([title, description], index) => (
+                        <div key={title} className="grid grid-cols-[28px_1fr] gap-3 border-b border-slate-100 py-4">
+                          <span className="text-[10px] font-black text-indigo-500">0{index + 1}</span>
+                          <div>
+                            <p className="text-[11px] font-bold text-slate-900">{title}</p>
+                            <p className="mt-1 text-[10px] leading-4 text-slate-500">{description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
+                      <p className="text-[10px] leading-5 text-slate-500">
+                        Terminaste de leer. Ahora podés pasar a tarjetas o practicar preguntas del mismo tema.
+                      </p>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-indigo-600" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <div className="hidden items-center justify-center lg:flex">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-indigo-600">
-                <ArrowRight className="h-4 w-4" />
-              </span>
-            </div>
-
-            <div className="rounded-3xl border border-indigo-100 bg-[linear-gradient(135deg,#f8fafc_0%,#eef2ff_100%)] p-5 sm:p-7">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-bold tracking-[0.14em] text-indigo-500 uppercase">Paso 2</p>
-                  <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900">
-                    Elegí cómo querés estudiar
-                  </h3>
-                </div>
-                <span className="hidden rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-indigo-700 shadow-sm ring-1 ring-indigo-100 sm:inline-flex">
-                  Generado desde tu material
-                </span>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {artifactCards.map(({ icon: Icon, label, description }) => (
-                  <article
-                    key={label}
-                    className="rounded-2xl border border-white bg-white/90 p-4 shadow-[0_8px_22px_rgba(15,23,42,0.04)]"
-                  >
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <h4 className="mt-3 text-sm font-bold text-slate-900">{label}</h4>
-                    <p className="mt-1 text-[11px] leading-5 text-slate-500">{description}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 px-5 py-4 text-center sm:flex-row sm:text-left">
-            <div>
-              <p className="text-xs font-bold text-slate-800">¿Preferís empezar con material que ya existe?</p>
-              <p className="mt-1 text-[11px] text-slate-500">
-                Entrá a tu materia y revisá apuntes y recursos compartidos antes de subir el tuyo.
-              </p>
-            </div>
-            <TrackedLink
-              href="/explorar"
-              eventName="cta_click"
-              payload={{
-                location: 'home_pdf_transform',
-                cta_name: 'explorar_materias',
-                destination: '/explorar',
-              }}
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 text-xs font-bold text-indigo-700 transition hover:bg-indigo-50"
-            >
-              Explorar materias
-              <ArrowRight className="h-3.5 w-3.5" />
-            </TrackedLink>
           </div>
         </div>
       </section>
