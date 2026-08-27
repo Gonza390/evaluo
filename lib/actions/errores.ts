@@ -13,6 +13,10 @@ import {
   getServerActionClientKey,
 } from '@/lib/rate-limit';
 
+function normalizeQuestionText(value: string) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 /**
  * Resuelve los IDs de preguntas del banco que pertenecen a `materia_id` +
  * `parcial`. Para `parcial === 3` (integrador) se aceptan parciales 1 y 2.
@@ -214,6 +218,19 @@ export async function getWrongAnswersExplanationsDemo(data: {
   chosen_answers?: Record<string, number | number[] | null>;
 }) {
   try {
+    // Este endpoint es exclusivamente para visitantes anónimos. Un usuario
+    // autenticado usa el flujo normal, con sus límites y su historial.
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      return {
+        success: false,
+        message: 'La explicación demo sólo está disponible antes de iniciar sesión.',
+      };
+    }
+
     const clientKey = await getServerActionClientKey();
     const rateResult = await enforceStrictRateLimit({
       key: `demo:explanations:${clientKey}`,
@@ -267,5 +284,82 @@ export async function getWrongAnswersExplanationsDemo(data: {
       parcial: data.parcial,
     });
     return { success: false, message: 'No se pudieron generar las explicaciones.' };
+  }
+}
+
+/**
+ * Helper del feedback en vivo. El componente de opción sólo conoce el texto de
+ * la pregunta visible; acá resolvemos de forma segura el ID sin exponer el
+ * banco completo al navegador y delegamos en el mismo pipeline demo.
+ */
+export async function getLiveWrongAnswerExplanationDemo(data: {
+  materia_id: string;
+  parcial: number;
+  enunciado: string;
+}) {
+  try {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      return {
+        success: true,
+        skipped: true,
+        explanations: [] as WrongAnswerExplanation[],
+      };
+    }
+
+    const materiaId = data.materia_id?.trim();
+    const enunciado = normalizeQuestionText(data.enunciado ?? '');
+    if (!materiaId || !enunciado) {
+      return { success: false, message: 'Pregunta no especificada.' };
+    }
+
+    const admin = createAdminClient();
+    let query = admin
+      .from('preguntas_banco')
+      .select('id, enunciado')
+      .eq('materia_id', materiaId)
+      .eq('es_demo', true)
+      .limit(100);
+
+    if (data.parcial === 3) {
+      query = query.in('parcial', [1, 2]);
+    } else {
+      query = query.eq('parcial', data.parcial);
+    }
+
+    const { data: candidates, error } = await query;
+    if (error) {
+      logError('actions.getLiveWrongAnswerExplanationDemo.lookup', error, {
+        materiaId,
+        parcial: data.parcial,
+      });
+      return { success: false, message: 'No pudimos resolver esta pregunta.' };
+    }
+
+    const match = (candidates ?? []).find(
+      (row) => normalizeQuestionText(row.enunciado ?? '') === enunciado
+    );
+    if (!match?.id) {
+      return {
+        success: true,
+        skipped: true,
+        explanations: [] as WrongAnswerExplanation[],
+      };
+    }
+
+    return await getWrongAnswersExplanationsDemo({
+      materia_id: materiaId,
+      parcial: data.parcial,
+      wrong_question_ids: [match.id],
+    });
+  } catch (error) {
+    logError('actions.getLiveWrongAnswerExplanationDemo', error, {
+      materiaId: data.materia_id,
+      parcial: data.parcial,
+    });
+    return { success: false, message: 'No se pudo generar la explicación.' };
   }
 }
