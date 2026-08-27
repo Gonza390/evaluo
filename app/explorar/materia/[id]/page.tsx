@@ -49,7 +49,7 @@ function buildMateriaQuery(searchParams: {
 async function getMateriaStudyHomeData(materiaId: string) {
   const client = createPublicClient();
 
-  const [partial1, partial2, integrator, sharedStudentMaterials] = await Promise.all([
+  const [partial1, partial2, sharedStudentMaterials] = await Promise.all([
     client
       .from('preguntas_banco_public')
       .select('id', { count: 'exact', head: true })
@@ -60,19 +60,17 @@ async function getMateriaStudyHomeData(materiaId: string) {
       .select('id', { count: 'exact', head: true })
       .eq('materia_id', materiaId)
       .eq('parcial', 2),
-    client
-      .from('preguntas_banco_public')
-      .select('id', { count: 'exact', head: true })
-      .eq('materia_id', materiaId)
-      .eq('parcial', 3),
     fetchSharedStudentMaterialsByMateria(client, materiaId, 6).catch(() => []),
   ]);
 
+  const partial1Count = partial1.error ? 0 : (partial1.count ?? 0);
+  const partial2Count = partial2.error ? 0 : (partial2.count ?? 0);
+
   return {
     questionCounts: {
-      1: partial1.error ? 0 : (partial1.count ?? 0),
-      2: partial2.error ? 0 : (partial2.count ?? 0),
-      3: integrator.error ? 0 : (integrator.count ?? 0),
+      1: partial1Count,
+      2: partial2Count,
+      3: partial1Count + partial2Count,
     } as Record<1 | 2 | 3, number>,
     sharedStudentMaterials,
   };
