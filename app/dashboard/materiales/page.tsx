@@ -126,7 +126,7 @@ export default async function DashboardMaterialsPage({
     const resolvedMateriaId = isMateriaValid ? requestedMateriaId : '';
 
     return (
-      <div className="animate-page-enter from-background/95 min-h-screen bg-gradient-to-br via-white/80 to-emerald-50/20 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="animate-page-enter min-h-screen bg-white px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <StudentMaterialsWorkspace
             initialMaterials={materials}
