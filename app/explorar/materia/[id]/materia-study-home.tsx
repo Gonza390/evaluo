@@ -354,7 +354,7 @@ export default function MateriaStudyHome({
         </div>
       </section>
 
-      <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 lg:px-8 lg:py-9">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 lg:px-8 lg:py-9">
         {contextError ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {contextError}
@@ -682,7 +682,7 @@ export default function MateriaStudyHome({
             </div>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }
