@@ -129,10 +129,18 @@ export function QuestionOptionButton({
         }
 
         if (!response.success) {
-          throw new Error(response.message || 'No pudimos generar la explicación.');
+          const message =
+            'message' in response && typeof response.message === 'string'
+              ? response.message
+              : 'No pudimos generar la explicación.';
+          throw new Error(message);
         }
 
-        const text = getBriefExplanation(response.explanations?.[0]?.explicacion ?? '');
+        const explanations =
+          'explanations' in response && Array.isArray(response.explanations)
+            ? response.explanations
+            : [];
+        const text = getBriefExplanation(explanations[0]?.explicacion ?? '');
         if (!text) {
           throw new Error('La explicación todavía no está disponible para esta pregunta.');
         }
