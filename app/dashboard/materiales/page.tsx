@@ -41,7 +41,7 @@ export default async function DashboardMaterialsPage({
     if (materiaId) params.set('materiaId', materiaId);
     const query = params.toString();
     const nextPath = query ? `/dashboard/materiales?${query}` : '/dashboard/materiales';
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    redirect(`/login?next=${encodeURIComponent(nextPath)}&reason=prepare-material`);
   }
 
   try {

@@ -20,6 +20,7 @@ import {
   Flame,
   GraduationCap,
   Heart,
+  HelpCircle,
   PlayCircle,
   Plus,
   Search,
@@ -883,20 +884,21 @@ export function DashboardContent({
     {
       id: 'practica',
       label: 'Respondé 5 preguntas de práctica',
-      description: 'Arrancá un simulador de parcial y respondé tus primeras preguntas.',
+      description:
+        'Empezá una práctica corta para conocer la dinámica sin completar todo el parcial.',
       done: (partialInsights?.preguntasRespondidasParcial ?? 0) >= 5,
       locked: !hasAnySubject,
       action: () => router.push(getSimulatorRoute(primarySubjectId, 1)),
       actionLabel: 'Practicar ahora',
     },
     {
-      id: 'simulacro',
-      label: 'Rendí tu primer simulacro',
-      description: 'Completá un parcial cronometrado y medí tu nivel de preparación.',
+      id: 'practica_completa',
+      label: 'Completá tu primera práctica',
+      description: 'Volvé a la misma práctica, terminá el parcial y revisá el resultado completo.',
       done: (partialInsights?.modelosEstimadosRealizados ?? 0) >= 1,
       locked: !hasAnySubject,
       action: () => router.push(getSimulatorRoute(primarySubjectId, 1)),
-      actionLabel: 'Empezar simulacro',
+      actionLabel: 'Completar práctica',
     },
     {
       id: 'calendario',
@@ -924,7 +926,7 @@ export function DashboardContent({
     {
       title: 'Seguí tu primer recorrido',
       description:
-        'Elegí tu primera materia, respondé 5 preguntas y rendí tu primer simulacro. Cada paso va desbloqueando el siguiente.',
+        'Elegí tu primera materia, respondé 5 preguntas, completá la práctica y cargá la fecha del parcial. Cada paso desbloquea el siguiente.',
       target: { type: 'ref', ref: checklistTourRef },
     },
     {
@@ -952,6 +954,12 @@ export function DashboardContent({
       window.localStorage.setItem(getDashboardTourStorageKey(user.id), 'done');
     }
   }, [user]);
+
+  const reopenDashboardTour = useCallback(() => {
+    dashboardTourDismissedRef.current = false;
+    setDashboardTourStepIndex(0);
+    setShowDashboardTour(true);
+  }, []);
 
   const handleDashboardTourNext = useCallback(() => {
     if (dashboardTourStepIndex >= dashboardTourSteps.length - 1) {
@@ -1090,7 +1098,7 @@ export function DashboardContent({
       <h3 className="mt-3 text-base font-semibold text-slate-900">
         Todavía no tenés materias recientes
       </h3>
-      <p className="mt-1 text-sm text-slate-500">Empezá a estudiar en 3 pasos:</p>
+      <p className="mt-1 text-sm text-slate-500">Empezá a estudiar en 4 pasos:</p>
       <ol className="mx-auto mt-5 max-w-md space-y-2.5 text-left">
         {[
           {
@@ -1099,12 +1107,16 @@ export function DashboardContent({
               'Agregá una materia de tu carrera para activar resúmenes, pregunteros y simulacros.',
           },
           {
-            title: 'Practicá con simulacros',
-            description: 'Respondé preguntas de práctica para medir tu nivel sin presión.',
+            title: 'Probá 5 preguntas',
+            description: 'Conocé la dinámica con una práctica corta y corrección inmediata.',
           },
           {
-            title: 'Rendí con confianza',
-            description: 'Completá un parcial cronometrado y seguí tu radar de confianza.',
+            title: 'Completá la práctica',
+            description: 'Terminá el parcial y revisá el resultado completo.',
+          },
+          {
+            title: 'Agendá tu parcial',
+            description: 'Cargá la fecha para recibir un próximo paso concreto.',
           },
         ].map((step, index) => (
           <li
@@ -1137,7 +1149,7 @@ export function DashboardContent({
             }
           }}
         >
-          Probá un simulacro de muestra
+          Probá preguntas de muestra
         </Button>
         <Button
           size="sm"
@@ -1244,11 +1256,21 @@ export function DashboardContent({
               </p>
             </div>
 
-            {isSaving ? (
-              <div className="flex w-full items-start justify-end">
+            <div className="flex w-full items-center justify-end gap-2">
+              {isSaving ? (
                 <span className="pl-1 text-xs text-slate-500">Sincronizando cambios...</span>
-              </div>
-            ) : null}
+              ) : null}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={reopenDashboardTour}
+                className="rounded-xl border-slate-200 bg-white text-xs"
+              >
+                <HelpCircle className="h-4 w-4" />
+                Volver a ver la guía
+              </Button>
+            </div>
           </div>
           {dashboardError ? (
             <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -1276,8 +1298,8 @@ export function DashboardContent({
                       Armemos tu espacio de estudio
                     </h2>
                     <p className="mt-3 max-w-[500px] text-[0.95rem] leading-6 font-medium text-white/85">
-                      Elegí tu primera materia y activá resúmenes, pregunteros y simulacros de tu
-                      cátedra. Te acompañamos con 3 pasos para que arranques desde hoy.
+                      Elegí tu primera materia y activá materiales y prácticas de tu cátedra. Te
+                      acompañamos con 4 pasos para que arranques desde hoy.
                     </p>
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <Button

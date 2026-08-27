@@ -10,13 +10,56 @@ import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 
 type AuthMode = 'login' | 'signup';
 
+function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean) {
+  if (reason === 'save-subject') {
+    return isSignUp
+      ? 'Creá tu cuenta para guardar esta materia y volver a encontrarla desde tu espacio.'
+      : 'Ingresá para guardar esta materia y volver al mismo punto.';
+  }
+  if (reason === 'save-career') {
+    return isSignUp
+      ? 'Creá tu cuenta para guardar esta carrera y organizar tus materias.'
+      : 'Ingresá para guardar esta carrera y volver al plan de estudios.';
+  }
+  if (nextPath.startsWith('/dashboard/materiales')) {
+    return isSignUp
+      ? 'Creá tu cuenta para subir tu PDF y convertirlo en resumen, glosario, tarjetas y ejercicios.'
+      : 'Ingresá para subir tu PDF o continuar trabajando con tus materiales.';
+  }
+  if (nextPath.startsWith('/simulador')) {
+    return isSignUp
+      ? 'Creá tu cuenta para continuar la práctica y guardar tus resultados.'
+      : 'Ingresá para continuar la práctica desde donde la dejaste.';
+  }
+  if (nextPath === '/empezar') {
+    return isSignUp
+      ? 'Creá tu cuenta y te guiaremos para elegir una materia o preparar tu primer PDF.'
+      : 'Ingresá y te mostraremos el próximo paso para empezar a estudiar.';
+  }
+  return isSignUp
+    ? 'Empezá gratis y guardá tu progreso en Evaluo.'
+    : 'Ingresá para continuar estudiando donde lo dejaste.';
+}
+
 function GoogleIcon() {
   return (
     <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.3-.2-1.8H12v3.5h5.5a4.7 4.7 0 0 1-2 3.1v2.3h3.3c1.9-1.8 2.8-4.4 2.8-7.1Z" />
-      <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.3-2.3c-.9.6-2.1 1-3.3 1-2.6 0-4.8-1.8-5.6-4.2H3v2.4A10 10 0 0 0 12 22Z" />
-      <path fill="#FBBC05" d="M6.4 14.1A6 6 0 0 1 6.1 12c0-.7.1-1.4.3-2.1V7.5H3A10 10 0 0 0 2 12c0 1.6.4 3.1 1 4.5l3.4-2.4Z" />
-      <path fill="#EA4335" d="M12 5.8c1.5 0 2.8.5 3.8 1.5l2.9-2.9A9.6 9.6 0 0 0 12 2a10 10 0 0 0-9 5.5l3.4 2.4c.8-2.4 3-4.1 5.6-4.1Z" />
+      <path
+        fill="#4285F4"
+        d="M21.6 12.2c0-.7-.1-1.3-.2-1.8H12v3.5h5.5a4.7 4.7 0 0 1-2 3.1v2.3h3.3c1.9-1.8 2.8-4.4 2.8-7.1Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 22c2.7 0 5-.9 6.6-2.4l-3.3-2.3c-.9.6-2.1 1-3.3 1-2.6 0-4.8-1.8-5.6-4.2H3v2.4A10 10 0 0 0 12 22Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M6.4 14.1A6 6 0 0 1 6.1 12c0-.7.1-1.4.3-2.1V7.5H3A10 10 0 0 0 2 12c0 1.6.4 3.1 1 4.5l3.4-2.4Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.8c1.5 0 2.8.5 3.8 1.5l2.9-2.9A9.6 9.6 0 0 0 12 2a10 10 0 0 0-9 5.5l3.4 2.4c.8-2.4 3-4.1 5.6-4.1Z"
+      />
     </svg>
   );
 }
@@ -32,6 +75,7 @@ export default function LoginFormGoogleFirst() {
   const [message, setMessage] = useState('');
   const [notice, setNotice] = useState('');
   const [intent, setIntent] = useState('');
+  const [reason, setReason] = useState('');
   const [nextPath, setNextPath] = useState('/dashboard');
 
   useEffect(() => {
@@ -46,6 +90,7 @@ export default function LoginFormGoogleFirst() {
     }
 
     setIntent(params.get('intent') ?? '');
+    setReason(params.get('reason') ?? '');
 
     const storedEmail = consumeStoredPricingEmail();
     if (storedEmail) {
@@ -56,6 +101,7 @@ export default function LoginFormGoogleFirst() {
 
   const isSignUp = mode === 'signup';
   const location = intent === 'premium' ? 'login_premium_intent' : 'login';
+  const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
     const { data } = await supabase
@@ -166,7 +212,13 @@ export default function LoginFormGoogleFirst() {
         </Link>
 
         <div className="flex items-center gap-2 text-sm font-bold tracking-tight text-slate-950">
-          <Image src="/icon.png" alt="" width={30} height={30} className="h-[30px] w-[30px] rounded-lg" />
+          <Image
+            src="/icon.png"
+            alt=""
+            width={30}
+            height={30}
+            className="h-[30px] w-[30px] rounded-lg"
+          />
           Evaluo
         </div>
       </div>
@@ -181,14 +233,13 @@ export default function LoginFormGoogleFirst() {
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.15rem]">
           {isSignUp ? 'Creá tu cuenta' : 'Bienvenido'}
         </h1>
-        <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">
-          {isSignUp
-            ? 'Empezá gratis y guardá tu progreso en Evaluo.'
-            : 'Ingresá para continuar estudiando donde lo dejaste.'}
-        </p>
+        <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
 
         {notice ? (
-          <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-left text-sm text-blue-700" role="status">
+          <div
+            className="mt-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-left text-sm text-blue-700"
+            role="status"
+          >
             {notice}
           </div>
         ) : null}
@@ -228,7 +279,9 @@ export default function LoginFormGoogleFirst() {
 
           <div className="flex items-center gap-3" aria-hidden="true">
             <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">o</span>
+            <span className="text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">
+              o
+            </span>
             <div className="h-px flex-1 bg-slate-200" />
           </div>
 
@@ -242,7 +295,9 @@ export default function LoginFormGoogleFirst() {
               <Mail className="h-4 w-4" />
               {isSignUp ? 'Registrarme con correo' : 'Usar correo y contraseña'}
             </span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${emailExpanded ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${emailExpanded ? 'rotate-180' : ''}`}
+            />
           </button>
 
           {emailExpanded ? (
@@ -255,7 +310,7 @@ export default function LoginFormGoogleFirst() {
                   type="email"
                   autoComplete="email"
                   placeholder="tu@email.com"
-                  className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-950 transition outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 />
               </label>
 
@@ -268,12 +323,12 @@ export default function LoginFormGoogleFirst() {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete={isSignUp ? 'new-password' : 'current-password'}
                     placeholder="••••••••"
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-950 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-950 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((value) => !value)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 transition hover:text-slate-700"
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

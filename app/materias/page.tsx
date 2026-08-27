@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import { fetchSharedStudentMaterialsByCarrera } from '@/lib/data/student-materials';
 import { createPublicClient } from '@/lib/supabase-public';
 import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
@@ -7,8 +8,15 @@ import MateriaList from '@/components/materia-list';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { StudyStatePanel } from '@/components/study-state-panel';
+import { fetchCatalogContentSignals } from '@/lib/data/catalog';
 
 export const revalidate = 600;
+
+const loadCatalogContentSignals = unstable_cache(
+  () => fetchCatalogContentSignals(createPublicClient()),
+  ['catalog-content-signals'],
+  { revalidate: 600, tags: ['catalog-content-signals'] }
+);
 
 export async function generateMetadata({
   searchParams,
@@ -93,19 +101,24 @@ export default async function MateriasPage({
   }
 
   let materias: Materia[] = [];
-  let sharedStudentMaterials: Awaited<
-    ReturnType<typeof fetchSharedStudentMaterialsByCarrera>
-  > = [];
+  let sharedStudentMaterials: Awaited<ReturnType<typeof fetchSharedStudentMaterialsByCarrera>> = [];
+  let contentMateriaIds: string[] = [];
+  let questionMateriaIds: string[] = [];
   let carreraData: Awaited<ReturnType<typeof getCarreraById>> | null = null;
   let universidadData: Awaited<ReturnType<typeof getUniversidadById>> | null = null;
 
   try {
     carreraData = await getCarreraById(carreraId);
     const publicClient = createPublicClient();
-    [materias, sharedStudentMaterials] = await Promise.all([
+    const [loadedMaterias, loadedSharedMaterials, contentSignals] = await Promise.all([
       getMateriasByCarrera(carreraId),
       fetchSharedStudentMaterialsByCarrera(publicClient, carreraId, 8),
+      loadCatalogContentSignals(),
     ]);
+    materias = loadedMaterias;
+    sharedStudentMaterials = loadedSharedMaterials;
+    contentMateriaIds = contentSignals.contentMateriaIds;
+    questionMateriaIds = contentSignals.questionMateriaIds;
 
     if (carreraData?.universidad_id) {
       universidadData = await getUniversidadById(carreraData.universidad_id);
@@ -141,7 +154,10 @@ export default async function MateriasPage({
             ...(universidadData
               ? [{ name: universidadData.nombre, path: `/universidad/${universidadData.id}` }]
               : []),
-            { name: carreraData.nombre, path: `/materias?carreraId=${encodeURIComponent(carreraId)}` },
+            {
+              name: carreraData.nombre,
+              path: `/materias?carreraId=${encodeURIComponent(carreraId)}`,
+            },
           ])}
         />
       ) : null}
@@ -153,6 +169,8 @@ export default async function MateriasPage({
         universidadNombre={universidadData?.nombre}
         universidadId={universidadData?.id}
         sharedStudentMaterials={sharedStudentMaterials}
+        contentMateriaIds={contentMateriaIds}
+        questionMateriaIds={questionMateriaIds}
       />
     </>
   );

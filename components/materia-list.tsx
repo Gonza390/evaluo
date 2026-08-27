@@ -53,6 +53,8 @@ interface MateriaListProps {
   universidadNombre?: string;
   universidadId?: string;
   sharedStudentMaterials?: StudentMaterial[];
+  contentMateriaIds?: string[];
+  questionMateriaIds?: string[];
 }
 
 const ICONOS_MATERIAS = [
@@ -85,21 +87,23 @@ function getDescripcionMateria(nombre: string) {
     'introduccion al derecho': 'Bases del sistema jurídico, sus fuentes y conceptos esenciales.',
     'derecho civil': 'Principios civiles clave sobre personas, bienes y relaciones privadas.',
     'derecho penal': 'Delitos, responsabilidad penal y estructura básica del sistema punitivo.',
-    'derecho constitucional': 'Organización del Estado, derechos fundamentales y control constitucional.',
+    'derecho constitucional':
+      'Organización del Estado, derechos fundamentales y control constitucional.',
     'derecho romano': 'Orígenes y categorías clásicas que influyen en el derecho actual.',
     'filosofia del derecho': 'Ideas, fundamentos y debates centrales sobre justicia y norma.',
     'historia del derecho': 'Evolución histórica de las instituciones jurídicas principales.',
-    'economia': 'Conceptos económicos base para analizar decisiones, mercados y contexto.',
-    'contabilidad': 'Registro, lectura e interpretación de información contable esencial.',
-    'administracion': 'Herramientas de gestión, organización y toma de decisiones.',
-    'marketing': 'Estrategias de mercado, posicionamiento y comportamiento del consumidor.',
-    'matematica': 'Nociones cuantitativas para resolver problemas y fortalecer análisis.',
-    'estadistica': 'Análisis de datos, probabilidades e interpretación de resultados.',
-    'metodologia de la investigacion': 'Técnicas para investigar, argumentar y estructurar trabajos académicos.',
-    'psicologia': 'Procesos de conducta, pensamiento y comprensión del comportamiento humano.',
-    'sociologia': 'Análisis de instituciones, vínculos sociales y dinámicas colectivas.',
-    'ingles': 'Comprensión y uso de inglés aplicado al entorno académico y profesional.',
-    'informatica': 'Herramientas digitales y nociones técnicas útiles para la cursada.',
+    economia: 'Conceptos económicos base para analizar decisiones, mercados y contexto.',
+    contabilidad: 'Registro, lectura e interpretación de información contable esencial.',
+    administracion: 'Herramientas de gestión, organización y toma de decisiones.',
+    marketing: 'Estrategias de mercado, posicionamiento y comportamiento del consumidor.',
+    matematica: 'Nociones cuantitativas para resolver problemas y fortalecer análisis.',
+    estadistica: 'Análisis de datos, probabilidades e interpretación de resultados.',
+    'metodologia de la investigacion':
+      'Técnicas para investigar, argumentar y estructurar trabajos académicos.',
+    psicologia: 'Procesos de conducta, pensamiento y comprensión del comportamiento humano.',
+    sociologia: 'Análisis de instituciones, vínculos sociales y dinámicas colectivas.',
+    ingles: 'Comprensión y uso de inglés aplicado al entorno académico y profesional.',
+    informatica: 'Herramientas digitales y nociones técnicas útiles para la cursada.',
   };
 
   if (exactDescriptions[normalized]) {
@@ -109,11 +113,17 @@ function getDescripcionMateria(nombre: string) {
   const keywordDescriptions: Array<[string, string]> = [
     ['derecho civil', 'Principios civiles clave sobre personas, bienes y relaciones privadas.'],
     ['derecho penal', 'Delitos, responsabilidad penal y estructura básica del sistema punitivo.'],
-    ['derecho constitucional', 'Organización del Estado, derechos fundamentales y control constitucional.'],
+    [
+      'derecho constitucional',
+      'Organización del Estado, derechos fundamentales y control constitucional.',
+    ],
     ['derecho comercial', 'Sociedades, contratos mercantiles y actividad empresarial.'],
     ['derecho laboral', 'Relaciones de trabajo, derechos laborales y normativa vigente.'],
     ['derecho internacional', 'Normas, tratados y relaciones entre Estados y actores globales.'],
-    ['derecho administrativo', 'Función del Estado, administración pública y actos administrativos.'],
+    [
+      'derecho administrativo',
+      'Función del Estado, administración pública y actos administrativos.',
+    ],
     ['derecho procesal', 'Etapas del proceso, reglas del litigio y técnicas de actuación.'],
     ['derecho tributario', 'Impuestos, obligaciones fiscales y marco tributario general.'],
     ['derecho ambiental', 'Regulación del ambiente, sostenibilidad y responsabilidad jurídica.'],
@@ -164,6 +174,8 @@ export default function MateriaList({
   universidadNombre,
   universidadId,
   sharedStudentMaterials = [],
+  contentMateriaIds = [],
+  questionMateriaIds = [],
 }: MateriaListProps) {
   const [materias] = useState<Materia[]>(initialMaterias);
   const [busqueda, setBusqueda] = useState('');
@@ -174,7 +186,9 @@ export default function MateriaList({
   const [favoritesLoading, setFavoritesLoading] = useState<Set<string>>(new Set());
   const [isCareerFavorite, setIsCareerFavorite] = useState(false);
   const [careerFavoriteLoading, setCareerFavoriteLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'informacion' | 'plan' | 'recursos' | 'comunidad'>('plan');
+  const [activeTab, setActiveTab] = useState<'informacion' | 'plan' | 'recursos' | 'comunidad'>(
+    'plan'
+  );
 
   useEffect(() => {
     const loadFavorites = async () => {
@@ -229,7 +243,9 @@ export default function MateriaList({
         description: 'Te llevamos al login para guardar esta materia.',
         duration: 2500,
       });
-      router.push('/login');
+      router.push(
+        `/login?next=${encodeURIComponent(getMateriaRoute(materiaId, carreraId))}&reason=save-subject`
+      );
       return;
     }
     if (favoritesLoading.has(materiaId)) return;
@@ -249,7 +265,11 @@ export default function MateriaList({
 
     try {
       if (wasFavorite) {
-        await supabase.from('user_favorites').delete().eq('user_id', user.id).eq('materia_id', materiaId);
+        await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('materia_id', materiaId);
       } else {
         await supabase.from('user_favorites').insert({ user_id: user.id, materia_id: materiaId });
       }
@@ -281,7 +301,9 @@ export default function MateriaList({
         description: 'Te llevamos al login para guardar esta carrera.',
         duration: 2500,
       });
-      router.push('/login');
+      router.push(
+        `/login?next=${encodeURIComponent(`/materias?carreraId=${carreraId}`)}&reason=save-career`
+      );
       return;
     }
 
@@ -309,12 +331,11 @@ export default function MateriaList({
 
   const shareCareer = async () => {
     const basePath = `/materias?carreraId=${encodeURIComponent(carreraId)}`;
-    const shareUrl =
-      user?.id
-        ? buildShareReferralUrl(basePath, user.id).replace('resultado_simulador', 'carrera')
-        : typeof window !== 'undefined'
-          ? new URL(basePath, window.location.origin).toString()
-          : basePath;
+    const shareUrl = user?.id
+      ? buildShareReferralUrl(basePath, user.id).replace('resultado_simulador', 'carrera')
+      : typeof window !== 'undefined'
+        ? new URL(basePath, window.location.origin).toString()
+        : basePath;
 
     const shareTitle = carreraNombre || carreraData?.nombre || 'Carrera';
     const shareText = `Mirá esta carrera en Evaluo: ${shareTitle}`;
@@ -360,9 +381,17 @@ export default function MateriaList({
     }
   };
 
-  const materiasFiltradas = materias.filter((materia) =>
-    materia.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const contentMateriaIdSet = new Set(contentMateriaIds);
+  const questionMateriaIdSet = new Set(questionMateriaIds);
+  const materiasFiltradas = materias
+    .filter((materia) => materia.nombre.toLowerCase().includes(busqueda.toLowerCase()))
+    .sort((a, b) => {
+      if (busqueda.trim()) return a.nombre.localeCompare(b.nombre, 'es');
+      const aReady = contentMateriaIdSet.has(a.id) ? 1 : 0;
+      const bReady = contentMateriaIdSet.has(b.id) ? 1 : 0;
+      if (aReady !== bReady) return bReady - aReady;
+      return a.nombre.localeCompare(b.nombre, 'es');
+    });
   const materiaNameById = new Map(materias.map((materia) => [materia.id, materia.nombre]));
   const officialCareerProfile = getOfficialCareerProfile({
     universidadNombre,
@@ -420,7 +449,7 @@ export default function MateriaList({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[20px] font-bold leading-tight tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
+                <h1 className="text-[20px] leading-tight font-bold tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
                   {carreraNombre || 'Abogacía'}
                 </h1>
               </div>
@@ -429,7 +458,9 @@ export default function MateriaList({
                   <div className="flex min-h-[48px] items-center gap-3">
                     <Clock className="h-4 w-4 shrink-0 text-white/90" />
                     <div>
-                      <p className="text-sm font-semibold text-white drop-shadow">{careerDuration}</p>
+                      <p className="text-sm font-semibold text-white drop-shadow">
+                        {careerDuration}
+                      </p>
                       <p className="mt-0.5 text-xs text-white/60">Duración</p>
                     </div>
                   </div>
@@ -437,7 +468,9 @@ export default function MateriaList({
                 <div className="flex min-h-[48px] items-center gap-3">
                   <BookOpen className="h-4 w-4 shrink-0 text-white/90" />
                   <div>
-                    <p className="text-sm font-semibold text-white drop-shadow">{materias.length} materias</p>
+                    <p className="text-sm font-semibold text-white drop-shadow">
+                      {materias.length} materias
+                    </p>
                     <p className="mt-0.5 text-xs text-white/60">Plan de estudios</p>
                   </div>
                 </div>
@@ -461,7 +494,7 @@ export default function MateriaList({
                 ) : null}
               </div>
             </div>
-            <div className="grid w-full self-center grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+            <div className="grid w-full grid-cols-2 gap-2 self-center sm:flex sm:w-auto sm:flex-wrap sm:items-center">
               <button
                 type="button"
                 onClick={shareCareer}
@@ -477,8 +510,12 @@ export default function MateriaList({
                 disabled={careerFavoriteLoading}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15 disabled:opacity-60 sm:px-5 sm:py-3"
               >
-                <Star className={`h-4 w-4 ${isCareerFavorite ? 'fill-current text-yellow-400' : ''}`} />
-                <span className="hidden sm:inline">{isCareerFavorite ? 'Guardada' : 'Guardar carrera'}</span>
+                <Star
+                  className={`h-4 w-4 ${isCareerFavorite ? 'fill-current text-yellow-400' : ''}`}
+                />
+                <span className="hidden sm:inline">
+                  {isCareerFavorite ? 'Guardada' : 'Guardar carrera'}
+                </span>
                 <span className="sm:hidden">{isCareerFavorite ? 'Guardada' : 'Guardar'}</span>
               </button>
             </div>
@@ -518,15 +555,19 @@ export default function MateriaList({
           <div className="animate-tab-panel">
             <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h2 className="section-title text-[1.6rem] text-slate-900 sm:text-3xl">Plan de estudios</h2>
-                <p className="section-copy mt-1 text-sm text-slate-600">Explorá todas las materias de la carrera</p>
+                <h2 className="section-title text-[1.6rem] text-slate-900 sm:text-3xl">
+                  Plan de estudios
+                </h2>
+                <p className="section-copy mt-1 text-sm text-slate-600">
+                  Primero aparecen las materias que ya tienen materiales o preguntas para practicar.
+                </p>
               </div>
               <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Buscar materia..."
-                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm ring-blue-500 focus:border-blue-500 focus:outline-none focus:ring-1 sm:w-72"
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-10 text-sm ring-blue-500 focus:border-blue-500 focus:ring-1 focus:outline-none sm:w-72"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
@@ -540,6 +581,8 @@ export default function MateriaList({
                 const isFavorite = favorites.has(materia.id);
                 const isFavoriteLoading = favoritesLoading.has(materia.id);
                 const isLongTitle = isLongMateriaTitle(materia.nombre);
+                const hasContent = contentMateriaIdSet.has(materia.id);
+                const hasQuestions = questionMateriaIdSet.has(materia.id);
 
                 return (
                   <Card
@@ -549,15 +592,17 @@ export default function MateriaList({
                     <CardContent className="flex h-full flex-col p-4 text-left">
                       <div className="mb-3 flex items-start justify-between gap-3">
                         <div className="flex min-w-0 flex-1 flex-col gap-3">
-                          <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icono.bg}`}>
+                          <div
+                            className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${icono.bg}`}
+                          >
                             <IconComponent className={`h-5 w-5 ${icono.color}`} />
                           </div>
                           <div className="min-w-0">
                             <h3
                               className={`text-[#152A63] ${
                                 isLongTitle
-                                  ? 'line-clamp-3 text-[15px] font-semibold leading-5 tracking-[-0.02em]'
-                                  : 'line-clamp-2 text-[17px] font-semibold leading-6 tracking-[-0.03em]'
+                                  ? 'line-clamp-3 text-[15px] leading-5 font-semibold tracking-[-0.02em]'
+                                  : 'line-clamp-2 text-[17px] leading-6 font-semibold tracking-[-0.03em]'
                               }`}
                             >
                               {materia.nombre}
@@ -565,6 +610,22 @@ export default function MateriaList({
                             <p className="mt-1.5 line-clamp-2 max-w-full text-[12px] leading-5 text-[#7C879C]">
                               {materia.descripcion || getDescripcionMateria(materia.nombre)}
                             </p>
+                            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                              {hasContent ? (
+                                <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">
+                                  Material disponible
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-500">
+                                  Contenido en preparación
+                                </span>
+                              )}
+                              {hasQuestions ? (
+                                <span className="rounded-full bg-indigo-50 px-2 py-1 text-indigo-700">
+                                  Práctica disponible
+                                </span>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
                         <button
@@ -572,11 +633,19 @@ export default function MateriaList({
                           onClick={() => toggleFavorite(materia.id)}
                           className={`shrink-0 rounded-xl border p-2 shadow-sm transition-all duration-300 ${
                             isFavorite
-                                ? 'border-amber-300 bg-gradient-to-br from-amber-100 via-white to-amber-50 text-amber-500 shadow-amber-100 hover:-translate-y-0.5 hover:shadow-md'
-                                : 'border-slate-200 bg-white text-slate-500 hover:-translate-y-0.5 hover:border-slate-300 hover:text-amber-500 hover:shadow-md'
+                              ? 'border-amber-300 bg-gradient-to-br from-amber-100 via-white to-amber-50 text-amber-500 shadow-amber-100 hover:-translate-y-0.5 hover:shadow-md'
+                              : 'border-slate-200 bg-white text-slate-500 hover:-translate-y-0.5 hover:border-slate-300 hover:text-amber-500 hover:shadow-md'
                           }`}
-                          aria-label={isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          title={user ? (isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos') : 'Iniciá sesión para guardar favoritos'}
+                          aria-label={`${isFavorite ? 'Quitar' : 'Agregar'} ${materia.nombre} ${
+                            isFavorite ? 'de' : 'a'
+                          } favoritos`}
+                          title={
+                            user
+                              ? isFavorite
+                                ? 'Quitar de favoritos'
+                                : 'Agregar a favoritos'
+                              : 'Iniciá sesión para guardar favoritos'
+                          }
                           disabled={isFavoriteLoading}
                         >
                           {isFavoriteLoading ? (
@@ -606,7 +675,9 @@ export default function MateriaList({
               {materiasFiltradas.length === 0 && (
                 <div className="col-span-full py-20 text-center">
                   <Search className="mx-auto mb-4 h-16 w-16 text-slate-300" />
-                  <h3 className="mb-2 text-xl font-semibold text-slate-800">No se encontraron materias</h3>
+                  <h3 className="mb-2 text-xl font-semibold text-slate-800">
+                    No se encontraron materias
+                  </h3>
                   <p className="text-slate-500">Probá con otra búsqueda</p>
                 </div>
               )}
@@ -619,7 +690,9 @@ export default function MateriaList({
             <div className="mx-auto max-w-5xl rounded-3xl border border-[#E8EDF5] bg-white p-8 text-left shadow-sm">
               <div className="flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
                 <div className="max-w-3xl">
-                  <h2 className="section-title mb-3 text-slate-800 sm:text-[2rem]">Información de la carrera</h2>
+                  <h2 className="section-title mb-3 text-slate-800 sm:text-[2rem]">
+                    Información de la carrera
+                  </h2>
                   <p className="text-sm leading-7 text-slate-600">{careerDescription}</p>
                 </div>
               </div>
@@ -627,24 +700,32 @@ export default function MateriaList({
               <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {careerDuration ? (
                   <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                    <span className="block text-xs uppercase tracking-wide text-slate-500">Duración</span>
+                    <span className="block text-xs tracking-wide text-slate-500 uppercase">
+                      Duración
+                    </span>
                     <span className="mt-1 block font-semibold">{careerDuration}</span>
                   </div>
                 ) : null}
                 {careerTitle ? (
                   <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                    <span className="block text-xs uppercase tracking-wide text-slate-500">Título otorgado</span>
+                    <span className="block text-xs tracking-wide text-slate-500 uppercase">
+                      Título otorgado
+                    </span>
                     <span className="mt-1 block font-semibold">{careerTitle}</span>
                   </div>
                 ) : null}
                 {careerLevel ? (
                   <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                    <span className="block text-xs uppercase tracking-wide text-slate-500">Tipo de programa</span>
+                    <span className="block text-xs tracking-wide text-slate-500 uppercase">
+                      Tipo de programa
+                    </span>
                     <span className="mt-1 block font-semibold">{careerLevel}</span>
                   </div>
                 ) : null}
                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                  <span className="block text-xs uppercase tracking-wide text-slate-500">Materias visibles</span>
+                  <span className="block text-xs tracking-wide text-slate-500 uppercase">
+                    Materias visibles
+                  </span>
                   <span className="mt-1 block font-semibold">{materias.length}</span>
                 </div>
               </div>
@@ -692,7 +773,9 @@ export default function MateriaList({
             {sharedStudentMaterials.length === 0 ? (
               <div className="rounded-[28px] border border-dashed border-slate-200 bg-white px-6 py-16 text-center">
                 <BarChart3 className="mx-auto mb-6 h-16 w-16 text-slate-300" />
-                <h3 className="text-2xl font-bold text-slate-800">Todavía no hay PDFs compartidos</h3>
+                <h3 className="text-2xl font-bold text-slate-800">
+                  Todavía no hay PDFs compartidos
+                </h3>
                 <p className="mx-auto mt-3 max-w-md text-slate-600">
                   Cuando los estudiantes de esta carrera suban apuntes a su espacio, los vas a ver
                   acá listos para abrir.
@@ -708,7 +791,7 @@ export default function MateriaList({
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-[#2563EB]">
+                          <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF4FF] px-3 py-1 text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
                             <Globe className="h-3.5 w-3.5" />
                             Compartido
                           </div>

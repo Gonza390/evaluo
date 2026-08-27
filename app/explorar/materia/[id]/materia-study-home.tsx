@@ -78,11 +78,7 @@ function getResumenHref(materiaId: string, materiaNombre: string, resumen: Resum
   return `${baseRoute}${separator}modulo=${Number.isFinite(moduleId) && moduleId > 0 ? moduleId : 1}`;
 }
 
-function buildUploadHref(
-  materiaId: string,
-  carreraId?: string,
-  universidadId?: string
-) {
+function buildUploadHref(materiaId: string, carreraId?: string, universidadId?: string) {
   const params = new URLSearchParams({ openUpload: '1', materiaId });
   if (carreraId) params.set('carreraId', carreraId);
   if (universidadId) params.set('universidadId', universidadId);
@@ -135,6 +131,8 @@ export default function MateriaStudyHome({
     [initialResumenes, visibleStudentMaterials.length]
   );
   const hasContent = visibleResumenes.length > 0 || visibleStudentMaterials.length > 0;
+  const totalQuestions = questionCounts[1] + questionCounts[2];
+  const hasQuestions = totalQuestions > 0;
 
   useEffect(() => {
     let active = true;
@@ -374,7 +372,9 @@ export default function MateriaStudyHome({
         <section className="grid gap-4 lg:grid-cols-2 lg:gap-5" aria-label="Acciones principales">
           <Link
             href={uploadHref}
-            onClick={() => trackAction('materia_upload_notes_clicked', { source: 'materia_action_card' })}
+            onClick={() =>
+              trackAction('materia_upload_notes_clicked', { source: 'materia_action_card' })
+            }
             className="group relative overflow-hidden rounded-[24px] border border-[#D8E5FF] bg-[linear-gradient(145deg,#F8FBFF_0%,#EEF4FF_100%)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#AFC8FF] hover:shadow-[0_18px_44px_rgba(37,99,235,0.10)] sm:p-6"
           >
             <div className="flex items-start gap-4">
@@ -386,7 +386,8 @@ export default function MateriaStudyHome({
                   Preparar mis apuntes
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  Subí un PDF de esta materia y Evaluo lo convierte en resumen, glosario, tarjetas y ejercicios.
+                  Subí un PDF de esta materia y Evaluo lo convierte en resumen, glosario, tarjetas y
+                  ejercicios.
                 </p>
               </div>
             </div>
@@ -436,10 +437,11 @@ export default function MateriaStudyHome({
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-2xl">
-                      Practicar preguntero
+                      Practicar preguntas
                     </h2>
                     <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                      Elegí qué parcial querés practicar y empezá ahora mismo.
+                      Respondé preguntas por parcial con corrección inmediata. El simulacro completo
+                      aparece cuando estés listo.
                     </p>
                   </div>
                   <ChevronDown
@@ -459,62 +461,76 @@ export default function MateriaStudyHome({
                 className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
               >
                 <Zap className="h-4 w-4" />
-                Practicar preguntero
+                Ver prácticas disponibles
               </button>
             ) : (
               <div className="mt-5 space-y-3">
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  {PRACTICE_OPTIONS.map((option) => {
-                    const count = questionCounts[option.parcial] ?? 0;
-                    const available = count > 0;
-                    const href = getSimulatorRoute(
-                      materiaId,
-                      option.parcial,
-                      universidadId,
-                      carreraId
-                    );
+                {hasQuestions ? (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    {PRACTICE_OPTIONS.filter(
+                      (option) => (questionCounts[option.parcial] ?? 0) > 0
+                    ).map((option) => {
+                      const count = questionCounts[option.parcial] ?? 0;
+                      const href = getSimulatorRoute(
+                        materiaId,
+                        option.parcial,
+                        universidadId,
+                        carreraId
+                      );
 
-                    if (!available) {
                       return (
-                        <div
+                        <Link
                           key={option.parcial}
-                          className="rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-left opacity-60"
+                          href={href}
+                          onClick={() =>
+                            trackAction('materia_simulator_cta_clicked', {
+                              source: 'materia_practice_picker',
+                              parcial: option.parcial,
+                              question_count: count,
+                            })
+                          }
+                          className="group rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
                         >
                           <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-slate-700">{option.label}</span>
-                            <span className="text-[11px] font-semibold text-slate-400">Sin preguntas</span>
+                            <span className="font-semibold text-slate-900">{option.label}</span>
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 opacity-0 transition group-hover:opacity-100" />
                           </div>
-                        </div>
+                          <p className="mt-1 text-[12px] text-slate-500">
+                            {count.toLocaleString('es-AR')} preguntas disponibles
+                          </p>
+                          <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-700">
+                            Comenzar <ChevronRight className="h-3.5 w-3.5" />
+                          </p>
+                        </Link>
                       );
-                    }
-
-                    return (
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-emerald-200 bg-white/80 p-4">
+                    <h3 className="font-bold text-slate-900">
+                      La práctica de esta materia está en preparación
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      No tenés que elegir entre opciones vacías. Podés crear ejercicios desde tus
+                      apuntes o probar una guía completa de ejemplo.
+                    </p>
+                    <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                       <Link
-                        key={option.parcial}
-                        href={href}
-                        onClick={() =>
-                          trackAction('materia_simulator_cta_clicked', {
-                            source: 'materia_practice_picker',
-                            parcial: option.parcial,
-                            question_count: count,
-                          })
-                        }
-                        className="group rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+                        href={uploadHref}
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-semibold text-slate-900">{option.label}</span>
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 opacity-0 transition group-hover:opacity-100" />
-                        </div>
-                        <p className="mt-1 text-[12px] text-slate-500">
-                          {count.toLocaleString('es-AR')} preguntas disponibles
-                        </p>
-                        <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-700">
-                          Comenzar <ChevronRight className="h-3.5 w-3.5" />
-                        </p>
+                        <UploadCloud className="h-4 w-4" />
+                        Crear ejercicios con mi PDF
                       </Link>
-                    );
-                  })}
-                </div>
+                      <Link
+                        href="/demo/material-estudio"
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                      >
+                        Ver guía de ejemplo
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -533,7 +549,8 @@ export default function MateriaStudyHome({
                 Materiales de {nombre}
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                Apuntes completos preparados en Evaluo y resúmenes compartidos para estudiar esta materia.
+                Apuntes completos preparados en Evaluo y resúmenes compartidos para estudiar esta
+                materia.
               </p>
             </div>
             <Link
@@ -644,15 +661,24 @@ export default function MateriaStudyHome({
                 Todavía no hay contenido compartido
               </h3>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-                Podés ser el primero en aportar apuntes de esta materia y convertirlos en material de estudio.
+                Podés convertir tus apuntes en una guía privada o compartirlos con la materia.
+                También podés ver un ejemplo antes de registrarte.
               </p>
-              <Link
-                href={uploadHref}
-                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
-              >
-                <UploadCloud className="h-4 w-4" />
-                Subir mi apunte
-              </Link>
+              <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+                <Link
+                  href={uploadHref}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                  Crear guía con mi PDF
+                </Link>
+                <Link
+                  href="/demo/material-estudio"
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+                >
+                  Ver una guía de ejemplo
+                </Link>
+              </div>
             </div>
           )}
         </section>

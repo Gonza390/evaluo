@@ -8,7 +8,7 @@ export default async function EmpezarPage() {
   const bootstrap = await getDashboardBootstrap();
 
   if (bootstrap.status === 'login') {
-    redirect('/login?next=%2Fempezar');
+    redirect('/login?next=%2Fempezar&reason=guided-start');
   }
 
   if (bootstrap.status === 'complete-profile') {
@@ -34,8 +34,8 @@ export default async function EmpezarPage() {
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-6 text-white/82 sm:text-base">
               {universityLabel ? `${careerLabel} · ${universityLabel}. ` : `${careerLabel}. `}
-              Podés estudiar con lo que ya compartió la comunidad o convertir tus propios apuntes
-              en un espacio de estudio.
+              Podés estudiar con lo que ya compartió la comunidad o convertir tus propios apuntes en
+              un espacio de estudio.
             </p>
           </div>
 
@@ -54,8 +54,8 @@ export default async function EmpezarPage() {
                 Explorar contenido de mi materia
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Abrí resúmenes, pregunteros y apuntes que otros estudiantes ya compartieron para
-                esa materia.
+                Abrí resúmenes, pregunteros y apuntes que otros estudiantes ya compartieron para esa
+                materia.
               </p>
               {firstSubject ? (
                 <p className="mt-3 text-sm font-semibold text-slate-800">{firstSubject.name}</p>

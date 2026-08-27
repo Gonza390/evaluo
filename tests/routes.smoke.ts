@@ -84,14 +84,24 @@ const materialRetrySource = readFileSync(
   resolve('components/student-material-processing-retry.tsx'),
   'utf8'
 );
+const materiaStudyHomeSource = readFileSync(
+  resolve('app/explorar/materia/[id]/materia-study-home.tsx'),
+  'utf8'
+);
+const dashboardSource = readFileSync(resolve('components/dashboard/dashboard-content.tsx'), 'utf8');
+const exploreClientSource = readFileSync(resolve('app/explorar/explorar-client.tsx'), 'utf8');
+const loginSource = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
-assert.match(
-  materiaPageSource,
-  /!contentSignals\.hasSummaries\s*&&\s*contentSignals\.hasQuestions/
-);
-assert.match(materiaPageSource, /params\.set\('tab', 'pregunteros'\)/);
-assert.match(materiaPageSource, /hasExplicitSupportedTab/);
+assert.match(materiaPageSource, /contentSignals\.hasAcademicContent/);
+assert.match(materiaStudyHomeSource, /La práctica de esta materia está en preparación/);
+assert.match(materiaStudyHomeSource, /Crear ejercicios con mi PDF/);
+assert.doesNotMatch(materiaStudyHomeSource, />Sin preguntas</);
+assert.match(dashboardSource, /Empezá a estudiar en 4 pasos/);
+assert.match(dashboardSource, /Volver a ver la guía/);
+assert.match(exploreClientSource, /readyMateriasCount/);
+assert.match(exploreClientSource, /Ver las \$\{rankedCarreras\.length\} carreras/);
+assert.match(loginSource, /getAuthContextCopy/);
 
 for (const href of ['/explorar', '/pregunteros', '/']) {
   assert.ok(notFoundSource.includes(`href="${href}"`));
@@ -155,7 +165,7 @@ for (const source of [footerHomeSource, footerSource]) {
 assert.match(materialJobsSource, /STUDENT_MATERIAL_JOB_LEASE_MS = 7 \* 60 \* 1000/);
 assert.match(materialJobsSource, /processing_status: 'failed'/);
 assert.match(materialJobsSource, /procesamiento se interrumpió por tiempo límite/i);
-assert.match(materialViewerSource, /recoverStaleStudentMaterialJobs\(admin, id\)/);
+assert.match(materialViewerSource, /recoverStaleStudentMaterialJobs\(admin, materialId\)/);
 assert.match(materialViewerSource, /StudentMaterialProcessingRetry/);
 assert.match(materialRetrySource, /processStudentMaterialAction\(materialId\)/);
 assert.match(materialRetrySource, /Reintentar procesamiento/);

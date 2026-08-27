@@ -38,10 +38,55 @@ export type ExplorarCatalogData = {
     universidadId: string | null;
     universidadNombre: string;
     materiasCount: number;
+    readyMateriasCount: number;
+    questionMateriasCount: number;
   }>;
 };
 
-export async function fetchCarrerasByUniversidad(client: QueryClient, uniId: string): Promise<CatalogCarrera[]> {
+export type CatalogContentSignals = {
+  contentMateriaIds: string[];
+  questionMateriaIds: string[];
+};
+
+export async function fetchCatalogContentSignals(
+  client: QueryClient
+): Promise<CatalogContentSignals> {
+  const [questionsResult, summariesResult, resourcesResult, studentMaterialsResult] =
+    await Promise.all([
+      client.from('preguntas_banco_public').select('materia_id').limit(10000),
+      client.from('resumenes').select('materia_id').limit(10000),
+      client.from('recursos').select('materia_id').limit(10000),
+      client
+        .from('student_materials')
+        .select('materia_id')
+        .eq('visibility', 'shared')
+        .eq('processing_status', 'ready')
+        .limit(10000),
+    ]);
+
+  const questionMateriaIds = new Set<string>();
+  const contentMateriaIds = new Set<string>();
+
+  for (const row of questionsResult.error ? [] : (questionsResult.data ?? [])) {
+    if (row.materia_id) questionMateriaIds.add(String(row.materia_id));
+  }
+  for (const result of [summariesResult, resourcesResult, studentMaterialsResult]) {
+    for (const row of result.error ? [] : (result.data ?? [])) {
+      if (row.materia_id) contentMateriaIds.add(String(row.materia_id));
+    }
+  }
+  for (const materiaId of questionMateriaIds) contentMateriaIds.add(materiaId);
+
+  return {
+    contentMateriaIds: [...contentMateriaIds],
+    questionMateriaIds: [...questionMateriaIds],
+  };
+}
+
+export async function fetchCarrerasByUniversidad(
+  client: QueryClient,
+  uniId: string
+): Promise<CatalogCarrera[]> {
   if (!isUuid(uniId)) return [];
   const { data, error } = await client
     .from('carreras')
@@ -53,7 +98,10 @@ export async function fetchCarrerasByUniversidad(client: QueryClient, uniId: str
   return (data as CatalogCarrera[] | null) ?? [];
 }
 
-export async function fetchMateriasByCarrera(client: QueryClient, carreraId: string): Promise<CatalogMateria[]> {
+export async function fetchMateriasByCarrera(
+  client: QueryClient,
+  carreraId: string
+): Promise<CatalogMateria[]> {
   if (!isUuid(carreraId)) return [];
   const { data, error } = await client
     .from('materias')
@@ -76,7 +124,10 @@ export async function fetchMateriasByCarrera(client: QueryClient, carreraId: str
   });
 }
 
-export async function fetchMateriaById(client: QueryClient, materiaId: string): Promise<CatalogMateria | null> {
+export async function fetchMateriaById(
+  client: QueryClient,
+  materiaId: string
+): Promise<CatalogMateria | null> {
   if (!isUuid(materiaId)) return null;
   const { data, error } = await client
     .from('materias')
@@ -89,7 +140,10 @@ export async function fetchMateriaById(client: QueryClient, materiaId: string): 
   return data as CatalogMateria;
 }
 
-export async function fetchCarreraById(client: QueryClient, carreraId: string): Promise<CatalogCarrera | null> {
+export async function fetchCarreraById(
+  client: QueryClient,
+  carreraId: string
+): Promise<CatalogCarrera | null> {
   if (!isUuid(carreraId)) return null;
   const { data, error } = await client
     .from('carreras')
@@ -102,7 +156,10 @@ export async function fetchCarreraById(client: QueryClient, carreraId: string): 
   return data as CatalogCarrera;
 }
 
-export async function fetchUniversidadById(client: QueryClient, uniId: string): Promise<CatalogUniversidad | null> {
+export async function fetchUniversidadById(
+  client: QueryClient,
+  uniId: string
+): Promise<CatalogUniversidad | null> {
   if (!isUuid(uniId)) return null;
   const { data, error } = await client
     .from('universidades')
@@ -123,11 +180,13 @@ export async function fetchUniversidades(client: QueryClient): Promise<CatalogUn
 }
 
 export async function fetchExplorarCatalogData(client: QueryClient): Promise<ExplorarCatalogData> {
-  const [universidadesResult, carrerasResult, carreraMateriasResult] = await Promise.all([
-    client.from('universidades').select('id, nombre').order('nombre'),
-    client.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-    client.from('carrera_materias').select('carrera_id, materia_id'),
-  ]);
+  const [universidadesResult, carrerasResult, carreraMateriasResult, contentSignals] =
+    await Promise.all([
+      client.from('universidades').select('id, nombre').order('nombre'),
+      client.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+      client.from('carrera_materias').select('carrera_id, materia_id'),
+      fetchCatalogContentSignals(client),
+    ]);
 
   if (universidadesResult.error) {
     throw universidadesResult.error;
@@ -144,13 +203,20 @@ export async function fetchExplorarCatalogData(client: QueryClient): Promise<Exp
   const universidades = (universidadesResult.data as CatalogUniversidad[] | null) ?? [];
   const carreras = (carrerasResult.data as CatalogCarrera[] | null) ?? [];
   const carreraMaterias =
-    (carreraMateriasResult.data as Array<{ carrera_id: string | null; materia_id: string | null }> | null) ?? [];
+    (carreraMateriasResult.data as Array<{
+      carrera_id: string | null;
+      materia_id: string | null;
+    }> | null) ?? [];
 
-  const universityNameById = new Map(universidades.map((universidad) => [universidad.id, universidad.nombre]));
+  const universityNameById = new Map(
+    universidades.map((universidad) => [universidad.id, universidad.nombre])
+  );
   const carrerasPorUniversidad = new Map<string, string[]>();
   const materiasPorUniversidad = new Map<string, Set<string>>();
   const materiasPorCarrera = new Map<string, Set<string>>();
   const carreraToUniversity = new Map<string, string>();
+  const contentMateriaIds = new Set(contentSignals.contentMateriaIds);
+  const questionMateriaIds = new Set(contentSignals.questionMateriaIds);
 
   for (const carrera of carreras) {
     const universityId = carrera.universidad_id;
@@ -184,14 +250,19 @@ export async function fetchExplorarCatalogData(client: QueryClient): Promise<Exp
       carrerasCount: carrerasPorUniversidad.get(universidad.id)?.length ?? 0,
       materiasCount: materiasPorUniversidad.get(universidad.id)?.size ?? 0,
     })),
-    carreras: carreras.map((carrera) => ({
-      id: carrera.id,
-      nombre: carrera.nombre,
-      universidadId: carrera.universidad_id ?? null,
-      universidadNombre: carrera.universidad_id
-        ? (universityNameById.get(carrera.universidad_id) ?? 'Universidad')
-        : 'Universidad',
-      materiasCount: materiasPorCarrera.get(carrera.id)?.size ?? 0,
-    })),
+    carreras: carreras.map((carrera) => {
+      const materiaIds = [...(materiasPorCarrera.get(carrera.id) ?? [])];
+      return {
+        id: carrera.id,
+        nombre: carrera.nombre,
+        universidadId: carrera.universidad_id ?? null,
+        universidadNombre: carrera.universidad_id
+          ? (universityNameById.get(carrera.universidad_id) ?? 'Universidad')
+          : 'Universidad',
+        materiasCount: materiaIds.length,
+        readyMateriasCount: materiaIds.filter((id) => contentMateriaIds.has(id)).length,
+        questionMateriasCount: materiaIds.filter((id) => questionMateriaIds.has(id)).length,
+      };
+    }),
   };
 }

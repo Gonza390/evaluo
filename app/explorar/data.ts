@@ -15,6 +15,8 @@ export type ExplorarCarrera = {
   universidadId: string | null;
   universidadNombre: string;
   materiasCount: number;
+  readyMateriasCount: number;
+  questionMateriasCount: number;
 };
 
 export type ExplorarData = {
