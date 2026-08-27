@@ -1,0 +1,79 @@
+.material-study-editorial {
+  min-height: 100%;
+  background: var(--background);
+}
+
+/* El contenido de estudio se lee como documento, no como una pila de tarjetas. */
+.material-study-editorial [role='tabpanel'] > .surface-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.material-study-editorial .surface-card {
+  box-shadow: none !important;
+}
+
+/* Tabs editoriales: una sola barra estable y el estado activo marcado por una línea. */
+.material-study-editorial [role='tablist'] {
+  gap: 0.2rem !important;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+  border-radius: 0 !important;
+}
+
+.material-study-editorial [role='tab'] {
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.material-study-editorial [role='tab'][data-state='active'] {
+  border-bottom-color: var(--primary) !important;
+  background: transparent !important;
+  color: var(--primary) !important;
+}
+
+/* La carcasa principal y el PDF conservan estructura, pero sin elevación decorativa. */
+.material-study-editorial [class*='shadow-[0_24px_70px'],
+.material-study-editorial [class*='shadow-[0_22px_54px'],
+.material-study-editorial [class*='shadow-[0_14px_30px'] {
+  box-shadow: none !important;
+}
+
+.material-study-editorial [class*='shadow-[0_24px_70px'],
+.material-study-editorial [class*='shadow-[0_22px_54px'] {
+  border-radius: 16px !important;
+}
+
+.material-study-editorial [class*='shadow-[0_14px_30px'] {
+  border-radius: 12px !important;
+}
+
+.material-study-editorial button[aria-label='Ocultar PDF'],
+.material-study-editorial button[aria-label='Mostrar PDF'] {
+  box-shadow: none !important;
+}
+
+/* Volver forma parte de la navegación de la página, no de una tarjeta. */
+.material-study-editorial main > section:first-child a {
+  border-color: transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  padding-left: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Controles secundarios más compactos y coherentes con el shell nuevo. */
+.material-study-editorial main button,
+.material-study-editorial main a {
+  box-shadow: none;
+}
+
+@media (max-width: 1279px) {
+  .material-study-editorial [role='tabpanel'] > .surface-card {
+    padding-inline: 0 !important;
+  }
+}
