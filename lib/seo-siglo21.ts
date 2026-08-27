@@ -70,6 +70,28 @@ async function getSiglo21University() {
   return data;
 }
 
+async function getSiglo21LinkedMateriaIds(universidadId: string) {
+  const admin = createAdminClient();
+  const { data: carreras, error: carreraError } = await admin
+    .from('carreras')
+    .select('id')
+    .eq('universidad_id', universidadId);
+
+  if (carreraError) throw carreraError;
+  const carreraIds = (carreras ?? []).map((carrera) => carrera.id).filter(Boolean);
+  if (carreraIds.length === 0) return new Set<string>();
+
+  const { data: relations, error: relationError } = await admin
+    .from('carrera_materias')
+    .select('materia_id')
+    .in('carrera_id', carreraIds);
+
+  if (relationError) throw relationError;
+  return new Set(
+    (relations ?? []).map((row) => row.materia_id).filter((id): id is string => Boolean(id))
+  );
+}
+
 async function getMateriaCareerContext(materiaId: string, universidadId: string) {
   const admin = createAdminClient();
   const { data: relations, error: relationError } = await admin
@@ -122,6 +144,60 @@ async function fetchAllMateriaQuestions(materiaId: string) {
   return rows;
 }
 
+async function fetchHubQuestionRows(universidadId: string, linkedMateriaIds: Set<string>) {
+  const admin = createAdminClient();
+  const pageSize = 1000;
+  const rows: Array<{
+    materia_id: string | null;
+    parcial: number | null;
+    universidad_id: string | null;
+  }> = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await admin
+      .from('preguntas_banco')
+      .select('materia_id, parcial, universidad_id')
+      .eq('universidad_id', universidadId)
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    const batch = (data ?? []) as typeof rows;
+    rows.push(...batch);
+    if (batch.length < pageSize) break;
+  }
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await admin
+      .from('preguntas_banco')
+      .select('materia_id, parcial, universidad_id')
+      .is('universidad_id', null)
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    const batch = ((data ?? []) as typeof rows).filter(
+      (row) => Boolean(row.materia_id) && linkedMateriaIds.has(String(row.materia_id))
+    );
+    rows.push(...batch);
+    if ((data ?? []).length < pageSize) break;
+  }
+
+  return rows;
+}
+
+function mapQuestionSample(question: {
+  id: string;
+  enunciado: string;
+  opciones: unknown;
+  parcial: number | null;
+}): Siglo21QuestionSample {
+  return {
+    id: question.id,
+    enunciado: question.enunciado,
+    parcial: Number(question.parcial ?? 1),
+    opcionesCount: Array.isArray(question.opciones) ? question.opciones.length : 0,
+  };
+}
+
 export async function getSiglo21PregunteroMateria(
   materiaId: string
 ): Promise<Siglo21PregunteroMateria | null> {
@@ -151,6 +227,10 @@ export async function getSiglo21PregunteroMateria(
 
   const parcial1 = questions.filter((question) => Number(question.parcial ?? 1) === 1);
   const parcial2 = questions.filter((question) => Number(question.parcial ?? 1) === 2);
+  const samplePreguntas = [
+    ...parcial1.slice(0, 4).map(mapQuestionSample),
+    ...parcial2.slice(0, 4).map(mapQuestionSample),
+  ];
 
   return {
     materiaId: materia.id,
@@ -162,12 +242,7 @@ export async function getSiglo21PregunteroMateria(
     preguntasParcial1: parcial1.length,
     preguntasParcial2: parcial2.length,
     preguntasIntegrador: parcial1.length > 0 && parcial2.length > 0 ? questions.length : 0,
-    samplePreguntas: questions.slice(0, 8).map((question) => ({
-      id: question.id,
-      enunciado: question.enunciado,
-      parcial: Number(question.parcial ?? 1),
-      opcionesCount: Array.isArray(question.opciones) ? question.opciones.length : 0,
-    })),
+    samplePreguntas,
   };
 }
 
@@ -180,21 +255,8 @@ export async function getSiglo21PregunteroHub(): Promise<{
   const universidad = await getSiglo21University();
   if (!universidad) return null;
 
-  const pageSize = 1000;
-  const rows: Array<{ materia_id: string | null; parcial: number | null }> = [];
-
-  for (let from = 0; ; from += pageSize) {
-    const { data, error } = await admin
-      .from('preguntas_banco')
-      .select('materia_id, parcial')
-      .eq('universidad_id', universidad.id)
-      .range(from, from + pageSize - 1);
-
-    if (error) throw error;
-    const batch = (data ?? []) as typeof rows;
-    rows.push(...batch);
-    if (batch.length < pageSize) break;
-  }
+  const linkedMateriaIds = await getSiglo21LinkedMateriaIds(universidad.id);
+  const rows = await fetchHubQuestionRows(universidad.id, linkedMateriaIds);
 
   const counts = new Map<string, { total: number; p1: number; p2: number }>();
   for (const row of rows) {
