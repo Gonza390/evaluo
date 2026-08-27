@@ -279,10 +279,12 @@ export async function enhancePdfExtractionWithVision(input: {
     };
   }
 
-  const rendered = renderResult.images.map((image, index) => ({
-    image,
-    pageNumber: renderResult.renderedPageNumbers[index],
-  })).filter((entry): entry is { image: Buffer; pageNumber: number } => Boolean(entry.pageNumber));
+  const rendered = renderResult.images
+    .map((image, index) => ({
+      image,
+      pageNumber: renderResult.renderedPageNumbers[index],
+    }))
+    .filter((entry): entry is { image: Buffer; pageNumber: number } => Boolean(entry.pageNumber));
 
   const batches = chunk(rendered, VISION_BATCH_SIZE);
   const visionPages = new Map<number, VisionPage>();
@@ -331,8 +333,7 @@ export async function enhancePdfExtractionWithVision(input: {
     if (index < 0 || index >= resolvedPages.length) continue;
 
     const nativePage = resolvedPages[index]?.trim() ?? '';
-    const canReplaceNative =
-      visionPage.confidence !== 'baja' || nativePage.length < 180;
+    const canReplaceNative = visionPage.confidence !== 'baja' || nativePage.length < 180;
 
     if (!canReplaceNative) continue;
 
@@ -341,6 +342,27 @@ export async function enhancePdfExtractionWithVision(input: {
   }
 
   appliedPageNumbers.sort((left, right) => left - right);
+
+  const requiresFullVisualCoverage =
+    input.analysis.requiresOcr || input.analysis.documentType === 'scanned';
+  if (
+    requiresFullVisualCoverage &&
+    appliedPageNumbers.length !== selectedPageNumbers.length
+  ) {
+    logInfo('studentMaterialVisionExtract.incompleteScanFallback', {
+      materialId: input.materialId,
+      selectedPages: selectedPageNumbers.length,
+      appliedPages: appliedPageNumbers.length,
+    });
+    return {
+      text: input.nativeText,
+      pages: input.nativePages,
+      visionUsed: false,
+      visionPageNumbers: [],
+      visionModel,
+    };
+  }
+
   const text = resolvedPages.filter((page) => page.trim()).join('\n\n').trim();
   const visionUsed = appliedPageNumbers.length > 0 && text.length > 0;
 
