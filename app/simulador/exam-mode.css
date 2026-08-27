@@ -152,47 +152,8 @@ html.evaluo-exam-scroll-lock body {
   background: color-mix(in oklch, var(--muted) 34%, var(--background));
 }
 
-/* En modo examen no revelamos visualmente si una respuesta es correcta o incorrecta.
-   La corrección sigue ocurriendo en servidor y se muestra en el diagnóstico final. */
-#evaluo-simulator-shell[data-exam-immersive='true']
-  .min-h-screen.bg-white.pb-36
-  main
-  [role='group']
-  button.border-emerald-500,
-#evaluo-simulator-shell[data-exam-immersive='true']
-  .min-h-screen.bg-white.pb-36
-  main
-  [role='group']
-  button.border-rose-500 {
-  border-color: var(--border) !important;
-  background: var(--card) !important;
-  color: var(--foreground) !important;
-  box-shadow: 0 1px 0 color-mix(in oklch, var(--foreground) 4%, transparent) !important;
-}
-
-#evaluo-simulator-shell[data-exam-immersive='true']
-  .min-h-screen.bg-white.pb-36
-  main
-  [role='group']
-  button[aria-pressed='true'] {
-  border-color: color-mix(in oklch, var(--primary) 72%, var(--border)) !important;
-  background: color-mix(in oklch, var(--primary) 8%, var(--background)) !important;
-  color: var(--foreground) !important;
-  box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 12%, transparent) !important;
-}
-
-#evaluo-simulator-shell[data-exam-immersive='true']
-  .min-h-screen.bg-white.pb-36
-  main
-  [role='group']
-  span.bg-emerald-100,
-#evaluo-simulator-shell[data-exam-immersive='true']
-  .min-h-screen.bg-white.pb-36
-  main
-  [role='group']
-  span.bg-rose-100 {
-  display: none !important;
-}
+/* Pantalla completa conserva el mismo feedback pedagógico que la vista normal:
+   opción elegida incorrecta en rojo, correcta en verde y sus etiquetas visibles. */
 
 @media (max-width: 1023px) {
   #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main.rounded-2xl {
