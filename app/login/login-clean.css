@@ -1,0 +1,23 @@
+.login-editorial {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.login-editorial button,
+.login-editorial [class*='shadow-['] {
+  box-shadow: none !important;
+}
+
+.login-editorial img {
+  border-radius: 0 !important;
+}
+
+.login-editorial button[class*='rounded-xl'],
+.login-editorial input[class*='rounded-xl'],
+.login-editorial label[class*='rounded-xl'] {
+  border-radius: 0.75rem !important;
+}
+
+.login-editorial button:hover {
+  transform: none !important;
+}
