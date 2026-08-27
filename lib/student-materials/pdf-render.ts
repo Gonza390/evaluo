@@ -9,6 +9,14 @@ const DEFAULT_RENDER_BATCH_SIZE = 10;
 // todas las páginas solicitadas.
 const MAX_RENDER_PAGES_FALLBACK = 500;
 
+// Detección conservadora de páginas en blanco. Muestreamos el canvas ya
+// renderizado sobre fondo blanco. Ante cualquier duda la página se considera
+// NO vacía y sigue a visión; preferimos gastar una llamada antes que perder
+// contenido académico tenue o pequeño.
+const BLANK_PAGE_SAMPLE_STEP = 6;
+const BLANK_PAGE_CHANNEL_THRESHOLD = 245;
+const BLANK_PAGE_NON_WHITE_SAMPLE_LIMIT = 8;
+
 type PdfCanvas = {
   width: number;
   height: number;
@@ -28,10 +36,50 @@ type PdfCanvasFactory = {
 export type PdfRenderResult = {
   images: Buffer[];
   renderedPageNumbers: number[];
+  blankPageNumbers: number[];
   pageCount: number;
   pagesProcessed: number;
   coverageRatio: number;
 };
+
+function isCanvasNearlyBlank(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number
+) {
+  if (width <= 0 || height <= 0) return false;
+
+  try {
+    const imageData = context.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    let nonWhiteSamples = 0;
+
+    for (let y = 0; y < height; y += BLANK_PAGE_SAMPLE_STEP) {
+      for (let x = 0; x < width; x += BLANK_PAGE_SAMPLE_STEP) {
+        const offset = (y * width + x) * 4;
+        const red = data[offset] ?? 255;
+        const green = data[offset + 1] ?? 255;
+        const blue = data[offset + 2] ?? 255;
+
+        if (
+          red < BLANK_PAGE_CHANNEL_THRESHOLD ||
+          green < BLANK_PAGE_CHANNEL_THRESHOLD ||
+          blue < BLANK_PAGE_CHANNEL_THRESHOLD
+        ) {
+          nonWhiteSamples += 1;
+          if (nonWhiteSamples >= BLANK_PAGE_NON_WHITE_SAMPLE_LIMIT) {
+            return false;
+          }
+        }
+      }
+    }
+
+    return true;
+  } catch {
+    // Si el runtime no permite leer píxeles, nunca asumimos que está vacía.
+    return false;
+  }
+}
 
 export async function renderPdfPagesToPngs(
   buffer: Buffer,
@@ -41,6 +89,7 @@ export async function renderPdfPagesToPngs(
     return {
       images: [],
       renderedPageNumbers: [],
+      blankPageNumbers: [],
       pageCount: 0,
       pagesProcessed: 0,
       coverageRatio: 0,
@@ -85,6 +134,7 @@ export async function renderPdfPagesToPngs(
     const pagesToRender = requestedPages.slice(0, MAX_RENDER_PAGES_FALLBACK);
     const images: Buffer[] = [];
     const renderedPageNumbers: number[] = [];
+    const blankPageNumbers: number[] = [];
     let pagesProcessed = 0;
 
     // En Node, PDF.js 5 crea su propio canvasFactory respaldado por
@@ -138,15 +188,14 @@ export async function renderPdfPagesToPngs(
            * Un PNG chico NO significa una página vacía.
            *
            * Una página de texto simple puede comprimir a menos de 16 KB.
-           * La versión anterior descartaba esos PNG y luego confundía
-           * `images.length` con páginas procesadas, generando coverage falso.
-           *
-           * Si el render terminó correctamente, conservamos la imagen y el
-           * número de página físico correspondiente para que los consumidores
-           * multimodales no pierdan trazabilidad si falla una página aislada.
+           * Si el render terminó correctamente, conservamos siempre la imagen
+           * y detectamos blancura desde los píxeles del canvas, no por tamaño.
            */
           images.push(canvas.toBuffer('image/png'));
           renderedPageNumbers.push(pageNumber);
+          if (isCanvasNearlyBlank(context, canvas.width, canvas.height)) {
+            blankPageNumbers.push(pageNumber);
+          }
           pagesProcessed += 1;
         } catch (pageError) {
           logError('studentMaterialPdfRender.page', pageError, {
@@ -186,6 +235,7 @@ export async function renderPdfPagesToPngs(
     return {
       images,
       renderedPageNumbers,
+      blankPageNumbers,
       pageCount,
       pagesProcessed,
       coverageRatio,
@@ -198,6 +248,7 @@ export async function renderPdfPagesToPngs(
     return {
       images: [],
       renderedPageNumbers: [],
+      blankPageNumbers: [],
       pageCount: documentHandle?.numPages ?? 0,
       pagesProcessed: 0,
       coverageRatio: 0,
