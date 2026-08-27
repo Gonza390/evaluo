@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getCanonicalMateriaId } from '@/lib/materia-aliases';
@@ -10,18 +9,9 @@ import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildShareCardPath } from '@/lib/share-card';
-
-const MateriaContent = dynamic(() => import('./materia-content'), {
-  loading: () => (
-    <div className="space-y-6">
-      <div className="surface-panel min-h-[220px] animate-pulse bg-white/80" aria-hidden="true" />
-      <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80" aria-hidden="true" />
-        <div className="surface-panel min-h-[360px] animate-pulse bg-white/80" aria-hidden="true" />
-      </div>
-    </div>
-  ),
-});
+import { createPublicClient } from '@/lib/supabase-public';
+import { fetchSharedStudentMaterialsByMateria } from '@/lib/data/student-materials';
+import MateriaStudyHome from './materia-study-home';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -54,6 +44,38 @@ function buildMateriaQuery(searchParams: {
 
   const query = params.toString();
   return query ? `?${query}` : '';
+}
+
+async function getMateriaStudyHomeData(materiaId: string) {
+  const client = createPublicClient();
+
+  const [partial1, partial2, integrator, sharedStudentMaterials] = await Promise.all([
+    client
+      .from('preguntas_banco_public')
+      .select('id', { count: 'exact', head: true })
+      .eq('materia_id', materiaId)
+      .eq('parcial', 1),
+    client
+      .from('preguntas_banco_public')
+      .select('id', { count: 'exact', head: true })
+      .eq('materia_id', materiaId)
+      .eq('parcial', 2),
+    client
+      .from('preguntas_banco_public')
+      .select('id', { count: 'exact', head: true })
+      .eq('materia_id', materiaId)
+      .eq('parcial', 3),
+    fetchSharedStudentMaterialsByMateria(client, materiaId, 6).catch(() => []),
+  ]);
+
+  return {
+    questionCounts: {
+      1: partial1.error ? 0 : (partial1.count ?? 0),
+      2: partial2.error ? 0 : (partial2.count ?? 0),
+      3: integrator.error ? 0 : (integrator.count ?? 0),
+    } as Record<1 | 2 | 3, number>,
+    sharedStudentMaterials,
+  };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -131,12 +153,12 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
   }
 
   const requestedCarreraId = resolvedSearchParams.carreraId?.trim() ?? '';
-  const [bootstrap, contentSignals] = await Promise.all([
+  const [bootstrap, studyHomeData] = await Promise.all([
     getMateriaBootstrap({
       materiaId,
       requestedCarreraId,
     }),
-    getMateriaSeoContentSignals(materiaId),
+    getMateriaStudyHomeData(materiaId),
   ]);
 
   if (bootstrap.materiaFound === false) {
@@ -146,19 +168,6 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
   const canonicalSegment = buildSeoEntitySlug(bootstrap.materiaNombre, materiaId);
   if (resolvedParams.id.includes('--') && resolvedParams.id !== canonicalSegment) {
     redirect(`/explorar/materia/${canonicalSegment}${buildMateriaQuery(resolvedSearchParams)}`);
-  }
-
-  const requestedTab = resolvedSearchParams.tab?.trim();
-  const hasExplicitSupportedTab =
-    requestedTab === 'resumenes' || requestedTab === 'trabajos' || requestedTab === 'pregunteros';
-
-  if (!hasExplicitSupportedTab && !contentSignals.hasSummaries && contentSignals.hasQuestions) {
-    const params = new URLSearchParams();
-    params.set('tab', 'pregunteros');
-    if (requestedCarreraId) {
-      params.set('carreraId', requestedCarreraId);
-    }
-    redirect(`/explorar/materia/${canonicalSegment}?${params.toString()}`);
   }
 
   const canonicalHref = `/explorar/materia/${canonicalSegment}`;
@@ -189,18 +198,18 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
           ]}
         />
       </div>
-      <MateriaContent
+      <MateriaStudyHome
         materiaId={materiaId}
         materiaNombre={bootstrap.materiaNombre}
         carreraId={bootstrap.carreraId || requestedCarreraId || undefined}
         carreraNombre={bootstrap.carreraNombre}
         universidadId={bootstrap.universidadId}
         universidadNombre={bootstrap.universidadNombre}
-        initialContextError={bootstrap.contextError}
+        contextError={bootstrap.contextError}
         initialResumenes={bootstrap.initialResumenes}
         initialResumenesError={bootstrap.initialResumenesError}
-        initialSimulatorRatings={bootstrap.initialSimulatorRatings}
-        initialSimulatorUsage={bootstrap.initialSimulatorUsage}
+        sharedStudentMaterials={studyHomeData.sharedStudentMaterials}
+        questionCounts={studyHomeData.questionCounts}
       />
     </>
   );
