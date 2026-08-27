@@ -118,8 +118,8 @@ export default async function SimuladorPage({ params, searchParams }: PageProps)
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-indigo-50">
-          <div className="animate-pulse text-xl font-bold text-indigo-600">
+        <div className="flex min-h-screen items-center justify-center bg-white px-6">
+          <div className="border-y border-slate-200 py-8 text-sm font-semibold text-slate-600">
             Iniciando simulador...
           </div>
         </div>
