@@ -40,6 +40,14 @@ function getRingRadius(targetRadius: string, padding: number): string {
 
 const RING_PADDING = 6;
 const GAP = 16;
+const FOCUSABLE_SELECTOR = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
 
 function getScrollParent(element: HTMLElement): HTMLElement | null {
   let node = element.parentElement;
@@ -51,6 +59,14 @@ function getScrollParent(element: HTMLElement): HTMLElement | null {
     node = node.parentElement;
   }
   return (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+}
+
+function getFocusableElements(container: HTMLElement | null) {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((element) => {
+    const style = getComputedStyle(element);
+    return style.visibility !== 'hidden' && style.display !== 'none' && element.getClientRects().length > 0;
+  });
 }
 
 export function GuidedTour({
@@ -81,28 +97,66 @@ export function GuidedTour({
   const stepsRef = useRef(steps);
   const scrollAdjustedRef = useRef(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     setMounted(true);
     stepsRef.current = steps;
   }, [steps]);
 
-  // ACC-06: Escape to close + focus trap (save/restore)
   useEffect(() => {
     if (!open) return;
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
         onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const card = cardRef.current;
+      if (!card) return;
+
+      const focusable = getFocusableElements(card);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        card.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const activeElement = document.activeElement as HTMLElement | null;
+
+      if (!card.contains(activeElement)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+        return;
+      }
+
+      if (event.shiftKey && activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
+
     document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open, onClose]);
 
   useEffect(() => {
     if (open) {
       previousFocusRef.current = document.activeElement as HTMLElement | null;
-      // Move focus to the tour card after render
       requestAnimationFrame(() => {
         const closeButton = cardRef.current?.querySelector<HTMLButtonElement>(
           'button[aria-label="Cerrar guía"]'
@@ -117,7 +171,7 @@ export function GuidedTour({
       previousFocusRef.current.focus();
       previousFocusRef.current = null;
     }
-  }, [open]);
+  }, [open, stepIndex]);
 
   const resolveTargetElement = useCallback((): HTMLElement | null => {
     const target = stepsRef.current[stepIndex]?.target;
@@ -251,7 +305,13 @@ export function GuidedTour({
   const ringRadius = getRingRadius(targetRadius, RING_PADDING);
 
   const overlay = (
-    <div aria-label={ariaLabel} role="dialog" aria-modal="false" aria-live="assertive" className="pointer-events-none fixed inset-0 z-[90]">
+    <div
+      aria-label={ariaLabel}
+      role="dialog"
+      aria-modal="true"
+      aria-live="assertive"
+      className="fixed inset-0 z-[90]"
+    >
       <div
         data-tour-overlay
         className="absolute inset-0"
@@ -262,7 +322,8 @@ export function GuidedTour({
       />
       <div
         data-tour-ring
-        className="absolute"
+        aria-hidden="true"
+        className="pointer-events-none absolute"
         style={{
           left: hole.left / zoom,
           top: hole.top / zoom,
@@ -286,16 +347,16 @@ export function GuidedTour({
           ) : (
             <div className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] border-b border-r border-border bg-card" />
           )}
-        <TourCard
-          title={step.title}
-          description={step.description}
-          stepIndex={stepIndex}
-          totalSteps={steps.length}
-          onNext={onNext}
-          onPrevious={onPrevious}
-          onClose={onClose}
-          finalLabel={finalLabel}
-        />
+          <TourCard
+            title={step.title}
+            description={step.description}
+            stepIndex={stepIndex}
+            totalSteps={steps.length}
+            onNext={onNext}
+            onPrevious={onPrevious}
+            onClose={onClose}
+            finalLabel={finalLabel}
+          />
         </div>
       </div>
     </div>
