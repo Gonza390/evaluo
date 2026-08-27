@@ -1,0 +1,672 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowLeft,
+  BookOpen,
+  BookOpenText,
+  BrainCircuit,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  GraduationCap,
+  Layers3,
+  Share2,
+  Sparkles,
+  Star,
+  UploadCloud,
+  Users,
+  Zap,
+} from 'lucide-react';
+import { useUser } from '@/hooks/useUser';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase-client';
+import { logError } from '@/lib/observability';
+import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
+import {
+  getCareerRoute,
+  getMateriaRoute,
+  getResourceRoute,
+  getSimulatorRoute,
+  getStudentMaterialRoute,
+  getUniversityRoute,
+} from '@/lib/routes';
+import type { StudentMaterial } from '@/lib/data/student-materials';
+import type { Resumen } from './materia-content.helpers';
+import { getMateriaHeroImage, isLongMateriaTitle } from './materia-content.helpers';
+
+type QuestionCounts = Record<1 | 2 | 3, number>;
+
+interface MateriaStudyHomeProps {
+  materiaId: string;
+  materiaNombre: string;
+  carreraId?: string;
+  carreraNombre?: string;
+  universidadId?: string;
+  universidadNombre?: string;
+  contextError?: string | null;
+  initialResumenes?: Resumen[];
+  initialResumenesError?: string | null;
+  sharedStudentMaterials?: StudentMaterial[];
+  questionCounts: QuestionCounts;
+}
+
+const STUDY_OUTPUTS = [
+  { label: 'Resumen', icon: BookOpenText },
+  { label: 'Glosario', icon: BookOpen },
+  { label: 'Tarjetas', icon: Layers3 },
+  { label: 'Ejercicios', icon: BrainCircuit },
+] as const;
+
+const PRACTICE_OPTIONS = [
+  { parcial: 1 as const, label: 'Parcial 1', shortLabel: 'P1' },
+  { parcial: 2 as const, label: 'Parcial 2', shortLabel: 'P2' },
+  { parcial: 3 as const, label: 'Integrador', shortLabel: 'INT' },
+];
+
+function getResumenHref(materiaId: string, materiaNombre: string, resumen: Resumen) {
+  const resourceId = resumen.id.startsWith('recurso-')
+    ? resumen.id.replace('recurso-', '')
+    : undefined;
+  const baseRoute = getResourceRoute(materiaId, 'resumen-modulo', materiaNombre, resourceId);
+  const moduleId = Number(resumen.module_id);
+  const separator = baseRoute.includes('?') ? '&' : '?';
+  return `${baseRoute}${separator}modulo=${Number.isFinite(moduleId) && moduleId > 0 ? moduleId : 1}`;
+}
+
+function formatDate(value: string | null) {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+export default function MateriaStudyHome({
+  materiaId,
+  materiaNombre,
+  carreraId,
+  carreraNombre = '',
+  universidadId,
+  universidadNombre = '',
+  contextError = null,
+  initialResumenes = [],
+  initialResumenesError = null,
+  sharedStudentMaterials = [],
+  questionCounts,
+}: MateriaStudyHomeProps) {
+  const router = useRouter();
+  const { user } = useUser();
+  const { toast } = useToast();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [practiceOpen, setPracticeOpen] = useState(false);
+
+  const nombre = materiaNombre || 'Materia';
+  const isLongTitle = isLongMateriaTitle(nombre);
+  const heroImage = getMateriaHeroImage(nombre);
+  const uploadHref = '/dashboard/materiales?openUpload=1';
+
+  const visibleResumenes = useMemo(
+    () => initialResumenes.filter((resumen) => Boolean(resumen.file_url)).slice(0, 6),
+    [initialResumenes]
+  );
+  const visibleStudentMaterials = useMemo(
+    () => sharedStudentMaterials.slice(0, Math.max(0, 6 - visibleResumenes.length)),
+    [sharedStudentMaterials, visibleResumenes.length]
+  );
+  const hasContent = visibleResumenes.length > 0 || visibleStudentMaterials.length > 0;
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadFavorite() {
+      if (!user) {
+        if (active) setIsFavorite(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('user_favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('materia_id', materiaId)
+          .maybeSingle();
+        if (active) setIsFavorite(Boolean(data));
+      } catch (error) {
+        logError('materiaStudyHome.favoriteStatus', error, { materiaId });
+      }
+    }
+
+    void loadFavorite();
+    return () => {
+      active = false;
+    };
+  }, [materiaId, user]);
+
+  const toggleFavorite = async () => {
+    if (favoritesLoading) return;
+
+    if (!user) {
+      const next = getMateriaRoute(materiaId, carreraId);
+      router.push(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+
+    const nextValue = !isFavorite;
+    setIsFavorite(nextValue);
+    setFavoritesLoading(true);
+
+    try {
+      if (nextValue) {
+        const { error } = await supabase
+          .from('user_favorites')
+          .insert({ user_id: user.id, materia_id: materiaId });
+        if (error) throw error;
+        toast({ title: 'Materia guardada', description: 'La agregamos a tus favoritos.' });
+      } else {
+        const { error } = await supabase
+          .from('user_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('materia_id', materiaId);
+        if (error) throw error;
+        toast({ title: 'Materia removida', description: 'Ya no aparece en tus favoritos.' });
+      }
+    } catch (error) {
+      setIsFavorite(!nextValue);
+      logError('materiaStudyHome.toggleFavorite', error, { materiaId, nextValue });
+      toast({
+        variant: 'destructive',
+        title: 'No pudimos guardar el favorito',
+        description: 'Intentá nuevamente en unos segundos.',
+      });
+    } finally {
+      setFavoritesLoading(false);
+    }
+  };
+
+  const handleShareMateria = async () => {
+    const sharePath = getMateriaRoute(materiaId, carreraId);
+    const shareUrl = new URL(sharePath, window.location.origin).toString();
+
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share({
+          title: nombre,
+          text: `Te comparto esta materia en Evaluo: ${nombre}`,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({ title: 'Link copiado', description: 'Ya podés compartir esta materia.' });
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      logError('materiaStudyHome.share', error, { materiaId });
+      toast({
+        variant: 'destructive',
+        title: 'No pudimos compartir la materia',
+        description: 'Intentá nuevamente en unos segundos.',
+      });
+    }
+  };
+
+  const trackAction = (eventName: string, metadata: Record<string, unknown>) => {
+    void trackMateriaAnalyticsEvent(eventName, {
+      userId: user?.id ?? null,
+      materiaId,
+      carreraId,
+      universidadId,
+      metadata,
+    });
+  };
+
+  return (
+    <div className="animate-page-enter min-h-full bg-white">
+      <div className="w-full border-b border-[#E8EDF5] bg-white">
+        <div className="mx-auto flex min-h-14 max-w-7xl overflow-x-hidden px-4 py-2.5 lg:px-8">
+          <nav className="flex flex-wrap items-center gap-1.5 text-sm leading-6">
+            <Link
+              href="/explorar"
+              className="flex items-center gap-1 text-slate-500 transition-colors hover:text-[#0F172A]"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="sm:hidden">Volver</span>
+              <span className="hidden sm:inline">Universidades</span>
+            </Link>
+            {universidadNombre ? (
+              <>
+                <ChevronRight className="hidden h-3.5 w-3.5 text-slate-400 sm:block" />
+                <Link
+                  href={universidadId ? getUniversityRoute(universidadId) : '/explorar'}
+                  className="hidden max-w-[140px] truncate text-slate-500 transition-colors hover:text-[#0F172A] sm:block sm:max-w-none"
+                >
+                  {universidadNombre}
+                </Link>
+              </>
+            ) : null}
+            {carreraNombre ? (
+              <>
+                <ChevronRight className="hidden h-3.5 w-3.5 text-slate-400 sm:block" />
+                <Link
+                  href={carreraId ? getCareerRoute(carreraId) : '/materias'}
+                  className="hidden max-w-[160px] truncate text-slate-500 transition-colors hover:text-[#0F172A] sm:block sm:max-w-none"
+                >
+                  {carreraNombre}
+                </Link>
+              </>
+            ) : null}
+            <ChevronRight className="hidden h-3.5 w-3.5 text-slate-400 sm:block" />
+            <span className="max-w-[190px] truncate font-medium text-slate-700 sm:max-w-none">
+              {nombre}
+            </span>
+          </nav>
+        </div>
+      </div>
+
+      <section className="relative min-h-[238px] w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl sm:min-h-[280px]">
+        <div
+          className="absolute inset-0 hidden h-full w-full bg-cover bg-center lg:block"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,#0F172A_0%,#0F172A_28%,rgba(15,23,42,0.94)_42%,rgba(15,23,42,0.76)_56%,rgba(15,23,42,0.42)_70%,rgba(15,23,42,0.16)_84%,rgba(15,23,42,0.04)_100%)] lg:block" />
+        <div className="absolute inset-0 hidden bg-[radial-gradient(circle_at_78%_36%,rgba(99,102,241,0.18),transparent_24%)] lg:block" />
+        <div className="absolute inset-0 hidden bg-gradient-to-t from-[#0F172A]/32 via-transparent to-[#0F172A]/10 lg:block" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0F172A] via-[#0F172A]/88 to-[#1E293B]/55 lg:hidden" />
+
+        <div className="relative mx-auto flex h-full max-w-7xl overflow-x-hidden px-4 py-4 lg:px-8 lg:py-8">
+          <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mx-auto flex min-w-0 flex-1 items-center justify-center gap-3 sm:gap-6 lg:max-w-3xl">
+              <div className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:flex sm:h-24 sm:w-24">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white sm:h-[80px] sm:w-[80px]">
+                  <GraduationCap className="h-5 w-5 sm:h-9 sm:w-9" />
+                </div>
+              </div>
+
+              <div className="min-w-0 flex-1 text-center lg:text-left">
+                <p className="text-xs text-white/70 sm:text-sm">Materia</p>
+                <h1
+                  className={`tracking-[-0.05em] text-white drop-shadow-lg ${
+                    isLongTitle
+                      ? 'text-[20px] leading-tight font-bold sm:text-[34px]'
+                      : 'text-[22px] leading-tight font-bold sm:text-[42px]'
+                  }`}
+                >
+                  {nombre}
+                </h1>
+
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-[12px] text-white/80 sm:mt-6 sm:gap-3 sm:text-sm lg:justify-start">
+                  {carreraNombre ? (
+                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+                      <BookOpen className="hidden h-4 w-4 shrink-0 sm:block" />
+                      <span>{carreraNombre}</span>
+                    </div>
+                  ) : null}
+                  {universidadNombre ? (
+                    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
+                      <Users className="hidden h-4 w-4 shrink-0 sm:block" />
+                      <span>{universidadNombre}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-center lg:justify-end">
+              <button
+                type="button"
+                onClick={() => void handleShareMateria()}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15 sm:h-auto sm:w-auto sm:px-5 sm:py-3"
+              >
+                <Share2 className="h-4 w-4" />
+                Compartir
+              </button>
+              <button
+                type="button"
+                onClick={() => void toggleFavorite()}
+                disabled={favoritesLoading}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/15 disabled:opacity-60 sm:h-auto sm:w-auto sm:px-5 sm:py-3"
+              >
+                <Star className={`h-4 w-4 ${isFavorite ? 'fill-current text-yellow-400' : ''}`} />
+                {isFavorite ? 'Guardada' : 'Guardar'}
+              </button>
+              <a
+                href="#practicar-preguntero"
+                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] sm:h-auto sm:w-auto sm:px-5 sm:py-3"
+              >
+                <Sparkles className="h-4 w-4" />
+                Ir a Pregunteros
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 lg:px-8 lg:py-9">
+        {contextError ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {contextError}
+          </div>
+        ) : null}
+
+        <section className="grid gap-4 lg:grid-cols-2 lg:gap-5" aria-label="Acciones principales">
+          <Link
+            href={uploadHref}
+            onClick={() => trackAction('materia_upload_notes_clicked', { source: 'materia_action_card' })}
+            className="group relative overflow-hidden rounded-[24px] border border-[#D8E5FF] bg-[linear-gradient(145deg,#F8FBFF_0%,#EEF4FF_100%)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#AFC8FF] hover:shadow-[0_18px_44px_rgba(37,99,235,0.10)] sm:p-6"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-white text-[#2563EB] shadow-[0_10px_25px_rgba(37,99,235,0.10)]">
+                <UploadCloud className="h-7 w-7" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-2xl">
+                  Subir mis apuntes
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                  Subí un PDF de esta materia y Evaluo lo convierte en resumen, glosario, tarjetas y ejercicios.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {STUDY_OUTPUTS.map(({ label, icon: Icon }) => (
+                <div
+                  key={label}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DCE7FA] bg-white/85 px-2.5 py-2 text-[12px] font-semibold text-slate-600"
+                >
+                  <Icon className="h-3.5 w-3.5 text-[#2563EB]" />
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F5DFF] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition group-hover:from-[#1D4ED8] group-hover:to-[#4338CA] sm:w-auto">
+              <UploadCloud className="h-4 w-4" />
+              Subir apunte
+            </div>
+          </Link>
+
+          <div
+            id="practicar-preguntero"
+            className={`rounded-[24px] border p-5 transition duration-200 sm:p-6 ${
+              practiceOpen
+                ? 'border-emerald-300 bg-[linear-gradient(145deg,#F7FFFC_0%,#ECFDF7_100%)] shadow-[0_18px_44px_rgba(5,150,105,0.10)]'
+                : 'border-slate-200 bg-white hover:border-emerald-200 hover:shadow-[0_16px_38px_rgba(15,23,42,0.07)]'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                const nextOpen = !practiceOpen;
+                setPracticeOpen(nextOpen);
+                if (nextOpen) {
+                  trackAction('materia_practice_picker_opened', { source: 'materia_action_card' });
+                }
+              }}
+              className="flex w-full items-start gap-4 text-left"
+              aria-expanded={practiceOpen}
+            >
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-emerald-50 text-emerald-700">
+                <Zap className="h-7 w-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-2xl">
+                      Practicar preguntero
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                      Elegí qué parcial querés practicar y empezá ahora mismo.
+                    </p>
+                  </div>
+                  <ChevronDown
+                    className={`mt-1 h-5 w-5 shrink-0 text-slate-400 transition-transform ${practiceOpen ? 'rotate-180' : ''}`}
+                  />
+                </div>
+              </div>
+            </button>
+
+            {!practiceOpen ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setPracticeOpen(true);
+                  trackAction('materia_practice_picker_opened', { source: 'materia_action_cta' });
+                }}
+                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+              >
+                <Zap className="h-4 w-4" />
+                Practicar preguntero
+              </button>
+            ) : (
+              <div className="mt-5 space-y-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  {PRACTICE_OPTIONS.map((option) => {
+                    const count = questionCounts[option.parcial] ?? 0;
+                    const available = count > 0;
+                    const href = getSimulatorRoute(
+                      materiaId,
+                      option.parcial,
+                      universidadId,
+                      carreraId
+                    );
+
+                    if (!available) {
+                      return (
+                        <div
+                          key={option.parcial}
+                          className="rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-left opacity-60"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-slate-700">{option.label}</span>
+                            <span className="text-[11px] font-semibold text-slate-400">Sin preguntas</span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={option.parcial}
+                        href={href}
+                        onClick={() =>
+                          trackAction('materia_simulator_cta_clicked', {
+                            source: 'materia_practice_picker',
+                            parcial: option.parcial,
+                            question_count: count,
+                          })
+                        }
+                        className="group rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-left transition hover:border-emerald-400 hover:bg-emerald-50"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-slate-900">{option.label}</span>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600 opacity-0 transition group-hover:opacity-100" />
+                        </div>
+                        <p className="mt-1 text-[12px] text-slate-500">
+                          {count.toLocaleString('es-AR')} preguntas disponibles
+                        </p>
+                        <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-emerald-700">
+                          Comenzar <ChevronRight className="h-3.5 w-3.5" />
+                        </p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="space-y-4" aria-labelledby="contenido-materia-title">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#2563EB] uppercase">
+                Biblioteca compartida
+              </p>
+              <h2
+                id="contenido-materia-title"
+                className="mt-1 text-[1.55rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-[2rem]"
+              >
+                Contenido de la materia
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+                Resúmenes y materiales compartidos por estudiantes de esta materia.
+              </p>
+            </div>
+            <Link
+              href={uploadHref}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#AFC8FF] hover:text-[#2563EB]"
+            >
+              <UploadCloud className="h-4 w-4" />
+              Aportar un apunte
+            </Link>
+          </div>
+
+          {initialResumenesError && visibleResumenes.length === 0 ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900">
+              {initialResumenesError}
+            </div>
+          ) : null}
+
+          {hasContent ? (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visibleResumenes.map((resumen) => {
+                const moduleId = Number(resumen.module_id);
+                const moduleLabel =
+                  Number.isFinite(moduleId) && moduleId > 0 ? `Módulo ${moduleId}` : 'Resumen';
+                const dateLabel = formatDate(resumen.created_at);
+
+                return (
+                  <article
+                    key={`resumen-${resumen.id}`}
+                    className="flex min-h-[230px] flex-col rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.055)] sm:p-5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#EEF4FF] text-[#2563EB]">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-[#EEF4FF] px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-[#2563EB] uppercase">
+                            {moduleLabel}
+                          </span>
+                          {resumen.pages ? (
+                            <span className="text-[11px] font-medium text-slate-400">
+                              {resumen.pages} páginas
+                            </span>
+                          ) : null}
+                        </div>
+                        <h3 className="mt-2 line-clamp-2 text-[17px] font-bold tracking-[-0.025em] text-slate-950">
+                          {resumen.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">
+                      {resumen.author_name || 'Resumen compartido para estudiar esta materia.'}
+                    </p>
+                    {dateLabel ? (
+                      <p className="mt-2 text-[12px] text-slate-400">Publicado {dateLabel}</p>
+                    ) : null}
+
+                    <Link
+                      href={getResumenHref(materiaId, nombre, resumen)}
+                      onClick={() =>
+                        trackAction('materia_resumen_opened', {
+                          source: 'materia_content_hub',
+                          resumen_id: resumen.id,
+                        })
+                      }
+                      className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-[#C7D2FE] px-3.5 text-sm font-semibold text-[#2563EB] transition hover:bg-[#EEF4FF]"
+                    >
+                      Ver resumen
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </article>
+                );
+              })}
+
+              {visibleStudentMaterials.map((material) => {
+                const dateLabel = formatDate(material.created_at);
+                return (
+                  <article
+                    key={`student-${material.id}`}
+                    className="flex min-h-[230px] flex-col rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.055)] sm:p-5"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-emerald-50 text-emerald-700">
+                        <FileText className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-emerald-700 uppercase">
+                            Apunte de estudiante
+                          </span>
+                          {material.page_count ? (
+                            <span className="text-[11px] font-medium text-slate-400">
+                              {material.page_count} páginas
+                            </span>
+                          ) : null}
+                        </div>
+                        <h3 className="mt-2 line-clamp-2 text-[17px] font-bold tracking-[-0.025em] text-slate-950">
+                          {material.title}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">
+                      PDF compartido por un estudiante. Abrilo junto con su material de estudio generado en Evaluo.
+                    </p>
+                    {dateLabel ? (
+                      <p className="mt-2 text-[12px] text-slate-400">Compartido {dateLabel}</p>
+                    ) : null}
+
+                    <Link
+                      href={getStudentMaterialRoute(material.id)}
+                      onClick={() =>
+                        trackAction('materia_student_material_opened', {
+                          source: 'materia_content_hub',
+                          material_id: material.id,
+                        })
+                      }
+                      className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-emerald-200 px-3.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
+                    >
+                      Abrir apunte
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-[22px] border border-dashed border-slate-300 bg-slate-50/70 px-5 py-8 text-center sm:px-8">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#2563EB] shadow-sm">
+                <FileText className="h-6 w-6" />
+              </div>
+              <h3 className="mt-4 text-lg font-bold tracking-[-0.03em] text-slate-950">
+                Todavía no hay contenido compartido
+              </h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
+                Podés ser el primero en aportar apuntes de esta materia y convertirlos en material de estudio.
+              </p>
+              <Link
+                href={uploadHref}
+                className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+              >
+                <UploadCloud className="h-4 w-4" />
+                Subir mi apunte
+              </Link>
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
+  );
+}
