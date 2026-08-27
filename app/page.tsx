@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Bot,
@@ -12,7 +11,6 @@ import {
   Target,
   UploadCloud,
   Zap,
-  ShieldCheck,
   ListFilter,
   Check,
   X,
@@ -20,6 +18,7 @@ import {
 import { FooterHome } from '@/components/footer-home';
 import { CatalogStats } from '@/components/marketing/catalog-stats';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
+import { HomeHeroV2 } from '@/components/marketing/home-hero-v2';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { LazyInteractiveDemo } from '@/components/marketing/lazy-interactive-demo';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -27,26 +26,19 @@ import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Tu materia, tus materiales y tu práctica, en un solo lugar',
+  title: 'Prepará mejor tu próximo parcial',
   description:
-    'Encontrá tu carrera y materia, estudiá con materiales organizados y practicá con simuladores y guías creadas desde tus PDFs.',
+    'Encontrá materiales de tu materia o subí tus apuntes. Evaluo los transforma en resúmenes, glosarios, flashcards y ejercicios para estudiar y practicar.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Evaluo | Tu espacio de estudio universitario',
+    title: 'Evaluo | Prepará mejor tu próximo parcial',
     description:
-      'Materiales, guías de estudio, preguntas y simuladores organizados por carrera y materia.',
+      'Materiales de tu materia, apuntes transformados en herramientas de estudio y práctica para llegar mejor preparado al parcial.',
     url: '/',
   },
 };
-
-const trustSignals = [
-  'Contenido ordenado por universidad, carrera y materia.',
-  'Resúmenes, pregunteros y simuladores dentro del mismo flujo.',
-  'Experiencia pensada para estudiar mejor desde celular y desktop.',
-  'Acceso rápido a lo importante sin perseguir PDFs ni links rotos.',
-];
 
 const steps = [
   {
@@ -136,282 +128,7 @@ export default function Home() {
       <MarketingAnalyticsSlot />
       <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(FAQ_ITEMS)]} />
 
-      {/* --- HEADER & HERO SECTION --- */}
-      <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_25%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
-        <div className="absolute top-44 left-1/4 h-64 w-64 rounded-full bg-blue-100/30 blur-3xl" />
-        <div className="absolute top-20 right-10 h-72 w-72 rounded-full bg-indigo-100/20 blur-3xl" />
-
-        <div className="mx-auto w-full max-w-[1240px] px-4 pt-3 pb-12 sm:px-8 lg:px-10 lg:pb-24">
-          <header className="animate-surface-reveal flex h-13 items-center justify-between gap-2 rounded-2xl border-b border-slate-200/50 bg-white/70 px-3 shadow-sm backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6">
-            <Link
-              href="/"
-              className="text-foreground flex items-center gap-2 text-2xl font-bold tracking-[-0.04em]"
-            >
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-slate-200/70">
-                <Image
-                  src="/icon.png"
-                  alt=""
-                  width={36}
-                  height={36}
-                  priority
-                  unoptimized
-                  className="h-full w-full object-contain"
-                />
-              </span>
-              <span>Evaluo</span>
-            </Link>
-
-            <nav className="hidden items-center gap-7 text-xs font-semibold text-slate-500 md:flex">
-              <a href="#como-funciona" className="transition hover:text-indigo-600">
-                Cómo funciona
-              </a>
-              <a href="#features" className="transition hover:text-indigo-600">
-                Qué encontrás
-              </a>
-              <a href="#comparativa" className="transition hover:text-indigo-600">
-                Comparación
-              </a>
-              <a href="#demo" className="transition hover:text-indigo-600">
-                Demo interactiva
-              </a>
-              <a href="#faq" className="transition hover:text-indigo-600">
-                Preguntas
-              </a>
-            </nav>
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link
-                href="/login"
-                className="hidden min-h-[44px] items-center px-3 text-xs font-bold text-slate-700 transition hover:text-indigo-600 sm:inline-flex"
-              >
-                Ingresar
-              </Link>
-              <TrackedLink
-                href={primaryHref}
-                eventName="cta_click"
-                payload={{
-                  location: 'home_header',
-                  cta_name: 'crear_cuenta',
-                  destination: primaryHref,
-                }}
-                className="from-brand to-brand-2 hidden h-9 items-center justify-center rounded-xl bg-gradient-to-r px-2.5 text-[12px] font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:translate-y-[-1px] hover:shadow-[0_12px_24px_rgba(37,99,235,0.22)] sm:inline-flex sm:px-4 sm:text-xs"
-              >
-                <span>Crear cuenta gratis</span>
-              </TrackedLink>
-            </div>
-          </header>
-
-          <div className="grid items-center gap-8 pt-8 sm:pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:pt-16">
-            <div className="animate-surface-reveal flex flex-col items-start text-left">
-              <h1 className="text-foreground text-[2.2rem] leading-[1.02] font-bold tracking-[-0.05em] sm:text-5xl lg:text-[62px]">
-                Tu materia, tus materiales y tu práctica,{' '}
-                <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">
-                  en un solo lugar
-                </span>
-                .
-              </h1>
-
-              <p className="mt-4 max-w-[560px] text-[13px] leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-8">
-                Encontrá tu carrera y materia, abrí recursos compartidos y convertí tus propios PDFs
-                en guías de estudio para practicar antes del parcial.
-              </p>
-
-              <div className="mt-6 flex w-full flex-col gap-2.5 sm:mt-8 sm:flex-row sm:gap-4">
-                <TrackedLink
-                  href="/explorar"
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_hero',
-                    cta_name: 'explorar_catalogo',
-                    destination: '/explorar',
-                  }}
-                  className="from-brand to-brand-2 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px] hover:shadow-[0_16px_32px_rgba(37,99,235,0.26)] sm:h-13 sm:px-8"
-                >
-                  <PlayCircle className="h-5 w-5" />
-                  Explorar catálogo
-                </TrackedLink>
-                <TrackedLink
-                  href={primaryHref}
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_hero',
-                    cta_name: 'crear_cuenta_gratis',
-                    destination: primaryHref,
-                  }}
-                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 shadow-[0_6px_20px_rgba(0,0,0,0.03)] transition hover:translate-y-[-1px] hover:bg-white sm:h-13 sm:px-8"
-                >
-                  Crear cuenta gratis
-                </TrackedLink>
-              </div>
-
-              <div className="mt-6 grid w-full gap-3 border-t border-slate-100 pt-5 text-[12px] font-semibold text-slate-500 sm:mt-8 sm:flex sm:flex-wrap sm:gap-4 sm:pt-6 sm:text-xs">
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Catálogo por carrera y materia</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Simuladores con tiempo</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                  <span>Registro gratis</span>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="animate-surface-reveal relative block"
-              style={{ animationDelay: '100ms' }}
-            >
-              <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 p-3 shadow-[0_28px_60px_rgba(15,23,42,0.15)]">
-                <div className="mb-3 flex items-center justify-between rounded-xl border-b border-slate-800 bg-slate-900/60 px-4 py-2.5 text-[12px]">
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-500" />
-                    <span className="font-bold text-white/90">Tu universidad &bull; Tu carrera</span>
-                  </div>
-                  <div className="font-medium text-white/60">Tu materia</div>
-                  <div className="rounded bg-indigo-500/20 px-2 py-0.5 font-bold text-indigo-400">
-                    28:14 min restantes
-                  </div>
-                </div>
-
-                <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-900 px-3 pb-2.5">
-                  <span className="shrink-0 text-[12px] font-bold text-white/50">
-                    Pregunta 9 de 20
-                  </span>
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                    <div className="h-full w-[45%] rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-                  </div>
-                  <span className="shrink-0 text-[12px] font-bold text-white/80">45%</span>
-                </div>
-
-                <div className="p-3">
-                  <div className="flex gap-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-[12px] font-bold text-indigo-400">
-                      ?
-                    </div>
-                    <p className="text-xs leading-5 font-bold text-white">
-                      Utilizando el criterio de la derivada segunda para extremos locales, ¿cuál de
-                      las siguientes afirmaciones es la correcta si f&apos;(c) = 0?
-                    </p>
-                  </div>
-
-                  <div className="mt-4 space-y-2">
-                    <div className="flex items-start gap-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-[12px] text-white">
-                      <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                        <Check className="h-2.5 w-2.5" />
-                      </div>
-                      <span className="leading-relaxed">
-                        Si <strong>f&apos;&apos;(c) &gt; 0</strong>, entonces la función f presenta
-                        un <strong>mínimo relativo</strong> en el punto c.
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-2.5 rounded-xl border border-slate-800 bg-slate-900/40 p-3 text-[12px] text-white/60">
-                      <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-slate-700 text-[8px] font-bold text-white/40">
-                        B
-                      </div>
-                      <span className="leading-relaxed">
-                        Si f&apos;&apos;(c) &lt; 0, entonces la función presenta un mínimo relativo
-                        en el punto c.
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-2.5 rounded-xl border border-slate-800 bg-slate-900/40 p-3 text-[12px] text-white/60">
-                      <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-slate-700 text-[8px] font-bold text-white/40">
-                        C
-                      </div>
-                      <span className="leading-relaxed">
-                        Si f&apos;&apos;(c) = 0, se puede confirmar al 100% que existe un punto de
-                        inflexión.
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 rounded-xl border border-t-2 border-indigo-500/20 border-t-indigo-500 bg-indigo-950/40 p-3.5">
-                    <div className="mb-1.5 flex items-center gap-1.5">
-                      <Bot className="h-4 w-4 text-indigo-400" />
-                      <span className="text-[12px] font-bold text-indigo-200">
-                        Explicación paso a paso &bull; Evaluo
-                      </span>
-                    </div>
-                    <p className="text-[12px] leading-5 text-indigo-200/80">
-                      Como f&apos;&apos;(c) &gt; 0, la función posee concavidad hacia arriba en el
-                      entorno de c, lo que permite identificar un mínimo local bajo las condiciones
-                      del criterio.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-5 -left-5 z-20 hidden rounded-2xl border border-white/10 bg-white/95 px-4 py-3 shadow-lg backdrop-blur sm:block">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-slate-800">Catálogo en expansión</p>
-                    <p className="text-[8px] leading-3 text-slate-500">
-                      Solicitá tu universidad si todavía no está disponible.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -top-5 -right-5 z-20 hidden rounded-2xl border border-white/10 bg-white/95 px-4 py-3 shadow-lg backdrop-blur sm:block">
-                <div className="flex items-center gap-2">
-                  <div className="animate-study-float flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-slate-800">Práctica enfocada</p>
-                    <p className="text-[8px] leading-3 text-slate-500">
-                      Preguntas, tiempo y revisión de resultados.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-b border-slate-100 bg-white py-10 sm:py-12">
-        <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-            {trustSignals.map((signal) => (
-              <div
-                key={signal}
-                className="flex items-center rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm transition hover:shadow-md"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                  <CheckCircle2 className="h-5 w-5" />
-                </span>
-                <span className="ml-3 text-xs leading-5 font-semibold text-slate-700 sm:text-sm">
-                  {signal}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 border-t border-slate-200/60 pt-8 text-center">
-            <p className="text-sm font-semibold text-slate-800">¿No encontrás tu universidad?</p>
-            <p className="mx-auto mt-1 max-w-lg text-xs leading-5 text-slate-500">
-              Podés solicitar que la sumemos al catálogo. Para enviar el pedido necesitás registrarte.
-            </p>
-            <Link
-              href="/solicitar-universidad"
-              className="mt-4 inline-flex h-10 items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
-            >
-              Solicitar mi universidad
-            </Link>
-            <p className="mx-auto mt-5 max-w-2xl text-[11px] leading-5 text-slate-400">
-              Evaluo es una plataforma independiente. Los nombres de universidades se utilizan únicamente para organizar e identificar el catálogo académico y no implican afiliación, representación ni aprobación institucional.
-            </p>
-          </div>
-        </div>
-      </section>
+      <HomeHeroV2 primaryHref={primaryHref} />
 
       <section id="como-funciona" className="py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
