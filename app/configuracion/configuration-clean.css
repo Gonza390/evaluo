@@ -1,9 +1,14 @@
 .configuration-editorial {
   min-height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--background);
 }
 
 .configuration-editorial .surface-panel {
+  min-width: 0;
+  max-width: 100%;
   border-right: 0 !important;
   border-left: 0 !important;
   border-radius: 0 !important;
@@ -40,6 +45,18 @@
   color: var(--primary) !important;
 }
 
+.configuration-editorial section.grid,
+.configuration-editorial section.grid > *,
+.configuration-editorial section.grid > .surface-panel,
+.configuration-editorial aside.surface-panel,
+.configuration-editorial aside.surface-panel > *,
+.configuration-editorial form,
+.configuration-editorial input,
+.configuration-editorial [role='combobox'] {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .configuration-editorial section.grid > .surface-panel {
   padding-inline: 0 !important;
 }
@@ -53,6 +70,7 @@
 }
 
 .configuration-editorial aside.surface-panel .rounded-2xl.border {
+  min-width: 0;
   border: 0 !important;
   border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
   border-radius: 0 !important;
@@ -60,10 +78,31 @@
   padding-inline: 0 !important;
 }
 
+/* Resumen de perfil: nombres largos de universidad/carrera no deben ensanchar la página. */
+.configuration-editorial aside.surface-panel p,
+.configuration-editorial aside.surface-panel span,
+.configuration-editorial section.surface-panel p,
+.configuration-editorial section.surface-panel li,
+.configuration-editorial section.surface-panel a {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .configuration-editorial button,
 .configuration-editorial input,
 .configuration-editorial [role='combobox'] {
   box-shadow: none !important;
+}
+
+.configuration-editorial button {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.configuration-editorial button > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 1023px) {
