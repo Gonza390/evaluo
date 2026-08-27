@@ -99,7 +99,7 @@ function CalendarMini() {
   }, [events]);
 
   return (
-    <div className="border-border mt-4 min-w-0 border-t pt-3">
+    <div className="border-border mt-5 min-w-0 border-t pt-4">
       <div className="flex items-center justify-between px-1">
         <p className="text-muted-foreground text-[12px] font-semibold">
           {formatMonthLabel(visibleMonth)}
@@ -109,7 +109,7 @@ function CalendarMini() {
             type="button"
             onClick={() => setVisibleMonth((current) => addMonths(current, -1))}
             aria-label="Mes anterior"
-            className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2.5 transition hover:bg-white"
+            className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2.5 transition hover:bg-slate-50"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
@@ -117,7 +117,7 @@ function CalendarMini() {
             type="button"
             onClick={() => setVisibleMonth((current) => addMonths(current, 1))}
             aria-label="Mes siguiente"
-            className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2.5 transition hover:bg-white"
+            className="text-muted-foreground hover:text-foreground inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md p-2.5 transition hover:bg-slate-50"
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
@@ -126,7 +126,7 @@ function CalendarMini() {
 
       <Link
         href="/calendario"
-        className="border-border hover:border-primary/30 hover:bg-primary/5 mt-2 block rounded-xl border p-2 transition"
+        className="border-border hover:border-primary/30 mt-2 block rounded-xl border p-2 transition hover:bg-slate-50/70"
         aria-label="Abrir el calendario"
       >
         <div className="grid grid-cols-7 gap-y-0.5 text-center">
@@ -141,7 +141,7 @@ function CalendarMini() {
           {loading
             ? Array.from({ length: 42 }).map((_, index) => (
                 <span key={index} className="flex h-6 items-center justify-center">
-                  <span className="h-4 w-4 animate-pulse rounded-md bg-white" />
+                  <span className="h-4 w-4 animate-pulse rounded-md bg-slate-100" />
                 </span>
               ))
             : monthGrid.map((date, index) => {
@@ -219,8 +219,8 @@ export function StudyRecommendationsPanel() {
   }, []);
 
   return (
-    <div className="surface-card border-border bg-card/90 min-w-0 overflow-hidden rounded-[var(--radius-card)] backdrop-blur">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 sm:px-5 sm:pt-5">
+    <section className="border-border min-w-0 border-t pt-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <CalendarDays className="text-brand h-4 w-4" />
           <h3 className="text-foreground text-lg font-semibold sm:text-xl">Tu plan de estudio</h3>
@@ -232,22 +232,22 @@ export function StudyRecommendationsPanel() {
           Calendario
         </Link>
       </div>
-      <p className="text-muted-foreground mt-1 px-4 text-xs sm:px-5">
+      <p className="text-muted-foreground mt-1 text-xs">
         Próximos parciales en tu calendario y qué te conviene practicar antes.
       </p>
 
-      <div className="space-y-2.5 px-4 pt-4 pb-4 sm:px-5 sm:pb-5">
+      <div className="mt-4 border-t border-slate-200">
         {loading ? (
-          <div className="space-y-2.5">
+          <div className="divide-y divide-slate-200">
             {Array.from({ length: 2 }).map((_, index) => (
-              <div
-                key={index}
-                className="border-border h-16 animate-pulse rounded-xl border bg-white"
-              />
+              <div key={index} className="py-4">
+                <div className="h-4 w-2/3 animate-pulse rounded-full bg-slate-100" />
+                <div className="mt-2 h-3 w-1/3 animate-pulse rounded-full bg-slate-100" />
+              </div>
             ))}
           </div>
         ) : recommendations.length === 0 ? (
-          <div className="border-border rounded-xl border border-dashed bg-white px-4 py-6 text-center">
+          <div className="py-7 text-center">
             <CalendarDays className="text-muted-foreground mx-auto h-7 w-7" />
             <p className="text-muted-foreground mt-2 text-sm font-medium">
               No tenés parciales cargados en el calendario
@@ -257,31 +257,24 @@ export function StudyRecommendationsPanel() {
             </p>
           </div>
         ) : (
-          <>
+          <div className="divide-y divide-slate-200">
             {recommendations.map((item) => {
               const needsAction = item.reason !== 'listo';
               return (
-                <div
-                  key={`${item.materiaId}-${item.examInstance}`}
-                  className={`rounded-xl border p-3 ${
-                    needsAction
-                      ? 'border-primary/20 from-primary/10 to-card bg-gradient-to-r'
-                      : 'border-border bg-card'
-                  }`}
-                >
+                <div key={`${item.materiaId}-${item.examInstance}`} className="py-4">
                   <div className="flex min-w-0 flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${
+                          className={`rounded-full border px-2 py-0.5 text-[12px] font-semibold ${
                             needsAction
-                              ? 'border-brand/25 bg-brand/10 text-brand border'
-                              : 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                              ? 'border-brand/25 bg-brand/5 text-brand'
+                              : 'border-emerald-200 bg-emerald-50 text-emerald-700'
                           }`}
                         >
                           {daysLabel(item.daysUntil)}
                         </span>
-                        <span className="text-muted-foreground rounded-full bg-white px-2 py-0.5 text-[12px] font-semibold">
+                        <span className="text-muted-foreground text-[12px] font-semibold">
                           {examLabel(item.examInstance)}
                         </span>
                       </div>
@@ -317,7 +310,7 @@ export function StudyRecommendationsPanel() {
                         </p>
                       ) : (
                         <p className="mt-2 text-[12px] leading-5 text-emerald-600">
-                          ? Buen ritmo: {item.probabilidadAprobar}% de aprobar. Seguí así.
+                          Buen ritmo: {item.probabilidadAprobar}% de aprobar. Seguí así.
                         </p>
                       )}
                     </div>
@@ -325,7 +318,7 @@ export function StudyRecommendationsPanel() {
                     {needsAction ? (
                       <Link
                         href={item.simulatedHref}
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition"
                       >
                         <PlayCircle className="h-3.5 w-3.5" />
                         Practicar
@@ -335,18 +328,16 @@ export function StudyRecommendationsPanel() {
                 </div>
               );
             })}
-          </>
+          </div>
         )}
       </div>
 
-      <div className="border-border text-muted-foreground flex items-start gap-1.5 border-t px-4 py-3 text-[12px] sm:px-5">
+      <div className="border-border text-muted-foreground flex items-start gap-1.5 border-t py-3 text-[12px]">
         <Sparkles className="text-brand h-3.5 w-3.5" />
         Basado en tu progreso real por materia y parcial.
       </div>
 
-      <div className="px-4 pb-4 sm:px-5 sm:pb-5">
-        <CalendarMini />
-      </div>
-    </div>
+      <CalendarMini />
+    </section>
   );
 }
