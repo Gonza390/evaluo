@@ -13,7 +13,6 @@ import {
   LogIn,
   LogOut,
   Settings,
-  Sparkles,
   Search,
 } from 'lucide-react';
 import { UserProvider, useUser } from '@/hooks/useUser';
@@ -213,27 +212,25 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   const shell = (
     <div className="bg-background flex min-h-screen flex-col">
       {showTopBar ? (
-        <header className="border-border bg-background/95 sticky top-0 z-30 border-b backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
           <div className="flex items-center justify-between gap-3 px-3 py-[9px] sm:px-6 sm:py-[11px]">
             <Link
               href={user ? '/dashboard' : '/'}
-              className="flex min-w-0 items-center gap-2 transition hover:opacity-85"
+              className="group flex min-w-0 items-center gap-2.5 transition hover:opacity-90"
             >
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-[0_8px_20px_rgba(37,99,235,0.20)] ring-1 ring-slate-200/70 sm:h-10 sm:w-10">
-                <Image
-                  src="/icon.png"
-                  alt=""
-                  width={40}
-                  height={40}
-                  priority
-                  className="h-full w-full object-cover"
-                />
-              </span>
-              <div>
-                <div className="text-foreground text-[1.05rem] font-bold tracking-tight sm:text-lg">
+              <Image
+                src="/icon.png"
+                alt=""
+                width={40}
+                height={40}
+                priority
+                className="h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-9 sm:w-9"
+              />
+              <div className="min-w-0">
+                <div className="truncate text-[1.05rem] font-bold tracking-[-0.025em] text-slate-950 sm:text-lg">
                   Evaluo
                 </div>
-                <p className="text-muted-foreground mt-0.5 hidden text-[12px] sm:block">
+                <p className="mt-0.5 hidden text-[11px] font-medium text-slate-400 sm:block">
                   Tu espacio académico
                 </p>
               </div>
@@ -242,13 +239,13 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/login"
-                  className="border-border bg-card text-foreground hover:border-input hover:text-foreground inline-flex h-11 items-center rounded-xl border px-3 text-xs font-semibold transition hover:bg-white sm:h-11 sm:px-4 sm:text-sm"
+                  className="inline-flex h-11 items-center rounded-lg px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 sm:px-4 sm:text-sm"
                 >
                   Iniciar
                 </Link>
                 <Link
                   href="/login?mode=signup"
-                  className="from-brand to-brand-2 inline-flex h-11 items-center rounded-xl bg-gradient-to-r px-3 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:opacity-95 sm:h-11 sm:px-4 sm:text-sm"
+                  className="from-brand to-brand-2 inline-flex h-11 items-center rounded-lg bg-gradient-to-r px-3 text-xs font-semibold text-white transition hover:opacity-95 sm:px-4 sm:text-sm"
                 >
                   <span className="sm:hidden">Registrate</span>
                   <span className="hidden sm:inline">Registrate gratis</span>
@@ -261,9 +258,9 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                   <button
                     type="button"
                     onClick={() => setShowStreakDialog(true)}
-                    className="border-border bg-card hover:border-input inline-flex min-w-0 items-center gap-1.5 rounded-2xl border px-1.5 py-1.5 text-left shadow-[0_10px_26px_rgba(15,23,42,0.06)] transition hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)] sm:gap-3 sm:rounded-[24px] sm:px-3 sm:py-2.5"
+                    className="inline-flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-slate-50 sm:gap-3 sm:px-2.5"
                   >
-                    <Avatar className="border-border ring-card flex h-9 w-9 shrink-0 border ring-2 sm:h-11 sm:w-11">
+                    <Avatar className="flex h-8 w-8 shrink-0 sm:h-9 sm:w-9">
                       <AvatarFallback className="bg-gradient-to-br from-fuchsia-500 via-violet-500 to-indigo-500 text-xs font-bold text-white">
                         {getUserInitials()}
                       </AvatarFallback>
@@ -273,16 +270,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                     </Avatar>
 
                     <div className="hidden min-w-0 flex-1 sm:block">
-                      <div className="flex items-center gap-2">
-                        <p className="text-foreground truncate text-[0.92rem] font-semibold tracking-[-0.01em]">
-                          {getUserName()}
-                        </p>
-                        <span className="border-brand/20 bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[12px] font-bold tracking-[0.14em] uppercase">
-                          <Sparkles className="h-3 w-3" />
-                          Activo
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground mt-0.5 truncate text-[12px]">
+                      <p className="truncate text-[0.88rem] font-semibold tracking-[-0.01em] text-slate-900">
+                        {getUserName()}
+                      </p>
+                      <p className="mt-0.5 max-w-[250px] truncate text-[11px] text-slate-400">
                         {profileSummary.carreraNombre && profileSummary.universidadNombre
                           ? `${profileSummary.carreraNombre} | ${profileSummary.universidadNombre}`
                           : profileSummary.carreraNombre ||
@@ -291,12 +282,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                       </p>
                     </div>
 
-                    <div className="border-brand/20 bg-brand/10 inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] sm:gap-1.5 sm:px-2.5">
-                      <span className="bg-card text-brand inline-flex h-5 w-5 items-center justify-center rounded-full shadow-sm">
-                        <Flame className="h-3.5 w-3.5" />
-                      </span>
-                      <span className="text-brand text-xs font-semibold">{streakDays}</span>
-                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1 text-indigo-600">
+                      <Flame className="h-4 w-4" />
+                      <span className="text-xs font-semibold">{streakDays}</span>
+                    </span>
                   </button>
                 </div>
 
@@ -442,7 +431,6 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               </>
             )}
           </div>
-          <div className="bg-border h-px w-full" />
         </header>
       ) : null}
       <div className="flex min-h-0 flex-1">
