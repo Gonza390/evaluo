@@ -49,7 +49,7 @@ function ResumenPreview() {
             className={`flex items-start gap-3 px-3.5 py-2.5 ${index > 0 ? 'border-t border-slate-100' : ''}`}
           >
             <span className="pt-0.5 text-[9px] font-black text-indigo-500">{number}</span>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-bold text-slate-900">{title}</p>
               <p className="mt-0.5 text-[9px] leading-4 text-slate-500">{description}</p>
             </div>
@@ -60,7 +60,7 @@ function ResumenPreview() {
       <div className="mt-auto pt-3">
         <div className="flex items-start gap-2 rounded-xl bg-indigo-50/80 px-3.5 py-2.5 text-indigo-950">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-indigo-500" />
-          <p className="text-[9px] leading-4">
+          <p className="min-w-0 text-[9px] leading-4">
             <strong>Idea clave:</strong> para multiplicar matrices, las columnas de la primera deben coincidir con las filas de la segunda.
           </p>
         </div>
@@ -110,7 +110,7 @@ function GlosarioPreview() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-end justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-[9px] font-bold tracking-[0.16em] text-indigo-500 uppercase">Glosario</p>
           <h3 className="mt-1.5 text-lg font-bold tracking-[-0.025em] text-slate-950">Conceptos importantes, listos para consultar</h3>
           <p className="mt-1.5 text-[10px] leading-4 text-slate-500">Definiciones construidas desde el contenido del material.</p>
@@ -120,9 +120,9 @@ function GlosarioPreview() {
 
       <div className="mt-4 divide-y divide-slate-100 border-y border-slate-200/80">
         {terms.map(([term, definition], index) => (
-          <div key={term} className="grid grid-cols-[30px_1fr] gap-2.5 py-2.5">
+          <div key={term} className="grid grid-cols-[30px_minmax(0,1fr)] gap-2.5 py-2.5">
             <span className="text-[9px] font-black text-indigo-500">{String(index + 1).padStart(2, '0')}</span>
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-bold text-slate-900">{term}</p>
               <p className="mt-0.5 text-[9px] leading-4 text-slate-500">{definition}</p>
             </div>
@@ -137,12 +137,12 @@ function EjerciciosPreview() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-[9px] font-bold tracking-[0.16em] text-indigo-500 uppercase">Ejercicios</p>
           <h3 className="mt-1.5 text-lg font-bold tracking-[-0.025em] text-slate-950">Comprobá si realmente entendiste el tema</h3>
           <p className="mt-1.5 text-[10px] leading-4 text-slate-500">Preguntas generadas desde los conceptos del mismo material.</p>
         </div>
-        <span className="hidden rounded-full bg-slate-100 px-2 py-1 text-[9px] font-semibold text-slate-500 sm:block">Intermedio</span>
+        <span className="hidden shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[9px] font-semibold text-slate-500 sm:block">Intermedio</span>
       </div>
 
       <p className="mt-4 max-w-[510px] text-xs leading-5 font-semibold text-slate-900">
@@ -155,12 +155,12 @@ function EjerciciosPreview() {
           return (
             <div
               key={option}
-              className={`flex items-center justify-between border-b px-1 py-2 text-[10px] font-bold ${
+              className={`flex min-w-0 items-center justify-between border-b px-1 py-2 text-[10px] font-bold ${
                 correct ? 'border-emerald-300 text-emerald-700' : 'border-slate-200 text-slate-500'
               }`}
             >
               {option}
-              {correct ? <Check className="h-3 w-3" /> : null}
+              {correct ? <Check className="h-3 w-3 shrink-0" /> : null}
             </div>
           );
         })}
@@ -199,10 +199,10 @@ function UploadPreview() {
               cta_name: 'subir_pdf_registro',
               destination: signupUploadHref,
             }}
-            className="from-brand to-brand-2 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-4 text-[11px] font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5"
+            className="from-brand to-brand-2 inline-flex h-10 max-w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-4 text-[11px] font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5"
           >
             Subir mi PDF gratis
-            <ArrowRight className="h-3.5 w-3.5" />
+            <ArrowRight className="h-3.5 w-3.5 shrink-0" />
           </TrackedLink>
           <TrackedLink
             href={loginUploadHref}
@@ -212,7 +212,7 @@ function UploadPreview() {
               cta_name: 'subir_pdf_login',
               destination: loginUploadHref,
             }}
-            className="inline-flex h-10 items-center justify-center px-3 text-[10px] font-bold text-slate-500 transition hover:text-indigo-700"
+            className="inline-flex h-10 max-w-full items-center justify-center px-3 text-[10px] font-bold text-slate-500 transition hover:text-indigo-700"
           >
             Ya tengo cuenta
           </TrackedLink>
@@ -266,17 +266,17 @@ export function HomeStudyPreview() {
           />
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-2.5 sm:px-5 sm:py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
               <ActiveIcon className="h-3.5 w-3.5" />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-[8px] font-semibold tracking-[0.14em] text-slate-400 uppercase">{activeStep.id === 'subir' ? 'Empezá con tu material' : 'Vista de estudio'}</p>
-              <p className="mt-0.5 text-[11px] font-bold text-slate-900 sm:text-xs">{activeStep.label}</p>
+              <p className="mt-0.5 truncate text-[11px] font-bold text-slate-900 sm:text-xs">{activeStep.label}</p>
             </div>
           </div>
-          <span className="text-[9px] font-semibold text-slate-400">{activeIndex + 1} / {previewSteps.length}</span>
+          <span className="shrink-0 text-[9px] font-semibold text-slate-400">{activeIndex + 1} / {previewSteps.length}</span>
         </div>
 
         <div className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] px-4 py-3.5 sm:px-6 sm:py-4">
@@ -285,11 +285,11 @@ export function HomeStudyPreview() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-4 py-2.5 sm:px-5">
-          <p className="text-[9px] font-semibold text-slate-500">
+        <div className="flex items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/70 px-4 py-2.5 sm:gap-4 sm:px-5">
+          <p className="min-w-0 pr-1 text-[9px] leading-4 font-semibold text-slate-500">
             {activeStep.id === 'subir' ? 'Tu material puede ser el próximo' : 'Un mismo material, distintas formas de estudiarlo'}
           </p>
-          <div className="flex items-center gap-1.5" aria-label="Cambiar vista">
+          <div className="flex shrink-0 items-center gap-1.5" aria-label="Cambiar vista">
             {previewSteps.map(({ id, label }, index) => (
               <button
                 key={id}
