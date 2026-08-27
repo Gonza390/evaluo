@@ -15,7 +15,7 @@ export default async function SolicitarUniversidadPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#F8FBFF_0%,#FFFFFF_55%,#F8FAFC_100%)] px-4 py-8 sm:px-6 sm:py-12">
+    <main className="min-h-screen bg-white px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-2xl">
         <Link
           href="/explorar"
@@ -25,23 +25,22 @@ export default async function SolicitarUniversidadPage() {
           Volver al catálogo
         </Link>
 
-        <section className="mt-5 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-          <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#EEF4FF_0%,#FFFFFF_100%)] px-5 py-6 sm:px-7 sm:py-8">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white">
-              <Building2 className="h-5 w-5" />
-            </div>
-            <h1 className="mt-4 text-2xl font-bold tracking-[-0.05em] text-slate-950 sm:text-3xl">
-              ¿No encontrás tu universidad?
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-              Contanos dónde estudiás y qué carrera cursás. Usamos estas solicitudes para decidir
-              qué universidades y carreras sumar después al catálogo.
-            </p>
+        <header className="mt-7 border-b border-slate-200 pb-7 sm:pb-8">
+          <div className="flex items-center gap-2 text-blue-600">
+            <Building2 className="h-5 w-5" />
+            <p className="text-xs font-bold tracking-[0.14em] uppercase">Catálogo Evaluo</p>
           </div>
+          <h1 className="mt-3 text-2xl font-bold tracking-[-0.05em] text-slate-950 sm:text-3xl">
+            ¿No encontrás tu universidad?
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
+            Contanos dónde estudiás y qué carrera cursás. Usamos estas solicitudes para decidir
+            qué universidades y carreras sumar después al catálogo.
+          </p>
+        </header>
 
-          <div className="p-5 sm:p-7">
-            <UniversityRequestForm />
-          </div>
+        <section className="py-7 sm:py-8">
+          <UniversityRequestForm />
         </section>
       </div>
     </main>
