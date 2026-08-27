@@ -27,6 +27,7 @@ type PdfCanvasFactory = {
 
 export type PdfRenderResult = {
   images: Buffer[];
+  renderedPageNumbers: number[];
   pageCount: number;
   pagesProcessed: number;
   coverageRatio: number;
@@ -34,11 +35,12 @@ export type PdfRenderResult = {
 
 export async function renderPdfPagesToPngs(
   buffer: Buffer,
-  options?: { pageNumbers?: number[]; batchSize?: number }
+  options?: { pageNumbers?: number[]; batchSize?: number; scale?: number }
 ): Promise<PdfRenderResult> {
   if (!buffer || buffer.length === 0) {
     return {
       images: [],
+      renderedPageNumbers: [],
       pageCount: 0,
       pagesProcessed: 0,
       coverageRatio: 0,
@@ -73,6 +75,7 @@ export async function renderPdfPagesToPngs(
       1,
       Math.floor(options?.batchSize ?? DEFAULT_RENDER_BATCH_SIZE)
     );
+    const scale = Math.min(3, Math.max(1, options?.scale ?? RENDER_SCALE));
 
     const requestedPages = normalizeRequestedPages(
       options?.pageNumbers,
@@ -81,6 +84,7 @@ export async function renderPdfPagesToPngs(
 
     const pagesToRender = requestedPages.slice(0, MAX_RENDER_PAGES_FALLBACK);
     const images: Buffer[] = [];
+    const renderedPageNumbers: number[] = [];
     let pagesProcessed = 0;
 
     // En Node, PDF.js 5 crea su propio canvasFactory respaldado por
@@ -112,9 +116,7 @@ export async function renderPdfPagesToPngs(
         try {
           page = await documentHandle.getPage(pageNumber);
 
-          const viewport = page.getViewport({
-            scale: RENDER_SCALE,
-          });
+          const viewport = page.getViewport({ scale });
 
           canvasAndContext = canvasFactory.create(
             Math.ceil(viewport.width),
@@ -139,9 +141,12 @@ export async function renderPdfPagesToPngs(
            * La versión anterior descartaba esos PNG y luego confundía
            * `images.length` con páginas procesadas, generando coverage falso.
            *
-           * Si el render terminó correctamente, conservamos la imagen.
+           * Si el render terminó correctamente, conservamos la imagen y el
+           * número de página físico correspondiente para que los consumidores
+           * multimodales no pierdan trazabilidad si falla una página aislada.
            */
           images.push(canvas.toBuffer('image/png'));
+          renderedPageNumbers.push(pageNumber);
           pagesProcessed += 1;
         } catch (pageError) {
           logError('studentMaterialPdfRender.page', pageError, {
@@ -180,6 +185,7 @@ export async function renderPdfPagesToPngs(
 
     return {
       images,
+      renderedPageNumbers,
       pageCount,
       pagesProcessed,
       coverageRatio,
@@ -191,6 +197,7 @@ export async function renderPdfPagesToPngs(
 
     return {
       images: [],
+      renderedPageNumbers: [],
       pageCount: documentHandle?.numPages ?? 0,
       pagesProcessed: 0,
       coverageRatio: 0,
