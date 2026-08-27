@@ -6,57 +6,56 @@ import {
   Brain,
   Check,
   FileText,
-  Layers3,
   ListChecks,
   Sparkles,
 } from 'lucide-react';
 
-const previewTabs = [
+const previewSteps = [
   { id: 'resumen', label: 'Resumen', icon: FileText },
   { id: 'flashcards', label: 'Flashcards', icon: Brain },
   { id: 'glosario', label: 'Glosario', icon: BookOpen },
   { id: 'ejercicios', label: 'Ejercicios', icon: ListChecks },
 ] as const;
 
-type PreviewTabId = (typeof previewTabs)[number]['id'];
+type PreviewStepId = (typeof previewSteps)[number]['id'];
 
 function ResumenPreview() {
   return (
-    <div className="space-y-3">
-      <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-500 uppercase">Resumen generado</p>
-            <h3 className="mt-1 text-sm font-bold text-slate-900">Álgebra · M1 y M2</h3>
-          </div>
-          <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-indigo-700 shadow-sm">
-            24 páginas
-          </span>
-        </div>
+    <div className="flex h-full flex-col">
+      <div>
+        <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">Resumen generado</p>
+        <h3 className="mt-2 text-xl font-bold tracking-[-0.025em] text-slate-950">Los temas clave, ordenados para repasar</h3>
+        <p className="mt-2 max-w-[500px] text-[11px] leading-5 text-slate-500">
+          Evaluo organiza el contenido del material y separa los conceptos importantes antes de practicar.
+        </p>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white/80">
         {[
           ['01', 'Sistemas de ecuaciones', 'Métodos, interpretación y resolución.'],
           ['02', 'Matrices', 'Tipos, operaciones y producto matricial.'],
           ['03', 'Vectores', 'Combinación y dependencia lineal.'],
-        ].map(([number, title, description]) => (
-          <div key={title} className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-            <span className="text-[10px] font-black text-indigo-500">{number}</span>
-            <p className="mt-2 text-[11px] font-bold text-slate-800">{title}</p>
-            <p className="mt-1 text-[10px] leading-4 text-slate-500">{description}</p>
+        ].map(([number, title, description], index) => (
+          <div
+            key={title}
+            className={`flex items-start gap-4 px-4 py-3.5 ${index > 0 ? 'border-t border-slate-100' : ''}`}
+          >
+            <span className="pt-0.5 text-[10px] font-black text-indigo-500">{number}</span>
+            <div>
+              <p className="text-[11px] font-bold text-slate-900">{title}</p>
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">{description}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-800">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-          Idea clave
+      <div className="mt-auto pt-5">
+        <div className="flex items-start gap-2.5 rounded-2xl bg-indigo-50/80 px-4 py-3.5 text-indigo-950">
+          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500" />
+          <p className="text-[10px] leading-5">
+            <strong>Idea clave:</strong> para multiplicar dos matrices, las columnas de la primera deben coincidir con las filas de la segunda.
+          </p>
         </div>
-        <p className="mt-2 text-[11px] leading-5 text-slate-600">
-          Para multiplicar dos matrices, el número de columnas de la primera debe coincidir con el número de filas de la segunda.
-        </p>
       </div>
     </div>
   );
@@ -64,21 +63,29 @@ function ResumenPreview() {
 
 function FlashcardsPreview() {
   return (
-    <div className="flex min-h-[278px] flex-col justify-center">
-      <div className="mx-auto w-full max-w-[430px] rounded-[24px] border border-indigo-200 bg-[linear-gradient(145deg,#ffffff_0%,#eef2ff_100%)] p-5 shadow-[0_18px_45px_rgba(79,70,229,0.12)] sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white">Flashcard 4 de 18</span>
-          <Brain className="h-5 w-5 text-indigo-500" />
-        </div>
-        <p className="mt-8 text-center text-[11px] font-semibold tracking-[0.12em] text-slate-400 uppercase">Pregunta</p>
-        <p className="mx-auto mt-2 max-w-[330px] text-center text-lg font-bold leading-7 tracking-tight text-slate-900">
-          ¿Cuándo se pueden multiplicar dos matrices?
-        </p>
-        <div className="mt-7 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-center">
-          <p className="text-[10px] font-bold text-emerald-600 uppercase">Respuesta</p>
-          <p className="mt-1 text-[11px] leading-5 font-semibold text-emerald-950">
-            Cuando las columnas de A coinciden con las filas de B.
+    <div className="flex h-full flex-col">
+      <div>
+        <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">Flashcards</p>
+        <h3 className="mt-2 text-xl font-bold tracking-[-0.025em] text-slate-950">Repasá activamente lo que acabás de estudiar</h3>
+        <p className="mt-2 text-[11px] leading-5 text-slate-500">Las tarjetas se generan a partir de los conceptos del mismo material.</p>
+      </div>
+
+      <div className="flex flex-1 items-center justify-center py-6">
+        <div className="w-full max-w-[440px] text-center">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-[10px] font-bold text-indigo-600">
+            <Brain className="h-3.5 w-3.5" />
+            Tarjeta 4 de 18
+          </div>
+          <p className="mt-7 text-[10px] font-bold tracking-[0.16em] text-slate-400 uppercase">Pregunta</p>
+          <p className="mx-auto mt-3 max-w-[360px] text-[18px] font-bold leading-7 tracking-tight text-slate-950">
+            ¿Cuándo se pueden multiplicar dos matrices?
           </p>
+          <div className="mx-auto mt-7 max-w-[390px] border-t border-slate-200 pt-5">
+            <p className="text-[10px] font-bold tracking-[0.12em] text-emerald-600 uppercase">Respuesta</p>
+            <p className="mt-2 text-[11px] leading-5 font-semibold text-slate-700">
+              Cuando el número de columnas de A coincide con el número de filas de B.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -93,54 +100,55 @@ function GlosarioPreview() {
   ];
 
   return (
-    <div className="space-y-2.5">
-      <div className="mb-4 flex items-end justify-between gap-3">
+    <div className="flex h-full flex-col">
+      <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-500 uppercase">Glosario del PDF</p>
-          <h3 className="mt-1 text-sm font-bold text-slate-900">Conceptos para repasar</h3>
+          <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">Glosario</p>
+          <h3 className="mt-2 text-xl font-bold tracking-[-0.025em] text-slate-950">Conceptos importantes, listos para consultar</h3>
+          <p className="mt-2 text-[11px] leading-5 text-slate-500">Definiciones construidas desde el contenido del material.</p>
         </div>
-        <span className="text-[10px] font-semibold text-slate-400">43 conceptos</span>
+        <span className="hidden shrink-0 text-[10px] font-semibold text-slate-400 sm:block">43 conceptos</span>
       </div>
-      {terms.map(([term, definition], index) => (
-        <div key={term} className="flex gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-[10px] font-black text-indigo-600">
-            {String(index + 1).padStart(2, '0')}
-          </span>
-          <div>
-            <p className="text-[11px] font-bold text-slate-900">{term}</p>
-            <p className="mt-1 text-[10px] leading-4 text-slate-500">{definition}</p>
+
+      <div className="mt-6 divide-y divide-slate-100 border-y border-slate-200/80">
+        {terms.map(([term, definition], index) => (
+          <div key={term} className="grid grid-cols-[34px_1fr] gap-3 py-4">
+            <span className="text-[10px] font-black text-indigo-500">{String(index + 1).padStart(2, '0')}</span>
+            <div>
+              <p className="text-[11px] font-bold text-slate-900">{term}</p>
+              <p className="mt-1 text-[10px] leading-4 text-slate-500">{definition}</p>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
 function EjerciciosPreview() {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex items-center justify-between gap-3">
+    <div className="flex h-full flex-col">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-500 uppercase">Ejercicio generado</p>
-          <p className="mt-1 text-xs font-bold text-slate-800">Producto de matrices</p>
+          <p className="text-[10px] font-bold tracking-[0.16em] text-indigo-500 uppercase">Ejercicios</p>
+          <h3 className="mt-2 text-xl font-bold tracking-[-0.025em] text-slate-950">Comprobá si realmente entendiste el tema</h3>
+          <p className="mt-2 text-[11px] leading-5 text-slate-500">Preguntas generadas desde los conceptos del mismo material.</p>
         </div>
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500">Intermedio</span>
+        <span className="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500 sm:block">Intermedio</span>
       </div>
 
-      <p className="mt-6 text-[13px] leading-6 font-semibold text-slate-900">
+      <p className="mt-7 max-w-[510px] text-[14px] leading-6 font-semibold text-slate-900">
         Si A es una matriz 3×2 y B es una matriz 2×4, ¿qué dimensión tiene el producto AB?
       </p>
 
-      <div className="mt-5 grid grid-cols-2 gap-2">
+      <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-2">
         {['2×2', '2×4', '3×2', '3×4'].map((option) => {
           const correct = option === '3×4';
           return (
             <div
               key={option}
-              className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-[11px] font-bold ${
-                correct
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                  : 'border-slate-200 bg-slate-50 text-slate-600'
+              className={`flex items-center justify-between border-b px-1 py-3 text-[11px] font-bold ${
+                correct ? 'border-emerald-300 text-emerald-700' : 'border-slate-200 text-slate-500'
               }`}
             >
               {option}
@@ -150,14 +158,16 @@ function EjerciciosPreview() {
         })}
       </div>
 
-      <div className="mt-4 rounded-xl bg-indigo-50 px-3.5 py-3 text-[10px] leading-4 text-indigo-800">
-        El resultado conserva las filas de A y las columnas de B: <strong>3×4</strong>.
+      <div className="mt-auto pt-5">
+        <p className="text-[10px] leading-5 text-slate-500">
+          <strong className="text-indigo-700">Por qué:</strong> el resultado conserva las filas de A y las columnas de B, por eso queda 3×4.
+        </p>
       </div>
     </div>
   );
 }
 
-const previews: Record<PreviewTabId, () => React.JSX.Element> = {
+const previews: Record<PreviewStepId, () => React.JSX.Element> = {
   resumen: ResumenPreview,
   flashcards: FlashcardsPreview,
   glosario: GlosarioPreview,
@@ -167,15 +177,16 @@ const previews: Record<PreviewTabId, () => React.JSX.Element> = {
 export function HomeStudyPreview() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const activeTab = previewTabs[activeIndex];
-  const ActivePreview = previews[activeTab.id];
+  const activeStep = previewSteps[activeIndex];
+  const ActivePreview = previews[activeStep.id];
+  const ActiveIcon = activeStep.icon;
 
   useEffect(() => {
     if (paused) return;
 
     const interval = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % previewTabs.length);
-    }, 3600);
+      setActiveIndex((current) => (current + 1) % previewSteps.length);
+    }, 4200);
 
     return () => window.clearInterval(interval);
   }, [paused]);
@@ -187,51 +198,45 @@ export function HomeStudyPreview() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-br from-indigo-200/45 via-blue-100/20 to-transparent blur-3xl" />
+      <div className="absolute -inset-8 rounded-[44px] bg-gradient-to-br from-indigo-200/50 via-blue-100/20 to-transparent blur-3xl" />
 
-      <div className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_30px_80px_rgba(15,23,42,0.16)] backdrop-blur sm:p-4">
-        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1.5">
-          {previewTabs.map(({ id, label, icon: Icon }, index) => {
-            const active = index === activeIndex;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveIndex(index)}
-                className={`relative flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-2.5 text-[9px] font-bold transition sm:flex-row sm:gap-1.5 sm:px-2 sm:text-[10px] ${
-                  active ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:bg-white/60 hover:text-slate-700'
-                }`}
-                aria-pressed={active}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{label}</span>
-                {active ? (
-                  <span className="absolute inset-x-2 bottom-0 h-0.5 overflow-hidden rounded-full bg-indigo-100">
-                    <span className="block h-full w-full origin-left animate-[homePreviewProgress_3.6s_linear] bg-indigo-600" />
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
+      <div className="relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-[0_32px_90px_rgba(15,23,42,0.16)]">
+        <div className="h-0.5 overflow-hidden bg-indigo-100">
+          <div
+            key={`progress-${activeStep.id}`}
+            className="h-full w-full origin-left animate-[homePreviewProgress_4.2s_linear] bg-indigo-500"
+          />
         </div>
 
-        <div key={activeTab.id} className="min-h-[318px] animate-surface-reveal px-1 py-4 sm:min-h-[330px] sm:px-2 sm:py-5">
-          <ActivePreview />
-        </div>
-
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-1 pt-3 sm:px-2">
-          <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-500">
-            <Layers3 className="h-3.5 w-3.5 text-indigo-500" />
-            Un PDF, varias formas de estudiar
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+              <ActiveIcon className="h-4.5 w-4.5" />
+            </span>
+            <div>
+              <p className="text-[9px] font-semibold tracking-[0.14em] text-slate-400 uppercase">Vista de estudio</p>
+              <p className="mt-0.5 text-xs font-bold text-slate-900 sm:text-sm">{activeStep.label}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5" aria-label="Vista activa">
-            {previewTabs.map(({ id }, index) => (
+          <span className="text-[10px] font-semibold text-slate-400">{activeIndex + 1} / {previewSteps.length}</span>
+        </div>
+
+        <div className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] px-5 py-5 sm:px-7 sm:py-6">
+          <div key={activeStep.id} className="min-h-[330px] animate-surface-reveal sm:min-h-[350px]">
+            <ActivePreview />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-5 py-3.5 sm:px-6">
+          <p className="text-[10px] font-semibold text-slate-500">Un mismo material, distintas formas de estudiarlo</p>
+          <div className="flex items-center gap-2" aria-label="Cambiar vista">
+            {previewSteps.map(({ id, label }, index) => (
               <button
                 key={id}
                 type="button"
-                aria-label={`Mostrar ${previewTabs[index].label}`}
+                aria-label={`Mostrar ${label}`}
                 onClick={() => setActiveIndex(index)}
-                className={`h-1.5 rounded-full transition-all ${index === activeIndex ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300'}`}
+                className={`h-2 rounded-full transition-all ${index === activeIndex ? 'w-6 bg-indigo-600' : 'w-2 bg-slate-300 hover:bg-slate-400'}`}
               />
             ))}
           </div>
