@@ -1,0 +1,49 @@
+.calendar-editorial {
+  min-height: 100%;
+  background: var(--background);
+}
+
+.calendar-editorial .surface-panel,
+.calendar-editorial .surface-card,
+.calendar-editorial .shadow-sm,
+.calendar-editorial [class*='shadow-[0_24px_70px'],
+.calendar-editorial [class*='shadow-[0_18px_'],
+.calendar-editorial [class*='shadow-[0_16px_'],
+.calendar-editorial [class*='shadow-[0_14px_'] {
+  box-shadow: none !important;
+}
+
+.calendar-editorial [class*='bg-[linear-gradient'] {
+  background-image: none !important;
+  background-color: var(--background) !important;
+}
+
+.calendar-editorial [class*='rounded-[32px]'],
+.calendar-editorial [class*='rounded-[28px]'] {
+  border-radius: 16px !important;
+}
+
+.calendar-editorial [class*='rounded-[24px]'] {
+  border-radius: 14px !important;
+}
+
+.calendar-editorial button,
+.calendar-editorial input {
+  box-shadow: none !important;
+}
+
+.calendar-editorial [class*='backdrop-blur'] {
+  backdrop-filter: none !important;
+}
+
+.calendar-editorial [class*='grid-cols-7'] button {
+  box-shadow: none !important;
+}
+
+@media (max-width: 639px) {
+  .calendar-editorial [class*='rounded-[32px]'],
+  .calendar-editorial [class*='rounded-[28px]'],
+  .calendar-editorial [class*='rounded-[24px]'] {
+    border-radius: 12px !important;
+  }
+}
