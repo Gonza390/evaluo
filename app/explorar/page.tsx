@@ -16,8 +16,7 @@ type ExplorarPageProps = {
 };
 
 export default async function ExplorarPage({ searchParams }: ExplorarPageProps) {
-  const resolvedSearchParams =
-    (await searchParams) ?? {};
+  const resolvedSearchParams = (await searchParams) ?? {};
   const initialData = await fetchExplorarData();
   const legacyUniversityId =
     resolvedSearchParams.universidadId ||
@@ -40,7 +39,7 @@ export default async function ExplorarPage({ searchParams }: ExplorarPageProps) 
   }
 
   return (
-    <div className="animate-page-enter mx-auto w-full max-w-6xl overflow-x-hidden px-3 py-3 sm:px-6 sm:py-6">
+    <div className="animate-page-enter mx-auto w-full max-w-6xl overflow-x-hidden px-4 pb-8 sm:px-6 sm:pb-10 [&_.surface-card]:shadow-none [&_.surface-panel]:shadow-none">
       <ExplorarStaticIntro />
       <Suspense fallback={<p className="mt-4 text-sm text-slate-500">Cargando catálogo...</p>}>
         <ExplorarClient initialData={initialData} />
