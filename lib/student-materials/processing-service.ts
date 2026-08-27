@@ -30,6 +30,10 @@ import {
   mapLocalSummaryToView,
   summarizeExtractedText,
 } from '@/lib/student-materials/text';
+import {
+  enhancePdfExtractionWithVision,
+  selectVisionPageNumbers,
+} from '@/lib/student-materials/vision-extract';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
@@ -90,8 +94,48 @@ export async function processStudentMaterial(input: {
   const extractionStartedAt = Date.now();
   const context = await loadStudentMaterialProcessingContext(admin, material);
   const buffer = Buffer.from(await context.file.arrayBuffer());
-  const { text, pageCount, pages } = await extractPdfTextAndPageCount(buffer);
-  const documentAnalysis = analyzePdfDocument(buffer, text, pageCount);
+  const {
+    text: nativeText,
+    pageCount,
+    pages: nativePages,
+  } = await extractPdfTextAndPageCount(buffer);
+  const documentAnalysis = analyzePdfDocument(buffer, nativeText, pageCount);
+
+  const selectedVisionPageNumbers = selectVisionPageNumbers({
+    analysis: documentAnalysis,
+    pages: nativePages,
+    pageCount,
+  });
+
+  if (selectedVisionPageNumbers.length > 0) {
+    await updateStudentMaterialProcessing(admin, material.id, {
+      processingStatus: 'processing',
+      processingStage: 'extracting',
+      processingProgress: 27,
+      processingMessage: documentAnalysis.requiresOcr
+        ? 'Detectamos páginas escaneadas. Activamos lectura visual para reconstruir texto, fórmulas, matrices y gráficos.'
+        : 'Detectamos páginas donde la estructura visual importa. Reforzamos la extracción de fórmulas, tablas y diagramas.',
+      pageCount,
+      processingStrategy: documentAnalysis.processingStrategy,
+      documentAnalysis,
+    });
+  }
+
+  const visionExtraction = await enhancePdfExtractionWithVision({
+    pdfBuffer: buffer,
+    nativeText,
+    nativePages,
+    pageCount,
+    analysis: documentAnalysis,
+    materialId: material.id,
+    userId: material.user_id,
+    pageNumbers: selectedVisionPageNumbers,
+  });
+
+  const text = visionExtraction.text;
+  const pages = visionExtraction.pages;
+  const visionUsed = visionExtraction.visionUsed;
+  const visionPageNumbers = visionExtraction.visionPageNumbers;
 
   /**
    * `pagesProcessed` mide páginas físicas procesadas por el extractor,
@@ -117,6 +161,7 @@ export async function processStudentMaterial(input: {
     typeof pageCount === 'number' &&
     pageCount >= LARGE_NATIVE_PDF_FAST_PATH_PAGES &&
     !documentAnalysis.requiresOcr &&
+    !visionUsed &&
     pagesWithText > 0;
 
   // Dedup es informativo: lo solapamos con la generación en lugar de frenar la IA.
@@ -143,7 +188,9 @@ export async function processStudentMaterial(input: {
     processingStatus: 'processing',
     processingStage: 'extracting',
     processingProgress: 34,
-    processingMessage: buildAnalysisMessage(documentAnalysis),
+    processingMessage: visionUsed
+      ? `Lectura visual integrada en ${visionPageNumbers.length} ${visionPageNumbers.length === 1 ? 'página' : 'páginas'}. Conservamos fórmulas y estructura antes de generar el material de estudio.`
+      : buildAnalysisMessage(documentAnalysis),
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     documentAnalysis,
@@ -157,7 +204,9 @@ export async function processStudentMaterial(input: {
     processingProgress: 45,
     processingMessage: useLargeNativePdfFastPath
       ? 'PDF extenso detectado. Activamos el modo rápido y preparamos resumen y glosario en paralelo.'
-      : 'Construyendo el modelo pedagógico canónico del material.',
+      : visionUsed
+        ? 'Construyendo el modelo pedagógico canónico desde texto y lectura visual del PDF.'
+        : 'Construyendo el modelo pedagógico canónico del material.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     pagesProcessed,
@@ -172,7 +221,10 @@ export async function processStudentMaterial(input: {
     text,
     pages,
     documentAnalysis,
-    pdfBuffer: documentAnalysis.requiresOcr ? buffer : undefined,
+    // Si la reconstrucción visual canónica fue satisfactoria, todo el pipeline
+    // posterior consume esa única fuente. Evitamos volver a leer el PDF por
+    // separado para resumen/glosario y generar versiones divergentes.
+    pdfBuffer: documentAnalysis.requiresOcr && !visionUsed ? buffer : undefined,
     materialId: material.id,
     userId: material.user_id,
   };
@@ -339,6 +391,8 @@ export async function processStudentMaterial(input: {
       page_count: pageCount,
       processing_strategy: documentAnalysis.processingStrategy,
       fast_path: useLargeNativePdfFastPath,
+      vision_used: visionUsed,
+      vision_page_count: visionPageNumbers.length,
     },
   });
 
@@ -357,6 +411,9 @@ export async function processStudentMaterial(input: {
     glossaryItemCount: glossary.length,
     processingStrategy: documentAnalysis.processingStrategy,
     fastPath: useLargeNativePdfFastPath,
+    visionUsed,
+    visionPageCount: visionPageNumbers.length,
+    visionModel: visionExtraction.visionModel,
     totalAiTokens: aiUsage.totalAiTokens,
     promptTokens: aiUsage.promptTokens,
     completionTokens: aiUsage.completionTokens,
