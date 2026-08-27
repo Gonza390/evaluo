@@ -171,11 +171,12 @@ export default function CareerListClient({
             );
           })
         ) : (
-          <div className="surface-card col-span-full border-dashed bg-[#FAFBFE] px-6 py-14 text-center shadow-none">
-            <p className="text-base font-semibold tracking-[-0.03em] text-[#10214C]">
+          <div className="col-span-full border-y border-slate-200 py-12 text-center">
+            <Search className="mx-auto h-6 w-6 text-slate-400" />
+            <p className="mt-4 text-base font-semibold tracking-[-0.03em] text-slate-950">
               No encontramos carreras para mostrar.
             </p>
-            <p className="mt-2 text-sm text-[#7C879C]">
+            <p className="mt-2 text-sm text-slate-500">
               Probá con otra búsqueda para ver más resultados.
             </p>
           </div>
