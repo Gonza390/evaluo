@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import {
+  ArrowRight,
   Bot,
   CheckCircle2,
   FileText,
@@ -12,8 +13,8 @@ import { FooterHome } from '@/components/footer-home';
 import { CatalogStats } from '@/components/marketing/catalog-stats';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { HomeHeroV2 } from '@/components/marketing/home-hero-v2';
+import { HomeLiveStudyDemo } from '@/components/marketing/home-live-study-demo';
 import { TrackedLink } from '@/components/marketing/tracked-link';
-import { LazyInteractiveDemo } from '@/components/marketing/lazy-interactive-demo';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
@@ -59,6 +60,12 @@ const steps = [
       'Revisá tus resultados y volvé sobre los temas donde necesitás más práctica antes del parcial.',
   },
 ];
+
+const demoJourney = [
+  ['01', 'Estudiá el material', 'Resumen y conceptos ordenados desde el apunte.'],
+  ['02', 'Ponete a prueba', 'Flashcards y ejercicios sobre el mismo contenido.'],
+  ['03', 'Practicá para el parcial', 'Preguntas con feedback para comprobar qué entendiste.'],
+] as const;
 
 export default function Home() {
   const primaryHref = '/login?mode=signup';
@@ -119,23 +126,50 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="demo" className="bg-white py-16 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="mx-auto mb-10 max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
-              <PlayCircle className="h-3.5 w-3.5" />
-              Probalo en vivo
-            </span>
-            <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              Viví la experiencia de estudio
+      <section id="demo" className="border-t border-slate-100 bg-slate-50/40 py-16 sm:py-24">
+        <div className="mx-auto grid w-full max-w-[1240px] gap-12 px-4 sm:px-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-16 lg:px-10">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase">
+              <span className="h-px w-8 shrink-0 bg-indigo-400" />
+              Evaluo en acción
+            </div>
+            <h2 className="mt-5 max-w-[520px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
+              De estudiar el material a comprobar qué entendiste.
             </h2>
-            <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Recorré una materia, abrí materiales y probá una pregunta del simulador. Sin registro
-              obligatorio para explorar.
+            <p className="mt-5 max-w-[520px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
+              Esta demo usa un material compartido de Marketing I. Cambiá de vista y recorré cómo el mismo contenido pasa de resumen a práctica sin salir de la materia.
             </p>
+
+            <div className="mt-8 border-t border-slate-200">
+              {demoJourney.map(([number, title, description]) => (
+                <div key={number} className="grid grid-cols-[38px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-4.5 sm:py-5">
+                  <span className="pt-0.5 text-[10px] font-black text-indigo-500">{number}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold tracking-tight text-slate-950">{title}</h3>
+                    <p className="mt-1.5 text-xs leading-5 text-slate-500">{description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <TrackedLink
+              href="/explorar/materia/4c28f824-1b82-4898-a6d4-3650ba517453"
+              eventName="cta_click"
+              payload={{
+                location: 'home_real_material_demo',
+                cta_name: 'explorar_marketing_i',
+                destination: '/explorar/materia/4c28f824-1b82-4898-a6d4-3650ba517453',
+              }}
+              className="mt-7 inline-flex items-center gap-2 text-xs font-bold text-indigo-700 transition hover:text-indigo-950"
+            >
+              Explorar Marketing I
+              <ArrowRight className="h-4 w-4" />
+            </TrackedLink>
           </div>
 
-          <LazyInteractiveDemo />
+          <div className="min-w-0">
+            <HomeLiveStudyDemo />
+          </div>
         </div>
       </section>
 
