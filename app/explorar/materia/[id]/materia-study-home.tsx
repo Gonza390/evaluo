@@ -15,7 +15,6 @@ import {
   GraduationCap,
   Layers3,
   Share2,
-  Sparkles,
   Star,
   UploadCloud,
   Users,
@@ -26,6 +25,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase-client';
 import { logError } from '@/lib/observability';
 import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
+import { pushRecentResource } from '@/lib/dashboard-client';
 import {
   getCareerRoute,
   getMateriaRoute,
@@ -37,6 +37,7 @@ import {
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import type { Resumen } from './materia-content.helpers';
 import { getMateriaHeroImage, isLongMateriaTitle } from './materia-content.helpers';
+import { MateriaStudyResumeCard } from './materia-study-resume-card';
 
 type QuestionCounts = Record<1 | 2 | 3, number>;
 
@@ -77,6 +78,17 @@ function getResumenHref(materiaId: string, materiaNombre: string, resumen: Resum
   return `${baseRoute}${separator}modulo=${Number.isFinite(moduleId) && moduleId > 0 ? moduleId : 1}`;
 }
 
+function buildUploadHref(
+  materiaId: string,
+  carreraId?: string,
+  universidadId?: string
+) {
+  const params = new URLSearchParams({ openUpload: '1', materiaId });
+  if (carreraId) params.set('carreraId', carreraId);
+  if (universidadId) params.set('universidadId', universidadId);
+  return `/dashboard/materiales?${params.toString()}`;
+}
+
 function formatDate(value: string | null) {
   if (!value) return null;
   return new Date(value).toLocaleDateString('es-AR', {
@@ -109,7 +121,7 @@ export default function MateriaStudyHome({
   const nombre = materiaNombre || 'Materia';
   const isLongTitle = isLongMateriaTitle(nombre);
   const heroImage = getMateriaHeroImage(nombre);
-  const uploadHref = '/dashboard/materiales?openUpload=1';
+  const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
 
   const visibleResumenes = useMemo(
     () => initialResumenes.filter((resumen) => Boolean(resumen.file_url)).slice(0, 6),
@@ -336,13 +348,6 @@ export default function MateriaStudyHome({
                 <Star className={`h-4 w-4 ${isFavorite ? 'fill-current text-yellow-400' : ''}`} />
                 {isFavorite ? 'Guardada' : 'Guardar'}
               </button>
-              <a
-                href="#practicar-preguntero"
-                className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] sm:h-auto sm:w-auto sm:px-5 sm:py-3"
-              >
-                <Sparkles className="h-4 w-4" />
-                Ir a Pregunteros
-              </a>
             </div>
           </div>
         </div>
@@ -354,6 +359,14 @@ export default function MateriaStudyHome({
             {contextError}
           </div>
         ) : null}
+
+        <MateriaStudyResumeCard
+          materiaId={materiaId}
+          materiaNombre={nombre}
+          carreraId={carreraId}
+          universidadId={universidadId}
+          uploadHref={uploadHref}
+        />
 
         <section className="grid gap-4 lg:grid-cols-2 lg:gap-5" aria-label="Acciones principales">
           <Link
@@ -367,7 +380,7 @@ export default function MateriaStudyHome({
               </div>
               <div className="min-w-0">
                 <h2 className="text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-2xl">
-                  Subir mis apuntes
+                  Preparar mis apuntes
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
                   Subí un PDF de esta materia y Evaluo lo convierte en resumen, glosario, tarjetas y ejercicios.
@@ -389,7 +402,7 @@ export default function MateriaStudyHome({
 
             <div className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F5DFF] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition group-hover:from-[#1D4ED8] group-hover:to-[#4338CA] sm:w-auto">
               <UploadCloud className="h-4 w-4" />
-              Subir apunte
+              Preparar mis apuntes
             </div>
           </Link>
 
@@ -542,6 +555,7 @@ export default function MateriaStudyHome({
                 const moduleLabel =
                   Number.isFinite(moduleId) && moduleId > 0 ? `Módulo ${moduleId}` : 'Resumen';
                 const dateLabel = formatDate(resumen.created_at);
+                const resumenHref = getResumenHref(materiaId, nombre, resumen);
 
                 return (
                   <article
@@ -577,13 +591,22 @@ export default function MateriaStudyHome({
                     ) : null}
 
                     <Link
-                      href={getResumenHref(materiaId, nombre, resumen)}
-                      onClick={() =>
+                      href={resumenHref}
+                      onClick={() => {
+                        pushRecentResource({
+                          id: resumen.id,
+                          title: resumen.title,
+                          subjectId: materiaId,
+                          subjectName: nombre,
+                          type: 'Resumen',
+                          href: resumenHref,
+                          openedAt: new Date().toISOString(),
+                        });
                         trackAction('materia_resumen_opened', {
                           source: 'materia_content_hub',
                           resumen_id: resumen.id,
-                        })
-                      }
+                        });
+                      }}
                       className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-[#C7D2FE] px-3.5 text-sm font-semibold text-[#2563EB] transition hover:bg-[#EEF4FF]"
                     >
                       Ver resumen
@@ -595,6 +618,7 @@ export default function MateriaStudyHome({
 
               {visibleStudentMaterials.map((material) => {
                 const dateLabel = formatDate(material.created_at);
+                const materialHref = getStudentMaterialRoute(material.id);
                 return (
                   <article
                     key={`student-${material.id}`}
@@ -629,13 +653,22 @@ export default function MateriaStudyHome({
                     ) : null}
 
                     <Link
-                      href={getStudentMaterialRoute(material.id)}
-                      onClick={() =>
+                      href={materialHref}
+                      onClick={() => {
+                        pushRecentResource({
+                          id: material.id,
+                          title: material.title,
+                          subjectId: materiaId,
+                          subjectName: nombre,
+                          type: 'Recurso',
+                          href: materialHref,
+                          openedAt: new Date().toISOString(),
+                        });
                         trackAction('materia_student_material_opened', {
                           source: 'materia_content_hub',
                           material_id: material.id,
-                        })
-                      }
+                        });
+                      }}
                       className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-emerald-200 px-3.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
                     >
                       Abrir apunte
