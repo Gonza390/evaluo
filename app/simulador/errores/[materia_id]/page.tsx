@@ -65,9 +65,10 @@ export default async function SimuladorErroresPage({
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-indigo-50">
-          <div className="animate-pulse text-xl font-bold text-indigo-600">
-            Cargando repaso de errores...
+        <div className="flex min-h-screen items-center justify-center bg-white px-6">
+          <div className="text-center">
+            <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
+            <p className="mt-4 text-sm font-semibold text-slate-700">Preparando tu repaso de errores...</p>
           </div>
         </div>
       }
