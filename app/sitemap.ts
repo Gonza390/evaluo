@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
 import { buildSeoEntitySlug, getSiglo21PregunteroHub } from '@/lib/seo-siglo21';
 
 export const revalidate = 3600;
@@ -16,21 +17,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/privacidad`, changeFrequency: 'yearly', priority: 0.2 },
   ];
 
-  try {
-    const hub = await getSiglo21PregunteroHub();
+  if (!isAdminClientConfigured()) return routes;
 
-    for (const item of hub?.items ?? []) {
+  try {
+    const admin = createAdminClient();
+    const [{ data: universidades }, { data: materias }, siglo21Hub] = await Promise.all([
+      admin.from('universidades').select('id'),
+      admin.from('materias').select('id'),
+      getSiglo21PregunteroHub(),
+    ]);
+
+    for (const universidad of universidades ?? []) {
+      routes.push({
+        url: `${SITE_URL}/universidad/${universidad.id}`,
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      });
+    }
+
+    for (const materia of materias ?? []) {
+      routes.push({
+        url: `${SITE_URL}/explorar/materia/${materia.id}`,
+        changeFrequency: 'weekly',
+        priority: 0.65,
+      });
+    }
+
+    for (const item of siglo21Hub?.items ?? []) {
       const slug = buildSeoEntitySlug(item.materiaNombre, item.materiaId);
 
       routes.push({
         url: `${SITE_URL}/pregunteros/${slug}`,
         changeFrequency: 'weekly',
         priority: 0.9,
-      });
-      routes.push({
-        url: `${SITE_URL}/explorar/materia/${item.materiaId}`,
-        changeFrequency: 'weekly',
-        priority: 0.75,
       });
 
       if (item.preguntasParcial1 > 0) {
@@ -58,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch (error) {
-    console.error('Could not build Siglo 21 sitemap entries:', error);
+    console.error('Error generating sitemap:', error);
   }
 
   return routes;
