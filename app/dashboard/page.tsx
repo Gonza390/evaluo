@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="animate-page-enter from-background/95 min-h-screen bg-gradient-to-br via-white/80 to-emerald-50/20">
+    <div className="animate-page-enter min-h-screen bg-white [&_.surface-card]:shadow-none [&_.surface-panel]:shadow-none [&_[data-tour-target-hero]]:shadow-none">
       <div className="flex flex-1">
         <LazyDashboardContent initialBootstrap={bootstrap} deferredBootstrap={deferred} />
       </div>
