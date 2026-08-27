@@ -36,10 +36,10 @@ async function SimuladorContent({
 
   if (!materiaId) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6 text-center">
-        <div className="max-w-md rounded-2xl border border-red-100 bg-white p-8 shadow-lg">
-          <h1 className="mb-2 text-2xl font-bold text-red-600">Faltan parámetros</h1>
-          <p className="text-gray-600">
+      <div className="flex min-h-screen items-center justify-center bg-white p-6 text-center">
+        <div className="max-w-md border-y border-red-100 py-8">
+          <h1 className="text-2xl font-bold tracking-[-0.04em] text-slate-950">No pudimos iniciar la práctica</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
             No se proporcionó un ID de materia válido para iniciar el simulador.
           </p>
         </div>
@@ -66,9 +66,10 @@ export default async function SimuladorPage({
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-indigo-50">
-          <div className="animate-pulse text-xl font-bold text-indigo-600">
-            Iniciando simulador...
+        <div className="flex min-h-screen items-center justify-center bg-white px-6">
+          <div className="text-center">
+            <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
+            <p className="mt-4 text-sm font-semibold text-slate-700">Preparando tu práctica...</p>
           </div>
         </div>
       }
