@@ -49,17 +49,15 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               href="/"
               className="group flex min-w-0 items-center gap-2 text-lg font-black tracking-[-0.045em] text-slate-950 sm:gap-2.5 sm:text-2xl"
             >
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-[0_7px_20px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80 transition group-hover:-translate-y-0.5 sm:h-10 sm:w-10 sm:rounded-2xl">
-                <Image
-                  src="/icon.png"
-                  alt=""
-                  width={40}
-                  height={40}
-                  priority
-                  unoptimized
-                  className="h-full w-full object-contain"
-                />
-              </span>
+              <Image
+                src="/icon.png"
+                alt=""
+                width={40}
+                height={40}
+                priority
+                unoptimized
+                className="h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-9 sm:w-9"
+              />
               <span className="truncate">Evaluo</span>
             </Link>
 
