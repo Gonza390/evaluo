@@ -1,6 +1,18 @@
 .pricing-editorial {
   min-height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--background);
+}
+
+.pricing-editorial main,
+.pricing-editorial main > section,
+.pricing-editorial main > section > div,
+.pricing-editorial article,
+.pricing-editorial article > div {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .pricing-editorial main > section:first-of-type > .absolute {
@@ -26,12 +38,23 @@
 }
 
 .pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden {
+  max-width: 100%;
   border-radius: 16px !important;
   box-shadow: none !important;
 }
 
+.pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden > div > span:first-child,
+.pricing-editorial article li,
+.pricing-editorial article p,
+.pricing-editorial article a,
+.pricing-editorial article button {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .pricing-editorial button,
 .pricing-editorial a {
+  max-width: 100%;
   box-shadow: none !important;
 }
 
@@ -41,6 +64,17 @@
   border-radius: 18px !important;
 }
 
+/* La muestra Premium usa columnas que pueden encogerse sin empujar el viewport. */
+.pricing-editorial [role='tablist'] {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  min-width: 0;
+}
+
+.pricing-editorial [role='tab'] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 639px) {
   .pricing-editorial article.rounded-3xl,
   .pricing-editorial [class*='rounded-3xl'],
@@ -48,5 +82,31 @@
   .pricing-editorial [class*='rounded-[28px]'],
   .pricing-editorial [class*='rounded-[24px]'] {
     border-radius: 14px !important;
+  }
+
+  /* Evita que "Recomendado" se superponga con la etiqueta de precio fundador. */
+  .pricing-editorial article > .absolute.top-5.right-5 {
+    position: static !important;
+    align-self: flex-end;
+    margin-bottom: 0.75rem;
+  }
+
+  .pricing-editorial article > div:first-of-type > span.inline-flex,
+  .pricing-editorial main > section:first-of-type span.inline-flex {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* La comparación conserva tres columnas pero permite que la función se parta en varias líneas. */
+  .pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden > div {
+    grid-template-columns: minmax(0, 1fr) 56px 66px !important;
+  }
+
+  .pricing-editorial #elegir-plan > div > .mt-8.overflow-hidden > div > span:first-child {
+    padding-right: 0.5rem;
+    font-size: 0.8125rem;
+    line-height: 1.15rem;
   }
 }
