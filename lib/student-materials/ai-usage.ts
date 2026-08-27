@@ -4,6 +4,7 @@ import { logError } from '@/lib/observability';
 import type { AdminClient } from '@/lib/student-materials/types';
 
 export type AiUsageOperation =
+  | 'source_vision'
   | 'summary_map'
   | 'summary_reduce'
   | 'summary_canonical'
