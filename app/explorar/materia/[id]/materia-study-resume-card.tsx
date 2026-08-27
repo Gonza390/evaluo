@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowRight, BookOpenText, RotateCcw, UploadCloud } from 'lucide-react';
+import { ArrowRight, RotateCcw } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 import { readRecentResources } from '@/lib/dashboard-client';
 import { listPersistedSimulatorStates } from '@/lib/simulator-persistence';
@@ -37,7 +37,6 @@ export function MateriaStudyResumeCard({
   materiaNombre,
   carreraId,
   universidadId,
-  uploadHref,
 }: MateriaStudyResumeCardProps) {
   const { user } = useUser();
   const [resumeItem, setResumeItem] = useState<ResumeItem | null>(null);
@@ -71,7 +70,8 @@ export function MateriaStudyResumeCard({
       const total = Math.max(1, simulatorState.preguntas.length);
       const answered = Math.min(total, Object.keys(simulatorState.selectedAnswers ?? {}).length);
       const progress = Math.round((answered / total) * 100);
-      const parcialLabel = simulatorState.parcial === 3 ? 'Integrador' : `Parcial ${simulatorState.parcial}`;
+      const parcialLabel =
+        simulatorState.parcial === 3 ? 'Integrador' : `Parcial ${simulatorState.parcial}`;
 
       setResumeItem({
         href: getSimulatorRoute(
@@ -118,58 +118,8 @@ export function MateriaStudyResumeCard({
     });
   };
 
-  if (!loaded) {
+  if (!loaded || !resumeItem) {
     return null;
-  }
-
-  if (!resumeItem) {
-    return (
-      <section
-        className="rounded-[24px] border border-slate-200 bg-[linear-gradient(145deg,#FFFFFF_0%,#F8FAFC_100%)] p-5 shadow-[0_14px_34px_rgba(15,23,42,0.05)] sm:p-6"
-        aria-labelledby="materia-start-title"
-      >
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#2563EB]">
-              <BookOpenText className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-bold tracking-[0.12em] text-[#2563EB] uppercase">
-                Empezá por acá
-              </p>
-              <h2
-                id="materia-start-title"
-                className="mt-1 text-xl font-bold tracking-[-0.035em] text-slate-950"
-              >
-                Armá tu recorrido de estudio
-              </h2>
-              <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-500">
-                Podés arrancar con el contenido compartido o preparar tus propios apuntes para estudiar esta materia.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <a
-              href="#contenido-materia-title"
-              onClick={() => track('start_shared_content')}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#AFC8FF] hover:text-[#2563EB]"
-            >
-              Ver contenido
-              <ArrowRight className="h-4 w-4" />
-            </a>
-            <Link
-              href={uploadHref}
-              onClick={() => track('start_prepare_notes')}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
-            >
-              <UploadCloud className="h-4 w-4" />
-              Preparar mis apuntes
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
   }
 
   return (
