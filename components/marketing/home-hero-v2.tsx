@@ -12,6 +12,7 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { TrackedLink } from '@/components/marketing/tracked-link';
+import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
 
 const artifactCards = [
   {
@@ -42,18 +43,18 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
       <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_78%_18%,rgba(99,102,241,0.16),transparent_28%),radial-gradient(circle_at_12%_35%,rgba(37,99,235,0.08),transparent_24%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/70 to-transparent" />
 
-        <div className="mx-auto w-full max-w-[1240px] px-4 pt-3 pb-14 sm:px-8 lg:px-10 lg:pb-24">
-          <header className="animate-surface-reveal flex h-13 items-center justify-between gap-2 rounded-2xl border border-slate-200/70 bg-white/80 px-3 shadow-sm backdrop-blur-md sm:h-16 sm:gap-4 sm:px-6">
+        <div className="mx-auto w-full max-w-[1240px] px-4 pb-14 sm:px-8 lg:px-10 lg:pb-24">
+          <header className="animate-surface-reveal relative z-20 flex min-h-18 items-center justify-between gap-3 border-b border-slate-200/70 py-3 sm:min-h-20">
             <Link
               href="/"
-              className="text-foreground flex items-center gap-2 text-2xl font-bold tracking-[-0.04em]"
+              className="group flex items-center gap-2.5 text-xl font-black tracking-[-0.045em] text-slate-950 sm:text-2xl"
             >
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-slate-200/70">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-[0_7px_20px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/80 transition group-hover:-translate-y-0.5">
                 <Image
                   src="/icon.png"
                   alt=""
-                  width={36}
-                  height={36}
+                  width={40}
+                  height={40}
                   priority
                   unoptimized
                   className="h-full w-full object-contain"
@@ -62,17 +63,17 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               <span>Evaluo</span>
             </Link>
 
-            <nav className="hidden items-center gap-7 text-xs font-semibold text-slate-500 md:flex">
-              <a href="#como-funciona" className="transition hover:text-indigo-600">
+            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 rounded-full border border-slate-200/80 bg-white/85 p-1.5 text-[11px] font-bold text-slate-500 shadow-[0_8px_24px_rgba(15,23,42,0.05)] backdrop-blur lg:flex">
+              <a href="#demo" className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-900">
+                Producto
+              </a>
+              <a href="#como-funciona" className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-900">
                 Cómo funciona
               </a>
-              <a href="#features" className="transition hover:text-indigo-600">
-                Herramientas
-              </a>
-              <a href="#demo" className="transition hover:text-indigo-600">
-                Ver producto
-              </a>
-              <a href="#faq" className="transition hover:text-indigo-600">
+              <Link href="/explorar" className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-900">
+                Materias
+              </Link>
+              <a href="#faq" className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-900">
                 Preguntas
               </a>
             </nav>
@@ -80,7 +81,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             <div className="flex items-center gap-2 sm:gap-3">
               <Link
                 href="/login"
-                className="hidden min-h-[44px] items-center px-3 text-xs font-bold text-slate-700 transition hover:text-indigo-600 sm:inline-flex"
+                className="hidden min-h-[42px] items-center rounded-xl px-3 text-xs font-bold text-slate-600 transition hover:bg-white hover:text-slate-950 sm:inline-flex"
               >
                 Ingresar
               </Link>
@@ -92,14 +93,15 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   cta_name: 'empezar_estudiar',
                   destination: primaryHref,
                 }}
-                className="from-brand to-brand-2 inline-flex h-9 items-center justify-center rounded-xl bg-gradient-to-r px-3 text-[12px] font-bold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(37,99,235,0.24)] sm:px-4 sm:text-xs"
+                className="from-brand to-brand-2 inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r px-3.5 text-[11px] font-bold text-white shadow-[0_9px_22px_rgba(37,99,235,0.2)] transition hover:-translate-y-0.5 hover:shadow-[0_13px_28px_rgba(37,99,235,0.28)] sm:px-4 sm:text-xs"
               >
                 Empezar gratis
+                <ArrowRight className="h-3.5 w-3.5" />
               </TrackedLink>
             </div>
           </header>
 
-          <div className="grid items-center gap-10 pt-10 sm:pt-16 lg:grid-cols-[0.94fr_1.06fr] lg:gap-14 lg:pt-20">
+          <div className="grid items-center gap-10 pt-10 sm:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:pt-18">
             <div className="animate-surface-reveal flex flex-col items-start text-left">
               <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
                 <Sparkles className="h-3.5 w-3.5" />
@@ -164,90 +166,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </div>
             </div>
 
-            <div
-              className="animate-surface-reveal relative mx-auto w-full max-w-[620px]"
-              style={{ animationDelay: '100ms' }}
-            >
-              <div className="absolute -inset-5 rounded-[34px] bg-gradient-to-br from-indigo-200/40 via-blue-100/10 to-transparent blur-2xl" />
-              <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_28px_70px_rgba(15,23,42,0.14)] sm:p-4">
-                <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-950 px-4 py-3 text-white">
-                  <div>
-                    <p className="text-[10px] font-semibold tracking-[0.14em] text-indigo-300 uppercase">
-                      Tu materia
-                    </p>
-                    <p className="mt-0.5 text-sm font-bold">Marketing I</p>
-                  </div>
-                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300">
-                    Material listo para estudiar
-                  </span>
-                </div>
-
-                <div className="mt-3 rounded-2xl border border-indigo-100 bg-[linear-gradient(135deg,#ffffff_0%,#eef2ff_100%)] p-5 shadow-sm sm:p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-bold text-white">
-                        <Sparkles className="h-3 w-3" />
-                        Material de estudio completo
-                      </span>
-                      <h2 className="mt-3 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                        Marketing 1 · Resumen completo
-                      </h2>
-                      <p className="mt-1 text-[11px] text-slate-500">
-                        Compartido por un estudiante · preparado en Evaluo
-                      </p>
-                    </div>
-                    <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-indigo-600 shadow-sm ring-1 ring-indigo-100 sm:flex">
-                      <BookOpen className="h-5 w-5" />
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid grid-cols-2 gap-2">
-                    {artifactCards.map(({ icon: Icon, label }) => (
-                      <div
-                        key={label}
-                        className="flex items-center gap-2 rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 text-[11px] font-bold text-slate-700 shadow-sm"
-                      >
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                          <Icon className="h-3.5 w-3.5" />
-                        </span>
-                        {label}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-indigo-600 px-4 py-3 text-white shadow-md shadow-indigo-200/70">
-                    <div>
-                      <p className="text-[10px] font-semibold text-indigo-100">Tu recorrido recomendado</p>
-                      <p className="text-[11px] font-bold sm:text-xs">Resumen → Flashcards → Ejercicios</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 shrink-0" />
-                  </div>
-                </div>
-
-                <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                        <ListChecks className="h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-[10px] font-semibold text-slate-400">Después de estudiar</p>
-                        <p className="text-xs font-bold text-slate-800">Practicá para el parcial</p>
-                      </div>
-                    </div>
-                    <p className="mt-2 text-[10px] leading-4 text-slate-500">
-                      Pregunteros, simuladores y revisión de errores dentro de la misma materia.
-                    </p>
-                  </div>
-                  <div className="flex min-w-[132px] items-center justify-center rounded-2xl bg-slate-950 px-4 py-4 text-center text-white">
-                    <div>
-                      <p className="text-[10px] font-semibold text-slate-400">Todo conectado</p>
-                      <p className="mt-1 text-xs font-bold">Materia → estudio → práctica</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <HomeStudyPreview />
           </div>
         </div>
       </section>
