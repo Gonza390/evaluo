@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import ClientLayout from '@/components/ClientLayout';
+import './material-study.css';
 
 export const metadata: Metadata = {
   title: 'Material de estudio',
@@ -11,5 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default function StudentMaterialLayout({ children }: { children: React.ReactNode }) {
-  return <ClientLayout>{children}</ClientLayout>;
+  return (
+    <ClientLayout>
+      <div className="material-study-editorial">{children}</div>
+    </ClientLayout>
+  );
 }
