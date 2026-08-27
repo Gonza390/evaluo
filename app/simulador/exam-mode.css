@@ -63,6 +63,14 @@ html.evaluo-exam-scroll-lock body {
   box-shadow: 0 10px 24px color-mix(in oklch, var(--foreground) 7%, transparent);
 }
 
+/* El aviso institucional queda como cierre secundario, separado del feedback pedagógico. */
+#evaluo-simulator-shell
+  .min-h-screen.bg-white.pb-36
+  main
+  > div[class*='border-slate-100'][class*='p-3.5']:last-child {
+  margin-top: 3.5rem !important;
+}
+
 #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 aside {
   border-radius: 20px;
   border-color: color-mix(in oklch, var(--border) 84%, transparent);
