@@ -31,13 +31,13 @@ import {
   getMateriaRoute,
   getResourceRoute,
   getSimulatorRoute,
-  getStudentMaterialRoute,
   getUniversityRoute,
 } from '@/lib/routes';
-import type { StudentMaterial } from '@/lib/data/student-materials';
+import type { SharedStudentMaterial } from '@/lib/data/student-materials';
 import type { Resumen } from './materia-content.helpers';
 import { getMateriaHeroImage, isLongMateriaTitle } from './materia-content.helpers';
 import { MateriaStudyResumeCard } from './materia-study-resume-card';
+import { SharedStudentMaterialCard } from './shared-student-material-card';
 
 type QuestionCounts = Record<1 | 2 | 3, number>;
 
@@ -51,7 +51,7 @@ interface MateriaStudyHomeProps {
   contextError?: string | null;
   initialResumenes?: Resumen[];
   initialResumenesError?: string | null;
-  sharedStudentMaterials?: StudentMaterial[];
+  sharedStudentMaterials?: SharedStudentMaterial[];
   questionCounts: QuestionCounts;
 }
 
@@ -123,13 +123,16 @@ export default function MateriaStudyHome({
   const heroImage = getMateriaHeroImage(nombre);
   const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
 
-  const visibleResumenes = useMemo(
-    () => initialResumenes.filter((resumen) => Boolean(resumen.file_url)).slice(0, 6),
-    [initialResumenes]
-  );
   const visibleStudentMaterials = useMemo(
-    () => sharedStudentMaterials.slice(0, Math.max(0, 6 - visibleResumenes.length)),
-    [sharedStudentMaterials, visibleResumenes.length]
+    () => sharedStudentMaterials.slice(0, 3),
+    [sharedStudentMaterials]
+  );
+  const visibleResumenes = useMemo(
+    () =>
+      initialResumenes
+        .filter((resumen) => Boolean(resumen.file_url))
+        .slice(0, Math.max(0, 6 - visibleStudentMaterials.length)),
+    [initialResumenes, visibleStudentMaterials.length]
   );
   const hasContent = visibleResumenes.length > 0 || visibleStudentMaterials.length > 0;
 
@@ -527,10 +530,10 @@ export default function MateriaStudyHome({
                 id="contenido-materia-title"
                 className="mt-1 text-[1.55rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-[2rem]"
               >
-                Contenido de la materia
+                Materiales de {nombre}
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                Resúmenes y materiales compartidos por estudiantes de esta materia.
+                Apuntes completos preparados en Evaluo y resúmenes compartidos para estudiar esta materia.
               </p>
             </div>
             <Link
@@ -550,6 +553,22 @@ export default function MateriaStudyHome({
 
           {hasContent ? (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visibleStudentMaterials.map((material) => (
+                <SharedStudentMaterialCard
+                  key={`student-${material.id}`}
+                  material={material}
+                  materiaId={materiaId}
+                  materiaNombre={nombre}
+                  onOpen={(materialId, artifactCount) =>
+                    trackAction('materia_student_material_opened', {
+                      source: 'materia_content_hub',
+                      material_id: materialId,
+                      artifact_count: artifactCount,
+                    })
+                  }
+                />
+              ))}
+
               {visibleResumenes.map((resumen) => {
                 const moduleId = Number(resumen.module_id);
                 const moduleLabel =
@@ -610,68 +629,6 @@ export default function MateriaStudyHome({
                       className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-[#C7D2FE] px-3.5 text-sm font-semibold text-[#2563EB] transition hover:bg-[#EEF4FF]"
                     >
                       Ver resumen
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </article>
-                );
-              })}
-
-              {visibleStudentMaterials.map((material) => {
-                const dateLabel = formatDate(material.created_at);
-                const materialHref = getStudentMaterialRoute(material.id);
-                return (
-                  <article
-                    key={`student-${material.id}`}
-                    className="flex min-h-[230px] flex-col rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.055)] sm:p-5"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-emerald-50 text-emerald-700">
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-[0.08em] text-emerald-700 uppercase">
-                            Apunte de estudiante
-                          </span>
-                          {material.page_count ? (
-                            <span className="text-[11px] font-medium text-slate-400">
-                              {material.page_count} páginas
-                            </span>
-                          ) : null}
-                        </div>
-                        <h3 className="mt-2 line-clamp-2 text-[17px] font-bold tracking-[-0.025em] text-slate-950">
-                          {material.title}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-500">
-                      PDF compartido por un estudiante. Abrilo junto con su material de estudio generado en Evaluo.
-                    </p>
-                    {dateLabel ? (
-                      <p className="mt-2 text-[12px] text-slate-400">Compartido {dateLabel}</p>
-                    ) : null}
-
-                    <Link
-                      href={materialHref}
-                      onClick={() => {
-                        pushRecentResource({
-                          id: material.id,
-                          title: material.title,
-                          subjectId: materiaId,
-                          subjectName: nombre,
-                          type: 'Recurso',
-                          href: materialHref,
-                          openedAt: new Date().toISOString(),
-                        });
-                        trackAction('materia_student_material_opened', {
-                          source: 'materia_content_hub',
-                          material_id: material.id,
-                        });
-                      }}
-                      className="mt-auto inline-flex h-10 items-center justify-between rounded-xl border border-emerald-200 px-3.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50"
-                    >
-                      Abrir apunte
                       <ChevronRight className="h-4 w-4" />
                     </Link>
                   </article>
