@@ -102,7 +102,11 @@
   box-shadow: none !important;
 }
 
-/* No se modifican las cards del Plan de estudios: representan materias reales. */
+/* Las cards del Plan de estudios se mantienen; solo se quitan badges redundantes de disponibilidad. */
+.career-editorial .surface-card span.bg-emerald-50,
+.career-editorial .surface-card span.bg-indigo-50 {
+  display: none !important;
+}
 
 @media (min-width: 640px) {
   .career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) > div {
