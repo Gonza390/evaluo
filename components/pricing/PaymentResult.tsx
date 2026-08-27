@@ -4,38 +4,22 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
-  BrainCircuit,
   CalendarClock,
   Check,
   CheckCircle2,
   Clock3,
-  Crown,
   FileUp,
   Loader2,
   ShieldCheck,
-  Sparkles,
-  Target,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const unlockedFeatures = [
-  {
-    icon: FileUp,
-    title: 'Subí tu material',
-    description: 'Tu PDF del curso se convierte en un espacio de estudio.',
-  },
-  {
-    icon: BrainCircuit,
-    title: 'Tu material, listo en minutos',
-    description: 'Resumen, tarjetas y ejercicios armados a partir de tus apuntes.',
-  },
-  {
-    icon: Target,
-    title: 'Simulá tu parcial',
-    description: 'Preguntas basadas en tu material, con corrección y explicaciones.',
-  },
-];
+  ['01', 'Subí tu material', 'Convertí tu PDF en un espacio de estudio.'],
+  ['02', 'Estudiá el contenido', 'Usá resumen, tarjetas y ejercicios sobre tus apuntes.'],
+  ['03', 'Practicá para el parcial', 'Comprobá qué entendiste y reforzá tus errores.'],
+] as const;
 
 export function PaymentResult() {
   const [status, setStatus] = useState('pending');
@@ -82,6 +66,7 @@ export function PaymentResult() {
     trackMarketingEvent('premium_checkout_returned', { status });
     trackedReturnStatus.current = status;
   }, [status]);
+
   const amount = details.amountArs
     ? new Intl.NumberFormat('es-AR', {
         style: 'currency',
@@ -97,82 +82,93 @@ export function PaymentResult() {
 
   if (!active) {
     return (
-      <div className="border-border bg-card mx-auto max-w-xl rounded-[32px] border p-7 text-center shadow-[0_24px_80px_rgba(15,23,42,0.12)] sm:p-10">
+      <section className="mx-auto w-full max-w-xl border-y border-slate-200 py-10 text-center sm:py-12">
         {status === 'pending' ? (
-          <Loader2 className="text-primary mx-auto h-12 w-12 animate-spin" />
+          <Loader2 className="mx-auto h-9 w-9 animate-spin text-blue-600" />
         ) : (
-          <Clock3 className="text-muted-foreground mx-auto h-12 w-12" />
+          <Clock3 className="mx-auto h-9 w-9 text-slate-400" />
         )}
-        <h1 className="text-foreground mt-5 text-3xl font-bold tracking-tight">
+        <p className="mt-5 text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">
+          Estado de tu suscripción
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950">
           Estamos confirmando tu suscripción
         </h1>
-        <p className="text-muted-foreground mt-3 text-sm leading-7">
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
           Mercado Pago puede tardar unos instantes en notificarnos. No vuelvas a pagar ni cierres
           esta pantalla.
         </p>
-        <Button asChild variant="outline" className="mt-6 h-11 rounded-xl px-6">
+        <Button asChild variant="outline" className="mt-6 h-11 rounded-lg px-6 shadow-none">
           <Link href="/pricing">Volver a Planes</Link>
         </Button>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="border-primary/20 bg-card relative mx-auto max-w-4xl overflow-hidden rounded-[36px] border shadow-[0_28px_90px_rgba(37,99,235,0.14)]">
-      <div className="bg-primary/8 absolute -top-28 -right-20 h-72 w-72 rounded-full blur-3xl" />
-      <div className="relative px-6 py-8 sm:px-10 sm:py-11">
-        <div className="flex flex-col items-center text-center">
-          <div className="bg-primary/10 ring-primary/10 flex h-20 w-20 items-center justify-center rounded-full ring-8">
-            <CheckCircle2 className="text-primary h-11 w-11" aria-hidden="true" />
-          </div>
-          <span className="bg-primary/10 text-primary mt-7 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold tracking-wide uppercase">
-            <Crown className="h-3.5 w-3.5" />
-            Evaluo Premium
-          </span>
-          <h1 className="text-foreground mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-5xl">
-            Ya podés estudiar tu material de verdad
-          </h1>
-          <p className="text-muted-foreground mt-4 max-w-2xl text-base leading-7 sm:text-lg">
-            Subí el PDF de tu materia y la IA lo convierte en tu guía de estudio: resumen, tarjetas
-            y ejercicios. Así llegás listo a tu parcial.
-          </p>
-        </div>
+    <section className="mx-auto w-full max-w-4xl">
+      <header className="border-b border-slate-200 pb-8 text-center sm:pb-10">
+        <CheckCircle2 className="mx-auto h-10 w-10 text-blue-600" aria-hidden="true" />
+        <p className="mt-5 text-xs font-bold tracking-[0.16em] text-blue-600 uppercase">
+          Evaluo Premium activado
+        </p>
+        <h1 className="mx-auto mt-3 max-w-3xl text-3xl font-bold tracking-[-0.05em] text-slate-950 sm:text-5xl">
+          Ya podés estudiar tu material de principio a fin.
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+          Subí el PDF de tu materia y seguí el mismo recorrido: estudiar el contenido, practicar y
+          volver sobre lo que necesitás reforzar.
+        </p>
+      </header>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-3">
-          {unlockedFeatures.map(({ icon: Icon, title, description }) => (
-            <div
-              key={title}
-              className="border-border bg-background rounded-2xl border p-4 text-left"
-            >
-              <Icon className="text-primary h-5 w-5" aria-hidden="true" />
-              <p className="text-foreground mt-3 text-sm font-bold">{title}</p>
-              <p className="text-muted-foreground mt-1 text-xs leading-5">{description}</p>
+      {(amount || nextPayment || details.promotion) ? (
+        <dl className="border-b border-slate-200">
+          {amount ? (
+            <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
+              <dt className="flex items-center gap-2 text-sm text-slate-500">
+                <Check className="h-4 w-4 text-blue-600" /> Plan
+              </dt>
+              <dd className="text-sm font-semibold text-slate-950 sm:text-right">{amount} por mes</dd>
             </div>
-          ))}
+          ) : null}
+          {nextPayment ? (
+            <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
+              <dt className="flex items-center gap-2 text-sm text-slate-500">
+                <CalendarClock className="h-4 w-4" /> Próxima renovación
+              </dt>
+              <dd className="text-sm font-semibold text-slate-950 sm:text-right">{nextPayment}</dd>
+            </div>
+          ) : null}
+          {details.promotion ? (
+            <div className="grid gap-2 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
+              <dt className="text-sm text-slate-500">Promoción</dt>
+              <dd className="text-sm font-semibold text-blue-600 sm:text-right">Precio fundador aplicado</dd>
+            </div>
+          ) : null}
+        </dl>
+      ) : null}
+
+      <div className="grid gap-10 py-8 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-14 sm:py-10">
+        <div>
+          <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">Qué sigue</p>
+          <div className="mt-4 border-t border-slate-200">
+            {unlockedFeatures.map(([number, title, description]) => (
+              <div
+                key={number}
+                className="grid grid-cols-[36px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-4"
+              >
+                <span className="pt-0.5 text-xs font-bold text-blue-600">{number}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-950">{title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {(amount || nextPayment || details.promotion) && (
-          <div className="border-border bg-white mt-6 flex flex-col gap-3 rounded-2xl border px-4 py-4 text-sm sm:flex-row sm:items-center sm:justify-center sm:gap-6">
-            {amount ? (
-              <span className="text-foreground flex items-center gap-2 font-semibold">
-                <Check className="text-primary h-4 w-4" /> {amount} por mes
-              </span>
-            ) : null}
-            {nextPayment ? (
-              <span className="text-muted-foreground flex items-center gap-2">
-                <CalendarClock className="h-4 w-4" /> Próxima renovación: {nextPayment}
-              </span>
-            ) : null}
-            {details.promotion ? (
-              <span className="text-primary flex items-center gap-2 font-semibold">
-                <Sparkles className="h-4 w-4" /> Precio fundador aplicado
-              </span>
-            ) : null}
-          </div>
-        )}
-
-        <div className="mt-8 flex flex-col items-center justify-center gap-3">
-          <Button asChild className="h-12 w-full rounded-xl px-8 text-base sm:w-auto">
+        <div className="flex min-w-0 flex-col gap-3 lg:min-w-[230px]">
+          <Button asChild className="h-12 w-full rounded-lg bg-blue-600 px-6 text-base shadow-none hover:bg-blue-700">
             <Link
               href="/dashboard/materiales?openUpload=1"
               onClick={() =>
@@ -182,26 +178,29 @@ export function PaymentResult() {
               }
             >
               <FileUp className="mr-2 h-4 w-4" />
-              Subí tu material
+              Subir mi material
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
           <Link
             href="/simulador"
-            className="text-muted-foreground hover:text-primary mt-1 text-xs underline-offset-4 hover:underline"
+            className="text-center text-xs font-semibold text-slate-500 transition hover:text-blue-600"
           >
-            ¿Ya tenés material? Ir directo al simulador.
+            Ir directo al simulador
           </Link>
         </div>
-        <p className="text-muted-foreground mt-4 flex items-center justify-center gap-2 text-center text-xs">
-          <ShieldCheck className="text-primary h-4 w-4" />
+      </div>
+
+      <footer className="border-t border-slate-200 pt-5 text-xs leading-5 text-slate-500">
+        <p className="flex items-start gap-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
           Al subir un material podés elegir si compartirlo con tu materia o mantenerlo privado.
         </p>
-        <p className="text-muted-foreground mt-2 flex items-center justify-center gap-2 text-center text-xs">
-          <ShieldCheck className="text-primary h-4 w-4" />
-          Suscripción administrada de forma segura con Mercado Pago
+        <p className="mt-2 flex items-start gap-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+          Suscripción administrada de forma segura con Mercado Pago.
         </p>
-      </div>
-    </div>
+      </footer>
+    </section>
   );
 }
