@@ -85,6 +85,7 @@ interface StudentMaterialsWorkspaceProps {
   carreraMaterias: CarreraMateriaRelation[];
   initialUniversidadId?: string;
   initialCarreraId?: string;
+  initialMateriaId?: string;
   initialOpenUpload?: boolean;
 }
 
@@ -123,6 +124,7 @@ export function StudentMaterialsWorkspace({
   carreraMaterias,
   initialUniversidadId = '',
   initialCarreraId = '',
+  initialMateriaId = '',
   initialOpenUpload = false,
 }: StudentMaterialsWorkspaceProps) {
   const router = useRouter();
@@ -140,7 +142,7 @@ export function StudentMaterialsWorkspace({
   const [description, setDescription] = useState('');
   const [universidadId, setUniversidadId] = useState(initialUniversidadId);
   const [carreraId, setCarreraId] = useState(initialCarreraId);
-  const [materiaId, setMateriaId] = useState('');
+  const [materiaId, setMateriaId] = useState(initialMateriaId);
   const [shareWithCatalog, setShareWithCatalog] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -210,7 +212,7 @@ export function StudentMaterialsWorkspace({
     setDescription('');
     setUniversidadId(initialUniversidadId);
     setCarreraId(initialCarreraId);
-    setMateriaId('');
+    setMateriaId(initialMateriaId);
     setShareWithCatalog(true);
     setSelectedFile(null);
     setFileInputKey((current) => current + 1);

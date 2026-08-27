@@ -20,16 +20,27 @@ function isMissingStudentMaterialsTableError(error: unknown) {
 export default async function DashboardMaterialsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ openUpload?: string }>;
+  searchParams: Promise<{
+    openUpload?: string;
+    universidadId?: string;
+    carreraId?: string;
+    materiaId?: string;
+  }>;
 }) {
-  const { openUpload } = await searchParams;
+  const { openUpload, universidadId, carreraId, materiaId } = await searchParams;
   const supabase = await createClientServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const nextPath = openUpload === '1' ? '/dashboard/materiales?openUpload=1' : '/dashboard/materiales';
+    const params = new URLSearchParams();
+    if (openUpload === '1') params.set('openUpload', '1');
+    if (universidadId) params.set('universidadId', universidadId);
+    if (carreraId) params.set('carreraId', carreraId);
+    if (materiaId) params.set('materiaId', materiaId);
+    const query = params.toString();
+    const nextPath = query ? `/dashboard/materiales?${query}` : '/dashboard/materiales';
     redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
 
@@ -76,17 +87,56 @@ export default async function DashboardMaterialsPage({
       throw profileResult.error;
     }
 
+    const universidades = universidadesResult.data ?? [];
+    const carreras = carrerasResult.data ?? [];
+    const materias = materiasResult.data ?? [];
+    const carreraMaterias = carreraMateriasResult.data ?? [];
+
+    const profileUniversidadId = String(profileResult.data?.universidad_id ?? '');
+    const requestedUniversidadId = String(universidadId ?? '');
+    const resolvedUniversidadId = universidades.some(
+      (universidad) => universidad.id === requestedUniversidadId
+    )
+      ? requestedUniversidadId
+      : profileUniversidadId;
+
+    const isCareerValid = (candidateId: string) =>
+      carreras.some(
+        (carrera) =>
+          carrera.id === candidateId &&
+          (!resolvedUniversidadId || carrera.universidad_id === resolvedUniversidadId)
+      );
+    const requestedCarreraId = String(carreraId ?? '');
+    const profileCarreraId = String(profileResult.data?.carrera_id ?? '');
+    const resolvedCarreraId = isCareerValid(requestedCarreraId)
+      ? requestedCarreraId
+      : isCareerValid(profileCarreraId)
+        ? profileCarreraId
+        : '';
+
+    const requestedMateriaId = String(materiaId ?? '');
+    const isMateriaValid = materias.some((materia) => {
+      if (materia.id !== requestedMateriaId || !resolvedCarreraId) return false;
+      if (materia.carrera_id === resolvedCarreraId) return true;
+      return carreraMaterias.some(
+        (relation) =>
+          relation.carrera_id === resolvedCarreraId && relation.materia_id === requestedMateriaId
+      );
+    });
+    const resolvedMateriaId = isMateriaValid ? requestedMateriaId : '';
+
     return (
       <div className="animate-page-enter from-background/95 min-h-screen bg-gradient-to-br via-white/80 to-emerald-50/20 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <StudentMaterialsWorkspace
             initialMaterials={materials}
-            universidades={universidadesResult.data ?? []}
-            carreras={carrerasResult.data ?? []}
-            materias={materiasResult.data ?? []}
-            carreraMaterias={carreraMateriasResult.data ?? []}
-            initialUniversidadId={profileResult.data?.universidad_id ?? ''}
-            initialCarreraId={profileResult.data?.carrera_id ?? ''}
+            universidades={universidades}
+            carreras={carreras}
+            materias={materias}
+            carreraMaterias={carreraMaterias}
+            initialUniversidadId={resolvedUniversidadId}
+            initialCarreraId={resolvedCarreraId}
+            initialMateriaId={resolvedMateriaId}
             initialOpenUpload={openUpload === '1'}
           />
         </div>
