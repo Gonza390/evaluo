@@ -190,23 +190,7 @@ export function HomeStudyPreview() {
       <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-br from-indigo-200/45 via-blue-100/20 to-transparent blur-3xl" />
 
       <div className="relative overflow-hidden rounded-[30px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_30px_80px_rgba(15,23,42,0.16)] backdrop-blur sm:p-4">
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-950 px-4 py-3 text-white">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 text-indigo-200">
-              <FileText className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[9px] font-semibold tracking-[0.13em] text-indigo-300 uppercase">Procesado desde tu PDF</p>
-              <p className="mt-0.5 truncate text-xs font-bold sm:text-sm">Álgebra M1 y M2.pdf</p>
-            </div>
-          </div>
-          <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-300 sm:inline-flex">
-            <Sparkles className="h-3 w-3" />
-            Material listo
-          </span>
-        </div>
-
-        <div className="mt-3 grid grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1.5">
+        <div className="grid grid-cols-4 gap-1 rounded-2xl bg-slate-100 p-1.5">
           {previewTabs.map(({ id, label, icon: Icon }, index) => {
             const active = index === activeIndex;
             return (
