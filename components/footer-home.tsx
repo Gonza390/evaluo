@@ -47,15 +47,18 @@ export function FooterHome() {
               Navegación
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
+              <a href="#producto" className="text-xs text-white/80 transition hover:text-white">
+                Producto
+              </a>
               <a href="#como-funciona" className="text-xs text-white/80 transition hover:text-white">
                 Cómo funciona
               </a>
-              <a href="#beneficios" className="text-xs text-white/80 transition hover:text-white">
-                Beneficios
+              <a href="#faq" className="text-xs text-white/80 transition hover:text-white">
+                Preguntas frecuentes
               </a>
-              <a href="#cta" className="text-xs text-white/80 transition hover:text-white">
+              <Link href="/login?mode=signup" className="text-xs text-white/80 transition hover:text-white">
                 Empezar
-              </a>
+              </Link>
             </nav>
           </div>
 
@@ -64,18 +67,18 @@ export function FooterHome() {
               Legal
             </h4>
             <nav className="mt-3 flex flex-col gap-2">
-              <a href="/terminos" className="text-xs text-white/80 transition hover:text-white">
+              <Link href="/terminos" className="text-xs text-white/80 transition hover:text-white">
                 Términos y condiciones
-              </a>
-              <a href="/privacidad" className="text-xs text-white/80 transition hover:text-white">
+              </Link>
+              <Link href="/privacidad" className="text-xs text-white/80 transition hover:text-white">
                 Política de privacidad
-              </a>
-              <a href="/copyright" className="text-xs text-white/80 transition hover:text-white">
+              </Link>
+              <Link href="/copyright" className="text-xs text-white/80 transition hover:text-white">
                 Copyright
-              </a>
-              <a href="/facturacion" className="text-xs text-white/80 transition hover:text-white">
+              </Link>
+              <Link href="/facturacion" className="text-xs text-white/80 transition hover:text-white">
                 Facturación
-              </a>
+              </Link>
             </nav>
           </div>
         </div>
