@@ -234,7 +234,7 @@ const previews: Record<PreviewStepId, () => React.JSX.Element> = {
 
 export function HomeStudyPreview() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [userPaused, setUserPaused] = useState(false);
+  const [userPaused, setUserPaused] = useState(true);
   const [interactionPaused, setInteractionPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const activeStep = previewSteps[activeIndex];
