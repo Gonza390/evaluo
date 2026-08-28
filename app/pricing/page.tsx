@@ -5,10 +5,35 @@ import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { PremiumValuePreview } from '@/components/pricing/PremiumValuePreview';
 
+const pricingDescription =
+  'Elegí cómo prepararte para tus parciales con Evaluo Gratis o Evaluo Premium.';
+
 export const metadata: Metadata = {
   title: 'Planes y precios',
-  description: 'Elegí cómo prepararte para tus parciales con Evaluo Gratis o Evaluo Premium.',
+  description: pricingDescription,
   alternates: { canonical: '/pricing' },
+  openGraph: {
+    type: 'website',
+    url: '/pricing',
+    siteName: 'Evaluo',
+    locale: 'es_AR',
+    title: 'Planes y precios | Evaluo',
+    description: pricingDescription,
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Planes y precios de Evaluo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Planes y precios | Evaluo',
+    description: pricingDescription,
+    images: ['/opengraph-image.png'],
+  },
 };
 
 const premiumFeatures = [
