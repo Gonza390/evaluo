@@ -119,7 +119,7 @@ const loadPregunteroHubData = unstable_cache(
         return byUniversity || a.carreraNombre.localeCompare(b.carreraNombre, 'es');
       });
   },
-  ['preguntero-hub-v3'],
+  ['preguntero-hub-v4'],
   { revalidate: 600, tags: ['universidad-data'] }
 );
 
