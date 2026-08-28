@@ -1,6 +1,5 @@
 import { AppShellProviders } from '@/components/app-shell-providers';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
-import { PdfWorkerPreload } from '@/components/pdf/pdf-worker-preload';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 import { hasPremiumAccess } from '@/lib/premium';
@@ -21,7 +20,6 @@ export default async function DemoMaterialEstudioPage() {
 
   return (
     <>
-      <PdfWorkerPreload />
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
