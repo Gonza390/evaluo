@@ -6,7 +6,7 @@ import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { PremiumValuePreview } from '@/components/pricing/PremiumValuePreview';
 
 export const metadata: Metadata = {
-  title: 'Planes y precios | Evaluo',
+  title: 'Planes y precios',
   description: 'Elegí cómo prepararte para tus parciales con Evaluo Gratis o Evaluo Premium.',
   alternates: { canonical: '/pricing' },
 };
