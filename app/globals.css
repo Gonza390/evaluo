@@ -170,6 +170,37 @@
   }
 }
 
+:fullscreen button[aria-label="Salir de pantalla completa"] {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 2147483647;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(226 232 240 / 0.95);
+  background: rgb(255 255 255 / 0.96);
+  color: rgb(15 23 42);
+  box-shadow: 0 12px 30px rgb(15 23 42 / 0.2);
+  backdrop-filter: blur(10px);
+}
+
+:fullscreen button[aria-label="Salir de pantalla completa"] svg {
+  display: none;
+}
+
+:fullscreen button[aria-label="Salir de pantalla completa"]::before {
+  content: "×";
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+:fullscreen button[aria-label="Salir de pantalla completa"]:hover {
+  background: rgb(248 250 252);
+}
+
 @media (max-width: 640px) {
   :root {
     --radius-card: 1.25rem;
