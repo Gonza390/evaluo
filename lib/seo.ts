@@ -62,6 +62,30 @@ export function buildFaqJsonLd(
   };
 }
 
+export function buildCollectionPageJsonLd({
+  name,
+  description,
+  url,
+}: {
+  name: string;
+  description: string;
+  url: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    description,
+    url: toAbsoluteUrl(url),
+    inLanguage: 'es-AR',
+    isPartOf: {
+      '@type': 'WebSite',
+      name: SITE_NAME,
+      url: toAbsoluteUrl('/'),
+    },
+  };
+}
+
 export function buildCourseJsonLd({
   name,
   description,
