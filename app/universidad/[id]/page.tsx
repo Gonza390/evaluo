@@ -41,13 +41,13 @@ async function fetchAllCarreraMateriaRelations(
   supabase: ReturnType<typeof createPublicClient>,
   carreraIds: string[]
 ) {
-  const allRows: Array<{ carrera_id: string | null }> = [];
+  const allRows: Array<{ carrera_id: string | null; materia_id: string | null }> = [];
 
   for (let from = 0; ; from += RELATIONS_PAGE_SIZE) {
     const to = from + RELATIONS_PAGE_SIZE - 1;
     const { data, error } = await supabase
       .from('carrera_materias')
-      .select('carrera_id')
+      .select('carrera_id, materia_id')
       .in('carrera_id', carreraIds)
       .range(from, to);
 
@@ -70,6 +70,7 @@ type UniversidadPageData = {
   universidad: { id: string; nombre: string };
   allCarreras: CarreraRow[];
   materiaCountByCarrera: Record<string, number>;
+  totalUniqueMaterias: number;
 } | null;
 
 const loadUniversidadPageData = unstable_cache(
@@ -95,17 +96,33 @@ const loadUniversidadPageData = unstable_cache(
     const allCarreras = (carrerasData ?? []) as CarreraRow[];
     const carreraIds = allCarreras.map((carrera) => carrera.id);
     const materiaCountByCarrera: Record<string, number> = {};
+    const uniqueMateriaIds = new Set<string>();
 
     if (carreraIds.length > 0) {
       const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
+      const materiaIdsByCarrera = new Map<string, Set<string>>();
 
       for (const item of carreraMaterias) {
-        if (!item.carrera_id) continue;
-        materiaCountByCarrera[item.carrera_id] = (materiaCountByCarrera[item.carrera_id] ?? 0) + 1;
+        if (!item.carrera_id || !item.materia_id) continue;
+
+        uniqueMateriaIds.add(item.materia_id);
+
+        const materiaIds = materiaIdsByCarrera.get(item.carrera_id) ?? new Set<string>();
+        materiaIds.add(item.materia_id);
+        materiaIdsByCarrera.set(item.carrera_id, materiaIds);
+      }
+
+      for (const [carreraId, materiaIds] of materiaIdsByCarrera.entries()) {
+        materiaCountByCarrera[carreraId] = materiaIds.size;
       }
     }
 
-    return { universidad, allCarreras, materiaCountByCarrera };
+    return {
+      universidad,
+      allCarreras,
+      materiaCountByCarrera,
+      totalUniqueMaterias: uniqueMateriaIds.size,
+    };
   },
   ['universidad-data'],
   { revalidate: 600, tags: ['universidad-data'] }
@@ -126,9 +143,7 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   }
 
   const universidad = data.universidad;
-  const hasAcademicCatalog =
-    data.allCarreras.length > 0 &&
-    Object.values(data.materiaCountByCarrera).some((count) => count > 0);
+  const hasAcademicCatalog = data.allCarreras.length > 0 && data.totalUniqueMaterias > 0;
 
   return {
     title: `${universidad.nombre} | Universidad`,
@@ -161,13 +176,8 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const { universidad, allCarreras } = data;
-  const materiaCountByCarrera = new Map(Object.entries(data.materiaCountByCarrera));
+  const { universidad, allCarreras, totalUniqueMaterias } = data;
   const universityProfile = getUniversityProfile(universidad.nombre);
-  const totalMaterias = Array.from(materiaCountByCarrera.values()).reduce(
-    (acc, count) => acc + count,
-    0
-  );
 
   return (
     <div className="animate-page-enter min-h-full bg-white">
@@ -204,7 +214,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
             </span>
             <span className="inline-flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-blue-600" />
-              <strong className="font-semibold text-slate-950">{totalMaterias}</strong> materias
+              <strong className="font-semibold text-slate-950">{totalUniqueMaterias}</strong> materias
             </span>
             {universityProfile?.highlightStats?.slice(0, 2).map((stat) => (
               <span key={stat.label} className="inline-flex items-baseline gap-1.5">
@@ -264,7 +274,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                     <span className="text-sm text-slate-500">Materias visibles</span>
                     <span className="text-sm font-semibold text-slate-950 sm:text-right">
-                      {totalMaterias}
+                      {totalUniqueMaterias}
                     </span>
                   </div>
                   <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
