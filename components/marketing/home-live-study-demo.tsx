@@ -45,12 +45,7 @@ export function HomeLiveStudyDemo() {
           <span className="flex h-8 w-8 shrink-0 items-center justify-center text-indigo-600">
             <FileText className="h-5 w-5" />
           </span>
-          <div className="min-w-0">
-            <p className="truncate text-xs font-bold text-slate-950 sm:text-sm">Marketing I</p>
-            <p className="truncate text-[9px] font-medium text-slate-400 sm:text-[10px]">
-              Marketing 1 resumen completo · M1–M4
-            </p>
-          </div>
+          <p className="truncate text-xs font-bold text-slate-950 sm:text-sm">Marketing I</p>
         </div>
         <p className="hidden shrink-0 text-[10px] font-semibold text-slate-400 sm:block">
           Material compartido · 29 páginas
