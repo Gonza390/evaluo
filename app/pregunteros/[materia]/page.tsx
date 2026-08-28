@@ -113,7 +113,7 @@ function buildPregunteroDescription(data: PregunteroData) {
   const context = [data.carreraNombre, data.universidadNombre].filter(Boolean).join(' en ');
   const base =
     data.totalPreguntas > 0
-      ? `Practicá con ${data.totalPreguntas} preguntas de ${data.materiaNombre}`
+      ? `Practicá con ${data.totalPreguntas.toLocaleString('es-AR')} preguntas de ${data.materiaNombre}`
       : `Practicá con preguntas disponibles de ${data.materiaNombre}`;
 
   return context
@@ -135,11 +135,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const canonicalHref = buildPregunteroHref(data.materiaNombre, data.materiaId);
   const description = buildPregunteroDescription(data);
-  const socialTitle = `Preguntero de ${data.materiaNombre} | Evaluo`;
+  const seoTitle = data.universidadNombre
+    ? `Preguntero de ${data.materiaNombre} - ${data.universidadNombre}`
+    : `Preguntero de ${data.materiaNombre}`;
+  const socialTitle = `${seoTitle} | Evaluo`;
   const socialImage = buildShareCardPath({
     kind: 'preguntero',
     title: `Preguntero de ${data.materiaNombre}`,
-    subtitle: [data.carreraNombre, data.universidadNombre].filter(Boolean).join(' · ') || 'Práctica universitaria',
+    subtitle:
+      [data.carreraNombre, data.universidadNombre].filter(Boolean).join(' · ') ||
+      'Práctica universitaria',
     detail:
       data.totalPreguntas > 0
         ? `${data.totalPreguntas.toLocaleString('es-AR')} preguntas disponibles para practicar`
@@ -147,7 +152,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   });
 
   return {
-    title: `Preguntero de ${data.materiaNombre}`,
+    title: seoTitle,
     description,
     alternates: { canonical: canonicalHref },
     robots: {
@@ -158,7 +163,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: socialTitle,
       description,
       url: canonicalHref,
-      images: [{ url: socialImage, width: 1200, height: 630, alt: `Preguntero de ${data.materiaNombre} en Evaluo` }],
+      images: [
+        {
+          url: socialImage,
+          width: 1200,
+          height: 630,
+          alt: `Preguntero de ${data.materiaNombre} en Evaluo`,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
@@ -183,7 +195,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
     redirect(canonicalHref);
   }
 
-  const materiaHref = data.materiaId ? `/explorar/materia/${data.materiaId}` : '/explorar';
+  const materiaHref = `/explorar/materia/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`;
 
   return (
     <main className="bg-background min-h-screen">
@@ -204,6 +216,9 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
           <h1 className="text-foreground mt-5 text-4xl font-bold tracking-[-0.06em] sm:text-5xl">
             Preguntero de {data.materiaNombre}
           </h1>
+          {data.universidadNombre ? (
+            <p className="mt-2 text-sm font-semibold text-indigo-700">{data.universidadNombre}</p>
+          ) : null}
           <p className="text-muted-foreground mt-5 max-w-3xl text-base leading-8">
             {buildPregunteroDescription(data)}
           </p>
@@ -268,7 +283,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
                 Respondé las preguntas con tiempo límite, corregí al instante y recibí explicaciones
-                paso a paso de la IA en cada error.
+                paso a paso en cada error.
               </p>
               <Link
                 href={materiaHref}
