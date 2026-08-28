@@ -41,7 +41,7 @@ function buildParcialDescription(input: {
     input.parcial === 'integrador' ? 'examen integrador' : `parcial ${input.parcial}`;
   const base =
     input.totalPreguntas > 0
-      ? `Practicá con ${input.totalPreguntas} preguntas del ${parcialLabel} de ${input.materiaNombre}`
+      ? `Practicá con ${input.totalPreguntas.toLocaleString('es-AR')} preguntas del ${parcialLabel} de ${input.materiaNombre}`
       : `Practicá el ${parcialLabel} de ${input.materiaNombre}`;
 
   return context
@@ -71,9 +71,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     universidadNombre: data.universidadNombre,
     totalPreguntas: data.totalPreguntas,
   });
+  const baseTitle = buildParcialTitle(data.materiaNombre, data.parcial);
+  const seoTitle = data.universidadNombre ? `${baseTitle} - ${data.universidadNombre}` : baseTitle;
 
   return {
-    title: buildParcialTitle(data.materiaNombre, data.parcial),
+    title: seoTitle,
     description,
     alternates: { canonical: canonicalHref },
     robots: {
@@ -81,10 +83,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       follow: true,
     },
     openGraph: {
-      title: `${buildParcialTitle(data.materiaNombre, data.parcial)} | Evaluo`,
+      title: `${seoTitle} | Evaluo`,
       description,
       url: canonicalHref,
       images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${seoTitle} | Evaluo`,
+      description,
+      images: ['/opengraph-image.png'],
     },
   };
 }
@@ -114,7 +122,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
     resolvedSearchParams
   );
-  const materiaHref = `/explorar/materia/${data.materiaId}`;
+  const materiaHref = `/explorar/materia/${expectedMateriaSlug}`;
 
   return (
     <main className="bg-background min-h-screen">
@@ -140,7 +148,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
             {buildParcialTitle(data.materiaNombre, data.parcial)}
             {data.universidadNombre ? (
               <span className="text-muted-foreground block text-2xl font-semibold sm:text-3xl">
-                ({data.universidadNombre})
+                {data.universidadNombre}
               </span>
             ) : null}
           </h1>
