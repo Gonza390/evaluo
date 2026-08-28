@@ -4,7 +4,7 @@ const SKELETON_BLOCK = 'bg-slate-200';
 
 export default function StudentMaterialLoading() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+    <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <section className="border-b border-[#E8EDF5] bg-white">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -82,6 +82,6 @@ export default function StudentMaterialLoading() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
