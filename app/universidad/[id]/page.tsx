@@ -189,7 +189,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
         ])}
       />
 
-      <main className="mx-auto w-full max-w-[1240px] px-4 py-7 sm:px-6 sm:py-9 lg:px-10">
+      <div className="mx-auto w-full max-w-[1240px] px-4 py-7 sm:px-6 sm:py-9 lg:px-10">
         <Link
           href="/explorar"
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-950"
@@ -304,7 +304,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
             <CareerListClient initialCarreras={allCarreras} universityName={universidad.nombre} />
           </section>
         )}
-      </main>
+      </div>
     </div>
   );
 }
