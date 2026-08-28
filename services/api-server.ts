@@ -1,5 +1,4 @@
 import { cache } from 'react';
-import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase-public';
 import {
   fetchCarreraById,
@@ -15,55 +14,28 @@ import {
 
 export type { Carrera, Materia, Universidad };
 
-const CATALOG_REVALIDATE_SECONDS = 600;
-const CATALOG_CACHE_TAG = 'public-catalog';
+const getPublicCatalogClient = cache(() => createPublicClient());
 
-const loadCarrerasByUniversidad = unstable_cache(
-  async (uniId: string): Promise<Carrera[]> =>
-    fetchCarrerasByUniversidad(createPublicClient(), uniId),
-  ['catalog-carreras-by-universidad'],
-  { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] }
-);
+export const getCarrerasByUni = cache(async (uniId: string): Promise<Carrera[]> => {
+  return fetchCarrerasByUniversidad(getPublicCatalogClient(), uniId);
+});
 
-const loadMateriasByCarrera = unstable_cache(
-  async (carreraId: string): Promise<Materia[]> =>
-    fetchMateriasByCarrera(createPublicClient(), carreraId),
-  ['catalog-materias-by-carrera'],
-  { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] }
-);
+export const getMateriasByCarrera = cache(async (carreraId: string): Promise<Materia[]> => {
+  return fetchMateriasByCarrera(getPublicCatalogClient(), carreraId);
+});
 
-const loadMateriaById = unstable_cache(
-  async (materiaId: string): Promise<Materia | null> =>
-    fetchMateriaById(createPublicClient(), materiaId),
-  ['catalog-materia-by-id'],
-  { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] }
-);
+export const getMateriaById = cache(async (materiaId: string): Promise<Materia | null> => {
+  return fetchMateriaById(getPublicCatalogClient(), materiaId);
+});
 
-const loadCarreraById = unstable_cache(
-  async (carreraId: string): Promise<Carrera | null> =>
-    fetchCarreraById(createPublicClient(), carreraId),
-  ['catalog-carrera-by-id'],
-  { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] }
-);
+export const getCarreraById = cache(async (carreraId: string): Promise<Carrera | null> => {
+  return fetchCarreraById(getPublicCatalogClient(), carreraId);
+});
 
-const loadUniversidadById = unstable_cache(
-  async (uniId: string): Promise<Universidad | null> =>
-    fetchUniversidadById(createPublicClient(), uniId),
-  ['catalog-universidad-by-id'],
-  { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] }
-);
+export const getUniversidadById = cache(async (uniId: string): Promise<Universidad | null> => {
+  return fetchUniversidadById(getPublicCatalogClient(), uniId);
+});
 
-const loadUniversidades = unstable_cache(
-  async (): Promise<Universidad[]> => fetchUniversidades(createPublicClient()),
-  ['catalog-universidades'],
-  { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] }
-);
-
-// React cache keeps request-local callers deduplicated, while unstable_cache keeps
-// public catalog reads reusable across requests and deployments for the TTL above.
-export const getCarrerasByUni = cache(loadCarrerasByUniversidad);
-export const getMateriasByCarrera = cache(loadMateriasByCarrera);
-export const getMateriaById = cache(loadMateriaById);
-export const getCarreraById = cache(loadCarreraById);
-export const getUniversidadById = cache(loadUniversidadById);
-export const getUniversidades = cache(loadUniversidades);
+export const getUniversidades = cache(async () => {
+  return fetchUniversidades(getPublicCatalogClient());
+});
