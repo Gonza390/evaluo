@@ -6,6 +6,7 @@ on:
       - main
       - master
       - 'codex/**'
+      - 'perf/**'
   pull_request:
 
 jobs:
@@ -43,6 +44,18 @@ jobs:
 
       - name: Performance budget
         run: npm run performance:budget
+
+      - name: Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/reports
+          if-no-files-found: ignore
+          retention-days: 14
 
 # Nota: el repositorio todavía no contiene un baseline inicial reproducible de
 # Supabase. Las migraciones históricas más antiguas asumen tablas preexistentes
