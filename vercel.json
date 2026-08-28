@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run build && npm run performance:budget",
   "crons": [
     {
       "path": "/api/internal/explanations/warm?batch_size=30&candidate_pool=4000&max_tokens=65000&lookback_days=120",
