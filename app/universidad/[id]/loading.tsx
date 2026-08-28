@@ -4,7 +4,7 @@ function Pulse({ className }: { className: string }) {
 
 export default function Loading() {
   return (
-    <main className="min-h-full bg-white">
+    <div className="min-h-full bg-white">
       <div className="mx-auto w-full max-w-[1240px] px-4 py-7 sm:px-6 sm:py-9 lg:px-10">
         <Pulse className="h-4 w-32 rounded-full" />
 
@@ -40,6 +40,6 @@ export default function Loading() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }
