@@ -10,6 +10,20 @@ import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 
 type AuthMode = 'login' | 'signup';
 
+function getSafeInternalPath(value: string | null | undefined, fallback = '/dashboard') {
+  if (!value || !value.startsWith('/')) return fallback;
+
+  try {
+    const baseUrl = new URL('https://evaluo.local');
+    const resolvedUrl = new URL(value, baseUrl);
+    if (resolvedUrl.origin !== baseUrl.origin) return fallback;
+
+    return `${resolvedUrl.pathname}${resolvedUrl.search}${resolvedUrl.hash}`;
+  } catch {
+    return fallback;
+  }
+}
+
 function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean) {
   if (reason === 'save-subject') {
     return isSignUp
@@ -84,7 +98,7 @@ export default function LoginFormGoogleFirst() {
     const requestedNext = params.get('next') ?? params.get('redirectTo');
 
     if (requestedMode === 'signup' || requestedMode === 'login') setMode(requestedMode);
-    if (requestedNext?.startsWith('/')) setNextPath(requestedNext);
+    setNextPath(getSafeInternalPath(requestedNext));
     if (params.get('reason') === 'inactive') {
       setNotice('Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
     }
