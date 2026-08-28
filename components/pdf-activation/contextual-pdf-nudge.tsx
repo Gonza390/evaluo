@@ -36,6 +36,7 @@ export function ContextualPdfNudge() {
       return;
     }
 
+    const userId = user.id;
     let active = true;
 
     async function checkUploads() {
@@ -44,7 +45,7 @@ export function ContextualPdfNudge() {
         const { count, error } = await supabase
           .from('student_materials')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+          .eq('user_id', userId);
 
         if (!active) return;
         if (error) {
