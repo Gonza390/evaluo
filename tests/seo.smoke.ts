@@ -27,12 +27,17 @@ assertIncludesAll('app/explorar/materia/[id]/page.tsx', [
   'buildSeoEntitySlug',
   'parseSeoEntitySlug',
   'canonicalHref',
-  'SeoBreadcrumbs',
   'buildBreadcrumbJsonLd',
   'openGraph',
   'twitter',
   'contentSignals.hasAcademicContent',
 ]);
+
+const materiaPage = source('app/explorar/materia/[id]/page.tsx');
+assert.ok(
+  !materiaPage.includes('SeoBreadcrumbs'),
+  'materia page must not render the redundant visual SEO breadcrumb'
+);
 
 const studyLandingPath = 'app/landings/estudiar/[materia]/page.tsx';
 assertIncludesAll(studyLandingPath, [

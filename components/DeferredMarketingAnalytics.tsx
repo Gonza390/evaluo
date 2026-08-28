@@ -12,54 +12,67 @@ const ThirdPartyAnalytics = dynamic(
   { ssr: false }
 );
 
+function scheduleAfterLoad(callback: () => void, delayMs: number) {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const schedule = () => {
+    timeoutId = globalThis.setTimeout(callback, delayMs);
+  };
+
+  if (document.readyState === 'complete') {
+    schedule();
+  } else {
+    window.addEventListener('load', schedule, { once: true });
+  }
+
+  return () => {
+    window.removeEventListener('load', schedule);
+    if (timeoutId !== null) globalThis.clearTimeout(timeoutId);
+  };
+}
+
 export function DeferredMarketingAnalytics({
   includeThirdParty = false,
 }: {
   includeThirdParty?: boolean;
 }) {
-  const [enabled, setEnabled] = useState(false);
+  const [coreEnabled, setCoreEnabled] = useState(false);
+  const [thirdPartyEnabled, setThirdPartyEnabled] = useState(false);
 
   useEffect(() => {
-    if (enabled || typeof window === 'undefined') {
-      return;
-    }
+    if (typeof window === 'undefined') return;
 
-    const enable = () => setEnabled(true);
-    const schedule = (): (() => void) => {
-      if ('requestIdleCallback' in window) {
-        const idleId = window.requestIdleCallback(() => enable(), { timeout: 2500 });
-        return () => window.cancelIdleCallback(idleId);
-      }
-
-      const timeoutId = globalThis.setTimeout(enable, 1800);
-      return () => {
-        globalThis.clearTimeout(timeoutId);
-      };
+    const enableCore = () => setCoreEnabled(true);
+    const enableThirdParty = () => {
+      setCoreEnabled(true);
+      if (includeThirdParty) setThirdPartyEnabled(true);
     };
 
-    const cancelScheduled = schedule();
-    const onFirstInteraction = () => enable();
+    // Preserve acquisition analytics without competing with the initial render.
+    const cancelCoreFallback = scheduleAfterLoad(enableCore, 3500);
+    // Clarity/GTM are lower priority and stay out of the critical rendering window.
+    const cancelThirdPartyFallback = includeThirdParty
+      ? scheduleAfterLoad(() => setThirdPartyEnabled(true), 10_000)
+      : () => undefined;
 
+    const onFirstInteraction = () => enableThirdParty();
     window.addEventListener('pointerdown', onFirstInteraction, { once: true, passive: true });
     window.addEventListener('keydown', onFirstInteraction, { once: true });
-    window.addEventListener('scroll', onFirstInteraction, { once: true, passive: true });
 
     return () => {
-      cancelScheduled();
+      cancelCoreFallback();
+      cancelThirdPartyFallback();
       window.removeEventListener('pointerdown', onFirstInteraction);
       window.removeEventListener('keydown', onFirstInteraction);
-      window.removeEventListener('scroll', onFirstInteraction);
     };
-  }, [enabled]);
+  }, [includeThirdParty]);
 
-  if (!enabled) {
-    return null;
-  }
+  if (!coreEnabled && !thirdPartyEnabled) return null;
 
   return (
     <>
-      <GoogleAnalytics />
-      {includeThirdParty ? <ThirdPartyAnalytics /> : null}
+      {coreEnabled ? <GoogleAnalytics /> : null}
+      {includeThirdParty && thirdPartyEnabled ? <ThirdPartyAnalytics /> : null}
     </>
   );
 }

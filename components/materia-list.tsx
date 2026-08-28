@@ -68,6 +68,9 @@ const ICONOS_MATERIAS = [
   { bg: 'bg-emerald-100', color: 'text-emerald-600', icon: BookOpen },
 ];
 
+const INITIAL_VISIBLE_MATERIAS = 18;
+const MATERIAS_PAGE_SIZE = 18;
+
 function getIconoMateria(index: number) {
   return ICONOS_MATERIAS[index % ICONOS_MATERIAS.length];
 }
@@ -179,6 +182,7 @@ export default function MateriaList({
 }: MateriaListProps) {
   const [materias] = useState<Materia[]>(initialMaterias);
   const [busqueda, setBusqueda] = useState('');
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_MATERIAS);
   const { user } = useUser();
   const router = useRouter();
   const { toast } = useToast();
@@ -189,6 +193,10 @@ export default function MateriaList({
   const [activeTab, setActiveTab] = useState<'informacion' | 'plan' | 'recursos' | 'comunidad'>(
     'plan'
   );
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_VISIBLE_MATERIAS);
+  }, [busqueda, carreraId]);
 
   useEffect(() => {
     const loadFavorites = async () => {
@@ -392,6 +400,8 @@ export default function MateriaList({
       if (aReady !== bReady) return bReady - aReady;
       return a.nombre.localeCompare(b.nombre, 'es');
     });
+  const visibleMaterias = materiasFiltradas.slice(0, visibleCount);
+  const hasMoreMaterias = visibleCount < materiasFiltradas.length;
   const materiaNameById = new Map(materias.map((materia) => [materia.id, materia.nombre]));
   const officialCareerProfile = getOfficialCareerProfile({
     universidadNombre,
@@ -575,7 +585,7 @@ export default function MateriaList({
             </div>
 
             <div className="grid auto-rows-fr grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {materiasFiltradas.map((materia, index) => {
+              {visibleMaterias.map((materia, index) => {
                 const icono = getIconoMateria(index);
                 const IconComponent = icono.icon;
                 const isFavorite = favorites.has(materia.id);
@@ -682,6 +692,18 @@ export default function MateriaList({
                 </div>
               )}
             </div>
+
+            {hasMoreMaterias ? (
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((current) => current + MATERIAS_PAGE_SIZE)}
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#2563EB] transition hover:border-[#93C5FD] hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  Ver más materias ({materiasFiltradas.length - visibleMaterias.length})
+                </button>
+              </div>
+            ) : null}
           </div>
         )}
 
