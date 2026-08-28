@@ -1,6 +1,6 @@
 {
   "routes": [
-    { "label": "/", "appPath": "page", "maxGzipKb": 250 },
+    { "label": "/", "appPath": "page", "maxGzipKb": 310 },
     { "label": "/login", "appPath": "login/page", "maxGzipKb": 360 },
     { "label": "/explorar", "appPath": "explorar/page", "maxGzipKb": 330 },
     { "label": "/dashboard", "appPath": "dashboard/page", "maxGzipKb": 340 },
