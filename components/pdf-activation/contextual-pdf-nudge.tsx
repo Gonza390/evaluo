@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { FileUp, X } from 'lucide-react';
-import { useUser } from '@/hooks/useUser';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -18,7 +17,6 @@ function getMateriaIdFromPath(pathname: string) {
 
 export function ContextualPdfNudge() {
   const pathname = usePathname();
-  const { user } = useUser();
   const [dismissed, setDismissed] = useState(false);
   const [hasUploadedMaterial, setHasUploadedMaterial] = useState<boolean | null>(null);
 
@@ -31,30 +29,39 @@ export function ContextualPdfNudge() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!isDashboard || !user) {
+    if (!isDashboard) {
       setHasUploadedMaterial(null);
       return;
     }
 
-    const userId = user.id;
     let active = true;
 
     async function checkUploads() {
       try {
         const supabase = getSupabaseBrowserClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!active) return;
+        if (!user) {
+          setHasUploadedMaterial(true);
+          return;
+        }
+
         const { count, error } = await supabase
           .from('student_materials')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId);
+          .eq('user_id', user.id);
 
         if (!active) return;
         if (error) {
-          setHasUploadedMaterial(null);
+          setHasUploadedMaterial(true);
           return;
         }
         setHasUploadedMaterial((count ?? 0) > 0);
       } catch {
-        if (active) setHasUploadedMaterial(null);
+        if (active) setHasUploadedMaterial(true);
       }
     }
 
@@ -62,10 +69,10 @@ export function ContextualPdfNudge() {
     return () => {
       active = false;
     };
-  }, [isDashboard, user]);
+  }, [isDashboard]);
 
   if (dismissed || (!isDashboard && !isMateria)) return null;
-  if (isDashboard && hasUploadedMaterial === true) return null;
+  if (isDashboard && hasUploadedMaterial !== false) return null;
 
   const href = isMateria && materiaId
     ? `/dashboard/materiales/subir?materiaId=${encodeURIComponent(materiaId)}&source=materia`
