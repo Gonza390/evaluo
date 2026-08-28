@@ -119,41 +119,81 @@ export function HomeLiveStudyDemo() {
               <Layers3 className="h-3.5 w-3.5" />
               Flashcard
             </div>
-            <p className="mt-5 text-[10px] font-semibold text-slate-400">Pregunta</p>
-            <h3 className="mt-2 max-w-[560px] text-xl font-bold leading-tight tracking-[-0.03em] text-slate-950 sm:text-2xl">
-              ¿Cuál es la diferencia entre intercambio y transacción?
-            </h3>
 
-            <div className="mt-7 border-y border-slate-200 py-5">
-              {showFlashcardAnswer ? (
-                <div className="animate-surface-reveal">
-                  <p className="text-[10px] font-bold tracking-[0.12em] text-emerald-600 uppercase">Respuesta</p>
-                  <p className="mt-2 max-w-[570px] text-xs leading-6 text-slate-600 sm:text-[13px]">
-                    Toda transacción es un intercambio, pero no todo intercambio es una transacción. La transacción implica objetos y condiciones acordadas entre las partes.
-                  </p>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowFlashcardAnswer(true)}
-                  className="inline-flex items-center gap-2 text-xs font-bold text-indigo-700 transition hover:text-indigo-900"
-                >
-                  Ver respuesta
-                  <Check className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {showFlashcardAnswer && (
+            <div className="relative mt-4 pb-2">
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-4 top-3 bottom-0 translate-y-1.5 rounded-[22px] border border-slate-200 bg-slate-50"
+              />
               <button
                 type="button"
-                onClick={() => setShowFlashcardAnswer(false)}
-                className="mt-4 inline-flex items-center gap-2 text-[10px] font-semibold text-slate-400 transition hover:text-slate-700"
+                onClick={() => setShowFlashcardAnswer((value) => !value)}
+                aria-label={showFlashcardAnswer ? 'Volver a la pregunta' : 'Girar flashcard para ver la respuesta'}
+                aria-pressed={showFlashcardAnswer}
+                className="group relative block min-h-[245px] w-full rounded-[22px] text-left outline-none [perspective:1200px] focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:min-h-[265px]"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Volver a preguntar
+                <div
+                  className={`relative min-h-[245px] w-full transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none sm:min-h-[265px] ${
+                    showFlashcardAnswer ? '[transform:rotateY(180deg)]' : ''
+                  }`}
+                >
+                  <div
+                    aria-hidden={showFlashcardAnswer}
+                    className="absolute inset-0 flex flex-col rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_16px_38px_rgba(15,23,42,0.08)] [backface-visibility:hidden] sm:px-7 sm:py-6"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
+                        Pregunta
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-[9px] font-semibold text-slate-400 sm:text-[10px]">
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Tocá para girar
+                      </span>
+                    </div>
+
+                    <div className="flex flex-1 items-center justify-center py-4 text-center">
+                      <h3 className="max-w-[520px] text-xl font-bold leading-tight tracking-[-0.035em] text-slate-950 sm:text-2xl">
+                        ¿Cuál es la diferencia entre intercambio y transacción?
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3 text-[9px] font-medium text-slate-400 sm:text-[10px]">
+                      <span>Marketing I</span>
+                      <span>Recuperación activa</span>
+                    </div>
+                  </div>
+
+                  <div
+                    aria-hidden={!showFlashcardAnswer}
+                    className="absolute inset-0 flex [transform:rotateY(180deg)] flex-col rounded-[22px] border border-emerald-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F4FBF7_100%)] px-5 py-5 shadow-[0_16px_38px_rgba(16,185,129,0.10)] [backface-visibility:hidden] sm:px-7 sm:py-6"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[9px] font-bold tracking-[0.15em] text-emerald-700 uppercase">
+                        Respuesta
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[9px] font-bold text-emerald-700 sm:text-[10px]">
+                        <Check className="h-3 w-3" />
+                        Correcta
+                      </span>
+                    </div>
+
+                    <div className="flex flex-1 items-center justify-center py-4 text-center">
+                      <p className="max-w-[540px] text-xs leading-6 text-slate-700 sm:text-[13px] sm:leading-6">
+                        Toda transacción es un intercambio, pero no todo intercambio es una transacción. La transacción implica objetos y condiciones acordadas entre las partes.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 border-t border-emerald-100 pt-3 text-[9px] font-medium text-slate-400 sm:text-[10px]">
+                      <span>Respuesta del material</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Tocá para volver
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </button>
-            )}
+            </div>
           </div>
         )}
 
