@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npx tsc --noEmit && npm run lint && npm test && next build && npm run performance:budget",
     "performance:budget": "node scripts/check-performance-budget.mjs",
     "start": "next start",
     "lint": "eslint .",
