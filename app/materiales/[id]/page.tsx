@@ -175,7 +175,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     if (material.processing_status !== 'ready') {
       return (
-        <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
           <div className="surface-panel flex w-full flex-col gap-4 border-slate-200 bg-white px-6 py-8 sm:px-8">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF4FF] text-[#2563EB]">
               <FileText className="h-7 w-7" />
@@ -233,7 +233,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
               ) : null}
             </div>
           </div>
-        </main>
+        </div>
       );
     }
 
@@ -250,7 +250,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     if (studySummary.status !== 'ready') {
       return (
-        <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
           <div className="surface-panel flex w-full flex-col gap-4 border-slate-200 bg-white px-6 py-8 sm:px-8">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF4FF] text-[#2563EB]">
               <FileText className="h-7 w-7" />
@@ -278,7 +278,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
               </Link>
             </div>
           </div>
-        </main>
+        </div>
       );
     }
 
@@ -355,7 +355,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
     }
 
     return (
-      <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
         <div className="surface-panel flex w-full flex-col items-center justify-center gap-4 border-amber-200 bg-amber-50/70 px-6 py-8 text-center sm:px-8">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
             <FileText className="h-7 w-7" />
@@ -376,7 +376,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
             Volver al dashboard
           </Link>
         </div>
-      </main>
+      </div>
     );
   }
 }
