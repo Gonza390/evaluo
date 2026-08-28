@@ -90,30 +90,35 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const carreraNombre = bootstrap.carreraNombre?.trim();
   const universidadNombre = bootstrap.universidadNombre?.trim();
   const canonicalHref = `/explorar/materia/${buildSeoEntitySlug(materiaNombre, canonicalMateriaId)}`;
-  const description = carreraNombre
-    ? `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} de ${carreraNombre} en Evaluo.`
-    : `Explorá los temas, recursos y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`;
-  const socialTitle = `${materiaNombre} | Evaluo`;
+  const context = [carreraNombre, universidadNombre].filter(Boolean).join(' en ');
+  const description = context
+    ? `Estudiá ${materiaNombre} para ${context}: explorá materiales, resúmenes, pregunteros y actividades disponibles en Evaluo.`
+    : `Explorá materiales, resúmenes, pregunteros y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`;
+  const seoTitle = universidadNombre
+    ? `${materiaNombre} - ${universidadNombre}`
+    : `Guía y recursos de ${materiaNombre}`;
+  const socialTitle = `${seoTitle} | Evaluo`;
   const socialImage = buildShareCardPath({
     kind: 'materia',
     title: materiaNombre,
-    subtitle: [carreraNombre, universidadNombre].filter(Boolean).join(' · ') || 'Recursos de estudio',
+    subtitle:
+      [carreraNombre, universidadNombre].filter(Boolean).join(' · ') || 'Recursos de estudio',
     detail: 'Recursos, pregunteros y simuladores en un solo lugar',
   });
 
   return {
-    title: `Guía y recursos de ${materiaNombre}`,
+    title: seoTitle,
     description,
     alternates: {
       canonical: canonicalHref,
     },
     openGraph: {
       title: socialTitle,
-      description: carreraNombre
-        ? `Recursos y actividades para estudiar ${materiaNombre} en ${carreraNombre}.`
-        : `Recursos y actividades para estudiar ${materiaNombre} en Evaluo.`,
+      description,
       url: canonicalHref,
-      images: [{ url: socialImage, width: 1200, height: 630, alt: `${materiaNombre} en Evaluo` }],
+      images: [
+        { url: socialImage, width: 1200, height: 630, alt: `${materiaNombre} en Evaluo` },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
