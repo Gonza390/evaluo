@@ -278,16 +278,16 @@ export function MaterialStudyWorkspace({
   const { toast } = useToast();
   const router = useRouter();
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [isViewerVisible, setIsViewerVisible] = useState(true);
+  const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerationStageIndex, setRegenerationStageIndex] = useState(0);
   const [regenerationProgress, setRegenerationProgress] = useState(8);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (window.innerWidth < 1280) {
-      setIsViewerVisible(false);
-    }
+    if (typeof window === 'undefined' || window.innerWidth < 1280) return;
+
+    const timeoutId = window.setTimeout(() => setIsViewerVisible(true), 1200);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const studyArtifacts = useMemo(
