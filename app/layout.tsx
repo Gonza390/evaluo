@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import type { Metadata, Viewport } from 'next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import SessionIdleGuard from '@/components/SessionIdleGuard';
+import { ContextualPdfNudge } from '@/components/pdf-activation/contextual-pdf-nudge';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -87,6 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-background text-foreground min-h-screen text-[0.92rem]">
         <SessionIdleGuard />
         {children}
+        <ContextualPdfNudge />
         <SpeedInsights />
       </body>
     </html>
