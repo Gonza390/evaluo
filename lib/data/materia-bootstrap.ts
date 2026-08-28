@@ -127,48 +127,99 @@ async function loadInitialResumenes(materiaId: string) {
 
 const loadMateriaBootstrap = unstable_cache(
   async (materiaId: string, requestedCarreraId: string): Promise<MateriaBootstrapData> => {
-  const client = createPublicClient();
+    const client = createPublicClient();
 
-  let materiaFound: boolean | null = null;
-  let materiaNombre = 'Materia';
-  let carreraId = requestedCarreraId;
-  let carreraNombre = '';
-  let universidadId = '';
-  let universidadNombre = '';
-  let contextError: string | null = null;
+    let materiaFound: boolean | null = null;
+    let materiaNombre = 'Materia';
+    let carreraId = requestedCarreraId;
+    let carreraNombre = '';
+    let universidadId = '';
+    let universidadNombre = '';
+    let contextError: string | null = null;
 
-  try {
-    const { data: materiaData, error: materiaError } = await client
-      .from('materias')
-      .select('nombre, carrera_id')
-      .eq('id', materiaId)
-      .maybeSingle();
-
-    if (materiaError) {
-      throw materiaError;
-    }
-
-    if (!materiaData) {
-      materiaFound = false;
-    } else {
-      materiaFound = true;
-      materiaNombre = materiaData.nombre?.trim() || 'Materia';
-      carreraId ||= String(materiaData.carrera_id ?? '').trim();
-    }
-
-    if (carreraId) {
-      const { data: carreraData, error: carreraError } = await client
-        .from('carreras')
-        .select('nombre, universidad_id')
-        .eq('id', carreraId)
+    try {
+      const { data: materiaData, error: materiaError } = await client
+        .from('materias')
+        .select('nombre, carrera_id')
+        .eq('id', materiaId)
         .maybeSingle();
 
-      if (carreraError) {
-        throw carreraError;
+      if (materiaError) {
+        throw materiaError;
       }
 
-      carreraNombre = carreraData?.nombre?.trim() || '';
-      universidadId = String(carreraData?.universidad_id ?? '').trim();
+      if (!materiaData) {
+        materiaFound = false;
+      } else {
+        materiaFound = true;
+        materiaNombre = materiaData.nombre?.trim() || 'Materia';
+        carreraId ||= String(materiaData.carrera_id ?? '').trim();
+      }
+
+      if (carreraId) {
+        const { data: carreraData, error: carreraError } = await client
+          .from('carreras')
+          .select('nombre, universidad_id')
+          .eq('id', carreraId)
+          .maybeSingle();
+
+        if (carreraError) {
+          throw carreraError;
+        }
+
+        carreraNombre = carreraData?.nombre?.trim() || '';
+        universidadId = String(carreraData?.universidad_id ?? '').trim();
+      } else if (materiaFound) {
+        const { data: relations, error: relationsError } = await client
+          .from('carrera_materias')
+          .select('carrera_id')
+          .eq('materia_id', materiaId)
+          .limit(250);
+
+        if (relationsError) {
+          throw relationsError;
+        }
+
+        const relatedCarreraIds = Array.from(
+          new Set(
+            (relations ?? [])
+              .map((relation) => relation.carrera_id)
+              .filter((id): id is string => Boolean(id))
+          )
+        );
+
+        if (relatedCarreraIds.length === 1) {
+          carreraId = relatedCarreraIds[0];
+        }
+
+        if (relatedCarreraIds.length > 0) {
+          const { data: relatedCarreras, error: relatedCarrerasError } = await client
+            .from('carreras')
+            .select('id, nombre, universidad_id')
+            .in('id', relatedCarreraIds);
+
+          if (relatedCarrerasError) {
+            throw relatedCarrerasError;
+          }
+
+          if (carreraId) {
+            const resolvedCarrera = (relatedCarreras ?? []).find((item) => item.id === carreraId);
+            carreraNombre = resolvedCarrera?.nombre?.trim() || '';
+          }
+
+          const relatedUniversidadIds = Array.from(
+            new Set(
+              (relatedCarreras ?? [])
+                .map((item) => item.universidad_id)
+                .filter((id): id is string => Boolean(id))
+            )
+          );
+
+          if (relatedUniversidadIds.length === 1) {
+            universidadId = relatedUniversidadIds[0];
+          }
+        }
+      }
 
       if (universidadId) {
         const { data: universidadData, error: universidadError } = await client
@@ -183,32 +234,31 @@ const loadMateriaBootstrap = unstable_cache(
 
         universidadNombre = universidadData?.nombre?.trim() || '';
       }
+    } catch (error) {
+      logError('materiaBootstrap.context', error, { materiaId });
+      contextError = getMateriaContextErrorMessage();
     }
-  } catch (error) {
-    logError('materiaBootstrap.context', error, { materiaId });
-    contextError = getMateriaContextErrorMessage();
-  }
 
-  const [{ initialResumenes, initialResumenesError }, ratings, usage] = await Promise.all([
-    loadInitialResumenes(materiaId),
-    getSimulatorRatingsSummaryByMateria(materiaId),
-    getSimulatorUsageSummaryByMateria(materiaId),
-  ]);
+    const [{ initialResumenes, initialResumenesError }, ratings, usage] = await Promise.all([
+      loadInitialResumenes(materiaId),
+      getSimulatorRatingsSummaryByMateria(materiaId),
+      getSimulatorUsageSummaryByMateria(materiaId),
+    ]);
 
-  return {
-    materiaId,
-    materiaFound,
-    materiaNombre,
-    carreraId: carreraId || undefined,
-    carreraNombre: carreraNombre || undefined,
-    universidadId: universidadId || undefined,
-    universidadNombre: universidadNombre || undefined,
-    contextError,
-    initialResumenes,
-    initialResumenesError,
-    initialSimulatorRatings: toRecord(ratings),
-    initialSimulatorUsage: toRecord(usage),
-  };
+    return {
+      materiaId,
+      materiaFound,
+      materiaNombre,
+      carreraId: carreraId || undefined,
+      carreraNombre: carreraNombre || undefined,
+      universidadId: universidadId || undefined,
+      universidadNombre: universidadNombre || undefined,
+      contextError,
+      initialResumenes,
+      initialResumenesError,
+      initialSimulatorRatings: toRecord(ratings),
+      initialSimulatorUsage: toRecord(usage),
+    };
   },
   ['materia-bootstrap'],
   { revalidate: 600, tags: ['materia-bootstrap'] }
