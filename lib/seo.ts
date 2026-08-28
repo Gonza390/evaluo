@@ -117,9 +117,14 @@ export function buildLearningResourceJsonLd({
     inLanguage: 'es-AR',
     isAccessibleForFree: true,
     learningResourceType: ['Resumen', 'Preguntero', 'Simulador de examen'],
+    provider: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      url: toAbsoluteUrl('/'),
+    },
     ...(universityName
       ? {
-          provider: {
+          about: {
             '@type': 'EducationalOrganization',
             name: universityName,
           },
