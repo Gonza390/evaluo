@@ -156,21 +156,32 @@ export function GuidedTour({
 
   useEffect(() => {
     if (open) {
-      previousFocusRef.current = document.activeElement as HTMLElement | null;
-      requestAnimationFrame(() => {
-        const closeButton = cardRef.current?.querySelector<HTMLButtonElement>(
-          'button[aria-label="Cerrar guía"]'
-        );
-        if (closeButton) {
-          closeButton.focus();
-        } else {
-          cardRef.current?.focus();
-        }
-      });
-    } else if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
-      previousFocusRef.current.focus();
-      previousFocusRef.current = null;
+      if (!previousFocusRef.current) {
+        previousFocusRef.current = document.activeElement as HTMLElement | null;
+      }
+      return;
     }
+
+    const previousFocus = previousFocusRef.current;
+    previousFocusRef.current = null;
+    if (previousFocus && typeof previousFocus.focus === 'function') {
+      requestAnimationFrame(() => previousFocus.focus());
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    requestAnimationFrame(() => {
+      const closeButton = cardRef.current?.querySelector<HTMLButtonElement>(
+        'button[aria-label="Cerrar guía"]'
+      );
+      if (closeButton) {
+        closeButton.focus();
+      } else {
+        cardRef.current?.focus();
+      }
+    });
   }, [open, stepIndex]);
 
   const resolveTargetElement = useCallback((): HTMLElement | null => {
