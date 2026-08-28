@@ -13,17 +13,32 @@ import {
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: 'Pregunteros universitarios por materia y universidad | Evaluo',
+  title: 'Pregunteros Universidad Siglo 21 por materia',
   description:
-    'Practicá con pregunteros de parcial, primer y segundo parcial, y examen integrador de las materias de tu universidad: UBA, UTN, UNC, UNLP, Siglo 21 y más. Con simulador y feedback en Evaluo.',
+    'Encontrá pregunteros de Universidad Siglo 21 organizados por carrera, materia y parcial. Solo mostramos materias que ya tienen preguntas disponibles para practicar en Evaluo.',
+  keywords: [
+    'pregunteros Siglo 21',
+    'preguntero Universidad Siglo 21',
+    'preguntas parcial Siglo 21',
+    'primer parcial Siglo 21',
+    'segundo parcial Siglo 21',
+  ],
   alternates: {
     canonical: '/pregunteros',
   },
   openGraph: {
-    title: 'Pregunteros universitarios por materia | Evaluo',
+    title: 'Pregunteros Universidad Siglo 21 por materia | Evaluo',
     description:
-      'Pregunteros de parcial, primer y segundo parcial e integrador por universidad y carrera. Practicá con simulador y feedback.',
+      'Pregunteros por carrera, materia y parcial con preguntas disponibles para practicar en Evaluo.',
     url: '/pregunteros',
+    images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Pregunteros Universidad Siglo 21 por materia | Evaluo',
+    description:
+      'Encontrá el preguntero de tu materia de Universidad Siglo 21 y practicá el parcial en Evaluo.',
+    images: ['/opengraph-image.png'],
   },
 };
 
@@ -50,10 +65,13 @@ const loadPregunteroHubData = unstable_cache(
     }
 
     const universidadById = new Map(
-      (universidadesResult.data ?? []).map((universidad) => [universidad.id, universidad.nombre])
+      (universidadesResult.data ?? []).map((universidad) => [
+        universidad.id,
+        universidad.nombre.trim(),
+      ])
     );
     const materiaById = new Map(
-      (materiasResult.data ?? []).map((materia) => [materia.id, materia.nombre])
+      (materiasResult.data ?? []).map((materia) => [materia.id, materia.nombre.trim()])
     );
     const questionMateriaIds = new Set(
       (preguntasResult.data ?? [])
@@ -90,7 +108,7 @@ const loadPregunteroHubData = unstable_cache(
         return [
           {
             carreraId: carrera.id,
-            carreraNombre: carrera.nombre,
+            carreraNombre: carrera.nombre.trim(),
             universidadNombre,
             materias,
           },
@@ -101,7 +119,7 @@ const loadPregunteroHubData = unstable_cache(
         return byUniversity || a.carreraNombre.localeCompare(b.carreraNombre, 'es');
       });
   },
-  ['preguntero-hub-v2'],
+  ['preguntero-hub-v3'],
   { revalidate: 600, tags: ['universidad-data'] }
 );
 
@@ -125,13 +143,13 @@ export default async function PregunteroHubPage() {
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-indigo-700 uppercase">
             <ListChecks className="h-4 w-4" aria-hidden="true" />
-            Pregunteros
+            Pregunteros · Universidad Siglo 21
           </p>
           <h1 className="mt-4 max-w-4xl text-4xl font-bold tracking-[-0.055em] text-slate-950 sm:text-5xl">
             Practicá el preguntero de tu materia.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-            Buscá tu universidad, carrera o materia. Solo mostramos materias que ya tienen preguntas disponibles para practicar.
+            Buscá tu carrera o materia de Universidad Siglo 21. Solo mostramos materias que ya tienen preguntas disponibles para practicar.
           </p>
         </div>
       </section>
@@ -153,7 +171,7 @@ export default async function PregunteroHubPage() {
             <div>
               <h2 className="text-base font-bold text-slate-950">¿Qué es un preguntero?</h2>
               <p className="mt-2 text-sm leading-7 text-slate-600">
-                Es un banco de preguntas de parcial o examen de una materia. En Evaluo podés practicarlas en un simulador y revisar tus respuestas con feedback al terminar.
+                Es un banco de preguntas de práctica asociado a una materia y a una instancia de parcial. En Evaluo podés responderlas en un simulador y revisar tus errores al terminar.
               </p>
             </div>
           </div>
