@@ -1,4 +1,5 @@
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildMateriaSharePath } from '@/lib/materia-share-path';
 
 export function getUniversityRoute(universityId: string) {
   return `/universidad/${universityId}`;
@@ -35,7 +36,31 @@ function getClientMateriaRouteSegment(materiaId: string) {
   return materiaNombre ? buildSeoEntitySlug(materiaNombre, materiaId) : materiaId;
 }
 
+function getClientShortMateriaRoute(materiaId: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+
+  const prefix = '/explorar/materia/';
+  if (!window.location.pathname.startsWith(prefix)) return null;
+
+  const currentSegment = decodeURIComponent(
+    window.location.pathname.slice(prefix.length).split('/')[0] ?? ''
+  );
+  const currentMateriaId = parseSeoEntitySlug(currentSegment).id;
+  if (currentMateriaId !== materiaId) return null;
+
+  const materiaNombre = document.querySelector('h1')?.textContent?.trim();
+  const universidadNombre = document
+    .querySelector<HTMLAnchorElement>('a[href^="/universidad/"]')
+    ?.textContent?.trim();
+
+  if (!materiaNombre || !universidadNombre) return null;
+  return buildMateriaSharePath(materiaNombre, universidadNombre);
+}
+
 export function getMateriaRoute(materiaId: string, carreraId?: string | null) {
+  const shortRoute = getClientShortMateriaRoute(materiaId);
+  if (shortRoute) return shortRoute;
+
   const params = new URLSearchParams();
 
   if (carreraId) {

@@ -8,6 +8,10 @@ import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildShareCardPath } from '@/lib/share-card';
+import {
+  buildMateriaSharePath,
+  getApprovedShareCreatorLabel,
+} from '@/lib/materia-share-path';
 import { createPublicClient } from '@/lib/supabase-public';
 import { fetchSharedStudentMaterialsByMateria } from '@/lib/data/student-materials';
 import MateriaStudyHome from './materia-study-home';
@@ -18,6 +22,7 @@ interface PageProps {
     carreraId?: string;
     tab?: string;
     modulo?: string;
+    creador?: string;
   }>;
 }
 
@@ -31,15 +36,18 @@ function buildMateriaQuery(searchParams: {
   carreraId?: string;
   tab?: string;
   modulo?: string;
+  creador?: string;
 }) {
   const params = new URLSearchParams();
   const carreraId = searchParams.carreraId?.trim();
   const tab = searchParams.tab?.trim();
   const modulo = searchParams.modulo?.trim();
+  const creador = searchParams.creador?.trim();
 
   if (carreraId) params.set('carreraId', carreraId);
   if (tab) params.set('tab', tab);
   if (modulo) params.set('modulo', modulo);
+  if (creador) params.set('creador', creador);
 
   const query = params.toString();
   return query ? `?${query}` : '';
@@ -75,8 +83,11 @@ async function getMateriaStudyHomeData(materiaId: string) {
   };
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params;
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve({} as { creador?: string }),
+  ]);
   const canonicalMateriaId = resolveMateriaId(resolvedParams.id);
   const [bootstrap, contentSignals] = await Promise.all([
     getMateriaBootstrap({
@@ -86,23 +97,45 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     getMateriaSeoContentSignals(canonicalMateriaId),
   ]);
   const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
-  const carreraNombre = bootstrap.carreraNombre?.trim();
   const universidadNombre = bootstrap.universidadNombre?.trim();
+  const creatorLabel = getApprovedShareCreatorLabel(resolvedSearchParams.creador);
   const canonicalHref = `/explorar/materia/${buildSeoEntitySlug(materiaNombre, canonicalMateriaId)}`;
-  const context = [carreraNombre, universidadNombre].filter(Boolean).join(' en ');
-  const description = context
-    ? `Estudiá ${materiaNombre} para ${context}: explorá materiales, resúmenes, pregunteros y actividades disponibles en Evaluo.`
-    : `Explorá materiales, resúmenes, pregunteros y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`;
+  const socialHref = universidadNombre
+    ? buildMateriaSharePath(materiaNombre, universidadNombre)
+    : canonicalHref;
+  const hasStudyMaterial =
+    contentSignals.summaryCount +
+      contentSignals.summaryResourceCount +
+      contentSignals.resourceCount >
+    0;
+
+  let description: string;
+  if (contentSignals.questionCount > 0) {
+    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con modelos de examen para practicar y explicación de cada respuesta${hasStudyMaterial ? ', más resúmenes y material de estudio' : ''}.`;
+  } else if (hasStudyMaterial) {
+    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con resúmenes y material de estudio disponibles en Evaluo.`;
+  } else {
+    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con material de estudio, práctica y herramientas de Evaluo.`;
+  }
+
+  if (creatorLabel) {
+    description = `${description} Contenido compartido con ${creatorLabel}.`;
+  }
+
   const seoTitle = universidadNombre
     ? `${materiaNombre} - ${universidadNombre}`
     : `Guía y recursos de ${materiaNombre}`;
-  const socialTitle = `${seoTitle} | Evaluo`;
+  const socialTitle = creatorLabel
+    ? `${materiaNombre} — con ${creatorLabel} | Evaluo`
+    : `${seoTitle} | Evaluo`;
   const socialImage = buildShareCardPath({
     kind: 'materia',
     title: materiaNombre,
-    subtitle:
-      [carreraNombre, universidadNombre].filter(Boolean).join(' · ') || 'Recursos de estudio',
-    detail: 'Recursos, pregunteros y simuladores en un solo lugar',
+    subtitle: universidadNombre || 'Recursos de estudio',
+    detail:
+      contentSignals.questionCount > 0
+        ? 'Modelos de examen con explicación de cada respuesta'
+        : 'Recursos, práctica y material de estudio en un solo lugar',
   });
 
   return {
@@ -114,7 +147,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: socialTitle,
       description,
-      url: canonicalHref,
+      url: socialHref,
       images: [
         { url: socialImage, width: 1200, height: 630, alt: `${materiaNombre} en Evaluo` },
       ],
@@ -140,6 +173,7 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
         carreraId?: string;
         tab?: string;
         modulo?: string;
+        creador?: string;
       }),
   ]);
   const parsedMateriaId = parseSeoEntitySlug(resolvedParams.id).id;
