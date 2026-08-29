@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Sparkles, X } from 'lucide-react';
-import { getLiveWrongAnswerExplanationDemo } from '@/lib/actions/errores';
+import { getLiveWrongAnswerExplanation } from '@/lib/actions/live-simulator-explanation';
 import { cn } from '@/lib/utils';
 
 const OPTION_LABELS = ['a', 'b', 'c', 'd'];
@@ -27,18 +27,55 @@ interface QuestionOptionButtonProps {
   disabled: boolean;
 }
 
-function getSimulatorContext() {
+type SimulatorContext = {
+  materiaId: string;
+  parcial: number;
+  mode: 'regular' | 'errores' | 'premium' | 'ultimo_intento';
+};
+
+function getSimulatorContext(): SimulatorContext | null {
   if (typeof window === 'undefined') return null;
   const parts = window.location.pathname.split('/').filter(Boolean);
   const simulatorIndex = parts.indexOf('simulador');
   if (simulatorIndex < 0) return null;
 
-  const materiaId = decodeURIComponent(parts[simulatorIndex + 1] ?? '');
-  const parcial = Number(parts[simulatorIndex + 2]);
-  if (!materiaId || ['errores', 'premium', 'ultimo-intento'].includes(materiaId)) return null;
-  if (![1, 2, 3].includes(parcial)) return null;
+  const first = decodeURIComponent(parts[simulatorIndex + 1] ?? '');
+  let materiaId = '';
+  let parcial = 1;
+  let mode: SimulatorContext['mode'] = 'regular';
 
-  return { materiaId, parcial };
+  if (first === 'errores') {
+    materiaId = decodeURIComponent(parts[simulatorIndex + 2] ?? '');
+    parcial = Number(new URLSearchParams(window.location.search).get('parcial')) || 1;
+    mode = 'errores';
+  } else if (first === 'premium') {
+    materiaId = decodeURIComponent(parts[simulatorIndex + 2] ?? '');
+    parcial = Number(parts[simulatorIndex + 3]);
+    mode = 'premium';
+  } else if (first === 'ultimo-intento') {
+    materiaId = decodeURIComponent(parts[simulatorIndex + 2] ?? '');
+    parcial = Number(parts[simulatorIndex + 3]);
+    mode = 'ultimo_intento';
+  } else {
+    materiaId = first;
+    parcial = Number(parts[simulatorIndex + 2]);
+  }
+
+  if (!materiaId || ![1, 2, 3].includes(parcial)) return null;
+  return { materiaId, parcial, mode };
+}
+
+function getAttemptKey(context: SimulatorContext) {
+  const storageKey = `evaluo_live_explanation_attempt:${context.mode}:${context.materiaId}:${context.parcial}`;
+  const existing = window.sessionStorage.getItem(storageKey);
+  if (existing) return existing;
+
+  const generated =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+  window.sessionStorage.setItem(storageKey, generated);
+  return generated;
 }
 
 function getBriefExplanation(text: string) {
@@ -73,7 +110,6 @@ export function QuestionOptionButton({
   const [explanation, setExplanation] = useState('');
   const [loadingExplanation, setLoadingExplanation] = useState(false);
   const [explanationError, setExplanationError] = useState('');
-  const [suppressed, setSuppressed] = useState(false);
 
   useEffect(() => {
     if (!questionAnswered || !selectedIsWrong) return;
@@ -98,10 +134,9 @@ export function QuestionOptionButton({
     host.dataset.evaluoLiveExplanation = 'true';
     optionsGroup.insertAdjacentElement('afterend', host);
     setPortalHost(host);
-    setSuppressed(false);
     setExplanationError('');
 
-    const cacheKey = `evaluo_demo_explanation:${context.materiaId}:${context.parcial}:${enunciado}`;
+    const cacheKey = `evaluo_live_explanation:${context.materiaId}:${context.parcial}:${enunciado}`;
     const cached = window.sessionStorage.getItem(cacheKey);
     if (cached) {
       setExplanation(cached);
@@ -115,25 +150,22 @@ export function QuestionOptionButton({
     setExplanation('');
     setLoadingExplanation(true);
 
-    void getLiveWrongAnswerExplanationDemo({
+    void getLiveWrongAnswerExplanation({
       materia_id: context.materiaId,
       parcial: context.parcial,
       enunciado,
+      attempt_key: getAttemptKey(context),
     })
       .then((response) => {
         if (!active) return;
-
-        if ('skipped' in response && response.skipped) {
-          setSuppressed(true);
-          return;
-        }
 
         if (!response.success) {
           const message =
             'message' in response && typeof response.message === 'string'
               ? response.message
               : 'No pudimos generar la explicación.';
-          throw new Error(message);
+          setExplanationError(message);
+          return;
         }
 
         const explanations =
@@ -142,7 +174,8 @@ export function QuestionOptionButton({
             : [];
         const text = getBriefExplanation(explanations[0]?.explicacion ?? '');
         if (!text) {
-          throw new Error('La explicación todavía no está disponible para esta pregunta.');
+          setExplanationError('La explicación todavía no está disponible para esta pregunta.');
+          return;
         }
 
         window.sessionStorage.setItem(cacheKey, text);
@@ -219,7 +252,7 @@ export function QuestionOptionButton({
         </div>
       </button>
 
-      {portalHost && !suppressed
+      {portalHost
         ? createPortal(
             <div
               className="mt-5 rounded-2xl border border-indigo-200 bg-[linear-gradient(135deg,#EEF0FF_0%,#FFFFFF_100%)] p-4 shadow-[0_12px_28px_rgba(99,102,241,0.08)]"
@@ -239,10 +272,7 @@ export function QuestionOptionButton({
                   ) : explanation ? (
                     <p className="mt-1 text-sm leading-6 text-slate-700">{explanation}</p>
                   ) : explanationError ? (
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      La respuesta correcta es la opción marcada en verde. La explicación automática
-                      no pudo cargarse ahora; podés seguir y volver a esta pregunta después.
-                    </p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">{explanationError}</p>
                   ) : null}
                 </div>
               </div>
