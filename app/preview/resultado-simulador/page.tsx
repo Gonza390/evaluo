@@ -7,10 +7,15 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams?: Promise<{ estado?: string }>;
+  searchParams?: Promise<{ estado?: string; contenido?: string }>;
 };
 
 export default async function SimulatorResultPreviewPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  return <SimulatorResultRedesignPreview improved={params.estado === 'mejora'} />;
+  return (
+    <SimulatorResultRedesignPreview
+      improved={params.estado === 'mejora'}
+      hasMaterial={params.contenido !== 'sin-material'}
+    />
+  );
 }
