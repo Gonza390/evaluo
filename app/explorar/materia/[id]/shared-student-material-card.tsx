@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -45,11 +46,32 @@ export function SharedStudentMaterialCard({
 }: SharedStudentMaterialCardProps) {
   const materialHref = getStudentMaterialRoute(material.id);
   const dateLabel = formatDate(material.created_at);
-  const availableArtifacts = ARTIFACTS.filter(
-    ({ key }) => material.study_artifacts?.[key]
-  );
+  const availableArtifacts = ARTIFACTS.filter(({ key }) => material.study_artifacts?.[key]);
   const isEnriched = material.study_artifacts?.count >= 3;
   const isComplete = material.study_artifacts?.complete;
+  const [uploaderName, setUploaderName] = useState('Estudiante');
+
+  useEffect(() => {
+    let active = true;
+
+    void fetch(`/api/student-materials/${material.id}/author`)
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as { name?: string | null };
+      })
+      .then((payload) => {
+        if (!active) return;
+        const name = payload?.name?.trim();
+        if (name) setUploaderName(name);
+      })
+      .catch(() => {
+        // La atribución es complementaria: el material sigue siendo usable si falla.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [material.id]);
 
   return (
     <article
@@ -121,13 +143,15 @@ export function SharedStudentMaterialCard({
         </div>
       ) : (
         <p className="relative mt-4 line-clamp-2 text-sm leading-6 text-slate-500">
-          Material compartido por un estudiante para estudiar esta materia.
+          Material compartido para estudiar esta materia.
         </p>
       )}
 
       <div className="relative mt-auto pt-4">
         <div className="mb-3 flex items-center justify-between gap-2 text-[11px] text-slate-400">
-          <span>Compartido por un estudiante</span>
+          <span>
+            Subido por <span className="font-semibold text-slate-600">{uploaderName}</span>
+          </span>
           {dateLabel ? <span>{dateLabel}</span> : null}
         </div>
 
