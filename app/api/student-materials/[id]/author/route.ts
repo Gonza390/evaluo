@@ -7,13 +7,6 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-function buildDisplayName(nombre?: string | null, apellido?: string | null) {
-  return [nombre, apellido]
-    .filter((value): value is string => Boolean(value?.trim()))
-    .map((value) => value.trim())
-    .join(' ');
-}
-
 export async function GET(_request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -47,12 +40,14 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('nombre, apellido')
+    .select('nombre')
     .eq('id', material.user_id)
     .maybeSingle();
 
+  const displayName = profile?.nombre?.trim() || 'Estudiante';
+
   return NextResponse.json(
-    { name: buildDisplayName(profile?.nombre, profile?.apellido) || 'Estudiante' },
+    { name: displayName },
     {
       headers: isPublicMaterial
         ? {
