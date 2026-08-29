@@ -13,7 +13,7 @@ type Props = {
   title: string;
   sharePath: string;
   initialVisibility: MaterialVisibility;
-  isOwner: boolean;
+  isOwner?: boolean;
 };
 
 export function StudentMaterialShareControl({
@@ -21,7 +21,7 @@ export function StudentMaterialShareControl({
   title,
   sharePath,
   initialVisibility,
-  isOwner,
+  isOwner = true,
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
@@ -117,7 +117,7 @@ export function StudentMaterialShareControl({
   };
 
   return (
-    <div className="fixed right-4 bottom-20 z-40 flex items-center gap-2 md:right-6 md:bottom-6">
+    <div data-student-material-share-control className="fixed right-4 bottom-20 z-40 flex items-center gap-2 md:right-6 md:bottom-6">
       {confirmOpen && isOwner ? (
         <div className="absolute right-0 bottom-[calc(100%+12px)] w-[min(360px,calc(100vw-2rem))] rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="flex items-start justify-between gap-3">
