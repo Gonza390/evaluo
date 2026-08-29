@@ -141,7 +141,7 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
 
       <button type="button" onClick={handleShare} disabled={loading} className="from-brand to-brand-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-4 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.26)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : copied ? <Check className="h-4 w-4" /> : canNativeShare ? <Share2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        {copied ? 'Enlace copiado' : 'Compartir PDF'}
+        {copied ? 'Enlace copiado' : 'Compartir este PDF'}
       </button>
     </div>
   );
