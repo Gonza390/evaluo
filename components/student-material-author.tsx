@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { UserRound } from 'lucide-react';
 
 type StudentMaterialAuthorProps = {
@@ -9,6 +10,7 @@ type StudentMaterialAuthorProps = {
 
 export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps) {
   const [name, setName] = useState<string | null>(null);
+  const [target, setTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -32,16 +34,39 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     };
   }, [materialId]);
 
-  if (!name) return null;
+  useEffect(() => {
+    const resolveTarget = () =>
+      document.querySelector<HTMLElement>('.material-study-editorial [role="tablist"]');
 
-  return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6">
-      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500 shadow-sm">
-        <UserRound className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
-        <span>
-          Subido por <span className="font-semibold text-slate-700">{name}</span>
-        </span>
-      </div>
-    </div>
+    const initialTarget = resolveTarget();
+    if (initialTarget) {
+      setTarget(initialTarget);
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      const nextTarget = resolveTarget();
+      if (!nextTarget) return;
+      setTarget(nextTarget);
+      observer.disconnect();
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
+  if (!name || !target) return null;
+
+  return createPortal(
+    <div
+      role="presentation"
+      className="ml-auto inline-flex h-8 flex-none shrink-0 items-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-2.5 text-[11px] text-slate-500 shadow-none sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-xs"
+    >
+      <UserRound className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
+      <span className="whitespace-nowrap">
+        Subido por <span className="font-semibold text-slate-700">{name}</span>
+      </span>
+    </div>,
+    target
   );
 }
