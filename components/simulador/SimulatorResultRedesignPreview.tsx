@@ -132,36 +132,34 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                 </div>
               </div>
 
-              <div className="py-6">
-                <div className="rounded-[24px] border border-[#DCE6FF] bg-[linear-gradient(135deg,#F7F9FF_0%,#FFFFFF_100%)] p-5 sm:p-6">
-                  <div className="flex items-start gap-4">
-                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF0FF] text-[#5D65F6]">
-                      <UploadCloud className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold tracking-[0.16em] text-[#5D65F6] uppercase">
-                        Seguí preparando esta materia
-                      </p>
-                      <h3 className="mt-2 text-lg font-bold tracking-[-0.025em] text-slate-950">
-                        ¿Tenés apuntes de Derecho Procesal Público?
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Convertí el PDF que estás usando para estudiar en resumen, glosario, tarjetas
-                        y ejercicios. Evaluo ya sabe qué materia estás preparando.
-                      </p>
-                      <Link
-                        href={uploadHref}
-                        className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#C7D2FE] bg-white px-4 text-sm font-semibold text-[#4F46E5] transition hover:bg-[#EEF0FF]"
-                      >
-                        Preparar mis apuntes
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
+              <div className="border-b border-slate-200 py-6">
+                <div className="flex items-start gap-4">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EEF0FF] text-[#5D65F6]">
+                    <UploadCloud className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-semibold tracking-[0.16em] text-[#5D65F6] uppercase">
+                      Seguí preparando esta materia
+                    </p>
+                    <h3 className="mt-2 text-lg font-bold tracking-[-0.025em] text-slate-950">
+                      ¿Tenés apuntes de Derecho Procesal Público?
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Convertí el PDF que estás usando para estudiar en resumen, glosario, tarjetas
+                      y ejercicios. Evaluo ya sabe qué materia estás preparando.
+                    </p>
+                    <Link
+                      href={uploadHref}
+                      className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#C7D2FE] bg-white px-4 text-sm font-semibold text-[#4F46E5] transition hover:bg-[#EEF0FF]"
+                    >
+                      Preparar mis apuntes
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
                   className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
