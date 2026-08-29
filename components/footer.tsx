@@ -10,7 +10,7 @@ export function Footer() {
     <footer className="mt-8 border-t border-slate-200 bg-white/95">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-center gap-3 px-4 py-4 text-center text-sm text-slate-500 sm:min-h-16 sm:flex-row sm:justify-between sm:py-2">
         <p>Evaluo</p>
-        <p>Plataforma académica para estudiar mejor</p>
+        <p>Tu plataforma de estudio</p>
         <div className="flex items-center gap-2" aria-label="Redes sociales de Evaluo">
           <a
             href={SOCIAL_LINKS.instagram}
