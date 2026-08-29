@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { createPublicClient } from '@/lib/supabase-public';
 import { isUuid } from '@/lib/uuid';
 import { createClientServer } from '@/lib/supabase-server';
+import { logError } from '@/lib/observability';
 
 import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
 
@@ -107,9 +108,18 @@ export default async function SimuladorPage({ params, searchParams }: PageProps)
     .from('materias')
     .select('id')
     .eq('id', materia_id)
-    .maybeSingle();
+    .maybeSingle()
+    .abortSignal(AbortSignal.timeout(8000));
 
-  if (error || !materia) {
+  if (error) {
+    logError('simulador.loadMateria', error, {
+      materiaId: materia_id,
+      parcial: parcialStr,
+    });
+    throw new Error('No pudimos consultar la materia del simulador.');
+  }
+
+  if (!materia) {
     return notFound();
   }
 
