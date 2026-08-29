@@ -4,6 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import SessionIdleGuard from '@/components/SessionIdleGuard';
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
+import './fullscreen-exit.css';
 
 const inter = Inter({
   subsets: ['latin'],
