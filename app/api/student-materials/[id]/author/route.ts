@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { createClientServer } from '@/lib/supabase-server';
 import { isUuid } from '@/lib/uuid';
 
 type RouteContext = {
@@ -27,13 +28,21 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .eq('id', id)
     .maybeSingle();
 
-  if (
-    materialError ||
-    !material ||
-    material.visibility !== 'shared' ||
-    material.processing_status !== 'ready'
-  ) {
+  if (materialError || !material) {
     return NextResponse.json({ name: null }, { status: 404 });
+  }
+
+  const isPublicMaterial = material.visibility === 'shared' && material.processing_status === 'ready';
+
+  if (!isPublicMaterial) {
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== material.user_id) {
+      return NextResponse.json({ name: null }, { status: 404 });
+    }
   }
 
   const { data: profile } = await admin
@@ -45,9 +54,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
   return NextResponse.json(
     { name: buildDisplayName(profile?.nombre, profile?.apellido) || 'Estudiante' },
     {
-      headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
-      },
+      headers: isPublicMaterial
+        ? {
+            'Cache-Control': 'public, max-age=300, s-maxage=300, stale-while-revalidate=600',
+          }
+        : {
+            'Cache-Control': 'private, no-store',
+          },
     }
   );
 }
