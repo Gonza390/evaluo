@@ -7,6 +7,14 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
+function readMetadataName(metadata: Record<string, unknown> | undefined) {
+  const fullName = typeof metadata?.full_name === 'string' ? metadata.full_name.trim() : '';
+  if (fullName) return fullName;
+
+  const name = typeof metadata?.name === 'string' ? metadata.name.trim() : '';
+  return name || null;
+}
+
 export async function GET(_request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -44,10 +52,15 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .eq('id', material.user_id)
     .maybeSingle();
 
-  const displayName = profile?.nombre?.trim() || 'Estudiante';
+  let displayName = profile?.nombre?.trim() || null;
+
+  if (!displayName) {
+    const { data: authUser } = await admin.auth.admin.getUserById(material.user_id);
+    displayName = readMetadataName(authUser.user?.user_metadata as Record<string, unknown> | undefined);
+  }
 
   return NextResponse.json(
-    { name: displayName },
+    { name: displayName || 'Estudiante' },
     {
       headers: isPublicMaterial
         ? {
