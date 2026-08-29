@@ -239,9 +239,9 @@ export function PaymentCheckoutCard({
           : 'border border-slate-200'
       }`}
     >
-      {featured ? (
+      {featured && isSemester ? (
         <div className="absolute right-5 top-5 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
-          Mejor valor
+          Recomendado
         </div>
       ) : null}
 
@@ -294,15 +294,15 @@ export function PaymentCheckoutCard({
         </p>
 
         {isSemester ? (
-          <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-4 py-3">
-            <p className="text-sm font-bold text-indigo-900">
+          <div className="mt-3 text-[11px] leading-4 text-indigo-800">
+            <p className="font-bold">
               {offer?.semesterRemaining == null
                 ? 'Verificando los 50 cupos…'
                 : offer.semesterRemaining > 0
                   ? `${offer.semesterRemaining} de ${offer.semesterLimit} cupos disponibles ahora`
                   : 'Los 50 cupos están ocupados'}
             </p>
-            <p className="mt-1 text-xs leading-5 text-indigo-700">
+            <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
               El cupo se descuenta con compras aprobadas y reservas de checkout recientes.
             </p>
           </div>
