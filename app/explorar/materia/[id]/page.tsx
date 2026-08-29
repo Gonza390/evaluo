@@ -11,7 +11,7 @@ import { buildShareCardPath } from '@/lib/share-card';
 import {
   buildMateriaSharePath,
   getApprovedShareCreatorLabel,
-} from '@/lib/materia-share-slug';
+} from '@/lib/materia-share-path';
 import { createPublicClient } from '@/lib/supabase-public';
 import { fetchSharedStudentMaterialsByMateria } from '@/lib/data/student-materials';
 import MateriaStudyHome from './materia-study-home';

@@ -1,5 +1,5 @@
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
-import { buildMateriaSharePath } from '@/lib/materia-share-slug';
+import { buildMateriaSharePath } from '@/lib/materia-share-path';
 
 export function getUniversityRoute(universityId: string) {
   return `/universidad/${universityId}`;
