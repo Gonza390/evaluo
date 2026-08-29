@@ -1,19 +1,12 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
   BookOpen,
   CheckCircle2,
   RotateCcw,
-  Sparkles,
-  ThumbsDown,
-  ThumbsUp,
   TrendingUp,
   UploadCloud,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type Props = {
   improved?: boolean;
@@ -23,8 +16,6 @@ type Props = {
 const PREVIEW_MATERIA_ID = 'a3f01be6-2087-493f-b436-83bdd39eed8a';
 
 export function SimulatorResultRedesignPreview({ improved = false, hasMaterial = true }: Props) {
-  const [vote, setVote] = useState<1 | -1 | null>(null);
-
   const correct = 20;
   const total = 30;
   const wrong = total - correct;
@@ -122,34 +113,35 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
               </div>
 
               <div className="mt-7 border-t border-slate-200 pt-6">
-                <p className="text-sm font-semibold text-slate-800">¿Te sirvió este simulador?</p>
-                <p className="mt-1 text-xs text-slate-500">Tu respuesta nos ayuda a mejorarlo.</p>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  <Link
+                    href={materiaHref}
+                    className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
+                  >
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                      <BookOpen className="h-4 w-4" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold text-slate-950">Volver a la materia</span>
+                      <span className="mt-0.5 block text-xs leading-5 text-slate-500">
+                        Seguir estudiando
+                      </span>
+                    </span>
+                  </Link>
+
                   <button
                     type="button"
-                    onClick={() => setVote(1)}
-                    className={cn(
-                      'inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition',
-                      vote === 1
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                    )}
+                    className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
                   >
-                    <ThumbsUp className="h-4 w-4" />
-                    Me gustó
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVote(-1)}
-                    className={cn(
-                      'inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition',
-                      vote === -1
-                        ? 'border-rose-200 bg-rose-50 text-rose-700'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                    )}
-                  >
-                    <ThumbsDown className="h-4 w-4" />
-                    No me gustó
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+                      <RotateCcw className="h-4 w-4" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold text-slate-950">Hacer otro modelo</span>
+                      <span className="mt-0.5 block text-xs leading-5 text-slate-500">
+                        Medir tu próxima mejora
+                      </span>
+                    </span>
                   </button>
                 </div>
               </div>
@@ -168,8 +160,8 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
                   próximo intento.
                 </p>
                 <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
-                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>Cada error tiene una explicación con IA lista para repasar.</span>
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>Cada respuesta tiene la explicación correcta para repasar.</span>
                 </div>
                 <Link
                   href={errorsHref}
@@ -180,7 +172,7 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
                 </Link>
               </div>
 
-              <div className="border-b border-slate-200 py-6">
+              <div className="py-6">
                 <p className="text-[12px] font-semibold tracking-[0.16em] text-[#5D65F6] uppercase">
                   Seguí con esta materia
                 </p>
@@ -222,7 +214,7 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
                         ¿Tenés apuntes de Derecho Procesal Público?
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Convertí tu PDF en resumen, glosario y tarjetas para seguir preparando esta
+                        Convertí tu PDF en resumen, glosario y flashcards para seguir preparando esta
                         materia desde Evaluo.
                       </p>
                       <Link
@@ -235,38 +227,6 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
                     </div>
                   </div>
                 )}
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <Link
-                  href={materiaHref}
-                  className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
-                >
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                    <BookOpen className="h-4 w-4" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-slate-950">Volver a la materia</span>
-                    <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                      Seguir estudiando
-                    </span>
-                  </span>
-                </Link>
-
-                <button
-                  type="button"
-                  className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
-                >
-                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                    <RotateCcw className="h-4 w-4" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-slate-950">Hacer otro modelo</span>
-                    <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                      Medir tu próxima mejora
-                    </span>
-                  </span>
-                </button>
               </div>
             </div>
           </div>
