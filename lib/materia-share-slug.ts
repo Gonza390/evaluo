@@ -30,7 +30,9 @@ async function findMateriaInUniversity(universityId: string, materiaSlug: string
     .eq('universidad_id', universityId);
 
   if (careersError) return null;
-  const careerIds = (careers ?? []).map((row) => row.id).filter(Boolean);
+  const careerIds = (careers ?? [])
+    .map((row) => row.id)
+    .filter((id): id is string => Boolean(id));
   if (careerIds.length === 0) return null;
 
   const [{ data: links }, { data: directMaterias }] = await Promise.all([
@@ -39,7 +41,11 @@ async function findMateriaInUniversity(universityId: string, materiaSlug: string
   ]);
 
   const linkedMateriaIds = Array.from(
-    new Set((links ?? []).map((row) => row.materia_id).filter(Boolean))
+    new Set(
+      (links ?? [])
+        .map((row) => row.materia_id)
+        .filter((id): id is string => Boolean(id))
+    )
   );
 
   let linkedMaterias: MateriaRow[] = [];
