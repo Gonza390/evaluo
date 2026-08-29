@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Building2, LayoutDashboard } from 'lucide-react';
+import { Building2, LayoutDashboard, MessageSquareText } from 'lucide-react';
 import ClientLayout from '@/components/ClientLayout';
 import { getAdminAccessContext } from '@/lib/access-control';
 import { AdminAccessState } from './admin-access-state';
@@ -34,6 +34,13 @@ export default async function AdministradorLayout({ children }: { children: Reac
         >
           <LayoutDashboard className="h-4 w-4" />
           Panel
+        </Link>
+        <Link
+          href="/administrador/feedback-simulador"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-200 bg-white px-3 text-xs font-semibold text-indigo-700 shadow-lg transition hover:bg-indigo-50"
+        >
+          <MessageSquareText className="h-4 w-4" />
+          Feedback simulador
         </Link>
         <Link
           href="/administrador/solicitudes"
