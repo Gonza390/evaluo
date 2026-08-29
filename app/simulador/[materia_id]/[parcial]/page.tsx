@@ -108,8 +108,8 @@ export default async function SimuladorPage({ params, searchParams }: PageProps)
     .from('materias')
     .select('id')
     .eq('id', materia_id)
-    .maybeSingle()
-    .abortSignal(AbortSignal.timeout(8000));
+    .abortSignal(AbortSignal.timeout(8000))
+    .maybeSingle();
 
   if (error) {
     logError('simulador.loadMateria', error, {
