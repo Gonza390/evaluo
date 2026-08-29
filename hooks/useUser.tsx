@@ -25,6 +25,20 @@ interface UserProviderProps {
   initialUser?: User | null;
 }
 
+function isSameUserSnapshot(currentUser: User | null, nextUser: User | null) {
+  if (currentUser === nextUser) return true;
+  if (!currentUser || !nextUser) return false;
+
+  return (
+    currentUser.id === nextUser.id &&
+    currentUser.email === nextUser.email &&
+    currentUser.updated_at === nextUser.updated_at &&
+    currentUser.last_sign_in_at === nextUser.last_sign_in_at &&
+    JSON.stringify(currentUser.app_metadata ?? {}) === JSON.stringify(nextUser.app_metadata ?? {}) &&
+    JSON.stringify(currentUser.user_metadata ?? {}) === JSON.stringify(nextUser.user_metadata ?? {})
+  );
+}
+
 export function UserProvider({ children, initialUser }: UserProviderProps) {
   const hasServerSnapshot = initialUser !== undefined;
   const [user, setUser] = useState<User | null>(initialUser ?? null);
@@ -52,11 +66,17 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
   useEffect(() => {
     let isMounted = true;
 
+    const applySessionUser = (nextUser: User | null) => {
+      setUser((currentUser) =>
+        isSameUserSnapshot(currentUser, nextUser) ? currentUser : nextUser
+      );
+      setLoading(false);
+    };
+
     if (!hasServerSnapshot) {
       void supabase.auth.getSession().then(({ data: { session } }) => {
         if (!isMounted) return;
-        setUser(session?.user ?? null);
-        setLoading(false);
+        applySessionUser(session?.user ?? null);
       });
     }
 
@@ -67,8 +87,7 @@ export function UserProvider({ children, initialUser }: UserProviderProps) {
         return;
       }
 
-      setUser(session?.user ?? null);
-      setLoading(false);
+      applySessionUser(session?.user ?? null);
     });
 
     return () => {
