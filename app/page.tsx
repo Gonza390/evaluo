@@ -70,7 +70,7 @@ const demoJourney = [
 export default function Home() {
   const primaryHref = '/login?mode=signup';
   return (
-    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <MarketingAnalyticsSlot />
       <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(FAQ_ITEMS)]} />
 
