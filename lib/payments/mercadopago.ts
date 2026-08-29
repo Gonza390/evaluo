@@ -37,6 +37,23 @@ export type MercadoPagoAuthorizedPayment = {
   } | null;
 };
 
+export type MercadoPagoPreference = {
+  id: string;
+  init_point?: string | null;
+  sandbox_init_point?: string | null;
+};
+
+export type MercadoPagoPayment = {
+  id: number | string;
+  status?: string | null;
+  status_detail?: string | null;
+  external_reference?: string | null;
+  transaction_amount?: number | string | null;
+  currency_id?: string | null;
+  date_approved?: string | null;
+  date_created?: string | null;
+};
+
 type MercadoPagoAuthorizedPaymentSearch = {
   results?: MercadoPagoAuthorizedPayment[];
 };
@@ -47,10 +64,12 @@ function accessToken() {
   return value;
 }
 
+function isTestMode() {
+  return process.env.MERCADOPAGO_TEST_MODE === 'true' || accessToken().startsWith('TEST-');
+}
+
 export function mercadoPagoPayerEmail(userEmail: string) {
-  const isTestMode =
-    process.env.MERCADOPAGO_TEST_MODE === 'true' || accessToken().startsWith('TEST-');
-  if (!isTestMode) return userEmail;
+  if (!isTestMode()) return userEmail;
 
   const testPayerEmail = process.env.MERCADOPAGO_TEST_PAYER_EMAIL?.trim();
   if (!testPayerEmail) throw new Error('MERCADOPAGO_TEST_PAYER_EMAIL no configurado.');
@@ -103,6 +122,41 @@ export function createMercadoPagoSubscription(input: {
   });
 }
 
+export function createMercadoPagoOneTimePreference(input: {
+  attemptId: string;
+  email: string;
+  amount: number;
+  backUrl: string;
+  notificationUrl: string;
+}) {
+  return mercadoPagoRequest<MercadoPagoPreference>('/checkout/preferences', {
+    method: 'POST',
+    headers: { 'X-Idempotency-Key': input.attemptId },
+    body: JSON.stringify({
+      items: [
+        {
+          id: 'evaluo-premium-semester',
+          title: 'Evaluo Premium · 6 meses',
+          description: 'Acceso a Evaluo Premium durante 6 meses',
+          quantity: 1,
+          currency_id: 'ARS',
+          unit_price: input.amount,
+        },
+      ],
+      payer: { email: input.email },
+      external_reference: input.attemptId,
+      back_urls: {
+        success: input.backUrl,
+        pending: input.backUrl,
+        failure: input.backUrl,
+      },
+      auto_return: 'approved',
+      notification_url: input.notificationUrl,
+      statement_descriptor: 'EVALUO',
+    }),
+  });
+}
+
 export function getMercadoPagoSubscription(id: string) {
   return mercadoPagoRequest<MercadoPagoPreapproval>(`/preapproval/${encodeURIComponent(id)}`);
 }
@@ -125,6 +179,10 @@ export async function findMercadoPagoAuthorizedPaymentByPaymentId(id: string) {
     `/authorized_payments/search?payment_id=${encodeURIComponent(id)}`
   );
   return payload.results?.[0] ?? null;
+}
+
+export function getMercadoPagoPayment(id: string) {
+  return mercadoPagoRequest<MercadoPagoPayment>(`/v1/payments/${encodeURIComponent(id)}`);
 }
 
 function parseSignature(header: string) {

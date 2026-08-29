@@ -5,7 +5,7 @@ import { FooterHome } from '@/components/footer-home';
 export const metadata = {
   title: 'Términos de facturación y reembolsos | Evaluo',
   description:
-    'Términos de facturación, suscripciones recurrentes, períodos de prueba, política de no reembolsos y contracargos de Evaluo.',
+    'Términos de facturación, suscripciones recurrentes, compras por período fijo, política de reembolsos y contracargos de Evaluo.',
   alternates: {
     canonical: '/facturacion',
   },
@@ -19,58 +19,59 @@ const sections = [
   {
     title: '1. Alcance de estos términos',
     body: [
-      'Estos términos de facturación ("Términos de Facturación") regulan la contratación, el cobro, la renovación y las disputas de los planes de pago de Evaluo. Se complementan con los Términos y Condiciones y la Política de Privacidad. Al suscribirte a un plan de pago, aceptás estas condiciones en su totalidad.',
+      'Estos términos de facturación ("Términos de Facturación") regulan la contratación, el cobro, la renovación y las disputas de los planes de pago de Evaluo. Se complementan con los Términos y Condiciones y la Política de Privacidad. Al contratar un plan de pago, aceptás estas condiciones en su totalidad.',
     ],
   },
   {
-    title: '2. Planes y suscripciones recurrentes',
+    title: '2. Modalidades de pago',
     body: [
-      'Evaluo ofrece planes de suscripción con renovación automática (por ejemplo, mensual o anual). El precio y las características del plan son los publicados en el momento de la contratación.',
-      'La suscripción se renueva automáticamente al finalizar cada período, salvo que el Usuario la cancele antes de la fecha de renovación. El cobro de la renovación se procesa a través de la pasarela de pagos (por ejemplo, Mercado Pago) con el medio de pago registrado.',
+      'Evaluo puede ofrecer suscripciones con renovación automática, como el plan Premium mensual, y también accesos por un período fijo abonados mediante un pago único, como una oferta de seis meses. El precio, la duración y las características aplicables son los publicados en el momento de la contratación.',
+      'Las suscripciones recurrentes se renuevan automáticamente al finalizar cada período, salvo que el Usuario las cancele antes de la fecha de renovación. El cobro se procesa a través de la pasarela de pagos (por ejemplo, Mercado Pago) con el medio de pago registrado.',
+      'Los accesos por período fijo no se renuevan automáticamente. Una vez aprobado el pago, el acceso permanece habilitado hasta la fecha de vencimiento informada al Usuario, salvo que el pago sea posteriormente anulado, reembolsado o desconocido conforme a la normativa y a las reglas de la pasarela de pagos.',
     ],
   },
   {
     title: '3. Períodos de prueba (free trial)',
     body: [
       'Cuando se ofrezca un período de prueba gratuito, el Usuario podrá acceder al plan durante el tiempo indicado sin cargo, sujeto al registro de un medio de pago si así se establece.',
-      'Al finalizar el período de prueba, la suscripción se activará automáticamente y se cobrará el valor vigente del plan, salvo que el Usuario cancele antes de que finalice la prueba.',
-      'El Usuario es responsable de cancelar dentro del plazo si no desea continuar. Evaluo recordará la proximidad del vencimiento por los canales habituales, pero la falta de cancelación no exime del cobro conforme a las condiciones aceptadas.',
+      'Si la prueba está asociada a una suscripción recurrente, al finalizar el período de prueba la suscripción podrá activarse automáticamente y cobrarse el valor vigente del plan, salvo que el Usuario cancele antes de que finalice la prueba, de acuerdo con las condiciones informadas al contratar.',
+      'El Usuario es responsable de revisar las condiciones y fechas informadas para cada prueba o promoción antes de confirmar la contratación.',
     ],
   },
   {
-    title: '4. Política de no reembolsos',
+    title: '4. Política de reembolsos',
     body: [
-      'Por tratarse de un producto digital de acceso inmediato, Evaluo aplica una política estricta de no reembolsos sobre las suscripciones y los contenidos adquiridos. Una vez efectuado el pago, no se realizan reembolsos por desistimiento, cambio de opinión, falta de uso o insatisfacción con los resultados académicos.',
-      'La cancelación de la suscripción no genera reembolso proporcional del período ya abonado. El acceso se mantiene hasta el final del período pagado.',
-      'Solo se contempla una excepción cuando la normativa aplicable de protección al consumidor (Ley N° 24.240 y normas complementarias) lo exija de forma imperativa. En tal caso, el reembolso se procesará por el mismo medio de pago utilizado, conforme a los plazos de la pasarela.',
+      'Por tratarse de un producto digital de acceso inmediato, los pagos realizados por planes de Evaluo no generan automáticamente un reembolso por falta de uso, cambio de opinión o resultados académicos distintos de los esperados.',
+      'La cancelación de una suscripción recurrente no genera por sí sola un reembolso proporcional del período ya abonado. En las compras por período fijo, el acceso se mantiene hasta la fecha de vencimiento correspondiente mientras el pago permanezca válido.',
+      'En todos los casos se respetarán los derechos y excepciones que resulten obligatorios conforme a la normativa aplicable de protección al consumidor. Cuando corresponda un reembolso, se procesará por el medio disponible de acuerdo con las reglas y plazos de la pasarela de pagos.',
     ],
   },
   {
     title: '5. Contracargos y disputas de pago',
     body: [
-      'En caso de que el Usuario inicie un contracargo, mediación o desconocimiento del pago ante su banco, emisor de tarjeta o la pasarela de pagos, deberá previamente contactarse con el soporte de Evaluo para intentar resolver la situación por los canales del servicio.',
-      'Ante un contracargo, Evaluo podrá presentar la documentación de respaldo ante la pasarela de pagos (por ejemplo, Mercado Pago), incluyendo el registro de la suscripción, la aceptación de los Términos de Facturación y la evidencia de acceso y uso del servicio. Esta documentación se aporta para defender la validez de la transacción.',
-      'El inicio de un contracargo sin causa legítima, o mientras la suscripción se encuentra activa, puede derivar en la suspensión del acceso al plan hasta tanto se resuelva la disputa. Si el contracargo resulta procedente por un error de facturación ajeno al Usuario, se corregirá el cobro sin penalidad.',
+      'En caso de que el Usuario inicie un contracargo, mediación o desconocimiento del pago ante su banco, emisor de tarjeta o la pasarela de pagos, recomendamos previamente contactarse con el soporte de Evaluo para intentar resolver la situación por los canales del servicio.',
+      'Ante una disputa, Evaluo podrá presentar ante la pasarela de pagos la documentación disponible sobre la contratación, la aceptación de estos Términos de Facturación y el acceso al servicio, en la medida permitida por la normativa aplicable.',
+      'Si un pago es anulado, reembolsado o desconocido, el acceso asociado podrá suspenderse o finalizar de acuerdo con el estado definitivo informado por la pasarela de pagos. Si existe un error de facturación atribuible al servicio, se corregirá el cobro conforme corresponda.',
     ],
   },
   {
     title: '6. Cambios de precios y de planes',
     body: [
-      'Evaluo podrá actualizar precios, planes o características del servicio. Los cambios de precio se comunicarán con anticipación razonable y regirán a partir del próximo ciclo de facturación. Si el Usuario no está de acuerdo con el nuevo precio, podrá cancelar su suscripción antes de la renovación.',
-      'Al cambiar de plan, el Usuario acepta las condiciones vigentes del nuevo plan. Las diferencias de precio entre planes se liquidan conforme a lo publicado en el momento del cambio.',
+      'Evaluo podrá actualizar precios, planes o características del servicio. En las suscripciones recurrentes, los cambios de precio que correspondan se comunicarán con anticipación razonable y regirán a partir de un ciclo futuro. Si el Usuario no está de acuerdo, podrá cancelar antes de la renovación.',
+      'Una compra por período fijo mantiene el precio y la duración confirmados para ese período. Cualquier compra posterior se regirá por las condiciones vigentes en ese momento.',
     ],
   },
   {
     title: '7. Impuestos y medios de pago',
     body: [
-      'Los precios publicados incluyen los impuestos, tributos y percepciones que correspondan según la legislación vigente. Evaluo no gestiona medios de pago directamente: las transacciones se procesan a través de pasarelas de pago autorizadas (por ejemplo, Mercado Pago), cuyos términos propios también aplican al Usuario.',
-      'El Usuario debe contar con un medio de pago válido. Si un cobro es rechazado o no puede procesarse, Evaluo intentará informarlo por los canales del servicio y podrá suspender el acceso hasta regularizar el pago.',
+      'Los precios publicados incluyen los impuestos, tributos y percepciones que correspondan según la legislación vigente, salvo que se informe expresamente lo contrario. Evaluo no gestiona medios de pago directamente: las transacciones se procesan a través de pasarelas de pago autorizadas (por ejemplo, Mercado Pago), cuyos términos propios también pueden aplicar al Usuario.',
+      'En las suscripciones recurrentes, si un cobro no puede procesarse, Evaluo podrá informar la situación por los canales del servicio y suspender el acceso hasta que el pago se regularice.',
     ],
   },
   {
     title: '8. Contacto',
     body: [
-      'Para consultas o reclamos de facturación, disputas o cancelaciones, escribinos a facturacion@evaluo.com.ar. Nuestro equipo atiende las consultas por los canales oficiales del servicio antes de que se inicie una disputa ante terceros.',
+      'Para consultas o reclamos de facturación, disputas o cancelaciones, escribinos a facturacion@evaluo.com.ar. Nuestro equipo atiende las consultas por los canales oficiales del servicio.',
     ],
   },
 ] as const;
@@ -96,8 +97,8 @@ export default function FacturacionPage() {
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-muted-foreground">
                 Última actualización: agosto de 2026. Estos términos regulan las suscripciones
-                recurrentes, los períodos de prueba, la política de reembolsos y el tratamiento de
-                los contracargos por los servicios de pago de Evaluo.
+                recurrentes, las compras por período fijo, los períodos de prueba, los reembolsos y
+                el tratamiento de disputas de pago de Evaluo.
               </p>
             </div>
 
@@ -125,13 +126,13 @@ export default function FacturacionPage() {
                     </p>
                     <div className="mt-4 space-y-5 text-[15px] leading-8 text-muted-foreground">
                       <p>
-                        Las suscripciones se renuevan automáticamente. Si no querés continuar,
-                        cancelá antes de la fecha de renovación.
+                        El plan mensual se renueva automáticamente hasta que lo canceles. Las
+                        compras por período fijo terminan en la fecha informada y no se renuevan
+                        automáticamente.
                       </p>
                       <p>
-                        Ante un contracargo, primero contactate con nuestro soporte: la evidencia de
-                        aceptación y uso del servicio se presenta ante la pasarela de pagos para
-                        defender la transacción.
+                        Si tenés un problema con un cobro, podés contactarnos para revisar el caso
+                        antes de iniciar una disputa ante la pasarela de pagos.
                       </p>
                     </div>
                   </div>
@@ -141,10 +142,10 @@ export default function FacturacionPage() {
                       Resumen
                     </p>
                     <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                      <p>Producto digital: sin reembolsos por desistimiento o falta de uso.</p>
-                      <p>Cancelación sin reembolso proporcional del período abonado.</p>
-                      <p>Disputas resueltas por soporte antes de iniciar contracargos.</p>
-                      <p>Cambios de precio comunicados y aplicables al próximo ciclo.</p>
+                      <p>Premium mensual: renovación automática hasta la cancelación.</p>
+                      <p>Planes por período fijo: un pago, acceso hasta el vencimiento informado.</p>
+                      <p>Los derechos obligatorios del consumidor se respetan en todos los casos.</p>
+                      <p>Los cambios futuros de precio no modifican períodos fijos ya comprados.</p>
                     </div>
                   </div>
                 </div>

@@ -4,10 +4,13 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import {
   findMercadoPagoAuthorizedPaymentByPaymentId,
   getMercadoPagoAuthorizedPayment,
+  getMercadoPagoPayment,
   getMercadoPagoSubscription,
   type MercadoPagoAuthorizedPayment,
+  type MercadoPagoPayment,
   verifyMercadoPagoWebhook,
 } from '@/lib/payments/mercadopago';
+import { PREMIUM_SEMESTER_MONTHS, PREMIUM_SEMESTER_PRICE_ARS } from '@/lib/payments/offers';
 import { subscriptionStatusForPayment } from '@/lib/payments/status';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 
@@ -19,6 +22,24 @@ type WebhookBody = {
 };
 
 const ACTIVE_PROVIDER_STATUSES = new Set(['authorized']);
+const ONE_TIME_FAILED_STATUSES = new Set([
+  'rejected',
+  'cancelled',
+  'canceled',
+  'refunded',
+  'charged_back',
+]);
+
+function addCalendarMonths(value: string, months: number) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return new Date(Date.now() + 183 * 24 * 60 * 60_000).toISOString();
+  const day = date.getUTCDate();
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+  date.setUTCDate(Math.min(day, lastDay));
+  return date.toISOString();
+}
 
 async function reconcileAuthorizedPayment(
   admin: SupabaseClient,
@@ -86,7 +107,7 @@ async function reconcileAuthorizedPayment(
       eventName: 'premium_subscription_activated',
       userId: subscription.user_id,
       path: '/api/webhooks/mercadopago',
-      metadata: { provider: 'mercadopago', amount_ars: amount },
+      metadata: { provider: 'mercadopago', amount_ars: amount, offer_code: 'monthly' },
     });
   } else if (reconciledSubscriptionStatus === 'past_due') {
     const { error: updateError } = await admin
@@ -95,6 +116,128 @@ async function reconcileAuthorizedPayment(
       .eq('id', subscription.id);
     if (updateError) throw updateError;
   }
+}
+
+async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPagoPayment) {
+  const attemptId = payment.external_reference?.trim();
+  if (!attemptId) return false;
+
+  const { data: attempt, error: attemptError } = await admin
+    .from('payment_checkout_attempts')
+    .select('id, user_id, plan_id, amount_ars, status')
+    .eq('id', attemptId)
+    .maybeSingle();
+  if (attemptError) throw attemptError;
+  if (!attempt) return false;
+
+  const amount = Number(payment.transaction_amount);
+  if (
+    payment.currency_id !== 'ARS' ||
+    !Number.isFinite(amount) ||
+    amount !== Number(attempt.amount_ars) ||
+    amount !== PREMIUM_SEMESTER_PRICE_ARS
+  ) {
+    return false;
+  }
+
+  const paymentStatus = (payment.status ?? '').toLowerCase();
+  if (!paymentStatus) return false;
+  const now = new Date().toISOString();
+  const paymentId = String(payment.id);
+  const approvedAt = payment.date_approved ?? payment.date_created ?? now;
+  const isApproved = paymentStatus === 'approved';
+  const failed = ONE_TIME_FAILED_STATUSES.has(paymentStatus);
+  const previousAttemptStatus = String(attempt.status ?? '').toLowerCase();
+
+  let subscriptionId: string | null = null;
+  if (isApproved) {
+    subscriptionId = attempt.id;
+    const expiresAt = addCalendarMonths(approvedAt, PREMIUM_SEMESTER_MONTHS);
+    const { error: subscriptionError } = await admin.from('user_subscriptions').upsert(
+      {
+        id: attempt.id,
+        user_id: attempt.user_id,
+        plan_id: attempt.plan_id,
+        status: 'active',
+        started_at: approvedAt,
+        expires_at: expiresAt,
+        payment_provider: 'mercadopago',
+        payment_reference: paymentId,
+        provider_subscription_id: null,
+        amount_ars: amount,
+        next_payment_date: null,
+        current_period_end: expiresAt,
+        promotion_code: 'semester_2026',
+        provider_updated_at: now,
+        canceled_at: null,
+        updated_at: now,
+      },
+      { onConflict: 'id' }
+    );
+    if (subscriptionError) throw subscriptionError;
+  } else if (failed) {
+    const { error: revokeError } = await admin
+      .from('user_subscriptions')
+      .update({
+        status: 'canceled',
+        expires_at: now,
+        current_period_end: now,
+        canceled_at: now,
+        provider_updated_at: now,
+        updated_at: now,
+      })
+      .eq('id', attempt.id)
+      .eq('payment_reference', paymentId);
+    if (revokeError) throw revokeError;
+  }
+
+  const { error: transactionError } = await admin.from('payment_transactions').upsert(
+    {
+      user_id: attempt.user_id,
+      subscription_id: subscriptionId,
+      provider: 'mercadopago',
+      provider_payment_id: paymentId,
+      provider_subscription_id: null,
+      status: paymentStatus,
+      amount_ars: amount,
+      currency: payment.currency_id,
+      paid_at: isApproved ? approvedAt : null,
+      raw_summary: {
+        checkout_attempt_id: attempt.id,
+        offer_code: 'semester',
+        status_detail: payment.status_detail ?? null,
+      },
+      updated_at: now,
+    },
+    { onConflict: 'provider,provider_payment_id' }
+  );
+  if (transactionError) throw transactionError;
+
+  const { error: attemptUpdateError } = await admin
+    .from('payment_checkout_attempts')
+    .update({
+      status: isApproved ? 'approved' : failed ? 'failed' : 'pending',
+      updated_at: now,
+    })
+    .eq('id', attempt.id);
+  if (attemptUpdateError) throw attemptUpdateError;
+
+  if (isApproved && previousAttemptStatus !== 'approved') {
+    await trackServerAnalyticsEvent({
+      eventName: 'premium_subscription_activated',
+      userId: attempt.user_id,
+      path: '/api/webhooks/mercadopago',
+      metadata: {
+        provider: 'mercadopago',
+        amount_ars: amount,
+        offer_code: 'semester',
+        billing_mode: 'fixed_term',
+        access_months: PREMIUM_SEMESTER_MONTHS,
+      },
+    });
+  }
+
+  return true;
 }
 
 export async function POST(request: Request) {
@@ -143,20 +286,25 @@ export async function POST(request: Request) {
       await reconcileAuthorizedPayment(admin, invoice);
     } else if (eventType === 'payment' || eventType.includes('payment.')) {
       const invoice = await findMercadoPagoAuthorizedPaymentByPaymentId(resourceId);
-      if (!invoice) {
-        await admin
-          .from('payment_webhook_events')
-          .update({ status: 'ignored', processed_at: new Date().toISOString() })
-          .eq('id', eventRowId);
-        return NextResponse.json({ ok: true, ignored: true });
+      if (invoice) {
+        await reconcileAuthorizedPayment(admin, invoice);
+      } else {
+        const payment = await getMercadoPagoPayment(resourceId);
+        const handled = await reconcileOneTimePayment(admin, payment);
+        if (!handled) {
+          await admin
+            .from('payment_webhook_events')
+            .update({ status: 'ignored', processed_at: now })
+            .eq('id', eventRowId);
+          return NextResponse.json({ ok: true, ignored: true });
+        }
       }
-      await reconcileAuthorizedPayment(admin, invoice);
     } else if (!eventType.includes('subscription') && !eventType.includes('preapproval')) {
       await admin
         .from('payment_webhook_events')
         .update({
           status: 'ignored',
-          processed_at: new Date().toISOString(),
+          processed_at: now,
         })
         .eq('id', eventRowId);
       return NextResponse.json({ ok: true, ignored: true });
@@ -215,6 +363,7 @@ export async function POST(request: Request) {
             provider: 'mercadopago',
             amount_ars: providerAmount,
             promotion: attempt.promotion_claim_id ? 'founders_2026' : null,
+            offer_code: attempt.promotion_claim_id ? 'legacy_founder' : 'monthly',
           },
         });
       }

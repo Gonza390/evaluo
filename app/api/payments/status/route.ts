@@ -14,7 +14,7 @@ export async function GET() {
   const { data } = await paymentsDb
     .from('user_subscriptions')
     .select(
-      'id, status, amount_ars, next_payment_date, promotion_code, payment_provider, canceled_at, expires_at, created_at, subscription_plans(code, name)'
+      'id, status, amount_ars, next_payment_date, promotion_code, payment_provider, provider_subscription_id, canceled_at, expires_at, created_at, subscription_plans(code, name)'
     )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
@@ -27,6 +27,7 @@ export async function GET() {
     next_payment_date: string | null;
     promotion_code: string | null;
     payment_provider: string | null;
+    provider_subscription_id: string | null;
     canceled_at: string | null;
     expires_at: string | null;
     created_at: string;
@@ -39,8 +40,17 @@ export async function GET() {
     Array.isArray(item.subscription_plans)
       ? (item.subscription_plans[0] ?? null)
       : item.subscription_plans;
-  const premium = subscriptions.find((item) => planFor(item)?.code === 'premium') ?? null;
+  const premiumSubscriptions = subscriptions.filter((item) => planFor(item)?.code === 'premium');
+  const premium =
+    premiumSubscriptions.find((item) => hasPremiumSubscriptionAccess(item.status, item.expires_at)) ??
+    premiumSubscriptions[0] ??
+    null;
   const premiumIsActive = hasPremiumSubscriptionAccess(premium?.status, premium?.expires_at);
+  const billingMode = premium?.provider_subscription_id
+    ? 'recurring'
+    : premium?.expires_at
+      ? 'fixed_term'
+      : null;
 
   const { data: transaction } = premium
     ? await paymentsDb
@@ -59,7 +69,12 @@ export async function GET() {
     amountArs: premium?.amount_ars ?? null,
     nextPaymentDate: premium?.next_payment_date ?? null,
     promotion: premium?.promotion_code ?? null,
-    provider: premium?.payment_provider ?? null,
+    provider:
+      billingMode === 'fixed_term' && premium?.payment_provider === 'mercadopago'
+        ? 'mercadopago_fixed_term'
+        : (premium?.payment_provider ?? null),
+    billingMode,
+    canCancel: billingMode === 'recurring' && premiumIsActive,
     canceledAt: premium?.canceled_at ?? null,
     accessUntil: premium?.expires_at ?? null,
     lastPayment: transaction

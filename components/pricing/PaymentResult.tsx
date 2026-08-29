@@ -17,17 +17,38 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const unlockedFeatures = [
   ['01', 'Subí tu material', 'Convertí tu PDF en un espacio de estudio.'],
-  ['02', 'Estudiá el contenido', 'Usá resumen, tarjetas y ejercicios sobre tus apuntes.'],
+  ['02', 'Estudiá el contenido', 'Usá resumen, flashcards y ejercicios sobre tus apuntes.'],
   ['03', 'Practicá para el parcial', 'Comprobá qué entendiste y reforzá tus errores.'],
 ] as const;
 
+type PaymentDetails = {
+  amountArs: number | null;
+  nextPaymentDate: string | null;
+  accessUntil: string | null;
+  promotion: string | null;
+  billingMode: 'recurring' | 'fixed_term' | null;
+};
+
+function formatDate(value: string | null) {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Intl.DateTimeFormat('es-AR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(parsed);
+}
+
 export function PaymentResult() {
   const [status, setStatus] = useState('pending');
-  const [details, setDetails] = useState<{
-    amountArs: number | null;
-    nextPaymentDate: string | null;
-    promotion: string | null;
-  }>({ amountArs: null, nextPaymentDate: null, promotion: null });
+  const [details, setDetails] = useState<PaymentDetails>({
+    amountArs: null,
+    nextPaymentDate: null,
+    accessUntil: null,
+    promotion: null,
+    billingMode: null,
+  });
   const trackedReturnStatus = useRef<string | null>(null);
 
   useEffect(() => {
@@ -40,17 +61,14 @@ export function PaymentResult() {
         return;
       }
       if (response.ok) {
-        const payload = (await response.json()) as {
-          status?: string;
-          amountArs?: number | null;
-          nextPaymentDate?: string | null;
-          promotion?: string | null;
-        };
+        const payload = (await response.json()) as Partial<PaymentDetails> & { status?: string };
         setStatus(payload.status ?? 'pending');
         setDetails({
           amountArs: payload.amountArs ?? null,
           nextPaymentDate: payload.nextPaymentDate ?? null,
+          accessUntil: payload.accessUntil ?? null,
           promotion: payload.promotion ?? null,
+          billingMode: payload.billingMode ?? null,
         });
         if (['active', 'approved', 'authorized'].includes(payload.status ?? '')) return;
       }
@@ -63,9 +81,13 @@ export function PaymentResult() {
 
   useEffect(() => {
     if (status === 'pending' || trackedReturnStatus.current === status) return;
-    trackMarketingEvent('premium_checkout_returned', { status });
+    trackMarketingEvent('premium_checkout_returned', {
+      status,
+      billing_mode: details.billingMode,
+      amount_ars: details.amountArs,
+    });
     trackedReturnStatus.current = status;
-  }, [status]);
+  }, [details.amountArs, details.billingMode, status]);
 
   const amount = details.amountArs
     ? new Intl.NumberFormat('es-AR', {
@@ -74,11 +96,17 @@ export function PaymentResult() {
         maximumFractionDigits: 0,
       }).format(details.amountArs)
     : null;
-  const nextPayment = details.nextPaymentDate
-    ? new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }).format(
-        new Date(details.nextPaymentDate)
-      )
-    : null;
+  const nextPayment = formatDate(details.nextPaymentDate);
+  const accessUntil = formatDate(details.accessUntil);
+  const fixedTerm = details.billingMode === 'fixed_term';
+  const promotionLabel =
+    details.promotion === 'founders_2026'
+      ? 'Precio fundador aplicado'
+      : details.promotion === 'semester_2026'
+        ? 'Plan de 6 meses'
+        : details.promotion
+          ? 'Promoción aplicada'
+          : null;
 
   if (!active) {
     return (
@@ -88,11 +116,11 @@ export function PaymentResult() {
         ) : (
           <Clock3 className="mx-auto h-9 w-9 text-slate-400" />
         )}
-        <p className="mt-5 text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">
-          Estado de tu suscripción
+        <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+          Estado del pago
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950">
-          Estamos confirmando tu suscripción
+          Estamos confirmando tu pago
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
           Mercado Pago puede tardar unos instantes en notificarnos. No vuelvas a pagar ni cierres
@@ -109,7 +137,7 @@ export function PaymentResult() {
     <section className="mx-auto w-full max-w-4xl">
       <header className="border-b border-slate-200 pb-8 text-center sm:pb-10">
         <CheckCircle2 className="mx-auto h-10 w-10 text-blue-600" aria-hidden="true" />
-        <p className="mt-5 text-xs font-bold tracking-[0.16em] text-blue-600 uppercase">
+        <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-blue-600">
           Evaluo Premium activado
         </p>
         <h1 className="mx-auto mt-3 max-w-3xl text-3xl font-bold tracking-[-0.05em] text-slate-950 sm:text-5xl">
@@ -121,17 +149,19 @@ export function PaymentResult() {
         </p>
       </header>
 
-      {(amount || nextPayment || details.promotion) ? (
+      {amount || nextPayment || accessUntil || promotionLabel ? (
         <dl className="border-b border-slate-200">
           {amount ? (
             <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
-                <Check className="h-4 w-4 text-blue-600" /> Plan
+                <Check className="h-4 w-4 text-blue-600" /> Pago
               </dt>
-              <dd className="text-sm font-semibold text-slate-950 sm:text-right">{amount} por mes</dd>
+              <dd className="text-sm font-semibold text-slate-950 sm:text-right">
+                {fixedTerm ? `${amount} · pago único` : `${amount} por mes`}
+              </dd>
             </div>
           ) : null}
-          {nextPayment ? (
+          {nextPayment && !fixedTerm ? (
             <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
               <dt className="flex items-center gap-2 text-sm text-slate-500">
                 <CalendarClock className="h-4 w-4" /> Próxima renovación
@@ -139,18 +169,26 @@ export function PaymentResult() {
               <dd className="text-sm font-semibold text-slate-950 sm:text-right">{nextPayment}</dd>
             </div>
           ) : null}
-          {details.promotion ? (
+          {accessUntil && fixedTerm ? (
+            <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
+              <dt className="flex items-center gap-2 text-sm text-slate-500">
+                <CalendarClock className="h-4 w-4" /> Premium hasta
+              </dt>
+              <dd className="text-sm font-semibold text-slate-950 sm:text-right">{accessUntil}</dd>
+            </div>
+          ) : null}
+          {promotionLabel ? (
             <div className="grid gap-2 py-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-center">
-              <dt className="text-sm text-slate-500">Promoción</dt>
-              <dd className="text-sm font-semibold text-blue-600 sm:text-right">Precio fundador aplicado</dd>
+              <dt className="text-sm text-slate-500">Oferta</dt>
+              <dd className="text-sm font-semibold text-blue-600 sm:text-right">{promotionLabel}</dd>
             </div>
           ) : null}
         </dl>
       ) : null}
 
-      <div className="grid gap-10 py-8 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-14 sm:py-10">
+      <div className="grid gap-10 py-8 sm:py-10 lg:grid-cols-[1fr_auto] lg:items-end lg:gap-14">
         <div>
-          <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">Qué sigue</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Qué sigue</p>
           <div className="mt-4 border-t border-slate-200">
             {unlockedFeatures.map(([number, title, description]) => (
               <div
@@ -183,10 +221,10 @@ export function PaymentResult() {
             </Link>
           </Button>
           <Link
-            href="/simulador"
+            href="/explorar"
             className="text-center text-xs font-semibold text-slate-500 transition hover:text-blue-600"
           >
-            Ir directo al simulador
+            Volver a mis materias
           </Link>
         </div>
       </div>
@@ -198,7 +236,7 @@ export function PaymentResult() {
         </p>
         <p className="mt-2 flex items-start gap-2">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-          Suscripción administrada de forma segura con Mercado Pago.
+          Pago procesado de forma segura con Mercado Pago.
         </p>
       </footer>
     </section>
