@@ -170,7 +170,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
     }
 
     const isOwner = user?.id === material.user_id;
-    const canRegenerate = await resolveAdminActor(user);
+    const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
 
     if (material.processing_status !== 'ready') {
