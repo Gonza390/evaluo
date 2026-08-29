@@ -13,9 +13,16 @@ type Props = {
   title: string;
   sharePath: string;
   initialVisibility: MaterialVisibility;
+  isOwner?: boolean;
 };
 
-export function StudentMaterialShareControl({ materialId, title, sharePath, initialVisibility }: Props) {
+export function StudentMaterialShareControl({
+  materialId,
+  title,
+  sharePath,
+  initialVisibility,
+  isOwner = true,
+}: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [visibility, setVisibility] = useState<MaterialVisibility>(initialVisibility);
@@ -65,6 +72,8 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
   };
 
   const enableSharing = async () => {
+    if (!isOwner) return;
+
     setLoading(true);
     try {
       const result = await updateStudentMaterialVisibilityAction({ materialId, visibility: 'shared' });
@@ -83,6 +92,8 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
   };
 
   const disableSharing = async () => {
+    if (!isOwner) return;
+
     setLoading(true);
     try {
       const result = await updateStudentMaterialVisibilityAction({ materialId, visibility: 'private' });
@@ -98,15 +109,16 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
 
   const handleShare = () => {
     if (visibility === 'private') {
-      setConfirmOpen(true);
+      if (isOwner) setConfirmOpen(true);
       return;
     }
+
     void shareCurrentLink();
   };
 
   return (
-    <div className="fixed right-4 bottom-20 z-40 flex items-center gap-2 md:right-6 md:bottom-6">
-      {confirmOpen ? (
+    <div data-student-material-share-control className="fixed right-4 bottom-20 z-40 flex items-center gap-2 md:right-6 md:bottom-6">
+      {confirmOpen && isOwner ? (
         <div className="absolute right-0 bottom-[calc(100%+12px)] w-[min(360px,calc(100vw-2rem))] rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -120,7 +132,7 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
             </button>
           </div>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Al activar el enlace, cualquier persona que lo reciba podrá ver el PDF procesado, su resumen y glosario. El material también podrá aparecer dentro de la materia en Evaluo.
+            Al activar el enlace, cualquier persona podrá abrir y compartir este PDF, junto con su resumen, glosario y material de estudio.
           </p>
           <p className="mt-2 text-xs leading-5 text-slate-500">Podés volver a hacerlo privado cuando quieras.</p>
           <div className="mt-4 flex gap-2">
@@ -133,15 +145,15 @@ export function StudentMaterialShareControl({ materialId, title, sharePath, init
         </div>
       ) : null}
 
-      {visibility === 'shared' ? (
+      {isOwner && visibility === 'shared' ? (
         <button type="button" onClick={() => void disableSharing()} disabled={loading} title="Volver a privado" className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-[0_12px_30px_rgba(15,23,42,0.10)] transition hover:border-slate-300 hover:text-slate-800 disabled:opacity-60">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
         </button>
       ) : null}
 
-      <button type="button" onClick={handleShare} disabled={loading} className="from-brand to-brand-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-4 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.26)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60">
+      <button type="button" onClick={handleShare} disabled={loading || (!isOwner && visibility !== 'shared')} className="from-brand to-brand-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-4 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.26)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60">
         {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : copied ? <Check className="h-4 w-4" /> : canNativeShare ? <Share2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        {copied ? 'Enlace copiado' : 'Compartir PDF'}
+        {copied ? 'Enlace copiado' : 'Compartir este PDF'}
       </button>
     </div>
   );

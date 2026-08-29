@@ -268,6 +268,8 @@ export async function processNextStudentMaterialJobAction(): Promise<ActionResul
 export async function regenerateStudentMaterialStudyAction(
   materialId: string
 ): Promise<ActionResult> {
+  let canUpdateFailureState = false;
+
   try {
     if (!studentMaterialIdSchema.safeParse(materialId).success) {
       return { success: false, message: 'El identificador del material no es valido.' };
@@ -286,7 +288,7 @@ export async function regenerateStudentMaterialStudyAction(
 
     const { data: material, error } = await admin
       .from('student_materials')
-      .select('id')
+      .select('id, user_id')
       .eq('id', materialId)
       .maybeSingle();
 
@@ -300,6 +302,15 @@ export async function regenerateStudentMaterialStudyAction(
         message: 'No encontramos el material a regenerar.',
       };
     }
+
+    if (material.user_id !== user.id) {
+      return {
+        success: false,
+        message: 'Solo podés regenerar PDFs que hayas subido vos.',
+      };
+    }
+
+    canUpdateFailureState = true;
 
     await Promise.all([
       admin.from('student_material_summaries').delete().eq('student_material_id', materialId),
@@ -317,22 +328,25 @@ export async function regenerateStudentMaterialStudyAction(
 
     return await processStudentMaterial({
       materialId,
+      ownerUserId: user.id,
       jobId: null,
     });
   } catch (error) {
     logError('studentMaterials.regenerate', error, { materialId });
 
-    try {
-      await updateStudentMaterialProcessing(materialId, {
-        processingStatus: 'failed',
-        processingStage: 'failed',
-        processingProgress: 0,
-        processingMessage: 'No pudimos regenerar el material.',
-        processingError:
-          error instanceof Error ? error.message : 'Error desconocido al regenerar el material.',
-      });
-    } catch (updateError) {
-      logError('studentMaterials.regenerateStatusUpdate', updateError, { materialId });
+    if (canUpdateFailureState) {
+      try {
+        await updateStudentMaterialProcessing(materialId, {
+          processingStatus: 'failed',
+          processingStage: 'failed',
+          processingProgress: 0,
+          processingMessage: 'No pudimos regenerar el material.',
+          processingError:
+            error instanceof Error ? error.message : 'Error desconocido al regenerar el material.',
+        });
+      } catch (updateError) {
+        logError('studentMaterials.regenerateStatusUpdate', updateError, { materialId });
+      }
     }
 
     return {
