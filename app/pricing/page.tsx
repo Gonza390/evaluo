@@ -43,6 +43,12 @@ const premiumFeatures = [
   'Seguí tu progreso dentro de cada materia',
 ];
 
+const semesterFeatures = [
+  ...premiumFeatures,
+  'Acceso anticipado a nuevas funciones de Evaluo',
+  'Atención personalizada durante tus 6 meses',
+];
+
 const freeFeatures = [
   'Resúmenes y materiales compartidos por materia',
   'Pregunteros para practicar',
@@ -177,7 +183,7 @@ export default async function PricingPage({
             />
 
             <PaymentCheckoutCard
-              features={premiumFeatures}
+              features={semesterFeatures}
               source={source}
               materiaId={materiaId}
               offerCode="semester"
