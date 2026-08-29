@@ -69,7 +69,10 @@ export async function GET() {
     amountArs: premium?.amount_ars ?? null,
     nextPaymentDate: premium?.next_payment_date ?? null,
     promotion: premium?.promotion_code ?? null,
-    provider: premium?.payment_provider ?? null,
+    provider:
+      billingMode === 'fixed_term' && premium?.payment_provider === 'mercadopago'
+        ? 'mercadopago_fixed_term'
+        : (premium?.payment_provider ?? null),
     billingMode,
     canCancel: billingMode === 'recurring' && premiumIsActive,
     canceledAt: premium?.canceled_at ?? null,
