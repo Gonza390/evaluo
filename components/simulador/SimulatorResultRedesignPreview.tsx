@@ -105,6 +105,39 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                   </div>
                 )}
               </div>
+
+              <div className="mt-7 border-t border-slate-200 pt-6">
+                <p className="text-sm font-semibold text-slate-800">¿Te sirvió este simulador?</p>
+                <p className="mt-1 text-xs text-slate-500">Tu respuesta nos ayuda a mejorarlo.</p>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVote(1)}
+                    className={cn(
+                      'inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition',
+                      vote === 1
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    )}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    Me gustó
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVote(-1)}
+                    className={cn(
+                      'inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition',
+                      vote === -1
+                        ? 'border-rose-200 bg-rose-50 text-rose-700'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    )}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    No me gustó
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="p-6 sm:p-8 lg:p-10">
@@ -189,43 +222,6 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
                     </span>
                   </span>
                 </button>
-              </div>
-
-              <div className="mt-6 border-t border-slate-200 pt-5">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">¿Te sirvió este simulador?</p>
-                    <p className="mt-1 text-xs text-slate-500">Tu respuesta nos ayuda a mejorarlo.</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setVote(1)}
-                      className={cn(
-                        'inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition',
-                        vote === 1
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                      )}
-                    >
-                      <ThumbsUp className="h-4 w-4" />
-                      Me gustó
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setVote(-1)}
-                      className={cn(
-                        'inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition',
-                        vote === -1
-                          ? 'border-rose-200 bg-rose-50 text-rose-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                      )}
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                      No me gustó
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
