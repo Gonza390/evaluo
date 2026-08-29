@@ -147,14 +147,10 @@ export function PaymentCheckoutCard({
 
   useEffect(() => {
     if (!offer || !displayedPrice || offerCode === 'recovery') return;
-    trackMarketingEvent('premium_offer_viewed', {
-      source,
-      materia_id: materiaId,
-      offer_code: offerCode,
-      displayed_amount_ars: displayedPrice,
-      semester_remaining: offer.semesterRemaining,
+    trackMarketingEvent('premium_preview_viewed', {
+      source: `${source}:${offerCode}`,
     });
-  }, [displayedPrice, materiaId, offer, offerCode, source]);
+  }, [displayedPrice, offer, offerCode, source]);
 
   const isSemester = offerCode === 'semester';
   const isRecovery = offerCode === 'recovery';
@@ -163,7 +159,7 @@ export function PaymentCheckoutCard({
 
   async function startCheckout() {
     trackMarketingEvent('premium_checkout_clicked', {
-      source,
+      source: `${source}:${offerCode}`,
       materia_id: materiaId,
       plan_context: 'premium',
       offer_code: offerCode,
@@ -186,7 +182,10 @@ export function PaymentCheckoutCard({
       const payload = (await response.json()) as { checkoutUrl?: string; error?: string };
       if (response.status === 401) {
         checkoutWindow?.close();
-        window.location.assign('/login?mode=login&intent=premium&next=/pricing');
+        const nextPath = `${window.location.pathname}${window.location.search}`;
+        window.location.assign(
+          `/login?mode=login&intent=premium&next=${encodeURIComponent(nextPath)}`
+        );
         return;
       }
       if (response.status === 403) {
