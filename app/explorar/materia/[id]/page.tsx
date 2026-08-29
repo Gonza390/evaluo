@@ -86,12 +86,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     getMateriaSeoContentSignals(canonicalMateriaId),
   ]);
   const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
-  const carreraNombre = bootstrap.carreraNombre?.trim();
   const universidadNombre = bootstrap.universidadNombre?.trim();
   const canonicalHref = `/explorar/materia/${buildSeoEntitySlug(materiaNombre, canonicalMateriaId)}`;
-  const context = [carreraNombre, universidadNombre].filter(Boolean).join(' en ');
-  const description = context
-    ? `Estudiá ${materiaNombre} para ${context}: explorá materiales, resúmenes, pregunteros y actividades disponibles en Evaluo.`
+  const description = universidadNombre
+    ? `Estudiá ${materiaNombre} en ${universidadNombre}: explorá materiales, resúmenes, pregunteros y actividades disponibles en Evaluo.`
     : `Explorá materiales, resúmenes, pregunteros y actividades disponibles para estudiar ${materiaNombre} en Evaluo.`;
   const seoTitle = universidadNombre
     ? `${materiaNombre} - ${universidadNombre}`
@@ -100,8 +98,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const socialImage = buildShareCardPath({
     kind: 'materia',
     title: materiaNombre,
-    subtitle:
-      [carreraNombre, universidadNombre].filter(Boolean).join(' · ') || 'Recursos de estudio',
+    subtitle: universidadNombre || 'Recursos de estudio',
     detail: 'Recursos, pregunteros y simuladores en un solo lugar',
   });
 
