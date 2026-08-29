@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   ArrowRight,
   Building2,
-  CheckCircle2,
   ChevronDown,
   GraduationCap,
   PlusCircle,
@@ -308,23 +307,6 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                         <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">
                           {carrera.universidadNombre}
                         </p>
-                        {carrera.readyMateriasCount > 0 ? (
-                          <div className="mt-2 flex flex-wrap gap-2 text-[12px] font-semibold">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              {carrera.readyMateriasCount} materias con contenido
-                            </span>
-                            {carrera.questionMateriasCount > 0 ? (
-                              <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">
-                                {carrera.questionMateriasCount} con práctica
-                              </span>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <p className="mt-2 text-[12px] font-medium text-slate-400">
-                            Plan disponible; contenido de estudio en preparación.
-                          </p>
-                        )}
                       </div>
 
                       <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
