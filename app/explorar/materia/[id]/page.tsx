@@ -103,14 +103,17 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const socialHref = universidadNombre
     ? buildMateriaSharePath(materiaNombre, universidadNombre)
     : canonicalHref;
-  const summaryAssetCount =
-    contentSignals.summaryCount + contentSignals.summaryResourceCount + contentSignals.resourceCount;
+  const hasStudyMaterial =
+    contentSignals.summaryCount +
+      contentSignals.summaryResourceCount +
+      contentSignals.resourceCount >
+    0;
 
   let description: string;
   if (contentSignals.questionCount > 0) {
-    description = `Estudiá ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''}: ${contentSignals.questionCount} preguntas para practicar y explicaciones con IA para entender tus errores${summaryAssetCount > 0 ? `, más ${summaryAssetCount} recursos de estudio` : ''}.`;
-  } else if (summaryAssetCount > 0) {
-    description = `Estudiá ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con ${summaryAssetCount} recursos, resúmenes y material de estudio disponibles en Evaluo.`;
+    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con modelos de examen para practicar y explicación de cada respuesta${hasStudyMaterial ? ', más resúmenes y material de estudio' : ''}.`;
+  } else if (hasStudyMaterial) {
+    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con resúmenes y material de estudio disponibles en Evaluo.`;
   } else {
     description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con material de estudio, práctica y herramientas de Evaluo.`;
   }
@@ -131,7 +134,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     subtitle: universidadNombre || 'Recursos de estudio',
     detail:
       contentSignals.questionCount > 0
-        ? `${contentSignals.questionCount} preguntas + explicaciones con IA`
+        ? 'Modelos de examen con explicación de cada respuesta'
         : 'Recursos, práctica y material de estudio en un solo lugar',
   });
 
