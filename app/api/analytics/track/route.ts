@@ -80,6 +80,9 @@ export async function POST(request: Request) {
     } = await supabase.auth.getUser();
 
     if (await isAdminActor(user)) {
+      // Once a session is identified as an administrator, remove the whole session.
+      // This also clears anonymous events created before the admin signed in.
+      await admin.from('analytics_events').delete().eq('session_key', sessionKey);
       return NextResponse.json({ ok: true, skipped: 'admin_user' }, { status: 202 });
     }
 
