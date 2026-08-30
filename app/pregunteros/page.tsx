@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { ListChecks, Target } from 'lucide-react';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildSeoEntitySlug } from '@/lib/seo-intents';
+import { isSiglo21University } from '@/lib/seo-search-copy';
 import {
   PregunteroHubClient,
   type PregunteroHubCarrera,
@@ -13,12 +16,13 @@ import {
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: 'Pregunteros Universidad Siglo 21 por materia',
+  title: 'Pregunteros Siglo 21: materias y parciales',
   description:
-    'Encontrá pregunteros de Universidad Siglo 21 organizados por carrera, materia y parcial. Solo mostramos materias que ya tienen preguntas disponibles para practicar en Evaluo.',
+    'Encontrá pregunteros Siglo 21 por materia y parcial. Practicá primer parcial, segundo parcial e integrador con preguntas disponibles en Evaluo.',
   keywords: [
     'pregunteros Siglo 21',
-    'preguntero Universidad Siglo 21',
+    'preguntero Siglo 21',
+    'pregunteros Universidad Siglo 21',
     'preguntas parcial Siglo 21',
     'primer parcial Siglo 21',
     'segundo parcial Siglo 21',
@@ -27,15 +31,15 @@ export const metadata: Metadata = {
     canonical: '/pregunteros',
   },
   openGraph: {
-    title: 'Pregunteros Universidad Siglo 21 por materia | Evaluo',
+    title: 'Pregunteros Siglo 21: materias y parciales | Evaluo',
     description:
-      'Pregunteros por carrera, materia y parcial con preguntas disponibles para practicar en Evaluo.',
+      'Pregunteros Siglo 21 organizados por materia y parcial, con preguntas disponibles para practicar en Evaluo.',
     url: '/pregunteros',
     images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Pregunteros Universidad Siglo 21 por materia | Evaluo',
+    title: 'Pregunteros Siglo 21 | Evaluo',
     description:
       'Encontrá el preguntero de tu materia de Universidad Siglo 21 y practicá el parcial en Evaluo.',
     images: ['/opengraph-image.png'],
@@ -115,16 +119,27 @@ const loadPregunteroHubData = unstable_cache(
         ];
       })
       .sort((a, b) => {
+        const aSiglo21 = isSiglo21University(a.universidadNombre) ? 0 : 1;
+        const bSiglo21 = isSiglo21University(b.universidadNombre) ? 0 : 1;
+        if (aSiglo21 !== bSiglo21) return aSiglo21 - bSiglo21;
         const byUniversity = a.universidadNombre.localeCompare(b.universidadNombre, 'es');
         return byUniversity || a.carreraNombre.localeCompare(b.carreraNombre, 'es');
       });
   },
-  ['preguntero-hub-v4'],
+  ['preguntero-hub-v5'],
   { revalidate: 600, tags: ['universidad-data'] }
 );
 
 export default async function PregunteroHubPage() {
   const carreras = await loadPregunteroHubData();
+  const siglo21Materias = Array.from(
+    new Map(
+      carreras
+        .filter((carrera) => isSiglo21University(carrera.universidadNombre))
+        .flatMap((carrera) => carrera.materias)
+        .map((materia) => [materia.materiaId, materia] as const)
+    ).values()
+  ).slice(0, 12);
 
   return (
     <main className="min-h-screen bg-white text-slate-950">
@@ -143,15 +158,39 @@ export default async function PregunteroHubPage() {
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-indigo-700 uppercase">
             <ListChecks className="h-4 w-4" aria-hidden="true" />
-            Pregunteros · Universidad Siglo 21
+            Universidad Siglo 21
           </p>
           <h1 className="mt-4 max-w-4xl text-4xl font-bold tracking-[-0.055em] text-slate-950 sm:text-5xl">
-            Practicá el preguntero de tu materia.
+            Pregunteros Siglo 21 por materia y parcial.
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-            Buscá tu carrera o materia de Universidad Siglo 21. Solo mostramos materias que ya tienen preguntas disponibles para practicar.
+            Encontrá tu materia y practicá primer parcial, segundo parcial o integrador. También podés buscar pregunteros disponibles de otras universidades.
           </p>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 lg:px-8">
+        {siglo21Materias.length > 0 ? (
+          <div className="border-b border-slate-200 pb-8">
+            <h2 className="text-lg font-bold tracking-[-0.03em] text-slate-950">
+              Pregunteros Siglo 21 disponibles
+            </h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Accesos directos a materias que ya tienen preguntas para practicar.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {siglo21Materias.map((materia) => (
+                <Link
+                  key={materia.materiaId}
+                  href={`/pregunteros/${buildSeoEntitySlug(materia.materiaNombre, materia.materiaId)}`}
+                  className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                >
+                  {materia.materiaNombre}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
