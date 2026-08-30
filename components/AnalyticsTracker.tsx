@@ -36,6 +36,14 @@ function getStudyContentType(pathname: string) {
   return null;
 }
 
+function getMateriaIdFromPath(pathname: string) {
+  if (!pathname.startsWith('/explorar/materia/')) return null;
+  const match = pathname.match(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i
+  );
+  return match?.[0] ?? null;
+}
+
 async function track(eventName: string, payload: Record<string, unknown>) {
   try {
     await fetch('/api/analytics/track', {
@@ -90,6 +98,35 @@ export default function AnalyticsTracker() {
       });
     }
   }, [loading, pathname, queryString, user?.id]);
+
+  useEffect(() => {
+    const materiaId = getMateriaIdFromPath(pathname);
+    if (!materiaId) return;
+
+    let active = true;
+    void fetch(`/api/analytics/content-availability?materia_id=${encodeURIComponent(materiaId)}`)
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as {
+          available?: boolean;
+          resumenCount?: number;
+          sharedMaterialCount?: number;
+        };
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        void trackProductAnalyticsEvent(payload.available ? 'content_available' : 'content_empty', {
+          materia_id: materiaId,
+          resumen_count: payload.resumenCount ?? 0,
+          shared_material_count: payload.sharedMaterialCount ?? 0,
+        });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
 
   useEffect(() => {
     if (loading) {
