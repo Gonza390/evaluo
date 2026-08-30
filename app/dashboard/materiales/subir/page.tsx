@@ -99,11 +99,11 @@ export default async function QuickPdfUploadPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50/50 px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-3xl">
+    <main className="min-h-screen bg-white px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-2xl">
         <Link
           href={source === 'materia' && requestedMateriaId ? `/explorar/materia/${requestedMateriaId}` : '/dashboard'}
-          className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-slate-600 transition hover:bg-white hover:text-slate-950"
+          className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-950"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver

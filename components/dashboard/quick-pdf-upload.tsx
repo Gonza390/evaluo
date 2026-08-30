@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
+import { CheckCircle2, Loader2, Upload } from 'lucide-react';
 import {
   cancelStudentMaterialUploadAction,
   finalizeStudentMaterialUploadAction,
@@ -74,7 +74,7 @@ export function QuickPdfUpload({
   );
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [useAnotherContext, setUseAnotherContext] = useState(!initialContextComplete);
+  const [editingContext, setEditingContext] = useState(!initialContextComplete);
   const [universidadId, setUniversidadId] = useState(initialUniversidadId);
   const [carreraId, setCarreraId] = useState(initialCarreraId);
   const [materiaId, setMateriaId] = useState(initialMateriaId);
@@ -142,20 +142,9 @@ export function QuickPdfUpload({
     return () => window.clearInterval(interval);
   }, [processingMaterialId, router]);
 
-  const restoreInitialContext = () => {
-    setUniversidadId(initialUniversidadId);
-    setCarreraId(initialCarreraId);
-    setMateriaId(initialMateriaId);
-  };
-
-  const handleAnotherContextChange = (checked: boolean) => {
-    setUseAnotherContext(checked);
-    setErrorMessage(null);
-    if (!checked) restoreInitialContext();
-  };
-
   const handleFile = (file: File | null) => {
     setErrorMessage(null);
+
     if (!file) {
       setSelectedFile(null);
       return;
@@ -262,71 +251,63 @@ export function QuickPdfUpload({
   };
 
   if (processingMaterialId) {
+    const progress = Math.max(10, Math.min(processingProgress, 100));
+
     return (
-      <div className="rounded-3xl border border-indigo-100 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] sm:p-8">
-        <div className="flex items-start gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
-            <Loader2 className="h-6 w-6 animate-spin" />
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+            <Loader2 className="h-5 w-5 animate-spin" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold tracking-[0.14em] text-indigo-700 uppercase">
-              Tu PDF ya está en Evaluo
-            </p>
-            <h1 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">
-              Estamos preparando tu material
+            <h1 className="text-xl font-bold tracking-[-0.035em] text-slate-950">
+              Preparando tu PDF
             </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{processingMessage}</p>
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
+            <p className="mt-1 text-sm leading-6 text-slate-600">{processingMessage}</p>
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
               <div
                 className="h-full rounded-full bg-indigo-600 transition-all duration-500"
-                style={{ width: `${Math.max(10, Math.min(processingProgress, 100))}%` }}
+                style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="mt-2 text-xs font-semibold text-slate-500">
-              {Math.max(10, Math.min(processingProgress, 100))}%
-            </p>
+            <p className="mt-2 text-xs text-slate-500">{progress}%</p>
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-      <div className="border-b border-slate-100 px-5 py-6 sm:px-8 sm:py-8">
-        <p className="text-xs font-bold tracking-[0.15em] text-indigo-700 uppercase">Paso 1</p>
-        <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-slate-950">
-          Elegí el PDF que estás usando para estudiar
+    <section className="rounded-2xl border border-slate-200 bg-white">
+      <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+        <h1 className="text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-[1.7rem]">
+          Subí tu PDF
         </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-          Evaluo va a usar ese apunte para preparar tu resumen, glosario, flashcards y ejercicios.
+        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+          Lo convertimos en resumen, glosario, flashcards y ejercicios para estudiar.
         </p>
       </div>
 
-      <div className="space-y-7 px-5 py-6 sm:px-8 sm:py-8">
-        <section>
+      <div className="space-y-5 px-5 pb-5 pt-5 sm:px-6 sm:pb-6">
+        <div>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex min-h-36 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/40 px-5 py-7 text-center transition hover:border-indigo-400 hover:bg-indigo-50"
+            className="flex min-h-28 w-full items-center gap-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-5 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40"
           >
-            {selectedFile ? (
-              <>
-                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-                <span className="mt-3 max-w-full truncate text-sm font-bold text-slate-900">
-                  {selectedFile.name}
-                </span>
-                <span className="mt-1 text-xs text-slate-500">
-                  {formatBytes(selectedFile.size)} · tocar para cambiar
-                </span>
-              </>
-            ) : (
-              <>
-                <Upload className="h-8 w-8 text-indigo-600" />
-                <span className="mt-3 text-sm font-bold text-slate-900">Elegir PDF</span>
-                <span className="mt-1 text-xs text-slate-500">PDF de hasta 20 MB</span>
-              </>
-            )}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200">
+              {selectedFile ? <CheckCircle2 className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold text-slate-950">
+                {selectedFile ? selectedFile.name : 'Elegir un PDF'}
+              </span>
+              <span className="mt-1 block text-xs text-slate-500">
+                {selectedFile
+                  ? `${formatBytes(selectedFile.size)} · tocar para cambiar`
+                  : 'Hasta 20 MB'}
+              </span>
+            </span>
           </button>
           <input
             ref={fileInputRef}
@@ -335,111 +316,105 @@ export function QuickPdfUpload({
             className="sr-only"
             onChange={(event) => handleFile(event.target.files?.[0] ?? null)}
           />
-        </section>
+        </div>
 
-        <section className="border-t border-slate-200 pt-6">
-          <div className="flex items-start gap-3">
-            <FileText className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-slate-950">¿Para qué materia es?</p>
-              {initialContextComplete && !useAnotherContext ? (
-                <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-4 py-3">
-                  <p className="text-xs font-bold text-emerald-800">Ya lo completamos por vos</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-700">
-                    {universityById.get(universidadId)} · {careerById.get(carreraId)} ·{' '}
-                    <strong>{materiaById.get(materiaId)}</strong>
-                  </p>
-                </div>
-              ) : null}
-
-              {initialContextComplete ? (
-                <label className="mt-4 flex cursor-pointer items-start gap-2.5 text-sm text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={useAnotherContext}
-                    onChange={(event) => handleAnotherContextChange(event.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
-                  />
-                  <span>
-                    <strong>Es para otra carrera o materia</strong>
-                    <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                      Marcá esta opción y elegí dónde querés guardar el PDF.
-                    </span>
-                  </span>
-                </label>
-              ) : null}
-
-              {useAnotherContext ? (
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <label className="text-xs font-semibold text-slate-600">
-                    Universidad
-                    <select
-                      value={universidadId}
-                      onChange={(event) => {
-                        setUniversidadId(event.target.value);
-                        setCarreraId('');
-                        setMateriaId('');
-                      }}
-                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-indigo-400"
-                    >
-                      <option value="">Elegir</option>
-                      {universidades.map((item) => (
-                        <option key={item.id} value={item.id}>{item.nombre}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="text-xs font-semibold text-slate-600">
-                    Carrera
-                    <select
-                      value={carreraId}
-                      disabled={!universidadId}
-                      onChange={(event) => {
-                        setCarreraId(event.target.value);
-                        setMateriaId('');
-                      }}
-                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-indigo-400"
-                    >
-                      <option value="">Elegir</option>
-                      {filteredCarreras.map((item) => (
-                        <option key={item.id} value={item.id}>{item.nombre}</option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="text-xs font-semibold text-slate-600">
-                    Materia
-                    <select
-                      value={materiaId}
-                      disabled={!carreraId}
-                      onChange={(event) => setMateriaId(event.target.value)}
-                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-indigo-400"
-                    >
-                      <option value="">Elegir</option>
-                      {filteredMaterias.map((item) => (
-                        <option key={item.id} value={item.id}>{item.nombre}</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ) : null}
+        {initialContextComplete && !editingContext ? (
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-slate-50 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Materia</p>
+              <p className="mt-0.5 truncate text-sm font-bold text-slate-950">
+                {materiaById.get(materiaId)}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-slate-500">
+                {careerById.get(carreraId)} · {universityById.get(universidadId)}
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setEditingContext(true)}
+              className="shrink-0 text-xs font-semibold text-indigo-700 hover:text-indigo-800"
+            >
+              Cambiar
+            </button>
           </div>
-        </section>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="text-xs font-semibold text-slate-600">
+              Universidad
+              <select
+                value={universidadId}
+                onChange={(event) => {
+                  setUniversidadId(event.target.value);
+                  setCarreraId('');
+                  setMateriaId('');
+                }}
+                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-indigo-400"
+              >
+                <option value="">Elegir</option>
+                {universidades.map((item) => (
+                  <option key={item.id} value={item.id}>{item.nombre}</option>
+                ))}
+              </select>
+            </label>
 
-        <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <label className="text-xs font-semibold text-slate-600">
+              Carrera
+              <select
+                value={carreraId}
+                disabled={!universidadId}
+                onChange={(event) => {
+                  setCarreraId(event.target.value);
+                  setMateriaId('');
+                }}
+                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-indigo-400"
+              >
+                <option value="">Elegir</option>
+                {filteredCarreras.map((item) => (
+                  <option key={item.id} value={item.id}>{item.nombre}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-xs font-semibold text-slate-600">
+              Materia
+              <select
+                value={materiaId}
+                disabled={!carreraId}
+                onChange={(event) => setMateriaId(event.target.value)}
+                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-indigo-400"
+              >
+                <option value="">Elegir</option>
+                {filteredMaterias.map((item) => (
+                  <option key={item.id} value={item.id}>{item.nombre}</option>
+                ))}
+              </select>
+            </label>
+
+            {initialContextComplete ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setUniversidadId(initialUniversidadId);
+                  setCarreraId(initialCarreraId);
+                  setMateriaId(initialMateriaId);
+                  setEditingContext(false);
+                }}
+                className="text-left text-xs font-semibold text-slate-500 hover:text-slate-800 sm:col-span-3"
+              >
+                Usar la materia anterior
+              </button>
+            ) : null}
+          </div>
+        )}
+
+        <label className="flex cursor-pointer items-center gap-3 border-t border-slate-100 pt-4 text-sm text-slate-700">
           <input
             type="checkbox"
             checked={shareWithCatalog}
             onChange={(event) => setShareWithCatalog(event.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
           />
-          <span>
-            <strong>Compartir también con estudiantes de esta materia</strong>
-            <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-              Podés desmarcarlo si querés usar el material sólo en tu espacio.
-            </span>
-          </span>
+          <span>Compartir con estudiantes de esta materia</span>
         </label>
 
         {errorMessage ? (
@@ -452,12 +427,12 @@ export function QuickPdfUpload({
           type="button"
           onClick={handleUpload}
           disabled={uploading || !selectedFile}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-          {uploading ? 'Subiendo PDF...' : 'Preparar mi PDF'}
+          {uploading ? 'Subiendo PDF...' : 'Preparar PDF'}
         </button>
       </div>
-    </div>
+    </section>
   );
 }
