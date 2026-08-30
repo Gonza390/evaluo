@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const { id } = await params;
 
   if (!isUuid(id)) {
-    return NextResponse.json({ name: null }, { status: 404 });
+    return NextResponse.json({ name: null, featured: false }, { status: 404 });
   }
 
   const admin = createAdminClient();
@@ -30,7 +30,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .maybeSingle();
 
   if (materialError || !material) {
-    return NextResponse.json({ name: null }, { status: 404 });
+    return NextResponse.json({ name: null, featured: false }, { status: 404 });
   }
 
   const isPublicMaterial = material.visibility === 'shared' && material.processing_status === 'ready';
@@ -42,13 +42,13 @@ export async function GET(_request: Request, { params }: RouteContext) {
     } = await supabase.auth.getUser();
 
     if (!user || user.id !== material.user_id) {
-      return NextResponse.json({ name: null }, { status: 404 });
+      return NextResponse.json({ name: null, featured: false }, { status: 404 });
     }
   }
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('nombre')
+    .select('nombre, role')
     .eq('id', material.user_id)
     .maybeSingle();
 
@@ -60,7 +60,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   return NextResponse.json(
-    { name: displayName || 'Estudiante' },
+    {
+      name: displayName || 'Estudiante',
+      featured: profile?.role === 'admin',
+    },
     {
       headers: isPublicMaterial
         ? {
