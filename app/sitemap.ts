@@ -149,14 +149,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       if (!hasAcademicContent) continue;
 
+      const materiaSlug = buildSeoEntitySlug(materia.nombre, materia.id);
       routes.push({
-        url: `${baseUrl}/explorar/materia/${materia.id}`,
+        url: `${baseUrl}/explorar/materia/${materiaSlug}`,
         ...(questionLastModified ? { lastModified: questionLastModified } : {}),
         changeFrequency: 'weekly',
         priority: 0.7,
       });
 
-      const materiaSlug = buildSeoEntitySlug(materia.nombre, materia.id);
       if (hasQuestions) {
         routes.push({
           url: `${baseUrl}/pregunteros/${materiaSlug}`,
@@ -203,7 +203,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
 
       routes.push({
-        url: `${baseUrl}/landings/estudiar/${buildSeoEntitySlug(materia.nombre, materia.id)}`,
+        url: `${baseUrl}/landings/estudiar/${materiaSlug}`,
         changeFrequency: 'monthly',
         priority: 0.65,
       });
