@@ -1,555 +1,554 @@
 'use client';
 
-import { CheckCircle2, Share2, Target, TrendingUp, UserPlus } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  BookOpenCheck,
+  Clock3,
+  FileUp,
+  RefreshCw,
+  RotateCcw,
+  Target,
+  UsersRound,
+} from 'lucide-react';
 
-interface FocusSubject {
-  id: string;
-  name: string;
-  parcial: number;
-  ready: number;
-  started: number;
-  answered1: number;
-  answered5: number;
-  activated: number;
-  registered: number;
-  finished: number;
-}
-
-interface ConversionStats {
-  premium: {
-    pricingViews: number;
-    intentClicks: number;
-    checkoutClicks: number;
-    checkoutUsers: number;
-    activatedUsers: number;
-    activeSubscriptions: number;
-    pricingToCheckoutPct: number;
-    checkoutToPaidPct: number;
-    sources: Array<{ source: string; clicks: number }>;
+type ProductAnalytics = {
+  generatedAt: string;
+  period: 1 | 7 | 30;
+  kpis: {
+    newUsers: number;
+    activationPct: number;
+    meaningfulUsers: number;
+    meaningfulOfAvailablePct: number;
+    return48hPct: number | null;
+    returnEligibleUsers: number;
+    coveragePct: number;
+    contentEmptyUsers: number;
   };
-  gate: { reached: number; converted: number; conversionRatePct: number };
-  retention: {
-    day7Cohort: number;
-    activeDay7: number;
-    day7RetentionPct: number;
-    usersWith2PlusSimulators: number;
-    twoPlusPct: number;
-  };
-  signupSources: Array<{ label: string; value: number }>;
-  focusSubjects: FocusSubject[];
-  acquisitionChannels: Array<{
-    channel: string;
-    ready: number;
-    activated: number;
+  funnel: Array<{
+    key: string;
+    label: string;
+    value: number;
+    conversionPct: number;
+  }>;
+  biggestDrop: {
+    from: string;
+    to: string;
+    lost: number;
+    dropPct: number;
+  } | null;
+  cohorts: Array<{
+    date: string;
+    label: string;
+    registered: number;
+    materia: number;
+    available: number;
+    opened: number;
+    meaningful: number;
+    returned: number;
+  }>;
+  acquisition: Array<{
+    source: string;
+    registrations: number;
+    materia: number;
+    meaningful: number;
     activationPct: number;
   }>;
-  needsFeedback: Array<{ reason: string; value: number }>;
-  sharing: {
-    shares: number;
-    authenticatedShares: number;
-    anonymousShares: number;
-    referredVisits: number;
-    started: number;
-    finished: number;
-    registered: number;
-    topSharers: Array<{
-      userId: string;
-      email: string;
-      shares: number;
-      referredVisits: number;
-      started: number;
-      finished: number;
-      registered: number;
-    }>;
-    links: Array<{
-      shareId: string;
-      email: string;
-      materia: string;
-      parcial: number;
-      kind: string;
-      method: string;
-      createdAt: string;
-      visits: number;
-      started: number;
-      finished: number;
-      registered: number;
+  coverage: {
+    reachedMateria: number;
+    availableUsers: number;
+    emptyUsers: number;
+    topEmptyMaterias: Array<{
+      materiaId: string;
+      name: string;
+      users: number;
     }>;
   };
+  pdf: {
+    selectedUsers: number;
+    completedUsers: number;
+    conversionPct: number;
+  };
+  users: Array<{
+    userId: string;
+    email: string;
+    registeredAt: string;
+    source: string;
+    materiaId: string | null;
+    materiaName: string | null;
+    reachedMateria: boolean;
+    contentAvailable: boolean;
+    contentOpened: boolean;
+    meaningfulStudy: boolean;
+    returned48h: boolean;
+    activeDays: number;
+    simulatorAttempts: number;
+    pdfSelected: number;
+    pdfUploads: number;
+  }>;
+  exclusions: {
+    adminUsers: number;
+    adminSessions: number;
+  };
+};
+
+function periodFromLabel(label: string): 1 | 7 | 30 {
+  if (label.toLowerCase().includes('hoy')) return 1;
+  if (label.includes('30')) return 30;
+  return 7;
 }
 
-function percentage(value: number, base: number) {
-  return base > 0 ? (value / base) * 100 : 0;
+function formatPercent(value: number | null) {
+  return value === null ? '—' : `${value.toLocaleString('es-AR')}%`;
 }
 
-function formatPercentage(value: number) {
-  return `${value.toFixed(1)}%`;
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  });
 }
 
-function MetricCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+function formatSignup(value: string) {
+  return new Date(value).toLocaleString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  });
+}
+
+function KpiCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  icon: typeof Target;
+}) {
   return (
-    <article className="border-border bg-card rounded-2xl border p-5 shadow-sm">
-      <p className="text-muted-foreground text-xs font-semibold tracking-[0.14em] uppercase">
-        {label}
-      </p>
-      <p className="text-foreground mt-3 text-3xl font-bold tracking-tight">{value}</p>
-      <p className="text-muted-foreground mt-2 text-sm">{detail}</p>
-    </article>
-  );
-}
-
-function FunnelRow({ label, value, base }: { label: string; value: number; base: number }) {
-  const pct = percentage(value, base);
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
-      <div>
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-foreground font-medium">{label}</span>
-          <span className="text-muted-foreground">{formatPercentage(pct)}</span>
-        </div>
-        <div className="bg-white mt-2 h-2 overflow-hidden rounded-full">
-          <div
-            className="bg-primary h-full rounded-full"
-            style={{ width: `${Math.max(pct, value > 0 ? 3 : 0)}%` }}
-          />
-        </div>
-      </div>
-      <span className="text-foreground min-w-10 text-right text-sm font-bold">{value}</span>
-    </div>
-  );
-}
-
-function SubjectFunnel({ subject }: { subject: FocusSubject }) {
-  const stages = [
-    ['Simulador listo', subject.ready],
-    ['Comenzaron', subject.started],
-    ['Respondieron 1', subject.answered1],
-    ['Respondieron 5', subject.answered5],
-    ['Activados (10)', subject.activated],
-    ['Se registraron', subject.registered],
-    ['Terminaron', subject.finished],
-  ] as const;
-  const base = Math.max(subject.ready, subject.started, 1);
-
-  return (
-    <article className="border-border bg-card rounded-3xl border p-5 shadow-sm sm:p-6">
-      <div className="border-border flex flex-col gap-2 border-b pb-5 sm:flex-row sm:items-start sm:justify-between">
+    <article className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.045)]">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-primary text-xs font-semibold tracking-[0.16em] uppercase">
-            Materia prioritaria
+          <p className="text-[12px] font-semibold tracking-[0.08em] text-slate-500 uppercase">
+            {label}
           </p>
-          <h3 className="text-foreground mt-2 text-xl font-bold tracking-tight">{subject.name}</h3>
-          <p className="text-muted-foreground mt-1 text-sm">Parcial {subject.parcial}</p>
+          <p className="mt-2 text-[1.7rem] font-bold tracking-[-0.055em] text-slate-950">{value}</p>
         </div>
-        <div className="bg-primary/10 text-primary rounded-xl px-3 py-2 text-sm font-bold">
-          {formatPercentage(percentage(subject.activated, base))} activación
-        </div>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
+          <Icon className="h-4 w-4" />
+        </span>
       </div>
-      <div className="mt-5 space-y-4">
-        {stages.map(([label, value]) => (
-          <FunnelRow key={label} label={label} value={value} base={base} />
-        ))}
-      </div>
+      <p className="mt-2 text-[12px] leading-5 text-slate-500">{detail}</p>
     </article>
+  );
+}
+
+function BooleanStatus({ value }: { value: boolean }) {
+  return (
+    <span
+      className={`inline-flex rounded-full px-2 py-1 text-[11px] font-semibold ${
+        value ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+      }`}
+    >
+      {value ? 'Sí' : 'No'}
+    </span>
   );
 }
 
 export function ConversionPanel({
-  stats,
+  stats: _legacyStats,
   periodLabel,
 }: {
-  stats: ConversionStats;
+  stats: unknown;
   periodLabel: string;
 }) {
-  const totalReady = stats.focusSubjects.reduce((sum, item) => sum + item.ready, 0);
-  const totalStarted = stats.focusSubjects.reduce((sum, item) => sum + item.started, 0);
-  const totalActivated = stats.focusSubjects.reduce((sum, item) => sum + item.activated, 0);
-  const totalFinished = stats.focusSubjects.reduce((sum, item) => sum + item.finished, 0);
-  const activationRate = percentage(totalActivated, Math.max(totalReady, totalStarted));
-  const startRate = percentage(totalStarted, totalReady);
-  const hasNewFunnelData = totalReady > 0 || totalStarted > 0;
+  const period = periodFromLabel(periodLabel);
+  const [data, setData] = useState<ProductAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/admin/product-analytics?period=${period}`, {
+        cache: 'no-store',
+      });
+      const payload = (await response.json()) as ProductAnalytics & { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || 'No pudimos cargar las métricas de producto.');
+      }
+      setData(payload);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error ? loadError.message : 'No pudimos cargar las métricas de producto.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const maxFunnelValue = useMemo(
+    () => Math.max(1, ...(data?.funnel.map((item) => item.value) ?? [1])),
+    [data]
+  );
+
+  if (loading && !data) {
+    return (
+      <section className="space-y-4">
+        <div className="h-28 animate-pulse rounded-[22px] border border-slate-200 bg-slate-50" />
+        <div className="grid grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="h-32 animate-pulse rounded-[20px] bg-slate-50" />
+          ))}
+        </div>
+        <div className="h-72 animate-pulse rounded-[22px] bg-slate-50" />
+      </section>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <section className="rounded-[22px] border border-rose-200 bg-rose-50 p-6">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-5 w-5 text-rose-600" />
+          <div>
+            <h2 className="font-bold text-rose-950">No pudimos cargar Producto</h2>
+            <p className="mt-1 text-sm text-rose-700">{error}</p>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="mt-4 inline-flex h-9 items-center gap-2 rounded-xl bg-rose-700 px-4 text-sm font-semibold text-white"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!data) return null;
 
   return (
     <div className="space-y-5">
-      <section className="border-primary/20 bg-card rounded-3xl border p-5 shadow-sm sm:p-7">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950 text-white shadow-[0_18px_55px_rgba(15,23,42,0.12)]">
+        <div className="flex items-start justify-between gap-6 px-6 py-5">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+              <BarChart3 className="h-4 w-4" />
+              Salud de activación
+            </div>
+            <h2 className="mt-2 text-[1.8rem] font-bold tracking-[-0.055em]">
+              ¿Los nuevos usuarios llegan a estudiar?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Registro → Materia → Contenido disponible → Contenido abierto → Estudio significativo → Regreso
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={loading}
+              className="inline-flex h-9 items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-3 text-xs font-semibold text-white transition hover:bg-white/15 disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Actualizar
+            </button>
+            <p className="text-[11px] text-slate-400">{formatDateTime(data.generatedAt)}</p>
+          </div>
+        </div>
+        <div className="border-t border-white/10 bg-white/[0.04] px-6 py-3 text-[12px] text-slate-300">
+          Administradores y cuentas internas quedan excluidos automáticamente de estas métricas.
+        </div>
+      </section>
+
+      <section className="grid grid-cols-5 gap-3">
+        <KpiCard
+          label="Nuevos usuarios"
+          value={data.kpis.newUsers.toLocaleString('es-AR')}
+          detail={`Registrados en ${periodLabel.toLowerCase()}.`}
+          icon={UsersRound}
+        />
+        <KpiCard
+          label="Activación"
+          value={formatPercent(data.kpis.activationPct)}
+          detail={`${data.kpis.meaningfulUsers} hicieron estudio significativo.`}
+          icon={Target}
+        />
+        <KpiCard
+          label="Cobertura"
+          value={formatPercent(data.kpis.coveragePct)}
+          detail={`${data.kpis.contentEmptyUsers} llegaron a una materia sin contenido.`}
+          icon={BookOpenCheck}
+        />
+        <KpiCard
+          label="Regreso 48 h"
+          value={formatPercent(data.kpis.return48hPct)}
+          detail={
+            data.kpis.returnEligibleUsers > 0
+              ? `Sobre ${data.kpis.returnEligibleUsers} activados con 48 h completas.`
+              : 'Todavía no hay cohorte madura para medir.'
+          }
+          icon={RotateCcw}
+        />
+        <KpiCard
+          label="Estudio / contenido"
+          value={formatPercent(data.kpis.meaningfulOfAvailablePct)}
+          detail="De quienes encontraron contenido, cuántos realmente estudiaron."
+          icon={Clock3}
+        />
+      </section>
+
+      <section className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.04)]">
+        <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
-              Monetización
-            </p>
-            <h2 className="text-foreground mt-2 text-2xl font-bold tracking-tight">
-              Embudo Premium
-            </h2>
-            <p className="text-muted-foreground mt-2 text-sm">
-              Sesiones y usuarios únicos durante {periodLabel.toLowerCase()}.
-            </p>
+            <p className="text-[12px] font-bold tracking-[0.14em] text-blue-600 uppercase">Embudo oficial</p>
+            <h3 className="mt-1 text-xl font-bold tracking-[-0.04em] text-slate-950">Dónde se pierde cada usuario</h3>
           </div>
-          <div className="bg-primary/10 text-primary rounded-2xl px-4 py-3 text-sm font-bold">
-            {stats.premium.activeSubscriptions} suscripciones activas
-          </div>
+          <p className="text-xs text-slate-500">Conversión contra el paso anterior</p>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Visitas a precios"
-            value={String(stats.premium.pricingViews)}
-            detail={`${stats.premium.intentClicks} llegaron desde un upsell`}
-          />
-          <MetricCard
-            label="Checkout iniciado"
-            value={String(stats.premium.checkoutUsers)}
-            detail={`${stats.premium.pricingToCheckoutPct.toFixed(1)}% desde pricing`}
-          />
-          <MetricCard
-            label="Nuevos Premium"
-            value={String(stats.premium.activatedUsers)}
-            detail={`${stats.premium.checkoutToPaidPct.toFixed(1)}% de los checkouts`}
-          />
-          <MetricCard
-            label="Intención de pago"
-            value={String(stats.premium.checkoutClicks)}
-            detail="Clics únicos en Suscribirme"
-          />
-        </div>
-
-        <div className="mt-6 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-          <article className="border-border rounded-2xl border p-5">
-            <h3 className="text-foreground font-bold">Conversión paso a paso</h3>
-            <div className="mt-5 space-y-4">
-              <FunnelRow
-                label="Vieron precios"
-                value={stats.premium.pricingViews}
-                base={Math.max(stats.premium.pricingViews, 1)}
-              />
-              <FunnelRow
-                label="Hicieron clic en suscribirse"
-                value={stats.premium.checkoutClicks}
-                base={Math.max(stats.premium.pricingViews, 1)}
-              />
-              <FunnelRow
-                label="Mercado Pago creado"
-                value={stats.premium.checkoutUsers}
-                base={Math.max(stats.premium.pricingViews, 1)}
-              />
-              <FunnelRow
-                label="Suscripción activada"
-                value={stats.premium.activatedUsers}
-                base={Math.max(stats.premium.pricingViews, 1)}
-              />
-            </div>
-          </article>
-
-          <article className="border-border rounded-2xl border p-5">
-            <h3 className="text-foreground font-bold">Origen de la intención Premium</h3>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Qué límite o herramienta llevó al estudiante a conocer el plan.
-            </p>
-            <div className="mt-4 space-y-2">
-              {stats.premium.sources.length > 0 ? (
-                stats.premium.sources.slice(0, 8).map((item) => (
-                  <div
-                    key={item.source}
-                    className="bg-white flex items-center justify-between rounded-xl px-3 py-3 text-sm"
-                  >
-                    <span className="text-foreground font-medium">{item.source}</span>
-                    <strong className="text-primary">{item.clicks}</strong>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  Los orígenes aparecerán cuando se publiquen los nuevos eventos.
+        <div className="mt-5 grid grid-cols-6 gap-2">
+          {data.funnel.map((step, index) => (
+            <div key={step.key} className="relative min-w-0">
+              <div className="rounded-[16px] border border-slate-200 bg-slate-50/60 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-white text-[11px] font-bold text-slate-500 shadow-sm">
+                    {index + 1}
+                  </span>
+                  {index > 0 ? (
+                    <span className="text-[11px] font-bold text-slate-600">{step.conversionPct}%</span>
+                  ) : null}
+                </div>
+                <p className="mt-3 min-h-9 text-[12px] font-semibold leading-4 text-slate-700">{step.label}</p>
+                <p className="mt-1 text-[1.45rem] font-bold tracking-[-0.05em] text-slate-950">
+                  {step.value.toLocaleString('es-AR')}
                 </p>
-              )}
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full bg-blue-600"
+                    style={{ width: `${Math.max(4, (step.value / maxFunnelValue) * 100)}%` }}
+                  />
+                </div>
+              </div>
+              {index < data.funnel.length - 1 ? (
+                <ArrowRight className="absolute top-1/2 -right-[9px] z-10 h-4 w-4 -translate-y-1/2 rounded-full bg-white text-slate-300" />
+              ) : null}
             </div>
-          </article>
-        </div>
-      </section>
-
-      <section className="border-border bg-card rounded-3xl border p-5 shadow-sm sm:p-7">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
-              Resumen ejecutivo
-            </p>
-            <h2 className="text-foreground mt-2 text-2xl font-bold tracking-tight">
-              ¿Los estudiantes encuentran valor?
-            </h2>
-            <p className="text-muted-foreground mt-2 text-sm leading-6">
-              Activación significa alcanzar 10 preguntas corregidas. Período:{' '}
-              {periodLabel.toLowerCase()}.
-            </p>
-          </div>
-          <div className="bg-white text-muted-foreground flex items-center gap-2 rounded-2xl px-4 py-3 text-sm">
-            <Target className="text-primary h-5 w-5" /> Foco: Universidad Siglo 21
-          </div>
-        </div>
-        {!hasNewFunnelData ? (
-          <div className="border-border bg-white mt-6 rounded-2xl border border-dashed p-5">
-            <p className="text-foreground font-semibold">Todavía no hay datos del nuevo funnel</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Los eventos empiezan a acumularse después de publicar esta versión.
-            </p>
-          </div>
-        ) : null}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Simuladores listos"
-            value={String(totalReady)}
-            detail="Sesiones con preguntas cargadas"
-          />
-          <MetricCard
-            label="Tasa de inicio"
-            value={formatPercentage(startRate)}
-            detail={`${totalStarted} comenzaron`}
-          />
-          <MetricCard
-            label="Activación"
-            value={formatPercentage(activationRate)}
-            detail={`${totalActivated} llegaron a 10`}
-          />
-          <MetricCard
-            label="Finalizados"
-            value={String(totalFinished)}
-            detail="Completaron el simulador"
-          />
-        </div>
-      </section>
-
-      <section aria-labelledby="materias-prioritarias-title">
-        <h2 id="materias-prioritarias-title" className="text-foreground mb-3 text-lg font-bold">
-          Dónde se pierde el estudiante
-        </h2>
-        <div className="grid gap-4 xl:grid-cols-2">
-          {stats.focusSubjects.map((subject) => (
-            <SubjectFunnel key={`${subject.id}-${subject.parcial}`} subject={subject} />
           ))}
         </div>
-      </section>
 
-      <section className="border-border bg-card rounded-3xl border p-5 shadow-sm sm:p-7">
-        <div className="flex items-start gap-3">
-          <div className="bg-primary/10 text-primary rounded-2xl p-3">
-            <Share2 className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-foreground text-lg font-bold">Crecimiento por links compartidos</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Cada link se sigue desde que se comparte hasta registro. Los datos comienzan con esta
-              versión.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <MetricCard
-            label="Links compartidos"
-            value={String(stats.sharing.shares)}
-            detail={`${stats.sharing.authenticatedShares} con usuario · ${stats.sharing.anonymousShares} anónimos`}
-          />
-          <MetricCard
-            label="Ingresos por link"
-            value={String(stats.sharing.referredVisits)}
-            detail="Sesiones atribuidas"
-          />
-          <MetricCard
-            label="Comenzaron"
-            value={String(stats.sharing.started)}
-            detail={`${formatPercentage(percentage(stats.sharing.started, stats.sharing.referredVisits))} de los ingresos`}
-          />
-          <MetricCard
-            label="Finalizaron"
-            value={String(stats.sharing.finished)}
-            detail="Simuladores terminados"
-          />
-          <MetricCard
-            label="Se registraron"
-            value={String(stats.sharing.registered)}
-            detail="Registros atribuidos"
-          />
-        </div>
-
-        <div className="mt-6 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
-          <article className="border-border rounded-2xl border p-4">
-            <h3 className="text-foreground font-bold">Usuarios que más crecimiento generan</h3>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Ordenados por registros, inicios, ingresos y cantidad compartida.
-            </p>
-            <div className="mt-4 space-y-2">
-              {stats.sharing.topSharers.length > 0 ? (
-                stats.sharing.topSharers.map((user) => (
-                  <div
-                    key={user.userId}
-                    className="bg-white grid gap-1 rounded-xl px-3 py-3 text-sm sm:grid-cols-[minmax(0,1fr)_auto]"
-                  >
-                    <span className="text-foreground truncate font-medium">{user.email}</span>
-                    <span className="text-muted-foreground">
-                      {user.shares} links · {user.referredVisits} ingresos · {user.started} inicios
-                      · {user.registered} registros
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  Todavía no hay usuarios registrados que hayan compartido.
+        {data.biggestDrop ? (
+          <div className="mt-4 flex items-center justify-between gap-5 rounded-[16px] border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+              <div>
+                <p className="text-xs font-bold text-amber-900">Mayor fuga del período</p>
+                <p className="mt-1 text-sm text-amber-800">
+                  {data.biggestDrop.from} → {data.biggestDrop.to}: se pierde {data.biggestDrop.dropPct}%.
                 </p>
-              )}
-            </div>
-          </article>
-
-          <article className="border-border rounded-2xl border p-4">
-            <h3 className="text-foreground font-bold">Rendimiento de los últimos links</h3>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Permite detectar qué materia, parcial y usuario generan visitas útiles.
-            </p>
-            <div className="mt-4 max-h-[360px] space-y-2 overflow-y-auto pr-1">
-              {stats.sharing.links.length > 0 ? (
-                stats.sharing.links.map((link) => (
-                  <div key={link.shareId} className="bg-white rounded-xl px-3 py-3 text-sm">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-foreground truncate font-medium">{link.email}</p>
-                        <p className="text-muted-foreground truncate text-xs">
-                          {link.materia} · Parcial {link.parcial} ·{' '}
-                          {link.kind === 'resultado' ? 'Resultado' : 'Preguntero'}
-                        </p>
-                      </div>
-                      <span className="text-muted-foreground shrink-0 text-xs">
-                        {new Date(link.createdAt).toLocaleDateString('es-AR')}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mt-2 text-xs">
-                      {link.visits} ingresos · {link.started} inicios · {link.finished} finalizados
-                      · {link.registered} registros ·{' '}
-                      {link.method === 'copy_link' ? 'Copiado' : 'Compartir del dispositivo'}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  Todavía no se compartieron links medibles.
-                </p>
-              )}
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-3">
-        <article className="border-border bg-card rounded-3xl border p-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <UserPlus className="text-primary h-5 w-5" />
-            <h2 className="text-foreground font-bold">Conversión del gate</h2>
-          </div>
-          <p className="text-foreground mt-4 text-3xl font-bold">
-            {formatPercentage(stats.gate.conversionRatePct)}
-          </p>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {stats.gate.converted} de {stats.gate.reached} sesiones completaron el acceso.
-          </p>
-        </article>
-        <article className="border-border bg-card rounded-3xl border p-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="text-primary h-5 w-5" />
-            <h2 className="text-foreground font-bold">Retención día 7</h2>
-          </div>
-          <p className="text-foreground mt-4 text-3xl font-bold">
-            {stats.retention.day7Cohort >= 10
-              ? formatPercentage(stats.retention.day7RetentionPct)
-              : 'Muestra insuficiente'}
-          </p>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {stats.retention.activeDay7} de {stats.retention.day7Cohort} estudiantes volvieron.
-          </p>
-        </article>
-        <article className="border-border bg-card rounded-3xl border p-5 shadow-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="text-primary h-5 w-5" />
-            <h2 className="text-foreground font-bold">Uso repetido</h2>
-          </div>
-          <p className="text-foreground mt-4 text-3xl font-bold">
-            {formatPercentage(stats.retention.twoPlusPct)}
-          </p>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {stats.retention.usersWith2PlusSimulators} hicieron dos o más simuladores.
-          </p>
-        </article>
-      </section>
-
-      <section className="border-border bg-card rounded-3xl border p-5 shadow-sm">
-        <h2 className="text-foreground font-bold">Origen de los registros</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Solo fuentes con registros reales en el período.
-        </p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {stats.signupSources.length > 0 ? (
-            stats.signupSources.map((source) => (
-              <div
-                key={source.label}
-                className="bg-white flex items-center justify-between rounded-xl px-4 py-3 text-sm"
-              >
-                <span className="text-muted-foreground">{source.label}</span>
-                <strong className="text-foreground">{source.value}</strong>
               </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground text-sm">Sin registros en este período.</p>
-          )}
-        </div>
+            </div>
+            <span className="shrink-0 text-xs font-semibold text-amber-800">
+              {data.biggestDrop.lost} usuarios
+            </span>
+          </div>
+        ) : null}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <article className="border-border bg-card rounded-3xl border p-5 shadow-sm">
-          <h2 className="text-foreground font-bold">Canales que traen estudiantes activados</h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Compara simuladores listos con sesiones que alcanzaron 10 respuestas.
-          </p>
-          <div className="mt-4 space-y-3">
-            {stats.acquisitionChannels.length > 0 ? (
-              stats.acquisitionChannels.map((item) => (
-                <div
-                  key={item.channel}
-                  className="bg-white grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl px-4 py-3 text-sm"
-                >
-                  <span className="text-foreground font-medium">{item.channel}</span>
-                  <span className="text-muted-foreground">
-                    {item.activated}/{item.ready}
-                  </span>
-                  <strong className="text-primary">{formatPercentage(item.activationPct)}</strong>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground text-sm">Todavía no hay campañas etiquetadas.</p>
-            )}
+      <div className="grid grid-cols-[1.35fr_0.9fr] gap-4">
+        <section className="rounded-[22px] border border-slate-200 bg-white p-5">
+          <div>
+            <p className="text-[12px] font-bold tracking-[0.13em] text-slate-500 uppercase">Cohortes</p>
+            <h3 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">Nuevos por día</h3>
           </div>
-        </article>
-        <article className="border-border bg-card rounded-3xl border p-5 shadow-sm">
-          <h2 className="text-foreground font-bold">Qué necesitan los estudiantes</h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Respuestas recibidas en el gate y al terminar.
-          </p>
-          <div className="mt-4 space-y-3">
-            {stats.needsFeedback.length > 0 ? (
-              stats.needsFeedback.map((item) => (
-                <div
-                  key={item.reason}
-                  className="bg-white flex items-center justify-between rounded-xl px-4 py-3 text-sm"
-                >
-                  <span className="text-foreground">
-                    {{
-                      more_questions: 'Más preguntas',
-                      better_explanations: 'Mejores explicaciones',
-                      summaries: 'Resúmenes',
-                      exam_similarity: 'Preguntas más parecidas al parcial',
-                      confusing_experience: 'Una experiencia más clara',
-                    }[item.reason] ?? item.reason}
-                  </span>
-                  <strong className="text-foreground">{item.value}</strong>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground text-sm">Todavía no recibimos respuestas.</p>
-            )}
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[660px] text-left text-[12px]">
+              <thead className="border-b border-slate-200 text-slate-500">
+                <tr>
+                  <th className="pb-2 font-semibold">Fecha</th>
+                  <th className="pb-2 text-right font-semibold">Registro</th>
+                  <th className="pb-2 text-right font-semibold">Materia</th>
+                  <th className="pb-2 text-right font-semibold">Disponible</th>
+                  <th className="pb-2 text-right font-semibold">Abrió</th>
+                  <th className="pb-2 text-right font-semibold">Estudió</th>
+                  <th className="pb-2 text-right font-semibold">Volvió</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.cohorts.map((row) => (
+                  <tr key={row.date}>
+                    <td className="py-2.5 font-semibold text-slate-800">{row.label}</td>
+                    <td className="py-2.5 text-right text-slate-600">{row.registered}</td>
+                    <td className="py-2.5 text-right text-slate-600">{row.materia}</td>
+                    <td className="py-2.5 text-right text-slate-600">{row.available}</td>
+                    <td className="py-2.5 text-right text-slate-600">{row.opened}</td>
+                    <td className="py-2.5 text-right font-semibold text-slate-900">{row.meaningful}</td>
+                    <td className="py-2.5 text-right text-slate-600">{row.returned}</td>
+                  </tr>
+                ))}
+                {data.cohorts.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-slate-500">
+                      Todavía no hay registros en este período.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
           </div>
-        </article>
+        </section>
+
+        <section className="rounded-[22px] border border-slate-200 bg-white p-5">
+          <div>
+            <p className="text-[12px] font-bold tracking-[0.13em] text-slate-500 uppercase">Adquisición</p>
+            <h3 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">Qué fuente trae usuarios útiles</h3>
+          </div>
+          <div className="mt-4 space-y-2">
+            {data.acquisition.slice(0, 8).map((row) => (
+              <div key={row.source} className="rounded-[15px] border border-slate-100 bg-slate-50/50 px-3 py-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="truncate text-sm font-semibold text-slate-800">{row.source}</span>
+                  <span className="text-xs font-bold text-slate-900">{row.activationPct}%</span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-3 text-[11px] text-slate-500">
+                  <span>{row.registrations} registros</span>
+                  <span>{row.materia} materia</span>
+                  <span>{row.meaningful} estudiaron</span>
+                </div>
+              </div>
+            ))}
+            {data.acquisition.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-500">Sin adquisición para mostrar.</p>
+            ) : null}
+          </div>
+        </section>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <section className="rounded-[22px] border border-slate-200 bg-white p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[12px] font-bold tracking-[0.13em] text-slate-500 uppercase">Cobertura de contenido</p>
+              <h3 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">Materias que frenan activación</h3>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold tracking-[-0.05em] text-slate-950">{data.coverage.emptyUsers}</p>
+              <p className="text-[11px] text-slate-500">sin contenido</p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-2">
+            {data.coverage.topEmptyMaterias.map((row) => (
+              <div key={row.materiaId} className="flex items-center justify-between gap-3 border-b border-slate-100 py-2 last:border-0">
+                <span className="truncate text-sm text-slate-700">{row.name}</span>
+                <span className="shrink-0 rounded-full bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700">
+                  {row.users} usuarios
+                </span>
+              </div>
+            ))}
+            {data.coverage.topEmptyMaterias.length === 0 ? (
+              <p className="py-6 text-center text-sm text-slate-500">No detectamos materias vacías en este período.</p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="rounded-[22px] border border-slate-200 bg-white p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[12px] font-bold tracking-[0.13em] text-slate-500 uppercase">PDF propio</p>
+              <h3 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">Selección → subida terminada</h3>
+            </div>
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+              <FileUp className="h-5 w-5" />
+            </span>
+          </div>
+          <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div className="rounded-[16px] bg-slate-50 p-4 text-center">
+              <p className="text-2xl font-bold text-slate-950">{data.pdf.selectedUsers}</p>
+              <p className="mt-1 text-xs text-slate-500">eligieron PDF</p>
+            </div>
+            <ArrowRight className="h-5 w-5 text-slate-300" />
+            <div className="rounded-[16px] bg-indigo-50 p-4 text-center">
+              <p className="text-2xl font-bold text-indigo-950">{data.pdf.completedUsers}</p>
+              <p className="mt-1 text-xs text-indigo-600">subidas</p>
+            </div>
+          </div>
+          <p className="mt-4 text-center text-sm font-semibold text-slate-700">
+            Conversión: {data.pdf.selectedUsers > 0 ? `${data.pdf.conversionPct}%` : 'sin datos nuevos todavía'}
+          </p>
+        </section>
+      </div>
+
+      <section className="rounded-[22px] border border-slate-200 bg-white p-5">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[12px] font-bold tracking-[0.13em] text-slate-500 uppercase">Diagnóstico individual</p>
+            <h3 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">Usuarios nuevos y recorrido</h3>
+            <p className="mt-1 text-xs text-slate-500">Sólo visible dentro del administrador.</p>
+          </div>
+          <span className="text-xs text-slate-500">Últimos {Math.min(50, data.users.length)}</span>
+        </div>
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full min-w-[1120px] text-left text-[12px]">
+            <thead className="border-b border-slate-200 text-slate-500">
+              <tr>
+                <th className="pb-2 font-semibold">Usuario</th>
+                <th className="pb-2 font-semibold">Registro</th>
+                <th className="pb-2 font-semibold">Fuente</th>
+                <th className="pb-2 font-semibold">Materia</th>
+                <th className="pb-2 text-center font-semibold">Disponible</th>
+                <th className="pb-2 text-center font-semibold">Abrió</th>
+                <th className="pb-2 text-center font-semibold">Estudió</th>
+                <th className="pb-2 text-center font-semibold">Volvió</th>
+                <th className="pb-2 text-right font-semibold">Sim.</th>
+                <th className="pb-2 text-right font-semibold">PDF</th>
+                <th className="pb-2 text-right font-semibold">Días</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {data.users.map((row) => (
+                <tr key={row.userId}>
+                  <td className="max-w-[220px] truncate py-2.5 font-semibold text-slate-800">{row.email}</td>
+                  <td className="py-2.5 text-slate-500">{formatSignup(row.registeredAt)}</td>
+                  <td className="py-2.5 text-slate-600">{row.source}</td>
+                  <td className="max-w-[180px] truncate py-2.5 text-slate-600">{row.materiaName ?? '—'}</td>
+                  <td className="py-2.5 text-center"><BooleanStatus value={row.contentAvailable} /></td>
+                  <td className="py-2.5 text-center"><BooleanStatus value={row.contentOpened} /></td>
+                  <td className="py-2.5 text-center"><BooleanStatus value={row.meaningfulStudy} /></td>
+                  <td className="py-2.5 text-center"><BooleanStatus value={row.returned48h} /></td>
+                  <td className="py-2.5 text-right text-slate-600">{row.simulatorAttempts}</td>
+                  <td className="py-2.5 text-right text-slate-600">{row.pdfUploads}</td>
+                  <td className="py-2.5 text-right font-semibold text-slate-800">{row.activeDays}</td>
+                </tr>
+              ))}
+              {data.users.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-10 text-center text-sm text-slate-500">
+                    No hay usuarios nuevos en este período.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );
