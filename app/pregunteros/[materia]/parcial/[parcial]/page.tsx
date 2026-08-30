@@ -1,10 +1,19 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { ArrowRight, BookOpen, HelpCircle, ListChecks, Sparkles, Target } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  HelpCircle,
+  ListChecks,
+  Sparkles,
+  Target,
+} from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildPregunteroParcialSearchTitle } from '@/lib/seo-search-copy';
 import { appendPregunteroAttribution } from '@/lib/preguntero-attribution';
 import {
   buildParcialHref,
@@ -38,15 +47,15 @@ function buildParcialDescription(input: {
 }) {
   const context = [input.carreraNombre, input.universidadNombre].filter(Boolean).join(' en ');
   const parcialLabel =
-    input.parcial === 'integrador' ? 'examen integrador' : `parcial ${input.parcial}`;
+    input.parcial === 'integrador' ? 'integrador' : `parcial ${input.parcial}`;
   const base =
     input.totalPreguntas > 0
-      ? `Practicá con ${input.totalPreguntas.toLocaleString('es-AR')} preguntas del ${parcialLabel} de ${input.materiaNombre}`
+      ? `${input.totalPreguntas.toLocaleString('es-AR')} preguntas para practicar el ${parcialLabel} de ${input.materiaNombre}`
       : `Practicá el ${parcialLabel} de ${input.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}. Descubrí qué reforzar y entendé por qué te equivocaste.`
-    : `${base}. Descubrí qué reforzar y entendé por qué te equivocaste.`;
+    ? `${base} para ${context}. Simulá el examen y revisá tus errores en Evaluo.`
+    : `${base}. Simulá el examen y revisá tus errores en Evaluo.`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -71,8 +80,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     universidadNombre: data.universidadNombre,
     totalPreguntas: data.totalPreguntas,
   });
-  const baseTitle = buildParcialTitle(data.materiaNombre, data.parcial);
-  const seoTitle = data.universidadNombre ? `${baseTitle} - ${data.universidadNombre}` : baseTitle;
+  const seoTitle = buildPregunteroParcialSearchTitle({
+    materiaNombre: data.materiaNombre,
+    parcial: data.parcial,
+    universityName: data.universidadNombre,
+  });
 
   return {
     title: seoTitle,
@@ -113,6 +125,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
 
   const canonicalHref = buildParcialHref(data.materiaNombre, data.materiaId, data.parcial);
   const expectedMateriaSlug = buildSeoEntitySlug(data.materiaNombre, data.materiaId);
+  const pregunteroHref = `/pregunteros/${expectedMateriaSlug}`;
   if (resolvedParams.materia !== expectedMateriaSlug) {
     redirect(appendPregunteroAttribution(canonicalHref, resolvedSearchParams));
   }
@@ -132,7 +145,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
           { name: 'Pregunteros', path: '/pregunteros' },
           {
             name: `Preguntero de ${data.materiaNombre}`,
-            path: `/pregunteros/${expectedMateriaSlug}`,
+            path: pregunteroHref,
           },
           { name: buildParcialTitle(data.materiaNombre, data.parcial), path: canonicalHref },
         ])}
@@ -140,7 +153,14 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
 
       <section className="border-border bg-card border-b">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="bg-brand/10 text-brand inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
+          <Link
+            href={pregunteroHref}
+            className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-sm font-semibold transition"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Preguntero de {data.materiaNombre}
+          </Link>
+          <p className="bg-brand/10 text-brand mt-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
             <ListChecks className="h-4 w-4" />
             Preguntero · {label}
           </p>
@@ -259,19 +279,25 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
 
             <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
               <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
-                Ver la materia completa
+                Seguir con {data.materiaNombre}
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
-                Accedé a los resúmenes por módulo, otros parciales y el material completo de la
-                materia.
+                Volvé al preguntero completo, revisá resúmenes o entrá a la materia para seguir estudiando.
               </p>
               <div className="mt-5 flex flex-col gap-3">
+                <Link
+                  href={pregunteroHref}
+                  className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+                >
+                  <ListChecks className="h-5 w-5" />
+                  Ver preguntero completo
+                </Link>
                 <Link
                   href={materiaHref}
                   className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
                 >
                   <BookOpen className="h-5 w-5" />
-                  Entrar a {data.materiaNombre}
+                  Entrar a la materia
                 </Link>
                 <Link
                   href={`/resumenes/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`}
