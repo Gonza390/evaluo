@@ -129,8 +129,6 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
     carreraNombre: carrera.nombre,
   });
 
-  const highlightedMaterias = materias.slice(0, 8);
-
   return (
     <main className="min-h-screen bg-white">
       <JsonLd
@@ -172,7 +170,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
                 {materias.length} materias visibles
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Recorre el plan disponible y entra directo a las materias más buscadas.
+                Recorre el plan disponible y entra directo a cada materia desde esta misma guía.
               </p>
             </article>
             <article className="rounded-3xl border border-slate-200 bg-white px-5 py-5">
@@ -199,7 +197,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-bold tracking-[-0.04em] text-slate-950">
               Qué vas a encontrar para {carrera.nombre}
@@ -207,8 +205,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             <div className="mt-5 space-y-4">
               <p className="text-sm leading-7 text-slate-600">
                 Esta guía reúne una entrada clara para quienes buscan estudiar {carrera.nombre} en{' '}
-                {universidad.nombre}. Desde aquí podés pasar al catálogo de materias, revisar
-                recursos de estudio y descubrir cómo practicar con el simulador.
+                {universidad.nombre}. Desde acá podés entrar a las materias, revisar recursos y pasar a los simuladores.
               </p>
               {officialProfile ? (
                 <p className="text-sm leading-7 text-slate-600">
@@ -228,7 +225,7 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href={`/materias?carreraId=${encodeURIComponent(carrera.id)}`}
+                href="#materias"
                 className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
               >
                 Ver materias de {carrera.nombre}
@@ -242,19 +239,22 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
             </div>
           </div>
 
-          <aside className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <aside id="materias" className="scroll-mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">
-              Materias para empezar
+              Materias de {carrera.nombre}
             </h2>
-            <div className="mt-5 space-y-3">
-              {highlightedMaterias.map((materia) => (
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Elegí una materia para ver pregunteros, resúmenes y recursos disponibles.
+            </p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {materias.map((materia) => (
                 <Link
                   key={materia.id}
-                  href={`/explorar/materia/${materia.id}?carreraId=${encodeURIComponent(carrera.id)}`}
+                  href={`/explorar/materia/${buildSeoEntitySlug(materia.nombre, materia.id)}`}
                   className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
                   <p className="text-sm font-semibold text-slate-900">{materia.nombre}</p>
-                  <p className="mt-1 text-xs text-slate-600">Ver resúmenes, recursos y simulador</p>
+                  <p className="mt-1 text-xs text-slate-600">Ver material y práctica</p>
                 </Link>
               ))}
             </div>
