@@ -9,7 +9,11 @@ import {
   getAnalyticsPageType,
   getAnalyticsSessionKey,
 } from '@/lib/analytics-client';
+import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 import { useUser } from '@/hooks/useUser';
+
+const PDF_UPLOAD_INTENT_KEY = 'evaluo_pdf_upload_intent';
+const PDF_UPLOAD_INTENT_TTL_MS = 30 * 60 * 1000;
 
 function getRouteContext() {
   const params = new URLSearchParams(window.location.search);
@@ -25,6 +29,31 @@ function getRouteContext() {
     ...(universidadId ? { universidad_id: universidadId } : {}),
     ...(tab ? { tab } : {}),
   };
+}
+
+function getStudyContentType(pathname: string) {
+  if (pathname.startsWith('/materiales/')) return 'student_material';
+  if (pathname.startsWith('/recursos/')) return 'resource';
+  if (pathname.startsWith('/resumenes/')) return 'summary';
+  if (pathname.startsWith('/estudiar/')) return 'study';
+  return null;
+}
+
+function getUuidFromPath(pathname: string) {
+  const match = pathname.match(
+    /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i
+  );
+  return match?.[0] ?? null;
+}
+
+function getMateriaIdFromPath(pathname: string) {
+  if (!pathname.startsWith('/explorar/materia/')) return null;
+  return getUuidFromPath(pathname);
+}
+
+function getStudentMaterialIdFromPath(pathname: string) {
+  if (!pathname.startsWith('/materiales/')) return null;
+  return getUuidFromPath(pathname);
 }
 
 async function track(eventName: string, payload: Record<string, unknown>) {
@@ -67,9 +96,115 @@ export default function AnalyticsTracker() {
       path: pathname,
       device_type: deviceType,
       user_id: user?.id ?? null,
-      metadata: attribution || Object.keys(routeContext).length > 0 ? { attribution, ...routeContext } : undefined,
+      metadata:
+        attribution || Object.keys(routeContext).length > 0
+          ? { attribution, ...routeContext }
+          : undefined,
     });
+
+    const acquisitionKey = `evaluo_acquisition_touch:${sessionKey}`;
+    if (!window.sessionStorage.getItem(acquisitionKey)) {
+      window.sessionStorage.setItem(acquisitionKey, '1');
+      void trackProductAnalyticsEvent('acquisition_touch', {
+        entry_page_type: getAnalyticsPageType(pathname),
+      });
+    }
   }, [loading, pathname, queryString, user?.id]);
+
+  useEffect(() => {
+    const materiaId = getMateriaIdFromPath(pathname);
+    if (!materiaId) return;
+
+    let active = true;
+    void fetch(`/api/analytics/content-availability?materia_id=${encodeURIComponent(materiaId)}`)
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return (await response.json()) as {
+          available?: boolean;
+          resumenCount?: number;
+          sharedMaterialCount?: number;
+        };
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        void trackProductAnalyticsEvent(payload.available ? 'content_available' : 'content_empty', {
+          materia_id: materiaId,
+          resumen_count: payload.resumenCount ?? 0,
+          shared_material_count: payload.sharedMaterialCount ?? 0,
+        });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!pathname.startsWith('/dashboard/materiales')) return;
+
+    const handleFileSelection = (event: Event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
+
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      if (!isPdf) return;
+
+      const selectedAt = Date.now();
+      try {
+        window.sessionStorage.setItem(
+          PDF_UPLOAD_INTENT_KEY,
+          JSON.stringify({ selectedAt, sourcePath: pathname, fileSizeBytes: file.size })
+        );
+      } catch {
+        // Storage is optional; the selection event can still be recorded.
+      }
+
+      void trackProductAnalyticsEvent('pdf_file_selected', {
+        source_path: pathname,
+        file_size_bytes: file.size,
+      });
+    };
+
+    document.addEventListener('change', handleFileSelection, true);
+    return () => document.removeEventListener('change', handleFileSelection, true);
+  }, [pathname]);
+
+  useEffect(() => {
+    const materialId = getStudentMaterialIdFromPath(pathname);
+    if (!materialId) return;
+
+    try {
+      const rawIntent = window.sessionStorage.getItem(PDF_UPLOAD_INTENT_KEY);
+      if (!rawIntent) return;
+
+      const intent = JSON.parse(rawIntent) as {
+        selectedAt?: number;
+        sourcePath?: string;
+        fileSizeBytes?: number;
+      };
+      const selectedAt = Number(intent.selectedAt ?? 0);
+      const elapsedMs = selectedAt > 0 ? Date.now() - selectedAt : Number.POSITIVE_INFINITY;
+
+      if (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs > PDF_UPLOAD_INTENT_TTL_MS) {
+        window.sessionStorage.removeItem(PDF_UPLOAD_INTENT_KEY);
+        return;
+      }
+
+      window.sessionStorage.removeItem(PDF_UPLOAD_INTENT_KEY);
+      void trackProductAnalyticsEvent('pdf_upload_completed', {
+        material_id: materialId,
+        source_path: intent.sourcePath ?? '/dashboard/materiales',
+        file_size_bytes: Number(intent.fileSizeBytes ?? 0),
+        elapsed_ms: elapsedMs,
+      });
+    } catch {
+      window.sessionStorage.removeItem(PDF_UPLOAD_INTENT_KEY);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (loading) {
@@ -127,6 +262,50 @@ export default function AnalyticsTracker() {
   }, [loading, pathname, user?.id]);
 
   useEffect(() => {
+    const contentType = getStudyContentType(pathname);
+    if (!contentType || pathname.startsWith('/demo/')) return;
+
+    void trackProductAnalyticsEvent('study_content_opened', {
+      content_type: contentType,
+    });
+
+    let activeMs = 0;
+    let lastTick = Date.now();
+    let completed = false;
+
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+      if (document.visibilityState === 'visible' && document.hasFocus()) {
+        activeMs += Math.max(0, now - lastTick);
+      }
+      lastTick = now;
+
+      if (!completed && activeMs >= 90_000) {
+        completed = true;
+        void trackProductAnalyticsEvent('meaningful_study_completed', {
+          content_type: contentType,
+          criterion: 'active_90s',
+          active_ms: activeMs,
+        });
+      }
+    }, 1_000);
+
+    const resetTick = () => {
+      lastTick = Date.now();
+    };
+    document.addEventListener('visibilitychange', resetTick);
+    window.addEventListener('focus', resetTick);
+    window.addEventListener('blur', resetTick);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', resetTick);
+      window.removeEventListener('focus', resetTick);
+      window.removeEventListener('blur', resetTick);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
     const sessionKey = getAnalyticsSessionKey();
     const deviceType = getAnalyticsDeviceType();
     const attribution = getAttributionSnapshot();
@@ -144,7 +323,12 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { engagement_ms: engagementMs, attribution, anonymous_id: anonymousId, page_type: pageType },
+        metadata: {
+          engagement_ms: engagementMs,
+          attribution,
+          anonymous_id: anonymousId,
+          page_type: pageType,
+        },
       });
     };
 
@@ -191,7 +375,12 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { engagement_ms: engagementMs, attribution, anonymous_id: anonymousId, page_type: pageType },
+        metadata: {
+          engagement_ms: engagementMs,
+          attribution,
+          anonymous_id: anonymousId,
+          page_type: pageType,
+        },
       });
 
       document.removeEventListener('visibilitychange', handleVisibility);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Copy, Share2, UserRound } from 'lucide-react';
+import { BadgeCheck, Check, Copy, Share2, UserRound } from 'lucide-react';
 
 type StudentMaterialAuthorProps = {
   materialId: string;
@@ -10,6 +10,7 @@ type StudentMaterialAuthorProps = {
 
 export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps) {
   const [name, setName] = useState<string | null>(null);
+  const [featured, setFeatured] = useState(false);
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [hasOwnerShareControl, setHasOwnerShareControl] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -20,15 +21,19 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     void fetch(`/api/student-materials/${materialId}/author`)
       .then(async (response) => {
         if (!response.ok) return null;
-        return (await response.json()) as { name?: string | null };
+        return (await response.json()) as { name?: string | null; featured?: boolean };
       })
       .then((payload) => {
         if (!active) return;
         const nextName = payload?.name?.trim();
         setName(nextName || null);
+        setFeatured(Boolean(payload?.featured));
       })
       .catch(() => {
-        if (active) setName(null);
+        if (active) {
+          setName(null);
+          setFeatured(false);
+        }
       });
 
     return () => {
@@ -101,6 +106,12 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
       <span className="whitespace-nowrap">
         Subido por <span className="font-semibold text-slate-700">{name}</span>
       </span>
+      {featured ? (
+        <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 sm:text-[11px]">
+          <BadgeCheck className="h-3 w-3" aria-hidden="true" />
+          Colaborador destacado
+        </span>
+      ) : null}
     </div>,
     target
   );
