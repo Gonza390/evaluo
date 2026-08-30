@@ -12,6 +12,9 @@ import {
 import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 import { useUser } from '@/hooks/useUser';
 
+const PDF_UPLOAD_INTENT_KEY = 'evaluo_pdf_upload_intent';
+const PDF_UPLOAD_INTENT_TTL_MS = 30 * 60 * 1000;
+
 function getRouteContext() {
   const params = new URLSearchParams(window.location.search);
   const carreraId = params.get('carreraId') ?? params.get('carrera_id');
@@ -36,12 +39,21 @@ function getStudyContentType(pathname: string) {
   return null;
 }
 
-function getMateriaIdFromPath(pathname: string) {
-  if (!pathname.startsWith('/explorar/materia/')) return null;
+function getUuidFromPath(pathname: string) {
   const match = pathname.match(
     /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i
   );
   return match?.[0] ?? null;
+}
+
+function getMateriaIdFromPath(pathname: string) {
+  if (!pathname.startsWith('/explorar/materia/')) return null;
+  return getUuidFromPath(pathname);
+}
+
+function getStudentMaterialIdFromPath(pathname: string) {
+  if (!pathname.startsWith('/materiales/')) return null;
+  return getUuidFromPath(pathname);
 }
 
 async function track(eventName: string, payload: Record<string, unknown>) {
@@ -126,6 +138,72 @@ export default function AnalyticsTracker() {
     return () => {
       active = false;
     };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!pathname.startsWith('/dashboard/materiales')) return;
+
+    const handleFileSelection = (event: Event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
+
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const isPdf = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+      if (!isPdf) return;
+
+      const selectedAt = Date.now();
+      try {
+        window.sessionStorage.setItem(
+          PDF_UPLOAD_INTENT_KEY,
+          JSON.stringify({ selectedAt, sourcePath: pathname, fileSizeBytes: file.size })
+        );
+      } catch {
+        // Storage is optional; the selection event can still be recorded.
+      }
+
+      void trackProductAnalyticsEvent('pdf_file_selected', {
+        source_path: pathname,
+        file_size_bytes: file.size,
+      });
+    };
+
+    document.addEventListener('change', handleFileSelection, true);
+    return () => document.removeEventListener('change', handleFileSelection, true);
+  }, [pathname]);
+
+  useEffect(() => {
+    const materialId = getStudentMaterialIdFromPath(pathname);
+    if (!materialId) return;
+
+    try {
+      const rawIntent = window.sessionStorage.getItem(PDF_UPLOAD_INTENT_KEY);
+      if (!rawIntent) return;
+
+      const intent = JSON.parse(rawIntent) as {
+        selectedAt?: number;
+        sourcePath?: string;
+        fileSizeBytes?: number;
+      };
+      const selectedAt = Number(intent.selectedAt ?? 0);
+      const elapsedMs = selectedAt > 0 ? Date.now() - selectedAt : Number.POSITIVE_INFINITY;
+
+      if (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs > PDF_UPLOAD_INTENT_TTL_MS) {
+        window.sessionStorage.removeItem(PDF_UPLOAD_INTENT_KEY);
+        return;
+      }
+
+      window.sessionStorage.removeItem(PDF_UPLOAD_INTENT_KEY);
+      void trackProductAnalyticsEvent('pdf_upload_completed', {
+        material_id: materialId,
+        source_path: intent.sourcePath ?? '/dashboard/materiales',
+        file_size_bytes: Number(intent.fileSizeBytes ?? 0),
+        elapsed_ms: elapsedMs,
+      });
+    } catch {
+      window.sessionStorage.removeItem(PDF_UPLOAD_INTENT_KEY);
+    }
   }, [pathname]);
 
   useEffect(() => {
