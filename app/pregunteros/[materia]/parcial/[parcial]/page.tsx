@@ -11,7 +11,6 @@ import {
   Target,
 } from 'lucide-react';
 import { PregunteroPersonasJuridicasExperiment } from '@/components/marketing/preguntero-personas-juridicas-experiment';
-import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
@@ -155,12 +154,6 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
     return (
       <main className="min-h-screen bg-white">
         <JsonLd data={breadcrumbData} />
-        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-          <PublicSiteHeader
-            primaryHref={`/login?mode=signup&next=${encodeURIComponent(canonicalHref)}`}
-            trackingLocation="preguntero_personas_juridicas_p1_header"
-          />
-        </div>
         <PregunteroPersonasJuridicasExperiment
           title={buildParcialTitle(data.materiaNombre, data.parcial)}
           materiaNombre={data.materiaNombre}
