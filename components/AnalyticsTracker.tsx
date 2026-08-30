@@ -9,6 +9,7 @@ import {
   getAnalyticsPageType,
   getAnalyticsSessionKey,
 } from '@/lib/analytics-client';
+import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 import { useUser } from '@/hooks/useUser';
 
 function getRouteContext() {
@@ -25,6 +26,14 @@ function getRouteContext() {
     ...(universidadId ? { universidad_id: universidadId } : {}),
     ...(tab ? { tab } : {}),
   };
+}
+
+function getStudyContentType(pathname: string) {
+  if (pathname.startsWith('/materiales/')) return 'student_material';
+  if (pathname.startsWith('/recursos/')) return 'resource';
+  if (pathname.startsWith('/resumenes/')) return 'summary';
+  if (pathname.startsWith('/estudiar/')) return 'study';
+  return null;
 }
 
 async function track(eventName: string, payload: Record<string, unknown>) {
@@ -67,8 +76,19 @@ export default function AnalyticsTracker() {
       path: pathname,
       device_type: deviceType,
       user_id: user?.id ?? null,
-      metadata: attribution || Object.keys(routeContext).length > 0 ? { attribution, ...routeContext } : undefined,
+      metadata:
+        attribution || Object.keys(routeContext).length > 0
+          ? { attribution, ...routeContext }
+          : undefined,
     });
+
+    const acquisitionKey = `evaluo_acquisition_touch:${sessionKey}`;
+    if (!window.sessionStorage.getItem(acquisitionKey)) {
+      window.sessionStorage.setItem(acquisitionKey, '1');
+      void trackProductAnalyticsEvent('acquisition_touch', {
+        entry_page_type: getAnalyticsPageType(pathname),
+      });
+    }
   }, [loading, pathname, queryString, user?.id]);
 
   useEffect(() => {
@@ -127,6 +147,50 @@ export default function AnalyticsTracker() {
   }, [loading, pathname, user?.id]);
 
   useEffect(() => {
+    const contentType = getStudyContentType(pathname);
+    if (!contentType || pathname.startsWith('/demo/')) return;
+
+    void trackProductAnalyticsEvent('study_content_opened', {
+      content_type: contentType,
+    });
+
+    let activeMs = 0;
+    let lastTick = Date.now();
+    let completed = false;
+
+    const timer = window.setInterval(() => {
+      const now = Date.now();
+      if (document.visibilityState === 'visible' && document.hasFocus()) {
+        activeMs += Math.max(0, now - lastTick);
+      }
+      lastTick = now;
+
+      if (!completed && activeMs >= 90_000) {
+        completed = true;
+        void trackProductAnalyticsEvent('meaningful_study_completed', {
+          content_type: contentType,
+          criterion: 'active_90s',
+          active_ms: activeMs,
+        });
+      }
+    }, 1_000);
+
+    const resetTick = () => {
+      lastTick = Date.now();
+    };
+    document.addEventListener('visibilitychange', resetTick);
+    window.addEventListener('focus', resetTick);
+    window.addEventListener('blur', resetTick);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', resetTick);
+      window.removeEventListener('focus', resetTick);
+      window.removeEventListener('blur', resetTick);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
     const sessionKey = getAnalyticsSessionKey();
     const deviceType = getAnalyticsDeviceType();
     const attribution = getAttributionSnapshot();
@@ -144,7 +208,12 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { engagement_ms: engagementMs, attribution, anonymous_id: anonymousId, page_type: pageType },
+        metadata: {
+          engagement_ms: engagementMs,
+          attribution,
+          anonymous_id: anonymousId,
+          page_type: pageType,
+        },
       });
     };
 
@@ -191,7 +260,12 @@ export default function AnalyticsTracker() {
         session_key: sessionKey,
         path: pathname,
         device_type: deviceType,
-        metadata: { engagement_ms: engagementMs, attribution, anonymous_id: anonymousId, page_type: pageType },
+        metadata: {
+          engagement_ms: engagementMs,
+          attribution,
+          anonymous_id: anonymousId,
+          page_type: pageType,
+        },
       });
 
       document.removeEventListener('visibilitychange', handleVisibility);
