@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { BookOpen, HelpCircle, ListChecks, Sparkles, Target } from 'lucide-react';
+import { ArrowLeft, BookOpen, HelpCircle, ListChecks, Sparkles, Target } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildPregunteroSearchTitle } from '@/lib/seo-search-copy';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
 import { buildShareCardPath } from '@/lib/share-card';
 
@@ -117,8 +118,8 @@ function buildPregunteroDescription(data: PregunteroData) {
       : `Practicá con preguntas disponibles de ${data.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}, con simulador de parcial y feedback en Evaluo.`
-    : `${base}, con simulador de parcial y feedback en Evaluo.`;
+    ? `${base} para ${context}, con parciales y simulador en Evaluo.`
+    : `${base}, con parciales y simulador en Evaluo.`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -135,9 +136,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const canonicalHref = buildPregunteroHref(data.materiaNombre, data.materiaId);
   const description = buildPregunteroDescription(data);
-  const seoTitle = data.universidadNombre
-    ? `Preguntero de ${data.materiaNombre} - ${data.universidadNombre}`
-    : `Preguntero de ${data.materiaNombre}`;
+  const seoTitle = buildPregunteroSearchTitle(data.materiaNombre, data.universidadNombre);
   const socialTitle = `${seoTitle} | Evaluo`;
   const socialImage = buildShareCardPath({
     kind: 'preguntero',
@@ -202,14 +201,21 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
-          { name: 'Explorar', path: '/explorar' },
+          { name: 'Pregunteros', path: '/pregunteros' },
           { name: `Preguntero de ${data.materiaNombre}`, path: canonicalHref },
         ])}
       />
 
       <section className="border-border bg-card border-b">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="bg-brand/10 text-brand inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
+          <Link
+            href="/pregunteros"
+            className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-sm font-semibold transition"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Todos los pregunteros
+          </Link>
+          <p className="bg-brand/10 text-brand mt-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
             <ListChecks className="h-4 w-4" />
             Preguntero
           </p>
@@ -217,7 +223,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
             Preguntero de {data.materiaNombre}
           </h1>
           {data.universidadNombre ? (
-            <p className="mt-2 text-sm font-semibold text-indigo-700">{data.universidadNombre}</p>
+            <p className="text-primary mt-2 text-sm font-semibold">{data.universidadNombre}</p>
           ) : null}
           <p className="text-muted-foreground mt-5 max-w-3xl text-base leading-8">
             {buildPregunteroDescription(data)}
@@ -282,8 +288,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
                 Simulá el parcial
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
-                Respondé las preguntas con tiempo límite, corregí al instante y recibí explicaciones
-                paso a paso en cada error.
+                Elegí el parcial arriba y pasá de las preguntas de muestra al simulador completo.
               </p>
               <Link
                 href={materiaHref}

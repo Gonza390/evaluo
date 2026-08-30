@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import { fetchSharedStudentMaterialsByCarrera } from '@/lib/data/student-materials';
 import { createPublicClient } from '@/lib/supabase-public';
+import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
 import type { Materia } from '@/services/api-server';
 import MateriaList from '@/components/materia-list';
@@ -31,7 +32,7 @@ export async function generateMetadata({
       title: 'Materias',
       robots: {
         index: false,
-        follow: false,
+        follow: true,
       },
     };
   }
@@ -43,32 +44,41 @@ export async function generateMetadata({
         title: 'Materias',
         robots: {
           index: false,
-          follow: false,
+          follow: true,
         },
       };
     }
     const universidadData = carreraData.universidad_id
       ? await getUniversidadById(carreraData.universidad_id)
       : null;
+    const canonicalHref = universidadData
+      ? `/estudiar/${buildSeoEntitySlug(universidadData.nombre, universidadData.id)}/${buildSeoEntitySlug(carreraData.nombre, carreraData.id)}`
+      : undefined;
 
     return {
       title: `${carreraData.nombre} | Materias`,
       description: `Explorá las materias de ${carreraData.nombre}${universidadData ? ` en ${universidadData.nombre}` : ''} y estudiá con materiales y simuladores en Evaluo.`,
-      alternates: {
-        canonical: `/materias?carreraId=${encodeURIComponent(carreraId)}`,
+      robots: {
+        index: false,
+        follow: true,
       },
-      openGraph: {
-        title: `${carreraData.nombre} | Evaluo`,
-        description: `Materias, recursos y simuladores para ${carreraData.nombre}.`,
-        url: `/materias?carreraId=${encodeURIComponent(carreraId)}`,
-      },
+      ...(canonicalHref
+        ? {
+            alternates: { canonical: canonicalHref },
+            openGraph: {
+              title: `${carreraData.nombre} | Evaluo`,
+              description: `Materias, recursos y simuladores para ${carreraData.nombre}.`,
+              url: canonicalHref,
+            },
+          }
+        : {}),
     };
   } catch {
     return {
       title: 'Materias',
       robots: {
         index: false,
-        follow: false,
+        follow: true,
       },
     };
   }
@@ -144,6 +154,11 @@ export default async function MateriasPage({
     );
   }
 
+  const careerCanonicalHref =
+    carreraData && universidadData
+      ? `/estudiar/${buildSeoEntitySlug(universidadData.nombre, universidadData.id)}/${buildSeoEntitySlug(carreraData.nombre, carreraData.id)}`
+      : `/materias?carreraId=${encodeURIComponent(carreraId)}`;
+
   return (
     <>
       {carreraData ? (
@@ -156,7 +171,7 @@ export default async function MateriasPage({
               : []),
             {
               name: carreraData.nombre,
-              path: `/materias?carreraId=${encodeURIComponent(carreraId)}`,
+              path: careerCanonicalHref,
             },
           ])}
         />

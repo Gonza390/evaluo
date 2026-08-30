@@ -96,6 +96,9 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
   const universidad = carrera.universidad_id ? await getUniversidadById(carrera.universidad_id) : null;
   const materias = await getMateriasByCarrera(carrera.id);
   const canonicalHref = buildSimulatorHref(carrera.nombre, carrera.id);
+  const careerStudyHref = universidad
+    ? `/estudiar/${buildSeoEntitySlug(universidad.nombre, universidad.id)}/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`
+    : '/explorar';
 
   if (resolvedParams.carrera !== buildSeoEntitySlug(carrera.nombre, carrera.id)) {
     redirect(canonicalHref);
@@ -173,14 +176,14 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href={`/materias?carreraId=${encodeURIComponent(carrera.id)}`}
+                href={`${careerStudyHref}#materias`}
                 className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
               >
                 Ver materias de {carrera.nombre}
               </Link>
               {universidad ? (
                 <Link
-                  href={`/estudiar/${buildSeoEntitySlug(universidad.nombre, universidad.id)}/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`}
+                  href={careerStudyHref}
                   className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-950"
                 >
                   Ver guía de carrera
@@ -195,7 +198,7 @@ export default async function CareerSimulatorIntentPage({ params }: PageProps) {
               {materias.slice(0, 8).map((materia) => (
                 <Link
                   key={materia.id}
-                  href={`/explorar/materia/${materia.id}?carreraId=${encodeURIComponent(carrera.id)}`}
+                  href={`/explorar/materia/${buildSeoEntitySlug(materia.nombre, materia.id)}`}
                   className="block rounded-2xl border border-slate-200 px-4 py-3 transition hover:border-[#BFDBFE] hover:bg-white"
                 >
                   <p className="text-sm font-semibold text-slate-900">{materia.nombre}</p>
