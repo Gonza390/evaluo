@@ -10,6 +10,7 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react';
+import { PregunteroPersonasJuridicasExperiment } from '@/components/marketing/preguntero-personas-juridicas-experiment';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
@@ -23,6 +24,8 @@ import {
 } from '@/lib/data/preguntero';
 
 export const revalidate = 600;
+
+const PERSONAS_JURIDICAS_MATERIA_ID = '5a10b059-546d-41a1-8ed8-d9fb1dd7581d';
 
 type PageProps = {
   params: Promise<{
@@ -136,20 +139,44 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
     resolvedSearchParams
   );
   const materiaHref = `/explorar/materia/${expectedMateriaSlug}`;
+  const resumenHref = `/resumenes/${expectedMateriaSlug}`;
+  const breadcrumbData = buildBreadcrumbJsonLd([
+    { name: 'Inicio', path: '/' },
+    { name: 'Pregunteros', path: '/pregunteros' },
+    {
+      name: `Preguntero de ${data.materiaNombre}`,
+      path: pregunteroHref,
+    },
+    { name: buildParcialTitle(data.materiaNombre, data.parcial), path: canonicalHref },
+  ]);
+
+  if (data.materiaId === PERSONAS_JURIDICAS_MATERIA_ID && data.parcial === '1') {
+    return (
+      <main className="min-h-screen bg-white">
+        <JsonLd data={breadcrumbData} />
+        <PregunteroPersonasJuridicasExperiment
+          title={buildParcialTitle(data.materiaNombre, data.parcial)}
+          materiaNombre={data.materiaNombre}
+          universidadNombre={data.universidadNombre}
+          carreraNombre={data.carreraNombre}
+          label={label}
+          totalPreguntas={data.totalPreguntas}
+          samplePreguntas={data.samplePreguntas}
+          simuladorHref={simuladorHref}
+          pregunteroHref={pregunteroHref}
+          materiaHref={materiaHref}
+          resumenHref={resumenHref}
+          parcial1Href={`/pregunteros/${expectedMateriaSlug}/parcial/1`}
+          parcial2Href={`/pregunteros/${expectedMateriaSlug}/parcial/2`}
+          integradorHref={`/pregunteros/${expectedMateriaSlug}/parcial/integrador`}
+        />
+      </main>
+    );
+  }
 
   return (
     <main className="bg-background min-h-screen">
-      <JsonLd
-        data={buildBreadcrumbJsonLd([
-          { name: 'Inicio', path: '/' },
-          { name: 'Pregunteros', path: '/pregunteros' },
-          {
-            name: `Preguntero de ${data.materiaNombre}`,
-            path: pregunteroHref,
-          },
-          { name: buildParcialTitle(data.materiaNombre, data.parcial), path: canonicalHref },
-        ])}
-      />
+      <JsonLd data={breadcrumbData} />
 
       <section className="border-border bg-card border-b">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
@@ -300,7 +327,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
                   Entrar a la materia
                 </Link>
                 <Link
-                  href={`/resumenes/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`}
+                  href={resumenHref}
                   className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
                 >
                   <BookOpen className="h-5 w-5" />
