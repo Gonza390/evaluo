@@ -8,6 +8,8 @@ import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const UUID_AT_END = /([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;
+const MATERIA_IDLE_DELAY_MS = 8_000;
+const MATERIA_NUDGE_SESSION_KEY = 'evaluo:pdf-nudge:materia-shown';
 
 function getMateriaIdFromPath(pathname: string) {
   if (!pathname.startsWith('/explorar/materia/')) return null;
@@ -18,6 +20,7 @@ function getMateriaIdFromPath(pathname: string) {
 export function ContextualPdfNudge() {
   const pathname = usePathname();
   const [dismissed, setDismissed] = useState(false);
+  const [materiaNudgeVisible, setMateriaNudgeVisible] = useState(false);
   const [hasUploadedMaterial, setHasUploadedMaterial] = useState<boolean | null>(null);
 
   const isDashboard = pathname === '/dashboard';
@@ -26,7 +29,68 @@ export function ContextualPdfNudge() {
 
   useEffect(() => {
     setDismissed(false);
+    setMateriaNudgeVisible(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!isMateria || dismissed) return undefined;
+
+    try {
+      if (window.sessionStorage.getItem(MATERIA_NUDGE_SESSION_KEY) === '1') {
+        return undefined;
+      }
+    } catch {
+      // If storage is unavailable, the nudge still works for the current page view.
+    }
+
+    let timeoutId: number | undefined;
+
+    const clearTimer = () => {
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId);
+        timeoutId = undefined;
+      }
+    };
+
+    const showNudge = () => {
+      if (document.visibilityState !== 'visible') return;
+      setMateriaNudgeVisible(true);
+      try {
+        window.sessionStorage.setItem(MATERIA_NUDGE_SESSION_KEY, '1');
+      } catch {
+        // Best-effort session persistence only.
+      }
+    };
+
+    const schedule = () => {
+      clearTimer();
+      if (document.visibilityState !== 'visible') return;
+      timeoutId = window.setTimeout(showNudge, MATERIA_IDLE_DELAY_MS);
+    };
+
+    const restartAfterInteraction = () => {
+      schedule();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') schedule();
+      else clearTimer();
+    };
+
+    schedule();
+    window.addEventListener('pointerdown', restartAfterInteraction, { passive: true });
+    window.addEventListener('keydown', restartAfterInteraction);
+    window.addEventListener('scroll', restartAfterInteraction, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearTimer();
+      window.removeEventListener('pointerdown', restartAfterInteraction);
+      window.removeEventListener('keydown', restartAfterInteraction);
+      window.removeEventListener('scroll', restartAfterInteraction);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [dismissed, isMateria]);
 
   useEffect(() => {
     if (!isDashboard) {
@@ -73,15 +137,17 @@ export function ContextualPdfNudge() {
 
   if (dismissed || (!isDashboard && !isMateria)) return null;
   if (isDashboard && hasUploadedMaterial !== false) return null;
+  if (isMateria && !materiaNudgeVisible) return null;
 
-  const href = isMateria && materiaId
-    ? `/dashboard/materiales/subir?materiaId=${encodeURIComponent(materiaId)}&source=materia`
-    : '/dashboard/materiales/subir?source=dashboard';
+  const href =
+    isMateria && materiaId
+      ? `/dashboard/materiales/subir?materiaId=${encodeURIComponent(materiaId)}&source=materia`
+      : '/dashboard/materiales/subir?source=dashboard';
 
   const onCtaClick = () => {
     trackMarketingEvent('cta_click', {
       location: isMateria ? 'materia_pdf_activation' : 'dashboard_pdf_activation',
-      cta_name: isMateria ? 'preparar_mi_pdf' : 'subir_mi_primer_pdf',
+      cta_name: isMateria ? 'subir_mi_pdf' : 'subir_mi_primer_pdf',
       destination: href,
       materia_id: materiaId ?? undefined,
     });
@@ -107,18 +173,13 @@ export function ContextualPdfNudge() {
         </span>
         <div className="min-w-0">
           <h2 className="text-[15px] font-bold tracking-[-0.02em] text-slate-950">
-            {isMateria ? '¿Estás estudiando con otro PDF?' : 'Estudiá con tus propios apuntes'}
+            {isMateria ? '¿Tenés el PDF de esta materia?' : 'Estudiá con tus propios apuntes'}
           </h2>
           <p className="mt-1.5 text-[12px] leading-5 text-slate-600">
             {isMateria
-              ? 'Subilo y convertí ese apunte en resumen, flashcards y ejercicios.'
+              ? 'Subilo y Evaluo lo convierte en resumen, glosario, flashcards y ejercicios para estudiar.'
               : 'Subí el PDF que estás usando para el parcial y Evaluo lo transforma en herramientas de estudio.'}
           </p>
-          {isMateria ? (
-            <p className="mt-2 text-[11px] leading-4 text-slate-500">
-              ¿Tenés otro apunte de esta materia? Usalo para crear tu propio espacio de estudio.
-            </p>
-          ) : null}
         </div>
       </div>
 
@@ -127,7 +188,7 @@ export function ContextualPdfNudge() {
         onClick={onCtaClick}
         className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
       >
-        {isMateria ? 'Preparar mi PDF' : 'Subir mi primer PDF'}
+        {isMateria ? 'Subir mi PDF' : 'Subir mi primer PDF'}
       </Link>
     </aside>
   );
