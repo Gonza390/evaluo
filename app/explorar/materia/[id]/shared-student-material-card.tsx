@@ -8,6 +8,7 @@ import {
   BrainCircuit,
   Check,
   ChevronRight,
+  Download,
   FileText,
   Layers3,
   Share2,
@@ -16,6 +17,7 @@ import {
 import type { SharedStudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { pushRecentResource } from '@/lib/dashboard-client';
+import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
 
 type SharedStudentMaterialCardProps = {
   material: SharedStudentMaterial;
@@ -68,6 +70,7 @@ export function SharedStudentMaterialCard({
   onOpen,
 }: SharedStudentMaterialCardProps) {
   const materialHref = getStudentMaterialRoute(material.id);
+  const downloadHref = `/api/student-materials/${material.id}/download`;
   const dateLabel = formatDate(material.created_at);
   const availableArtifacts = ARTIFACTS.filter(({ key }) => material.study_artifacts?.[key]);
   const isEnriched = material.study_artifacts?.count >= 3;
@@ -121,6 +124,17 @@ export function SharedStudentMaterialCard({
     } catch {
       window.prompt('Copiá este enlace para compartir el PDF:', publicUrl);
     }
+  };
+
+  const handleDownload = () => {
+    void trackMateriaAnalyticsEvent('student_material_download_clicked', {
+      materiaId,
+      metadata: {
+        material_id: material.id,
+        material_title: material.title,
+        source: 'materia_shared_material_card',
+      },
+    });
   };
 
   return (
@@ -229,6 +243,16 @@ export function SharedStudentMaterialCard({
             <span className="truncate">{isEnriched ? 'Estudiar este apunte' : 'Abrir apunte'}</span>
             <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
           </Link>
+
+          <a
+            href={downloadHref}
+            onClick={handleDownload}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#2563EB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
+            aria-label={`Descargar ${material.title} con portada de Evaluo`}
+            title="Descargar PDF"
+          >
+            <Download className="h-4 w-4" />
+          </a>
 
           <button
             type="button"
