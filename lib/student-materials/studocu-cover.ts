@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { Buffer } from 'node:buffer';
 import { PDFDocument } from 'pdf-lib';
 import { logError } from '@/lib/observability';
 
@@ -13,6 +13,16 @@ const STUDOCU_STRONG_MARKERS = [
   'studocu.com',
   'www.studocu',
 ];
+
+type PdfParseForkResult = {
+  text?: string;
+  numpages?: number;
+};
+
+type PdfParseFork = (
+  buffer: Buffer,
+  options?: { max?: number }
+) => Promise<PdfParseForkResult>;
 
 function normalizePageText(value: string) {
   return value
@@ -40,54 +50,24 @@ export function isStudocuCoverText(value: string) {
 }
 
 async function extractFirstPageText(bytes: Uint8Array) {
-  const loadingTask = pdfjs.getDocument({
-    data: new Uint8Array(bytes),
-    isEvalSupported: false,
-    useSystemFonts: true,
-    disableFontFace: true,
-    verbosity: 0,
-  });
+  const module = await import('pdf-parse-fork');
+  const pdfParse = module.default as unknown as PdfParseFork;
+  const parsed = await pdfParse(Buffer.from(bytes), { max: 1 });
 
-  let documentHandle: pdfjs.PDFDocumentProxy | null = null;
-
-  try {
-    documentHandle = await loadingTask.promise;
-    if (documentHandle.numPages < 1) {
-      return { text: '', pageCount: 0 };
-    }
-
-    const page = await documentHandle.getPage(1);
-    try {
-      const content = await page.getTextContent();
-      const text = (content.items ?? [])
-        .map((item) => {
-          if (!item || !('str' in item) || typeof item.str !== 'string') {
-            return '';
-          }
-          return item.str;
-        })
-        .filter(Boolean)
-        .join(' ');
-
-      return { text, pageCount: documentHandle.numPages };
-    } finally {
-      try {
-        await page.cleanup();
-      } catch {
-        // Liberacion best-effort.
-      }
-    }
-  } finally {
-    if (documentHandle) {
-      void documentHandle.destroy().catch(() => undefined);
-    }
-  }
+  return {
+    text: parsed.text ?? '',
+    pageCount: typeof parsed.numpages === 'number' ? parsed.numpages : 0,
+  };
 }
 
 /**
  * Elimina fisicamente la primera pagina solo cuando detectamos una portada
- * de Studocu con suficiente confianza. Si no podemos inspeccionar o reescribir
- * el PDF, devolvemos el original para no bloquear una carga valida.
+ * de Studocu con suficiente confianza. Para esta inspeccion usamos
+ * pdf-parse-fork limitado a la primera pagina: en Vercel no depende del worker
+ * externo de pdfjs-dist que puede quedar fuera del bundle serverless.
+ *
+ * Si no podemos inspeccionar o reescribir el PDF, devolvemos el original para
+ * no bloquear una carga valida.
  */
 export async function stripStudocuCoverPage(
   bytes: Uint8Array
