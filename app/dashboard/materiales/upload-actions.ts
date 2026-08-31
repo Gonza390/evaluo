@@ -8,6 +8,7 @@ import { hasPremiumAccess } from '@/lib/premium';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { assertStudentMaterialPdfPageLimit } from '@/lib/student-materials/pdf-validation';
+import { stripStudocuCoverPage } from '@/lib/student-materials/studocu-cover';
 import {
   buildStudentMaterialStoragePath,
   getValidationMessage,
@@ -390,7 +391,23 @@ export async function finalizeStudentMaterialUploadAction(
       throw new Error('El archivo no contiene un PDF válido.');
     }
 
-    await assertStudentMaterialPdfPageLimit(fileBytes);
+    const normalizedPdf = await stripStudocuCoverPage(fileBytes);
+    const storedFileBytes = normalizedPdf.bytes;
+
+    if (normalizedPdf.removed) {
+      const { error: replaceError } = await admin.storage
+        .from('biblioteca')
+        .upload(input.filePath, storedFileBytes, {
+          contentType: parsed.file.mimeType || 'application/pdf',
+          upsert: true,
+        });
+
+      if (replaceError) {
+        throw replaceError;
+      }
+    }
+
+    await assertStudentMaterialPdfPageLimit(storedFileBytes);
 
     const { data: insertedMaterial, error: insertError } = await admin
       .from('student_materials')
@@ -404,13 +421,14 @@ export async function finalizeStudentMaterialUploadAction(
         file_name: parsed.file.name,
         file_path: input.filePath,
         mime_type: parsed.file.mimeType || 'application/pdf',
-        file_size_bytes: parsed.file.size,
+        file_size_bytes: storedFileBytes.byteLength,
         visibility: parsed.metadata.shareWithCatalog ? 'shared' : 'private',
         processing_status: 'uploaded',
         processing_stage: 'uploaded',
         processing_progress: 10,
-        processing_message:
-          'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
+        processing_message: normalizedPdf.removed
+          ? 'PDF subido. Quitamos la portada de Studocu y ahora vamos a analizar el contenido.'
+          : 'PDF subido. Vamos a analizar su estructura antes de generar el espacio de estudio.',
         processing_error: null,
       } as never)
       .select('id')
