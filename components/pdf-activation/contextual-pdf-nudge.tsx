@@ -54,6 +54,10 @@ export function ContextualPdfNudge() {
 
     const showNudge = () => {
       idleTimerRef.current = null;
+      if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+        return;
+      }
+
       try {
         window.sessionStorage.setItem(MATERIA_NUDGE_SESSION_KEY, '1');
       } catch {
@@ -68,13 +72,26 @@ export function ContextualPdfNudge() {
 
     const restartIdleTimer = () => {
       clearIdleTimer();
+      if (document.visibilityState !== 'visible' || !document.hasFocus()) {
+        return;
+      }
       idleTimerRef.current = window.setTimeout(showNudge, MATERIA_IDLE_DELAY_MS);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== 'visible') {
+        clearIdleTimer();
+        return;
+      }
+      restartIdleTimer();
     };
 
     const interactionEvents: Array<keyof WindowEventMap> = [
       'pointerdown',
+      'pointermove',
       'keydown',
       'scroll',
+      'wheel',
       'touchstart',
       'touchmove',
     ];
@@ -83,12 +100,18 @@ export function ContextualPdfNudge() {
     interactionEvents.forEach((eventName) => {
       window.addEventListener(eventName, restartIdleTimer, { passive: true });
     });
+    window.addEventListener('focus', restartIdleTimer);
+    window.addEventListener('blur', clearIdleTimer);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearIdleTimer();
       interactionEvents.forEach((eventName) => {
         window.removeEventListener(eventName, restartIdleTimer);
       });
+      window.removeEventListener('focus', restartIdleTimer);
+      window.removeEventListener('blur', clearIdleTimer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [dismissed, isMateria, materiaId, materiaNudgeVisible]);
 
