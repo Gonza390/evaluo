@@ -1,7 +1,12 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { getStudentMaterialUploadQuotaAction } from '@/app/dashboard/materiales/upload-actions';
 import { QuickPdfUpload } from '@/components/dashboard/quick-pdf-upload';
+import {
+  PdfUploadLimitReached,
+  PdfUploadQuotaStatus,
+} from '@/components/pdf-activation/pdf-upload-quota';
 import { createPublicClient } from '@/lib/supabase-public';
 import { createClientServer } from '@/lib/supabase-server';
 
@@ -25,29 +30,38 @@ export default async function QuickPdfUploadPage({
   }
 
   const publicClient = createPublicClient();
-  const [universidadesResult, carrerasResult, materiasResult, relacionesResult, profileResult] =
-    await Promise.all([
-      publicClient.from('universidades').select('id, nombre').order('nombre'),
-      publicClient.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-      publicClient.from('materias').select('id, nombre, carrera_id').order('nombre'),
-      publicClient.from('carrera_materias').select('carrera_id, materia_id'),
-      supabase
-        .from('profiles')
-        .select('universidad_id, carrera_id')
-        .eq('id', user.id)
-        .maybeSingle(),
-    ]);
+  const [
+    universidadesResult,
+    carrerasResult,
+    materiasResult,
+    relacionesResult,
+    profileResult,
+    quotaResult,
+  ] = await Promise.all([
+    publicClient.from('universidades').select('id, nombre').order('nombre'),
+    publicClient.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+    publicClient.from('materias').select('id, nombre, carrera_id').order('nombre'),
+    publicClient.from('carrera_materias').select('carrera_id, materia_id'),
+    supabase
+      .from('profiles')
+      .select('universidad_id, carrera_id')
+      .eq('id', user.id)
+      .maybeSingle(),
+    getStudentMaterialUploadQuotaAction(),
+  ]);
 
   if (universidadesResult.error) throw universidadesResult.error;
   if (carrerasResult.error) throw carrerasResult.error;
   if (materiasResult.error) throw materiasResult.error;
   if (relacionesResult.error) throw relacionesResult.error;
   if (profileResult.error) throw profileResult.error;
+  if (!quotaResult.success || !quotaResult.quota) throw new Error(quotaResult.message);
 
   const universidades = universidadesResult.data ?? [];
   const carreras = carrerasResult.data ?? [];
   const materias = materiasResult.data ?? [];
   const carreraMaterias = relacionesResult.data ?? [];
+  const quota = quotaResult.quota;
 
   const profileUniversidadId = String(profileResult.data?.universidad_id ?? '');
   const profileCarreraId = String(profileResult.data?.carrera_id ?? '');
@@ -98,26 +112,43 @@ export default async function QuickPdfUploadPage({
     }
   }
 
+  const returnHref =
+    source === 'materia' && requestedSubject
+      ? `/explorar/materia/${requestedSubject.id}`
+      : '/dashboard';
+  const quotaExhausted = !quota.isPremium && (quota.remaining ?? 0) <= 0;
+
   return (
     <main className="min-h-screen bg-white px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-2xl">
         <Link
-          href={source === 'materia' && requestedMateriaId ? `/explorar/materia/${requestedMateriaId}` : '/dashboard'}
+          href={returnHref}
           className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-950"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver
         </Link>
 
-        <QuickPdfUpload
-          universidades={universidades}
-          carreras={carreras}
-          materias={materias}
-          carreraMaterias={carreraMaterias}
-          initialUniversidadId={initialUniversidadId}
-          initialCarreraId={initialCarreraId}
-          initialMateriaId={initialMateriaId}
-        />
+        {quotaExhausted ? (
+          <PdfUploadLimitReached
+            quota={quota}
+            returnHref={returnHref}
+            materiaId={requestedSubject?.id}
+          />
+        ) : (
+          <>
+            <PdfUploadQuotaStatus quota={quota} />
+            <QuickPdfUpload
+              universidades={universidades}
+              carreras={carreras}
+              materias={materias}
+              carreraMaterias={carreraMaterias}
+              initialUniversidadId={initialUniversidadId}
+              initialCarreraId={initialCarreraId}
+              initialMateriaId={initialMateriaId}
+            />
+          </>
+        )}
       </div>
     </main>
   );

@@ -22,10 +22,24 @@ import {
 const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = 3;
 const MAX_PENDING_STUDENT_MATERIALS = 1;
 const FREE_MATERIAL_UPLOAD_INTERVAL_DAYS = 15;
+const FREE_MATERIAL_UPLOAD_LIMIT = 2;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 type ActionResult = {
   success: boolean;
   message: string;
+};
+
+export type StudentMaterialUploadQuota = {
+  isPremium: boolean;
+  limit: number | null;
+  used: number;
+  remaining: number | null;
+  nextAvailableAt: string | null;
+};
+
+export type StudentMaterialUploadQuotaResult = ActionResult & {
+  quota?: StudentMaterialUploadQuota;
 };
 
 export type PrepareStudentMaterialUploadResult = ActionResult & {
@@ -75,15 +89,88 @@ async function requireAuthenticatedUser() {
   return user;
 }
 
+async function getStudentMaterialUploadQuotaForUser(
+  userId: string
+): Promise<StudentMaterialUploadQuota> {
+  const admin = createAdminClient();
+  const now = new Date();
+  const intervalStart = new Date(
+    now.getTime() - FREE_MATERIAL_UPLOAD_INTERVAL_DAYS * DAY_MS
+  );
+
+  const [{ data: materials, error }, isPremium] = await Promise.all([
+    admin
+      .from('student_materials')
+      .select('id, created_at, processing_status')
+      .eq('user_id', userId)
+      .gte('created_at', intervalStart.toISOString())
+      .order('created_at', { ascending: true }),
+    hasPremiumAccess(userId),
+  ]);
+
+  if (error) throw error;
+
+  const countedMaterials = (materials ?? []).filter(
+    (material) => material.processing_status !== 'failed'
+  );
+
+  if (isPremium) {
+    return {
+      isPremium: true,
+      limit: null,
+      used: countedMaterials.length,
+      remaining: null,
+      nextAvailableAt: null,
+    };
+  }
+
+  const used = countedMaterials.length;
+  const remaining = Math.max(0, FREE_MATERIAL_UPLOAD_LIMIT - used);
+  let nextAvailableAt: string | null = null;
+
+  if (remaining === 0 && countedMaterials.length > 0) {
+    const blockingIndex = Math.max(0, countedMaterials.length - FREE_MATERIAL_UPLOAD_LIMIT);
+    const blockingMaterial = countedMaterials[blockingIndex];
+    const createdAt = new Date(blockingMaterial.created_at);
+    if (!Number.isNaN(createdAt.getTime())) {
+      nextAvailableAt = new Date(
+        createdAt.getTime() + FREE_MATERIAL_UPLOAD_INTERVAL_DAYS * DAY_MS
+      ).toISOString();
+    }
+  }
+
+  return {
+    isPremium: false,
+    limit: FREE_MATERIAL_UPLOAD_LIMIT,
+    used,
+    remaining,
+    nextAvailableAt,
+  };
+}
+
+export async function getStudentMaterialUploadQuotaAction(): Promise<StudentMaterialUploadQuotaResult> {
+  try {
+    const user = await requireAuthenticatedUser();
+    const quota = await getStudentMaterialUploadQuotaForUser(user.id);
+    return { success: true, message: 'Cupo disponible.', quota };
+  } catch (error) {
+    logError('studentMaterials.getUploadQuota', error);
+    return {
+      success: false,
+      message: isMissingStudentMaterialsTableError(error)
+        ? getStudentMaterialsSetupMessage()
+        : 'No pudimos verificar tu cupo de PDFs. Intentá nuevamente.',
+    };
+  }
+}
+
 async function assertStudentMaterialQuota(userId: string) {
   const admin = createAdminClient();
   const now = new Date();
   const dayStart = new Date(now);
   dayStart.setUTCHours(0, 0, 0, 0);
-  const intervalStart = new Date(now);
-  intervalStart.setUTCDate(intervalStart.getUTCDate() - (FREE_MATERIAL_UPLOAD_INTERVAL_DAYS - 1));
 
-  const [dailyResult, pendingResult, intervalResult] = await Promise.all([
+  const [dailyResult, pendingResult, quota] = await Promise.all([
     admin
       .from('student_materials')
       .select('id', { count: 'exact', head: true })
@@ -94,28 +181,21 @@ async function assertStudentMaterialQuota(userId: string) {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .in('processing_status', ['uploaded', 'processing']),
-    admin
-      .from('student_materials')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', intervalStart.toISOString()),
+    getStudentMaterialUploadQuotaForUser(userId),
   ]);
 
   if (dailyResult.error) throw dailyResult.error;
   if (pendingResult.error) throw pendingResult.error;
-  if (intervalResult.error) throw intervalResult.error;
 
-  const isPremium = await hasPremiumAccess(userId);
-
-  if (isPremium) {
+  if (quota.isPremium) {
     if ((dailyResult.count ?? 0) >= MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY) {
       throw new Error(
-        `Alcanzaste el limite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por dia. Intenta nuevamente mañana.`
+        `Alcanzaste el límite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por día. Intentá nuevamente mañana.`
       );
     }
-  } else if ((intervalResult.count ?? 0) >= 1) {
+  } else if ((quota.remaining ?? 0) <= 0) {
     throw new Error(
-      'El plan gratis permite subir 1 material cada 15 dias. Sumate a Premium para subir hasta 3 por dia.'
+      'Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.'
     );
   }
 
