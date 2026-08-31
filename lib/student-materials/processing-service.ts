@@ -24,6 +24,7 @@ import {
   buildChunkEvaluationReport,
 } from '@/lib/student-materials/chunk-evaluator';
 import { checkDuplicate } from '@/lib/student-materials/dedup';
+import { tryReuseStudentMaterialCanonicalArtifacts } from '@/lib/student-materials/canonical-cache';
 import {
   buildSummaryChunks,
   buildTraceableSummaryChunks,
@@ -163,6 +164,98 @@ export async function processStudentMaterial(input: {
     !documentAnalysis.requiresOcr &&
     !visionUsed &&
     pagesWithText > 0;
+
+  const cacheReuse = await tryReuseStudentMaterialCanonicalArtifacts({
+    materialId: material.id,
+    materiaId: material.materia_id,
+    text,
+  });
+
+  if (cacheReuse.hit) {
+    await updateStudentMaterialProcessing(admin, material.id, {
+      processingStatus: 'ready',
+      processingStage: 'ready',
+      processingProgress: 100,
+      processingMessage: 'Material listo para estudiar.',
+      processingError: null,
+      pageCount,
+      processingStrategy: documentAnalysis.processingStrategy,
+      documentAnalysis,
+      pagesProcessed,
+      coverageRatio,
+    });
+
+    if (input.jobId) await completeStudentMaterialJob(admin, input.jobId);
+
+    const aiUsage = await aggregateAiUsageForMaterial(admin, material.id);
+
+    await Promise.all([
+      trackServerAnalyticsEvent({
+        eventName: 'student_material_processing_cache_hit',
+        userId: material.user_id,
+        path: '/dashboard/materiales',
+        metadata: {
+          material_id: material.id,
+          pipeline_version: cacheReuse.pipelineVersion,
+          page_count: pageCount,
+          vision_used: visionUsed,
+          vision_page_count: visionPageNumbers.length,
+        },
+      }),
+      trackServerAnalyticsEvent({
+        eventName: 'student_material_processing_ready',
+        userId: material.user_id,
+        path: '/dashboard/materiales',
+        metadata: {
+          material_id: material.id,
+          page_count: pageCount,
+          processing_strategy: documentAnalysis.processingStrategy,
+          fast_path: useLargeNativePdfFastPath,
+          vision_used: visionUsed,
+          vision_page_count: visionPageNumbers.length,
+          cache_hit: true,
+          pipeline_version: cacheReuse.pipelineVersion,
+        },
+      }),
+    ]);
+
+    logInfo('processStudentMaterial.performance', {
+      materialId: material.id,
+      pageCount,
+      pagesProcessed,
+      pagesWithText,
+      coverageRatio,
+      chunkCount: cacheReuse.chunkCount,
+      extractionMs,
+      generationMs: 0,
+      totalMs: Date.now() - processingStartedAt,
+      summaryProvider: cacheReuse.summaryProvider,
+      glossaryProvider: cacheReuse.glossaryProvider,
+      glossaryItemCount: cacheReuse.glossaryItemCount,
+      processingStrategy: documentAnalysis.processingStrategy,
+      fastPath: useLargeNativePdfFastPath,
+      visionUsed,
+      visionPageCount: visionPageNumbers.length,
+      visionModel: visionExtraction.visionModel,
+      cacheHit: true,
+      cacheSourceMaterialId: cacheReuse.sourceMaterialId,
+      pipelineVersion: cacheReuse.pipelineVersion,
+      totalAiTokens: aiUsage.totalAiTokens,
+      promptTokens: aiUsage.promptTokens,
+      completionTokens: aiUsage.completionTokens,
+      aiCallCount: aiUsage.aiCallCount,
+      tokensPerPage:
+        pageCount && pageCount > 0 && aiUsage.totalAiTokens
+          ? Math.round(aiUsage.totalAiTokens / pageCount)
+          : null,
+    });
+
+    return {
+      success: true,
+      materialId: material.id,
+      message: 'El PDF ya quedo listo reutilizando un procesamiento identico.',
+    };
+  }
 
   // Dedup es informativo: lo solapamos con la generación en lugar de frenar la IA.
   const dedupPromise = checkDuplicate(
@@ -393,6 +486,8 @@ export async function processStudentMaterial(input: {
       fast_path: useLargeNativePdfFastPath,
       vision_used: visionUsed,
       vision_page_count: visionPageNumbers.length,
+      cache_hit: false,
+      pipeline_version: cacheReuse.pipelineVersion,
     },
   });
 
@@ -414,6 +509,8 @@ export async function processStudentMaterial(input: {
     visionUsed,
     visionPageCount: visionPageNumbers.length,
     visionModel: visionExtraction.visionModel,
+    cacheHit: false,
+    pipelineVersion: cacheReuse.pipelineVersion,
     totalAiTokens: aiUsage.totalAiTokens,
     promptTokens: aiUsage.promptTokens,
     completionTokens: aiUsage.completionTokens,
