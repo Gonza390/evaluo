@@ -11,6 +11,7 @@ import {
   Sparkles,
   Workflow,
 } from 'lucide-react';
+import { MaterialFeedbackPrompt } from '@/components/material-feedback-prompt';
 import { cn } from '@/lib/utils';
 
 type StudyCalloutKind =
@@ -443,5 +444,10 @@ export function StudyRichText({ body }: { body: string }) {
     flushTable('table-final');
   }
 
-  return <div className="space-y-3.5">{content}</div>;
+  return (
+    <>
+      <div className="space-y-3.5">{content}</div>
+      <MaterialFeedbackPrompt />
+    </>
+  );
 }
