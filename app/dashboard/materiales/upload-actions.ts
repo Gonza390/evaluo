@@ -22,6 +22,7 @@ import {
 const MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY = 3;
 const MAX_PENDING_STUDENT_MATERIALS = 1;
 const FREE_MATERIAL_UPLOAD_INTERVAL_DAYS = 15;
+const FREE_MATERIAL_UPLOAD_LIMIT = 2;
 
 type ActionResult = {
   success: boolean;
@@ -81,7 +82,7 @@ async function assertStudentMaterialQuota(userId: string) {
   const dayStart = new Date(now);
   dayStart.setUTCHours(0, 0, 0, 0);
   const intervalStart = new Date(now);
-  intervalStart.setUTCDate(intervalStart.getUTCDate() - (FREE_MATERIAL_UPLOAD_INTERVAL_DAYS - 1));
+  intervalStart.setUTCDate(intervalStart.getUTCDate() - FREE_MATERIAL_UPLOAD_INTERVAL_DAYS);
 
   const [dailyResult, pendingResult, intervalResult] = await Promise.all([
     admin
@@ -113,9 +114,9 @@ async function assertStudentMaterialQuota(userId: string) {
         `Alcanzaste el limite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por dia. Intenta nuevamente mañana.`
       );
     }
-  } else if ((intervalResult.count ?? 0) >= 1) {
+  } else if ((intervalResult.count ?? 0) >= FREE_MATERIAL_UPLOAD_LIMIT) {
     throw new Error(
-      'El plan gratis permite subir 1 material cada 15 dias. Sumate a Premium para subir hasta 3 por dia.'
+      `El plan gratis permite subir ${FREE_MATERIAL_UPLOAD_LIMIT} materiales cada ${FREE_MATERIAL_UPLOAD_INTERVAL_DAYS} dias. Sumate a Premium para subir hasta ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} por dia.`
     );
   }
 
