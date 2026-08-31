@@ -77,6 +77,7 @@ export default function PdfUploadQuotaPreviewPage() {
             quota={exhaustedQuota}
             returnHref="/explorar/materia/5a10b059-546d-41a1-8ed8-d9fb1dd7581d"
             materiaId="5a10b059-546d-41a1-8ed8-d9fb1dd7581d"
+            trackAnalytics={false}
           />
         </section>
       </div>
