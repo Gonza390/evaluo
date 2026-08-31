@@ -21,4 +21,12 @@ const legacyWatermark = sanitizeStudocuExtractedText(
 );
 assert.equal(legacyWatermark, 'Concepto importante\nOtra explicación académica');
 
+const paragraphStructure = sanitizeStudocuExtractedText(
+  'Primer párrafo académico.\n\nScan to open on Studocu\n\nSegundo párrafo académico.'
+);
+assert.equal(
+  paragraphStructure,
+  'Primer párrafo académico.\n\nSegundo párrafo académico.'
+);
+
 console.log('studocu-sanitizer.smoke: ok');
