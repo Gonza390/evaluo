@@ -14,6 +14,10 @@ const PRODUCT_EVENTS = new Set([
   'meaningful_study_completed',
   'pdf_file_selected',
   'pdf_upload_completed',
+  'pdf_nudge_viewed',
+  'pdf_nudge_clicked',
+  'pdf_limit_reached',
+  'pdf_limit_upgrade_clicked',
   'reminder_clicked',
 ]);
 
