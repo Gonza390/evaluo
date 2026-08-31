@@ -5,6 +5,7 @@ export type StudentMaterialJobStatus = 'queued' | 'processing' | 'completed' | '
 
 const MAX_STUDENT_MATERIAL_JOB_ATTEMPTS = 3;
 const STUDENT_MATERIAL_JOB_LEASE_MS = 7 * 60 * 1000;
+const AUTOMATIC_RETRY_BACKOFF_MS = [0, 5 * 60 * 1000, 30 * 60 * 1000] as const;
 
 export type StudentMaterialJobRow = {
   id: string;
@@ -12,6 +13,7 @@ export type StudentMaterialJobRow = {
   status: StudentMaterialJobStatus;
   attempts: number;
   last_error: string | null;
+  completed_at?: string | null;
 };
 
 function jobsTable() {
@@ -27,6 +29,21 @@ function isMissingJobsTableError(error: unknown) {
 
 function getStaleJobCutoffIso(now = Date.now()) {
   return new Date(now - STUDENT_MATERIAL_JOB_LEASE_MS).toISOString();
+}
+
+export function isStudentMaterialJobEligibleForAutomaticRetry(
+  job: Pick<StudentMaterialJobRow, 'status' | 'attempts' | 'completed_at'>,
+  now = Date.now()
+) {
+  if (job.status === 'queued') return true;
+  if (job.status !== 'failed') return false;
+  if (job.attempts >= MAX_STUDENT_MATERIAL_JOB_ATTEMPTS) return false;
+
+  const completedAt = job.completed_at ? Date.parse(job.completed_at) : Number.NaN;
+  if (!Number.isFinite(completedAt)) return true;
+
+  const backoffMs = AUTOMATIC_RETRY_BACKOFF_MS[Math.min(job.attempts, AUTOMATIC_RETRY_BACKOFF_MS.length - 1)];
+  return now - completedAt >= backoffMs;
 }
 
 export async function recoverStaleStudentMaterialJobs(
@@ -54,9 +71,7 @@ export async function recoverStaleStudentMaterialJobs(
     }
 
     const { data, error } = await query.select('student_material_id');
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const materialIds = Array.from(
       new Set(
@@ -77,16 +92,12 @@ export async function recoverStaleStudentMaterialJobs(
         } as never)
         .in('id', materialIds);
 
-      if (materialError) {
-        throw materialError;
-      }
+      if (materialError) throw materialError;
     }
 
     return materialIds;
   } catch (error) {
-    if (isMissingJobsTableError(error)) {
-      return [];
-    }
+    if (isMissingJobsTableError(error)) return [];
 
     logError('studentMaterialJobs.recoverStale', error, { studentMaterialId });
     throw error;
@@ -107,32 +118,19 @@ export async function enqueueStudentMaterialJob(admin: AdminClient, studentMater
       .limit(1)
       .maybeSingle();
 
-    if (existingError) {
-      throw existingError;
-    }
-
-    if (existing) {
-      return String((existing as { id: string }).id);
-    }
+    if (existingError) throw existingError;
+    if (existing) return String((existing as { id: string }).id);
 
     const { data, error } = await admin
       .from(jobsTable())
-      .insert({
-        student_material_id: studentMaterialId,
-        status: 'queued',
-      } as never)
+      .insert({ student_material_id: studentMaterialId, status: 'queued' } as never)
       .select('id')
       .single();
 
-    if (error) {
-      throw error;
-    }
-
+    if (error) throw error;
     return String((data as { id: string }).id);
   } catch (error) {
-    if (isMissingJobsTableError(error)) {
-      return null;
-    }
+    if (isMissingJobsTableError(error)) return null;
     throw error;
   }
 }
@@ -146,7 +144,7 @@ export async function claimStudentMaterialJob(
 
     const { data: job, error } = await admin
       .from(jobsTable())
-      .select('id, student_material_id, status, attempts, last_error')
+      .select('id, student_material_id, status, attempts, last_error, completed_at')
       .eq('student_material_id', studentMaterialId)
       .in('status', ['queued', 'failed'])
       .lt('attempts', MAX_STUDENT_MATERIAL_JOB_ATTEMPTS)
@@ -154,13 +152,8 @@ export async function claimStudentMaterialJob(
       .limit(1)
       .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
-
-    if (!job) {
-      return null;
-    }
+    if (error) throw error;
+    if (!job) return null;
 
     const attempts = Number((job as { attempts?: number }).attempts ?? 0) + 1;
     const { data: claimed, error: claimError } = await admin
@@ -174,22 +167,15 @@ export async function claimStudentMaterialJob(
       } as never)
       .eq('id', (job as { id: string }).id)
       .eq('status', (job as { status: string }).status)
-      .select('id, student_material_id, status, attempts, last_error')
+      .select('id, student_material_id, status, attempts, last_error, completed_at')
       .maybeSingle();
 
-    if (claimError) {
-      throw claimError;
-    }
-
-    if (!claimed) {
-      return null;
-    }
+    if (claimError) throw claimError;
+    if (!claimed) return null;
 
     return claimed as unknown as StudentMaterialJobRow;
   } catch (error) {
-    if (isMissingJobsTableError(error)) {
-      return null;
-    }
+    if (isMissingJobsTableError(error)) return null;
     throw error;
   }
 }
@@ -205,13 +191,9 @@ export async function completeStudentMaterialJob(admin: AdminClient, jobId: stri
       } as never)
       .eq('id', jobId);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
   } catch (error) {
-    if (!isMissingJobsTableError(error)) {
-      throw error;
-    }
+    if (!isMissingJobsTableError(error)) throw error;
   }
 }
 
@@ -226,42 +208,37 @@ export async function failStudentMaterialJob(admin: AdminClient, jobId: string, 
       } as never)
       .eq('id', jobId);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
   } catch (error) {
-    if (!isMissingJobsTableError(error)) {
-      throw error;
-    }
+    if (!isMissingJobsTableError(error)) throw error;
   }
 }
 
-export async function claimNextQueuedStudentMaterialJob(admin: AdminClient): Promise<StudentMaterialJobRow | null> {
+export async function claimNextQueuedStudentMaterialJob(
+  admin: AdminClient
+): Promise<StudentMaterialJobRow | null> {
   try {
     await recoverStaleStudentMaterialJobs(admin);
 
-    const { data: job, error } = await admin
+    const { data: jobs, error } = await admin
       .from(jobsTable())
-      .select('id, student_material_id, status, attempts, last_error')
+      .select('id, student_material_id, status, attempts, last_error, completed_at')
       .in('status', ['queued', 'failed'])
       .lt('attempts', MAX_STUDENT_MATERIAL_JOB_ATTEMPTS)
       .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle();
+      .limit(20);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    if (!job) {
-      return null;
-    }
+    const eligibleJob = ((jobs ?? []) as unknown as StudentMaterialJobRow[]).find((job) =>
+      isStudentMaterialJobEligibleForAutomaticRetry(job)
+    );
 
-    return await claimStudentMaterialJob(admin, String((job as { student_material_id: string }).student_material_id));
+    if (!eligibleJob) return null;
+
+    return await claimStudentMaterialJob(admin, eligibleJob.student_material_id);
   } catch (error) {
-    if (isMissingJobsTableError(error)) {
-      return null;
-    }
+    if (isMissingJobsTableError(error)) return null;
 
     logError('studentMaterialJobs.claimNext', error);
     throw error;
