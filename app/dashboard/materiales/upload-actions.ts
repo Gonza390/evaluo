@@ -76,9 +76,20 @@ function getStudentMaterialsSetupMessage() {
   return 'Falta aplicar la migración de student_materials en Supabase. Sin esa tabla, este espacio todavía no puede guardar ni listar PDFs.';
 }
 
-function isInternalMaterialTestUser(userId: string) {
-  const configuredUserId = process.env.STUDENT_MATERIAL_INTERNAL_TEST_USER_ID?.trim();
-  return Boolean(configuredUserId && configuredUserId === userId);
+async function hasUnlimitedStudentMaterialUploads(userId: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('profiles')
+    .select('student_material_uploads_unlimited')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return Boolean(
+    (data as { student_material_uploads_unlimited?: boolean } | null)
+      ?.student_material_uploads_unlimited
+  );
 }
 
 async function requireAuthenticatedUser() {
@@ -104,7 +115,7 @@ async function getStudentMaterialUploadQuotaForUser(
     now.getTime() - FREE_MATERIAL_UPLOAD_INTERVAL_DAYS * DAY_MS
   );
 
-  const [{ data: materials, error }, isPremium] = await Promise.all([
+  const [{ data: materials, error }, isPremium, hasUnlimitedUploads] = await Promise.all([
     admin
       .from('student_materials')
       .select('id, created_at, processing_status')
@@ -112,6 +123,7 @@ async function getStudentMaterialUploadQuotaForUser(
       .gte('created_at', intervalStart.toISOString())
       .order('created_at', { ascending: true }),
     hasPremiumAccess(userId),
+    hasUnlimitedStudentMaterialUploads(userId),
   ]);
 
   if (error) throw error;
@@ -120,7 +132,7 @@ async function getStudentMaterialUploadQuotaForUser(
     (material) => material.processing_status !== 'failed'
   );
 
-  if (isInternalMaterialTestUser(userId) || isPremium) {
+  if (hasUnlimitedUploads || isPremium) {
     return {
       isPremium: true,
       limit: null,
@@ -175,9 +187,8 @@ async function assertStudentMaterialQuota(userId: string) {
   const now = new Date();
   const dayStart = new Date(now);
   dayStart.setUTCHours(0, 0, 0, 0);
-  const isInternalTestUser = isInternalMaterialTestUser(userId);
 
-  const [dailyResult, pendingResult, quota] = await Promise.all([
+  const [dailyResult, pendingResult, quota, hasUnlimitedUploads] = await Promise.all([
     admin
       .from('student_materials')
       .select('id', { count: 'exact', head: true })
@@ -189,18 +200,19 @@ async function assertStudentMaterialQuota(userId: string) {
       .eq('user_id', userId)
       .in('processing_status', ['uploaded', 'processing']),
     getStudentMaterialUploadQuotaForUser(userId),
+    hasUnlimitedStudentMaterialUploads(userId),
   ]);
 
   if (dailyResult.error) throw dailyResult.error;
   if (pendingResult.error) throw pendingResult.error;
 
-  if (!isInternalTestUser && quota.isPremium) {
+  if (!hasUnlimitedUploads && quota.isPremium) {
     if ((dailyResult.count ?? 0) >= MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY) {
       throw new Error(
         `Alcanzaste el límite de ${MAX_PREMIUM_STUDENT_MATERIALS_PER_DAY} materiales por día. Intentá nuevamente mañana.`
       );
     }
-  } else if (!isInternalTestUser && (quota.remaining ?? 0) <= 0) {
+  } else if (!hasUnlimitedUploads && (quota.remaining ?? 0) <= 0) {
     throw new Error(
       'Ya usaste tus 2 PDFs gratuitos. Volvé a la pantalla de carga para ver cuándo se renueva tu cupo o continuar con Premium.'
     );
