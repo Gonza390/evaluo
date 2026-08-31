@@ -46,7 +46,7 @@ export function isStudocuNoiseLine(value: string) {
  *
  * La limpieza es conservadora: cuando una marca aparece embebida junto a
  * contenido académico, se elimina únicamente el fragmento conocido y se
- * conserva el resto de la línea.
+ * conserva el resto de la línea y la estructura de párrafos del documento.
  */
 export function sanitizeStudocuExtractedText(value: string) {
   if (!value) return '';
@@ -54,10 +54,12 @@ export function sanitizeStudocuExtractedText(value: string) {
   const cleanedLines = value
     .replace(/\r/g, '')
     .split('\n')
-    .map((rawLine) => rawLine.trim())
-    .filter((line) => !isStudocuNoiseLine(line))
-    .map(cleanInlineStudocuNoise)
-    .filter(Boolean);
+    .map((rawLine) => {
+      const line = rawLine.trim();
+      if (!line) return '';
+      if (isStudocuNoiseLine(line)) return '';
+      return cleanInlineStudocuNoise(line);
+    });
 
   return cleanedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
