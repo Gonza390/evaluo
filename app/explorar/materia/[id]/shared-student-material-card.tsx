@@ -6,9 +6,11 @@ import {
   BookOpen,
   BookOpenText,
   BrainCircuit,
+  Check,
   ChevronRight,
   FileText,
   Layers3,
+  Share2,
   Sparkles,
 } from 'lucide-react';
 import type { SharedStudentMaterial } from '@/lib/data/student-materials';
@@ -38,6 +40,27 @@ function formatDate(value: string | null) {
   });
 }
 
+function getPublicMaterialUrl(materialHref: string) {
+  return new URL(materialHref, 'https://evaluo.com.ar').toString();
+}
+
+async function copyText(value: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
 export function SharedStudentMaterialCard({
   material,
   materiaId,
@@ -50,6 +73,7 @@ export function SharedStudentMaterialCard({
   const isEnriched = material.study_artifacts?.count >= 3;
   const isComplete = material.study_artifacts?.complete;
   const [uploaderName, setUploaderName] = useState('Estudiante');
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -72,6 +96,32 @@ export function SharedStudentMaterialCard({
       active = false;
     };
   }, [material.id]);
+
+  const handleShare = async () => {
+    const publicUrl = getPublicMaterialUrl(materialHref);
+    const shareData = {
+      title: material.title,
+      text: `Mirá este apunte de ${materiaNombre} en Evaluo.`,
+      url: publicUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await copyText(publicUrl);
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 1800);
+    } catch {
+      window.prompt('Copiá este enlace para compartir el PDF:', publicUrl);
+    }
+  };
 
   return (
     <article
@@ -155,29 +205,42 @@ export function SharedStudentMaterialCard({
           {dateLabel ? <span>{dateLabel}</span> : null}
         </div>
 
-        <Link
-          href={materialHref}
-          onClick={() => {
-            pushRecentResource({
-              id: material.id,
-              title: material.title,
-              subjectId: materiaId,
-              subjectName: materiaNombre,
-              type: 'Recurso',
-              href: materialHref,
-              openedAt: new Date().toISOString(),
-            });
-            onOpen(material.id, material.study_artifacts?.count ?? 0);
-          }}
-          className={`inline-flex h-11 w-full items-center justify-between rounded-xl px-4 text-sm font-semibold transition ${
-            isEnriched
-              ? 'bg-[#2563EB] text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] hover:bg-[#1D4ED8]'
-              : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-          }`}
-        >
-          {isEnriched ? 'Estudiar este apunte' : 'Abrir apunte'}
-          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={materialHref}
+            onClick={() => {
+              pushRecentResource({
+                id: material.id,
+                title: material.title,
+                subjectId: materiaId,
+                subjectName: materiaNombre,
+                type: 'Recurso',
+                href: materialHref,
+                openedAt: new Date().toISOString(),
+              });
+              onOpen(material.id, material.study_artifacts?.count ?? 0);
+            }}
+            className={`inline-flex h-11 min-w-0 flex-1 items-center justify-between rounded-xl px-4 text-sm font-semibold transition ${
+              isEnriched
+                ? 'bg-[#2563EB] text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] hover:bg-[#1D4ED8]'
+                : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+            }`}
+          >
+            <span className="truncate">{isEnriched ? 'Estudiar este apunte' : 'Abrir apunte'}</span>
+            <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => void handleShare()}
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-[#BFDBFE] hover:bg-[#F8FBFF] hover:text-[#2563EB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB]/30"
+            aria-label={`Compartir ${material.title}`}
+            title="Compartir PDF"
+          >
+            {shareCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+            <span className="hidden sm:inline">{shareCopied ? 'Copiado' : 'Compartir'}</span>
+          </button>
+        </div>
       </div>
     </article>
   );
