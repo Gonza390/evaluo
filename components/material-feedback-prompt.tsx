@@ -41,8 +41,13 @@ export function MaterialFeedbackPrompt() {
     let observer: IntersectionObserver | null = null;
     const timer = window.setTimeout(() => {
       void (async () => {
+        const activeTabPanel = anchor.closest<HTMLElement>(
+          '[role="tabpanel"][data-state="active"]'
+        );
+        if (!activeTabPanel) return;
+
         const anchors = Array.from(
-          document.querySelectorAll<HTMLElement>('[data-material-feedback-anchor="true"]')
+          activeTabPanel.querySelectorAll<HTMLElement>('[data-material-feedback-anchor="true"]')
         );
         if (anchors.at(-1) !== anchor) return;
 
