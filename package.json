@@ -9,7 +9,7 @@
     "performance:budget": "node scripts/check-performance-budget.mjs",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts"
+    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-cache.smoke.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -54,7 +54,7 @@
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.6.0",
     "geist": "^1.7.0",
-    "input-otp": "1.4.2",
+    "input-otp": "^1.4.2",
     "lucide-react": "^0.564.0",
     "next": "^16.3.0",
     "pdf-lib": "^1.17.1",
