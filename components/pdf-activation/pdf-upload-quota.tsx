@@ -44,22 +44,25 @@ export function PdfUploadLimitReached({
   quota,
   returnHref,
   materiaId,
+  trackAnalytics = true,
 }: {
   quota: PdfUploadQuotaView;
   returnHref: string;
   materiaId?: string;
+  trackAnalytics?: boolean;
 }) {
   const nextDate = formatNextDate(quota.nextAvailableAt);
   const pricingHref = `/pricing?source=pdf_limit${materiaId ? `&materiaId=${encodeURIComponent(materiaId)}` : ''}`;
 
   useEffect(() => {
+    if (!trackAnalytics) return;
     void trackProductAnalyticsEvent('pdf_limit_reached', {
       free_limit: quota.limit ?? 2,
       used: quota.used,
       next_available_at: quota.nextAvailableAt,
       materia_id: materiaId,
     });
-  }, [materiaId, quota.limit, quota.nextAvailableAt, quota.used]);
+  }, [materiaId, quota.limit, quota.nextAvailableAt, quota.used, trackAnalytics]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -99,6 +102,7 @@ export function PdfUploadLimitReached({
           <Link
             href={pricingHref}
             onClick={() => {
+              if (!trackAnalytics) return;
               void trackProductAnalyticsEvent('pdf_limit_upgrade_clicked', {
                 free_limit: quota.limit ?? 2,
                 used: quota.used,
