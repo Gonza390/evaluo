@@ -19,6 +19,33 @@ const loadCatalogContentSignals = unstable_cache(
   { revalidate: 600, tags: ['catalog-content-signals'] }
 );
 
+function normalizeMateriaName(nombre: string) {
+  return nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function getBriefAiDescription(nombre: string) {
+  const descriptions: Record<string, string> = {
+    icse: 'Sociedad, Estado y procesos políticos para comprender la realidad social.',
+    'introduccion al conocimiento de la sociedad y el estado':
+      'Sociedad, Estado y procesos políticos para comprender la realidad social.',
+    ipc: 'Pensamiento científico, métodos, argumentos y construcción del conocimiento.',
+    'introduccion al pensamiento cientifico':
+      'Pensamiento científico, métodos, argumentos y construcción del conocimiento.',
+    'fisica e introduccion a la biofisica':
+      'Principios físicos aplicados a fenómenos biológicos y al cuerpo humano.',
+    'biologia e introduccion a la biologia celular':
+      'Bases de biología celular, organización y procesos fundamentales de la vida.',
+    matematica: 'Herramientas matemáticas para razonar y resolver problemas.',
+    quimica: 'Materia, reacciones y fundamentos químicos aplicados a ciencias de la salud.',
+  };
+
+  return descriptions[normalizeMateriaName(nombre)] ?? null;
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -125,7 +152,10 @@ export default async function MateriasPage({
       fetchSharedStudentMaterialsByCarrera(publicClient, carreraId, 8),
       loadCatalogContentSignals(),
     ]);
-    materias = loadedMaterias;
+    materias = loadedMaterias.map((materia) => {
+      const descripcion = getBriefAiDescription(materia.nombre);
+      return descripcion ? { ...materia, descripcion } : materia;
+    });
     sharedStudentMaterials = loadedSharedMaterials;
     contentMateriaIds = contentSignals.contentMateriaIds;
     questionMateriaIds = contentSignals.questionMateriaIds;
