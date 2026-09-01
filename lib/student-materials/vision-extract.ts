@@ -15,6 +15,8 @@ const MIN_CANONICAL_PAGE_CHARS = 40;
 const BLANK_PAGE_MARKER = '__BLANK_PAGE__';
 const INITIAL_VISION_MAX_OUTPUT_TOKENS = 7600;
 const RETRY_VISION_MAX_OUTPUT_TOKENS = 4200;
+const IMAGE_HEAVY_NATIVE_TEXT_THRESHOLD = 900;
+const MIXED_NATIVE_TEXT_THRESHOLD = 420;
 
 const VISION_PAGE_SCHEMA = {
   type: 'OBJECT',
@@ -66,24 +68,24 @@ function countMatches(value: string, pattern: RegExp) {
 
 /**
  * Señales conservadoras para páginas donde el orden espacial de símbolos es
- * semántico. El objetivo no es decidir la materia, sino detectar cuándo una
- * extracción lineal de PDF puede degradar ecuaciones, matrices o vectores.
+ * semántico. Evitamos contar '/' y '*' como señales por sí solas porque en
+ * apuntes académicos aparecen mucho en listas, fechas y secuencias como C/G/A/U.
  */
 export function isMathDensePage(value: string) {
   const text = value.trim();
   if (!text) return false;
 
-  const mathSymbols = countMatches(text, /[=+*/×÷±≤≥∑∫√∞≠≈^]/g);
+  const mathSymbols = countMatches(text, /[=+×÷±≤≥∑∫√∞≠≈^]/g);
   const equationShapes = countMatches(
     text,
-    /(?:^|\s)[A-Za-z][A-Za-z0-9_]*(?:\([^\n)]*\))?\s*[=<>]\s*[^\n]{1,80}/gm
+    /(?:^|\s)[A-Za-z][A-Za-z0-9_]*(?:\([^\n)]*\))?\s*(?:=|<->|↔|⇌|->|=>)\s*[^\n]{1,80}/gm
   );
   const structuralTerms =
     /\b(?:matriz|matrices|matrix|vector(?:es)?|ecuaci[oó]n|equation|sistema|system|determinante|determinant|integral|derivada|derivative|transpuesta|transpose|escalar|scalar)\b/i.test(
       text
     );
 
-  return mathSymbols >= 8 || equationShapes >= 3 || (structuralTerms && mathSymbols >= 3);
+  return mathSymbols >= 8 || equationShapes >= 2 || (structuralTerms && mathSymbols >= 3);
 }
 
 function getDocumentPageCount(pageCount: number | null, pages: string[] | null) {
@@ -94,9 +96,11 @@ function getDocumentPageCount(pageCount: number | null, pages: string[] | null) 
 /**
  * Selecciona sólo las páginas que justifican el costo visual.
  *
- * - Un escaneo corto/medio se procesa completo.
+ * - Un escaneo corto/medio se procesa completo sólo cuando el usuario lo pidió.
  * - En PDFs mixtos se leen visualmente páginas con poco texto o matemática
  *   densa, manteniendo el camino nativo para el resto.
+ * - En documentos image-heavy permitimos algo más de texto por página porque
+ *   suelen intercalar diagramas valiosos con explicaciones escritas.
  * - Escaneos enormes conservan por ahora el fallback PDF completo existente;
  *   evitamos construir un documento canónico parcial y presentarlo como total.
  */
@@ -117,11 +121,15 @@ export function selectVisionPageNumbers(input: {
 
   const pages = input.pages ?? [];
   const selected: number[] = [];
+  const lowTextThreshold =
+    input.analysis.documentType === 'image_heavy'
+      ? IMAGE_HEAVY_NATIVE_TEXT_THRESHOLD
+      : MIXED_NATIVE_TEXT_THRESHOLD;
 
   pages.forEach((page, index) => {
     const pageNumber = index + 1;
     const normalized = page.replace(/\s+/g, ' ').trim();
-    const hasLittleNativeText = normalized.length < 320;
+    const hasLittleNativeText = normalized.length < lowTextThreshold;
     const visualCandidate =
       input.analysis.processingStrategy === 'hybrid_text' ||
       input.analysis.documentType === 'image_heavy';
