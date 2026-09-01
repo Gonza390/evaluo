@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -42,6 +42,7 @@ import {
   Share2,
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
+import { ResumenMaterialCard } from '@/components/materia/resumen-material-card';
 import {
   buildResumenKey,
   getMateriaContextErrorMessage,
@@ -578,140 +579,54 @@ export default function MateriaContent({
     [activeTab, materiaId, recursosPdf, resourceVotes]
   );
 
-  const renderResumenCards = (className = 'grid gap-4 md:grid-cols-2 xl:grid-cols-3') => (
+  const renderResumenCards = (className = 'grid gap-5') => (
     <div className={className}>
       {resumenesFiltrados.map((resumen) => {
-        const resumenUrl = resumen.file_url ? getRecursoPublicUrl(resumen.file_url) : null;
+        if (!resumen.file_url) return null;
+
         const resourceId = resumen.id.startsWith('recurso-')
           ? resumen.id.replace('recurso-', '')
           : null;
         const resourceVoteSummary = resourceId
           ? (resourceVotes[resourceId] ?? getDefaultResourceVoteSummary())
           : null;
+        const nestedResourceId = resourceId ?? undefined;
+        const baseRoute = getResourceRoute(
+          materiaId,
+          'resumen-modulo',
+          nombre,
+          nestedResourceId
+        );
+        const separator = baseRoute.includes('?') ? '&' : '?';
+        const studyRoute = `${baseRoute}${separator}modulo=${activeUnidad}`;
 
         return (
-          <article
+          <ResumenMaterialCard
             key={resumen.id}
-            className="surface-card p-6"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h3 className="text-lg font-semibold tracking-[-0.035em] text-slate-900">{resumen.title}</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  {resumen.author_name || 'Autor no especificado'}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-1">
-                {getResumenRating(resumen.score).map((filled, index) => (
-                  <Star
-                    key={index}
-                    className={`h-4 w-4 ${filled ? 'fill-current text-yellow-400' : 'text-slate-200'}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-500">
-              {resumen.pages ? (
-                <div className="flex items-center gap-1.5">
-                  <FileText className="h-4 w-4" />
-                  <span>{resumen.pages} paginas</span>
-                </div>
-              ) : null}
-              {resumen.created_at ? (
-                <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4" />
-                  <span>{new Date(resumen.created_at).toLocaleDateString('es-AR')}</span>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {resumenUrl ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const nestedResourceId = resumen.id.startsWith('recurso-')
-                        ? resumen.id.replace('recurso-', '')
-                        : undefined;
-                      const baseRoute = getResourceRoute(
-                        materiaId,
-                        'resumen-modulo',
-                        nombre,
-                        nestedResourceId
-                      );
-                      const separator = baseRoute.includes('?') ? '&' : '?';
-                      router.push(`${baseRoute}${separator}modulo=${activeUnidad}`);
-                    }}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Leer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const storagePath = resumen.file_url;
-                      if (!storagePath) {
-                        return;
-                      }
-
-                      await handleSecureDownload({
-                        id: resumen.id,
-                        nombre: resumen.title,
-                        tipo: 'resumen',
-                        url_archivo: storagePath,
-                        creado_at: resumen.created_at,
-                        materia_id: materiaId,
-                      });
-                    }}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#4F5DFF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
-                  >
-                    <Download className="h-4 w-4" />
-                    Descargar
-                  </button>
-                </>
-              ) : null}
-
-              {isUserLogged ? (
-                <div className="ml-auto flex items-center gap-2">
-                  {resourceVoteSummary ? (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                      {resourceVoteSummary.score >= 0 ? '+' : ''}
-                      {resourceVoteSummary.score} ranking
-                    </span>
-                  ) : null}
-                  <button
-                    onClick={() =>
-                      resourceId ? void voteResource(resourceId, 1) : void voteResumen(resumen.id, 1)
-                    }
-                    disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
-                    className={`rounded-full border p-2 transition disabled:opacity-60 ${
-                      resourceVoteSummary?.userVote === 1
-                        ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-                        : 'border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'
-                    }`}
-                  >
-                    <ThumbsUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      resourceId ? void voteResource(resourceId, -1) : void voteResumen(resumen.id, -1)
-                    }
-                    disabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
-                    className={`rounded-full border p-2 transition disabled:opacity-60 ${
-                      resourceVoteSummary?.userVote === -1
-                        ? 'border-rose-300 bg-rose-50 text-rose-600'
-                        : 'border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600'
-                    }`}
-                  >
-                    <ThumbsDown className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </article>
+            title={resumen.title}
+            author={resumen.author_name || 'Biblioteca Evaluo'}
+            filePath={resumen.file_url}
+            pages={resumen.pages}
+            createdAt={resumen.created_at}
+            rank={resourceVoteSummary?.score ?? null}
+            userVote={resourceVoteSummary?.userVote ?? null}
+            showVoting={isUserLogged}
+            votingDisabled={voteLoading === resumen.id || resourceVoteLoading === resourceId}
+            onStudy={() => router.push(studyRoute)}
+            onDownload={async () => {
+              await handleSecureDownload({
+                id: resumen.id,
+                nombre: resumen.title,
+                tipo: 'resumen',
+                url_archivo: resumen.file_url,
+                creado_at: resumen.created_at,
+                materia_id: materiaId,
+              });
+            }}
+            onVote={(voteType) =>
+              resourceId ? void voteResource(resourceId, voteType) : void voteResumen(resumen.id, voteType)
+            }
+          />
         );
       })}
     </div>
@@ -1369,4 +1284,3 @@ export default function MateriaContent({
     </div>
   );
 }
-
