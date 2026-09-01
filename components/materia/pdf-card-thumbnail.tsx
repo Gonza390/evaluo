@@ -8,27 +8,65 @@ interface PdfCardThumbnailProps {
   resourcePath: string | null;
   title?: string;
   shouldLoad?: boolean;
+  variant?: 'thumbnail' | 'preview';
 }
 
 export function PdfCardThumbnail({
   resourcePath,
   title = 'Portada del PDF',
-  shouldLoad: _shouldLoad = true,
+  shouldLoad = true,
+  variant = 'thumbnail',
 }: PdfCardThumbnailProps) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   const isPdf = Boolean(resourcePath && resourcePath.toLowerCase().endsWith('.pdf'));
   const thumbnailSrc = resourcePath
     ? `/api/pdf-thumbnail?path=${encodeURIComponent(resourcePath)}`
     : null;
+  const isPreview = variant === 'preview';
 
   useEffect(() => {
     setThumbnailFailed(false);
   }, [resourcePath]);
 
+  if (isPreview) {
+    return (
+      <div className="flex h-full w-full items-start justify-center">
+        <div className="w-full max-w-[164px] overflow-hidden rounded-[7px] border border-slate-200 bg-white shadow-[0_9px_20px_rgba(15,23,42,0.10)]">
+          {shouldLoad && isPdf && thumbnailSrc && !thumbnailFailed ? (
+            <div className="relative aspect-[0.727] w-full bg-white">
+              <Image
+                src={thumbnailSrc}
+                alt={title}
+                fill
+                sizes="164px"
+                className="object-contain"
+                loading="lazy"
+                unoptimized
+                onError={() => setThumbnailFailed(true)}
+              />
+            </div>
+          ) : (
+            <div className="flex aspect-[0.727] w-full items-center justify-center bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] px-4 text-center">
+              <div className="space-y-2.5">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#2563EB]">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#2563EB]">
+                  Documento PDF
+                </p>
+                <p className="text-[10px] leading-4 text-slate-400">Abrí el material para verlo completo</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-[18px] bg-white p-1.5 shadow-[0_10px_24px_rgba(37,99,235,0.08)]">
       <div className="overflow-hidden rounded-[12px] bg-white">
-        {isPdf && thumbnailSrc && !thumbnailFailed ? (
+        {shouldLoad && isPdf && thumbnailSrc && !thumbnailFailed ? (
           <div className="relative h-[132px] w-[96px] overflow-hidden bg-white">
             <Image
               src={thumbnailSrc}
@@ -50,9 +88,7 @@ export function PdfCardThumbnail({
               <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#4F5DFF]">
                 Material
               </p>
-              <p className="text-[12px] leading-4 text-slate-500">
-                Vista previa al abrir
-              </p>
+              <p className="text-[12px] leading-4 text-slate-500">Vista previa al abrir</p>
             </div>
           </div>
         )}
