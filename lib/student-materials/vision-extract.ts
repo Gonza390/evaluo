@@ -5,6 +5,7 @@ import { recordAiUsage } from '@/lib/student-materials/ai-usage';
 import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
 import { cleanMultilineBlock } from '@/lib/student-materials/text';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
+import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 
 const VISION_RENDER_SCALE = 2.2;
 const VISION_BATCH_SIZE = 4;
@@ -286,6 +287,21 @@ export async function enhancePdfExtractionWithVision(input: {
   userId?: string;
   pageNumbers?: number[];
 }): Promise<VisionEnhancedPdfExtraction> {
+  const visualAnalysisEnabled = await isStudentMaterialVisualAnalysisEnabled(input.materialId);
+
+  if (!visualAnalysisEnabled) {
+    logInfo('studentMaterialVisionExtract.skippedByPreference', {
+      materialId: input.materialId,
+    });
+    return {
+      text: input.nativeText,
+      pages: input.nativePages,
+      visionUsed: false,
+      visionPageNumbers: [],
+      visionModel: null,
+    };
+  }
+
   const selectedPageNumbers =
     input.pageNumbers ??
     selectVisionPageNumbers({
