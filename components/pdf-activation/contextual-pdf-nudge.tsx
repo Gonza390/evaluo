@@ -199,7 +199,7 @@ export function ContextualPdfNudge() {
         aria-label="Preparar material propio"
         className={`fixed max-w-md border bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] ${
           isMateria
-            ? 'top-1/2 left-1/2 z-50 w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 rounded-[26px] border-white/80 p-5 sm:w-[440px] sm:p-6'
+            ? 'top-1/2 left-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-[26px] border-white/80 p-5 sm:w-[440px] sm:p-6'
             : 'inset-x-3 bottom-3 z-40 mx-auto rounded-2xl border-indigo-100 bg-white/95 p-4 backdrop-blur sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]'
         }`}
       >
