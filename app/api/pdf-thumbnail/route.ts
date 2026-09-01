@@ -57,15 +57,24 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient();
-    // Validación de visibilidad con RLS: solo se sirve el thumbnail si el
-    // recurso o resumen es visible para el solicitante (las policies deciden).
+    // Validación de visibilidad con RLS. También permitimos materiales de
+    // estudiantes únicamente cuando están compartidos y terminaron de procesarse.
     const server = await createClientServer();
-    const [{ data: resourceMatch }, { data: resumenMatch }] = await Promise.all([
-      server.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
-      server.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
-    ]);
+    const [{ data: resourceMatch }, { data: resumenMatch }, { data: studentMaterialMatch }] =
+      await Promise.all([
+        server.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
+        server.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
+        server
+          .from('student_materials')
+          .select('id')
+          .eq('file_path', objectPath)
+          .eq('visibility', 'shared')
+          .eq('processing_status', 'ready')
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
-    if (!resourceMatch && !resumenMatch) {
+    if (!resourceMatch && !resumenMatch && !studentMaterialMatch) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
@@ -85,15 +94,13 @@ export async function GET(request: Request) {
     const firstPage = rendered.images[0];
 
     if (!firstPage) {
-      // El cliente ya tiene un fallback visual para thumbnails no disponibles.
-      // 422 evita registrar como excepción un PDF válido que no pudo renderizarse.
       return NextResponse.json({ error: 'Unable to render pdf thumbnail' }, { status: 422 });
     }
 
-    // Sharp procesa PNG de forma nativa en Vercel. No le pasamos el PDF crudo:
-    // libvips puede compilarse sin soporte PDF y devolver "unsupported image format".
+    // Una resolución mayor mantiene legible el preview derecho sin convertir
+    // el PDF completo en una carga pesada para la grilla de materias.
     const thumbnail = await sharp(firstPage)
-      .resize({ width: 192, height: 264, fit: 'inside', withoutEnlargement: true })
+      .resize({ width: 360, height: 495, fit: 'inside', withoutEnlargement: true })
       .png()
       .toBuffer();
 
