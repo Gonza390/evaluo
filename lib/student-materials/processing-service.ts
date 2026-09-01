@@ -34,6 +34,7 @@ import {
   enhancePdfExtractionWithVision,
   selectVisionPageNumbers,
 } from '@/lib/student-materials/vision-extract';
+import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
@@ -100,21 +101,24 @@ export async function processStudentMaterial(input: {
     pages: nativePages,
   } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, nativeText, pageCount);
+  const visualAnalysisEnabled = await isStudentMaterialVisualAnalysisEnabled(material.id);
 
-  const selectedVisionPageNumbers = selectVisionPageNumbers({
-    analysis: documentAnalysis,
-    pages: nativePages,
-    pageCount,
-  });
+  const selectedVisionPageNumbers = visualAnalysisEnabled
+    ? selectVisionPageNumbers({
+        analysis: documentAnalysis,
+        pages: nativePages,
+        pageCount,
+      })
+    : [];
 
-  if (selectedVisionPageNumbers.length > 0) {
+  if (visualAnalysisEnabled && selectedVisionPageNumbers.length > 0) {
     await updateStudentMaterialProcessing(admin, material.id, {
       processingStatus: 'processing',
       processingStage: 'extracting',
       processingProgress: 27,
       processingMessage: documentAnalysis.requiresOcr
-        ? 'Detectamos páginas escaneadas. Activamos lectura visual para reconstruir texto, fórmulas, matrices y gráficos.'
-        : 'Detectamos páginas donde la estructura visual importa. Reforzamos la extracción de fórmulas, tablas y diagramas.',
+        ? 'Detectamos páginas escaneadas. Activamos lectura visual solo en las páginas necesarias.'
+        : 'Detectamos páginas donde la estructura visual importa. Analizamos solo esas páginas para controlar el costo.',
       pageCount,
       processingStrategy: documentAnalysis.processingStrategy,
       documentAnalysis,
@@ -189,8 +193,12 @@ export async function processStudentMaterial(input: {
     processingStage: 'extracting',
     processingProgress: 34,
     processingMessage: visionUsed
-      ? `Lectura visual integrada en ${visionPageNumbers.length} ${visionPageNumbers.length === 1 ? 'página' : 'páginas'}. Conservamos fórmulas y estructura antes de generar el material de estudio.`
-      : buildAnalysisMessage(documentAnalysis),
+      ? `Lectura visual integrada en ${visionPageNumbers.length} ${visionPageNumbers.length === 1 ? 'página' : 'páginas'}. Ese contenido ya forma parte de la fuente académica del PDF.`
+      : visualAnalysisEnabled && selectedVisionPageNumbers.length === 0
+        ? 'No detectamos páginas que justifiquen análisis visual. Seguimos con el texto nativo sin costo visual adicional.'
+        : visualAnalysisEnabled
+          ? buildAnalysisMessage(documentAnalysis)
+          : 'Procesamiento estándar: usamos únicamente la extracción nativa del PDF, sin análisis visual.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     documentAnalysis,
@@ -205,7 +213,7 @@ export async function processStudentMaterial(input: {
     processingMessage: useLargeNativePdfFastPath
       ? 'PDF extenso detectado. Activamos el modo rápido y preparamos resumen y glosario en paralelo.'
       : visionUsed
-        ? 'Construyendo el modelo pedagógico canónico desde texto y lectura visual del PDF.'
+        ? 'Construyendo el modelo pedagógico canónico desde texto y contenido visual recuperado.'
         : 'Construyendo el modelo pedagógico canónico del material.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
@@ -221,10 +229,13 @@ export async function processStudentMaterial(input: {
     text,
     pages,
     documentAnalysis,
-    // Si la reconstrucción visual canónica fue satisfactoria, todo el pipeline
-    // posterior consume esa única fuente. Evitamos volver a leer el PDF por
-    // separado para resumen/glosario y generar versiones divergentes.
-    pdfBuffer: documentAnalysis.requiresOcr && !visionUsed ? buffer : undefined,
+    // El PDF completo sólo puede llegar a un modelo multimodal cuando el
+    // usuario activó explícitamente el análisis visual. En modo estándar no
+    // existe fallback visual oculto ni costo de visión accidental.
+    pdfBuffer:
+      visualAnalysisEnabled && documentAnalysis.requiresOcr && !visionUsed
+        ? buffer
+        : undefined,
     materialId: material.id,
     userId: material.user_id,
   };
@@ -391,6 +402,8 @@ export async function processStudentMaterial(input: {
       page_count: pageCount,
       processing_strategy: documentAnalysis.processingStrategy,
       fast_path: useLargeNativePdfFastPath,
+      visual_analysis_enabled: visualAnalysisEnabled,
+      visual_candidate_count: selectedVisionPageNumbers.length,
       vision_used: visionUsed,
       vision_page_count: visionPageNumbers.length,
     },
@@ -411,6 +424,8 @@ export async function processStudentMaterial(input: {
     glossaryItemCount: glossary.length,
     processingStrategy: documentAnalysis.processingStrategy,
     fastPath: useLargeNativePdfFastPath,
+    visualAnalysisEnabled,
+    visualCandidateCount: selectedVisionPageNumbers.length,
     visionUsed,
     visionPageCount: visionPageNumbers.length,
     visionModel: visionExtraction.visionModel,
