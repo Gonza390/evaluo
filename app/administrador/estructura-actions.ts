@@ -62,6 +62,62 @@ export async function crearFacultadAdministrador(input: {
   }
 }
 
+export async function crearCarreraDirectaUniversidadAdministrador(input: {
+  nombre: string;
+  universidadId: string;
+}): Promise<{ success: boolean; message: string }> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const catalog = admin as any;
+    const nombre = input.nombre.trim();
+
+    if (!nombre || !input.universidadId) {
+      return { success: false, message: 'Completa universidad y nombre de carrera.' };
+    }
+
+    const { data: universidad, error: universidadError } = await admin
+      .from('universidades')
+      .select('id')
+      .eq('id', input.universidadId)
+      .maybeSingle();
+
+    if (universidadError) throw universidadError;
+    if (!universidad) {
+      return { success: false, message: 'La universidad seleccionada no existe.' };
+    }
+
+    const { data: existente, error: existenteError } = await catalog
+      .from('carreras')
+      .select('id')
+      .eq('universidad_id', input.universidadId)
+      .is('facultad_id', null)
+      .ilike('nombre', nombre)
+      .maybeSingle();
+
+    if (existenteError) throw existenteError;
+    if (existente) {
+      return { success: false, message: 'Esa carrera ya existe dentro de la universidad.' };
+    }
+
+    const { error } = await catalog.from('carreras').insert({
+      nombre,
+      universidad_id: input.universidadId,
+      facultad_id: null,
+    });
+
+    if (error) throw error;
+
+    revalidateAdministrador();
+    return { success: true, message: 'Carrera creada correctamente.' };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No pudimos crear la carrera.',
+    };
+  }
+}
+
 export async function crearCarreraEnFacultadAdministrador(input: {
   nombre: string;
   universidadId: string;
