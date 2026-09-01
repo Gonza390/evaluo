@@ -870,7 +870,7 @@ export function MaterialStudyWorkspace({
                           title={title}
                           subtitle={null}
                           className="h-full rounded-[22px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
-                          heightClassName="h-[calc(100vh-14.8rem)] min-h-[620px]"
+                          heightClassName="h-full min-h-0"
                           pageMaxWidthClassName="max-w-[720px]"
                           showSidebarThumbnails={false}
                           theme="default"

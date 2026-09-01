@@ -436,14 +436,14 @@ export default function PdfViewer({
     <div
       ref={containerRef}
       className={cn(
-        'surface-panel w-full min-w-0 max-w-full overflow-hidden',
+        'surface-panel flex w-full min-w-0 max-w-full flex-col overflow-hidden',
         isStudyTheme && 'border-white/8 bg-[#111214] text-slate-100',
         className
       )}
     >
       <div
         className={cn(
-          'border-b border-slate-200 bg-white px-3 py-3 md:px-4',
+          'shrink-0 border-b border-slate-200 bg-white px-3 py-3 md:px-4',
           isStudyTheme && 'border-white/8 bg-[#111214]'
         )}
       >
@@ -540,7 +540,7 @@ export default function PdfViewer({
         </div>
       </div>
 
-      <div className={cn('grid gap-0', showSidebarThumbnails ? 'lg:grid-cols-[170px_minmax(0,1fr)]' : 'grid-cols-1')}>
+      <div className={cn('grid min-h-0 flex-1 gap-0', showSidebarThumbnails ? 'lg:grid-cols-[170px_minmax(0,1fr)]' : 'grid-cols-1')}>
         {showSidebarThumbnails ? (
           <aside
             className={cn(
@@ -616,7 +616,7 @@ export default function PdfViewer({
           </aside>
         ) : null}
 
-        <div className={cn('bg-white p-2 sm:p-3', isStudyTheme && 'bg-[#17181C]')}>
+        <div className={cn('h-full min-h-0 bg-white p-2 sm:p-3', isStudyTheme && 'bg-[#17181C]')}>
           <div
             ref={pageViewportRef}
             className={cn(
