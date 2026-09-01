@@ -2,7 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, BookOpen, GraduationCap } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpen,
+  Building2,
+  ChevronRight,
+  GraduationCap,
+} from 'lucide-react';
 import { createPublicClient } from '@/lib/supabase-public';
 import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -26,10 +32,16 @@ const CareerListClient = dynamic(() => import('./career-list-client'), {
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ tab?: string }>;
+  searchParams?: Promise<{ tab?: string; facultadId?: string }>;
 };
 
 type CarreraRow = {
+  id: string;
+  nombre: string;
+  facultad_id: string | null;
+};
+
+type FacultadRow = {
   id: string;
   nombre: string;
 };
@@ -51,16 +63,11 @@ async function fetchAllCarreraMateriaRelations(
       .in('carrera_id', carreraIds)
       .range(from, to);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
     const rows = data ?? [];
     allRows.push(...rows);
-
-    if (rows.length < RELATIONS_PAGE_SIZE) {
-      break;
-    }
+    if (rows.length < RELATIONS_PAGE_SIZE) break;
   }
 
   return allRows;
@@ -68,6 +75,7 @@ async function fetchAllCarreraMateriaRelations(
 
 type UniversidadPageData = {
   universidad: { id: string; nombre: string };
+  facultades: FacultadRow[];
   allCarreras: CarreraRow[];
   materiaCountByCarrera: Record<string, number>;
   totalUniqueMaterias: number;
@@ -76,6 +84,7 @@ type UniversidadPageData = {
 const loadUniversidadPageData = unstable_cache(
   async (id: string): Promise<UniversidadPageData> => {
     const supabase = createPublicClient();
+    const catalog = supabase as any;
 
     const { data: universidad } = await supabase
       .from('universidades')
@@ -83,17 +92,26 @@ const loadUniversidadPageData = unstable_cache(
       .eq('id', id)
       .single();
 
-    if (!universidad) {
-      return null;
-    }
+    if (!universidad) return null;
 
-    const { data: carrerasData } = await supabase
-      .from('carreras')
-      .select('id, nombre')
-      .eq('universidad_id', id)
-      .order('nombre');
+    const [facultadesResult, carrerasResult] = await Promise.all([
+      catalog
+        .from('facultades')
+        .select('id, nombre')
+        .eq('universidad_id', id)
+        .order('nombre'),
+      catalog
+        .from('carreras')
+        .select('id, nombre, facultad_id')
+        .eq('universidad_id', id)
+        .order('nombre'),
+    ]);
 
-    const allCarreras = (carrerasData ?? []) as CarreraRow[];
+    if (facultadesResult.error) throw facultadesResult.error;
+    if (carrerasResult.error) throw carrerasResult.error;
+
+    const facultades = (facultadesResult.data ?? []) as FacultadRow[];
+    const allCarreras = (carrerasResult.data ?? []) as CarreraRow[];
     const carreraIds = allCarreras.map((carrera) => carrera.id);
     const materiaCountByCarrera: Record<string, number> = {};
     const uniqueMateriaIds = new Set<string>();
@@ -104,9 +122,7 @@ const loadUniversidadPageData = unstable_cache(
 
       for (const item of carreraMaterias) {
         if (!item.carrera_id || !item.materia_id) continue;
-
         uniqueMateriaIds.add(item.materia_id);
-
         const materiaIds = materiaIdsByCarrera.get(item.carrera_id) ?? new Set<string>();
         materiaIds.add(item.materia_id);
         materiaIdsByCarrera.set(item.carrera_id, materiaIds);
@@ -119,12 +135,13 @@ const loadUniversidadPageData = unstable_cache(
 
     return {
       universidad,
+      facultades,
       allCarreras,
       materiaCountByCarrera,
       totalUniqueMaterias: uniqueMateriaIds.size,
     };
   },
-  ['universidad-data'],
+  ['universidad-data-v2'],
   { revalidate: 600, tags: ['universidad-data'] }
 );
 
@@ -135,49 +152,83 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   if (!data) {
     return {
       title: 'Universidad',
-      robots: {
-        index: false,
-        follow: false,
-      },
+      robots: { index: false, follow: false },
     };
   }
 
-  const universidad = data.universidad;
-  const hasAcademicCatalog = data.allCarreras.length > 0 && data.totalUniqueMaterias > 0;
+  const { universidad, allCarreras, totalUniqueMaterias } = data;
+  const hasAcademicCatalog = allCarreras.length > 0 && totalUniqueMaterias > 0;
 
   return {
     title: `${universidad.nombre} | Universidad`,
-    description: `Explorá carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
-    alternates: {
-      canonical: `/universidad/${universidad.id}`,
-    },
-    robots: {
-      index: hasAcademicCatalog,
-      follow: true,
-    },
+    description: `Explorá la estructura académica, carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
+    alternates: { canonical: `/universidad/${universidad.id}` },
+    robots: { index: hasAcademicCatalog, follow: true },
     openGraph: {
       title: `${universidad.nombre} | Evaluo`,
-      description: `Carreras y materias disponibles de ${universidad.nombre}.`,
+      description: `Facultades, carreras y materias disponibles de ${universidad.nombre}.`,
       url: `/universidad/${universidad.id}`,
     },
   };
 }
 
+function FacultyGrid({ universidadId, facultades }: { universidadId: string; facultades: FacultadRow[] }) {
+  return (
+    <div className="pt-6 sm:pt-7">
+      <div>
+        <h2 className="section-title leading-none text-[#10214C]">Facultades</h2>
+        <p className="section-copy mt-2 text-[#7C879C]">
+          Elegí una facultad para ver sus carreras.
+        </p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {facultades.map((facultad, index) => (
+          <Link
+            key={facultad.id}
+            href={`/universidad/${universidadId}?tab=carreras&facultadId=${facultad.id}`}
+            className="surface-card group animate-surface-reveal p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
+            style={{ animationDelay: `${index * 80}ms` }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#2563EB]">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[1.02rem] font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
+                  {facultad.nombre}
+                </h3>
+                <p className="mt-1 text-sm text-[#7C879C]">Ver carreras</p>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function UniversidadPage({ params, searchParams }: Props) {
   const [id, resolvedSearchParams] = await Promise.all([
     (await params).id,
-    searchParams ?? Promise.resolve<{ tab?: string }>({}),
+    searchParams ?? Promise.resolve<{ tab?: string; facultadId?: string }>({}),
   ]);
+
   const activeTab = resolvedSearchParams?.tab === 'informacion' ? 'informacion' : 'carreras';
-
   const data = await loadUniversidadPageData(id);
+  if (!data) notFound();
 
-  if (!data) {
-    notFound();
-  }
-
-  const { universidad, allCarreras, totalUniqueMaterias } = data;
+  const { universidad, facultades, allCarreras, totalUniqueMaterias } = data;
   const universityProfile = getUniversityProfile(universidad.nombre);
+  const selectedFacultad = facultades.find(
+    (facultad) => facultad.id === resolvedSearchParams?.facultadId
+  ) ?? null;
+  const carrerasDirectas = allCarreras.filter((carrera) => !carrera.facultad_id);
+  const carrerasSeleccionadas = selectedFacultad
+    ? allCarreras.filter((carrera) => carrera.facultad_id === selectedFacultad.id)
+    : [];
+  const usesFaculties = facultades.length > 0;
 
   return (
     <div className="animate-page-enter min-h-full bg-white">
@@ -186,6 +237,9 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
           { name: 'Inicio', path: '/' },
           { name: 'Explorar', path: '/explorar' },
           { name: universidad.nombre, path: `/universidad/${id}` },
+          ...(selectedFacultad
+            ? [{ name: selectedFacultad.nombre, path: `/universidad/${id}?facultadId=${selectedFacultad.id}` }]
+            : []),
         ])}
       />
 
@@ -208,6 +262,12 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
+            {usesFaculties ? (
+              <span className="inline-flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                <strong className="font-semibold text-slate-950">{facultades.length}</strong> facultades
+              </span>
+            ) : null}
             <span className="inline-flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-blue-600" />
               <strong className="font-semibold text-slate-950">{allCarreras.length}</strong> carreras
@@ -232,7 +292,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
               activeTab === 'carreras' ? 'text-slate-950' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Carreras
+            Oferta académica
             {activeTab === 'carreras' ? (
               <span className="absolute inset-x-0 bottom-[-1px] h-0.5 bg-blue-600" />
             ) : null}
@@ -259,28 +319,30 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   Sobre {universidad.nombre}
                 </h2>
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-                  {universidad.nombre} reúne una propuesta académica organizada por carreras y
-                  materias. En Evaluo podés entrar directo a cada carrera, recorrer su plan de
-                  estudios y continuar desde cada materia sin perder el contexto académico.
+                  {usesFaculties
+                    ? `${universidad.nombre} organiza su oferta académica en facultades, carreras y materias. En Evaluo podés recorrer esa estructura nivel por nivel.`
+                    : `${universidad.nombre} reúne una propuesta académica organizada por carreras y materias. En Evaluo podés entrar directo a cada carrera y continuar desde sus materias.`}
                 </p>
 
                 <div className="mt-8 border-t border-slate-200">
+                  {usesFaculties ? (
+                    <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                      <span className="text-sm text-slate-500">Facultades visibles</span>
+                      <span className="text-sm font-semibold text-slate-950 sm:text-right">{facultades.length}</span>
+                    </div>
+                  ) : null}
                   <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                     <span className="text-sm text-slate-500">Carreras visibles</span>
-                    <span className="text-sm font-semibold text-slate-950 sm:text-right">
-                      {allCarreras.length}
-                    </span>
+                    <span className="text-sm font-semibold text-slate-950 sm:text-right">{allCarreras.length}</span>
                   </div>
                   <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                     <span className="text-sm text-slate-500">Materias visibles</span>
-                    <span className="text-sm font-semibold text-slate-950 sm:text-right">
-                      {totalUniqueMaterias}
-                    </span>
+                    <span className="text-sm font-semibold text-slate-950 sm:text-right">{totalUniqueMaterias}</span>
                   </div>
                   <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                     <span className="text-sm text-slate-500">Modelo académico</span>
                     <span className="text-sm font-semibold text-slate-950 sm:text-right">
-                      Organizado por carreras
+                      {usesFaculties ? 'Facultades → carreras → materias' : 'Carreras → materias'}
                     </span>
                   </div>
                 </div>
@@ -292,16 +354,51 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   El contenido se conecta por materia.
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Cuando una materia corresponde a más de una carrera, el material puede compartirse
-                  sin duplicar contenido. Así el recorrido se mantiene claro y consistente al
-                  estudiar.
+                  Cuando una materia corresponde a más de una carrera, el material puede compartirse sin duplicar contenido.
                 </p>
               </aside>
             </div>
           </section>
         ) : (
           <section className="animate-tab-panel">
-            <CareerListClient initialCarreras={allCarreras} universityName={universidad.nombre} />
+            {usesFaculties ? (
+              selectedFacultad ? (
+                <div className="pt-6 sm:pt-7">
+                  <Link
+                    href={`/universidad/${id}?tab=carreras`}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-blue-600"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Facultades
+                  </Link>
+                  <div className="mt-5 border-b border-slate-200 pb-5">
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">Facultad</p>
+                    <h2 className="mt-2 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
+                      {selectedFacultad.nombre}
+                    </h2>
+                  </div>
+                  <CareerListClient
+                    initialCarreras={carrerasSeleccionadas}
+                    universityName={universidad.nombre}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <FacultyGrid universidadId={id} facultades={facultades} />
+                  {carrerasDirectas.length > 0 ? (
+                    <div className="mt-12 border-t border-slate-200 pt-8">
+                      <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">Carreras directas</p>
+                      <CareerListClient
+                        initialCarreras={carrerasDirectas}
+                        universityName={universidad.nombre}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              )
+            ) : (
+              <CareerListClient initialCarreras={allCarreras} universityName={universidad.nombre} />
+            )}
           </section>
         )}
       </div>
