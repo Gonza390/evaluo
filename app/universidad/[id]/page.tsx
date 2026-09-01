@@ -14,6 +14,7 @@ import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { getUniversityProfile } from '@/lib/university-profiles';
+import { getFacultyProfile } from '@/lib/faculty-profiles';
 
 const CareerListClient = dynamic(() => import('./career-list-client'), {
   loading: () => (
@@ -157,16 +158,19 @@ export async function generateMetadata({ params }: Pick<Props, 'params'>): Promi
   }
 
   const { universidad, allCarreras, totalUniqueMaterias } = data;
+  const profile = getUniversityProfile(universidad.nombre);
   const hasAcademicCatalog = allCarreras.length > 0 && totalUniqueMaterias > 0;
 
   return {
     title: `${universidad.nombre} | Universidad`,
-    description: `Explorá la estructura académica, carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
+    description:
+      profile?.description ??
+      `Explorá la estructura académica, carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
     alternates: { canonical: `/universidad/${universidad.id}` },
     robots: { index: hasAcademicCatalog, follow: true },
     openGraph: {
       title: `${universidad.nombre} | Evaluo`,
-      description: `Facultades, carreras y materias disponibles de ${universidad.nombre}.`,
+      description: profile?.subtitle ?? `Facultades, carreras y materias disponibles de ${universidad.nombre}.`,
       url: `/universidad/${universidad.id}`,
     },
   };
@@ -224,6 +228,10 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
   const selectedFacultad = facultades.find(
     (facultad) => facultad.id === resolvedSearchParams?.facultadId
   ) ?? null;
+  const facultyProfile = selectedFacultad
+    ? getFacultyProfile(universidad.nombre, selectedFacultad.nombre)
+    : null;
+  const selectedFacultyName = facultyProfile?.displayName ?? selectedFacultad?.nombre ?? null;
   const carrerasDirectas = allCarreras.filter((carrera) => !carrera.facultad_id);
   const carrerasSeleccionadas = selectedFacultad
     ? allCarreras.filter((carrera) => carrera.facultad_id === selectedFacultad.id)
@@ -238,7 +246,7 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
           { name: 'Explorar', path: '/explorar' },
           { name: universidad.nombre, path: `/universidad/${id}` },
           ...(selectedFacultad
-            ? [{ name: selectedFacultad.nombre, path: `/universidad/${id}?facultadId=${selectedFacultad.id}` }]
+            ? [{ name: selectedFacultyName ?? selectedFacultad.nombre, path: `/universidad/${id}?facultadId=${selectedFacultad.id}` }]
             : []),
         ])}
       />
@@ -262,26 +270,31 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
           </p>
 
           <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
-            {usesFaculties ? (
-              <span className="inline-flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                <strong className="font-semibold text-slate-950">{facultades.length}</strong> facultades
-              </span>
-            ) : null}
-            <span className="inline-flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-blue-600" />
-              <strong className="font-semibold text-slate-950">{allCarreras.length}</strong> carreras
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-blue-600" />
-              <strong className="font-semibold text-slate-950">{totalUniqueMaterias}</strong> materias
-            </span>
-            {universityProfile?.highlightStats?.slice(0, 2).map((stat) => (
-              <span key={stat.label} className="inline-flex items-baseline gap-1.5">
-                <strong className="font-semibold text-slate-950">{stat.value}</strong>
-                <span>{stat.label}</span>
-              </span>
-            ))}
+            {universityProfile?.highlightStats?.length ? (
+              universityProfile.highlightStats.slice(0, 4).map((stat) => (
+                <span key={stat.label} className="inline-flex items-baseline gap-1.5">
+                  <strong className="font-semibold text-slate-950">{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </span>
+              ))
+            ) : (
+              <>
+                {usesFaculties ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    <strong className="font-semibold text-slate-950">{facultades.length}</strong> facultades en Evaluo
+                  </span>
+                ) : null}
+                <span className="inline-flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-blue-600" />
+                  <strong className="font-semibold text-slate-950">{allCarreras.length}</strong> carreras en Evaluo
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  <strong className="font-semibold text-slate-950">{totalUniqueMaterias}</strong> materias en Evaluo
+                </span>
+              </>
+            )}
           </div>
         </header>
 
@@ -319,43 +332,71 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   Sobre {universidad.nombre}
                 </h2>
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-                  {usesFaculties
-                    ? `${universidad.nombre} organiza su oferta académica en facultades, carreras y materias. En Evaluo podés recorrer esa estructura nivel por nivel.`
-                    : `${universidad.nombre} reúne una propuesta académica organizada por carreras y materias. En Evaluo podés entrar directo a cada carrera y continuar desde sus materias.`}
+                  {universityProfile?.description ??
+                    (usesFaculties
+                      ? `${universidad.nombre} organiza su oferta académica en facultades, carreras y materias.`
+                      : `${universidad.nombre} reúne una propuesta académica organizada por carreras y materias.`)}
                 </p>
 
                 <div className="mt-8 border-t border-slate-200">
-                  {usesFaculties ? (
-                    <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
-                      <span className="text-sm text-slate-500">Facultades visibles</span>
-                      <span className="text-sm font-semibold text-slate-950 sm:text-right">{facultades.length}</span>
-                    </div>
-                  ) : null}
-                  <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
-                    <span className="text-sm text-slate-500">Carreras visibles</span>
-                    <span className="text-sm font-semibold text-slate-950 sm:text-right">{allCarreras.length}</span>
-                  </div>
-                  <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
-                    <span className="text-sm text-slate-500">Materias visibles</span>
-                    <span className="text-sm font-semibold text-slate-950 sm:text-right">{totalUniqueMaterias}</span>
-                  </div>
-                  <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
-                    <span className="text-sm text-slate-500">Modelo académico</span>
-                    <span className="text-sm font-semibold text-slate-950 sm:text-right">
-                      {usesFaculties ? 'Facultades → carreras → materias' : 'Carreras → materias'}
-                    </span>
-                  </div>
+                  {universityProfile?.facts?.length ? (
+                    universityProfile.facts.map((fact) => (
+                      <div key={fact.label} className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-center">
+                        <span className="text-sm text-slate-500">{fact.label}</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">{fact.value}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      {usesFaculties ? (
+                        <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                          <span className="text-sm text-slate-500">Facultades en Evaluo</span>
+                          <span className="text-sm font-semibold text-slate-950 sm:text-right">{facultades.length}</span>
+                        </div>
+                      ) : null}
+                      <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                        <span className="text-sm text-slate-500">Carreras en Evaluo</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">{allCarreras.length}</span>
+                      </div>
+                      <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                        <span className="text-sm text-slate-500">Materias en Evaluo</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">{totalUniqueMaterias}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
               <aside className="border-t border-slate-200 pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
-                <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">En Evaluo</p>
-                <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
-                  El contenido se conecta por materia.
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  Cuando una materia corresponde a más de una carrera, el material puede compartirse sin duplicar contenido.
-                </p>
+                {universityProfile ? (
+                  <>
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">Fuente institucional</p>
+                    <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
+                      Información verificada con la universidad.
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Los datos institucionales de esta ficha se basan en información publicada por {universityProfile.sourceName}.
+                    </p>
+                    <a
+                      href={universityProfile.officialUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:underline"
+                    >
+                      Ver fuente oficial
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">En Evaluo</p>
+                    <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
+                      El contenido se conecta por materia.
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Cuando una materia corresponde a más de una carrera, el material puede compartirse sin duplicar contenido.
+                    </p>
+                  </>
+                )}
               </aside>
             </div>
           </section>
@@ -371,12 +412,46 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                     <ArrowLeft className="h-4 w-4" />
                     Facultades
                   </Link>
-                  <div className="mt-5 border-b border-slate-200 pb-5">
+
+                  <div className="mt-5 border-b border-slate-200 pb-6">
                     <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">Facultad</p>
                     <h2 className="mt-2 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
-                      {selectedFacultad.nombre}
+                      {selectedFacultyName}
                     </h2>
+                    {facultyProfile ? (
+                      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                        {facultyProfile.subtitle}
+                      </p>
+                    ) : null}
                   </div>
+
+                  {facultyProfile ? (
+                    <div className="grid gap-8 border-b border-slate-200 py-7 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
+                      <div>
+                        <h3 className="text-lg font-bold tracking-[-0.035em] text-slate-950">Sobre la facultad</h3>
+                        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                          {facultyProfile.description}
+                        </p>
+                        <a
+                          href={facultyProfile.officialUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:underline"
+                        >
+                          Ver fuente oficial
+                        </a>
+                      </div>
+                      <div className="border-t border-slate-200 pt-5 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+                        {facultyProfile.facts.map((fact) => (
+                          <div key={fact.label} className="border-b border-slate-200 py-3 first:pt-0">
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">{fact.label}</p>
+                            <p className="mt-1 text-sm font-semibold leading-6 text-slate-950">{fact.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
                   <CareerListClient
                     initialCarreras={carrerasSeleccionadas}
                     universityName={universidad.nombre}
