@@ -166,7 +166,7 @@ export function SharedStudentMaterialCard({
     >
       <div className="grid w-full min-w-0 max-w-full gap-3.5 md:grid-cols-[minmax(0,1fr)_148px] md:items-stretch">
         <div className="flex min-w-0 max-w-full flex-col">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+          <div className="flex min-w-0 items-baseline">
             <span
               className={`min-w-0 text-[9px] font-extrabold uppercase leading-4 tracking-[0.14em] ${
                 isEnriched ? 'text-[#2563EB]' : 'text-emerald-700'
@@ -177,9 +177,6 @@ export function SharedStudentMaterialCard({
                 : isEnriched
                   ? 'Apunte enriquecido'
                   : 'Apunte de estudiante'}
-            </span>
-            <span className="shrink-0 whitespace-nowrap text-[10px] font-semibold text-slate-400">
-              {material.page_count ? `${material.page_count} páginas · ` : ''}PDF
             </span>
           </div>
 
