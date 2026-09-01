@@ -169,6 +169,7 @@ export function BibliotecaPanel({ universidades, materias }: { overview: Bibliot
         </div>
       : level === 'facultad' ? (carrerasFacultad.length ? <div className="grid gap-2.5">{carrerasFacultad.map((c) => <Row key={c.id} title={c.nombre} subtitle="Ver materias" icon={<GraduationCap className="h-5 w-5" />} onClick={() => openCareer(c.id)} />)}</div> : <Empty title="Todavía no hay carreras" description={`Añadí la primera carrera dentro de ${facultad?.nombre ?? 'esta facultad'}.`} />)
       : materiasVisibles.length ? <div className="grid gap-2.5">{materiasVisibles.map((m) => <div key={m.id} className="flex items-center gap-3 rounded-2xl border border-[#e4e9f2] bg-white px-4 py-4"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef3ff] text-[#315efb]"><BookOpen className="h-5 w-5" /></span><span><span className="block text-[14px] font-semibold text-[#1d2a44]">{m.nombre}</span><span className="text-[12px] text-[#8a95ab]">Materia</span></span></div>)}</div> : <Empty title="Todavía no hay materias" description={`Creá la primera materia dentro de ${carrera?.nombre ?? 'esta carrera'} o vinculá una existente.` />}
+      }
     </section>
   );
 }
