@@ -187,7 +187,11 @@ export function ContextualPdfNudge() {
   return (
     <aside
       aria-label="Preparar material propio"
-      className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-md rounded-2xl border border-indigo-100 bg-white/95 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.18)] backdrop-blur sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]"
+      className={`fixed z-40 max-w-md rounded-2xl border border-indigo-100 bg-white/95 p-4 shadow-[0_18px_55px_rgba(15,23,42,0.18)] backdrop-blur ${
+        isMateria
+          ? 'top-1/2 left-1/2 w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 sm:w-[390px]'
+          : 'inset-x-3 bottom-3 mx-auto sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]'
+      }`}
     >
       <button
         type="button"
