@@ -1,3 +1,3 @@
 'use client';
 
-export { BibliotecaPanel } from './biblioteca-panel-simple';
+export { BibliotecaPanel } from './biblioteca-panel-hierarchy';
