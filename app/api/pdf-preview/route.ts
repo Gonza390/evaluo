@@ -53,12 +53,13 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient();
-    const [{ data: resourceMatch }, { data: resumenMatch }] = await Promise.all([
-      admin.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
-      admin.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
+    const candidatePaths = Array.from(new Set([rawPath, objectPath]));
+    const [{ data: resourceMatches }, { data: resumenMatches }] = await Promise.all([
+      admin.from('recursos').select('id').in('url_archivo', candidatePaths).limit(1),
+      admin.from('resumenes').select('id').in('file_url', candidatePaths).limit(1),
     ]);
 
-    if (!resourceMatch && !resumenMatch) {
+    if (!(resourceMatches?.length || resumenMatches?.length)) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
