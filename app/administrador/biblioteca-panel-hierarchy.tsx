@@ -25,6 +25,7 @@ import {
   crearUniversidadBibliotecaAdministrador,
 } from './biblioteca-actions';
 import {
+  crearCarreraDirectaUniversidadAdministrador,
   crearCarreraEnFacultadAdministrador,
   crearFacultadAdministrador,
   obtenerEstructuraUniversidadAdministrador,
@@ -44,7 +45,7 @@ type CarreraRow = {
   facultadId: string | null;
 };
 
-const LEGACY_FACULTY_ID = '__sin_facultad__';
+type CreateMode = 'universidad' | 'facultad' | 'carrera-directa' | 'carrera-facultad' | 'materia' | null;
 
 function AddForm({
   title,
@@ -64,7 +65,7 @@ function AddForm({
   onCancel: () => void;
 }) {
   return (
-    <div className="mb-4 rounded-2xl border border-[#dce3f0] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="mb-5 rounded-2xl border border-[#dce3f0] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
       <p className="mb-3 text-[13px] font-semibold text-[#1d2a44]">{title}</p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
@@ -132,9 +133,18 @@ function NavigationRow({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#d7deeb] bg-white px-5 py-10 text-center">
+    <div className="rounded-2xl border border-dashed border-[#d7deeb] bg-white px-5 py-8 text-center">
       <p className="text-[14px] font-semibold text-[#1d2a44]">{title}</p>
       <p className="mx-auto mt-1.5 max-w-md text-[13px] leading-5 text-[#8a95ab]">{description}</p>
+    </div>
+  );
+}
+
+function SectionTitle({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-3">
+      <h3 className="text-[14px] font-semibold text-[#1d2a44]">{title}</h3>
+      <p className="mt-0.5 text-[12px] text-[#8a95ab]">{description}</p>
     </div>
   );
 }
@@ -158,7 +168,7 @@ export function BibliotecaPanel({
   const [carreraId, setCarreraId] = useState('');
   const [facultades, setFacultades] = useState<FacultadRow[]>([]);
   const [carreras, setCarreras] = useState<CarreraRow[]>([]);
-  const [creating, setCreating] = useState(false);
+  const [createMode, setCreateMode] = useState<CreateMode>(null);
   const [newName, setNewName] = useState('');
 
   const universidad = universidades.find((item) => item.id === universidadId) ?? null;
@@ -168,27 +178,34 @@ export function BibliotecaPanel({
   const level = carreraId
     ? 'materias'
     : facultadId
-      ? 'carreras'
+      ? 'facultad'
       : universidadId
-        ? 'facultades'
+        ? 'universidad'
         : 'universidades';
 
-  const carrerasVisibles = useMemo(() => {
-    if (!facultadId) return [];
-    if (facultadId === LEGACY_FACULTY_ID) return carreras.filter((item) => !item.facultadId);
-    return carreras.filter((item) => item.facultadId === facultadId);
-  }, [carreras, facultadId]);
+  const carrerasDirectas = useMemo(
+    () => carreras.filter((item) => !item.facultadId),
+    [carreras]
+  );
+
+  const carrerasFacultad = useMemo(
+    () => (facultadId ? carreras.filter((item) => item.facultadId === facultadId) : []),
+    [carreras, facultadId]
+  );
 
   const materiasVisibles = useMemo(
     () => (carreraId ? materias.filter((item) => item.carreraIds.includes(carreraId)) : []),
     [carreraId, materias]
   );
 
-  const hasLegacyCareers = carreras.some((item) => !item.facultadId);
-
   const closeCreate = () => {
-    setCreating(false);
+    setCreateMode(null);
     setNewName('');
+  };
+
+  const beginCreate = (mode: Exclude<CreateMode, null>) => {
+    setNewName('');
+    setCreateMode(mode);
   };
 
   const loadUniversity = async (id: string) => {
@@ -247,18 +264,20 @@ export function BibliotecaPanel({
 
   const submitCreate = () => {
     const nombre = newName.trim();
-    if (!nombre) return;
+    if (!nombre || !createMode) return;
 
     startTransition(async () => {
       let result: { success: boolean; message: string } | null = null;
 
-      if (level === 'universidades') {
+      if (createMode === 'universidad') {
         result = await crearUniversidadBibliotecaAdministrador(nombre);
-      } else if (level === 'facultades' && universidadId) {
+      } else if (createMode === 'facultad' && universidadId) {
         result = await crearFacultadAdministrador({ nombre, universidadId });
-      } else if (level === 'carreras' && universidadId && facultadId && facultadId !== LEGACY_FACULTY_ID) {
+      } else if (createMode === 'carrera-directa' && universidadId) {
+        result = await crearCarreraDirectaUniversidadAdministrador({ nombre, universidadId });
+      } else if (createMode === 'carrera-facultad' && universidadId && facultadId) {
         result = await crearCarreraEnFacultadAdministrador({ nombre, universidadId, facultadId });
-      } else if (level === 'materias' && carreraId) {
+      } else if (createMode === 'materia' && carreraId) {
         result = await crearMateriaBibliotecaAdministrador({ nombre, carreraIds: [carreraId] });
       }
 
@@ -266,8 +285,9 @@ export function BibliotecaPanel({
       toast({ description: result.message, variant: result.success ? 'default' : 'destructive' });
       if (!result.success) return;
 
+      const mode = createMode;
       closeCreate();
-      if (universidadId && (level === 'facultades' || level === 'carreras')) {
+      if (universidadId && mode !== 'materia') {
         await loadUniversity(universidadId);
       }
       router.refresh();
@@ -275,16 +295,24 @@ export function BibliotecaPanel({
   };
 
   const createCopy =
-    level === 'universidades'
-      ? { button: 'Añadir universidad', title: 'Nueva universidad', placeholder: 'Nombre de la universidad' }
-      : level === 'facultades'
-        ? { button: 'Añadir facultad', title: 'Nueva facultad', placeholder: 'Nombre de la facultad' }
-        : level === 'carreras'
-          ? { button: 'Añadir carrera', title: 'Nueva carrera', placeholder: 'Nombre de la carrera' }
-          : { button: 'Añadir materia', title: 'Nueva materia', placeholder: 'Nombre de la materia' };
+    createMode === 'universidad'
+      ? { title: 'Nueva universidad', placeholder: 'Nombre de la universidad' }
+      : createMode === 'facultad'
+        ? { title: 'Nueva facultad', placeholder: 'Nombre de la facultad' }
+        : createMode === 'carrera-directa'
+          ? { title: 'Nueva carrera', placeholder: 'Nombre de la carrera' }
+          : createMode === 'carrera-facultad'
+            ? { title: `Nueva carrera en ${facultad?.nombre ?? 'la facultad'}`, placeholder: 'Nombre de la carrera' }
+            : { title: 'Nueva materia', placeholder: 'Nombre de la materia' };
 
-  const canCreate = !(level === 'carreras' && facultadId === LEGACY_FACULTY_ID);
-  const backAction = level === 'facultades' ? goRoot : level === 'carreras' ? goUniversity : goFaculty;
+  const backAction =
+    level === 'universidad'
+      ? goRoot
+      : level === 'facultad'
+        ? goUniversity
+        : facultadId
+          ? goFaculty
+          : goUniversity;
 
   return (
     <section className="mx-auto max-w-5xl">
@@ -292,18 +320,59 @@ export function BibliotecaPanel({
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9aa5ba]">Biblioteca</p>
           <h2 className="mt-1 text-[1.55rem] font-semibold tracking-[-0.045em] text-[#1d2a44]">Estructura académica</h2>
-          <p className="mt-1 text-[13px] text-[#7f8aa3]">Universidad → Facultad → Carrera → Materia</p>
+          <p className="mt-1 text-[13px] text-[#7f8aa3]">Una universidad puede tener carreras directas o agruparlas por facultad.</p>
         </div>
-        {canCreate ? (
-          <button
-            type="button"
-            onClick={() => setCreating(true)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#315efb] px-4 text-[13px] font-semibold text-white transition hover:bg-[#254ee0]"
-          >
-            <Plus className="h-4 w-4" />
-            {createCopy.button}
-          </button>
-        ) : null}
+
+        <div className="flex flex-wrap gap-2">
+          {level === 'universidades' ? (
+            <button
+              type="button"
+              onClick={() => beginCreate('universidad')}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#315efb] px-4 text-[13px] font-semibold text-white transition hover:bg-[#254ee0]"
+            >
+              <Plus className="h-4 w-4" /> Añadir universidad
+            </button>
+          ) : null}
+
+          {level === 'universidad' ? (
+            <>
+              <button
+                type="button"
+                onClick={() => beginCreate('carrera-directa')}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#315efb] px-4 text-[13px] font-semibold text-white transition hover:bg-[#254ee0]"
+              >
+                <Plus className="h-4 w-4" /> Añadir carrera
+              </button>
+              <button
+                type="button"
+                onClick={() => beginCreate('facultad')}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#cfd8e9] bg-white px-4 text-[13px] font-semibold text-[#315efb] transition hover:bg-[#f6f8ff]"
+              >
+                <Plus className="h-4 w-4" /> Añadir facultad
+              </button>
+            </>
+          ) : null}
+
+          {level === 'facultad' ? (
+            <button
+              type="button"
+              onClick={() => beginCreate('carrera-facultad')}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#315efb] px-4 text-[13px] font-semibold text-white transition hover:bg-[#254ee0]"
+            >
+              <Plus className="h-4 w-4" /> Añadir carrera
+            </button>
+          ) : null}
+
+          {level === 'materias' ? (
+            <button
+              type="button"
+              onClick={() => beginCreate('materia')}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#315efb] px-4 text-[13px] font-semibold text-white transition hover:bg-[#254ee0]"
+            >
+              <Plus className="h-4 w-4" /> Añadir materia
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="mb-4 flex min-h-7 flex-wrap items-center gap-1.5 text-[12px]">
@@ -314,12 +383,10 @@ export function BibliotecaPanel({
             <button type="button" onClick={goUniversity} className="font-medium text-[#315efb] hover:underline">{universidad.nombre}</button>
           </>
         ) : null}
-        {facultadId ? (
+        {facultad ? (
           <>
             <ChevronRight className="h-3.5 w-3.5 text-[#a5afc1]" />
-            <button type="button" onClick={goFaculty} className="font-medium text-[#315efb] hover:underline">
-              {facultadId === LEGACY_FACULTY_ID ? 'Sin facultad asignada' : facultad?.nombre ?? 'Facultad'}
-            </button>
+            <button type="button" onClick={goFaculty} className="font-medium text-[#315efb] hover:underline">{facultad.nombre}</button>
           </>
         ) : null}
         {carrera ? (
@@ -337,7 +404,7 @@ export function BibliotecaPanel({
         </button>
       ) : null}
 
-      {creating ? (
+      {createMode ? (
         <AddForm
           title={createCopy.title}
           placeholder={createCopy.placeholder}
@@ -357,29 +424,46 @@ export function BibliotecaPanel({
         universidades.length ? (
           <div className="grid gap-2.5">
             {universidades.map((item) => (
-              <NavigationRow key={item.id} title={item.nombre} subtitle="Ver facultades" icon={<School className="h-5 w-5" />} onClick={() => void openUniversity(item.id)} />
+              <NavigationRow key={item.id} title={item.nombre} subtitle="Ver carreras y facultades" icon={<School className="h-5 w-5" />} onClick={() => void openUniversity(item.id)} />
             ))}
           </div>
         ) : <EmptyState title="No hay universidades" description="Añadí la primera universidad para comenzar." />
-      ) : level === 'facultades' ? (
-        facultades.length || hasLegacyCareers ? (
-          <div className="grid gap-2.5">
-            {facultades.map((item) => (
-              <NavigationRow key={item.id} title={item.nombre} subtitle="Ver carreras" icon={<Building2 className="h-5 w-5" />} onClick={() => openFaculty(item.id)} />
-            ))}
-            {hasLegacyCareers ? (
-              <NavigationRow title="Carreras sin facultad asignada" subtitle="Estructura anterior" icon={<Building2 className="h-5 w-5" />} onClick={() => openFaculty(LEGACY_FACULTY_ID)} />
-            ) : null}
+      ) : level === 'universidad' ? (
+        <div className="space-y-8">
+          <div>
+            <SectionTitle title="Carreras" description="Carreras vinculadas directamente a la universidad." />
+            {carrerasDirectas.length ? (
+              <div className="grid gap-2.5">
+                {carrerasDirectas.map((item) => (
+                  <NavigationRow key={item.id} title={item.nombre} subtitle="Ver materias" icon={<GraduationCap className="h-5 w-5" />} onClick={() => openCareer(item.id)} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="No hay carreras directas" description={`Podés añadir carreras directamente a ${universidad?.nombre ?? 'esta universidad'} sin crear una facultad.`} />
+            )}
           </div>
-        ) : <EmptyState title="Todavía no hay facultades" description={`Añadí la primera facultad dentro de ${universidad?.nombre ?? 'esta universidad'}.`} />
-      ) : level === 'carreras' ? (
-        carrerasVisibles.length ? (
+
+          <div>
+            <SectionTitle title="Facultades" description="Opcional. Usalas solo cuando la universidad se organiza de esta manera." />
+            {facultades.length ? (
+              <div className="grid gap-2.5">
+                {facultades.map((item) => (
+                  <NavigationRow key={item.id} title={item.nombre} subtitle="Ver carreras" icon={<Building2 className="h-5 w-5" />} onClick={() => openFaculty(item.id)} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState title="No hay facultades" description="No es obligatorio crear una facultad para añadir carreras." />
+            )}
+          </div>
+        </div>
+      ) : level === 'facultad' ? (
+        carrerasFacultad.length ? (
           <div className="grid gap-2.5">
-            {carrerasVisibles.map((item) => (
+            {carrerasFacultad.map((item) => (
               <NavigationRow key={item.id} title={item.nombre} subtitle="Ver materias" icon={<GraduationCap className="h-5 w-5" />} onClick={() => openCareer(item.id)} />
             ))}
           </div>
-        ) : <EmptyState title="Todavía no hay carreras" description={facultadId === LEGACY_FACULTY_ID ? 'No hay carreras pendientes de asignación.' : `Añadí la primera carrera dentro de ${facultad?.nombre ?? 'esta facultad'}.`} />
+        ) : <EmptyState title="Todavía no hay carreras" description={`Añadí la primera carrera dentro de ${facultad?.nombre ?? 'esta facultad'}.`} />
       ) : materiasVisibles.length ? (
         <div className="grid gap-2.5">
           {materiasVisibles.map((item) => (
