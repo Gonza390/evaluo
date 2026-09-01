@@ -26,6 +26,7 @@ import {
   type StudentMaterial,
 } from '@/lib/data/student-materials';
 import { PdfCardThumbnail } from '@/components/materia/pdf-card-thumbnail';
+import { SharedStudentMaterialCard } from '@/components/materia/shared-student-material-card';
 import {
   fetchMateriaRecursos,
   fetchResourceVoteSummaries,
@@ -57,7 +58,6 @@ import {
   Eye,
   Download,
   Share2,
-  Globe,
 } from 'lucide-react';
 import {
   buildResumenKey,
@@ -1537,45 +1537,16 @@ export default function MateriaContent({
                   description="Cuando alguien comparta apuntes desde su espacio personal, aparecerán acá listos para abrir."
                 />
               ) : (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {sharedStudentMaterials.map((material) => (
-                    <article key={material.id} className="surface-card overflow-hidden p-4 sm:p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563EB]">
-                              {material.title}
-                            </h3>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                              <Globe className="h-3 w-3" />
-                              Colaborador
-                            </span>
-                          </div>
-                          <p className="mt-2 text-sm text-slate-500">{material.file_name}</p>
-                        </div>
-                        {material.page_count ? (
-                          <span className="rounded-full bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600">
-                            {material.page_count} páginas
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <p className="mt-4 text-sm leading-6 text-slate-500">
-                        Compartido dentro de {nombre} el{' '}
-                        {new Date(material.created_at).toLocaleDateString('es-AR')}.
-                      </p>
-
-                      <div className="mt-6 flex flex-wrap gap-3">
-                        <Link
-                          href={getStudentMaterialRoute(material.id)}
-                          className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                        >
-                          Abrir PDF
-                        </Link>
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                <div className="grid gap-4 xl:grid-cols-2">
+        {sharedStudentMaterials.map((material) => (
+          <SharedStudentMaterialCard
+            key={material.id}
+            material={material}
+            href={getStudentMaterialRoute(material.id)}
+            materiaNombre={nombre}
+          />
+        ))}
+      </div>
               )}
             </section>
           </div>
