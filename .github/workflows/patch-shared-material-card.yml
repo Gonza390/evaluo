@@ -1,0 +1,112 @@
+name: Wire shared PDF material card
+
+on:
+  push:
+    branches:
+      - feat/pdf-material-card-production
+
+permissions:
+  contents: write
+
+jobs:
+  patch-materia-view:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/pdf-material-card-production
+          fetch-depth: 0
+
+      - name: Replace shared material card markup
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/explorar/materia/[id]/materia-content.tsx')
+          source = path.read_text(encoding='utf-8')
+
+          import_anchor = "import { PdfCardThumbnail } from '@/components/materia/pdf-card-thumbnail';\n"
+          import_line = "import { SharedStudentMaterialCard } from '@/components/materia/shared-student-material-card';\n"
+          if import_line not in source:
+              if import_anchor not in source:
+                  raise SystemExit('PdfCardThumbnail import anchor not found')
+              source = source.replace(import_anchor, import_anchor + import_line, 1)
+
+          old = '''                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {sharedStudentMaterials.map((material) => (
+                    <article key={material.id} className="surface-card overflow-hidden p-4 sm:p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-[18px] font-semibold tracking-[-0.035em] text-[#2563EB]">
+                              {material.title}
+                            </h3>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                              <Globe className="h-3 w-3" />
+                              Colaborador
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-slate-500">{material.file_name}</p>
+                        </div>
+                        {material.page_count ? (
+                          <span className="rounded-full bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600">
+                            {material.page_count} páginas
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-4 text-sm leading-6 text-slate-500">
+                        Compartido dentro de {nombre} el{' '}
+                        {new Date(material.created_at).toLocaleDateString('es-AR')}.
+                      </p>
+
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <Link
+                          href={getStudentMaterialRoute(material.id)}
+                          className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        >
+                          Abrir PDF
+                        </Link>
+                      </div>
+                    </article>
+                  ))}
+                </div>'''
+
+          new = '''                <div className="grid gap-4 xl:grid-cols-2">
+                  {sharedStudentMaterials.map((material) => (
+                    <SharedStudentMaterialCard
+                      key={material.id}
+                      material={material}
+                      href={getStudentMaterialRoute(material.id)}
+                      materiaNombre={nombre}
+                    />
+                  ))}
+                </div>'''
+
+          if old not in source:
+              if new not in source:
+                  raise SystemExit('Shared student material block not found')
+          else:
+              source = source.replace(old, new, 1)
+
+          # Globe was only used by the previous student-card badge. Remove it if unused now.
+          if source.count('Globe') == 1:
+              source = source.replace('  Globe,\n', '')
+
+          path.write_text(source, encoding='utf-8')
+          PY
+
+      - name: Commit patched view
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'app/explorar/materia/[id]/materia-content.tsx'
+          git commit -m "feat: show rich cards for shared student PDFs"
+          git push origin HEAD:feat/pdf-material-card-production
