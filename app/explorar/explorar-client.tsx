@@ -163,7 +163,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
         </div>
         <Link
           href="/solicitar-universidad"
-          className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100"
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100"
         >
           <PlusCircle className="h-4 w-4" />
           Solicitar universidad
@@ -200,7 +200,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                 <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
                 <Link
                   href="/solicitar-universidad"
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                  className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
                 >
                   Solicitar que la sumemos
                   <ArrowRight className="h-4 w-4" />
