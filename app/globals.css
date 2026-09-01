@@ -169,6 +169,17 @@
     --shadow-panel: 0 18px 42px -22px oklch(0.15 0.01 230 / 0.11);
   }
 
+  button,
+  [role='button'] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  input:not([type='checkbox']):not([type='radio']),
+  select {
+    min-height: 44px;
+  }
+
   p {
     @apply text-[0.92rem] leading-6;
   }
@@ -260,17 +271,6 @@
   }
 }
 
-@keyframes pageEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes progressSheen {
   0% {
     transform: translateX(-120%);
@@ -354,7 +354,9 @@
   }
 
   .animate-page-enter {
-    animation: pageEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   .animate-tab-panel {
