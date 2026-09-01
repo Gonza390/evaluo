@@ -11,12 +11,14 @@ const VISION_RENDER_SCALE = 2.2;
 const VISION_BATCH_SIZE = 4;
 const VISION_CONCURRENCY = 2;
 const MAX_FULL_SCAN_VISION_PAGES = 48;
+const MAX_SELECTIVE_VISION_PAGES = 12;
 const MIN_CANONICAL_PAGE_CHARS = 40;
 const BLANK_PAGE_MARKER = '__BLANK_PAGE__';
 const INITIAL_VISION_MAX_OUTPUT_TOKENS = 7600;
 const RETRY_VISION_MAX_OUTPUT_TOKENS = 4200;
-const IMAGE_HEAVY_NATIVE_TEXT_THRESHOLD = 900;
+const IMAGE_HEAVY_NATIVE_TEXT_THRESHOLD = 1000;
 const MIXED_NATIVE_TEXT_THRESHOLD = 420;
+const MATH_NATIVE_TEXT_THRESHOLD = 1200;
 
 const VISION_PAGE_SCHEMA = {
   type: 'OBJECT',
@@ -101,6 +103,9 @@ function getDocumentPageCount(pageCount: number | null, pages: string[] | null) 
  *   densa, manteniendo el camino nativo para el resto.
  * - En documentos image-heavy permitimos algo más de texto por página porque
  *   suelen intercalar diagramas valiosos con explicaciones escritas.
+ * - Matemática sólo fuerza visión si la extracción nativa sigue siendo corta;
+ *   una fórmula aislada dentro de una página bien extraída no justifica costo.
+ * - En PDFs no escaneados limitamos la rama visual a 12 páginas como guardrail.
  * - Escaneos enormes conservan por ahora el fallback PDF completo existente;
  *   evitamos construir un documento canónico parcial y presentarlo como total.
  */
@@ -130,16 +135,18 @@ export function selectVisionPageNumbers(input: {
     const pageNumber = index + 1;
     const normalized = page.replace(/\s+/g, ' ').trim();
     const hasLittleNativeText = normalized.length < lowTextThreshold;
+    const mathCandidate =
+      normalized.length < MATH_NATIVE_TEXT_THRESHOLD && isMathDensePage(page);
     const visualCandidate =
       input.analysis.processingStrategy === 'hybrid_text' ||
       input.analysis.documentType === 'image_heavy';
 
-    if (isMathDensePage(page) || (visualCandidate && hasLittleNativeText)) {
+    if (mathCandidate || (visualCandidate && hasLittleNativeText)) {
       selected.push(pageNumber);
     }
   });
 
-  return selected.slice(0, MAX_FULL_SCAN_VISION_PAGES);
+  return selected.slice(0, Math.min(MAX_SELECTIVE_VISION_PAGES, MAX_FULL_SCAN_VISION_PAGES));
 }
 
 function buildVisionPrompt(pageNumbers: number[], retry = false) {
