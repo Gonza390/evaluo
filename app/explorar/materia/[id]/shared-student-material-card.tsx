@@ -158,14 +158,14 @@ export function SharedStudentMaterialCard({
 
   return (
     <article
-      className={`min-w-0 max-w-full overflow-hidden rounded-[24px] border bg-white p-3.5 transition duration-200 sm:p-4 ${
+      className={`h-full min-w-0 max-w-full overflow-hidden rounded-[24px] border bg-white p-3.5 transition duration-200 sm:p-4 ${
         isEnriched
           ? 'border-[#BFCBFF] shadow-[0_14px_34px_rgba(37,99,235,0.07)] hover:border-[#91AAFF] hover:shadow-[0_18px_40px_rgba(37,99,235,0.10)]'
           : 'border-slate-200 shadow-[0_10px_26px_rgba(15,23,42,0.05)] hover:border-slate-300'
       }`}
     >
-      <div className="grid w-full min-w-0 max-w-full gap-3.5 md:grid-cols-[minmax(0,1fr)_148px] md:items-stretch">
-        <div className="flex min-w-0 max-w-full flex-col">
+      <div className="grid h-full w-full min-w-0 max-w-full gap-3.5 md:grid-cols-[minmax(0,1fr)_148px] md:items-stretch">
+        <div className="flex h-full min-w-0 max-w-full flex-col">
           <div className="flex min-w-0 items-baseline">
             <span
               className={`min-w-0 text-[9px] font-extrabold uppercase leading-4 tracking-[0.14em] ${
@@ -180,7 +180,7 @@ export function SharedStudentMaterialCard({
             </span>
           </div>
 
-          <h3 className="mt-2.5 line-clamp-2 [overflow-wrap:anywhere] text-[18px] font-black leading-[1.08] tracking-[-0.035em] text-slate-950 sm:text-[20px]">
+          <h3 className="mt-2.5 min-h-[44px] line-clamp-2 [overflow-wrap:anywhere] text-[18px] font-black leading-[1.08] tracking-[-0.035em] text-slate-950 sm:text-[20px]">
             {material.title}
           </h3>
 
@@ -209,7 +209,7 @@ export function SharedStudentMaterialCard({
             })}
           </div>
 
-          <div className="mt-3 border-t border-slate-100 pt-2.5">
+          <div className="mt-auto border-t border-slate-100 pt-2.5">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-1.5 text-[10px] text-slate-400">
               <span className="min-w-0 max-w-full truncate">
                 Subido por <span className="font-semibold text-slate-600">{uploaderName}</span>
@@ -254,7 +254,7 @@ export function SharedStudentMaterialCard({
           </div>
         </div>
 
-        <aside className="order-last flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[17px] border border-slate-200 bg-[#F7F9FD] p-2">
+        <aside className="order-last flex h-full w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[17px] border border-slate-200 bg-[#F7F9FD] p-2">
           <div className="flex min-w-0 items-center justify-between gap-1.5 px-0.5 pb-1.5">
             <span className="min-w-0 truncate text-[8px] font-bold uppercase tracking-[0.1em] text-slate-400">
               Vista previa
