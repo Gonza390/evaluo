@@ -109,6 +109,39 @@
   display: none !important;
 }
 
+/* Alineación estable de las tarjetas de materias. */
+.career-editorial .animate-tab-panel .grid.auto-rows-fr > .surface-card {
+  height: 100%;
+  min-height: 276px !important;
+}
+
+.career-editorial
+  .animate-tab-panel
+  .grid.auto-rows-fr
+  > .surface-card
+  > [data-slot='card-content'] {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+}
+
+.career-editorial .animate-tab-panel .grid.auto-rows-fr > .surface-card h3 {
+  min-height: 60px;
+}
+
+.career-editorial .animate-tab-panel .grid.auto-rows-fr > .surface-card h3 + p {
+  min-height: 40px;
+}
+
+.career-editorial
+  .animate-tab-panel
+  .grid.auto-rows-fr
+  > .surface-card
+  [data-slot='card-content']
+  > div:last-child {
+  margin-top: auto !important;
+}
+
 @media (min-width: 640px) {
   .career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) > div {
     padding-inline: 1.25rem !important;
@@ -140,5 +173,9 @@
 
   .career-editorial .animate-tab-panel > div[class*='max-w-5xl'] > div:nth-child(2) > div {
     border-top: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
+  }
+
+  .career-editorial .animate-tab-panel .grid.auto-rows-fr > .surface-card {
+    min-height: 264px !important;
   }
 }
