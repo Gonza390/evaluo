@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Loader2, Upload } from 'lucide-react';
+import { CheckCircle2, ImageIcon, Loader2, Upload } from 'lucide-react';
 import {
   cancelStudentMaterialUploadAction,
   finalizeStudentMaterialUploadAction,
@@ -12,6 +12,7 @@ import {
   getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
 } from '@/app/dashboard/materiales/actions';
+import { updateStudentMaterialVisualAnalysisAction } from '@/app/dashboard/materiales/visual-analysis-actions';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
@@ -79,6 +80,7 @@ export function QuickPdfUpload({
   const [carreraId, setCarreraId] = useState(initialCarreraId);
   const [materiaId, setMateriaId] = useState(initialMateriaId);
   const [shareWithCatalog, setShareWithCatalog] = useState(true);
+  const [analyzeVisuals, setAnalyzeVisuals] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingMaterialId, setProcessingMaterialId] = useState<string | null>(null);
@@ -233,9 +235,24 @@ export function QuickPdfUpload({
         return;
       }
 
+      const visualPreference = await updateStudentMaterialVisualAnalysisAction({
+        materialId: result.materialId,
+        enabled: analyzeVisuals,
+      });
+
+      if (!visualPreference.success) {
+        setErrorMessage(visualPreference.message);
+        setUploading(false);
+        return;
+      }
+
       setProcessingMaterialId(result.materialId);
       setProcessingProgress(10);
-      setProcessingMessage('PDF subido. Estamos preparando tu espacio de estudio.');
+      setProcessingMessage(
+        analyzeVisuals
+          ? 'PDF subido. Usaremos visión solo en las páginas que realmente lo necesiten.'
+          : 'PDF subido. Estamos preparando tu espacio de estudio con extracción estándar.'
+      );
       void processStudentMaterialAction(result.materialId);
     } catch (error) {
       if (preparedFilePath) {
@@ -406,6 +423,24 @@ export function QuickPdfUpload({
             ) : null}
           </div>
         )}
+
+        <label className="flex cursor-pointer items-start gap-3 border-t border-slate-100 pt-4 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={analyzeVisuals}
+            onChange={(event) => setAnalyzeVisuals(event.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
+          />
+          <span className="flex min-w-0 gap-2">
+            <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+            <span>
+              <span className="block font-semibold text-slate-800">Analizar imágenes, gráficos y diagramas</span>
+              <span className="mt-0.5 block text-xs leading-5 text-slate-500">
+                Opcional. La IA visual se usa solo en páginas candidatas para mantener bajo el costo.
+              </span>
+            </span>
+          </span>
+        </label>
 
         <label className="flex cursor-pointer items-center gap-3 border-t border-slate-100 pt-4 text-sm text-slate-700">
           <input
