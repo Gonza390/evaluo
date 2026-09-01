@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BookOpen,
-  FileText,
   Layers3,
   List,
   Share2,
@@ -13,14 +12,26 @@ import {
   Sparkles,
   Zap,
 } from 'lucide-react';
-import type { SharedStudentMaterial } from '@/lib/data/student-materials';
+import type {
+  SharedStudentMaterialStudyArtifacts,
+  StudentMaterial,
+} from '@/lib/data/student-materials';
 import { PdfCardThumbnail } from '@/components/materia/pdf-card-thumbnail';
 
 interface SharedStudentMaterialCardProps {
-  material: SharedStudentMaterial;
+  material: StudentMaterial;
   href: string;
   materiaNombre: string;
 }
+
+const EMPTY_ARTIFACTS: SharedStudentMaterialStudyArtifacts = {
+  summary: false,
+  glossary: false,
+  flashcards: false,
+  exercises: false,
+  count: 0,
+  complete: false,
+};
 
 function formatBytes(bytes: number | null) {
   if (!bytes || bytes <= 0) return null;
@@ -42,7 +53,10 @@ export function SharedStudentMaterialCard({
   materiaNombre,
 }: SharedStudentMaterialCardProps) {
   const [copied, setCopied] = useState(false);
-  const artifacts = material.study_artifacts;
+  const enrichedMaterial = material as StudentMaterial & {
+    study_artifacts?: SharedStudentMaterialStudyArtifacts;
+  };
+  const artifacts = enrichedMaterial.study_artifacts ?? EMPTY_ARTIFACTS;
   const fileSize = formatBytes(material.file_size_bytes);
   const pagesLabel = material.page_count ? `${material.page_count} páginas` : 'PDF';
   const isComplete = artifacts.complete;
@@ -109,7 +123,9 @@ export function SharedStudentMaterialCard({
                     : 'border-slate-100 bg-slate-50/70 text-slate-400'
                 }`}
               >
-                <Icon className={`h-4 w-4 shrink-0 ${available ? 'text-[#2563EB]' : 'text-slate-300'}`} />
+                <Icon
+                  className={`h-4 w-4 shrink-0 ${available ? 'text-[#2563EB]' : 'text-slate-300'}`}
+                />
                 <span>{label}</span>
               </div>
             ))}
@@ -171,7 +187,10 @@ export function SharedStudentMaterialCard({
               <p className="truncate text-[10px] font-semibold text-slate-600">{material.file_name}</p>
               <p className="mt-0.5 text-[9px] text-slate-400">{fileSize || pagesLabel}</p>
             </div>
-            <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500" aria-label="Archivo procesado" />
+            <ShieldCheck
+              className="h-4 w-4 shrink-0 text-emerald-500"
+              aria-label="Archivo procesado"
+            />
           </div>
         </aside>
       </div>
