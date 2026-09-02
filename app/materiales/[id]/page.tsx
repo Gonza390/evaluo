@@ -295,14 +295,27 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       });
     }
 
-    const { data: sourceChunks } = await admin
-      .from('student_material_chunks')
-      .select('chunk_text, page_start, page_end, section_title')
-      .eq('student_material_id', material.id)
-      .order('chunk_index', { ascending: true });
+    const [{ data: sourceChunks }, modelResult] = await Promise.all([
+      admin
+        .from('student_material_chunks')
+        .select('chunk_text, page_start, page_end, section_title')
+        .eq('student_material_id', material.id)
+        .order('chunk_index', { ascending: true }),
+      (admin as unknown as { from: (table: string) => any })
+        .from('student_materials')
+        .select('pedagogical_model')
+        .eq('id', material.id)
+        .maybeSingle(),
+    ]);
+
+    const canonicalModel = (modelResult.data?.pedagogical_model ?? null) as Parameters<
+      typeof buildPedagogicalArtifacts
+    >[0]['canonicalModel'];
+
     const pedagogicalArtifacts = buildPedagogicalArtifacts({
       summary: studySummary,
       glossary: studyGlossary,
+      canonicalModel,
       chunks: (sourceChunks ?? []).map((chunk) => ({
         text: chunk.chunk_text,
         pageStart: chunk.page_start,
