@@ -1,5 +1,10 @@
 import { PDFDocument } from 'pdf-lib';
-import { MAX_STUDENT_MATERIAL_PDF_PAGES } from '@/lib/student-materials/validation';
+import { hasPremiumAccess } from '@/lib/premium';
+import { createClientServer } from '@/lib/supabase-server';
+import {
+  MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+  MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES,
+} from '@/lib/student-materials/validation';
 
 export async function getStudentMaterialPdfPageCount(bytes: Uint8Array) {
   try {
@@ -10,6 +15,28 @@ export async function getStudentMaterialPdfPageCount(bytes: Uint8Array) {
   }
 }
 
+async function getStudentMaterialPdfPageLimit() {
+  const supabase = await createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      maxPages: MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+      isPremium: false,
+    };
+  }
+
+  const isPremium = await hasPremiumAccess(user.id);
+  return {
+    maxPages: isPremium
+      ? MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES
+      : MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+    isPremium,
+  };
+}
+
 export async function assertStudentMaterialPdfPageLimit(bytes: Uint8Array) {
   const pageCount = await getStudentMaterialPdfPageCount(bytes);
 
@@ -17,9 +44,13 @@ export async function assertStudentMaterialPdfPageLimit(bytes: Uint8Array) {
     throw new Error('El PDF debe contener al menos una página.');
   }
 
-  if (pageCount > MAX_STUDENT_MATERIAL_PDF_PAGES) {
+  const { maxPages, isPremium } = await getStudentMaterialPdfPageLimit();
+
+  if (pageCount > maxPages) {
     throw new Error(
-      `El PDF tiene ${pageCount} páginas. El máximo permitido es de ${MAX_STUDENT_MATERIAL_PDF_PAGES} páginas.`
+      isPremium
+        ? `El PDF tiene ${pageCount} páginas. Premium permite hasta ${maxPages} páginas por documento.`
+        : `El PDF tiene ${pageCount} páginas. El plan Free permite hasta ${maxPages} páginas por documento; Premium admite hasta ${MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES}.`
     );
   }
 
