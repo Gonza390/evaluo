@@ -126,136 +126,51 @@ function StudyDocumentSection({ title, children }: { title: string; children: Re
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function StructuredSectionBody({ body }: { body: string }) {
-  const lines = body
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+function MaterialMetadata({
+  carreraName,
+  universidadName,
+  materiaName,
+}: {
+  carreraName?: string;
+  universidadName?: string;
+  materiaName?: string;
+}) {
+  if (!carreraName && !universidadName && !materiaName) return null;
 
-  const rows: Array<{ columns: string[] }> = [];
-  let isCollectingTable = false;
-  const content: React.ReactNode[] = [];
+  return (
+    <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50/70">
+      <div className="grid sm:grid-cols-2">
+        {carreraName ? (
+          <div className="border-b border-slate-200 px-4 py-3.5 sm:border-r sm:px-5 sm:py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
+            <p className="mt-1.5 text-[13.5px] font-semibold leading-5 text-slate-900 sm:text-sm">
+              {carreraName}
+            </p>
+          </div>
+        ) : null}
 
-  const flushTable = (key: string) => {
-    if (rows.length < 2) {
-      rows.length = 0;
-      return;
-    }
+        {universidadName ? (
+          <div className="border-b border-slate-200 px-4 py-3.5 sm:px-5 sm:py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+              Universidad
+            </p>
+            <p className="mt-1.5 text-[13.5px] font-semibold leading-5 text-slate-900 sm:text-sm">
+              {universidadName}
+            </p>
+          </div>
+        ) : null}
 
-    const header = rows[0]?.columns ?? [];
-    const bodyRows = rows
-      .slice(1)
-      .filter((row) => row.columns.some((column) => !/^:?-+:?$/i.test(column)));
-
-    if (header.length === 0 || bodyRows.length === 0) {
-      rows.length = 0;
-      return;
-    }
-
-    content.push(
-      <div key={key} className="overflow-x-auto rounded-[16px] border border-slate-200">
-        <table className="min-w-full border-collapse text-left text-[13px]">
-          <thead className="bg-white text-slate-700">
-            <tr>
-              {header.map((column, index) => (
-                <th
-                  key={`${column}-${index}`}
-                  className="border-b border-slate-200 px-3 py-2 font-semibold"
-                >
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {bodyRows.map((row, rowIndex) => (
-              <tr key={`${row.columns.join('|')}-${rowIndex}`} className="bg-white">
-                {row.columns.map((column, columnIndex) => (
-                  <td
-                    key={`${column}-${columnIndex}`}
-                    className="border-t border-slate-200 px-3 py-2 align-top text-slate-600"
-                  >
-                    {column}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {materiaName ? (
+          <div className="px-4 py-3.5 sm:col-span-2 sm:px-5 sm:py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
+            <p className="mt-1.5 text-[13.5px] font-semibold leading-5 text-slate-900 sm:text-sm">
+              {materiaName}
+            </p>
+          </div>
+        ) : null}
       </div>
-    );
-
-    rows.length = 0;
-  };
-
-  lines.forEach((line, index) => {
-    if (line.includes('|')) {
-      isCollectingTable = true;
-      rows.push({
-        columns: line
-          .split('|')
-          .map((column) => column.trim())
-          .filter(Boolean),
-      });
-      return;
-    }
-
-    if (isCollectingTable) {
-      flushTable(`table-${index}`);
-      isCollectingTable = false;
-    }
-
-    if (/^\d+\.\d+\s+/.test(line)) {
-      content.push(
-        <h5
-          key={`subheading-${index}`}
-          className="pt-1 text-[0.95rem] font-semibold text-slate-950"
-        >
-          {line}
-        </h5>
-      );
-      return;
-    }
-
-    if (/^[•\-]\s+/.test(line)) {
-      content.push(
-        <div
-          key={`bullet-${index}`}
-          className="flex items-start gap-2 text-[13.5px] leading-6 text-slate-700"
-        >
-          <span className="mt-[0.42rem] text-[12px] text-[#2563EB]">•</span>
-          <p>{line.replace(/^[•\-]\s+/, '')}</p>
-        </div>
-      );
-      return;
-    }
-
-    if (/^Importante:/i.test(line)) {
-      content.push(
-        <div
-          key={`important-${index}`}
-          className="rounded-[16px] border border-[#DBEAFE] bg-white px-3.5 py-3 text-[13px] leading-6 text-slate-700"
-        >
-          <span className="font-semibold text-[#2563EB]">Importante:</span>{' '}
-          {line.replace(/^Importante:\s*/i, '')}
-        </div>
-      );
-      return;
-    }
-
-    content.push(
-      <p key={`paragraph-${index}`} className="text-[13.5px] leading-6 text-slate-700">
-        {line}
-      </p>
-    );
-  });
-
-  if (isCollectingTable) {
-    flushTable('table-final');
-  }
-
-  return <div className="space-y-3">{content}</div>;
+    </div>
+  );
 }
 
 export function MaterialStudyWorkspace({
@@ -298,6 +213,7 @@ export function MaterialStudyWorkspace({
       buildPedagogicalArtifacts({ summary: studySummary, glossary: studyGlossary }),
     [pedagogicalArtifacts, studyGlossary, studySummary]
   );
+
   const usefulGlossary = useMemo(
     () => studyGlossary.filter(isPedagogicalGlossaryItem),
     [studyGlossary]
@@ -341,15 +257,9 @@ export function MaterialStudyWorkspace({
       const nextProgress = Math.min(92, 8 + Math.floor(elapsed / 1800) * 7);
       setRegenerationProgress(nextProgress);
 
-      if (elapsed > 3_500) {
-        setRegenerationStageIndex(1);
-      }
-      if (elapsed > 8_000) {
-        setRegenerationStageIndex(2);
-      }
-      if (elapsed > 14_000) {
-        setRegenerationStageIndex(3);
-      }
+      if (elapsed > 3_500) setRegenerationStageIndex(1);
+      if (elapsed > 8_000) setRegenerationStageIndex(2);
+      if (elapsed > 14_000) setRegenerationStageIndex(3);
     }, 700);
 
     return () => window.clearInterval(timer);
@@ -367,9 +277,7 @@ export function MaterialStudyWorkspace({
       });
 
       setRegenerationProgress(result.success ? 100 : regenerationProgress);
-      if (result.success) {
-        setRegenerationStageIndex(4);
-      }
+      if (result.success) setRegenerationStageIndex(4);
 
       setIsRegenerating(false);
       router.refresh();
@@ -416,57 +324,58 @@ export function MaterialStudyWorkspace({
       </TabsList>
 
       {activeTab === 'resumen' ? (
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5 sm:gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsViewerVisible((current) => !current)}
+            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+          >
+            {isViewerVisible ? (
+              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            )}
+            {isViewerVisible ? 'Ocultar PDF' : 'Mostrar PDF'}
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+          >
+            <a href={viewerUrl} target="_blank" rel="noreferrer">
+              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              PDF
+            </a>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleComments}
+            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+          >
+            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            Calificar
+          </Button>
+
+          {canRegenerate ? (
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setIsViewerVisible((current) => !current)}
-              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
             >
-              {isViewerVisible ? (
-                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              ) : (
-                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              )}
-              {isViewerVisible ? 'Ocultar PDF' : 'Mostrar PDF'}
+              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              {isRegenerating ? 'Regenerando...' : 'Regenerar'}
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-            >
-              <a href={viewerUrl} target="_blank" rel="noreferrer">
-                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                PDF
-              </a>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleComments}
-              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-            >
-              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Calificar
-            </Button>
-            {canRegenerate ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRegenerate}
-                disabled={isRegenerating}
-                className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-              >
-                <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                {isRegenerating ? 'Regenerando...' : 'Regenerar'}
-              </Button>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       ) : null}
     </div>
@@ -520,9 +429,7 @@ export function MaterialStudyWorkspace({
                       {label}
                     </span>
                   </div>
-                  {isActive ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" />
-                  ) : null}
+                  {isActive ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" /> : null}
                 </div>
               );
             })}
@@ -537,15 +444,10 @@ export function MaterialStudyWorkspace({
 
           <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
             <p className="text-[13px] font-semibold text-slate-950">
-              {
-                regenerationStages[
-                  Math.min(regenerationStageIndex, regenerationStages.length - 1)
-                ]?.[1]
-              }
+              {regenerationStages[Math.min(regenerationStageIndex, regenerationStages.length - 1)]?.[1]}
             </p>
             <p className="mt-1.5 text-[12.5px] leading-5 text-slate-500">
-              Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario
-              del PDF.
+              Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario del PDF.
             </p>
           </div>
         </div>
@@ -594,15 +496,12 @@ export function MaterialStudyWorkspace({
                     {section.title}
                   </h3>
                   <StudyRichText body={section.body} />
-                  {index < fullSummarySections.length - 1 ? (
-                    <div className="h-px bg-white" />
-                  ) : null}
+                  {index < fullSummarySections.length - 1 ? <div className="h-px bg-white" /> : null}
                 </div>
               ))
             ) : (
               <p className="text-[14px] leading-6 text-slate-500">
-                Todavía no pudimos organizar el contenido por temas claros dentro del texto extraído
-                del PDF.
+                Todavía no pudimos organizar el contenido por temas claros dentro del texto extraído del PDF.
               </p>
             )}
           </section>
@@ -616,48 +515,45 @@ export function MaterialStudyWorkspace({
         >
           {usefulGlossary.length > 0 ? (
             <div className="overflow-hidden rounded-[18px] border border-slate-200">
-              <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-6 border-b border-slate-200 bg-white px-4 py-3 md:grid">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                  Término
-                </p>
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                  Definición
-                </p>
+              <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-6 border-b border-slate-200 bg-slate-50/70 px-4 py-3 md:grid">
+                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Término</p>
+                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Definición</p>
               </div>
               <div className="divide-y divide-slate-200 bg-white">
-                {usefulGlossary.map((item) => (
-                  <article
-                    key={item.term}
-                    className="grid gap-2.5 px-3.5 py-3.5 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-6 md:px-4 md:py-4"
-                  >
-                    <div className="space-y-1.5">
-                      <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase md:hidden">
-                        Término
-                      </p>
-                      <h3 className="text-[0.92rem] font-semibold tracking-[-0.03em] text-slate-950 md:text-[0.98rem]">
-                        {item.term}
-                      </h3>
-                      {item.englishTerm ? (
-                        <p className="text-[12px] font-medium text-slate-500 italic">
-                          {item.englishTerm}
-                        </p>
-                      ) : null}
-                    </div>
+                {usefulGlossary.map((item) => {
+                  const englishTerm =
+                    item.englishTerm && item.englishTerm.trim().toLowerCase() !== 'svg'
+                      ? item.englishTerm
+                      : null;
 
-                    <div className="space-y-1.5">
-                      <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase md:hidden">
-                        Definición
-                      </p>
-                      <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">
-                        {item.definition}
-                      </p>
-                      <p className="text-[11.5px] leading-5 text-slate-500 md:text-[12px]">
-                        <span className="font-semibold text-slate-500">Contexto:</span>{' '}
-                        {item.context}
-                      </p>
-                    </div>
-                  </article>
-                ))}
+                  return (
+                    <article
+                      key={item.term}
+                      className="grid gap-2.5 px-3.5 py-4 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-6 md:px-4 md:py-4"
+                    >
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
+                          Término
+                        </p>
+                        <h3 className="text-[0.94rem] font-semibold tracking-[-0.025em] text-slate-950 md:text-[0.98rem]">
+                          {item.term}
+                        </h3>
+                        {englishTerm ? (
+                          <p className="text-[12px] font-medium text-slate-400 italic">{englishTerm}</p>
+                        ) : null}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
+                          Definición
+                        </p>
+                        <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">
+                          {item.definition}
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -724,9 +620,7 @@ export function MaterialStudyWorkspace({
                 {usefulGlossary.slice(0, 4).map((item, index) => (
                   <div key={item.term} className="space-y-3">
                     <p className="text-[13px] font-medium text-slate-700">{item.term}</p>
-                    {index < Math.min(3, usefulGlossary.length - 1) ? (
-                      <div className="h-px bg-slate-100" />
-                    ) : null}
+                    {index < Math.min(3, usefulGlossary.length - 1) ? <div className="h-px bg-slate-100" /> : null}
                   </div>
                 ))}
               </div>
@@ -765,53 +659,37 @@ export function MaterialStudyWorkspace({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
-      <section className="border-b border-[#E8EDF5] bg-white">
-        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <Link
-              href={backHref}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 font-semibold text-slate-700 transition hover:bg-white"
-            >
-              Volver
-            </Link>
-          </div>
-
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-4xl">
-              <h1 className="text-2xl font-bold tracking-[-0.06em] text-slate-950 sm:text-[2rem]">
-                {title}
-              </h1>
+      <section className="border-b border-slate-200 bg-slate-50/55">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+          <div className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center border-b border-slate-100 px-4 py-3 sm:px-5 lg:px-6">
+              <Link
+                href={backHref}
+                className="inline-flex h-9 items-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-3 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Volver
+              </Link>
             </div>
 
-            <div className="grid w-full grid-cols-1 gap-2 text-[12px] sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-2 sm:text-[13px]">
-              {carreraName || universidadName || materiaName ? (
-                <>
-                  <p className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-slate-500 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0">
-                    <span className="block font-semibold tracking-[0.14em] text-slate-500 uppercase sm:inline">
-                      Carrera
-                    </span>
-                    <span className="mt-0.5 block font-semibold text-slate-900 sm:mt-0 sm:ml-2 sm:inline">
-                      {carreraName}
-                    </span>
-                  </p>
-                  <p className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-slate-500 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0">
-                    <span className="block font-semibold tracking-[0.14em] text-slate-500 uppercase sm:inline">
-                      Universidad
-                    </span>
-                    <span className="mt-0.5 block font-semibold text-slate-900 sm:mt-0 sm:ml-2 sm:inline">
-                      {universidadName}
-                    </span>
-                  </p>
-                  <p className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-slate-500 sm:w-auto sm:border-0 sm:bg-transparent sm:p-0">
-                    <span className="block font-semibold tracking-[0.14em] text-slate-500 uppercase sm:inline">
-                      Materia
-                    </span>
-                    <span className="mt-0.5 block font-semibold text-slate-900 sm:mt-0 sm:ml-2 sm:inline">
-                      {materiaName}
-                    </span>
-                  </p>
-                </>
-              ) : null}
+            <div className="grid gap-5 px-4 py-5 sm:px-5 sm:py-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:items-center lg:gap-8 lg:px-6 lg:py-7">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
+                  Material de estudio
+                </p>
+                <h1 className="mt-2 max-w-[760px] text-[1.9rem] font-bold leading-[1.08] tracking-[-0.055em] text-slate-950 sm:text-[2.25rem] lg:text-[2.45rem]">
+                  {title}
+                </h1>
+                <p className="mt-3 max-w-2xl text-[13px] leading-5 text-slate-500">
+                  Resumen, glosario y herramientas de práctica construidas desde el contenido de tu PDF.
+                </p>
+              </div>
+
+              <MaterialMetadata
+                carreraName={carreraName}
+                universidadName={universidadName}
+                materiaName={materiaName}
+              />
             </div>
           </div>
         </div>
@@ -835,16 +713,18 @@ export function MaterialStudyWorkspace({
                     defaultSize={isViewerVisible ? 60 : 100}
                     minSize={42}
                   >
-                    <div className="h-full min-w-0 bg-white flex flex-col">{tabPanels}</div>
+                    <div className="flex h-full min-w-0 flex-col bg-white">{tabPanels}</div>
                   </ResizablePanel>
+
                   {isViewerVisible ? <ResizableHandle withHandle className="bg-white" /> : null}
+
                   {isViewerVisible ? (
                     <ResizablePanel id="study-viewer-panel" order={2} defaultSize={40} minSize={26}>
                       <div className="relative h-full min-w-0 bg-white p-2">
                         <button
                           type="button"
                           onClick={() => setIsViewerVisible(false)}
-                          className="absolute top-1/2 left-0 z-20 inline-flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition hover:bg-white"
+                          className="absolute top-1/2 left-0 z-20 inline-flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition hover:bg-slate-50"
                           aria-label="Ocultar PDF"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -865,11 +745,12 @@ export function MaterialStudyWorkspace({
                 </ResizablePanelGroup>
               </div>
             </Tabs>
+
             {activeTab === 'resumen' && !isViewerVisible ? (
               <button
                 type="button"
                 onClick={() => setIsViewerVisible(true)}
-                className="absolute top-1/2 right-4 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition hover:bg-white"
+                className="absolute top-1/2 right-4 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition hover:bg-slate-50"
                 aria-label="Mostrar PDF"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -882,13 +763,14 @@ export function MaterialStudyWorkspace({
           <div className="flex flex-col rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
             {content}
           </div>
+
           {activeTab === 'resumen' ? (
             isViewerVisible ? (
               <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
                 <button
                   type="button"
                   onClick={() => setIsViewerVisible(false)}
-                  className="absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition hover:bg-white"
+                  className="absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition hover:bg-slate-50"
                   aria-label="Ocultar PDF"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -912,14 +794,13 @@ export function MaterialStudyWorkspace({
                       PDF oculto
                     </p>
                     <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                      Mostrá el documento cuando quieras contrastar el resumen con el archivo
-                      original.
+                      Mostrá el documento cuando quieras contrastar el resumen con el archivo original.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsViewerVisible(true)}
-                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.10)] transition hover:bg-white"
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.10)] transition hover:bg-slate-50"
                     aria-label="Mostrar PDF"
                   >
                     <ChevronLeft className="h-4 w-4" />
