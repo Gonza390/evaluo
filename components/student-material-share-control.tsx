@@ -5,6 +5,10 @@ import { Check, Copy, Link2, Loader2, Lock, Share2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { updateStudentMaterialVisibilityAction } from '@/app/dashboard/materiales/actions';
 import { useToast } from '@/components/ui/use-toast';
+import {
+  buildStudentMaterialShareImagePath,
+  shareStudentMaterial,
+} from '@/lib/student-material-share-client';
 
 type MaterialVisibility = 'private' | 'shared';
 
@@ -31,7 +35,7 @@ export function StudentMaterialShareControl({
   const [copied, setCopied] = useState(false);
   const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
-  const shareUrl = () => new URL(sharePath, window.location.origin).toString();
+  const shareUrl = () => new URL(sharePath, 'https://evaluo.com.ar').toString();
 
   const copyLink = async (url: string) => {
     if (navigator.clipboard?.writeText) {
@@ -54,20 +58,14 @@ export function StudentMaterialShareControl({
 
   const shareCurrentLink = async () => {
     const url = shareUrl();
+    const result = await shareStudentMaterial({
+      title,
+      text: `${title} — material de estudio compartido en Evaluo.`,
+      url,
+      imagePath: buildStudentMaterialShareImagePath({ title }),
+    });
 
-    if (canNativeShare) {
-      try {
-        await navigator.share({
-          title: `${title} | Evaluo`,
-          text: `${title} — material de estudio compartido en Evaluo.`,
-          url,
-        });
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-      }
-    }
-
+    if (result === 'shared' || result === 'aborted') return;
     await copyLink(url);
   };
 
