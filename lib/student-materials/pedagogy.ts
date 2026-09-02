@@ -1,5 +1,6 @@
 import type {
   CanonicalPedagogicalModel,
+  CanonicalPedagogicalSourceKind,
   StudyGlossaryItem,
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
@@ -50,8 +51,9 @@ const FOUNDATIONAL_CONTEXT_PATTERN =
   /fundamentos?|conceptos?|definici[oó]n|principios?|bases?\b|marco\b|teor[ií]a|modelos?|elementos?|componentes?|caracter[ií]sticas?/i;
 const UNDERSTANDING_SIGNAL_PATTERN =
   /clasificaci[oó]n|tipos?\b|incluye|se compone|relaci[oó]n|diferenc|compar|proceso|etapas?|fases?|pasos?|ventajas?|limitaciones?|criterios?|riesgos?/i;
-const APPLICATION_SIGNAL_PATTERN =
-  /ejempl|caso|situaci[oó]n|aplic|estrateg|proceso|pasos?|etapas?|fases?|criterios?|decisi[oó]n|procedimiento|riesgos?|medidas?|consecuencias?|resolver|implement|utiliza|uso\b/i;
+const CAUSAL_SIGNAL_PATTERN =
+  /aument|dismin|reduce|libera|consume|provoca|produce|favorece|impide|evita|acelera|retarda|rompe|activa|inhibe|requiere|determina|permite|consecuencia|resultado/i;
+const COMPARISON_SIGNAL_PATTERN = /diferenc|compar|frente\s+a|versus|contrasta?/i;
 const CONTEXT_STOP_WORDS = new Set([
   'para',
   'como',
@@ -67,6 +69,10 @@ const CONTEXT_STOP_WORDS = new Set([
   'pagina',
   'paginas',
   'seccion',
+  'reaccion',
+  'reacciones',
+  'proceso',
+  'procesos',
 ]);
 
 export function isPedagogicalGlossaryItem(item: StudyGlossaryItem) {
@@ -131,7 +137,14 @@ export type StudyQuestion = {
   id: string;
   type: 'multiple_choice' | 'open';
   level: 'recordar' | 'comprender' | 'aplicar';
-  kind?: 'concept' | 'relationship' | 'classification' | 'process' | 'formula' | 'confusion' | 'section';
+  kind?:
+    | 'concept'
+    | 'relationship'
+    | 'classification'
+    | 'process'
+    | 'formula'
+    | 'confusion'
+    | 'section';
   topic?: string;
   prompt: string;
   options: string[];
@@ -155,6 +168,27 @@ function emptyReference(sectionTitle: string | null, excerpt: string): Pedagogic
   return { pageStart: null, pageEnd: null, sectionTitle, excerpt: truncateAtWord(excerpt, 220) };
 }
 
+function findReference(term: string, chunks: PedagogicalChunk[], fallback: PedagogicalReference) {
+  const needle = normalizeForDedupe(term);
+  const words = needle.split(/\s+/).filter((word) => word.length >= 4);
+  const match = chunks.find((chunk) => {
+    const haystack = normalizeForDedupe(chunk.text);
+    return (
+      haystack.includes(needle) ||
+      (words.length > 0 && words.every((word) => haystack.includes(word)))
+    );
+  });
+
+  return match
+    ? {
+        pageStart: match.pageStart,
+        pageEnd: match.pageEnd,
+        sectionTitle: match.sectionTitle,
+        excerpt: truncateAtWord(match.text, 220),
+      }
+    : fallback;
+}
+
 function referenceFromPages(
   pages: number[] | undefined,
   sectionTitle: string | null,
@@ -174,24 +208,40 @@ function referenceFromPages(
   return findReference(sectionTitle ?? excerpt, chunks, emptyReference(sectionTitle, excerpt));
 }
 
-function findReference(term: string, chunks: PedagogicalChunk[], fallback: PedagogicalReference) {
-  const needle = normalizeForDedupe(term);
-  const words = needle.split(/\s+/).filter((word) => word.length >= 4);
-  const match = chunks.find((chunk) => {
-    const haystack = normalizeForDedupe(chunk.text);
-    return (
-      haystack.includes(needle) ||
-      (words.length > 0 && words.every((word) => haystack.includes(word)))
-    );
-  });
-  return match
-    ? {
-        pageStart: match.pageStart,
-        pageEnd: match.pageEnd,
-        sectionTitle: match.sectionTitle,
-        excerpt: truncateAtWord(match.text, 220),
-      }
-    : fallback;
+function referenceFromBinding(
+  model: CanonicalPedagogicalModel,
+  kind: CanonicalPedagogicalSourceKind,
+  key: string,
+  sectionTitle: string | null,
+  chunks: PedagogicalChunk[],
+  fallbackExcerpt: string
+) {
+  const normalizedKey = normalizeForDedupe(key);
+  const binding = model.sourceBindings?.find(
+    (item) => item.kind === kind && normalizeForDedupe(item.key) === normalizedKey
+  );
+
+  if (!binding || binding.references.length === 0) {
+    return findReference(key, chunks, emptyReference(sectionTitle, fallbackExcerpt));
+  }
+
+  const pageStarts = binding.references
+    .map((reference) => reference.pageStart)
+    .filter((page): page is number => page !== null && page > 0);
+  const pageEnds = binding.references
+    .map((reference) => reference.pageEnd ?? reference.pageStart)
+    .filter((page): page is number => page !== null && page > 0);
+  const bestExcerpt = binding.references
+    .map((reference) => cleanLine(reference.excerpt))
+    .filter(Boolean)
+    .sort((left, right) => right.length - left.length)[0];
+
+  return {
+    pageStart: pageStarts.length > 0 ? Math.min(...pageStarts) : null,
+    pageEnd: pageEnds.length > 0 ? Math.max(...pageEnds) : null,
+    sectionTitle,
+    excerpt: truncateAtWord(bestExcerpt || fallbackExcerpt, 300),
+  } satisfies PedagogicalReference;
 }
 
 function getContextWords(value: string) {
@@ -208,6 +258,90 @@ function countSharedWords(left: Set<string>, right: Set<string>) {
     if (right.has(word)) count += 1;
   }
   return count;
+}
+
+function pageAffinity(leftPages: number[] | undefined, rightPages: number[] | undefined) {
+  const left = (leftPages ?? []).filter((page) => page > 0);
+  const right = (rightPages ?? []).filter((page) => page > 0);
+  if (left.length === 0 || right.length === 0) return 0;
+  if (left.some((page) => right.includes(page))) return 8;
+
+  let distance = Number.POSITIVE_INFINITY;
+  for (const leftPage of left) {
+    for (const rightPage of right) {
+      distance = Math.min(distance, Math.abs(leftPage - rightPage));
+    }
+  }
+
+  if (distance === 1) return 5;
+  if (distance <= 2) return 3;
+  if (distance <= 4) return 1;
+  return 0;
+}
+
+function semanticScore(
+  targetText: string,
+  targetPages: number[] | undefined,
+  candidateText: string,
+  candidatePages: number[] | undefined
+) {
+  const targetWords = getContextWords(targetText);
+  const candidateWords = getContextWords(candidateText);
+  const sharedWords = countSharedWords(targetWords, candidateWords);
+  const pageScore = pageAffinity(targetPages, candidatePages);
+  const targetNormalized = normalizeForDedupe(targetText);
+  const candidateNormalized = normalizeForDedupe(candidateText);
+  const phraseBonus =
+    targetNormalized.length >= 6 && candidateNormalized.includes(targetNormalized) ? 5 : 0;
+
+  return sharedWords * 5 + pageScore + phraseBonus;
+}
+
+function rankSemanticItems<T>(
+  targetText: string,
+  targetPages: number[] | undefined,
+  candidates: T[],
+  toText: (candidate: T) => string,
+  toPages: (candidate: T) => number[] | undefined,
+  limit: number
+) {
+  return candidates
+    .map((candidate, index) => ({
+      candidate,
+      index,
+      score: semanticScore(targetText, targetPages, toText(candidate), toPages(candidate)),
+    }))
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .slice(0, limit)
+    .map(({ candidate }) => candidate);
+}
+
+function selectDistributedByPages<T>(
+  items: T[],
+  limit: number,
+  getPages: (item: T) => number[] | undefined
+) {
+  const selected: T[] = [];
+  const deferred: T[] = [];
+  const pagesSeen = new Set<number>();
+
+  for (const item of items) {
+    const page = (getPages(item) ?? []).filter((value) => value > 0).sort((a, b) => a - b)[0];
+    if (page && !pagesSeen.has(page)) {
+      selected.push(item);
+      pagesSeen.add(page);
+    } else {
+      deferred.push(item);
+    }
+    if (selected.length >= limit) return selected.slice(0, limit);
+  }
+
+  for (const item of deferred) {
+    if (selected.length >= limit) break;
+    selected.push(item);
+  }
+
+  return selected.slice(0, limit);
 }
 
 function selectDistractorDefinitions(
@@ -272,16 +406,9 @@ function resolveFlashcardLevel(concept: StudyGlossaryItem): StudyFlashcard['leve
 
 function buildFlashcardFront(concept: StudyGlossaryItem, level: StudyFlashcard['level']) {
   const term = cleanLine(concept.term);
-
-  if (level === 'recordar') {
-    return `¿Qué significa “${term}” según el material?`;
-  }
-
-  return `¿Cómo explicarías “${term}” con tus palabras según el material?`;
-}
-
-function sectionSupportsApplication(body: string) {
-  return APPLICATION_SIGNAL_PATTERN.test(body);
+  return level === 'recordar'
+    ? `¿Qué significa “${term}” según el material?`
+    : `¿Cómo explicarías “${term}” con tus palabras según el material?`;
 }
 
 function cleanStudyUnit(value: string) {
@@ -310,10 +437,8 @@ function buildExpectedSectionAnswer(body: string) {
       .map(cleanLine)
       .filter(Boolean);
   });
-  const selected = dedupeStrings(units).slice(0, 4);
-  const answer = selected.join(' ');
 
-  return truncateAtWord(answer || cleanStudyUnit(body), 480);
+  return truncateAtWord(dedupeStrings(units).slice(0, 4).join(' ') || cleanStudyUnit(body), 480);
 }
 
 function buildFallbackMultipleChoice(
@@ -328,11 +453,7 @@ function buildFallbackMultipleChoice(
       const distractors = selectDistractorDefinitions(concept, concepts, 3).map((item) =>
         truncateAtWord(item, 220)
       );
-      const options = placeCorrectOption(
-        correctAnswer,
-        distractors,
-        index % Math.max(1, distractors.length + 1)
-      ).slice(0, 4);
+      const options = placeCorrectOption(correctAnswer, distractors, index % 4).slice(0, 4);
       const level = index < 2 ? 'recordar' : 'comprender';
 
       return {
@@ -368,35 +489,45 @@ function buildCanonicalConceptQuestions(
   const concepts = model.concepts.filter(
     (concept) => cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
   );
+  const selected = selectDistributedByPages(concepts, 10, (concept) => concept.pageReferences);
 
-  return concepts.slice(0, 8).map((concept, index): StudyQuestion => {
-    const correct = truncateAtWord(concept.detail, 210);
-    const distractors = concepts
-      .filter((candidate) => candidate.term !== concept.term)
-      .map((candidate) => truncateAtWord(candidate.detail, 210));
-    const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
-
-    return {
-      id: `model-concept-${index + 1}`,
-      type: 'multiple_choice',
-      level: index < 2 ? 'recordar' : 'comprender',
-      kind: 'concept',
-      topic: concept.term,
-      prompt:
-        index < 2
-          ? `Según el PDF, ¿qué describe correctamente “${concept.term}”?`
-          : `¿Cuál de estas afirmaciones representa mejor “${concept.term}” según el material?`,
-      options,
-      answer: correct,
-      explanation: `La respuesta se apoya en la descripción de “${concept.term}” recuperada del PDF.`,
-      reference: referenceFromPages(
+  return selected
+    .map((concept, index): StudyQuestion => {
+      const correct = truncateAtWord(concept.detail, 210);
+      const candidates = concepts.filter((candidate) => candidate.term !== concept.term);
+      const distractors = rankSemanticItems(
+        `${concept.term} ${concept.detail}`,
         concept.pageReferences,
-        concept.term,
-        concept.detail,
-        chunks
-      ),
-    };
-  }).filter((question) => question.options.length >= 3);
+        candidates,
+        (candidate) => `${candidate.term} ${candidate.detail}`,
+        (candidate) => candidate.pageReferences,
+        3
+      ).map((candidate) => truncateAtWord(candidate.detail, 210));
+      const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
+      const level: StudyQuestion['level'] = index < 2 ? 'recordar' : 'comprender';
+
+      return {
+        id: `model-concept-${index + 1}`,
+        type: 'multiple_choice',
+        level,
+        kind: 'concept',
+        topic: concept.term,
+        prompt:
+          level === 'recordar'
+            ? `Según el PDF, ¿qué describe correctamente “${concept.term}”?`
+            : `¿Cuál de estas afirmaciones representa mejor “${concept.term}” según el material?`,
+        options,
+        answer: correct,
+        explanation: `La respuesta conserva la descripción que el PDF asigna a “${concept.term}”. Los distractores provienen de conceptos cercanos del mismo material.`,
+        reference: referenceFromPages(
+          concept.pageReferences,
+          concept.term,
+          concept.detail,
+          chunks
+        ),
+      };
+    })
+    .filter((question) => question.options.length >= 3);
 }
 
 function buildCanonicalRelationshipQuestions(
@@ -406,62 +537,124 @@ function buildCanonicalRelationshipQuestions(
   const relationships = model.relationships.filter(
     (item) => cleanLine(item.description).length >= 16
   );
+  const selected = selectDistributedByPages(relationships, 9, (item) => item.pageReferences);
 
-  return relationships.slice(0, 6).map((item, index): StudyQuestion => {
-    const correct = truncateAtWord(item.description, 190);
-    const distractors = relationships
-      .filter((candidate) => candidate !== item)
-      .map((candidate) => truncateAtWord(candidate.description, 190));
-    const options = placeCorrectOption(correct, distractors, (index + 1) % 4).slice(0, 4);
-
-    return {
-      id: `model-relationship-${index + 1}`,
-      type: 'multiple_choice',
-      level: 'comprender',
-      kind: 'relationship',
-      topic: `${item.source} ↔ ${item.target}`,
-      prompt: `¿Qué relación establece el material entre “${item.source}” y “${item.target}”?`,
-      options,
-      answer: correct,
-      explanation: `El PDF vincula explícitamente ${item.source} con ${item.target} de esta manera.`,
-      reference: referenceFromPages(
+  return selected
+    .map((item, index): StudyQuestion => {
+      const correct = truncateAtWord(item.description, 190);
+      const candidates = relationships.filter((candidate) => candidate !== item);
+      const distractors = rankSemanticItems(
+        `${item.source} ${item.target} ${item.description}`,
         item.pageReferences,
-        `${item.source} ${item.target}`,
-        item.description,
-        chunks
-      ),
-    };
-  }).filter((question) => question.options.length >= 3);
+        candidates,
+        (candidate) => `${candidate.source} ${candidate.target} ${candidate.description}`,
+        (candidate) => candidate.pageReferences,
+        3
+      ).map((candidate) => truncateAtWord(candidate.description, 190));
+      const options = placeCorrectOption(correct, distractors, (index + 1) % 4).slice(0, 4);
+      const isCausal = CAUSAL_SIGNAL_PATTERN.test(item.description);
+
+      return {
+        id: `model-relationship-${index + 1}`,
+        type: 'multiple_choice',
+        level: isCausal ? 'aplicar' : 'comprender',
+        kind: 'relationship',
+        topic: `${item.source} ↔ ${item.target}`,
+        prompt: isCausal
+          ? `En una situación donde interviene “${item.source}”, ¿qué consecuencia o vínculo con “${item.target}” coincide con lo explicado en el PDF?`
+          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”?`,
+        options,
+        answer: correct,
+        explanation: `El PDF vincula explícitamente “${item.source}” con “${item.target}” de esta manera.`,
+        reference: referenceFromPages(
+          item.pageReferences,
+          `${item.source} ${item.target}`,
+          item.description,
+          chunks
+        ),
+      };
+    })
+    .filter((question) => question.options.length >= 3);
+}
+
+function splitClassificationItem(value: string) {
+  const cleaned = cleanLine(value);
+  const separator = cleaned.indexOf(':');
+  if (separator > 0 && separator < 80) {
+    const label = cleanLine(cleaned.slice(0, separator));
+    const detail = cleanLine(cleaned.slice(separator + 1));
+    if (label && detail.length >= 8) return { label, detail };
+  }
+  return { label: cleaned, detail: '' };
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractClassificationItemDetail(
+  label: string,
+  pages: number[] | undefined,
+  chunks: PedagogicalChunk[]
+) {
+  const pageSet = new Set((pages ?? []).filter((page) => page > 0));
+  const candidates = chunks.filter(
+    (chunk) =>
+      pageSet.size === 0 ||
+      (chunk.pageStart !== null && pageSet.has(chunk.pageStart)) ||
+      (chunk.pageEnd !== null && pageSet.has(chunk.pageEnd))
+  );
+  const pattern = new RegExp(`${escapeRegExp(label)}\\s*[:–—-]\\s*([^\\n•|]{12,260})`, 'i');
+
+  for (const chunk of candidates) {
+    const match = chunk.text.match(pattern);
+    const detail = cleanLine(match?.[1] ?? '').split(/(?<=[.!?])\s+/)[0] ?? '';
+    if (detail.length >= 12) return truncateAtWord(detail, 190);
+  }
+
+  return '';
 }
 
 function buildCanonicalClassificationQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  const allItems = dedupeStrings(model.classifications.flatMap((item) => item.items));
+  const eligible = model.classifications.filter((classification) => classification.items.length >= 3);
+  const selected = selectDistributedByPages(eligible, 10, (classification) => classification.pageReferences);
 
-  return model.classifications
-    .filter((classification) => classification.items.length >= 2)
-    .slice(0, 6)
+  return selected
     .map((classification, index): StudyQuestion | null => {
-      const correct = cleanLine(classification.items[index % classification.items.length] ?? '');
-      if (!correct) return null;
+      const entries = classification.items
+        .map(splitClassificationItem)
+        .map((entry) => ({
+          ...entry,
+          detail:
+            entry.detail ||
+            extractClassificationItemDetail(entry.label, classification.pageReferences, chunks),
+        }));
+      const withEvidence = entries.filter(
+        (entry) => entry.label.length >= 2 && entry.detail.length >= 12
+      );
+      if (withEvidence.length === 0) return null;
 
-      const ownItems = new Set(classification.items.map(normalizeForDedupe));
-      const distractors = allItems.filter((item) => !ownItems.has(normalizeForDedupe(item)));
-      const options = placeCorrectOption(correct, distractors, (index + 2) % 4).slice(0, 4);
+      const correct = withEvidence[index % withEvidence.length];
+      const labels = dedupeStrings(entries.map((entry) => entry.label));
+      const distractors = labels.filter(
+        (label) => normalizeForDedupe(label) !== normalizeForDedupe(correct.label)
+      );
+      const options = placeCorrectOption(correct.label, distractors, (index + 2) % 4).slice(0, 4);
       if (options.length < 3) return null;
 
       return {
         id: `model-classification-${index + 1}`,
         type: 'multiple_choice',
-        level: 'comprender',
+        level: 'aplicar',
         kind: 'classification',
         topic: classification.title,
-        prompt: `¿Cuál de estos elementos pertenece a “${classification.title}” según el PDF?`,
+        prompt: `Un caso del material se describe así: “${truncateAtWord(correct.detail, 175)}”. Dentro de “${classification.title}”, ¿a qué categoría corresponde?`,
         options,
-        answer: correct,
-        explanation: `“${correct}” aparece incluido en la clasificación “${classification.title}” del material.`,
+        answer: correct.label,
+        explanation: `La descripción corresponde a “${correct.label}” dentro de la clasificación “${classification.title}”. Las alternativas pertenecen a esa misma clasificación.`,
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -473,21 +666,38 @@ function buildCanonicalClassificationQuestions(
     .filter((question): question is StudyQuestion => Boolean(question));
 }
 
+function processScenarioSteps(title: string, steps: string[]) {
+  const titleWords = getContextWords(title);
+  const cueFree = steps
+    .map(cleanLine)
+    .filter((step) => step.length >= 12)
+    .filter((step) => countSharedWords(titleWords, getContextWords(step)) === 0);
+
+  return cueFree.length >= 2 ? cueFree.slice(0, 3) : [];
+}
+
 function buildCanonicalProcessQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  const allSteps = dedupeStrings(model.processes.flatMap((process) => process.steps));
+  const eligible = model.processes.filter((process) => process.steps.length >= 2);
+  const selected = selectDistributedByPages(eligible, 8, (process) => process.pageReferences);
 
-  return model.processes
-    .filter((process) => process.steps.length >= 2)
-    .slice(0, 5)
+  return selected
     .map((process, index): StudyQuestion | null => {
-      const correct = cleanLine(process.steps[index % process.steps.length] ?? '');
-      if (!correct) return null;
-      const processSteps = new Set(process.steps.map(normalizeForDedupe));
-      const distractors = allSteps.filter((step) => !processSteps.has(normalizeForDedupe(step)));
-      const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
+      const scenarioSteps = processScenarioSteps(process.title, process.steps);
+      if (scenarioSteps.length < 2) return null;
+
+      const candidates = eligible.filter((candidate) => candidate !== process);
+      const distractors = rankSemanticItems(
+        `${process.title} ${process.steps.join(' ')}`,
+        process.pageReferences,
+        candidates,
+        (candidate) => `${candidate.title} ${candidate.steps.join(' ')}`,
+        (candidate) => candidate.pageReferences,
+        3
+      ).map((candidate) => candidate.title);
+      const options = placeCorrectOption(process.title, distractors, index % 4).slice(0, 4);
       if (options.length < 3) return null;
 
       return {
@@ -496,10 +706,12 @@ function buildCanonicalProcessQuestions(
         level: 'aplicar',
         kind: 'process',
         topic: process.title,
-        prompt: `¿Cuál de estas acciones forma parte del proceso “${process.title}” descrito en el PDF?`,
+        prompt: `En una situación se observan estas acciones: ${scenarioSteps
+          .map((step) => `“${truncateAtWord(step, 105)}”`)
+          .join(' → ')}. ¿Qué proceso del PDF describe mejor el caso?`,
         options,
-        answer: correct,
-        explanation: `El material incluye “${correct}” como parte del proceso “${process.title}”.`,
+        answer: process.title,
+        explanation: `Las acciones forman parte del proceso “${process.title}” tal como está organizado en el material.`,
         reference: referenceFromPages(
           process.pageReferences,
           process.title,
@@ -511,41 +723,112 @@ function buildCanonicalProcessQuestions(
     .filter((question): question is StudyQuestion => Boolean(question));
 }
 
+function isPhFormula(expression: string) {
+  const normalized = normalizeForDedupe(expression);
+  return normalized.includes('ph') && normalized.includes('log');
+}
+
 function buildCanonicalFormulaQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  const fallbackDistractors = [
-    ...model.relationships.map((item) => item.description),
-    ...model.concepts.map((item) => item.detail),
-  ];
+  return model.formulas
+    .slice(0, 5)
+    .map((formula, index): StudyQuestion | null => {
+      if (isPhFormula(formula.expression)) {
+        const exponent = 5;
+        const correct = String(exponent);
+        const distractors = ['3', '7', '10'];
+        return {
+          id: `model-formula-${index + 1}`,
+          type: 'multiple_choice',
+          level: 'aplicar',
+          kind: 'formula',
+          topic: formula.expression,
+          prompt: `Una solución tiene [H+] = 10⁻${exponent}. Aplicando “${formula.expression}”, ¿qué valor de pH corresponde?`,
+          options: placeCorrectOption(correct, distractors, (index + 1) % 4),
+          answer: correct,
+          explanation: `La expresión del PDF define el pH como el logaritmo negativo de la concentración de H+. Para 10⁻${exponent}, el resultado es ${exponent}.`,
+          reference: referenceFromPages(
+            formula.pageReferences,
+            formula.expression,
+            formula.description,
+            chunks
+          ),
+        };
+      }
 
-  return model.formulas.slice(0, 4).map((formula, index): StudyQuestion => {
-    const correct = truncateAtWord(formula.description, 190);
-    const distractors = [
-      ...model.formulas.filter((candidate) => candidate !== formula).map((candidate) => candidate.description),
-      ...fallbackDistractors,
-    ].map((item) => truncateAtWord(item, 190));
-    const options = placeCorrectOption(correct, distractors, (index + 1) % 4).slice(0, 4);
+      if (
+        normalizeForDedupe(formula.description).includes(normalizeForDedupe(formula.expression))
+      ) {
+        return null;
+      }
+
+      const distractors = model.formulas
+        .filter((candidate) => candidate !== formula)
+        .map((candidate) => candidate.expression);
+      const options = placeCorrectOption(formula.expression, distractors, (index + 1) % 4).slice(0, 4);
+      if (options.length < 3) return null;
+
+      return {
+        id: `model-formula-${index + 1}`,
+        type: 'multiple_choice',
+        level: 'comprender',
+        kind: 'formula',
+        topic: formula.expression,
+        prompt: `El material describe: “${truncateAtWord(formula.description, 170)}”. ¿Qué expresión o magnitud corresponde?`,
+        options,
+        answer: formula.expression,
+        explanation: `La descripción es la que el PDF asocia con “${formula.expression}”.`,
+        reference: referenceFromPages(
+          formula.pageReferences,
+          formula.expression,
+          formula.description,
+          chunks
+        ),
+      };
+    })
+    .filter((question): question is StudyQuestion => Boolean(question));
+}
+
+function comparisonSubject(claim: string) {
+  return cleanLine(claim)
+    .replace(/^diferencias?\s+(?:funcionales?\s+y\s+estructurales?\s+)?entre\s+/i, '')
+    .replace(/^diferencias?\s+entre\s+/i, '')
+    .replace(/[.]$/, '');
+}
+
+function buildCanonicalComparisonQuestions(
+  model: CanonicalPedagogicalModel,
+  chunks: PedagogicalChunk[]
+) {
+  const claims = model.examRelevantClaims.filter((claim) => COMPARISON_SIGNAL_PATTERN.test(claim));
+
+  return claims.slice(0, 4).map((claim, index): StudyQuestion => {
+    const reference = referenceFromBinding(
+      model,
+      'exam_relevant_claim',
+      claim,
+      'Comparación',
+      chunks,
+      claim
+    );
+    const subject = comparisonSubject(claim);
 
     return {
-      id: `model-formula-${index + 1}`,
-      type: 'multiple_choice',
-      level: 'aplicar',
-      kind: 'formula',
-      topic: formula.expression,
-      prompt: `¿Qué representa o describe la expresión “${formula.expression}” en este material?`,
-      options,
-      answer: correct,
-      explanation: `La interpretación correcta es la que el PDF asocia con la fórmula “${formula.expression}”.`,
-      reference: referenceFromPages(
-        formula.pageReferences,
-        formula.expression,
-        formula.description,
-        chunks
-      ),
+      id: `model-comparison-${index + 1}`,
+      type: 'open',
+      level: 'comprender',
+      kind: 'relationship',
+      topic: truncateAtWord(subject || claim, 100),
+      prompt: `Compará ${subject || 'los elementos señalados'} según el PDF. Explicá qué los distingue usando los criterios que presenta el material.`,
+      options: [],
+      answer: truncateAtWord(reference.excerpt || claim, 480),
+      explanation:
+        'Una respuesta sólida debe establecer diferencias concretas respaldadas por el PDF, no limitarse a nombrar las alternativas.',
+      reference,
     };
-  }).filter((question) => question.options.length >= 3);
+  });
 }
 
 function buildCanonicalConfusionQuestions(
@@ -558,15 +841,18 @@ function buildCanonicalConfusionQuestions(
     level: 'comprender',
     kind: 'confusion',
     topic: 'Confusión frecuente',
-    prompt: `Aclar á con tus palabras esta confusión que el material considera importante: “${truncateAtWord(confusion, 180)}”`,
+    prompt: `Aclará con tus palabras esta confusión que el material considera importante: “${truncateAtWord(confusion, 180)}”`,
     options: [],
     answer: truncateAtWord(confusion, 420),
     explanation:
       'Una respuesta sólida debe distinguir con precisión los conceptos que el PDF señala como fáciles de confundir.',
-    reference: findReference(
+    reference: referenceFromBinding(
+      model,
+      'confusion',
       confusion,
+      'Confusión frecuente',
       chunks,
-      emptyReference('Confusión frecuente', confusion)
+      confusion
     ),
   }));
 }
@@ -575,50 +861,88 @@ function buildOpenSectionQuestions(
   summary: StudentMaterialSummary,
   chunks: PedagogicalChunk[]
 ) {
-  return summary.sections.slice(0, 5).map((section, index): StudyQuestion => {
-    const canApply = index > 0 && sectionSupportsApplication(section.body);
-    const level: StudyQuestion['level'] = canApply ? 'aplicar' : 'comprender';
-
-    return {
-      id: `section-open-${index + 1}`,
-      type: 'open',
-      level,
-      kind: 'section',
-      topic: section.title,
-      prompt: canApply
-        ? `Usando únicamente lo explicado en “${section.title}”, planteá cómo aplicarías esas ideas a una situación concreta y justificá tu decisión.`
-        : `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos del material.`,
-      options: [],
-      answer: buildExpectedSectionAnswer(section.body),
-      explanation: canApply
-        ? 'Una respuesta sólida debe aplicar criterios explícitos del PDF al caso y justificar por qué corresponden.'
-        : 'Una respuesta sólida debe explicar la idea central y conectar conceptos del material, no limitarse a copiar frases aisladas.',
-      reference: findReference(section.title, chunks, emptyReference(section.title, section.body)),
-    };
-  });
+  return summary.sections.slice(0, 4).map((section, index): StudyQuestion => ({
+    id: `section-open-${index + 1}`,
+    type: 'open',
+    level: 'comprender',
+    kind: 'section',
+    topic: section.title,
+    prompt: `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos del material.`,
+    options: [],
+    answer: buildExpectedSectionAnswer(section.body),
+    explanation:
+      'Una respuesta sólida debe explicar la idea central y conectar conceptos del material, no limitarse a copiar frases aisladas.',
+    reference: findReference(section.title, chunks, emptyReference(section.title, section.body)),
+  }));
 }
 
 function selectMiniExamQuestions(questions: StudyQuestion[], limit = 8) {
   const selected: StudyQuestion[] = [];
-  const pushFirst = (predicate: (question: StudyQuestion) => boolean) => {
-    const match = questions.find(
-      (question) => predicate(question) && !selected.some((item) => item.id === question.id)
-    );
-    if (match) selected.push(match);
+  const selectedIds = new Set<string>();
+  const selectedTopics = new Set<string>();
+  const selectedPages = new Set<number>();
+  const selectedKinds = new Set<StudyQuestion['kind']>();
+
+  const quotaRecordar = Math.max(1, Math.round(limit * 0.25));
+  const quotaAplicar = Math.max(1, Math.round(limit * 0.375));
+  const quotaComprender = Math.max(0, limit - quotaRecordar - quotaAplicar);
+
+  const kindPriority: Record<StudyQuestion['level'], Array<StudyQuestion['kind']>> = {
+    recordar: ['concept', 'classification', 'formula'],
+    comprender: ['relationship', 'formula', 'classification', 'confusion', 'section', 'concept'],
+    aplicar: ['classification', 'process', 'relationship', 'formula', 'concept'],
   };
 
-  pushFirst((q) => q.kind === 'concept' && q.level === 'recordar');
-  pushFirst((q) => q.kind === 'relationship');
-  pushFirst((q) => q.kind === 'classification');
-  pushFirst((q) => q.kind === 'process');
-  pushFirst((q) => q.kind === 'formula');
-  pushFirst((q) => q.kind === 'confusion');
-  pushFirst((q) => q.type === 'open' && q.level === 'comprender');
-  pushFirst((q) => q.type === 'open' && q.level === 'aplicar');
+  const scoreCandidate = (question: StudyQuestion) => {
+    let score = question.type === 'multiple_choice' ? 5 : 1;
+    if (question.topic && !selectedTopics.has(normalizeForDedupe(question.topic))) score += 5;
+    if (question.reference.pageStart && !selectedPages.has(question.reference.pageStart)) score += 4;
+    if (question.kind && !selectedKinds.has(question.kind)) score += 2;
+    if (question.kind === 'confusion' && selected.some((item) => item.kind === 'confusion')) score -= 30;
+    if (question.type === 'open' && selected.filter((item) => item.type === 'open').length >= 2) score -= 20;
+    return score;
+  };
 
-  for (const question of questions) {
-    if (selected.length >= limit) break;
-    if (!selected.some((item) => item.id === question.id)) selected.push(question);
+  const pushBest = (level: StudyQuestion['level'], target: number) => {
+    for (let count = 0; count < target && selected.length < limit; count += 1) {
+      const candidates = questions
+        .filter((question) => question.level === level && !selectedIds.has(question.id))
+        .map((question, index) => ({
+          question,
+          index,
+          kindRank: Math.max(0, kindPriority[level].indexOf(question.kind)),
+          score: scoreCandidate(question),
+        }))
+        .sort(
+          (left, right) =>
+            right.score - left.score || left.kindRank - right.kindRank || left.index - right.index
+        );
+      const match = candidates[0]?.question;
+      if (!match) break;
+      selected.push(match);
+      selectedIds.add(match.id);
+      if (match.topic) selectedTopics.add(normalizeForDedupe(match.topic));
+      if (match.reference.pageStart) selectedPages.add(match.reference.pageStart);
+      if (match.kind) selectedKinds.add(match.kind);
+    }
+  };
+
+  pushBest('recordar', quotaRecordar);
+  pushBest('comprender', quotaComprender);
+  pushBest('aplicar', quotaAplicar);
+
+  while (selected.length < limit) {
+    const remaining = questions
+      .filter((question) => !selectedIds.has(question.id))
+      .map((question, index) => ({ question, index, score: scoreCandidate(question) }))
+      .sort((left, right) => right.score - left.score || left.index - right.index);
+    const match = remaining[0]?.question;
+    if (!match) break;
+    selected.push(match);
+    selectedIds.add(match.id);
+    if (match.topic) selectedTopics.add(normalizeForDedupe(match.topic));
+    if (match.reference.pageStart) selectedPages.add(match.reference.pageStart);
+    if (match.kind) selectedKinds.add(match.kind);
   }
 
   return selected.slice(0, limit);
@@ -665,14 +989,12 @@ export function buildPedagogicalArtifacts(input: {
         ...buildCanonicalClassificationQuestions(model, chunks),
         ...buildCanonicalProcessQuestions(model, chunks),
         ...buildCanonicalFormulaQuestions(model, chunks),
+        ...buildCanonicalComparisonQuestions(model, chunks),
         ...buildCanonicalConfusionQuestions(model, chunks),
       ]
     : [];
 
-  const questions = dedupeQuestions([
-    ...modelQuestions,
-    ...fallbackQuestions,
-  ]);
+  const questions = dedupeQuestions([...modelQuestions, ...fallbackQuestions]);
   const miniExam = selectMiniExamQuestions(questions, 8);
   const allItems = [...flashcards, ...questions];
 
@@ -682,7 +1004,7 @@ export function buildPedagogicalArtifacts(input: {
     miniExamQuestionIds: miniExam.map((question) => question.id),
     coverage: {
       conceptsUsed: model?.concepts.length ?? concepts.length,
-      sectionsUsed: Math.min(5, input.summary.sections.length),
+      sectionsUsed: Math.min(4, input.summary.sections.length),
       referencedItems: allItems.filter((item) => item.reference.excerpt.length > 0).length,
       totalItems: allItems.length,
     },
