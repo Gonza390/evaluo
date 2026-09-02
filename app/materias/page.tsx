@@ -1,49 +1,42 @@
 import type { Metadata } from 'next';
-import { unstable_cache } from 'next/cache';
-import { fetchSharedStudentMaterialsByCarrera } from '@/lib/data/student-materials';
-import { createPublicClient } from '@/lib/supabase-public';
+import { Suspense } from 'react';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
-import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
-import type { Materia } from '@/services/api-server';
-import MateriaList from '@/components/materia-list';
+import { getCarreraById, getUniversidadById } from '@/services/api-server';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { StudyStatePanel } from '@/components/study-state-panel';
-import { fetchCatalogContentSignals } from '@/lib/data/catalog';
+import { CareerHeroServer } from '@/components/career-hero-server';
+import { MateriaCatalogSection } from './materia-catalog-section';
 
 export const revalidate = 600;
 
-const loadCatalogContentSignals = unstable_cache(
-  () => fetchCatalogContentSignals(createPublicClient()),
-  ['catalog-content-signals'],
-  { revalidate: 600, tags: ['catalog-content-signals'] }
-);
-
-function normalizeMateriaName(nombre: string) {
-  return nombre
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
-}
-
-function getBriefAiDescription(nombre: string) {
-  const descriptions: Record<string, string> = {
-    icse: 'Sociedad, Estado y procesos políticos para comprender la realidad social.',
-    'introduccion al conocimiento de la sociedad y el estado':
-      'Sociedad, Estado y procesos políticos para comprender la realidad social.',
-    ipc: 'Pensamiento científico, métodos, argumentos y construcción del conocimiento.',
-    'introduccion al pensamiento cientifico':
-      'Pensamiento científico, métodos, argumentos y construcción del conocimiento.',
-    'fisica e introduccion a la biofisica':
-      'Principios físicos aplicados a fenómenos biológicos y al cuerpo humano.',
-    'biologia e introduccion a la biologia celular':
-      'Bases de biología celular, organización y procesos fundamentales de la vida.',
-    matematica: 'Herramientas matemáticas para razonar y resolver problemas.',
-    quimica: 'Materia, reacciones y fundamentos químicos aplicados a ciencias de la salud.',
-  };
-
-  return descriptions[normalizeMateriaName(nombre)] ?? null;
+function MateriaCatalogFallback() {
+  return (
+    <div className="bg-white">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <div className="grid grid-cols-2 gap-2 py-3 sm:flex sm:gap-6">
+            <div className="h-11 rounded-xl bg-slate-100 sm:w-32" />
+            <div className="h-11 rounded-xl bg-slate-100 sm:w-28" />
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="h-7 w-44 animate-pulse rounded-lg bg-slate-100" />
+            <div className="mt-2 h-4 w-72 max-w-full animate-pulse rounded-full bg-slate-100" />
+          </div>
+          <div className="h-11 w-full animate-pulse rounded-xl bg-slate-100 sm:w-72" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="min-h-[184px] animate-pulse rounded-2xl border border-slate-200 bg-slate-50" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export async function generateMetadata({
@@ -57,10 +50,7 @@ export async function generateMetadata({
   if (!carreraId) {
     return {
       title: 'Materias',
-      robots: {
-        index: false,
-        follow: true,
-      },
+      robots: { index: false, follow: true },
     };
   }
 
@@ -69,12 +59,10 @@ export async function generateMetadata({
     if (!carreraData) {
       return {
         title: 'Materias',
-        robots: {
-          index: false,
-          follow: true,
-        },
+        robots: { index: false, follow: true },
       };
     }
+
     const universidadData = carreraData.universidad_id
       ? await getUniversidadById(carreraData.universidad_id)
       : null;
@@ -85,10 +73,7 @@ export async function generateMetadata({
     return {
       title: `${carreraData.nombre} | Materias`,
       description: `Explorá las materias de ${carreraData.nombre}${universidadData ? ` en ${universidadData.nombre}` : ''} y estudiá con materiales y simuladores en Evaluo.`,
-      robots: {
-        index: false,
-        follow: true,
-      },
+      robots: { index: false, follow: true },
       ...(canonicalHref
         ? {
             alternates: { canonical: canonicalHref },
@@ -103,10 +88,7 @@ export async function generateMetadata({
   } catch {
     return {
       title: 'Materias',
-      robots: {
-        index: false,
-        follow: true,
-      },
+      robots: { index: false, follow: true },
     };
   }
 }
@@ -137,35 +119,66 @@ export default async function MateriasPage({
     );
   }
 
-  let materias: Materia[] = [];
-  let sharedStudentMaterials: Awaited<ReturnType<typeof fetchSharedStudentMaterialsByCarrera>> = [];
-  let contentMateriaIds: string[] = [];
-  let questionMateriaIds: string[] = [];
-  let carreraData: Awaited<ReturnType<typeof getCarreraById>> | null = null;
-  let universidadData: Awaited<ReturnType<typeof getUniversidadById>> | null = null;
-
   try {
-    carreraData = await getCarreraById(carreraId);
-    const publicClient = createPublicClient();
-    const [loadedMaterias, loadedSharedMaterials, contentSignals] = await Promise.all([
-      getMateriasByCarrera(carreraId),
-      fetchSharedStudentMaterialsByCarrera(publicClient, carreraId, 8),
-      loadCatalogContentSignals(),
-    ]);
-    materias = loadedMaterias.map((materia) => {
-      const descripcion = getBriefAiDescription(materia.nombre);
-      return descripcion ? { ...materia, descripcion } : materia;
-    });
-    sharedStudentMaterials = loadedSharedMaterials;
-    contentMateriaIds = contentSignals.contentMateriaIds;
-    questionMateriaIds = contentSignals.questionMateriaIds;
-
-    if (carreraData?.universidad_id) {
-      universidadData = await getUniversidadById(carreraData.universidad_id);
+    const carreraData = await getCarreraById(carreraId);
+    if (!carreraData) {
+      return (
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+          <StudyStatePanel
+            iconName="book-open"
+            tone="warning"
+            className="w-full"
+            title="No encontramos esta carrera"
+            description="La carrera ya no está disponible o el enlace cambió."
+            secondaryText="Volvé a explorar para elegir otra carrera."
+            primaryActionLabel="Volver a explorar"
+            primaryActionHref="/explorar"
+            secondaryActionLabel="Ir al inicio"
+            secondaryActionHref="/"
+          />
+        </div>
+      );
     }
+
+    const universidadData = carreraData.universidad_id
+      ? await getUniversidadById(carreraData.universidad_id)
+      : null;
+    const careerCanonicalHref = universidadData
+      ? `/estudiar/${buildSeoEntitySlug(universidadData.nombre, universidadData.id)}/${buildSeoEntitySlug(carreraData.nombre, carreraData.id)}`
+      : `/materias?carreraId=${encodeURIComponent(carreraId)}`;
+
+    return (
+      <>
+        <JsonLd
+          data={buildBreadcrumbJsonLd([
+            { name: 'Inicio', path: '/' },
+            { name: 'Explorar', path: '/explorar' },
+            ...(universidadData
+              ? [{ name: universidadData.nombre, path: `/universidad/${universidadData.id}` }]
+              : []),
+            { name: carreraData.nombre, path: careerCanonicalHref },
+          ])}
+        />
+        <CareerHeroServer
+          carreraId={carreraId}
+          carreraNombre={carreraData.nombre}
+          carreraData={carreraData}
+          universidadNombre={universidadData?.nombre ?? undefined}
+          universidadId={universidadData?.id ?? undefined}
+        />
+        <Suspense fallback={<MateriaCatalogFallback />}>
+          <MateriaCatalogSection
+            carreraId={carreraId}
+            carreraNombre={carreraData.nombre}
+            carreraData={carreraData}
+            universidadNombre={universidadData?.nombre ?? undefined}
+            universidadId={universidadData?.id ?? undefined}
+          />
+        </Suspense>
+      </>
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Error desconocido';
-
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
         <StudyStatePanel
@@ -183,40 +196,4 @@ export default async function MateriasPage({
       </div>
     );
   }
-
-  const careerCanonicalHref =
-    carreraData && universidadData
-      ? `/estudiar/${buildSeoEntitySlug(universidadData.nombre, universidadData.id)}/${buildSeoEntitySlug(carreraData.nombre, carreraData.id)}`
-      : `/materias?carreraId=${encodeURIComponent(carreraId)}`;
-
-  return (
-    <>
-      {carreraData ? (
-        <JsonLd
-          data={buildBreadcrumbJsonLd([
-            { name: 'Inicio', path: '/' },
-            { name: 'Explorar', path: '/explorar' },
-            ...(universidadData
-              ? [{ name: universidadData.nombre, path: `/universidad/${universidadData.id}` }]
-              : []),
-            {
-              name: carreraData.nombre,
-              path: careerCanonicalHref,
-            },
-          ])}
-        />
-      ) : null}
-      <MateriaList
-        initialMaterias={materias}
-        carreraId={carreraId}
-        carreraNombre={carreraData?.nombre}
-        carreraData={carreraData ?? undefined}
-        universidadNombre={universidadData?.nombre}
-        universidadId={universidadData?.id}
-        sharedStudentMaterials={sharedStudentMaterials}
-        contentMateriaIds={contentMateriaIds}
-        questionMateriaIds={questionMateriaIds}
-      />
-    </>
-  );
 }
