@@ -317,6 +317,12 @@ export function MaterialStudyWorkspace({
     setCommentsOpen((current) => !current);
   };
 
+  const handleStudyTabChange = (value: string) => {
+    if (value !== 'resumen') {
+      setIsViewerVisible(false);
+    }
+  };
+
   useEffect(() => {
     if (!isRegenerating) {
       setRegenerationStageIndex(0);
@@ -739,7 +745,11 @@ export function MaterialStudyWorkspace({
   );
 
   const content = (
-    <Tabs defaultValue="resumen" className="flex min-w-0 flex-col gap-2.5 overflow-x-hidden">
+    <Tabs
+      defaultValue="resumen"
+      onValueChange={handleStudyTabChange}
+      className="flex min-w-0 flex-col gap-2.5 overflow-x-hidden"
+    >
       {tabHeader}
       {regenerationOverlay}
       <div>{tabPanels}</div>
@@ -803,7 +813,11 @@ export function MaterialStudyWorkspace({
       <section className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
         <div className="hidden xl:block">
           <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
-            <Tabs defaultValue="resumen" className="flex h-full min-w-0 flex-col overflow-x-hidden">
+            <Tabs
+              defaultValue="resumen"
+              onValueChange={handleStudyTabChange}
+              className="flex h-full min-w-0 flex-col overflow-x-hidden"
+            >
               {tabHeader}
               {regenerationOverlay}
               <div className="flex min-h-0 flex-1">
