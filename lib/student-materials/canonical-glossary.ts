@@ -242,20 +242,31 @@ function selectCanonicalGlossaryCandidates(
   const selected = new Map<string, CanonicalGlossaryCandidate>();
   const ordered = [...candidates].sort(compareCandidateCoverage);
 
-  // Las definiciones canónicas son el núcleo del glosario. Si entran sin
-  // desplazar toda la diversidad estructural, se conservan completas.
+  // Las definiciones canónicas son el núcleo del glosario. Para evitar que una
+  // página muy densa monopolice el cupo, garantizamos hasta 3 definiciones por
+  // página antes de completar por cuotas. Así también se conservan pares o
+  // tríadas conceptuales que se explican juntas en la fuente.
   const coreDefinitions = ordered.filter(
     (candidate) => candidate.kind === 'concept' && candidate.priority === 0
   );
-  const completeCoreLimit = Math.floor(limit * 0.8);
-  const guaranteedDefinitions =
-    coreDefinitions.length <= completeCoreLimit
-      ? coreDefinitions
-      : takeEvenly(coreDefinitions, Math.ceil(limit * 0.68));
+  const definitionsByPage = new Map<number, CanonicalGlossaryCandidate[]>();
 
-  for (const candidate of guaranteedDefinitions) {
+  for (const candidate of coreDefinitions) {
+    const page = candidate.pageReferences[0] ?? Number.MAX_SAFE_INTEGER;
+    const bucket = definitionsByPage.get(page) ?? [];
+    bucket.push(candidate);
+    definitionsByPage.set(page, bucket);
+  }
+
+  for (const [, bucket] of [...definitionsByPage.entries()].sort(
+    ([left], [right]) => left - right
+  )) {
+    const representatives = bucket.length <= 3 ? bucket : takeEvenly(bucket, 3);
+    for (const candidate of representatives) {
+      if (selected.size >= limit) break;
+      selected.set(candidate.id, candidate);
+    }
     if (selected.size >= limit) break;
-    selected.set(candidate.id, candidate);
   }
 
   // Garantizamos presencia de los temas del documento, especialmente para
