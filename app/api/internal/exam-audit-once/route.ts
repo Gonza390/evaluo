@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   const admin = createAdminClient();
   const [materialResult, summaryResult, glossaryResult, chunksResult] = await Promise.all([
-    admin.from('student_materials').select('pedagogical_model').eq('id', MATERIAL_ID).maybeSingle(),
+    admin.from('student_materials').select('*').eq('id', MATERIAL_ID).maybeSingle(),
     admin.from('student_material_summaries').select('status,summary_short,key_points,summary_sections,provider,error_message,source_chunks_count').eq('student_material_id', MATERIAL_ID).maybeSingle(),
     admin.from('student_material_glossaries').select('status,glossary_items,provider,error_message').eq('student_material_id', MATERIAL_ID).maybeSingle(),
     admin.from('student_material_chunks').select('chunk_index,chunk_text,page_start,page_end,section_title').eq('student_material_id', MATERIAL_ID).order('chunk_index'),
@@ -59,7 +59,8 @@ export async function GET(request: Request) {
     sectionTitle: chunk.section_title,
     excerpt: chunk.chunk_text.slice(0, 220),
   }));
-  const canonicalModel = materialResult.data.pedagogical_model as unknown as CanonicalPedagogicalModel | null;
+  const material = materialResult.data as unknown as { pedagogical_model?: unknown };
+  const canonicalModel = (material.pedagogical_model ?? null) as CanonicalPedagogicalModel | null;
   const artifacts = buildPedagogicalArtifacts({ summary, glossary, chunks, canonicalModel });
 
   const counts = {
