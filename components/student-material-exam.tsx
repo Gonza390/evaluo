@@ -267,10 +267,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
               })}
             </div>
 
-            <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[12px] leading-5 text-slate-500">
-                Banco disponible: {artifacts.questions.length} preguntas construidas desde el contenido del PDF.
-              </p>
+            <div className="mt-5 flex justify-end border-t border-slate-100 pt-5">
               <Button type="button" onClick={startExam} className="h-11 rounded-[14px] px-5">
                 Comenzar examen
                 <ArrowRight className="h-4 w-4" />
