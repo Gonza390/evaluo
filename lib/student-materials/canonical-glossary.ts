@@ -4,7 +4,16 @@ import type {
   StudyGlossaryItem,
 } from '@/lib/student-materials/types';
 
+type GlossaryKind =
+  | 'concept'
+  | 'classification'
+  | 'process'
+  | 'relationship'
+  | 'formula';
+
 type CanonicalGlossaryCandidate = StudyGlossaryItem & {
+  id: string;
+  kind: GlossaryKind;
   pageReferences: number[];
   priority: number;
 };
@@ -14,6 +23,41 @@ export const CANONICAL_GLOSSARY_PROVIDER = 'canonical-local';
 export function buildCanonicalStudentMaterialGlossary(
   model: CanonicalPedagogicalModel
 ): StudyGlossaryItem[] {
+  const candidates = mergeCandidates(buildCandidates(model));
+  const selected = selectCanonicalGlossaryCandidates(model, candidates);
+
+  return selected
+    .sort((left, right) =>
+      left.term.localeCompare(right.term, 'es', { sensitivity: 'base' })
+    )
+    .map(
+      ({
+        id: _id,
+        kind: _kind,
+        pageReferences: _pageReferences,
+        priority: _priority,
+        ...item
+      }) => item
+    );
+}
+
+export function resolveCanonicalGlossaryLimit(
+  model: CanonicalPedagogicalModel
+) {
+  const pageCount = inferCanonicalPageCount(model);
+  const topicCount = model.topics.length;
+
+  return Math.min(
+    42,
+    Math.max(
+      18,
+      Math.ceil(pageCount * 1.5),
+      Math.min(36, topicCount * 2)
+    )
+  );
+}
+
+function buildCandidates(model: CanonicalPedagogicalModel) {
   const candidates: CanonicalGlossaryCandidate[] = [];
 
   for (const concept of model.concepts) {
@@ -29,11 +73,15 @@ export function buildCanonicalStudentMaterialGlossary(
     );
     const relatedTopics = findRelatedTopics(model, pageReferences);
     const importance = resolveImportance(
-      concept.kind === 'definicion' || concept.kind === 'clasificacion',
+      concept.kind === 'definicion' ||
+        concept.kind === 'clasificacion' ||
+        concept.kind === 'idea_clave',
       relatedTopics.some((topic) => topic.relevance === 'alta')
     );
 
     candidates.push({
+      id: `concept:${normalizeKey(term)}`,
+      kind: 'concept',
       term,
       definition,
       context: buildContext(
@@ -44,11 +92,7 @@ export function buildCanonicalStudentMaterialGlossary(
       englishTerm: null,
       pageReferences,
       priority: buildCandidatePriority(
-        concept.kind === 'definicion' || concept.kind === 'clasificacion'
-          ? 0
-          : concept.kind === 'autor' || concept.kind === 'idea_clave'
-            ? 2
-            : 3,
+        concept.kind === 'definicion' || concept.kind === 'idea_clave' ? 0 : 2,
         importance
       ),
     });
@@ -66,12 +110,13 @@ export function buildCanonicalStudentMaterialGlossary(
       classification.pageReferences
     );
     const relatedTopics = findRelatedTopics(model, pageReferences);
-
     const importance = relatedTopics.some((topic) => topic.relevance === 'alta')
       ? ('alta' as const)
       : ('media' as const);
 
     candidates.push({
+      id: `classification:${normalizeKey(term)}`,
+      kind: 'classification',
       term,
       definition: `Clasificación que incluye: ${items.join('; ')}.`,
       context: buildContext(
@@ -82,6 +127,73 @@ export function buildCanonicalStudentMaterialGlossary(
       englishTerm: null,
       pageReferences,
       priority: buildCandidatePriority(1, importance),
+    });
+  }
+
+  for (const process of model.processes) {
+    const term = cleanInline(process.title);
+    const steps = process.steps.map(cleanInline).filter(Boolean);
+    if (!isUsefulTerm(term) || steps.length < 2) continue;
+
+    const pageReferences = resolveEntityPages(
+      model,
+      'process',
+      term,
+      process.pageReferences
+    );
+    const relatedTopics = findRelatedTopics(model, pageReferences);
+    const importance = relatedTopics.some((topic) => topic.relevance === 'alta')
+      ? ('alta' as const)
+      : ('media' as const);
+
+    candidates.push({
+      id: `process:${normalizeKey(term)}`,
+      kind: 'process',
+      term,
+      definition: `Proceso descrito en el material: ${steps.join(' → ')}.`,
+      context: buildContext(
+        relatedTopics.map((topic) => topic.title),
+        pageReferences
+      ),
+      importance,
+      englishTerm: null,
+      pageReferences,
+      priority: buildCandidatePriority(1, importance),
+    });
+  }
+
+  for (const relationship of model.relationships) {
+    const source = cleanInline(relationship.source);
+    const target = cleanInline(relationship.target);
+    const definition = cleanInline(relationship.description);
+    const term = `${source} ↔ ${target}`;
+    if (!source || !target || !isUsefulTerm(term) || definition.length < 12) continue;
+
+    const sourceKey = `${source} → ${target}`;
+    const pageReferences = resolveEntityPages(
+      model,
+      'relationship',
+      sourceKey,
+      relationship.pageReferences
+    );
+    const relatedTopics = findRelatedTopics(model, pageReferences);
+    const importance = relatedTopics.some((topic) => topic.relevance === 'alta')
+      ? ('alta' as const)
+      : ('media' as const);
+
+    candidates.push({
+      id: `relationship:${normalizeKey(term)}`,
+      kind: 'relationship',
+      term,
+      definition,
+      context: buildContext(
+        relatedTopics.map((topic) => topic.title),
+        pageReferences
+      ),
+      importance,
+      englishTerm: null,
+      pageReferences,
+      priority: buildCandidatePriority(2, importance),
     });
   }
 
@@ -97,12 +209,13 @@ export function buildCanonicalStudentMaterialGlossary(
       formula.pageReferences
     );
     const relatedTopics = findRelatedTopics(model, pageReferences);
-
     const importance = relatedTopics.some((topic) => topic.relevance === 'alta')
       ? ('alta' as const)
       : ('media' as const);
 
     candidates.push({
+      id: `formula:${normalizeKey(term)}`,
+      kind: 'formula',
       term,
       definition,
       context: buildContext(
@@ -116,32 +229,7 @@ export function buildCanonicalStudentMaterialGlossary(
     });
   }
 
-  return selectCanonicalGlossaryCandidates(
-    model,
-    mergeCandidates(candidates)
-  )
-    .sort((left, right) =>
-      left.term.localeCompare(right.term, 'es', {
-        sensitivity: 'base',
-      })
-    )
-    .map(({ pageReferences: _pageReferences, priority: _priority, ...item }) => item);
-}
-
-export function resolveCanonicalGlossaryLimit(
-  model: CanonicalPedagogicalModel
-) {
-  const pageCount = inferCanonicalPageCount(model);
-  const topicCoverageFloor = model.topics.length;
-
-  return Math.min(
-    60,
-    Math.max(
-      12,
-      pageCount * 3,
-      topicCoverageFloor
-    )
-  );
+  return candidates;
 }
 
 function selectCanonicalGlossaryCandidates(
@@ -151,64 +239,102 @@ function selectCanonicalGlossaryCandidates(
   const limit = resolveCanonicalGlossaryLimit(model);
   if (candidates.length <= limit) return candidates;
 
-  const ordered = [...candidates].sort(compareCandidatePriority);
   const selected = new Map<string, CanonicalGlossaryCandidate>();
+  const ordered = [...candidates].sort(compareCandidateCoverage);
 
-  const topicsByPriority = [...model.topics].sort((left, right) => {
-    if (left.relevance !== right.relevance) {
-      return left.relevance === 'alta' ? -1 : 1;
-    }
-
-    return left.title.localeCompare(right.title, 'es', {
-      sensitivity: 'base',
-    });
+  // Primero garantizamos presencia de los temas del documento, especialmente
+  // para evitar glosarios concentrados sólo en las primeras páginas.
+  const topics = [...model.topics].sort((left, right) => {
+    const leftPage = normalizePages(left.pageReferences)[0] ?? Number.MAX_SAFE_INTEGER;
+    const rightPage = normalizePages(right.pageReferences)[0] ?? Number.MAX_SAFE_INTEGER;
+    if (leftPage !== rightPage) return leftPage - rightPage;
+    if (left.relevance !== right.relevance) return left.relevance === 'alta' ? -1 : 1;
+    return left.title.localeCompare(right.title, 'es', { sensitivity: 'base' });
   });
 
-  for (const topic of topicsByPriority) {
+  for (const topic of topics) {
     if (selected.size >= limit) break;
-
     const topicPages = new Set(normalizePages(topic.pageReferences));
     if (topicPages.size === 0) continue;
 
-    const representative = ordered.find((candidate) => {
-      const key = normalizeKey(candidate.term);
-      if (selected.has(key)) return false;
+    const representative = ordered.find(
+      (candidate) =>
+        !selected.has(candidate.id) &&
+        candidate.pageReferences.some((page) => topicPages.has(page))
+    );
+    if (representative) selected.set(representative.id, representative);
+  }
 
-      return candidate.pageReferences.some((page) => topicPages.has(page));
-    });
+  const quotas: Array<[GlossaryKind, number]> = [
+    ['concept', Math.ceil(limit * 0.48)],
+    ['classification', Math.ceil(limit * 0.18)],
+    ['process', Math.ceil(limit * 0.13)],
+    ['relationship', Math.ceil(limit * 0.13)],
+    ['formula', Math.max(1, Math.floor(limit * 0.08))],
+  ];
 
-    if (representative) {
-      selected.set(normalizeKey(representative.term), representative);
+  for (const [kind, quota] of quotas) {
+    if (selected.size >= limit) break;
+    const alreadyOfKind = [...selected.values()].filter(
+      (candidate) => candidate.kind === kind
+    ).length;
+    const needed = Math.max(0, quota - alreadyOfKind);
+    const bucket = ordered.filter(
+      (candidate) => candidate.kind === kind && !selected.has(candidate.id)
+    );
+
+    for (const candidate of takeEvenly(bucket, needed)) {
+      if (selected.size >= limit) break;
+      selected.set(candidate.id, candidate);
     }
   }
 
   for (const candidate of ordered) {
     if (selected.size >= limit) break;
-
-    const key = normalizeKey(candidate.term);
-    if (!selected.has(key)) {
-      selected.set(key, candidate);
-    }
+    if (!selected.has(candidate.id)) selected.set(candidate.id, candidate);
   }
 
   return [...selected.values()];
 }
 
-function compareCandidatePriority(
+function takeEvenly(candidates: CanonicalGlossaryCandidate[], count: number) {
+  if (count <= 0 || candidates.length === 0) return [];
+  if (candidates.length <= count) return candidates;
+
+  const ordered = [...candidates].sort(compareCandidateCoverage);
+  if (count === 1) return [ordered[Math.floor((ordered.length - 1) / 2)]!];
+
+  const result: CanonicalGlossaryCandidate[] = [];
+  const used = new Set<string>();
+
+  for (let index = 0; index < count; index += 1) {
+    const target = Math.round((index * (ordered.length - 1)) / (count - 1));
+    const candidate = ordered[target];
+    if (candidate && !used.has(candidate.id)) {
+      result.push(candidate);
+      used.add(candidate.id);
+    }
+  }
+
+  for (const candidate of ordered) {
+    if (result.length >= count) break;
+    if (used.has(candidate.id)) continue;
+    result.push(candidate);
+    used.add(candidate.id);
+  }
+
+  return result;
+}
+
+function compareCandidateCoverage(
   left: CanonicalGlossaryCandidate,
   right: CanonicalGlossaryCandidate
 ) {
-  if (left.priority !== right.priority) {
-    return left.priority - right.priority;
-  }
-
-  if (left.pageReferences.length !== right.pageReferences.length) {
-    return left.pageReferences.length - right.pageReferences.length;
-  }
-
-  return left.term.localeCompare(right.term, 'es', {
-    sensitivity: 'base',
-  });
+  const leftPage = left.pageReferences[0] ?? Number.MAX_SAFE_INTEGER;
+  const rightPage = right.pageReferences[0] ?? Number.MAX_SAFE_INTEGER;
+  if (leftPage !== rightPage) return leftPage - rightPage;
+  if (left.priority !== right.priority) return left.priority - right.priority;
+  return left.term.localeCompare(right.term, 'es', { sensitivity: 'base' });
 }
 
 function buildCandidatePriority(
@@ -222,12 +348,8 @@ function inferCanonicalPageCount(model: CanonicalPedagogicalModel) {
   const pages = [
     ...model.topics.flatMap((topic) => topic.pageReferences),
     ...model.concepts.flatMap((concept) => concept.pageReferences ?? []),
-    ...model.relationships.flatMap(
-      (relationship) => relationship.pageReferences ?? []
-    ),
-    ...model.classifications.flatMap(
-      (classification) => classification.pageReferences ?? []
-    ),
+    ...model.relationships.flatMap((relationship) => relationship.pageReferences ?? []),
+    ...model.classifications.flatMap((classification) => classification.pageReferences ?? []),
     ...model.processes.flatMap((process) => process.pageReferences ?? []),
     ...model.formulas.flatMap((formula) => formula.pageReferences ?? []),
     ...(model.sourceBindings ?? []).flatMap((binding) =>
@@ -264,12 +386,11 @@ function mergeCandidates(
         ? ('alta' as const)
         : ('media' as const);
     const preferred =
-      candidate.definition.length > existing.definition.length
-        ? candidate
-        : existing;
+      candidate.definition.length > existing.definition.length ? candidate : existing;
 
     merged.set(key, {
       ...preferred,
+      id: existing.id,
       importance,
       pageReferences,
       context: mergeContexts(existing.context, candidate.context, pageReferences),
@@ -292,17 +413,19 @@ function resolveEntityPages(
   const normalizedKey = normalizeKey(key);
   if (!normalizedKey) return [];
 
-  const binding = (model.sourceBindings ?? []).find(
+  const bindings = (model.sourceBindings ?? []).filter(
     (candidate) =>
       candidate.kind === kind &&
-      normalizeKey(candidate.key) === normalizedKey
+      (normalizeKey(candidate.key) === normalizedKey ||
+        normalizeKey(candidate.key).includes(normalizedKey) ||
+        normalizedKey.includes(normalizeKey(candidate.key)))
   );
 
-  if (!binding) return [];
-
   return normalizePages(
-    binding.references.flatMap((reference) =>
-      expandPageRange(reference.pageStart, reference.pageEnd)
+    bindings.flatMap((binding) =>
+      binding.references.flatMap((reference) =>
+        expandPageRange(reference.pageStart, reference.pageEnd)
+      )
     )
   );
 }
@@ -312,66 +435,45 @@ function findRelatedTopics(
   pageReferences: number[]
 ) {
   if (pageReferences.length === 0) return [];
-
   const pages = new Set(pageReferences);
-
   return model.topics.filter((topic) =>
     topic.pageReferences.some((page) => pages.has(page))
   );
 }
 
 function resolveImportance(
-  conceptIsStructurallyCentral: boolean,
+  structurallyCentral: boolean,
   belongsToHighRelevanceTopic: boolean
 ): 'alta' | 'media' {
-  return conceptIsStructurallyCentral || belongsToHighRelevanceTopic
-    ? 'alta'
-    : 'media';
+  return structurallyCentral || belongsToHighRelevanceTopic ? 'alta' : 'media';
 }
 
 function buildContext(topicTitles: string[], pageReferences: number[]) {
   const uniqueTopics = dedupeStrings(topicTitles).slice(0, 2);
-  const parts: string[] = [];
-
-  if (uniqueTopics.length > 0) {
-    parts.push(uniqueTopics.join(' · '));
-  } else {
-    parts.push('Concepto del material');
-  }
-
-  const pageLabel = formatPageReferences(pageReferences);
-  if (pageLabel) parts.push(pageLabel);
-
+  const parts = [
+    uniqueTopics.length > 0 ? uniqueTopics.join(' · ') : 'Concepto del material',
+    formatPageReferences(pageReferences),
+  ].filter(Boolean);
   return parts.join(' · ');
 }
 
-function mergeContexts(
-  left: string,
-  right: string,
-  pageReferences: number[]
-) {
+function mergeContexts(left: string, right: string, pageReferences: number[]) {
   const topicParts = dedupeStrings(
     [extractTopicContext(left), extractTopicContext(right)].filter(Boolean)
   ).slice(0, 2);
-
   return buildContext(topicParts, pageReferences);
 }
 
 function extractTopicContext(value: string) {
   const [topicPart = ''] = value.split(' · Ver en PDF · ');
   const clean = topicPart.trim();
-
   return clean === 'Concepto del material' ? '' : clean;
 }
 
 function formatPageReferences(pageReferences: number[]) {
   const pages = normalizePages(pageReferences);
   if (pages.length === 0) return '';
-
-  if (pages.length === 1) {
-    return `Ver en PDF · página ${pages[0]}`;
-  }
-
+  if (pages.length === 1) return `Ver en PDF · página ${pages[0]}`;
   return `Ver en PDF · páginas ${pages.join(', ')}`;
 }
 
@@ -379,29 +481,16 @@ function normalizePages(values: number[]) {
   return [
     ...new Set(
       values.filter(
-        (value) =>
-          Number.isInteger(value) &&
-          value >= 1
+        (value) => Number.isInteger(value) && Number.isFinite(value) && value >= 1
       )
     ),
   ].sort((left, right) => left - right);
 }
 
-function expandPageRange(
-  pageStart: number | null,
-  pageEnd: number | null
-) {
+function expandPageRange(pageStart: number | null, pageEnd: number | null) {
   if (pageStart === null) return [];
-
-  const end =
-    pageEnd !== null && pageEnd >= pageStart
-      ? pageEnd
-      : pageStart;
-
-  return Array.from(
-    { length: end - pageStart + 1 },
-    (_, index) => pageStart + index
-  );
+  const end = pageEnd !== null && pageEnd >= pageStart ? pageEnd : pageStart;
+  return Array.from({ length: end - pageStart + 1 }, (_, index) => pageStart + index);
 }
 
 function cleanInline(value: string) {
@@ -418,7 +507,10 @@ function normalizeKey(value: string) {
   return cleanInline(value)
     .toLocaleLowerCase('es')
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function dedupeStrings(values: string[]) {
@@ -429,7 +521,6 @@ function dedupeStrings(values: string[]) {
     const clean = cleanInline(value);
     const key = normalizeKey(clean);
     if (!clean || seen.has(key)) continue;
-
     seen.add(key);
     result.push(clean);
   }
