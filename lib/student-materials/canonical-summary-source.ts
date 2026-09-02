@@ -75,6 +75,8 @@ type BindingPageIndex = Map<string, number[]>;
  * - conserva examRelevantClaims como `studyClaims`: son hechos/ideas académicas,
  *   no predicciones ni preguntas de examen;
  * - refuerza cada topic con los studyClaims respaldados por sus mismas páginas;
+ * - crea topics complementarios cuando hay contenido canónico respaldado por
+ *   páginas que no quedaron representadas en los topics generados;
  * - no recorta por cantidad de elementos ni por caracteres.
  *
  * El modelo canónico ya hizo el trabajo costoso de comprender y consolidar el
@@ -95,12 +97,121 @@ export function buildCanonicalSummarySource(
       ...(bindingPages.get(buildBindingIndexKey(kind, key)) ?? []),
     ]);
 
+  const concepts = model.concepts
+    .map((concept) => {
+      const term = cleanText(concept.term);
+      const detail = cleanText(concept.detail);
+
+      return {
+        term,
+        detail,
+        kind: concept.kind,
+        pageReferences: resolvePages(
+          'concept',
+          term,
+          concept.pageReferences
+        ),
+      } satisfies CanonicalSummarySourceConcept;
+    })
+    .filter((concept) => concept.term && concept.detail);
+
+  const relationships = model.relationships
+    .map((relationship) => {
+      const source = cleanText(relationship.source);
+      const target = cleanText(relationship.target);
+      const description = cleanText(relationship.description);
+
+      return {
+        source,
+        target,
+        description,
+        pageReferences: resolvePages(
+          'relationship',
+          buildRelationshipKey(source, target),
+          relationship.pageReferences
+        ),
+      } satisfies CanonicalSummarySourceRelationship;
+    })
+    .filter(
+      (relationship) =>
+        relationship.source &&
+        relationship.target &&
+        relationship.description
+    );
+
+  const classifications = model.classifications
+    .map((classification) => {
+      const title = cleanText(classification.title);
+
+      return {
+        title,
+        items: cleanTextList(classification.items),
+        pageReferences: resolvePages(
+          'classification',
+          title,
+          classification.pageReferences
+        ),
+      } satisfies CanonicalSummarySourceClassification;
+    })
+    .filter(
+      (classification) =>
+        classification.title && classification.items.length > 0
+    );
+
+  const processes = model.processes
+    .map((process) => {
+      const title = cleanText(process.title);
+
+      return {
+        title,
+        steps: cleanTextList(process.steps),
+        pageReferences: resolvePages(
+          'process',
+          title,
+          process.pageReferences
+        ),
+      } satisfies CanonicalSummarySourceProcess;
+    })
+    .filter((process) => process.title && process.steps.length > 0);
+
+  const formulas = model.formulas
+    .map((formula) => {
+      const expression = cleanText(formula.expression);
+      const description = cleanText(formula.description);
+
+      return {
+        expression,
+        description,
+        pageReferences: resolvePages(
+          'formula',
+          expression,
+          formula.pageReferences
+        ),
+      } satisfies CanonicalSummarySourceFormula;
+    })
+    .filter((formula) => formula.expression && formula.description);
+
+  const authorsOrTheories = cleanTextList(model.authorsOrTheories).map((value) => ({
+    value,
+    pageReferences: resolvePages('author_or_theory', value),
+  }));
+
+  const examples = cleanTextList(model.examples).map((value) => ({
+    value,
+    pageReferences: resolvePages('example', value),
+  }));
+
   const studyClaims = cleanTextList(model.examRelevantClaims).map((value) => ({
     value,
     pageReferences: resolvePages('exam_relevant_claim', value),
   }));
 
-  const topics = model.topics
+  const confusions = cleanTextList(model.confusions).map((value) => ({
+    value,
+    pageReferences: resolvePages('confusion', value),
+  }));
+
+  const baseTopics = model.topics
     .map((topic) => {
       const title = cleanText(topic.title);
       const baseDescription = cleanText(topic.description);
@@ -132,121 +243,43 @@ export function buildCanonicalSummarySource(
     })
     .filter((topic) => topic.title && topic.description);
 
+  const coveredPages = new Set(
+    baseTopics.flatMap((topic) => topic.pageReferences)
+  );
+  const supplementalTopics = buildSupplementalTopics(
+    {
+      concepts,
+      relationships,
+      classifications,
+      processes,
+      formulas,
+      authorsOrTheories,
+      examples,
+      studyClaims,
+      confusions,
+    },
+    coveredPages
+  );
+  const topics = [...baseTopics, ...supplementalTopics].sort((left, right) => {
+    const leftPage = left.pageReferences[0] ?? Number.MAX_SAFE_INTEGER;
+    const rightPage = right.pageReferences[0] ?? Number.MAX_SAFE_INTEGER;
+    if (leftPage !== rightPage) return leftPage - rightPage;
+    return left.title.localeCompare(right.title, 'es', { sensitivity: 'base' });
+  });
+
   return {
     title: cleanText(model.title),
     overview: cleanText(model.overview),
     topics,
-
-    concepts: model.concepts
-      .map((concept) => {
-        const term = cleanText(concept.term);
-        const detail = cleanText(concept.detail);
-
-        return {
-          term,
-          detail,
-          kind: concept.kind,
-          pageReferences: resolvePages(
-            'concept',
-            term,
-            concept.pageReferences
-          ),
-        } satisfies CanonicalSummarySourceConcept;
-      })
-      .filter((concept) => concept.term && concept.detail),
-
-    relationships: model.relationships
-      .map((relationship) => {
-        const source = cleanText(relationship.source);
-        const target = cleanText(relationship.target);
-        const description = cleanText(relationship.description);
-
-        return {
-          source,
-          target,
-          description,
-          pageReferences: resolvePages(
-            'relationship',
-            buildRelationshipKey(source, target),
-            relationship.pageReferences
-          ),
-        } satisfies CanonicalSummarySourceRelationship;
-      })
-      .filter(
-        (relationship) =>
-          relationship.source &&
-          relationship.target &&
-          relationship.description
-      ),
-
-    classifications: model.classifications
-      .map((classification) => {
-        const title = cleanText(classification.title);
-
-        return {
-          title,
-          items: cleanTextList(classification.items),
-          pageReferences: resolvePages(
-            'classification',
-            title,
-            classification.pageReferences
-          ),
-        } satisfies CanonicalSummarySourceClassification;
-      })
-      .filter(
-        (classification) =>
-          classification.title && classification.items.length > 0
-      ),
-
-    processes: model.processes
-      .map((process) => {
-        const title = cleanText(process.title);
-
-        return {
-          title,
-          steps: cleanTextList(process.steps),
-          pageReferences: resolvePages(
-            'process',
-            title,
-            process.pageReferences
-          ),
-        } satisfies CanonicalSummarySourceProcess;
-      })
-      .filter((process) => process.title && process.steps.length > 0),
-
-    formulas: model.formulas
-      .map((formula) => {
-        const expression = cleanText(formula.expression);
-        const description = cleanText(formula.description);
-
-        return {
-          expression,
-          description,
-          pageReferences: resolvePages(
-            'formula',
-            expression,
-            formula.pageReferences
-          ),
-        } satisfies CanonicalSummarySourceFormula;
-      })
-      .filter((formula) => formula.expression && formula.description),
-
-    authorsOrTheories: cleanTextList(model.authorsOrTheories).map((value) => ({
-      value,
-      pageReferences: resolvePages('author_or_theory', value),
-    })),
-
-    examples: cleanTextList(model.examples).map((value) => ({
-      value,
-      pageReferences: resolvePages('example', value),
-    })),
-
+    concepts,
+    relationships,
+    classifications,
+    processes,
+    formulas,
+    authorsOrTheories,
+    examples,
     studyClaims,
-
-    confusions: cleanTextList(model.confusions).map((value) => ({
-      value,
-      pageReferences: resolvePages('confusion', value),
-    })),
+    confusions,
   };
 }
 
@@ -258,6 +291,78 @@ export function buildCanonicalSummarySourceText(
   model: CanonicalPedagogicalModel
 ) {
   return JSON.stringify(buildCanonicalSummarySource(model));
+}
+
+function buildSupplementalTopics(
+  source: Pick<
+    CanonicalSummarySource,
+    | 'concepts'
+    | 'relationships'
+    | 'classifications'
+    | 'processes'
+    | 'formulas'
+    | 'authorsOrTheories'
+    | 'examples'
+    | 'studyClaims'
+    | 'confusions'
+  >,
+  coveredPages: Set<number>
+): CanonicalSummarySourceTopic[] {
+  const candidatePages = normalizePageReferences([
+    ...source.concepts.flatMap((item) => item.pageReferences),
+    ...source.relationships.flatMap((item) => item.pageReferences),
+    ...source.classifications.flatMap((item) => item.pageReferences),
+    ...source.processes.flatMap((item) => item.pageReferences),
+    ...source.formulas.flatMap((item) => item.pageReferences),
+    ...source.authorsOrTheories.flatMap((item) => item.pageReferences),
+    ...source.examples.flatMap((item) => item.pageReferences),
+    ...source.studyClaims.flatMap((item) => item.pageReferences),
+    ...source.confusions.flatMap((item) => item.pageReferences),
+  ]).filter((page) => !coveredPages.has(page));
+
+  return candidatePages
+    .map((page) => {
+      const lines = cleanTextList([
+        ...source.concepts
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `${item.term}: ${item.detail}`),
+        ...source.relationships
+          .filter((item) => item.pageReferences.includes(page))
+          .map(
+            (item) =>
+              `${item.source} ↔ ${item.target}: ${item.description}`
+          ),
+        ...source.classifications
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `${item.title}: ${item.items.join('; ')}.`),
+        ...source.processes
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `${item.title}: ${item.steps.join(' → ')}.`),
+        ...source.formulas
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `${item.expression}: ${item.description}`),
+        ...source.authorsOrTheories
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => item.value),
+        ...source.examples
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `Ejemplo: ${item.value}`),
+        ...source.studyClaims
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `Idea clave: ${item.value}`),
+        ...source.confusions
+          .filter((item) => item.pageReferences.includes(page))
+          .map((item) => `Confusión importante: ${item.value}`),
+      ]);
+
+      return {
+        title: `Contenido complementario · página ${page}`,
+        description: cleanText(lines.join(' ')),
+        relevance: 'alta' as const,
+        pageReferences: [page],
+      };
+    })
+    .filter((topic) => topic.description.length > 0);
 }
 
 function buildBindingPageIndex(
