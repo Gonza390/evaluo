@@ -19,6 +19,12 @@ type StudentMaterialExamProps = {
 
 type OpenAssessment = 'got_it' | 'review';
 
+type ExamSizeOption = {
+  count: number;
+  label: string;
+  description: string;
+};
+
 function normalizeAnswer(value: string) {
   return value
     .toLowerCase()
@@ -41,24 +47,98 @@ function sourceLabel(question: StudyQuestion) {
   return sectionTitle || 'Referencia del documento';
 }
 
-function resolveExamQuestions(artifacts: PedagogicalArtifacts) {
-  const byId = new Map(artifacts.questions.map((question) => [question.id, question]));
-  const preferred = artifacts.miniExamQuestionIds
-    .map((id) => byId.get(id))
-    .filter((question): question is StudyQuestion => Boolean(question));
+function resolveExamSizeOptions(totalQuestions: number): ExamSizeOption[] {
+  if (totalQuestions <= 0) return [];
 
-  if (preferred.length >= 4) return preferred.slice(0, 8);
+  let counts: number[];
 
-  const selected = [...preferred];
-  for (const question of artifacts.questions) {
-    if (selected.length >= 8) break;
-    if (!selected.some((item) => item.id === question.id)) selected.push(question);
+  if (totalQuestions <= 6) {
+    counts = [Math.min(3, totalQuestions), Math.min(5, totalQuestions), totalQuestions];
+  } else if (totalQuestions <= 11) {
+    counts = [5, Math.min(8, totalQuestions), totalQuestions];
+  } else if (totalQuestions <= 19) {
+    counts = [5, Math.min(10, totalQuestions), Math.min(15, totalQuestions)];
+  } else if (totalQuestions <= 29) {
+    counts = [8, 12, Math.min(20, totalQuestions)];
+  } else {
+    counts = [10, 15, 20];
   }
-  return selected;
+
+  const uniqueCounts = Array.from(new Set(counts.filter((count) => count > 0))).sort(
+    (left, right) => left - right
+  );
+
+  return uniqueCounts.map((count, index) => ({
+    count,
+    label: index === 0 ? 'Rápido' : index === uniqueCounts.length - 1 ? 'Intensivo' : 'Recomendado',
+    description:
+      index === 0
+        ? 'Repaso breve de los puntos centrales.'
+        : index === uniqueCounts.length - 1
+          ? 'Mayor cobertura del contenido del PDF.'
+          : 'Buen equilibrio entre tiempo y cobertura.',
+  }));
+}
+
+function resolveExamQuestions(artifacts: PedagogicalArtifacts, targetCount: number) {
+  const byId = new Map(artifacts.questions.map((question) => [question.id, question]));
+  const selected: StudyQuestion[] = [];
+  const selectedIds = new Set<string>();
+
+  const push = (question: StudyQuestion | undefined) => {
+    if (!question || selectedIds.has(question.id) || selected.length >= targetCount) return;
+    selected.push(question);
+    selectedIds.add(question.id);
+  };
+
+  artifacts.miniExamQuestionIds.forEach((id) => push(byId.get(id)));
+
+  const kindOrder: Array<StudyQuestion['kind']> = [
+    'relationship',
+    'classification',
+    'process',
+    'formula',
+    'concept',
+    'confusion',
+    'section',
+  ];
+
+  let addedInRound = true;
+  while (selected.length < targetCount && addedInRound) {
+    addedInRound = false;
+
+    for (const kind of kindOrder) {
+      const match = artifacts.questions.find(
+        (question) => question.kind === kind && !selectedIds.has(question.id)
+      );
+      if (match) {
+        push(match);
+        addedInRound = true;
+      }
+      if (selected.length >= targetCount) break;
+    }
+  }
+
+  for (const question of artifacts.questions) {
+    if (selected.length >= targetCount) break;
+    push(question);
+  }
+
+  return selected.slice(0, targetCount);
 }
 
 export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
-  const questions = useMemo(() => resolveExamQuestions(artifacts), [artifacts]);
+  const sizeOptions = useMemo(
+    () => resolveExamSizeOptions(artifacts.questions.length),
+    [artifacts.questions.length]
+  );
+  const defaultSize = sizeOptions[Math.floor(sizeOptions.length / 2)]?.count ?? 0;
+  const [selectedSize, setSelectedSize] = useState(defaultSize);
+  const [started, setStarted] = useState(false);
+  const questions = useMemo(
+    () => resolveExamQuestions(artifacts, selectedSize || defaultSize),
+    [artifacts, defaultSize, selectedSize]
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
@@ -101,7 +181,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
     };
   }, [openAssessments, questions, selectedAnswers]);
 
-  const resetExam = () => {
+  const clearAttempt = () => {
     setCurrentIndex(0);
     setSelectedAnswers({});
     setOpenDrafts({});
@@ -110,7 +190,17 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
     setFinished(false);
   };
 
-  if (questions.length === 0) {
+  const startExam = () => {
+    clearAttempt();
+    setStarted(true);
+  };
+
+  const resetExam = () => {
+    clearAttempt();
+    setStarted(false);
+  };
+
+  if (artifacts.questions.length === 0 || sizeOptions.length === 0) {
     return (
       <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
         <Target className="mx-auto h-6 w-6 text-slate-400" />
@@ -118,6 +208,76 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
         <p className="mt-1 text-[13px] leading-5 text-slate-500">
           El PDF necesita más contenido estructurado para armar un examen útil.
         </p>
+      </div>
+    );
+  }
+
+  if (!started) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
+          <div className="bg-[linear-gradient(135deg,#EEF4FF_0%,#FFFFFF_60%,#F8FAFC_100%)] px-5 py-6 sm:px-7 sm:py-7">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB] text-white shadow-[0_12px_28px_rgba(37,99,235,0.18)]">
+              <Target className="h-5 w-5" />
+            </div>
+            <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#2563EB]">
+              Examen basado en este PDF
+            </p>
+            <h3 className="mt-1.5 text-2xl font-bold tracking-[-0.05em] text-slate-950">
+              Elegí cuánto querés practicar
+            </h3>
+            <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-slate-600">
+              Las opciones se adaptan a la cantidad y variedad de preguntas que este documento permite construir con buena cobertura.
+            </p>
+          </div>
+
+          <div className="px-5 py-5 sm:px-7 sm:py-6">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {sizeOptions.map((option) => {
+                const selected = selectedSize === option.count;
+                return (
+                  <button
+                    key={option.count}
+                    type="button"
+                    onClick={() => setSelectedSize(option.count)}
+                    className={cn(
+                      'rounded-[18px] border px-4 py-4 text-left transition',
+                      selected
+                        ? 'border-[#2563EB] bg-[#EEF4FF] shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn('text-xl font-bold', selected ? 'text-[#2563EB]' : 'text-slate-950')}>
+                        {option.count}
+                      </span>
+                      <span className={cn(
+                        'rounded-full px-2 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em]',
+                        selected ? 'bg-white text-[#2563EB]' : 'bg-slate-100 text-slate-500'
+                      )}>
+                        {option.label}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs font-semibold text-slate-700">
+                      {option.count === 1 ? 'pregunta' : 'preguntas'}
+                    </p>
+                    <p className="mt-2 text-[12px] leading-5 text-slate-500">{option.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[12px] leading-5 text-slate-500">
+                Banco disponible: {artifacts.questions.length} preguntas construidas desde el contenido del PDF.
+              </p>
+              <Button type="button" onClick={startExam} className="h-11 rounded-[14px] px-5">
+                Comenzar examen
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -185,7 +345,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
 
         <Button onClick={resetExam} className="h-11 w-full rounded-[14px] sm:w-auto">
           <RotateCcw className="h-4 w-4" />
-          Reintentar examen
+          Elegir otro examen
         </Button>
       </div>
     );
