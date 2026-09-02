@@ -93,7 +93,6 @@ export function ProfileCompletionPrivateCatalog({
   const [universidadId, setUniversidadId] = useState('');
   const [universidadNombre, setUniversidadNombre] = useState('');
   const [universidadSearch, setUniversidadSearch] = useState('');
-  const [loadingUniversidades, setLoadingUniversidades] = useState(false);
 
   const [carreras, setCarreras] = useState<Carrera[]>([]);
   const [carreraId, setCarreraId] = useState('');
@@ -240,20 +239,24 @@ export function ProfileCompletionPrivateCatalog({
     let active = true;
     setLoadingCarreras(true);
 
-    void supabase
-      .from('carreras')
-      .select('id, nombre, universidad_id')
-      .eq('universidad_id', universidadId)
-      .order('nombre')
-      .then(({ data, error }) => {
+    void (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('carreras')
+          .select('id, nombre, universidad_id')
+          .eq('universidad_id', universidadId)
+          .order('nombre');
+
         if (!active) return;
         if (error) {
           toast({ variant: 'destructive', title: 'No pudimos cargar las carreras' });
           return;
         }
         setCarreras(data ?? []);
-      })
-      .finally(() => active && setLoadingCarreras(false));
+      } finally {
+        if (active) setLoadingCarreras(false);
+      }
+    })();
 
     return () => {
       active = false;
@@ -448,7 +451,7 @@ export function ProfileCompletionPrivateCatalog({
               <Label htmlFor="onboarding-university">Universidad</Label>
               <Input id="onboarding-university" className="mt-2 h-11" value={universidadSearch} onChange={(e) => setUniversidadSearch(e.target.value)} placeholder="Ej. Universidad de Buenos Aires" />
               <div className="mt-2 max-h-56 overflow-y-auto border-y border-slate-200">
-                {loadingUniversidades ? <div className="flex justify-center py-6"><Spinner size="sm" /></div> : filteredUniversidades.map((uni) => (
+                {filteredUniversidades.map((uni) => (
                   <button key={uni.id} type="button" onClick={() => selectUniversity(uni)} className="flex w-full items-center justify-between border-b border-slate-100 px-2 py-3 text-left text-sm font-medium text-slate-700 last:border-0 hover:text-indigo-700">
                     {uni.nombre}<ArrowRight className="h-4 w-4 text-slate-300" />
                   </button>
