@@ -7,7 +7,6 @@ import {
   PdfUploadLimitReached,
   PdfUploadQuotaStatus,
 } from '@/components/pdf-activation/pdf-upload-quota';
-import { createPublicClient } from '@/lib/supabase-public';
 import { createClientServer } from '@/lib/supabase-server';
 
 export default async function QuickPdfUploadPage({
@@ -29,7 +28,6 @@ export default async function QuickPdfUploadPage({
     redirect(`/login?next=${encodeURIComponent(nextPath)}&reason=prepare-material`);
   }
 
-  const publicClient = createPublicClient();
   const [
     universidadesResult,
     carrerasResult,
@@ -38,10 +36,10 @@ export default async function QuickPdfUploadPage({
     profileResult,
     quotaResult,
   ] = await Promise.all([
-    publicClient.from('universidades').select('id, nombre').order('nombre'),
-    publicClient.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-    publicClient.from('materias').select('id, nombre, carrera_id').order('nombre'),
-    publicClient.from('carrera_materias').select('carrera_id, materia_id'),
+    supabase.from('universidades').select('id, nombre').order('nombre'),
+    supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+    supabase.from('materias').select('id, nombre, carrera_id').order('nombre'),
+    supabase.from('carrera_materias').select('carrera_id, materia_id'),
     supabase
       .from('profiles')
       .select('universidad_id, carrera_id')
