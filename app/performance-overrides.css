@@ -14,6 +14,13 @@
   animation: evaluoSurfaceRevealSafe 0.42s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 
+/* /materias now streams its breadcrumb + LCP hero from the server.
+   MateriaList keeps the interactive tabs/cards, but its legacy breadcrumb/hero are hidden. */
+.materia-list-catalog-only > .animate-page-enter > :nth-child(1),
+.materia-list-catalog-only > .animate-page-enter > :nth-child(2) {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-surface-reveal {
     animation: none !important;
