@@ -5,6 +5,10 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { studentMaterialIdSchema } from '@/lib/student-materials/validation';
 
+type StructuralAdminClient = {
+  from: (table: string) => any;
+};
+
 export type StudentMaterialVisualAnalysisQuota = {
   isPremium: boolean;
   allowed: boolean;
@@ -31,6 +35,22 @@ async function requireAuthenticatedUser() {
   return user;
 }
 
+function getStructuralAdmin() {
+  return createAdminClient() as unknown as StructuralAdminClient;
+}
+
+async function getFreeVisualEntitlement(userId: string) {
+  const admin = getStructuralAdmin();
+  const { data, error } = await admin
+    .from('student_material_visual_entitlements')
+    .select('material_id, granted_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as { material_id?: string; granted_at?: string } | null;
+}
+
 async function getVisualAnalysisQuotaForUser(
   userId: string
 ): Promise<StudentMaterialVisualAnalysisQuota> {
@@ -43,47 +63,47 @@ async function getVisualAnalysisQuotaForUser(
     };
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from('profiles')
-    .select('free_visual_analysis_used_at')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!data) throw new Error('No encontramos tu perfil para verificar el beneficio visual.');
-
-  const used = Boolean(
-    (data as { free_visual_analysis_used_at?: string | null }).free_visual_analysis_used_at
-  );
-
+  const entitlement = await getFreeVisualEntitlement(userId);
   return {
     isPremium: false,
-    allowed: !used,
-    remaining: used ? 0 : 1,
+    allowed: !entitlement,
+    remaining: entitlement ? 0 : 1,
   };
 }
 
-async function claimFreeVisualAnalysisUse(userId: string) {
-  const admin = createAdminClient();
+async function claimFreeVisualAnalysisUse(userId: string, materialId: string) {
+  const existing = await getFreeVisualEntitlement(userId);
+  if (existing) {
+    return {
+      granted: existing.material_id === materialId,
+      inserted: false,
+    };
+  }
+
+  const admin = getStructuralAdmin();
   const { data, error } = await admin
-    .from('profiles')
-    .update({ free_visual_analysis_used_at: new Date().toISOString() } as never)
-    .eq('id', userId)
-    .is('free_visual_analysis_used_at', null)
-    .select('id')
+    .from('student_material_visual_entitlements')
+    .insert({ user_id: userId, material_id: materialId })
+    .select('user_id')
     .maybeSingle();
 
-  if (error) throw error;
-  return Boolean(data);
+  if (error) {
+    if (String(error.code ?? '') === '23505') {
+      return { granted: false, inserted: false };
+    }
+    throw error;
+  }
+
+  return { granted: Boolean(data), inserted: Boolean(data) };
 }
 
-async function releaseFreeVisualAnalysisUse(userId: string) {
-  const admin = createAdminClient();
+async function releaseFreeVisualAnalysisUse(userId: string, materialId: string) {
+  const admin = getStructuralAdmin();
   await admin
-    .from('profiles')
-    .update({ free_visual_analysis_used_at: null } as never)
-    .eq('id', userId);
+    .from('student_material_visual_entitlements')
+    .delete()
+    .eq('user_id', userId)
+    .eq('material_id', materialId);
 }
 
 export async function getStudentMaterialVisualAnalysisQuotaAction(): Promise<VisualAnalysisQuotaResult> {
@@ -122,10 +142,10 @@ export async function updateStudentMaterialVisualAnalysisAction(input: {
 
   try {
     const user = await requireAuthenticatedUser();
-    const admin = createAdminClient();
+    const admin = getStructuralAdmin();
     const { data: material, error: materialError } = await admin
       .from('student_materials')
-      .select('id, visual_analysis_enabled')
+      .select('id')
       .eq('id', parsedId.data)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -135,37 +155,34 @@ export async function updateStudentMaterialVisualAnalysisAction(input: {
       return { success: false, message: 'No encontramos el material para actualizarlo.' };
     }
 
-    const alreadyEnabled = Boolean(
-      (material as { visual_analysis_enabled?: boolean }).visual_analysis_enabled
-    );
+    let insertedFreeEntitlement = false;
+    if (input.enabled) {
+      const isPremium = await hasPremiumAccess(user.id);
 
-    let claimedFreeUse = false;
-    if (input.enabled && !alreadyEnabled) {
-      const quota = await getVisualAnalysisQuotaForUser(user.id);
-
-      if (!quota.isPremium) {
-        claimedFreeUse = await claimFreeVisualAnalysisUse(user.id);
-        if (!claimedFreeUse) {
+      if (!isPremium) {
+        const claim = await claimFreeVisualAnalysisUse(user.id, parsedId.data);
+        if (!claim.granted) {
           return {
             success: false,
             message:
               'Ya usaste tu único análisis visual gratuito. Premium incluye análisis de imágenes, gráficos y diagramas sin límite.',
           };
         }
+        insertedFreeEntitlement = claim.inserted;
       }
     }
 
     const { data, error } = await admin
       .from('student_materials')
-      .update({ visual_analysis_enabled: input.enabled } as never)
+      .update({ visual_analysis_enabled: input.enabled })
       .eq('id', parsedId.data)
       .eq('user_id', user.id)
       .select('id')
       .maybeSingle();
 
     if (error || !data) {
-      if (claimedFreeUse) {
-        await releaseFreeVisualAnalysisUse(user.id).catch(() => undefined);
+      if (insertedFreeEntitlement) {
+        await releaseFreeVisualAnalysisUse(user.id, parsedId.data).catch(() => undefined);
       }
 
       return {
