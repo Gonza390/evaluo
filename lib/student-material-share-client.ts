@@ -75,12 +75,11 @@ export async function shareStudentMaterial({
       const imageShareData: ShareData = {
         title: `${title} | Evaluo`,
         text: `${text}\n${url}`,
-        url,
         files: [imageFile],
       };
 
       try {
-        if (navigator.canShare(imageShareData)) {
+        if (navigator.canShare({ files: [imageFile] })) {
           await navigator.share(imageShareData);
           return 'shared';
         }
