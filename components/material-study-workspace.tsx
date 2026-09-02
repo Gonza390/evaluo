@@ -278,6 +278,7 @@ export function MaterialStudyWorkspace({
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<StudyTabId>('resumen');
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -318,8 +319,12 @@ export function MaterialStudyWorkspace({
   };
 
   const handleStudyTabChange = (value: string) => {
-    if (value !== 'resumen') {
+    const nextTab = value as StudyTabId;
+    setActiveTab(nextTab);
+
+    if (nextTab !== 'resumen') {
       setIsViewerVisible(false);
+      setCommentsOpen(false);
     }
   };
 
@@ -410,58 +415,60 @@ export function MaterialStudyWorkspace({
         })}
       </TabsList>
 
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsViewerVisible((current) => !current)}
-            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-          >
-            {isViewerVisible ? (
-              <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            ) : (
-              <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            )}
-            {isViewerVisible ? 'Ocultar PDF' : 'Mostrar PDF'}
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="sm"
-            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-          >
-            <a href={viewerUrl} target="_blank" rel="noreferrer">
-              <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              PDF
-            </a>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleComments}
-            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-          >
-            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            Calificar
-          </Button>
-          {canRegenerate ? (
+      {activeTab === 'resumen' ? (
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleRegenerate}
-              disabled={isRegenerating}
+              onClick={() => setIsViewerVisible((current) => !current)}
               className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
             >
-              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              {isRegenerating ? 'Regenerando...' : 'Regenerar'}
+              {isViewerVisible ? (
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              )}
+              {isViewerVisible ? 'Ocultar PDF' : 'Mostrar PDF'}
             </Button>
-          ) : null}
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+            >
+              <a href={viewerUrl} target="_blank" rel="noreferrer">
+                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                PDF
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleComments}
+              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+            >
+              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Calificar
+            </Button>
+            {canRegenerate ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRegenerate}
+                disabled={isRegenerating}
+                className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-white sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+              >
+                <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                {isRegenerating ? 'Regenerando...' : 'Regenerar'}
+              </Button>
+            ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 
@@ -553,7 +560,7 @@ export function MaterialStudyWorkspace({
       tabIndex={0}
       className="px-2.5 pb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-inset sm:px-4 sm:pb-4 xl:h-full xl:overflow-y-auto"
     >
-      {commentsOpen ? (
+      {commentsOpen && activeTab === 'resumen' ? (
         <WorkspaceCard className="mb-3 border-[#BFDBFE] bg-white">
           <MaterialFeedback materialId={materialId} />
         </WorkspaceCard>
@@ -746,7 +753,7 @@ export function MaterialStudyWorkspace({
 
   const content = (
     <Tabs
-      defaultValue="resumen"
+      value={activeTab}
       onValueChange={handleStudyTabChange}
       className="flex min-w-0 flex-col gap-2.5 overflow-x-hidden"
     >
@@ -814,7 +821,7 @@ export function MaterialStudyWorkspace({
         <div className="hidden xl:block">
           <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
-              defaultValue="resumen"
+              value={activeTab}
               onValueChange={handleStudyTabChange}
               className="flex h-full min-w-0 flex-col overflow-x-hidden"
             >
@@ -858,7 +865,7 @@ export function MaterialStudyWorkspace({
                 </ResizablePanelGroup>
               </div>
             </Tabs>
-            {!isViewerVisible ? (
+            {activeTab === 'resumen' && !isViewerVisible ? (
               <button
                 type="button"
                 onClick={() => setIsViewerVisible(true)}
@@ -875,50 +882,52 @@ export function MaterialStudyWorkspace({
           <div className="flex flex-col rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
             {content}
           </div>
-          {isViewerVisible ? (
-            <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
-              <button
-                type="button"
-                onClick={() => setIsViewerVisible(false)}
-                className="absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition hover:bg-white"
-                aria-label="Ocultar PDF"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-              <PdfViewer
-                url={viewerUrl}
-                title={title}
-                subtitle={null}
-                className="rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
-                heightClassName="h-[58vh] sm:h-[62vh]"
-                pageMaxWidthClassName="max-w-[760px]"
-                showSidebarThumbnails={false}
-                theme="default"
-              />
-            </div>
-          ) : (
-            <div className="rounded-[20px] border border-dashed border-slate-300 bg-white/80 px-4 py-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                    PDF oculto
-                  </p>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                    Mostrá el documento cuando quieras contrastar el resumen con el archivo
-                    original.
-                  </p>
-                </div>
+          {activeTab === 'resumen' ? (
+            isViewerVisible ? (
+              <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
                 <button
                   type="button"
-                  onClick={() => setIsViewerVisible(true)}
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.10)] transition hover:bg-white"
-                  aria-label="Mostrar PDF"
+                  onClick={() => setIsViewerVisible(false)}
+                  className="absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition hover:bg-white"
+                  aria-label="Ocultar PDF"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4" />
                 </button>
+                <PdfViewer
+                  url={viewerUrl}
+                  title={title}
+                  subtitle={null}
+                  className="rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
+                  heightClassName="h-[58vh] sm:h-[62vh]"
+                  pageMaxWidthClassName="max-w-[760px]"
+                  showSidebarThumbnails={false}
+                  theme="default"
+                />
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="rounded-[20px] border border-dashed border-slate-300 bg-white/80 px-4 py-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                      PDF oculto
+                    </p>
+                    <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                      Mostrá el documento cuando quieras contrastar el resumen con el archivo
+                      original.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsViewerVisible(true)}
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.10)] transition hover:bg-white"
+                    aria-label="Mostrar PDF"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )
+          ) : null}
         </div>
       </section>
     </div>
