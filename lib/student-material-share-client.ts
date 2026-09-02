@@ -16,6 +16,9 @@ type ShareStudentMaterialInput = {
 
 export type ShareStudentMaterialResult = 'shared' | 'aborted' | 'unsupported';
 
+const preparedShareImages = new Map<string, File>();
+const pendingShareImages = new Map<string, Promise<File | null>>();
+
 export function buildStudentMaterialCanonicalPath(title: string, materialId: string) {
   return `/materiales/${buildSeoEntitySlug(title, materialId)}`;
 }
@@ -35,6 +38,11 @@ export function buildStudentMaterialShareImagePath({
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError';
+}
+
+function getShareImageKey(imagePath: string, title: string) {
+  if (typeof window === 'undefined') return null;
+  return `${new URL(imagePath, window.location.origin).toString()}::${title}`;
 }
 
 async function createShareImageFile(imagePath: string, title: string) {
@@ -58,6 +66,34 @@ async function createShareImageFile(imagePath: string, title: string) {
   }
 }
 
+export function prepareStudentMaterialShareImage(imagePath: string, title: string) {
+  const key = getShareImageKey(imagePath, title);
+  if (!key) return Promise.resolve<File | null>(null);
+
+  const prepared = preparedShareImages.get(key);
+  if (prepared) return Promise.resolve(prepared);
+
+  const pending = pendingShareImages.get(key);
+  if (pending) return pending;
+
+  const preparation = createShareImageFile(imagePath, title)
+    .then((file) => {
+      if (file) preparedShareImages.set(key, file);
+      return file;
+    })
+    .finally(() => {
+      pendingShareImages.delete(key);
+    });
+
+  pendingShareImages.set(key, preparation);
+  return preparation;
+}
+
+function getPreparedStudentMaterialShareImage(imagePath: string, title: string) {
+  const key = getShareImageKey(imagePath, title);
+  return key ? preparedShareImages.get(key) ?? null : null;
+}
+
 export async function shareStudentMaterial({
   title,
   text,
@@ -68,25 +104,23 @@ export async function shareStudentMaterial({
     return 'unsupported';
   }
 
-  if (imagePath && typeof navigator.canShare === 'function') {
-    const imageFile = await createShareImageFile(imagePath, title);
+  const imageFile = imagePath ? getPreparedStudentMaterialShareImage(imagePath, title) : null;
 
-    if (imageFile) {
-      const imageShareData: ShareData = {
-        title: `${title} | Evaluo`,
-        text: `${text}\n${url}`,
-        files: [imageFile],
-      };
+  if (imageFile && typeof navigator.canShare === 'function') {
+    const imageShareData: ShareData = {
+      title: `${title} | Evaluo`,
+      text: `${text}\n${url}`,
+      files: [imageFile],
+    };
 
-      try {
-        if (navigator.canShare({ files: [imageFile] })) {
-          await navigator.share(imageShareData);
-          return 'shared';
-        }
-      } catch (error) {
-        if (isAbortError(error)) return 'aborted';
-        // Algunos share targets aceptan enlaces pero no archivos. Continuamos con el fallback.
+    try {
+      if (navigator.canShare({ files: [imageFile] })) {
+        await navigator.share(imageShareData);
+        return 'shared';
       }
+    } catch (error) {
+      if (isAbortError(error)) return 'aborted';
+      // Algunos share targets aceptan enlaces pero no archivos. Continuamos con el fallback.
     }
   }
 
