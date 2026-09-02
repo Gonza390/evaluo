@@ -12,7 +12,11 @@ import {
   getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
 } from '@/app/dashboard/materiales/actions';
-import { updateStudentMaterialVisualAnalysisAction } from '@/app/dashboard/materiales/visual-analysis-actions';
+import {
+  getStudentMaterialVisualAnalysisQuotaAction,
+  updateStudentMaterialVisualAnalysisAction,
+  type StudentMaterialVisualAnalysisQuota,
+} from '@/app/dashboard/materiales/visual-analysis-actions';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
@@ -81,6 +85,8 @@ export function QuickPdfUpload({
   const [materiaId, setMateriaId] = useState(initialMateriaId);
   const [shareWithCatalog, setShareWithCatalog] = useState(true);
   const [analyzeVisuals, setAnalyzeVisuals] = useState(false);
+  const [visualQuota, setVisualQuota] = useState<StudentMaterialVisualAnalysisQuota | null>(null);
+  const [visualQuotaLoading, setVisualQuotaLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingMaterialId, setProcessingMaterialId] = useState<string | null>(null);
@@ -118,6 +124,25 @@ export function QuickPdfUpload({
       (item) => item.carrera_id === carreraId || allowedIds.has(item.id)
     );
   }, [carreraId, carreraMaterias, materias]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void getStudentMaterialVisualAnalysisQuotaAction()
+      .then((result) => {
+        if (cancelled) return;
+        if (result.success && result.quota) {
+          setVisualQuota(result.quota);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setVisualQuotaLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!processingMaterialId) return undefined;
@@ -178,6 +203,22 @@ export function QuickPdfUpload({
     if (!universidadId || !carreraId || !materiaId) {
       setErrorMessage('Elegí universidad, carrera y materia para preparar el PDF.');
       return;
+    }
+
+    if (analyzeVisuals) {
+      const visualQuotaResult = await getStudentMaterialVisualAnalysisQuotaAction();
+      if (visualQuotaResult.quota) {
+        setVisualQuota(visualQuotaResult.quota);
+      }
+
+      if (!visualQuotaResult.success || !visualQuotaResult.quota?.allowed) {
+        setAnalyzeVisuals(false);
+        setErrorMessage(
+          visualQuotaResult.message ||
+            'Ya usaste tu análisis visual gratuito. Premium lo incluye sin límite.'
+        );
+        return;
+      }
     }
 
     const title = fileTitle(selectedFile.name);
@@ -246,6 +287,10 @@ export function QuickPdfUpload({
         return;
       }
 
+      if (analyzeVisuals && visualQuota && !visualQuota.isPremium) {
+        setVisualQuota({ isPremium: false, allowed: false, remaining: 0 });
+      }
+
       setProcessingMaterialId(result.materialId);
       setProcessingProgress(10);
       setProcessingMessage(
@@ -293,6 +338,9 @@ export function QuickPdfUpload({
       </section>
     );
   }
+
+  const visualUnavailable =
+    visualQuota?.isPremium === false && visualQuota.allowed === false;
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white">
@@ -424,19 +472,39 @@ export function QuickPdfUpload({
           </div>
         )}
 
-        <label className="flex cursor-pointer items-start gap-3 border-t border-slate-100 pt-4 text-sm text-slate-700">
+        <label
+          className={`flex items-start gap-3 border-t border-slate-100 pt-4 text-sm ${
+            visualUnavailable || visualQuotaLoading
+              ? 'cursor-not-allowed text-slate-400'
+              : 'cursor-pointer text-slate-700'
+          }`}
+        >
           <input
             type="checkbox"
             checked={analyzeVisuals}
-            onChange={(event) => setAnalyzeVisuals(event.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
+            disabled={visualUnavailable || visualQuotaLoading}
+            onChange={(event) => {
+              setErrorMessage(null);
+              setAnalyzeVisuals(event.target.checked);
+            }}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 disabled:cursor-not-allowed"
           />
           <span className="flex min-w-0 gap-2">
-            <ImageIcon className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+            <ImageIcon
+              className={`mt-0.5 h-4 w-4 shrink-0 ${
+                visualUnavailable ? 'text-slate-400' : 'text-indigo-600'
+              }`}
+            />
             <span>
               <span className="block font-semibold text-slate-800">Analizar imágenes, gráficos y diagramas</span>
               <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                Opcional. La IA visual se usa solo en páginas candidatas para mantener bajo el costo.
+                {visualQuotaLoading
+                  ? 'Verificando disponibilidad de análisis visual...'
+                  : visualQuota?.isPremium
+                    ? 'Premium: análisis visual sin límite. Solo se procesan las páginas que lo necesitan.'
+                    : visualUnavailable
+                      ? 'Ya usaste tu análisis visual gratuito. Premium lo incluye sin límite.'
+                      : 'Incluye 1 uso gratuito. La IA visual se usa solo en páginas candidatas para controlar el costo.'}
               </span>
             </span>
           </span>
