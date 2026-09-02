@@ -560,21 +560,15 @@ export function MaterialStudyWorkspace({
       </TabsContent>
 
       <TabsContent value="tarjetas" className="animate-tab-panel">
-        <StudyDocumentShell
-          title="Flashcards"
-          description="Practicá recuperación activa con conceptos y respuestas derivadas de este PDF."
-        >
+        <div className="px-1 py-1 sm:px-2 sm:py-2">
           <StudentMaterialFlashcards cards={studyArtifacts.flashcards} materialId={materialId} />
-        </StudyDocumentShell>
+        </div>
       </TabsContent>
 
       <TabsContent value="ejercicios" className="animate-tab-panel">
-        <StudyDocumentShell
-          title="Examen de práctica"
-          description="Una pregunta por vez, con dificultad progresiva, corrección y referencia al contenido del PDF."
-        >
+        <div className="px-1 py-1 sm:px-2 sm:py-2">
           <StudentMaterialExam artifacts={studyArtifacts} />
-        </StudyDocumentShell>
+        </div>
       </TabsContent>
 
       <TabsContent value="mapa" className="animate-tab-panel">
