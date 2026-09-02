@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { FileText } from 'lucide-react';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
-import { createPublicClient } from '@/lib/supabase-public';
 import { createClientServer } from '@/lib/supabase-server';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
@@ -45,8 +44,6 @@ export default async function DashboardMaterialsPage({
   }
 
   try {
-    const publicClient = createPublicClient();
-
     const [
       materials,
       universidadesResult,
@@ -56,10 +53,10 @@ export default async function DashboardMaterialsPage({
       profileResult,
     ] = await Promise.all([
       fetchStudentMaterialsByUser(supabase, user.id),
-      publicClient.from('universidades').select('id, nombre').order('nombre'),
-      publicClient.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-      publicClient.from('materias').select('id, nombre, carrera_id').order('nombre'),
-      publicClient.from('carrera_materias').select('carrera_id, materia_id'),
+      supabase.from('universidades').select('id, nombre').order('nombre'),
+      supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+      supabase.from('materias').select('id, nombre, carrera_id').order('nombre'),
+      supabase.from('carrera_materias').select('carrera_id, materia_id'),
       supabase
         .from('profiles')
         .select('universidad_id, carrera_id')
@@ -67,25 +64,11 @@ export default async function DashboardMaterialsPage({
         .maybeSingle(),
     ]);
 
-    if (universidadesResult.error) {
-      throw universidadesResult.error;
-    }
-
-    if (carrerasResult.error) {
-      throw carrerasResult.error;
-    }
-
-    if (materiasResult.error) {
-      throw materiasResult.error;
-    }
-
-    if (carreraMateriasResult.error) {
-      throw carreraMateriasResult.error;
-    }
-
-    if (profileResult.error) {
-      throw profileResult.error;
-    }
+    if (universidadesResult.error) throw universidadesResult.error;
+    if (carrerasResult.error) throw carrerasResult.error;
+    if (materiasResult.error) throw materiasResult.error;
+    if (carreraMateriasResult.error) throw carreraMateriasResult.error;
+    if (profileResult.error) throw profileResult.error;
 
     const universidades = universidadesResult.data ?? [];
     const carreras = carrerasResult.data ?? [];
