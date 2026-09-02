@@ -55,7 +55,10 @@ export type StudentMaterialProcessingResult = {
   materialId?: string;
 };
 
-const LARGE_NATIVE_PDF_FAST_PATH_PAGES = 20;
+// Los PDFs dentro del límite Free (30 páginas) conservan siempre el modelo
+// pedagógico canónico. El fast path queda reservado para documentos mayores,
+// donde el ahorro de latencia/costo compensa perder parte de los artefactos ricos.
+const LARGE_NATIVE_PDF_FAST_PATH_PAGES = 31;
 
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
