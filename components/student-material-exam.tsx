@@ -83,10 +83,19 @@ function hasGroundedComparisonAnswer(question: StudyQuestion) {
   return matches >= Math.min(2, keywords.length);
 }
 
+function isUsefulFormulaQuestion(question: StudyQuestion) {
+  if (question.kind !== 'formula') return true;
+  const expression = question.topic?.trim() ?? '';
+  if (!expression) return false;
+  if (/^km$/i.test(expression)) return true;
+  return /[=+\-*/()[\]0-9]/.test(expression);
+}
+
 function isEligibleExamQuestion(question: StudyQuestion) {
   if (question.kind === 'confusion') return false;
   if (!hasExplicitClassificationEvidence(question)) return false;
   if (!hasGroundedComparisonAnswer(question)) return false;
+  if (!isUsefulFormulaQuestion(question)) return false;
 
   if (question.type === 'multiple_choice') {
     if (question.options.length < 3) return false;
@@ -156,6 +165,7 @@ function resolveExamQuestions(
     if (question.topic && !selectedTopics.has(normalizeAnswer(question.topic))) value += 6;
     if (question.reference.pageStart && !selectedPages.has(question.reference.pageStart)) value += 5;
     if (question.kind && !selectedKinds.has(question.kind)) value += 3;
+    if (question.kind === 'formula' && question.level === 'aplicar') value += 6;
     return value;
   };
 
@@ -191,14 +201,30 @@ function resolveExamQuestions(
     push(match);
   }
 
+  if (targetCount >= 10 && selected.every((question) => question.type !== 'open')) {
+    const openCandidate = questions
+      .filter((question) => question.type === 'open' && question.level === 'comprender')
+      .map((question, index) => ({ question, index, score: score(question) }))
+      .sort((left, right) => right.score - left.score || left.index - right.index)[0]?.question;
+    const replaceIndex = selected.findLastIndex(
+      (question) => question.type === 'multiple_choice' && question.level === 'comprender'
+    );
+    if (openCandidate && replaceIndex >= 0) {
+      selected[replaceIndex] = openCandidate;
+    }
+  }
+
   return selected.slice(0, targetCount);
 }
 
 export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
-  const eligibleQuestions = useMemo(
-    () => artifacts.questions.filter(isEligibleExamQuestion),
-    [artifacts.questions]
-  );
+  const eligibleQuestions = useMemo(() => {
+    const baseEligible = artifacts.questions.filter(isEligibleExamQuestion);
+    const canonicalEligible = baseEligible.filter(
+      (question) => !question.id.startsWith('fallback-concept-')
+    );
+    return canonicalEligible.length >= 20 ? canonicalEligible : baseEligible;
+  }, [artifacts.questions]);
   const eligibleIds = useMemo(
     () => new Set(eligibleQuestions.map((question) => question.id)),
     [eligibleQuestions]
