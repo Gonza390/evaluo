@@ -138,37 +138,35 @@ function MaterialMetadata({
   if (!carreraName && !universidadName && !materiaName) return null;
 
   return (
-    <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-slate-50/70">
-      <div className="grid sm:grid-cols-2">
-        {carreraName ? (
-          <div className="border-b border-slate-200 px-4 py-3.5 sm:border-r sm:px-5 sm:py-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
-            <p className="mt-1.5 text-[13.5px] font-semibold leading-5 text-slate-900 sm:text-sm">
-              {carreraName}
-            </p>
-          </div>
-        ) : null}
+    <div className="grid min-w-0 gap-x-7 gap-y-3 sm:grid-cols-2 lg:min-w-[560px]">
+      {carreraName ? (
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
+          <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
+            {carreraName}
+          </p>
+        </div>
+      ) : null}
 
-        {universidadName ? (
-          <div className="border-b border-slate-200 px-4 py-3.5 sm:px-5 sm:py-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-              Universidad
-            </p>
-            <p className="mt-1.5 text-[13.5px] font-semibold leading-5 text-slate-900 sm:text-sm">
-              {universidadName}
-            </p>
-          </div>
-        ) : null}
+      {universidadName ? (
+        <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-7">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+            Universidad
+          </p>
+          <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
+            {universidadName}
+          </p>
+        </div>
+      ) : null}
 
-        {materiaName ? (
-          <div className="px-4 py-3.5 sm:col-span-2 sm:px-5 sm:py-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
-            <p className="mt-1.5 text-[13.5px] font-semibold leading-5 text-slate-900 sm:text-sm">
-              {materiaName}
-            </p>
-          </div>
-        ) : null}
-      </div>
+      {materiaName ? (
+        <div className="min-w-0 border-t border-slate-100 pt-3 sm:col-span-2">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
+          <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
+            {materiaName}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -659,38 +657,28 @@ export function MaterialStudyWorkspace({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
-      <section className="border-b border-slate-200 bg-slate-50/55">
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
-          <div className="overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)]">
-            <div className="flex items-center border-b border-slate-100 px-4 py-3 sm:px-5 lg:px-6">
-              <Link
-                href={backHref}
-                className="inline-flex h-9 items-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-3 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Volver
-              </Link>
+      <section className="border-b border-[#E8EDF5] bg-white">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Volver
+          </Link>
+
+          <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(560px,1.1fr)] lg:items-end lg:gap-12">
+            <div className="min-w-0">
+              <h1 className="max-w-[720px] text-[1.9rem] font-bold leading-[1.08] tracking-[-0.055em] text-slate-950 sm:text-[2.2rem] lg:text-[2.35rem]">
+                {title}
+              </h1>
             </div>
 
-            <div className="grid gap-5 px-4 py-5 sm:px-5 sm:py-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,0.95fr)] lg:items-center lg:gap-8 lg:px-6 lg:py-7">
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
-                  Material de estudio
-                </p>
-                <h1 className="mt-2 max-w-[760px] text-[1.9rem] font-bold leading-[1.08] tracking-[-0.055em] text-slate-950 sm:text-[2.25rem] lg:text-[2.45rem]">
-                  {title}
-                </h1>
-                <p className="mt-3 max-w-2xl text-[13px] leading-5 text-slate-500">
-                  Resumen, glosario y herramientas de práctica construidas desde el contenido de tu PDF.
-                </p>
-              </div>
-
-              <MaterialMetadata
-                carreraName={carreraName}
-                universidadName={universidadName}
-                materiaName={materiaName}
-              />
-            </div>
+            <MaterialMetadata
+              carreraName={carreraName}
+              universidadName={universidadName}
+              materiaName={materiaName}
+            />
           </div>
         </div>
       </section>
