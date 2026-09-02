@@ -6,6 +6,7 @@ import { ContextualPdfNudge } from '@/components/pdf-activation/contextual-pdf-n
 import { SITE_URL } from '@/lib/site';
 import './globals.css';
 import './fullscreen-exit.css';
+import './performance-overrides.css';
 
 const inter = Inter({
   subsets: ['latin'],
