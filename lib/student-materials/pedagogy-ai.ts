@@ -533,17 +533,14 @@ async function mapPedagogicalGroupWithRecovery(
     }
 
     if (depth >= MAP_RECOVERY_MAX_DEPTH) {
-      logError(
-        'pedagogy.generateModel.mapRecoveryDepthExceeded',
-        new Error('La recuperación selectiva de provenance agotó su profundidad máxima.'),
-        {
-          materialId: input.materialId,
-          chunkIndexes: group.chunkIndexes,
-          missingChunkNumbers,
-          depth,
-        }
-      );
-      return null;
+      logInfo('pedagogy.generateModel.mapRecoveryPartialAccepted', {
+        materialId: input.materialId,
+        depth,
+        originalChunkIndexes: group.chunkIndexes,
+        missingChunkNumbers,
+        reason: 'recovery_depth_exhausted',
+      });
+      return attempt;
     }
 
     const missingIndexes = missingChunkNumbers.map(
@@ -571,7 +568,16 @@ async function mapPedagogicalGroupWithRecovery(
       depth + 1
     );
 
-    if (!recovered) return null;
+    if (!recovered) {
+      logInfo('pedagogy.generateModel.mapRecoveryPartialAccepted', {
+        materialId: input.materialId,
+        depth,
+        originalChunkIndexes: group.chunkIndexes,
+        missingChunkNumbers,
+        reason: 'isolated_chunk_without_extractable_entity',
+      });
+      return attempt;
+    }
 
     const merged = mergeCompactPedagogicalNodes([
       attempt,
@@ -581,9 +587,20 @@ async function mapPedagogicalGroupWithRecovery(
       group.chunkIndexes.map((index) => index + 1)
     );
 
-    return hasSameChunkCoverage(expectedChunkNumbers, merged)
-      ? merged
-      : null;
+    if (!hasSameChunkCoverage(expectedChunkNumbers, merged)) {
+      logInfo('pedagogy.generateModel.mapRecoveryPartialAccepted', {
+        materialId: input.materialId,
+        depth,
+        originalChunkIndexes: group.chunkIndexes,
+        missingChunkNumbers: findMissingCompactChunkNumbers(
+          [...expectedChunkNumbers],
+          merged
+        ),
+        reason: 'partial_recovery_preserved',
+      });
+    }
+
+    return merged;
   }
 
   if (
@@ -620,22 +637,33 @@ async function mapPedagogicalGroupWithRecovery(
     )
   );
 
-  if (recoveredParts.some((part) => part === null)) {
+  const availableParts = recoveredParts.filter(
+    (part): part is CompactPedagogicalNode => part !== null
+  );
+
+  if (availableParts.length === 0) {
     return null;
   }
 
-  const merged = mergeCompactPedagogicalNodes(
-    recoveredParts.filter(
-      (part): part is CompactPedagogicalNode => part !== null
-    )
-  );
+  const merged = mergeCompactPedagogicalNodes(availableParts);
   const expectedChunkNumbers = new Set(
     group.chunkIndexes.map((index) => index + 1)
   );
 
-  return hasSameChunkCoverage(expectedChunkNumbers, merged)
-    ? merged
-    : null;
+  if (!hasSameChunkCoverage(expectedChunkNumbers, merged)) {
+    logInfo('pedagogy.generateModel.mapRecoveryPartialAccepted', {
+      materialId: input.materialId,
+      depth,
+      originalChunkIndexes: group.chunkIndexes,
+      missingChunkNumbers: findMissingCompactChunkNumbers(
+        [...expectedChunkNumbers],
+        merged
+      ),
+      reason: 'split_recovery_partial',
+    });
+  }
+
+  return merged;
 }
 
 async function mapPedagogicalGroupAttempt(
