@@ -14,9 +14,9 @@ import {
 } from '@/lib/student-materials/document-chunks';
 import { logError, logInfo } from '@/lib/observability';
 
-const MAP_GROUP_MAX_CHARS = 6_500;
+const MAP_GROUP_MAX_CHARS = 4_800;
 const MAP_CONCURRENCY = 3;
-const MAP_MAX_OUTPUT_TOKENS = 1_900;
+const MAP_MAX_OUTPUT_TOKENS = 2_600;
 const MAP_RECOVERY_MAX_DEPTH = 4;
 
 const REDUCE_GROUP_MAX_CHARS = 20_000;
@@ -254,6 +254,10 @@ Objetivo:
 - Extraé contenido académico explícito, sin conocimiento externo.
 - Conservá definiciones, conceptos, relaciones, clasificaciones, procesos, fórmulas,
   autores/teorías, ejemplos, contenido estructuralmente evaluable y confusiones.
+- Para CADA CHUNK, extraé todas las definiciones explícitas, contrastes, reglas,
+  clasificaciones, procesos y fórmulas académicamente distintas; no alcanza con
+  citar un chunk en una sola entidad para considerarlo cubierto.
+- Prestá especial atención a conceptos definidos hacia el final de cada CHUNK.
 - No repitas la misma idea en varias categorías si una sola la representa bien.
 - Preferí más entidades breves antes que pocas entidades verbosas.
 
@@ -797,7 +801,6 @@ async function reducePedagogicalTree(
 ): Promise<CompactPedagogicalNode | null> {
   let current = mergeExactDuplicatesWithinNodes(partials);
   let level = 1;
-
   while (current.length > 1) {
     const groups = buildPedagogicalReduceGroups(current);
 
@@ -925,7 +928,12 @@ async function reducePedagogicalGroup(
       return deterministicFallback;
     }
 
-    return compact;
+    // La reducción por IA puede consolidar redacción, pero nunca debe borrar
+    // entidades semánticamente distintas ya extraídas por los mapas.
+    return mergeCompactPedagogicalNodes([
+      deterministicFallback,
+      compact,
+    ]);
   } catch (error) {
     logError('pedagogy.generateModel.reduce', error, {
       materialId: input.materialId,
