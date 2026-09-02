@@ -2,7 +2,8 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ProfileCompletionModal } from '@/components/profile-completion-modal';
+import { ProfileCompletionPrivateCatalog } from '@/components/profile-completion-private-catalog';
+import { Spinner } from '@/components/ui/spinner';
 import { useUser } from '@/hooks/useUser';
 import { logError } from '@/lib/observability';
 import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
@@ -22,20 +23,16 @@ function sanitizeNextPath(value: string | null) {
   return value;
 }
 
-function ProfileSetupSkeleton({ compact = false }: { compact?: boolean }) {
+function ProfileSetupLoading({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
-      <div className={`w-full ${compact ? 'max-w-xl' : 'max-w-2xl'} border-y border-slate-200 py-8`}>
-        <div className="h-3 w-24 animate-pulse rounded-full bg-slate-100" />
-        <div className="mt-5 h-8 w-2/3 animate-pulse rounded-lg bg-slate-100" />
-        <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-slate-100" />
-        <div className="mt-2 h-4 w-4/5 animate-pulse rounded-full bg-slate-100" />
-        <div className="mt-7 h-px bg-slate-200" />
-        <p className="mt-6 text-sm font-semibold text-slate-700">
-          Estamos preparando tu experiencia académica
-        </p>
-        <p className="mt-1 text-sm text-slate-500">
-          Validamos tu sesión y revisamos tu universidad, carrera y materias activas.
+      <div className={`w-full ${compact ? 'max-w-xl' : 'max-w-2xl'} border-y border-slate-200 py-10 text-center`}>
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+          <Spinner size="sm" />
+        </div>
+        <p className="mt-4 text-sm font-semibold text-slate-800">Preparando tu experiencia académica</p>
+        <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">
+          Revisamos tu universidad, carrera y materias para llevarte al siguiente paso.
         </p>
       </div>
     </div>
@@ -97,34 +94,27 @@ function CompletarPerfilContent() {
         setRequiresCompletion(true);
       } catch (error) {
         logError('completarPerfil.checkProfile', error, { userId: user.id, nextPath });
-        if (active) {
-          setRequiresCompletion(true);
-        }
+        if (active) setRequiresCompletion(true);
       } finally {
-        if (active) {
-          setIsCheckingProfile(false);
-        }
+        if (active) setIsCheckingProfile(false);
       }
     }
 
     void checkProfile();
-
     return () => {
       active = false;
     };
   }, [loading, nextPath, router, user]);
 
   if (!user || loading || isCheckingProfile) {
-    return <ProfileSetupSkeleton />;
+    return <ProfileSetupLoading />;
   }
 
-  if (!requiresCompletion) {
-    return null;
-  }
+  if (!requiresCompletion) return null;
 
   return (
     <div className="min-h-screen bg-white">
-      <ProfileCompletionModal
+      <ProfileCompletionPrivateCatalog
         userId={user.id}
         isOpen={true}
         allowSkip={false}
@@ -143,7 +133,7 @@ function CompletarPerfilContent() {
 
 export default function CompletarPerfilPage() {
   return (
-    <Suspense fallback={<ProfileSetupSkeleton compact={true} />}>
+    <Suspense fallback={<ProfileSetupLoading compact={true} />}>
       <CompletarPerfilContent />
     </Suspense>
   );
