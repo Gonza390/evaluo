@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Copy, Link2, Loader2, Lock, Share2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { updateStudentMaterialVisibilityAction } from '@/app/dashboard/materiales/actions';
 import { useToast } from '@/components/ui/use-toast';
 import {
   buildStudentMaterialShareImagePath,
+  prepareStudentMaterialShareImage,
   shareStudentMaterial,
 } from '@/lib/student-material-share-client';
 
@@ -34,6 +35,11 @@ export function StudentMaterialShareControl({
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const shareImagePath = buildStudentMaterialShareImagePath({ title });
+
+  useEffect(() => {
+    void prepareStudentMaterialShareImage(shareImagePath, title);
+  }, [shareImagePath, title]);
 
   const shareUrl = () => new URL(sharePath, 'https://evaluo.com.ar').toString();
 
@@ -62,7 +68,7 @@ export function StudentMaterialShareControl({
       title,
       text: `${title} — material de estudio compartido en Evaluo.`,
       url,
-      imagePath: buildStudentMaterialShareImagePath({ title }),
+      imagePath: shareImagePath,
     });
 
     if (result === 'shared' || result === 'aborted') return;
