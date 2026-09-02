@@ -54,5 +54,5 @@ export async function extractPdfTextAndPageCount(buffer: Buffer) {
 }
 
 export { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy-v2';
-export { generatePedagogicalModel } from '@/lib/student-materials/pedagogy-ai';
+export { generatePedagogicalModel } from '@/lib/student-materials/pedagogy-ai-local';
 export type { PedagogicalArtifacts, PedagogicalChunk } from '@/lib/student-materials/pedagogy';
