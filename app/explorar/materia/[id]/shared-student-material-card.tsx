@@ -17,6 +17,11 @@ import type { SharedStudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { pushRecentResource } from '@/lib/dashboard-client';
 import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
+import {
+  buildStudentMaterialCanonicalPath,
+  buildStudentMaterialShareImagePath,
+  shareStudentMaterial,
+} from '@/lib/student-material-share-client';
 import { PdfCardThumbnail } from '@/components/materia/pdf-card-thumbnail';
 
 type SharedStudentMaterialCardProps = {
@@ -107,21 +112,20 @@ export function SharedStudentMaterialCard({
   }, [material.id]);
 
   const handleShare = async () => {
-    const publicUrl = getPublicMaterialUrl(materialHref);
-    const shareData = {
+    const sharePath = buildStudentMaterialCanonicalPath(material.title, material.id);
+    const publicUrl = getPublicMaterialUrl(sharePath);
+    const result = await shareStudentMaterial({
       title: material.title,
       text: `Mirá este apunte de ${materiaNombre} en Evaluo.`,
       url: publicUrl,
-    };
+      imagePath: buildStudentMaterialShareImagePath({
+        title: material.title,
+        materiaName: materiaNombre,
+        pageCount: material.page_count,
+      }),
+    });
 
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-      }
-    }
+    if (result === 'shared' || result === 'aborted') return;
 
     try {
       await copyText(publicUrl);
