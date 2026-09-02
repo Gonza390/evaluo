@@ -23,7 +23,7 @@ import type {
 } from '@/lib/student-materials/types';
 import { logError } from '@/lib/observability';
 
-const CANONICAL_SUMMARY_MAX_OUTPUT_TOKENS = 4_200;
+const CANONICAL_SUMMARY_MAX_OUTPUT_TOKENS = 6_000;
 
 const CANONICAL_SUMMARY_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -102,6 +102,17 @@ export function buildCanonicalSummaryPrompt(
     '- Podés integrar varios topics relacionados dentro de una misma sección, pero ningún topic puede quedar sin representación.',
     '- Priorizá definiciones, relaciones, clasificaciones, procesos, fórmulas, ejemplos y confusiones conceptuales.',
     '- No repitas la misma idea en varias secciones.',
+    '- Priorizá cobertura académica suficiente por encima de una brevedad excesiva.',
+    '',
+    'Contrato de cobertura interna:',
+    '- No alcanza con mencionar el nombre de un topic: representá sus ideas, conceptos y estructuras importantes.',
+    '- Si una clasificación canónica tiene hasta 10 elementos, conservá todos sus elementos. No reduzcas una clasificación desarrollada a una lista incompleta.',
+    '- Cuando la fuente aporte características o diferencias de los miembros de una clasificación, incluilas; evitá dejar nombres aislados si existe detalle canónico disponible.',
+    '- Si un proceso tiene una secuencia explícita, conservá todos sus pasos relevantes y su orden.',
+    '- Conservá las fórmulas y su significado cuando aparezcan en el modelo.',
+    '- Las relaciones conceptuales centrales del topic deben aparecer en el desarrollo, no sólo las definiciones sueltas.',
+    '- Un topic desarrollado mediante varios conceptos, relaciones o procesos no debe comprimirse a una sola oración genérica.',
+    '- No completes huecos con conocimiento general: si el modelo no aporta un detalle, no lo inventes.',
     '',
     'Separación pedagógica obligatoria:',
     '- La fuente de esta llamada excluye deliberadamente examRelevantClaims.',
@@ -319,6 +330,25 @@ function sanitizeCanonicalSummaryPayload(
     return null;
   }
 
+  const totalBodyChars = sections.reduce(
+    (total, section) => total + cleanLine(section.body).length,
+    0
+  );
+  const canonicalDetailCount =
+    source.concepts.length +
+    source.relationships.length +
+    source.classifications.length +
+    source.processes.length +
+    source.formulas.length;
+  const minimumBodyChars = Math.min(
+    5_000,
+    Math.max(1_600, canonicalDetailCount * 55)
+  );
+
+  if (totalBodyChars < minimumBodyChars) {
+    return null;
+  }
+
   return {
     shortSummary,
     keyPoints,
@@ -365,6 +395,13 @@ function buildRelatedStudyLines(
   for (const concept of source.concepts) {
     if (!sharesPage(topicPages, concept.pageReferences)) continue;
     lines.push(`- ${concept.term}: ${concept.detail}`);
+  }
+
+  for (const relationship of source.relationships) {
+    if (!sharesPage(topicPages, relationship.pageReferences)) continue;
+    lines.push(
+      `- ${relationship.source} ↔ ${relationship.target}: ${relationship.description}`
+    );
   }
 
   for (const classification of source.classifications) {
