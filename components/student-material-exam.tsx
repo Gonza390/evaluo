@@ -1,14 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  ArrowRight,
-  Check,
-  CheckCircle2,
-  CircleAlert,
-  RotateCcw,
-  Target,
-} from 'lucide-react';
+import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
@@ -202,9 +195,8 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
 
   if (artifacts.questions.length === 0 || sizeOptions.length === 0) {
     return (
-      <div className="rounded-[20px] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
-        <Target className="mx-auto h-6 w-6 text-slate-400" />
-        <p className="mt-3 text-sm font-semibold text-slate-800">Todavía no hay preguntas suficientes</p>
+      <div className="border-y border-slate-200 py-10 text-center">
+        <p className="text-sm font-semibold text-slate-800">Todavía no hay preguntas suficientes</p>
         <p className="mt-1 text-[13px] leading-5 text-slate-500">
           El PDF necesita más contenido estructurado para armar un examen útil.
         </p>
@@ -214,67 +206,62 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
 
   if (!started) {
     return (
-      <div className="mx-auto max-w-3xl">
-        <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
-          <div className="bg-[linear-gradient(135deg,#EEF4FF_0%,#FFFFFF_60%,#F8FAFC_100%)] px-5 py-6 sm:px-7 sm:py-7">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#2563EB] text-white shadow-[0_12px_28px_rgba(37,99,235,0.18)]">
-              <Target className="h-5 w-5" />
-            </div>
-            <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-[#2563EB]">
-              Examen basado en este PDF
-            </p>
-            <h3 className="mt-1.5 text-2xl font-bold tracking-[-0.05em] text-slate-950">
-              Elegí cuánto querés practicar
-            </h3>
-            <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-slate-600">
-              Las opciones se adaptan a la cantidad y variedad de preguntas que este documento permite construir con buena cobertura.
-            </p>
-          </div>
+      <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+        <header className="border-b border-slate-200 pb-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
+            Examen basado en este PDF
+          </p>
+          <h2 className="mt-2 text-[1.65rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[1.85rem]">
+            Elegí cuánto querés practicar
+          </h2>
+          <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-slate-600">
+            Las opciones se adaptan a la cantidad y variedad de preguntas que este documento permite construir con buena cobertura.
+          </p>
+        </header>
 
-          <div className="px-5 py-5 sm:px-7 sm:py-6">
-            <div className="grid gap-3 sm:grid-cols-3">
-              {sizeOptions.map((option) => {
-                const selected = selectedSize === option.count;
-                return (
-                  <button
-                    key={option.count}
-                    type="button"
-                    onClick={() => setSelectedSize(option.count)}
+        <div className="grid gap-3 py-5 sm:grid-cols-3">
+          {sizeOptions.map((option) => {
+            const selected = selectedSize === option.count;
+            return (
+              <button
+                key={option.count}
+                type="button"
+                onClick={() => setSelectedSize(option.count)}
+                className={cn(
+                  'min-h-32 border px-4 py-4 text-left transition first:rounded-l-[16px] last:rounded-r-[16px] sm:rounded-[16px]',
+                  selected
+                    ? 'border-[#2563EB] bg-[#F7FAFF]'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60'
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={cn('text-xl font-bold', selected ? 'text-[#2563EB]' : 'text-slate-950')}>
+                    {option.count}
+                  </span>
+                  <span
                     className={cn(
-                      'rounded-[18px] border px-4 py-4 text-left transition',
-                      selected
-                        ? 'border-[#2563EB] bg-[#EEF4FF] shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                      'text-[9.5px] font-bold uppercase tracking-[0.1em]',
+                      selected ? 'text-[#2563EB]' : 'text-slate-400'
                     )}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={cn('text-xl font-bold', selected ? 'text-[#2563EB]' : 'text-slate-950')}>
-                        {option.count}
-                      </span>
-                      <span className={cn(
-                        'rounded-full px-2 py-1 text-[9.5px] font-bold uppercase tracking-[0.1em]',
-                        selected ? 'bg-white text-[#2563EB]' : 'bg-slate-100 text-slate-500'
-                      )}>
-                        {option.label}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs font-semibold text-slate-700">
-                      {option.count === 1 ? 'pregunta' : 'preguntas'}
-                    </p>
-                    <p className="mt-2 text-[12px] leading-5 text-slate-500">{option.description}</p>
-                  </button>
-                );
-              })}
-            </div>
+                    {option.label}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs font-semibold text-slate-700">
+                  {option.count === 1 ? 'pregunta' : 'preguntas'}
+                </p>
+                <p className="mt-2 text-[12px] leading-5 text-slate-500">{option.description}</p>
+              </button>
+            );
+          })}
+        </div>
 
-            <div className="mt-5 flex justify-end border-t border-slate-100 pt-5">
-              <Button type="button" onClick={startExam} className="h-11 rounded-[14px] px-5">
-                Comenzar examen
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </section>
+        <div className="flex justify-end border-t border-slate-200 pt-5">
+          <Button type="button" onClick={startExam} className="h-11 rounded-[14px] px-5">
+            Comenzar examen
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     );
   }
@@ -289,43 +276,40 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
     ).slice(0, 5);
 
     return (
-      <div className="mx-auto max-w-3xl space-y-5">
-        <section className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.08)]">
-          <div className="bg-[linear-gradient(135deg,#EEF4FF_0%,#FFFFFF_55%,#F8FAFC_100%)] px-5 py-6 text-center sm:px-8 sm:py-8">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#2563EB] text-white shadow-[0_12px_28px_rgba(37,99,235,0.20)]">
-              <CheckCircle2 className="h-6 w-6" />
-            </div>
-            <p className="mt-4 text-[12px] font-bold uppercase tracking-[0.16em] text-[#2563EB]">
-              Examen completado
-            </p>
-            <h3 className="mt-2 text-3xl font-bold tracking-[-0.06em] text-slate-950">
+      <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+        <header className="border-b border-slate-200 pb-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
+            Examen completado
+          </p>
+          <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
+            <h2 className="text-4xl font-bold tracking-[-0.07em] text-slate-950">
               {result.percentage}%
-            </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            </h2>
+            <p className="pb-1 text-sm text-slate-600">
               {result.correct} de {result.total} respuestas consolidadas
             </p>
           </div>
+        </header>
 
-          <div className="grid gap-3 border-t border-slate-100 px-5 py-5 sm:grid-cols-3 sm:px-8">
-            {(['recordar', 'comprender', 'aplicar'] as const).map((level) => (
-              <div key={level} className="rounded-[18px] border border-slate-200 bg-slate-50/70 px-4 py-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                  {levelLabel(level)}
-                </p>
-                <p className="mt-1 text-lg font-bold text-slate-950">
-                  {result.levels[level].correct}/{result.levels[level].total}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <div className="grid border-b border-slate-200 py-5 sm:grid-cols-3 sm:divide-x sm:divide-slate-200">
+          {(['recordar', 'comprender', 'aplicar'] as const).map((level) => (
+            <div key={level} className="py-2 sm:px-5 first:sm:pl-0 last:sm:pr-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                {levelLabel(level)}
+              </p>
+              <p className="mt-1 text-lg font-bold text-slate-950">
+                {result.levels[level].correct}/{result.levels[level].total}
+              </p>
+            </div>
+          ))}
+        </div>
 
-        {reviewTopics.length > 0 ? (
-          <section className="rounded-[22px] border border-amber-200 bg-amber-50/60 px-5 py-5">
+        <section className="border-b border-slate-200 py-5">
+          {reviewTopics.length > 0 ? (
             <div className="flex items-start gap-3">
               <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div>
-                <h4 className="font-semibold text-slate-950">Temas para repasar</h4>
+                <h3 className="font-semibold text-slate-950">Temas para repasar</h3>
                 <ul className="mt-2 space-y-1.5 text-[13px] leading-5 text-slate-700">
                   {reviewTopics.map((topic) => (
                     <li key={topic}>• {topic}</li>
@@ -333,17 +317,19 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
                 </ul>
               </div>
             </div>
-          </section>
-        ) : (
-          <section className="rounded-[22px] border border-emerald-200 bg-emerald-50/60 px-5 py-5 text-sm text-emerald-800">
-            No quedaron temas marcados para repasar en este intento.
-          </section>
-        )}
+          ) : (
+            <p className="text-sm font-medium text-emerald-700">
+              No quedaron temas marcados para repasar en este intento.
+            </p>
+          )}
+        </section>
 
-        <Button onClick={resetExam} className="h-11 w-full rounded-[14px] sm:w-auto">
-          <RotateCcw className="h-4 w-4" />
-          Elegir otro examen
-        </Button>
+        <div className="pt-5">
+          <Button onClick={resetExam} className="h-11 w-full rounded-[14px] sm:w-auto">
+            <RotateCcw className="h-4 w-4" />
+            Elegir otro examen
+          </Button>
+        </div>
       </div>
     );
   }
@@ -370,7 +356,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">
@@ -378,7 +364,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
           </p>
           <p className="mt-1 text-xs text-slate-500">Basado únicamente en este PDF</p>
         </div>
-        <span className="rounded-full bg-[#EEF4FF] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#2563EB]">
+        <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#2563EB]">
           {levelLabel(current.level)}
         </span>
       </div>
@@ -390,10 +376,10 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
         />
       </div>
 
-      <article className="rounded-[24px] border border-slate-200 bg-white px-4 py-5 shadow-[0_18px_48px_rgba(15,23,42,0.07)] sm:px-6 sm:py-6">
-        <h3 className="text-lg font-bold leading-7 tracking-[-0.035em] text-slate-950 sm:text-xl">
+      <article className="border-t border-slate-200 pt-6">
+        <h2 className="text-lg font-bold leading-7 tracking-[-0.035em] text-slate-950 sm:text-xl">
           {current.prompt}
-        </h3>
+        </h2>
 
         {current.type === 'multiple_choice' ? (
           <div className="mt-5 grid gap-2.5">
@@ -412,9 +398,9 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
                     setSelectedAnswers((answers) => ({ ...answers, [current.id]: option }))
                   }
                   className={cn(
-                    'flex min-h-14 w-full items-start gap-3 rounded-[16px] border px-3.5 py-3 text-left transition sm:px-4',
-                    !isRevealed && selected && 'border-[#2563EB] bg-[#EEF4FF]',
-                    !isRevealed && !selected && 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
+                    'flex min-h-14 w-full items-start gap-3 rounded-[14px] border px-3.5 py-3 text-left transition sm:px-4',
+                    !isRevealed && selected && 'border-[#2563EB] bg-[#F7FAFF]',
+                    !isRevealed && !selected && 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60',
                     showCorrect && 'border-emerald-300 bg-emerald-50',
                     showWrong && 'border-red-300 bg-red-50',
                     isRevealed && !showCorrect && !showWrong && 'border-slate-200 bg-slate-50/50'
@@ -446,12 +432,12 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
               setOpenDrafts((drafts) => ({ ...drafts, [current.id]: event.target.value }))
             }
             placeholder="Escribí tu respuesta con tus palabras..."
-            className="mt-5 min-h-36 w-full resize-y rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#DBEAFE] disabled:bg-slate-50"
+            className="mt-5 min-h-36 w-full resize-y rounded-[14px] border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#DBEAFE] disabled:bg-slate-50"
           />
         )}
 
         {!isRevealed ? (
-          <div className="mt-5 flex justify-end">
+          <div className="mt-5 flex justify-end border-t border-slate-100 pt-5">
             <Button
               type="button"
               disabled={current.type === 'multiple_choice' && !selectedAnswer}
@@ -462,15 +448,15 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
             </Button>
           </div>
         ) : (
-          <div className="mt-5 space-y-4">
+          <div className="mt-5 space-y-4 border-t border-slate-200 pt-5">
             <section
               className={cn(
-                'rounded-[18px] border px-4 py-4',
+                'border-l-2 py-0.5 pl-4',
                 current.type === 'multiple_choice' && isCorrect
-                  ? 'border-emerald-200 bg-emerald-50/70'
+                  ? 'border-emerald-500'
                   : current.type === 'multiple_choice'
-                    ? 'border-amber-200 bg-amber-50/70'
-                    : 'border-[#BFDBFE] bg-[#F8FBFF]'
+                    ? 'border-amber-500'
+                    : 'border-[#2563EB]'
               )}
             >
               <p className="text-sm font-bold text-slate-950">
@@ -490,7 +476,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
             </section>
 
             {current.type === 'open' ? (
-              <div className="rounded-[18px] border border-slate-200 bg-slate-50/70 px-4 py-4">
+              <div className="border-t border-slate-100 pt-4">
                 <p className="text-[13px] font-semibold text-slate-800">
                   Compará tu respuesta con la esperada. ¿Cómo te fue?
                 </p>
@@ -527,7 +513,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
               </div>
             ) : null}
 
-            <div className="flex justify-end">
+            <div className="flex justify-end border-t border-slate-100 pt-4">
               <Button type="button" disabled={!canAdvance} onClick={goNext} className="h-11 rounded-[14px] px-5">
                 {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
                 <ArrowRight className="h-4 w-4" />
