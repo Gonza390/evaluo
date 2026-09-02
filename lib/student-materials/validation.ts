@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
 export const MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES = 20 * 1024 * 1024;
-export const MAX_STUDENT_MATERIAL_PDF_PAGES = 30;
+export const MAX_FREE_STUDENT_MATERIAL_PDF_PAGES = 30;
+export const MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES = 50;
+// Compatibilidad con usos existentes: el límite base sigue siendo el de Free.
+export const MAX_STUDENT_MATERIAL_PDF_PAGES = MAX_FREE_STUDENT_MATERIAL_PDF_PAGES;
 
 const uuidSchema = z.string().uuid();
 
