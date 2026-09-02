@@ -1,3 +1,4 @@
+import { hasPremiumAccess } from '@/lib/premium';
 import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 
@@ -10,14 +11,30 @@ export async function isStudentMaterialVisualAnalysisEnabled(materialId?: string
 
   try {
     const admin = createAdminClient() as unknown as StructuralAdminClient;
-    const { data, error } = await admin
+    const { data: material, error } = await admin
       .from('student_materials')
-      .select('visual_analysis_enabled')
+      .select('user_id, visual_analysis_enabled')
       .eq('id', materialId)
       .maybeSingle();
 
     if (error) throw error;
-    return data?.visual_analysis_enabled === true;
+    if (!material?.user_id || material.visual_analysis_enabled !== true) {
+      return false;
+    }
+
+    if (await hasPremiumAccess(String(material.user_id))) {
+      return true;
+    }
+
+    const { data: entitlement, error: entitlementError } = await admin
+      .from('student_material_visual_entitlements')
+      .select('material_id')
+      .eq('user_id', String(material.user_id))
+      .eq('material_id', materialId)
+      .maybeSingle();
+
+    if (entitlementError) throw entitlementError;
+    return entitlement?.material_id === materialId;
   } catch (error) {
     logError('studentMaterialVisualAnalysisPolicy.read', error, { materialId });
     return false;
