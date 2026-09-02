@@ -27,6 +27,14 @@ function normalizeAnswer(value: string) {
     .trim();
 }
 
+function normalizeForSearch(value: string) {
+  return normalizeAnswer(value).replace(/[^a-z0-9áéíóúñü\s]/gi, ' ');
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function levelLabel(level: StudyQuestion['level']) {
   if (level === 'recordar') return 'Recordar';
   if (level === 'aplicar') return 'Aplicar';
@@ -38,6 +46,55 @@ function sourceLabel(question: StudyQuestion) {
   if (pageStart && pageEnd && pageEnd !== pageStart) return `Páginas ${pageStart}–${pageEnd}`;
   if (pageStart) return `Página ${pageStart}`;
   return sectionTitle || 'Referencia del documento';
+}
+
+function hasExplicitClassificationEvidence(question: StudyQuestion) {
+  if (question.kind !== 'classification') return true;
+  const answer = question.answer.trim();
+  const excerpt = question.reference.excerpt;
+  if (!answer || !excerpt) return false;
+
+  return new RegExp(`${escapeRegExp(answer)}\\s*:`, 'i').test(excerpt);
+}
+
+function hasGroundedComparisonAnswer(question: StudyQuestion) {
+  if (question.type !== 'open' || question.kind !== 'relationship') return true;
+  const topic = normalizeForSearch(question.topic ?? '');
+  const answer = normalizeForSearch(question.answer);
+  const stopWords = new Set([
+    'segun',
+    'material',
+    'entre',
+    'frente',
+    'estructura',
+    'estructural',
+    'funcional',
+  ]);
+  const keywords = Array.from(
+    new Set(
+      topic
+        .split(/\s+/)
+        .filter((word) => word.length >= 4 && !stopWords.has(word))
+    )
+  );
+
+  if (keywords.length === 0) return Boolean(answer);
+  const matches = keywords.filter((word) => answer.includes(word)).length;
+  return matches >= Math.min(2, keywords.length);
+}
+
+function isEligibleExamQuestion(question: StudyQuestion) {
+  if (question.kind === 'confusion') return false;
+  if (!hasExplicitClassificationEvidence(question)) return false;
+  if (!hasGroundedComparisonAnswer(question)) return false;
+
+  if (question.type === 'multiple_choice') {
+    if (question.options.length < 3) return false;
+    const answer = normalizeAnswer(question.answer);
+    if (!question.options.some((option) => normalizeAnswer(option) === answer)) return false;
+  }
+
+  return Boolean(question.prompt.trim() && question.answer.trim());
 }
 
 function resolveExamSizeOptions(totalQuestions: number): ExamSizeOption[] {
@@ -73,64 +130,98 @@ function resolveExamSizeOptions(totalQuestions: number): ExamSizeOption[] {
   }));
 }
 
-function resolveExamQuestions(artifacts: PedagogicalArtifacts, targetCount: number) {
-  const byId = new Map(artifacts.questions.map((question) => [question.id, question]));
+function resolveExamQuestions(
+  questions: StudyQuestion[],
+  preferredQuestionIds: string[],
+  targetCount: number
+) {
   const selected: StudyQuestion[] = [];
   const selectedIds = new Set<string>();
+  const selectedTopics = new Set<string>();
+  const selectedPages = new Set<number>();
+  const selectedKinds = new Set<StudyQuestion['kind']>();
+  const preferredIds = new Set(preferredQuestionIds);
+  const levelSequence: StudyQuestion['level'][] = [
+    'recordar',
+    'comprender',
+    'aplicar',
+    'comprender',
+    'aplicar',
+  ];
+  const maxOpenQuestions = Math.max(1, Math.round(targetCount * 0.15));
+
+  const score = (question: StudyQuestion) => {
+    let value = preferredIds.has(question.id) ? 4 : 0;
+    if (question.type === 'multiple_choice') value += 4;
+    if (question.topic && !selectedTopics.has(normalizeAnswer(question.topic))) value += 6;
+    if (question.reference.pageStart && !selectedPages.has(question.reference.pageStart)) value += 5;
+    if (question.kind && !selectedKinds.has(question.kind)) value += 3;
+    return value;
+  };
+
+  const pickBest = (level?: StudyQuestion['level']) =>
+    questions
+      .filter((question) => !selectedIds.has(question.id))
+      .filter((question) => !level || question.level === level)
+      .filter(
+        (question) =>
+          question.type !== 'open' ||
+          selected.filter((selectedQuestion) => selectedQuestion.type === 'open').length < maxOpenQuestions
+      )
+      .map((question, index) => ({ question, index, score: score(question) }))
+      .sort((left, right) => right.score - left.score || left.index - right.index)[0]?.question;
 
   const push = (question: StudyQuestion | undefined) => {
     if (!question || selectedIds.has(question.id) || selected.length >= targetCount) return;
     selected.push(question);
     selectedIds.add(question.id);
+    if (question.topic) selectedTopics.add(normalizeAnswer(question.topic));
+    if (question.reference.pageStart) selectedPages.add(question.reference.pageStart);
+    if (question.kind) selectedKinds.add(question.kind);
   };
 
-  artifacts.miniExamQuestionIds.forEach((id) => push(byId.get(id)));
-
-  const kindOrder: Array<StudyQuestion['kind']> = [
-    'relationship',
-    'classification',
-    'process',
-    'formula',
-    'concept',
-    'confusion',
-    'section',
-  ];
-
-  let addedInRound = true;
-  while (selected.length < targetCount && addedInRound) {
-    addedInRound = false;
-
-    for (const kind of kindOrder) {
-      const match = artifacts.questions.find(
-        (question) => question.kind === kind && !selectedIds.has(question.id)
-      );
-      if (match) {
-        push(match);
-        addedInRound = true;
-      }
-      if (selected.length >= targetCount) break;
-    }
+  for (let index = 0; index < targetCount; index += 1) {
+    const desiredLevel = levelSequence[index % levelSequence.length];
+    push(pickBest(desiredLevel) ?? pickBest());
   }
 
-  for (const question of artifacts.questions) {
-    if (selected.length >= targetCount) break;
-    push(question);
+  while (selected.length < targetCount) {
+    const match = pickBest();
+    if (!match) break;
+    push(match);
   }
 
   return selected.slice(0, targetCount);
 }
 
 export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
+  const eligibleQuestions = useMemo(
+    () => artifacts.questions.filter(isEligibleExamQuestion),
+    [artifacts.questions]
+  );
+  const eligibleIds = useMemo(
+    () => new Set(eligibleQuestions.map((question) => question.id)),
+    [eligibleQuestions]
+  );
+  const preferredQuestionIds = useMemo(
+    () => artifacts.miniExamQuestionIds.filter((id) => eligibleIds.has(id)),
+    [artifacts.miniExamQuestionIds, eligibleIds]
+  );
   const sizeOptions = useMemo(
-    () => resolveExamSizeOptions(artifacts.questions.length),
-    [artifacts.questions.length]
+    () => resolveExamSizeOptions(eligibleQuestions.length),
+    [eligibleQuestions.length]
   );
   const defaultSize = sizeOptions[Math.floor(sizeOptions.length / 2)]?.count ?? 0;
   const [selectedSize, setSelectedSize] = useState(defaultSize);
   const [started, setStarted] = useState(false);
   const questions = useMemo(
-    () => resolveExamQuestions(artifacts, selectedSize || defaultSize),
-    [artifacts, defaultSize, selectedSize]
+    () =>
+      resolveExamQuestions(
+        eligibleQuestions,
+        preferredQuestionIds,
+        selectedSize || defaultSize
+      ),
+    [defaultSize, eligibleQuestions, preferredQuestionIds, selectedSize]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
@@ -193,7 +284,7 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
     setStarted(false);
   };
 
-  if (artifacts.questions.length === 0 || sizeOptions.length === 0) {
+  if (eligibleQuestions.length === 0 || sizeOptions.length === 0) {
     return (
       <div className="border-y border-slate-200 py-10 text-center">
         <p className="text-sm font-semibold text-slate-800">Todavía no hay preguntas suficientes</p>
