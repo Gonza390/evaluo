@@ -507,59 +507,58 @@ export function MaterialStudyWorkspace({
       </TabsContent>
 
       <TabsContent value="glosario" className="animate-tab-panel">
-        <StudyDocumentShell
-          title="Glosario del documento"
-          description="Términos y conceptos detectados desde el contenido del PDF para estudiar con más precisión."
-        >
-          {usefulGlossary.length > 0 ? (
-            <div className="overflow-hidden rounded-[18px] border border-slate-200">
-              <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-6 border-b border-slate-200 bg-slate-50/70 px-4 py-3 md:grid">
-                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Término</p>
-                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Definición</p>
-              </div>
-              <div className="divide-y divide-slate-200 bg-white">
-                {usefulGlossary.map((item) => {
-                  const englishTerm =
-                    item.englishTerm && item.englishTerm.trim().toLowerCase() !== 'svg'
-                      ? item.englishTerm
-                      : null;
+        <div className="surface-card rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+          <div className="px-4 py-4 sm:px-5 sm:py-5">
+            {usefulGlossary.length > 0 ? (
+              <div className="overflow-hidden rounded-[18px] border border-slate-200">
+                <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-6 border-b border-slate-200 bg-slate-50/70 px-4 py-3 md:grid">
+                  <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Término</p>
+                  <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Definición</p>
+                </div>
+                <div className="divide-y divide-slate-200 bg-white">
+                  {usefulGlossary.map((item) => {
+                    const englishTerm =
+                      item.englishTerm && item.englishTerm.trim().toLowerCase() !== 'svg'
+                        ? item.englishTerm
+                        : null;
 
-                  return (
-                    <article
-                      key={item.term}
-                      className="grid gap-2.5 px-3.5 py-4 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-6 md:px-4 md:py-4"
-                    >
-                      <div className="space-y-1.5">
-                        <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
-                          Término
-                        </p>
-                        <h3 className="text-[0.94rem] font-semibold tracking-[-0.025em] text-slate-950 md:text-[0.98rem]">
-                          {item.term}
-                        </h3>
-                        {englishTerm ? (
-                          <p className="text-[12px] font-medium text-slate-400 italic">{englishTerm}</p>
-                        ) : null}
-                      </div>
+                    return (
+                      <article
+                        key={item.term}
+                        className="grid gap-2.5 px-3.5 py-4 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-6 md:px-4 md:py-4"
+                      >
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
+                            Término
+                          </p>
+                          <h3 className="text-[0.94rem] font-semibold tracking-[-0.025em] text-slate-950 md:text-[0.98rem]">
+                            {item.term}
+                          </h3>
+                          {englishTerm ? (
+                            <p className="text-[12px] font-medium text-slate-400 italic">{englishTerm}</p>
+                          ) : null}
+                        </div>
 
-                      <div className="space-y-1.5">
-                        <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
-                          Definición
-                        </p>
-                        <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">
-                          {item.definition}
-                        </p>
-                      </div>
-                    </article>
-                  );
-                })}
+                        <div className="space-y-1.5">
+                          <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
+                            Definición
+                          </p>
+                          <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">
+                            {item.definition}
+                          </p>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ) : (
-            <p className="text-[14px] leading-6 text-slate-500">
-              Todavía no pudimos detectar un glosario claro a partir de este PDF.
-            </p>
-          )}
-        </StudyDocumentShell>
+            ) : (
+              <p className="text-[14px] leading-6 text-slate-500">
+                Todavía no pudimos detectar un glosario claro a partir de este PDF.
+              </p>
+            )}
+          </div>
+        </div>
       </TabsContent>
 
       <TabsContent value="tarjetas" className="animate-tab-panel">
