@@ -17,6 +17,12 @@ import type { SharedStudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { pushRecentResource } from '@/lib/dashboard-client';
 import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
+import {
+  buildStudentMaterialCanonicalPath,
+  buildStudentMaterialShareImagePath,
+  prepareStudentMaterialShareImage,
+  shareStudentMaterial,
+} from '@/lib/student-material-share-client';
 import { PdfCardThumbnail } from '@/components/materia/pdf-card-thumbnail';
 
 type SharedStudentMaterialCardProps = {
@@ -81,6 +87,11 @@ export function SharedStudentMaterialCard({
   const fileSizeLabel = formatBytes(material.file_size_bytes);
   const isEnriched = material.study_artifacts?.count >= 3;
   const isComplete = material.study_artifacts?.complete;
+  const shareImagePath = buildStudentMaterialShareImagePath({
+    title: material.title,
+    materiaName: materiaNombre,
+    pageCount: material.page_count,
+  });
   const [uploaderName, setUploaderName] = useState('Estudiante');
   const [shareCopied, setShareCopied] = useState(false);
 
@@ -106,22 +117,21 @@ export function SharedStudentMaterialCard({
     };
   }, [material.id]);
 
+  useEffect(() => {
+    void prepareStudentMaterialShareImage(shareImagePath, material.title);
+  }, [material.title, shareImagePath]);
+
   const handleShare = async () => {
-    const publicUrl = getPublicMaterialUrl(materialHref);
-    const shareData = {
+    const sharePath = buildStudentMaterialCanonicalPath(material.title, material.id);
+    const publicUrl = getPublicMaterialUrl(sharePath);
+    const result = await shareStudentMaterial({
       title: material.title,
       text: `Mirá este apunte de ${materiaNombre} en Evaluo.`,
       url: publicUrl,
-    };
+      imagePath: shareImagePath,
+    });
 
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-      }
-    }
+    if (result === 'shared' || result === 'aborted') return;
 
     try {
       await copyText(publicUrl);
