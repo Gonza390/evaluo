@@ -59,6 +59,7 @@ export type CanonicalSummarySource = {
   formulas: CanonicalSummarySourceFormula[];
   authorsOrTheories: CanonicalSummarySourceValue[];
   examples: CanonicalSummarySourceValue[];
+  studyClaims: CanonicalSummarySourceValue[];
   confusions: CanonicalSummarySourceValue[];
 };
 
@@ -71,7 +72,9 @@ type BindingPageIndex = Map<string, number[]>;
  * La proyección:
  * - conserva todos los elementos académicos del modelo canónico;
  * - conserva páginas físicas sin enviar excerpts ni chunk indexes;
- * - excluye examRelevantClaims, que pertenecen al artefacto de práctica;
+ * - conserva examRelevantClaims como `studyClaims`: son hechos/ideas académicas,
+ *   no predicciones ni preguntas de examen;
+ * - refuerza cada topic con los studyClaims respaldados por sus mismas páginas;
  * - no recorta por cantidad de elementos ni por caracteres.
  *
  * El modelo canónico ya hizo el trabajo costoso de comprender y consolidar el
@@ -92,27 +95,47 @@ export function buildCanonicalSummarySource(
       ...(bindingPages.get(buildBindingIndexKey(kind, key)) ?? []),
     ]);
 
+  const studyClaims = cleanTextList(model.examRelevantClaims).map((value) => ({
+    value,
+    pageReferences: resolvePages('exam_relevant_claim', value),
+  }));
+
+  const topics = model.topics
+    .map((topic) => {
+      const title = cleanText(topic.title);
+      const baseDescription = cleanText(topic.description);
+      const pageReferences = resolvePages(
+        'topic',
+        title,
+        topic.pageReferences
+      );
+      const relatedClaims = studyClaims
+        .filter((claim) => sharesPage(pageReferences, claim.pageReferences))
+        .map((claim) => claim.value);
+      const description = cleanText(
+        [
+          baseDescription,
+          relatedClaims.length > 0
+            ? `Ideas clave del material: ${relatedClaims.join(' ')}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' ')
+      );
+
+      return {
+        title,
+        description,
+        relevance: topic.relevance === 'alta' ? 'alta' : 'media',
+        pageReferences,
+      } satisfies CanonicalSummarySourceTopic;
+    })
+    .filter((topic) => topic.title && topic.description);
+
   return {
     title: cleanText(model.title),
     overview: cleanText(model.overview),
-
-    topics: model.topics
-      .map((topic) => {
-        const title = cleanText(topic.title);
-        const description = cleanText(topic.description);
-
-        return {
-          title,
-          description,
-          relevance: topic.relevance === 'alta' ? 'alta' : 'media',
-          pageReferences: resolvePages(
-            'topic',
-            title,
-            topic.pageReferences
-          ),
-        } satisfies CanonicalSummarySourceTopic;
-      })
-      .filter((topic) => topic.title && topic.description),
+    topics,
 
     concepts: model.concepts
       .map((concept) => {
@@ -218,6 +241,8 @@ export function buildCanonicalSummarySource(
       pageReferences: resolvePages('example', value),
     })),
 
+    studyClaims,
+
     confusions: cleanTextList(model.confusions).map((value) => ({
       value,
       pageReferences: resolvePages('confusion', value),
@@ -288,6 +313,12 @@ function cleanTextList(values: string[]) {
   }
 
   return result;
+}
+
+function sharesPage(left: number[], right: number[]) {
+  if (left.length === 0 || right.length === 0) return false;
+  const rightPages = new Set(right);
+  return left.some((page) => rightPages.has(page));
 }
 
 function normalizePageReferences(values: number[]) {
