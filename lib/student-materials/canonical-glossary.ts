@@ -48,11 +48,11 @@ export function resolveCanonicalGlossaryLimit(
   const topicCount = model.topics.length;
 
   return Math.min(
-    42,
+    50,
     Math.max(
       18,
-      Math.ceil(pageCount * 1.5),
-      Math.min(36, topicCount * 2)
+      Math.ceil(pageCount * 2.25),
+      Math.min(44, topicCount * 2)
     )
   );
 }
@@ -242,8 +242,24 @@ function selectCanonicalGlossaryCandidates(
   const selected = new Map<string, CanonicalGlossaryCandidate>();
   const ordered = [...candidates].sort(compareCandidateCoverage);
 
-  // Primero garantizamos presencia de los temas del documento, especialmente
-  // para evitar glosarios concentrados sólo en las primeras páginas.
+  // Las definiciones canónicas son el núcleo del glosario. Si entran sin
+  // desplazar toda la diversidad estructural, se conservan completas.
+  const coreDefinitions = ordered.filter(
+    (candidate) => candidate.kind === 'concept' && candidate.priority === 0
+  );
+  const completeCoreLimit = Math.floor(limit * 0.8);
+  const guaranteedDefinitions =
+    coreDefinitions.length <= completeCoreLimit
+      ? coreDefinitions
+      : takeEvenly(coreDefinitions, Math.ceil(limit * 0.68));
+
+  for (const candidate of guaranteedDefinitions) {
+    if (selected.size >= limit) break;
+    selected.set(candidate.id, candidate);
+  }
+
+  // Garantizamos presencia de los temas del documento, especialmente para
+  // evitar glosarios concentrados sólo en las primeras páginas.
   const topics = [...model.topics].sort((left, right) => {
     const leftPage = normalizePages(left.pageReferences)[0] ?? Number.MAX_SAFE_INTEGER;
     const rightPage = normalizePages(right.pageReferences)[0] ?? Number.MAX_SAFE_INTEGER;
@@ -261,6 +277,26 @@ function selectCanonicalGlossaryCandidates(
       (candidate) =>
         !selected.has(candidate.id) &&
         candidate.pageReferences.some((page) => topicPages.has(page))
+    );
+    if (representative) selected.set(representative.id, representative);
+  }
+
+  // Los topics pueden tener referencias representativas y dejar huecos entre
+  // páginas. Cubrimos también cada página que tenga contenido canónico útil.
+  const candidatePages = normalizePages(
+    ordered.flatMap((candidate) => candidate.pageReferences)
+  );
+
+  for (const page of candidatePages) {
+    if (selected.size >= limit) break;
+    const alreadyCovered = [...selected.values()].some((candidate) =>
+      candidate.pageReferences.includes(page)
+    );
+    if (alreadyCovered) continue;
+
+    const representative = ordered.find(
+      (candidate) =>
+        !selected.has(candidate.id) && candidate.pageReferences.includes(page)
     );
     if (representative) selected.set(representative.id, representative);
   }
