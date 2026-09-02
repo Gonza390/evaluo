@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { MaterialFeedback } from '@/components/material-feedback';
 import { StudyRichText } from '@/components/study-rich-text';
+import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
@@ -65,7 +66,7 @@ const STUDY_TABS: Array<{
   { id: 'resumen', label: 'Resumen', icon: BookOpenText },
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'tarjetas', label: 'Tarjetas', icon: Sparkles },
-  { id: 'ejercicios', label: 'Ejercicios', icon: BrainCircuit },
+  { id: 'ejercicios', label: 'Examen', icon: BrainCircuit },
   { id: 'mapa', label: 'Mapa mental', icon: Map, premium: true },
 ];
 
@@ -665,48 +666,10 @@ export function MaterialStudyWorkspace({
 
       <TabsContent value="ejercicios" className="animate-tab-panel">
         <StudyDocumentShell
-          title="Ejercicios y práctica"
-          description="Mini parcial progresivo: recordar, comprender y aplicar con respuestas explicadas."
+          title="Examen de práctica"
+          description="Una pregunta por vez, con dificultad progresiva, corrección y referencia al contenido del PDF."
         >
-          <div className="space-y-4">
-            {studyArtifacts.questions.map((exercise, index) => (
-              <article key={exercise.id} className="space-y-2.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF4FF] text-xs font-bold text-[#2563EB]">
-                    {index + 1}
-                  </div>
-                  <h3 className="text-[0.98rem] font-semibold text-slate-950">{exercise.prompt}</h3>
-                </div>
-                {exercise.options.length > 0 ? (
-                  <ol className="space-y-1 pl-5 text-[13px] text-slate-700">
-                    {exercise.options.map((option) => (
-                      <li key={option} className="list-[upper-alpha]">
-                        {option}
-                      </li>
-                    ))}
-                  </ol>
-                ) : null}
-                <details className="rounded-[14px] border border-slate-200 bg-white px-3 py-2 text-[13px]">
-                  <summary className="cursor-pointer font-semibold text-[#2563EB]">
-                    Ver respuesta y explicación
-                  </summary>
-                  <p className="mt-2 leading-6 text-slate-700">
-                    <strong>Respuesta:</strong> {exercise.answer}
-                  </p>
-                  <p className="mt-1 leading-6 text-slate-600">{exercise.explanation}</p>
-                  <p className="mt-2 text-[11.5px] text-slate-500">
-                    {exercise.level} ·{' '}
-                    {exercise.reference.pageStart
-                      ? `Página ${exercise.reference.pageStart}`
-                      : (exercise.reference.sectionTitle ?? 'Referencia del documento')}
-                  </p>
-                </details>
-                {index < studyArtifacts.questions.length - 1 ? (
-                  <div className="h-px bg-white" />
-                ) : null}
-              </article>
-            ))}
-          </div>
+          <StudentMaterialExam artifacts={studyArtifacts} />
         </StudyDocumentShell>
       </TabsContent>
 
