@@ -19,7 +19,6 @@ export function PremiumUpsell({
   description,
   source,
   features,
-  ctaLabel = 'Quiero pasarme a Premium',
   materiaId,
 }: PremiumUpsellProps) {
   useEffect(() => {
@@ -39,13 +38,26 @@ export function PremiumUpsell({
     window.location.assign(`/pricing?${params.toString()}#elegir-plan`);
   };
 
+  const contextualCopy =
+    source === 'material_mapa_mental'
+      ? {
+          title: 'Conectá los temas de este PDF de un vistazo',
+          description:
+            'Visualizá los conceptos clave y cómo se relacionan para repasar más rápido y detectar qué temas necesitás reforzar.',
+        }
+      : { title, description };
+
   return (
     <section className="border-y border-slate-200 py-6 text-left">
       <div className="flex items-start gap-3">
         <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
         <div className="min-w-0">
-          <h3 className="text-base leading-snug font-bold text-slate-950">{title}</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+          <h3 className="text-base leading-snug font-bold text-slate-950">
+            {contextualCopy.title}
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            {contextualCopy.description}
+          </p>
         </div>
       </div>
 
@@ -64,7 +76,7 @@ export function PremiumUpsell({
         onClick={handleUpgrade}
         className="mt-5 h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-none transition hover:bg-blue-700"
       >
-        {ctaLabel}
+        Ver Premium
       </Button>
     </section>
   );
