@@ -140,7 +140,7 @@ export function PaymentCheckoutCard({
 
   const displayedPrice = useMemo(() => {
     if (!offer) return null;
-    if (offerCode === 'semester') return offer.semesterPriceArs;
+    if (offerCode === 'semester') return offer.semesterEquivalentMonthlyArs;
     if (offerCode === 'recovery') return 9990;
     return offer.monthlyPriceArs;
   }, [offer, offerCode]);
@@ -155,7 +155,7 @@ export function PaymentCheckoutCard({
   const isSemester = offerCode === 'semester';
   const isRecovery = offerCode === 'recovery';
   const semesterSoldOut = isSemester && offer ? !offer.semesterAvailable : false;
-  const billingLabel = isSemester ? 'pago único' : '/mes';
+  const billingLabel = '/mes';
 
   async function startCheckout() {
     trackMarketingEvent('premium_checkout_clicked', {
@@ -287,7 +287,7 @@ export function PaymentCheckoutCard({
           {!offer
             ? 'Verificando precio y disponibilidad.'
             : isSemester
-              ? `Equivale a ${currency.format(offer.semesterEquivalentMonthlyArs)} por mes. Pagás una sola vez y tenés Premium durante 6 meses.`
+              ? `Pagás ${currency.format(offer.semesterPriceArs)} una sola vez y tenés Premium durante 6 meses. Sin renovación automática.`
               : isRecovery
                 ? 'Precio especial mensual para retomar tu checkout de Premium.'
                 : 'Renovación mensual automática. Podés cancelar futuras renovaciones cuando quieras.'}
