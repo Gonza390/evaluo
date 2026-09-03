@@ -76,8 +76,8 @@ export function PricingPlanSelector({
         </button>
       </div>
 
-      <div className="mx-auto grid max-w-5xl items-stretch gap-6 lg:grid-cols-2">
-        <article className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+      <div className="mx-auto grid max-w-5xl items-stretch gap-6 lg:auto-rows-fr lg:grid-cols-2">
+        <article className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
           <div>
             <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
               Gratis
@@ -111,13 +111,15 @@ export function PricingPlanSelector({
           </Link>
         </article>
 
-        <PaymentCheckoutCard
-          features={premiumFeatures}
-          source={source}
-          materiaId={materiaId}
-          offerCode={billingMode}
-          featured
-        />
+        <div className="h-full [&>article]:h-full">
+          <PaymentCheckoutCard
+            features={premiumFeatures}
+            source={source}
+            materiaId={materiaId}
+            offerCode={billingMode}
+            featured
+          />
+        </div>
       </div>
     </>
   );
