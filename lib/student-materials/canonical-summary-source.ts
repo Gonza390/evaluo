@@ -201,7 +201,7 @@ export function buildCanonicalSummarySource(
     pageReferences: resolvePages('example', value),
   }));
 
-  const studyClaims = cleanTextList(model.examRelevantClaims).map((value) => ({
+  const studyClaims = cleanTextList(model.examRelevantClaims.map(normalizeStudyClaim)).map((value) => ({
     value,
     pageReferences: resolvePages('exam_relevant_claim', value),
   }));
@@ -398,6 +398,13 @@ function buildRelationshipKey(source: string, target: string) {
 
 function normalizeLookupKey(value: string) {
   return cleanText(value).toLocaleLowerCase('es');
+}
+
+function normalizeStudyClaim(value: string) {
+  return cleanText(value)
+    .replace(/^pregunta\s+(?:t[ií]pica\s+)?de\s+examen\s*:\s*/i, '')
+    .replace(/^pregunta\s+(?:t[ií]pica\s+)?de\s+parcial\s*:\s*/i, '')
+    .trim();
 }
 
 function cleanText(value: string) {
