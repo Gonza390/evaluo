@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Check } from 'lucide-react';
+import { Check, ShieldCheck } from 'lucide-react';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -103,12 +103,18 @@ export function PricingPlanSelector({
             ))}
           </ul>
 
-          <Link
-            href="/explorar"
-            className="mt-8 inline-flex h-12 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Seguir gratis
-          </Link>
+          <div className="mt-8">
+            <Link
+              href="/explorar"
+              className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              Seguir gratis
+            </Link>
+            <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
+              <ShieldCheck className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+              Sin tarjeta · Empezá gratis
+            </p>
+          </div>
         </article>
 
         <div className="h-full [&>article]:h-full">
