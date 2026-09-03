@@ -109,20 +109,23 @@ assert.equal(
 
 const thirtyPagePdf = await createPdfWithPages(30);
 assert.equal(
-  await assertStudentMaterialPdfPageLimit(thirtyPagePdf),
+  await assertStudentMaterialPdfPageLimit(thirtyPagePdf, { isPremium: false }),
   30,
-  'Un PDF de exactamente 30 páginas debe ser válido.'
+  'Un PDF de exactamente 30 páginas debe ser válido para Free.'
 );
 
 const thirtyOnePagePdf = await createPdfWithPages(31);
 await assert.rejects(
-  () => assertStudentMaterialPdfPageLimit(thirtyOnePagePdf),
-  /31 páginas.*máximo permitido.*30 páginas/i,
-  'Un PDF de 31 páginas debe rechazarse.'
+  () => assertStudentMaterialPdfPageLimit(thirtyOnePagePdf, { isPremium: false }),
+  /31 páginas.*Free.*30 páginas/i,
+  'Un PDF de 31 páginas debe rechazarse para Free.'
 );
 
 await assert.rejects(
-  () => assertStudentMaterialPdfPageLimit(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])),
+  () =>
+    assertStudentMaterialPdfPageLimit(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]), {
+      isPremium: false,
+    }),
   /PDF válido/i,
   'Un archivo con sólo la firma PDF pero estructura inválida debe rechazarse.'
 );
