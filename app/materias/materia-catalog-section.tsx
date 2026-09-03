@@ -72,13 +72,26 @@ export async function MateriaCatalogSection({
     return descripcion ? { ...materia, descripcion } : materia;
   });
 
+  const clientCarreraData = carreraData
+    ? {
+        id: carreraData.id,
+        nombre: carreraData.nombre,
+        universidad_id: carreraData.universidad_id ?? null,
+        ...(carreraData.descripcion ? { descripcion: carreraData.descripcion } : {}),
+        ...(carreraData.nivel ? { nivel: carreraData.nivel } : {}),
+        ...(carreraData.carga_horaria ? { carga_horaria: carreraData.carga_horaria } : {}),
+        ...(carreraData.modalidad ? { modalidad: carreraData.modalidad } : {}),
+        ...(carreraData.director ? { director: carreraData.director } : {}),
+      }
+    : undefined;
+
   return (
     <div className="materia-list-catalog-only">
       <MateriaList
         initialMaterias={materias}
         carreraId={carreraId}
         carreraNombre={carreraNombre}
-        carreraData={carreraData}
+        carreraData={clientCarreraData}
         universidadNombre={universidadNombre}
         universidadId={universidadId}
         sharedStudentMaterials={sharedStudentMaterials}
