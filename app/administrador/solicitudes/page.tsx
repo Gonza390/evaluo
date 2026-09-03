@@ -7,6 +7,7 @@ import {
   Clock3,
   GraduationCap,
   LockKeyhole,
+  Mail,
   XCircle,
 } from 'lucide-react';
 import { getAdminAccessContext } from '@/lib/access-control';
@@ -40,6 +41,25 @@ function formatDate(value: string) {
     timeStyle: 'short',
     timeZone: 'America/Argentina/Buenos_Aires',
   });
+}
+
+function RequesterEmail({ email }: { email: string | null }) {
+  if (!email) {
+    return (
+      <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
+        <Mail className="h-3.5 w-3.5" /> Email no disponible
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={`mailto:${email}`}
+      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:underline"
+    >
+      <Mail className="h-3.5 w-3.5" /> {email}
+    </a>
+  );
 }
 
 export default async function SolicitudesUniversidadAdministradorPage() {
@@ -148,6 +168,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                         {row.facultyName ? ` · ${row.facultyName}` : ''}
                         {row.careerName ? ` · ${row.careerName}` : ''}
                       </p>
+                      <RequesterEmail email={row.userEmail} />
                       {!canApprove ? (
                         <p className="mt-2 text-xs font-semibold text-amber-700">
                           Aprobá primero la carrera para poder publicar esta materia.
@@ -251,6 +272,8 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                             </p>
                           </div>
                         </div>
+
+                        <RequesterEmail email={row.userEmail} />
 
                         {row.note ? (
                           <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
