@@ -10,6 +10,8 @@ export type UniversityRequestStatus = 'pending' | 'reviewing' | 'planned' | 'add
 
 export type AdminUniversityRequestRow = {
   id: string;
+  userId: string;
+  userEmail: string | null;
   universityName: string;
   country: string;
   city: string | null;
@@ -26,6 +28,8 @@ export type AdminPendingAcademicRow = {
   kind: 'career' | 'subject';
   id: string;
   name: string;
+  ownerUserId: string | null;
+  userEmail: string | null;
   universityName: string;
   facultyName: string | null;
   careerName: string | null;
@@ -35,6 +39,7 @@ export type AdminPendingAcademicRow = {
 
 type RawUniversityRequestRow = {
   id: string;
+  user_id: string;
   university_name: string;
   country: string;
   city: string | null;
@@ -52,6 +57,7 @@ type RawPendingCareer = {
   nombre: string;
   universidad_id: string | null;
   facultad_id: string | null;
+  owner_user_id: string | null;
   created_at: string | null;
   approval_status: string;
 };
@@ -60,6 +66,7 @@ type RawPendingSubject = {
   id: string;
   nombre: string;
   carrera_id: string | null;
+  owner_user_id: string | null;
   approval_status: string;
 };
 
@@ -72,6 +79,25 @@ type RawCareerContext = RawNamedRow & {
 
 function getUntypedAdminClient() {
   return createAdminClient() as unknown as SupabaseClient;
+}
+
+async function resolveAdminUserEmails(userIds: Array<string | null | undefined>) {
+  const ids = Array.from(new Set(userIds.filter((id): id is string => Boolean(id))));
+  if (ids.length === 0) return new Map<string, string | null>();
+
+  const admin = createAdminClient();
+  const entries = await Promise.all(
+    ids.map(async (userId) => {
+      const { data, error } = await admin.auth.admin.getUserById(userId);
+      if (error) {
+        logError('admin.requests.userEmail', error, { userId });
+        return [userId, null] as const;
+      }
+      return [userId, data.user?.email ?? null] as const;
+    })
+  );
+
+  return new Map(entries);
 }
 
 function revalidateAcademicCatalog() {
@@ -94,15 +120,19 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
     const { data, error } = await admin
       .from('university_requests')
       .select(
-        'id, university_name, country, city, career_name, note, status, created_at, reviewed_at, approved_university_id, approved_career_id'
+        'id, user_id, university_name, country, city, career_name, note, status, created_at, reviewed_at, approved_university_id, approved_career_id'
       )
       .order('created_at', { ascending: false })
       .limit(100);
 
     if (error) throw error;
 
-    const rows = ((data ?? []) as RawUniversityRequestRow[]).map((row) => ({
+    const rawRows = (data ?? []) as RawUniversityRequestRow[];
+    const emailByUserId = await resolveAdminUserEmails(rawRows.map((row) => row.user_id));
+    const rows = rawRows.map((row) => ({
       id: row.id,
+      userId: row.user_id,
+      userEmail: emailByUserId.get(row.user_id) ?? null,
       universityName: row.university_name,
       country: row.country,
       city: row.city,
@@ -142,13 +172,13 @@ export async function listarCatalogoAcademicoPendienteAdministrador(): Promise<{
       await Promise.all([
         admin
           .from('carreras')
-          .select('id, nombre, universidad_id, facultad_id, created_at, approval_status')
+          .select('id, nombre, universidad_id, facultad_id, owner_user_id, created_at, approval_status')
           .eq('approval_status', 'pending')
           .order('created_at', { ascending: true })
           .limit(100),
         admin
           .from('materias')
-          .select('id, nombre, carrera_id, approval_status')
+          .select('id, nombre, carrera_id, owner_user_id, approval_status')
           .eq('approval_status', 'pending')
           .limit(200),
         admin.from('universidades').select('id, nombre'),
@@ -168,6 +198,13 @@ export async function listarCatalogoAcademicoPendienteAdministrador(): Promise<{
       if (result.error) throw result.error;
     }
 
+    const rawCareers = (careersResult.data ?? []) as RawPendingCareer[];
+    const rawSubjects = (subjectsResult.data ?? []) as RawPendingSubject[];
+    const emailByUserId = await resolveAdminUserEmails([
+      ...rawCareers.map((row) => row.owner_user_id),
+      ...rawSubjects.map((row) => row.owner_user_id),
+    ]);
+
     const universities = new Map(
       ((universitiesResult.data ?? []) as RawNamedRow[]).map((row) => [row.id, row.nombre])
     );
@@ -178,12 +215,12 @@ export async function listarCatalogoAcademicoPendienteAdministrador(): Promise<{
       ((allCareersResult.data ?? []) as RawCareerContext[]).map((row) => [row.id, row])
     );
 
-    const careerRows: AdminPendingAcademicRow[] = (
-      (careersResult.data ?? []) as RawPendingCareer[]
-    ).map((row) => ({
+    const careerRows: AdminPendingAcademicRow[] = rawCareers.map((row) => ({
       kind: 'career',
       id: row.id,
       name: row.nombre,
+      ownerUserId: row.owner_user_id,
+      userEmail: row.owner_user_id ? emailByUserId.get(row.owner_user_id) ?? null : null,
       universityName: row.universidad_id
         ? universities.get(row.universidad_id) ?? 'Universidad'
         : 'Universidad',
@@ -193,14 +230,14 @@ export async function listarCatalogoAcademicoPendienteAdministrador(): Promise<{
       createdAt: row.created_at,
     }));
 
-    const subjectRows: AdminPendingAcademicRow[] = (
-      (subjectsResult.data ?? []) as RawPendingSubject[]
-    ).map((row) => {
+    const subjectRows: AdminPendingAcademicRow[] = rawSubjects.map((row) => {
       const career = row.carrera_id ? careers.get(row.carrera_id) : undefined;
       return {
         kind: 'subject',
         id: row.id,
         name: row.nombre,
+        ownerUserId: row.owner_user_id,
+        userEmail: row.owner_user_id ? emailByUserId.get(row.owner_user_id) ?? null : null,
         universityName: career?.universidad_id
           ? universities.get(career.universidad_id) ?? 'Universidad'
           : 'Universidad',
