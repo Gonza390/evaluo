@@ -6,6 +6,13 @@ import { register } from 'node:module';
 const repoRoot = process.cwd();
 
 export async function resolve(specifier, context, nextResolve) {
+  // Node executes the smoke suites directly, outside the Next.js resolver.
+  // Next exposes these package subpaths as .js files, while application code
+  // intentionally imports the framework-facing aliases without extensions.
+  if (specifier === 'next/headers') {
+    return nextResolve('next/headers.js', context);
+  }
+
   if (specifier.startsWith('@/')) {
     const relative = specifier.slice(2);
     let candidate = join(repoRoot, relative);
