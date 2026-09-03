@@ -297,7 +297,6 @@ assert.deepEqual(
 assert.ok(traceableChunks.every((chunk) => chunk.pageEnd === chunk.pageStart));
 assert.ok(traceableChunks.every((chunk) => chunk.contentHash.length === 64));
 assert.match(traceableChunks[0]?.sectionTitle ?? '', /MEMORIA/i);
-
 const longStructuredMaterial = Array.from(
   { length: 50 },
   (_, index) =>
@@ -794,8 +793,8 @@ const denseGlossaryFixture: CanonicalPedagogicalModel = {
 
 assert.equal(
   resolveCanonicalGlossaryLimit(denseGlossaryFixture),
-  45,
-  'Un material de 15 páginas debe usar como máximo tres términos por página, con techo global.'
+  34,
+  'Un material de 15 páginas debe respetar la densidad canónica de 2,25 términos por página, con techo global.'
 );
 
 const denseCanonicalGlossary = buildCanonicalStudentMaterialGlossary(
@@ -804,8 +803,8 @@ const denseCanonicalGlossary = buildCanonicalStudentMaterialGlossary(
 
 assert.equal(
   denseCanonicalGlossary.length,
-  45,
-  'El glosario denso de 15 páginas debe quedar limitado a 45 entradas.'
+  34,
+  'El glosario denso de 15 páginas debe quedar limitado a 34 entradas.'
 );
 assert.ok(
   denseCanonicalGlossary.some(
