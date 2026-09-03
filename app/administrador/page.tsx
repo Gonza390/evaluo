@@ -1,9 +1,6 @@
 import Link from 'next/link';
 import { BookOpen, Bot, Megaphone, Users, Waypoints } from 'lucide-react';
-import {
-  obtenerBibliotecaResumenAdministrador,
-  obtenerLogsAdministrador,
-} from './actions';
+import { obtenerBibliotecaResumenAdministrador } from './actions';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -15,6 +12,8 @@ import {
   obtenerBibliotecaFormularioAdministradorOptimizado,
   obtenerUsuariosAdministradorPaginado,
 } from './performance-actions';
+import { obtenerLogsAdministradorRapido } from './logs-performance-actions';
+import { StorageAuditButton } from './storage-audit-button';
 import {
   AICostPanel,
   BibliotecaPanel,
@@ -115,7 +114,7 @@ export default async function AdministradorPage({
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaResumenAdministrador() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginado(usersPage, 25) : Promise.resolve(null),
-    needsLogs ? obtenerLogsAdministrador() : Promise.resolve(null),
+    needsLogs ? obtenerLogsAdministradorRapido() : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -192,7 +191,10 @@ export default async function AdministradorPage({
     }
   } else if (activePanel === 'logs') {
     panelContent = logsResult?.success && logsResult.data ? (
-      <LogsPanel data={logsResult.data} />
+      <>
+        <StorageAuditButton scannedAt={logsResult.storageAuditScannedAt ?? null} />
+        <LogsPanel data={logsResult.data} />
+      </>
     ) : (
       <ErrorPanel message={logsResult?.message ?? 'No pudimos cargar Logs.'} />
     );
