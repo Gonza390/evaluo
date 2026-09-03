@@ -43,7 +43,8 @@ const finalizeSource = uploadActionsSource.slice(finalizeStart);
 const downloadIndex = finalizeSource.indexOf('.download(input.filePath)');
 const sizeValidationIndex = finalizeSource.indexOf('fileBytes.byteLength !== parsed.file.size');
 const signatureValidationIndex = finalizeSource.indexOf('isPdfFileSignature(fileBytes)');
-const pageValidationIndex = finalizeSource.indexOf('assertStudentMaterialPdfPageLimit(fileBytes)');
+const normalizePdfIndex = finalizeSource.indexOf('stripStudocuCoverPage(fileBytes)');
+const pageValidationIndex = finalizeSource.indexOf('assertStudentMaterialPdfPageLimit(storedFileBytes)');
 const insertIndex = finalizeSource.indexOf(".from('student_materials')\n      .insert(");
 
 assert.ok(downloadIndex >= 0, 'Finalize debe comprobar que el objeto exista realmente en Storage.');
@@ -53,8 +54,12 @@ assert.ok(
   'Finalize debe validar la firma PDF después de comprobar el tamaño.'
 );
 assert.ok(
-  pageValidationIndex > signatureValidationIndex,
-  'Finalize debe validar el máximo de páginas después de comprobar la firma PDF.'
+  normalizePdfIndex > signatureValidationIndex,
+  'Finalize debe normalizar el PDF únicamente después de comprobar su firma.'
+);
+assert.ok(
+  pageValidationIndex > normalizePdfIndex,
+  'Finalize debe validar el máximo de páginas sobre el PDF normalizado.'
 );
 assert.ok(
   insertIndex > pageValidationIndex,
