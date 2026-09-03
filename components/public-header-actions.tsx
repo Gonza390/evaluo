@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, LogIn } from 'lucide-react';
+import { Home } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 
 export async function PublicHeaderActions() {
@@ -13,15 +13,15 @@ export async function PublicHeaderActions() {
       <nav className="flex items-center gap-2 sm:gap-3">
         <Link
           href="/explorar"
-          className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
+          className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 sm:px-4 sm:text-sm"
         >
           Explorar
         </Link>
         <Link
           href="/dashboard"
-          className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:opacity-95 sm:h-10 sm:px-4 sm:text-sm"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-700 sm:px-4 sm:text-sm"
         >
-          <Home className="h-4 w-4" />
+          <Home aria-hidden="true" className="h-4 w-4" />
           Ir al dashboard
         </Link>
       </nav>
@@ -31,17 +31,16 @@ export async function PublicHeaderActions() {
   return (
     <nav className="flex items-center gap-2 sm:gap-3">
       <Link
-        href="/explorar"
-        className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900 sm:h-10 sm:px-4 sm:text-sm"
+        href="/login?mode=login"
+        className="hidden min-h-11 items-center rounded-xl px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 sm:inline-flex sm:px-4 sm:text-sm"
       >
-        Explorar
+        Iniciar sesión
       </Link>
       <Link
-        href="/login"
-        className="inline-flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-3 text-xs font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:opacity-95 sm:h-10 sm:px-4 sm:text-sm"
+        href="/login?mode=signup"
+        className="inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-700 sm:px-4 sm:text-sm"
       >
-        <LogIn className="h-4 w-4" />
-        Ingresar
+        Crear cuenta gratis
       </Link>
     </nav>
   );

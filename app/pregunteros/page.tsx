@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { unstable_cache } from 'next/cache';
 import { ListChecks, Target } from 'lucide-react';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { FooterHome } from '@/components/footer-home';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -142,7 +143,8 @@ export default async function PregunteroHubPage() {
   ).slice(0, 12);
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <>
+      <main className="min-h-screen bg-white text-slate-950">
       <JsonLd
         data={buildBreadcrumbJsonLd([
           { name: 'Inicio', path: '/' },
@@ -216,6 +218,8 @@ export default async function PregunteroHubPage() {
           </div>
         </div>
       </section>
-    </main>
+      </main>
+      <FooterHome />
+    </>
   );
 }

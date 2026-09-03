@@ -550,7 +550,7 @@ export default function ConfiguracionPage() {
                   placeholder={
                     universidadSeleccionada
                       ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
-                      : 'Primero selecciona una universidad'
+                      : 'Primero seleccioná una universidad'
                   }
                   className="h-12 rounded-xl border-input bg-card pl-10 disabled:opacity-60"
                 />
@@ -562,11 +562,11 @@ export default function ConfiguracionPage() {
                   </div>
                 ) : !universidadId ? (
                   <div className="px-4 py-4 text-sm text-muted-foreground">
-                    Primero selecciona una universidad.
+                    Primero seleccioná una universidad.
                   </div>
                 ) : carreras.length === 0 ? (
                   <div className="px-4 py-4 text-sm text-muted-foreground">
-                    No encontramos carreras para esa busqueda.
+                    No encontramos carreras para esa búsqueda.
                   </div>
                 ) : (
                   carreras.map((carrera) => (

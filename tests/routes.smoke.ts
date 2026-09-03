@@ -78,6 +78,32 @@ const nextConfigSource = readFileSync(resolve('next.config.mjs'), 'utf8');
 const pdfRenderSource = readFileSync(resolve('lib/student-materials/pdf-render.ts'), 'utf8');
 const footerHomeSource = readFileSync(resolve('components/footer-home.tsx'), 'utf8');
 const footerSource = readFileSync(resolve('components/footer.tsx'), 'utf8');
+const publicSiteHeaderSource = readFileSync(
+  resolve('components/marketing/public-site-header.tsx'),
+  'utf8'
+);
+const publicLayoutSource = readFileSync(resolve('components/PublicLayout.tsx'), 'utf8');
+const homeStudyPreviewSource = readFileSync(
+  resolve('components/marketing/home-study-preview.tsx'),
+  'utf8'
+);
+const simulatorIndexSource = readFileSync(resolve('app/simulador/page.tsx'), 'utf8');
+const simulatorPreviewSource = readFileSync(
+  resolve('app/preview/resultado-simulador/page.tsx'),
+  'utf8'
+);
+const materiaLoadingSource = readFileSync(
+  resolve('app/explorar/materia/[id]/loading.tsx'),
+  'utf8'
+);
+const universityPageSource = readFileSync(resolve('app/universidad/[id]/page.tsx'), 'utf8');
+const universityCareerListSource = readFileSync(
+  resolve('app/universidad/[id]/career-list-client.tsx'),
+  'utf8'
+);
+const materiaListSource = readFileSync(resolve('components/materia-list.tsx'), 'utf8');
+const pricingSource = readFileSync(resolve('app/pricing/page.tsx'), 'utf8');
+const pregunteroHubSource = readFileSync(resolve('app/pregunteros/page.tsx'), 'utf8');
 const materialViewerSource = readFileSync(resolve('app/materiales/[id]/page.tsx'), 'utf8');
 const materialJobsSource = readFileSync(resolve('lib/student-material-jobs.ts'), 'utf8');
 const materialRetrySource = readFileSync(
@@ -143,7 +169,7 @@ assert.match(
 );
 assert.match(
   clientLayoutUiSource,
-  /\{ label: 'Ingresar', href: '\/login', icon: LogIn, variant: 'cta' as const \}/
+  /\{ label: 'Iniciar sesión', href: '\/login\?mode=login', icon: LogIn, variant: 'cta' as const \}/
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);
@@ -155,12 +181,41 @@ assert.match(pdfRenderSource, /canvasFactory\.destroy/);
 assert.doesNotMatch(pdfRenderSource, /from ['"]canvas['"]/);
 assert.doesNotMatch(pdfRenderSource, /createRequire/);
 
-for (const source of [footerHomeSource, footerSource]) {
-  assert.ok(source.includes('https://www.instagram.com/evaluo.app/'));
-  assert.ok(source.includes('https://www.linkedin.com/company/evaluo-ar/'));
-  assert.doesNotMatch(source, /https:\/\/(www\.)?tiktok\.com/);
-  assert.doesNotMatch(source, /https:\/\/(www\.)?youtube\.com/);
+assert.ok(footerHomeSource.includes('https://www.instagram.com/evaluo.app/'));
+assert.ok(footerHomeSource.includes('https://www.linkedin.com/company/evaluo-ar/'));
+assert.doesNotMatch(footerHomeSource, /https:\/\/(www\.)?tiktok\.com/);
+assert.doesNotMatch(footerHomeSource, /https:\/\/(www\.)?youtube\.com/);
+assert.match(footerSource, /<FooterHome variant="compact" \/>/);
+assert.doesNotMatch(footerHomeSource, /<h4/);
+
+assert.match(publicSiteHeaderSource, /export function PublicBrandLink/);
+assert.match(publicSiteHeaderSource, /Crear cuenta gratis/);
+assert.match(publicSiteHeaderSource, /Iniciar sesión/);
+assert.match(publicLayoutSource, /<PublicSiteHeader variant="landing"/);
+assert.match(clientLayoutUiSource, /<PublicBrandLink \/>/);
+assert.match(clientLayoutUiSource, /<PublicGuestActions trackingLocation="discovery_header" \/>/);
+assert.match(pricingSource, /<FooterHome \/>/);
+assert.match(pregunteroHubSource, /<FooterHome \/>/);
+
+assert.match(
+  homeStudyPreviewSource,
+  /<h2 className="sr-only">Vista previa de una guía de estudio creada con Evaluo<\/h2>/
+);
+assert.doesNotMatch(simulatorPreviewSource, /Preview resultado simulador \| Evaluo/);
+assert.match(simulatorIndexSource, /href="\/explorar"/);
+assert.match(simulatorIndexSource, /Ir a mis materias/);
+assert.match(simulatorIndexSource, /Volver al inicio/);
+
+for (const source of [universityPageSource, universityCareerListSource, materiaListSource]) {
+  assert.doesNotMatch(source, /#7C879C/i);
 }
+assert.match(materiaLoadingSource, /bg-slate-100/);
+assert.doesNotMatch(
+  materiaLoadingSource,
+  /animate-pulse rounded-full bg-white(?:["\s]|$)/
+);
+assert.match(materiaStudyHomeSource, /bg-primary hover:bg-primary\/90/);
+assert.match(materiaStudyHomeSource, /border border-indigo-200 bg-white/);
 
 assert.match(materialJobsSource, /STUDENT_MATERIAL_JOB_LEASE_MS = 7 \* 60 \* 1000/);
 assert.match(materialJobsSource, /processing_status: 'failed'/);

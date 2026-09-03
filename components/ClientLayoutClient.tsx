@@ -23,6 +23,10 @@ import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider'
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getCareerRoute } from '@/lib/routes';
+import {
+  PublicBrandLink,
+  PublicGuestActions,
+} from '@/components/marketing/public-site-header';
 
 const Footer = dynamic(() => import('./footer').then((module) => module.Footer));
 const Navbar = dynamic(() => import('./navbar').then((module) => module.Navbar));
@@ -105,7 +109,7 @@ function BottomNav() {
         { label: 'Inicio', href: '/', icon: Home },
         { label: 'Explorar', href: '/explorar', icon: Search },
         { label: 'Pregunteros', href: '/pregunteros', icon: GraduationCap },
-        { label: 'Ingresar', href: '/login', icon: LogIn, variant: 'cta' as const },
+        { label: 'Iniciar sesión', href: '/login?mode=login', icon: LogIn, variant: 'cta' as const },
       ];
 
   return (
@@ -213,44 +217,38 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     <div className="bg-background flex min-h-screen flex-col">
       {showTopBar ? (
         <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-          <div className="flex items-center justify-between gap-3 px-3 py-[9px] sm:px-6 sm:py-[11px]">
-            <Link
-              href={user ? '/dashboard' : '/'}
-              className="group flex min-w-0 items-center gap-2.5 transition hover:opacity-90"
-            >
-              <Image
-                src="/icon.png"
-                alt=""
-                width={40}
-                height={40}
-                priority
-                className="h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-9 sm:w-9"
-              />
-              <div className="min-w-0">
-                <div className="truncate text-[1.05rem] font-bold tracking-[-0.025em] text-slate-950 sm:text-lg">
-                  Evaluo
-                </div>
-                <p className="mt-0.5 hidden text-[11px] font-medium text-slate-400 sm:block">
-                  Tu espacio académico
-                </p>
-              </div>
-            </Link>
+          <div
+            className={`flex min-h-18 items-center justify-between gap-3 py-3 sm:min-h-20 ${
+              user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
+            }`}
+          >
             {!user ? (
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <Link
-                  href="/login"
-                  className="inline-flex h-11 items-center rounded-lg px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 sm:px-4 sm:text-sm"
-                >
-                  Iniciar
-                </Link>
-                <Link
-                  href="/login?mode=signup"
-                  className="from-brand to-brand-2 inline-flex h-11 items-center rounded-lg bg-gradient-to-r px-3 text-xs font-semibold text-white transition hover:opacity-95 sm:px-4 sm:text-sm"
-                >
-                  <span className="sm:hidden">Registrate</span>
-                  <span className="hidden sm:inline">Registrate gratis</span>
-                </Link>
-              </div>
+              <PublicBrandLink />
+            ) : (
+              <Link
+                href="/dashboard"
+                className="group flex min-w-0 items-center gap-2.5 transition hover:opacity-90"
+              >
+                <Image
+                  src="/icon.png"
+                  alt=""
+                  width={40}
+                  height={40}
+                  priority
+                  className="h-8 w-8 shrink-0 object-contain transition-transform group-hover:scale-[1.04] sm:h-9 sm:w-9"
+                />
+                <div className="min-w-0">
+                  <div className="truncate text-[1.05rem] font-bold tracking-[-0.025em] text-slate-950 sm:text-lg">
+                    Evaluo
+                  </div>
+                  <p className="mt-0.5 hidden text-[11px] font-medium text-slate-400 sm:block">
+                    Tu espacio académico
+                  </p>
+                </div>
+              </Link>
+            )}
+            {!user ? (
+              <PublicGuestActions trackingLocation="discovery_header" />
             ) : (
               <>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
@@ -319,7 +317,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                             {streakLabel}
                           </DialogDescription>
                           <p className="text-muted-foreground mt-2 max-w-[250px] text-xs leading-5">
-                            Sigue entrando cada día para mantener tu impulso y volver más rápido a
+                            Seguí entrando cada día para mantener tu impulso y volver más rápido a
                             estudiar.
                           </p>
                         </DialogHeader>
@@ -397,7 +395,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                           onClick={() => setShowStreakDialog(false)}
                           className="from-brand to-brand-2 mt-4 inline-flex h-10 w-full items-center justify-center rounded-2xl bg-gradient-to-br text-sm font-semibold text-white shadow-[0_14px_34px_rgba(37,99,235,0.24)] transition hover:opacity-95"
                         >
-                          Sigue estudiando
+                          Seguí estudiando
                         </button>
 
                         <div className="mt-3 flex flex-wrap items-center justify-center gap-2">

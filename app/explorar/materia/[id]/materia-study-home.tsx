@@ -404,7 +404,7 @@ export default function MateriaStudyHome({
               ))}
             </div>
 
-            <div className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F5DFF] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition group-hover:from-[#1D4ED8] group-hover:to-[#4338CA] sm:w-auto">
+            <div className="bg-primary hover:bg-primary/90 mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition sm:w-auto">
               <UploadCloud className="h-4 w-4" />
               Preparar mis apuntes
             </div>
@@ -458,7 +458,7 @@ export default function MateriaStudyHome({
                   setPracticeOpen(true);
                   trackAction('materia_practice_picker_opened', { source: 'materia_action_cta' });
                 }}
-                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+                className="text-primary hover:border-primary/40 hover:bg-primary/5 mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-white px-5 text-sm font-semibold transition sm:w-auto"
               >
                 <Zap className="h-4 w-4" />
                 Ver prácticas disponibles

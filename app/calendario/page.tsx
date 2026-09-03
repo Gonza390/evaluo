@@ -63,7 +63,7 @@ const DEFAULT_FORM_STATE = DEFAULT_CALENDAR_FORM_STATE;
 const CALENDAR_TOUR_STEPS: CalendarTourStep[] = [
   {
     id: 'month',
-    title: 'Navega el mes',
+    title: 'Navegá el mes',
     description:
       'Usá estas flechas para cambiar de mes o volvé a hoy cuando quieras ubicarte rápido.',
   },
@@ -77,13 +77,13 @@ const CALENDAR_TOUR_STEPS: CalendarTourStep[] = [
     id: 'composer',
     title: 'Completá la fecha',
     description:
-      'Aquí eliges la materia o el trabajo práctico, defines la instancia y dejas listo el evento para guardarlo.',
+      'Aquí elegís la materia o el trabajo práctico, definís la instancia y dejás listo el evento para guardarlo.',
   },
   {
     id: 'create',
     title: 'Guardá el evento',
     description:
-      'Cuando ya tengas los datos listos, guarda el evento para verlo dentro del calendario y consultarlo después.',
+      'Cuando ya tengas los datos listos, guardá el evento para verlo dentro del calendario y consultarlo después.',
   },
 ];
 

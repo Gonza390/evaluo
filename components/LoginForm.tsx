@@ -373,7 +373,7 @@ export default function LoginForm() {
               {isSignUp
                 ? intent === 'premium'
                   ? 'Crear cuenta y continuar'
-                  : 'Crear cuenta'
+                  : 'Crear cuenta gratis'
                 : 'Iniciar sesión'}
             </Button>
           </form>
@@ -448,7 +448,7 @@ export default function LoginForm() {
             disabled={loading}
             className="text-brand hover:text-brand-2 font-semibold transition hover:underline disabled:opacity-60"
           >
-            {isSignUp ? 'Iniciar sesión' : 'Registrarte'}
+            {isSignUp ? 'Iniciar sesión' : 'Crear cuenta gratis'}
           </button>
         </div>
       </div>

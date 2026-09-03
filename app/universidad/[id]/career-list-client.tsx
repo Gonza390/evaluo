@@ -120,7 +120,7 @@ export default function CareerListClient({
           <h2 className="section-title leading-none text-[#10214C]">
             Todas las carreras
           </h2>
-          <p className="section-copy mt-2 text-[#7C879C]">
+          <p className="section-copy mt-2 text-slate-600">
             Explorá las carreras que ofrece esta universidad.
           </p>
         </div>
@@ -162,7 +162,7 @@ export default function CareerListClient({
                     <h3 className="text-[1.02rem] leading-6 font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
                       {carrera.nombre}
                     </h3>
-                    <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-[#7C879C]">
+                    <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-slate-600">
                       {cardDescription}
                     </p>
                   </div>
