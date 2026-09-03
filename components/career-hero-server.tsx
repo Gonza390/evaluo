@@ -8,6 +8,9 @@ type CareerHeroProps = {
   carreraId: string;
   carreraNombre: string;
   carreraData?: {
+    id: string;
+    nombre: string;
+    universidad_id?: string | null;
     descripcion?: string | null;
     nivel?: string | null;
     carga_horaria?: string | null;
