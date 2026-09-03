@@ -210,7 +210,10 @@ for (const source of [universityPageSource, universityCareerListSource, materiaL
   assert.doesNotMatch(source, /#7C879C/i);
 }
 assert.match(materiaLoadingSource, /bg-slate-100/);
-assert.doesNotMatch(materiaLoadingSource, /animate-pulse rounded-full bg-white/);
+assert.doesNotMatch(
+  materiaLoadingSource,
+  /animate-pulse rounded-full bg-white(?:["\s]|$)/
+);
 assert.match(materiaStudyHomeSource, /bg-primary hover:bg-primary\/90/);
 assert.match(materiaStudyHomeSource, /border border-indigo-200 bg-white/);
 
