@@ -15,7 +15,16 @@ export async function getStudentMaterialPdfPageCount(bytes: Uint8Array) {
   }
 }
 
-async function getStudentMaterialPdfPageLimit() {
+async function getStudentMaterialPdfPageLimit(accessOverride?: { isPremium: boolean }) {
+  if (accessOverride) {
+    return {
+      maxPages: accessOverride.isPremium
+        ? MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES
+        : MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+      isPremium: accessOverride.isPremium,
+    };
+  }
+
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -37,14 +46,17 @@ async function getStudentMaterialPdfPageLimit() {
   };
 }
 
-export async function assertStudentMaterialPdfPageLimit(bytes: Uint8Array) {
+export async function assertStudentMaterialPdfPageLimit(
+  bytes: Uint8Array,
+  accessOverride?: { isPremium: boolean }
+) {
   const pageCount = await getStudentMaterialPdfPageCount(bytes);
 
   if (pageCount < 1) {
     throw new Error('El PDF debe contener al menos una página.');
   }
 
-  const { maxPages, isPremium } = await getStudentMaterialPdfPageLimit();
+  const { maxPages, isPremium } = await getStudentMaterialPdfPageLimit(accessOverride);
 
   if (pageCount > maxPages) {
     throw new Error(
