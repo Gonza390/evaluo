@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Crown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -19,7 +19,6 @@ export function PremiumUpsell({
   description,
   source,
   features,
-  ctaLabel = 'Quiero pasarme a Premium',
   materiaId,
 }: PremiumUpsellProps) {
   useEffect(() => {
@@ -39,33 +38,61 @@ export function PremiumUpsell({
     window.location.assign(`/pricing?${params.toString()}#elegir-plan`);
   };
 
+  const contextualCopy =
+    source === 'material_mapa_mental'
+      ? {
+          title: 'Mapa mental',
+          description:
+            'Conectá los temas y conceptos clave de este PDF para repasar más rápido y detectar qué necesitás reforzar.',
+        }
+      : { title, description };
+
   return (
-    <section className="border-y border-slate-200 py-6 text-left">
-      <div className="flex items-start gap-3">
-        <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
-        <div className="min-w-0">
-          <h3 className="text-base leading-snug font-bold text-slate-950">{title}</h3>
-          <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+    <section className="flex min-h-[440px] w-full items-center justify-center px-4 py-10 text-center sm:min-h-[500px] sm:px-6">
+      <div className="w-full max-w-xl">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600 shadow-sm">
+          <Sparkles className="h-6 w-6" />
         </div>
+
+        <div className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-bold tracking-[0.12em] text-blue-700 uppercase">
+          <Crown className="h-3.5 w-3.5" />
+          Función Premium
+        </div>
+
+        <h2 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-[1.8rem]">
+          {contextualCopy.title}
+        </h2>
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-[15px]">
+          {contextualCopy.description}
+        </p>
+
+        {features && features.length > 0 ? (
+          <div className="mx-auto mt-6 max-w-md rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left">
+            <p className="text-xs font-bold tracking-[0.1em] text-slate-500 uppercase">
+              Con Premium desbloqueás
+            </p>
+            <ul className="mt-3 space-y-2.5">
+              {features.map((feature) => (
+                <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        <Button
+          onClick={handleUpgrade}
+          className="mt-6 h-11 w-full max-w-sm rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-none transition hover:bg-blue-700"
+        >
+          Ver Premium
+        </Button>
+
+        <p className="mt-3 text-xs leading-5 text-slate-400">
+          Mirá los beneficios y elegí el plan que mejor te quede.
+        </p>
       </div>
-
-      {features && features.length > 0 ? (
-        <ul className="mt-4 space-y-2 border-t border-slate-200 pt-4">
-          {features.map((feature) => (
-            <li key={feature} className="flex items-start gap-2 text-sm text-slate-700">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      <Button
-        onClick={handleUpgrade}
-        className="mt-5 h-10 w-full rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-none transition hover:bg-blue-700"
-      >
-        {ctaLabel}
-      </Button>
     </section>
   );
 }
