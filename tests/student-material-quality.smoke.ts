@@ -173,7 +173,6 @@ async function buildPdfExtractionRegressionFixture() {
     { x: 40, y: 560, size: 10, font }
   );
 
-  // Página física 2 intencionalmente vacía. Debe conservar su posición.
   pdf.addPage(pageSize);
 
   const page3 = pdf.addPage(pageSize);
@@ -333,8 +332,6 @@ assert.match(
   /MARCA_30/,
   'La selección para IA debe incluir el final del documento.'
 );
-
-
 
 const compactNodeA = normalizeCompactPedagogicalNode(
   {
@@ -874,7 +871,6 @@ assert.doesNotMatch(
 assert.match(canonicalSummarySourceText, /Fundamentos de IA/);
 assert.match(canonicalSummarySourceText, /Clasificar correos como spam o no spam/);
 
-
 const canonicalGuidePrompt = buildCanonicalSummaryPrompt(
   {
     title: 'Material canónico de prueba',
@@ -904,8 +900,8 @@ assert.equal(canonicalGuideFallback.provider, 'canonical-local-fallback');
 assert.equal(canonicalGuideFallback.sourceChunksCount, canonicalSummaryFixture.chunkCount);
 assert.equal(
   canonicalGuideFallback.sections.length,
-  canonicalSummaryFixture.topics.length,
-  'El fallback canónico debe representar todos los topics sin truncarlos.'
+  canonicalSummarySource.topics.length,
+  'El fallback canónico debe representar todos los topics de la fuente canónica completa sin truncarlos.'
 );
 assert.match(
   canonicalGuideFallback.sections[0]?.body ?? '',
