@@ -389,7 +389,8 @@ function buildBindingIndexKey(
   kind: CanonicalPedagogicalSourceKind,
   key: string
 ) {
-  return `${kind}:${normalizeLookupKey(key)}`;
+  const normalizedKey = kind === 'exam_relevant_claim' ? normalizeStudyClaim(key) : key;
+  return `${kind}:${normalizeLookupKey(normalizedKey)}`;
 }
 
 function buildRelationshipKey(source: string, target: string) {
