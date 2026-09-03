@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { BookOpen, Bot, Megaphone, Users, Waypoints } from 'lucide-react';
-import { obtenerBibliotecaResumenAdministrador } from './actions';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -8,10 +7,11 @@ import {
   obtenerRankingErroresIA,
 } from './shared-actions';
 import { obtenerConsumoPdfIAAdministrador } from './ai-cost-data';
+import { obtenerBibliotecaFormularioAdministradorOptimizado } from './performance-actions';
 import {
-  obtenerBibliotecaFormularioAdministradorOptimizado,
-  obtenerUsuariosAdministradorPaginado,
-} from './performance-actions';
+  obtenerBibliotecaResumenAdministradorCacheado,
+  obtenerUsuariosAdministradorPaginadoCacheado,
+} from './cached-performance-actions';
 import { obtenerLogsAdministradorRapido } from './logs-performance-actions';
 import { StorageAuditButton } from './storage-audit-button';
 import {
@@ -112,8 +112,8 @@ export default async function AdministradorPage({
     iaCostResult,
   ] = await Promise.all([
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
-    needsBiblioteca ? obtenerBibliotecaResumenAdministrador() : Promise.resolve(null),
-    needsUsers ? obtenerUsuariosAdministradorPaginado(usersPage, 25) : Promise.resolve(null),
+    needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
+    needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
     needsLogs ? obtenerLogsAdministradorRapido() : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
