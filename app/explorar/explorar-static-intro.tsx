@@ -2,7 +2,7 @@ import { Sparkles } from 'lucide-react';
 
 export function ExplorarStaticIntro() {
   return (
-    <section className="animate-surface-reveal border-b border-slate-200/80 py-7 sm:py-10">
+    <section className="border-b border-slate-200/80 py-7 sm:py-10">
       <div className="max-w-3xl">
         <div className="flex items-center gap-2 text-[11px] font-bold tracking-[0.18em] text-indigo-600 uppercase">
           <Sparkles className="h-3.5 w-3.5" />
