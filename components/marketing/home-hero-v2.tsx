@@ -73,12 +73,12 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
-                    cta_name: 'empezar_estudiar_gratis',
+                    cta_name: 'crear_cuenta_gratis',
                     destination: primaryHref,
                   }}
                   className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:px-8"
                 >
-                  Empezar a estudiar gratis
+                  Crear cuenta gratis
                   <ArrowRight className="h-4 w-4 shrink-0" />
                 </TrackedLink>
                 <TrackedLink

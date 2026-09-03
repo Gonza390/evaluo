@@ -181,7 +181,7 @@ function FacultyGrid({ universidadId, facultades }: { universidadId: string; fac
     <div className="pt-6 sm:pt-7">
       <div>
         <h2 className="section-title leading-none text-[#10214C]">Facultades</h2>
-        <p className="section-copy mt-2 text-[#7C879C]">
+        <p className="section-copy mt-2 text-slate-600">
           Elegí una facultad para ver sus carreras.
         </p>
       </div>
@@ -202,7 +202,7 @@ function FacultyGrid({ universidadId, facultades }: { universidadId: string; fac
                 <h3 className="text-[1.02rem] font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
                   {facultad.nombre}
                 </h3>
-                <p className="mt-1 text-sm text-[#7C879C]">Ver carreras</p>
+                <p className="mt-1 text-sm text-slate-600">Ver carreras</p>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
             </div>

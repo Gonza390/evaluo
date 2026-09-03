@@ -1,24 +1,15 @@
-import Link from 'next/link';
 import { Footer } from '@/components/footer';
 import { PublicHeaderActions } from '@/components/public-header-actions';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 
 export function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/96 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link href="/" className="transition hover:opacity-85">
-            <div className="text-[1.05rem] font-bold tracking-tight text-slate-900 sm:text-lg">
-              Evaluo
-            </div>
-            <p className="mt-0.5 hidden text-[12px] text-slate-500 sm:block">
-              Tu espacio académico
-            </p>
-          </Link>
-
-          <PublicHeaderActions />
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur">
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+          <PublicSiteHeader variant="landing" actions={<PublicHeaderActions />} />
         </div>
-      </header>
+      </div>
 
       <main className="flex-1 bg-white">{children}</main>
       <Footer />

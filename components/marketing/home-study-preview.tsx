@@ -278,6 +278,7 @@ export function HomeStudyPreview() {
       }}
       onPointerDown={() => setInteractionPaused(true)}
     >
+      <h2 className="sr-only">Vista previa de una guía de estudio creada con Evaluo</h2>
       <div className="absolute -inset-6 rounded-[40px] bg-gradient-to-br from-indigo-200/45 via-blue-100/20 to-transparent blur-3xl" />
 
       <div className="relative overflow-hidden rounded-[28px] border border-slate-200/80 bg-white shadow-[0_26px_72px_rgba(15,23,42,0.14)]">

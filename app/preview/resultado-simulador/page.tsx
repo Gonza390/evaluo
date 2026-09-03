@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { SimulatorResultRedesignPreview } from '@/components/simulador/SimulatorResultRedesignPreview';
 
 export const metadata: Metadata = {
-  title: 'Preview resultado simulador | Evaluo',
+  title: 'Preview resultado simulador',
   robots: { index: false, follow: false },
 };
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, Check, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { FooterHome } from '@/components/footer-home';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 
 const pricingDescription =
@@ -76,7 +77,8 @@ export default async function PricingPage({
   const showRecovery = params.recovery === '1';
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
+    <>
+      <main className="min-h-screen bg-white text-slate-950">
       <MarketingPageViewTracker
         eventName="pricing_view"
         payload={{ location: source, plan_context: 'premium', recovery: showRecovery }}
@@ -238,6 +240,8 @@ export default async function PricingPage({
           </div>
         </div>
       </section>
-    </main>
+      </main>
+      <FooterHome />
+    </>
   );
 }

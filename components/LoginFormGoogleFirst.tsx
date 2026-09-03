@@ -354,7 +354,7 @@ export default function LoginFormGoogleFirst() {
                 disabled={loading}
                 className="from-brand to-brand-2 h-11 w-full rounded-xl bg-gradient-to-r text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+                {isSignUp ? 'Crear cuenta gratis' : 'Iniciar sesión'}
               </button>
             </form>
           ) : null}
@@ -382,7 +382,7 @@ export default function LoginFormGoogleFirst() {
             disabled={loading}
             className="font-semibold text-blue-600 transition hover:text-blue-700 hover:underline disabled:opacity-60"
           >
-            {isSignUp ? 'Iniciar sesión' : 'Registrate gratis'}
+            {isSignUp ? 'Iniciar sesión' : 'Crear cuenta gratis'}
           </button>
         </p>
       </div>

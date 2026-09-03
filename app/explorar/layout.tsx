@@ -4,14 +4,14 @@ import ClientLayout from '@/components/ClientLayout';
 export const metadata: Metadata = {
   title: 'Explorar universidades y materias',
   description:
-    'Descubre universidades, carreras y materias disponibles en Evaluo para estudiar con resúmenes, preguntas y simuladores.',
+    'Descubrí universidades, carreras y materias disponibles en Evaluo para estudiar con resúmenes, preguntas y simuladores.',
   alternates: {
     canonical: '/explorar',
   },
   openGraph: {
     title: 'Explorar universidades y materias',
     description:
-      'Encuentra tu universidad, carrera y materia para estudiar con recursos, preguntas y simuladores en Evaluo.',
+      'Encontrá tu universidad, carrera y materia para estudiar con recursos, preguntas y simuladores en Evaluo.',
     url: '/explorar',
   },
 };

@@ -617,7 +617,7 @@ export default function MateriaList({
                             >
                               {materia.nombre}
                             </h3>
-                            <p className="mt-1.5 line-clamp-2 max-w-full text-[12px] leading-5 text-[#7C879C]">
+                            <p className="mt-1.5 line-clamp-2 max-w-full text-[12px] leading-5 text-slate-600">
                               {materia.descripcion || getDescripcionMateria(materia.nombre)}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
