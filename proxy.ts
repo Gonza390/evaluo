@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase';
 import {
@@ -7,6 +8,11 @@ import {
   isLikelyBotUserAgent,
   proxyRateLimitHeaders,
 } from '@/lib/proxy-security';
+import {
+  normalizeReferralCode,
+  REFERRAL_COOKIE_MAX_AGE_SECONDS,
+  REFERRAL_COOKIE_NAME,
+} from '@/lib/referrals';
 
 function createClient(request: NextRequest, response: NextResponse) {
   return createServerClient<Database>(
@@ -26,6 +32,20 @@ function createClient(request: NextRequest, response: NextResponse) {
       },
     }
   );
+}
+
+function persistReferralCookie(request: NextRequest, response: NextResponse) {
+  const code = normalizeReferralCode(request.nextUrl.searchParams.get('ref'));
+  if (!code) return response;
+
+  response.cookies.set(REFERRAL_COOKIE_NAME, code, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
+  });
+  return response;
 }
 
 function enforceProxyApiProtection(request: NextRequest, pathname: string): NextResponse | null {
@@ -61,7 +81,7 @@ export async function proxy(request: NextRequest) {
 
   const apiProtectionBlock = enforceProxyApiProtection(request, pathname);
   if (apiProtectionBlock) {
-    return apiProtectionBlock;
+    return persistReferralCookie(request, apiProtectionBlock);
   }
 
   const isRegularSimulatorRoute =
@@ -82,7 +102,7 @@ export async function proxy(request: NextRequest) {
   const isLoginRoute = pathname.startsWith('/login');
 
   if (!isProtectedRoute && !isLoginRoute) {
-    return response;
+    return persistReferralCookie(request, response);
   }
 
   const supabase = createClient(request, response);
@@ -90,21 +110,37 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (user) {
+    const referralCode =
+      normalizeReferralCode(request.nextUrl.searchParams.get('ref')) ??
+      normalizeReferralCode(request.cookies.get(REFERRAL_COOKIE_NAME)?.value);
+
+    if (referralCode) {
+      const rpcClient = supabase as unknown as SupabaseClient;
+      await rpcClient
+        .rpc('claim_my_referral_attribution', {
+          p_code: referralCode,
+          p_source: 'link',
+        })
+        .catch(() => undefined);
+    }
+  }
+
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', pathname);
-    return NextResponse.redirect(loginUrl);
+    return persistReferralCookie(request, NextResponse.redirect(loginUrl));
   }
 
   if (isRegularSimulatorRoute && !user) {
-    return response;
+    return persistReferralCookie(request, response);
   }
 
   if (isLoginRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return persistReferralCookie(request, NextResponse.redirect(new URL('/dashboard', request.url)));
   }
 
-  return response;
+  return persistReferralCookie(request, response);
 }
 
 export const config = {
