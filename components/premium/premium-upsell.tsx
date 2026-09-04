@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { Check, Crown, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -14,6 +14,9 @@ interface PremiumUpsellProps {
   materiaId?: string | null;
 }
 
+const MAPA_MENTAL_SOURCE = 'material_mapa_mental';
+const MAPA_MENTAL_DISMISS_KEY = 'evaluo:mapa-mental-premium-dismissed-once';
+
 export function PremiumUpsell({
   title,
   description,
@@ -21,25 +24,66 @@ export function PremiumUpsell({
   features,
   materiaId,
 }: PremiumUpsellProps) {
+  const isMapaMentalFlow = source === MAPA_MENTAL_SOURCE;
+  const [mapaMentalFlowDismissed, setMapaMentalFlowDismissed] = useState(false);
+
   useEffect(() => {
     trackMarketingEvent('premium_gate_viewed', {
       source,
       materia_id: materiaId ?? undefined,
     });
-  }, [materiaId, source]);
+
+    if (!isMapaMentalFlow) return;
+
+    try {
+      const dismissedOnce = window.sessionStorage.getItem(MAPA_MENTAL_DISMISS_KEY) === '1';
+      if (dismissedOnce) {
+        window.sessionStorage.removeItem(MAPA_MENTAL_DISMISS_KEY);
+        setMapaMentalFlowDismissed(true);
+        return;
+      }
+    } catch {
+      // Si sessionStorage no está disponible, abrimos el flujo normalmente.
+    }
+
+    const params = new URLSearchParams();
+    if (materiaId) params.set('materia', materiaId);
+    const query = params.toString();
+    window.location.assign(`/premium/mapa-mental${query ? `?${query}` : ''}`);
+  }, [isMapaMentalFlow, materiaId, source]);
 
   const handleUpgrade = () => {
     trackMarketingEvent('premium_cta_clicked', {
       source,
       materia_id: materiaId ?? undefined,
     });
+
+    if (isMapaMentalFlow) {
+      const params = new URLSearchParams();
+      if (materiaId) params.set('materia', materiaId);
+      const query = params.toString();
+      window.location.assign(`/premium/mapa-mental${query ? `?${query}` : ''}`);
+      return;
+    }
+
     const params = new URLSearchParams({ source });
     if (materiaId) params.set('materia', materiaId);
     window.location.assign(`/pricing?${params.toString()}#elegir-plan`);
   };
 
+  if (isMapaMentalFlow && !mapaMentalFlowDismissed) {
+    return (
+      <section className="flex min-h-[440px] w-full items-center justify-center px-4 py-10 text-center sm:min-h-[500px] sm:px-6">
+        <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500">
+          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" aria-hidden="true" />
+          Abriendo Evaluo Premium…
+        </div>
+      </section>
+    );
+  }
+
   const contextualCopy =
-    source === 'material_mapa_mental'
+    isMapaMentalFlow
       ? {
           title: 'Mapa mental',
           description:
