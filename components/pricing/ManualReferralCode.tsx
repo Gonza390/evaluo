@@ -21,6 +21,7 @@ type AppliedReferral = {
 
 type ManualReferralCodeProps = {
   offerCode: ReferralOfferCode;
+  variant?: 'default' | 'compact';
 };
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -45,11 +46,15 @@ function referralError(error: string | undefined, offerCode: ReferralOfferCode) 
   return 'El código no existe, venció o está pausado.';
 }
 
-export function ManualReferralCode({ offerCode }: ManualReferralCodeProps) {
+export function ManualReferralCode({
+  offerCode,
+  variant = 'default',
+}: ManualReferralCodeProps) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState<AppliedReferral | null>(null);
+  const compact = variant === 'compact';
 
   useEffect(() => {
     setApplied(null);
@@ -101,6 +106,69 @@ export function ManualReferralCode({ offerCode }: ManualReferralCodeProps) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (compact) {
+    return (
+      <div className="w-full border-t border-slate-200 pt-3 text-left">
+        <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
+          <Tag className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
+          ¿Tenés un código de descuento?
+        </div>
+
+        <div className="mt-2 flex gap-2">
+          <Input
+            value={code}
+            onChange={(event) => {
+              setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 32));
+              setApplied(null);
+              setError(null);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                void applyCode();
+              }
+            }}
+            placeholder="Ej. MARCA20"
+            autoComplete="off"
+            spellCheck={false}
+            className="h-10 min-w-0 rounded-xl bg-white text-xs font-medium uppercase tracking-wide sm:text-sm"
+            aria-label="Código de descuento"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 shrink-0 rounded-xl px-4 text-xs sm:text-sm"
+            onClick={() => void applyCode()}
+            loading={loading}
+            disabled={!code.trim()}
+          >
+            Aplicar
+          </Button>
+        </div>
+
+        {applied ? (
+          <div className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-emerald-700 sm:text-xs">
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <p>
+              <span className="font-bold">
+                {applied.code} · {applied.discountPercent}% aplicado.
+              </span>{' '}
+              Total {offerCode === 'semester' ? 'por 6 meses' : 'mensual'}:{' '}
+              <span className="font-bold">{currency.format(applied.amountArs)}</span> · ahorrás{' '}
+              {currency.format(applied.discountAmountArs)}.
+            </p>
+          </div>
+        ) : null}
+
+        {error ? (
+          <p role="alert" className="mt-2 text-[11px] leading-4 text-rose-600 sm:text-xs">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    );
   }
 
   return (
