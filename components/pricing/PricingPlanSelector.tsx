@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Check, ShieldCheck } from 'lucide-react';
+import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -75,6 +76,8 @@ export function PricingPlanSelector({
           </span>
         </button>
       </div>
+
+      <ManualReferralCode offerCode={billingMode} />
 
       <div className="mx-auto grid max-w-5xl items-stretch gap-6 lg:auto-rows-fr lg:grid-cols-2">
         <article className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
