@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 import { isUuid } from '@/lib/uuid';
+import { findStrongCareerMatch, normalizeCareerName } from '@/lib/career-matching';
 
 type PendingCareerInput = {
   universidadId: string;
@@ -93,14 +94,17 @@ export async function createPrivatePendingCareerAction(
       .from('carreras')
       .select('id, nombre, universidad_id, approval_status, owner_user_id, facultad_id')
       .eq('universidad_id', universidadId)
-      .ilike('nombre', carreraNombre)
-      .limit(20);
+      .limit(250);
 
     if (carrerasError) throw carrerasError;
 
-    const carreraExistente = (carrerasExistentes ?? []).find((row: any) =>
-      visibleToUser(row, user.id)
+    const visibles = (carrerasExistentes ?? []).filter((row: any) => visibleToUser(row, user.id));
+    const exacta = visibles.find(
+      (row: any) => normalizeCareerName(row.nombre) === normalizeCareerName(carreraNombre)
     );
+    const aprobadas = visibles.filter((row: any) => row.approval_status === 'approved');
+    const coincidenciaFuerte = findStrongCareerMatch(carreraNombre, aprobadas)?.career ?? null;
+    const carreraExistente = exacta ?? coincidenciaFuerte;
 
     if (carreraExistente) {
       return {
