@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { BadgePercent, CreditCard, MousePointerClick, ReceiptText, UsersRound } from 'lucide-react';
+import { BadgePercent, CreditCard, MousePointerClick, UsersRound } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
 import { getReferralPortalData } from '@/lib/referral-portal';
 import { PartnerReferralActions } from '@/components/referrals/PartnerReferralActions';
@@ -19,6 +19,17 @@ function appliesLabel(value: 'all' | 'monthly' | 'semester') {
   if (value === 'monthly') return 'Mensual';
   if (value === 'semester') return '6 meses';
   return 'Mensual y 6 meses';
+}
+
+function MetricTooltip({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-full left-0 z-20 mt-2 hidden max-w-[220px] rounded-lg bg-slate-950 px-2.5 py-1.5 text-[11px] leading-4 font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100 md:block"
+    >
+      {children}
+    </span>
+  );
 }
 
 export default async function ReferidosPage() {
@@ -63,21 +74,25 @@ export default async function ReferidosPage() {
       label: 'Atribuidos',
       value: portal.summary.attributedUsers,
       icon: UsersRound,
+      help: 'Usuarios vinculados a tu código o link.',
     },
     {
       label: 'Checkouts',
       value: portal.summary.checkoutAttempts,
       icon: MousePointerClick,
+      help: 'Usuarios que iniciaron un checkout con tu código.',
     },
     {
       label: 'Conversiones',
       value: portal.summary.approvedCheckouts,
       icon: BadgePercent,
+      help: 'Checkouts o suscripciones aprobadas.',
     },
     {
       label: 'Pagos',
       value: portal.summary.approvedPayments,
       icon: CreditCard,
+      help: 'Pagos efectivamente acreditados.',
     },
   ];
 
@@ -127,18 +142,23 @@ export default async function ReferidosPage() {
       ) : null}
 
       <div className="grid grid-cols-2 gap-y-6 border-b border-slate-200 py-6 md:grid-cols-5">
-        {metrics.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="border-l border-slate-200 pl-4 first:border-l-0 first:pl-0">
+        {metrics.map(({ label, value, icon: Icon, help }) => (
+          <div
+            key={label}
+            className="group relative cursor-help border-l border-slate-200 pl-4 first:border-l-0 first:pl-0"
+          >
             <div className="flex items-center gap-2 text-slate-500">
               <Icon className="h-4 w-4" />
               <p className="text-xs font-semibold">{label}</p>
             </div>
             <p className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">{value}</p>
+            <MetricTooltip>{help}</MetricTooltip>
           </div>
         ))}
-        <div className="border-l border-slate-200 pl-4">
+        <div className="group relative cursor-help border-l border-slate-200 pl-4">
           <p className="text-xs font-semibold text-slate-500">Conversión</p>
           <p className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">{percent(conversionRate)}</p>
+          <MetricTooltip>Conversiones sobre usuarios atribuidos.</MetricTooltip>
         </div>
       </div>
 
@@ -220,13 +240,6 @@ export default async function ReferidosPage() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="flex items-start gap-3 border-t border-slate-200 pt-5 text-xs leading-5 text-slate-500">
-        <ReceiptText className="mt-0.5 h-4 w-4 shrink-0" />
-        <p>
-          Este panel muestra métricas comerciales agregadas. No expone nombres, emails, materias ni información individual de los alumnos referidos.
-        </p>
       </div>
     </section>
   );
