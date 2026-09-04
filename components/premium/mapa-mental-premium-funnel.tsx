@@ -99,15 +99,13 @@ function FeatureStatus({
   premium?: boolean;
   index: number;
 }) {
-  const delay = 300 + index * 95 + (premium ? 45 : 0);
+  const delay = premium ? 560 + index * 105 : 280 + index * 75;
 
   return (
     <span
       className={`premium-compare-mark mx-auto flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8 ${
         enabled
-          ? premium
-            ? 'bg-emerald-50 text-emerald-600'
-            : 'bg-indigo-50 text-indigo-600'
+          ? 'bg-emerald-50 text-emerald-600'
           : 'bg-slate-50 text-slate-300'
       }`}
       style={{ animationDelay: `${delay}ms` }}
@@ -321,9 +319,9 @@ export function MapaMentalPremiumFunnel({
               return (
                 <article
                   key={benefit.title}
-                  className="benefit-card flex min-h-[78px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 text-left shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[86px] sm:gap-3.5 sm:p-4.5"
+                  className="benefit-card flex min-h-[80px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 text-left shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[90px] sm:gap-4 sm:p-5"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 sm:h-11 sm:w-11">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 sm:h-12 sm:w-12">
                     <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
@@ -350,37 +348,41 @@ export function MapaMentalPremiumFunnel({
 
     if (targetStep === 2) {
       return (
-        <section className="funnel-step mx-auto flex h-full w-full max-w-4xl flex-col justify-center px-1 py-2 sm:py-3">
-          <div className="text-center">
-            <h1 className="mx-auto max-w-3xl text-2xl font-extrabold leading-[1.07] tracking-[-0.045em] text-slate-950 sm:text-3xl lg:text-[2.25rem]">
+        <section className="funnel-step funnel-step-two mx-auto flex h-full w-full max-w-4xl flex-col items-center justify-start px-1 pt-3 text-center sm:pt-5">
+          <div className="shrink-0">
+            <h1 className="mx-auto max-w-3xl text-[1.55rem] font-extrabold leading-[1.06] tracking-[-0.045em] text-slate-950 sm:text-[2rem] lg:text-[2.15rem]">
               Todo lo que necesitás para preparar mejor tu parcial
             </h1>
             <p className="mx-auto mt-2 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">
-              Premium concentra en un solo lugar las herramientas que personalizan tu preparación.
+              Mirá la diferencia entre estudiar gratis y preparar el parcial con Premium.
             </p>
           </div>
 
-          <div className="relative mt-4 rounded-[1.8rem] border border-slate-200 bg-white/95 p-2 shadow-[0_18px_48px_rgba(15,23,42,0.07)] sm:p-3">
-            <div className="premium-column-shell pointer-events-none absolute bottom-2 right-2 top-2 w-[88px] overflow-hidden rounded-[1.55rem] border border-indigo-200 bg-[linear-gradient(180deg,rgba(238,242,255,0.96),rgba(255,255,255,0.98),rgba(239,246,255,0.96))] shadow-[0_14px_34px_rgba(79,70,229,0.11)] sm:bottom-3 sm:right-3 sm:top-3 sm:w-[142px] sm:rounded-[1.7rem]">
-              <div className="premium-column-sheen absolute -left-1/2 h-20 w-[200%] rotate-[-12deg] bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.95),transparent)] opacity-80" />
+          <div className="comparison-card relative mt-4 w-full max-w-3xl rounded-[1.65rem] border border-slate-200 bg-white/95 p-2 shadow-[0_16px_44px_rgba(15,23,42,0.065)] sm:p-2.5">
+            <div className="premium-column-shell pointer-events-none absolute bottom-2 right-2 top-2 w-[78px] overflow-hidden rounded-[1.35rem] border border-indigo-200 bg-[linear-gradient(180deg,rgba(238,242,255,0.98),rgba(255,255,255,0.99),rgba(238,242,255,0.98))] shadow-[0_12px_30px_rgba(79,70,229,0.11)] sm:bottom-2.5 sm:right-2.5 sm:top-2.5 sm:w-[128px] sm:rounded-[1.5rem]">
+              <div className="premium-column-sheen absolute -left-1/2 h-16 w-[200%] rotate-[-12deg] bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.96),transparent)] opacity-80" />
             </div>
 
-            <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_66px_88px] items-center px-3 py-2 sm:grid-cols-[minmax(0,1fr)_112px_142px] sm:px-4 sm:py-2.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-slate-400 sm:text-[11px]">Función</span>
-              <span className="text-center text-[11px] font-extrabold uppercase tracking-[0.06em] text-slate-400 sm:text-xs">Gratis</span>
-              <span className="mx-auto inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 px-2.5 py-1.5 text-[9px] font-extrabold tracking-[0.05em] text-white shadow-sm sm:px-3 sm:text-[10px]">
-                <Crown className="h-3 w-3" aria-hidden="true" />
+            <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_58px_78px] items-center px-3 pb-2 pt-1.5 sm:grid-cols-[minmax(0,1fr)_98px_128px] sm:px-4 sm:pb-2.5 sm:pt-2">
+              <span aria-hidden="true" />
+              <span className="text-center text-[10px] font-extrabold uppercase tracking-[0.07em] text-slate-400 sm:text-[11px]">
+                Gratis
+              </span>
+              <span className="mx-auto inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-500 to-blue-500 px-2 py-1 text-[8px] font-extrabold tracking-[0.04em] text-white shadow-sm sm:px-2.5 sm:py-1.5 sm:text-[9px]">
+                <Crown className="h-2.5 w-2.5 sm:h-3 sm:w-3" aria-hidden="true" />
                 PREMIUM
               </span>
             </div>
 
-            <div className="relative z-10 overflow-hidden rounded-2xl border border-slate-100 bg-white/70">
+            <div className="relative z-10 overflow-hidden rounded-[1.25rem] border border-slate-100 bg-white/72">
               {comparisonRows.map((feature, index) => (
                 <div
                   key={feature}
-                  className="grid grid-cols-[minmax(0,1fr)_66px_88px] items-center border-b border-slate-100 px-3 py-2 last:border-0 sm:grid-cols-[minmax(0,1fr)_112px_142px] sm:px-4 sm:py-2.5"
+                  className="comparison-row grid min-h-[43px] grid-cols-[minmax(0,1fr)_58px_78px] items-center border-b border-slate-100 px-3 py-1.5 text-left last:border-0 sm:min-h-[47px] sm:grid-cols-[minmax(0,1fr)_98px_128px] sm:px-4 sm:py-2"
                 >
-                  <span className="pr-2 text-[11px] font-semibold leading-4 text-slate-800 sm:text-xs sm:leading-5">{feature}</span>
+                  <span className="pr-2 text-[10.5px] font-semibold leading-4 text-slate-800 sm:text-xs sm:leading-5">
+                    {feature}
+                  </span>
                   <FeatureStatus enabled={false} index={index} />
                   <FeatureStatus enabled premium index={index} />
                 </div>
@@ -392,7 +394,7 @@ export function MapaMentalPremiumFunnel({
             type="button"
             onClick={() => continueTo(3)}
             disabled={incomingStep !== null}
-            className="mx-auto mt-4 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-[0_6px_0_0_#4338CA] transition hover:bg-indigo-700 active:translate-y-0.5 active:shadow-[0_4px_0_0_#4338CA] disabled:pointer-events-none"
+            className="mx-auto mt-4 inline-flex h-11 w-full max-w-md shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-[0_6px_0_0_#4338CA] transition hover:bg-indigo-700 active:translate-y-0.5 active:shadow-[0_4px_0_0_#4338CA] disabled:pointer-events-none"
           >
             Continuar
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -419,7 +421,7 @@ export function MapaMentalPremiumFunnel({
           <button
             type="button"
             onClick={() => selectBillingMode('semester')}
-            className={`relative min-w-0 rounded-2xl border-2 p-3.5 text-left transition sm:p-4.5 ${
+            className={`relative min-w-0 rounded-2xl border-2 p-3.5 text-left transition sm:p-4 ${
               billingMode === 'semester'
                 ? 'border-indigo-500 bg-indigo-50/50 shadow-[0_12px_35px_rgba(79,70,229,0.11)]'
                 : 'border-slate-200 bg-white hover:border-indigo-200'
@@ -459,7 +461,7 @@ export function MapaMentalPremiumFunnel({
           <button
             type="button"
             onClick={() => selectBillingMode('monthly')}
-            className={`min-w-0 rounded-2xl border-2 p-3.5 text-left transition sm:p-4.5 ${
+            className={`min-w-0 rounded-2xl border-2 p-3.5 text-left transition sm:p-4 ${
               billingMode === 'monthly'
                 ? 'border-indigo-500 bg-indigo-50/50 shadow-[0_12px_35px_rgba(79,70,229,0.11)]'
                 : 'border-slate-200 bg-white hover:border-indigo-200'
@@ -532,30 +534,33 @@ export function MapaMentalPremiumFunnel({
           to { transform: translateX(0); opacity: 1; }
         }
         @keyframes evaluoCompareMarkPop {
-          0% { opacity: 0; transform: scale(0.45) translateY(5px); }
-          64% { opacity: 1; transform: scale(1.16) translateY(-1px); }
+          0% { opacity: 0; transform: scale(0.42) translateY(4px); }
+          64% { opacity: 1; transform: scale(1.14) translateY(-1px); }
           100% { opacity: 1; transform: scale(1) translateY(0); }
         }
         @keyframes evaluoColumnBreathe {
-          0%, 100% { box-shadow: 0 14px 34px rgba(79,70,229,0.10); }
-          50% { box-shadow: 0 18px 42px rgba(79,70,229,0.18); }
+          0%, 100% { box-shadow: 0 12px 30px rgba(79,70,229,0.10); }
+          50% { box-shadow: 0 16px 36px rgba(79,70,229,0.17); }
         }
         @keyframes evaluoColumnSheen {
-          0% { transform: translateY(-130%) rotate(-12deg); opacity: 0; }
-          28% { opacity: 0.72; }
-          62% { opacity: 0.35; }
-          100% { transform: translateY(540%) rotate(-12deg); opacity: 0; }
+          0% { transform: translateY(-150%) rotate(-12deg); opacity: 0; }
+          28% { opacity: 0.7; }
+          62% { opacity: 0.32; }
+          100% { transform: translateY(620%) rotate(-12deg); opacity: 0; }
         }
         .premium-slide-out { animation: evaluoSlideOutLeft ${SLIDE_MS}ms cubic-bezier(.72,0,.22,1) both; }
         .premium-slide-in { animation: evaluoSlideInRight ${SLIDE_MS}ms cubic-bezier(.72,0,.22,1) both; }
-        .premium-compare-mark { opacity: 0; animation: evaluoCompareMarkPop 420ms cubic-bezier(.2,.8,.2,1) forwards; }
+        .premium-compare-mark { opacity: 0; animation: evaluoCompareMarkPop 400ms cubic-bezier(.2,.8,.2,1) forwards; }
         .premium-column-shell { animation: evaluoColumnBreathe 2.8s ease-in-out infinite; }
         .premium-column-sheen { animation: evaluoColumnSheen 3.4s ease-in-out 900ms infinite; }
         @media (max-height: 720px) and (min-width: 640px) {
-          .premium-funnel-shell .funnel-step-one h1 { font-size: 1.9rem; }
+          .premium-funnel-shell .funnel-step-one h1 { font-size: 1.85rem; }
           .premium-funnel-shell .benefit-grid { margin-top: 0.75rem; gap: 0.6rem; }
           .premium-funnel-shell .benefit-card { min-height: 66px; padding: 0.7rem; }
-          .premium-funnel-shell .funnel-step { padding-top: 0.15rem; padding-bottom: 0.15rem; }
+          .premium-funnel-shell .funnel-step-two { padding-top: 0.2rem; }
+          .premium-funnel-shell .funnel-step-two h1 { font-size: 1.65rem; }
+          .premium-funnel-shell .funnel-step-two .comparison-card { margin-top: 0.55rem; }
+          .premium-funnel-shell .funnel-step-two .comparison-row { min-height: 38px; padding-top: 0.25rem; padding-bottom: 0.25rem; }
         }
         @media (prefers-reduced-motion: reduce) {
           .premium-slide-out, .premium-slide-in, .premium-compare-mark, .premium-column-shell, .premium-column-sheen {
