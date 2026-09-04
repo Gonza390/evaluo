@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     .select(
       'id, code, partner_id, discount_percent, applies_to, max_redemptions, starts_at, ends_at, is_active'
     )
-    .ilike('code', code)
+    .eq('code', code)
     .limit(1)
     .maybeSingle();
 
