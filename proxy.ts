@@ -117,12 +117,14 @@ export async function proxy(request: NextRequest) {
 
     if (referralCode) {
       const rpcClient = supabase as unknown as SupabaseClient;
-      await rpcClient
-        .rpc('claim_my_referral_attribution', {
+      try {
+        await rpcClient.rpc('claim_my_referral_attribution', {
           p_code: referralCode,
           p_source: 'link',
-        })
-        .catch(() => undefined);
+        });
+      } catch {
+        // La atribución es best effort y nunca debe bloquear navegación o auth.
+      }
     }
   }
 
