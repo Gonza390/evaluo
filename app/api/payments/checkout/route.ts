@@ -201,12 +201,12 @@ export async function POST(request: Request) {
   }
 
   let promotion = null;
-  const referralApplies =
+  if (
     referral &&
     offerCode !== 'recovery' &&
-    (referral.appliesTo === 'all' || referral.appliesTo === offerCode);
-
-  if (referralApplies && (offerCode === 'monthly' || offerCode === 'semester')) {
+    (referral.appliesTo === 'all' || referral.appliesTo === offerCode) &&
+    (offerCode === 'monthly' || offerCode === 'semester')
+  ) {
     try {
       promotion = await reserveReferralPromotion(admin, {
         userId: user.id,
