@@ -16,6 +16,7 @@ import {
   Target,
   X,
 } from 'lucide-react';
+import { ManualReferralCode } from '@/components/pricing/ManualReferralCode';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import {
   PREMIUM_MONTHLY_PRICE_ARS,
@@ -104,9 +105,7 @@ function FeatureStatus({
   return (
     <span
       className={`premium-compare-mark mx-auto flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8 ${
-        enabled
-          ? 'bg-emerald-50 text-emerald-600'
-          : 'bg-slate-50 text-slate-300'
+        enabled ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-300'
       }`}
       style={{ animationDelay: `${delay}ms` }}
       aria-label={enabled ? 'Incluido' : 'No incluido'}
@@ -243,7 +242,9 @@ export function MapaMentalPremiumFunnel({
 
       if (response.status === 401) {
         checkoutWindow?.close();
-        const nextPath = `/premium/mapa-mental?step=3&mode=${offerCode}`;
+        const nextParams = new URLSearchParams({ step: '3', mode: offerCode });
+        if (materiaId) nextParams.set('materia', materiaId);
+        const nextPath = `/premium/mapa-mental?${nextParams.toString()}`;
         window.location.assign(
           `/login?mode=login&intent=premium&next=${encodeURIComponent(nextPath)}`
         );
@@ -496,7 +497,11 @@ export function MapaMentalPremiumFunnel({
           </button>
         </div>
 
-        <div className="mx-auto mt-4 w-full max-w-md">
+        <div className="mx-auto mt-3 w-full max-w-md">
+          <ManualReferralCode offerCode={billingMode} variant="compact" />
+        </div>
+
+        <div className="mx-auto mt-3 w-full max-w-md">
           <button
             type="button"
             onClick={startCheckout}
@@ -598,9 +603,7 @@ export function MapaMentalPremiumFunnel({
             {renderStep(step)}
           </div>
           {incomingStep !== null ? (
-            <div className="premium-slide-in absolute inset-0">
-              {renderStep(incomingStep)}
-            </div>
+            <div className="premium-slide-in absolute inset-0">{renderStep(incomingStep)}</div>
           ) : null}
         </div>
       </div>
