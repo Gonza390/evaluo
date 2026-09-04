@@ -32,13 +32,47 @@ const ONE_TIME_FAILED_STATUSES = new Set([
 
 function addCalendarMonths(value: string, months: number) {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return new Date(Date.now() + 183 * 24 * 60 * 60_000).toISOString();
+  if (Number.isNaN(date.getTime())) {
+    return new Date(Date.now() + 183 * 24 * 60 * 60_000).toISOString();
+  }
   const day = date.getUTCDate();
   date.setUTCDate(1);
   date.setUTCMonth(date.getUTCMonth() + months);
-  const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+  const lastDay = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)
+  ).getUTCDate();
   date.setUTCDate(Math.min(day, lastDay));
   return date.toISOString();
+}
+
+async function getPromotionCode(admin: SupabaseClient, claimId: string | null | undefined) {
+  if (!claimId) return null;
+  const { data, error } = await admin
+    .from('payment_promotion_claims')
+    .select('promotion_code')
+    .eq('id', claimId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.promotion_code ? String(data.promotion_code) : null;
+}
+
+async function updatePromotionClaim(
+  admin: SupabaseClient,
+  claimId: string | null | undefined,
+  status: 'activated' | 'released',
+  now: string
+) {
+  if (!claimId) return;
+  const patch =
+    status === 'activated'
+      ? { status: 'activated', activated_at: now }
+      : { status: 'released', released_at: now };
+  const { error } = await admin
+    .from('payment_promotion_claims')
+    .update(patch)
+    .eq('id', claimId)
+    .eq('status', 'pending');
+  if (error) throw error;
 }
 
 async function reconcileAuthorizedPayment(
@@ -47,12 +81,13 @@ async function reconcileAuthorizedPayment(
 ) {
   const { data: subscription, error: subscriptionError } = await admin
     .from('user_subscriptions')
-    .select('id, user_id, amount_ars')
+    .select('id, user_id, amount_ars, promotion_code')
     .eq('payment_provider', 'mercadopago')
     .eq('provider_subscription_id', invoice.preapproval_id)
     .single();
-  if (subscriptionError || !subscription)
+  if (subscriptionError || !subscription) {
     throw new Error('Suscripcion de la factura no encontrada.');
+  }
 
   const amount = Number(invoice.transaction_amount);
   if (invoice.currency_id !== 'ARS' || !Number.isFinite(amount) || amount <= 0) {
@@ -63,7 +98,8 @@ async function reconcileAuthorizedPayment(
   }
 
   const paymentId = invoice.payment?.id;
-  const paymentStatus = invoice.payment?.status?.toLowerCase() || invoice.summarized?.toLowerCase();
+  const paymentStatus =
+    invoice.payment?.status?.toLowerCase() || invoice.summarized?.toLowerCase();
   if (!paymentId || !paymentStatus) return;
 
   const now = new Date().toISOString();
@@ -82,6 +118,7 @@ async function reconcileAuthorizedPayment(
         authorized_payment_id: String(invoice.id),
         status_detail: invoice.payment?.status_detail ?? null,
         retry_attempt: invoice.retry_attempt ?? null,
+        promotion_code: subscription.promotion_code ?? null,
       },
       updated_at: now,
     },
@@ -107,7 +144,12 @@ async function reconcileAuthorizedPayment(
       eventName: 'premium_subscription_activated',
       userId: subscription.user_id,
       path: '/api/webhooks/mercadopago',
-      metadata: { provider: 'mercadopago', amount_ars: amount, offer_code: 'monthly' },
+      metadata: {
+        provider: 'mercadopago',
+        amount_ars: amount,
+        offer_code: 'monthly',
+        promotion: subscription.promotion_code ?? undefined,
+      },
     });
   } else if (reconciledSubscriptionStatus === 'past_due') {
     const { error: updateError } = await admin
@@ -124,7 +166,9 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
 
   const { data: attempt, error: attemptError } = await admin
     .from('payment_checkout_attempts')
-    .select('id, user_id, plan_id, amount_ars, status')
+    .select(
+      'id, user_id, plan_id, promotion_claim_id, referral_code_id, offer_code, base_amount_ars, discount_amount_ars, amount_ars, status'
+    )
     .eq('id', attemptId)
     .maybeSingle();
   if (attemptError) throw attemptError;
@@ -135,7 +179,8 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
     payment.currency_id !== 'ARS' ||
     !Number.isFinite(amount) ||
     amount !== Number(attempt.amount_ars) ||
-    amount !== PREMIUM_SEMESTER_PRICE_ARS
+    attempt.offer_code !== 'semester' ||
+    Number(attempt.base_amount_ars) !== PREMIUM_SEMESTER_PRICE_ARS
   ) {
     return false;
   }
@@ -148,6 +193,7 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
   const isApproved = paymentStatus === 'approved';
   const failed = ONE_TIME_FAILED_STATUSES.has(paymentStatus);
   const previousAttemptStatus = String(attempt.status ?? '').toLowerCase();
+  const promotionCode = await getPromotionCode(admin, attempt.promotion_claim_id);
 
   let subscriptionId: string | null = null;
   if (isApproved) {
@@ -167,7 +213,7 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
         amount_ars: amount,
         next_payment_date: null,
         current_period_end: expiresAt,
-        promotion_code: 'semester_2026',
+        promotion_code: promotionCode ?? 'semester_2026',
         provider_updated_at: now,
         canceled_at: null,
         updated_at: now,
@@ -205,6 +251,10 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
       raw_summary: {
         checkout_attempt_id: attempt.id,
         offer_code: 'semester',
+        base_amount_ars: Number(attempt.base_amount_ars),
+        discount_amount_ars: Number(attempt.discount_amount_ars),
+        referral_code_id: attempt.referral_code_id ?? null,
+        promotion_code: promotionCode,
         status_detail: payment.status_detail ?? null,
       },
       updated_at: now,
@@ -222,6 +272,12 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
     .eq('id', attempt.id);
   if (attemptUpdateError) throw attemptUpdateError;
 
+  if (isApproved) {
+    await updatePromotionClaim(admin, attempt.promotion_claim_id, 'activated', now);
+  } else if (failed) {
+    await updatePromotionClaim(admin, attempt.promotion_claim_id, 'released', now);
+  }
+
   if (isApproved && previousAttemptStatus !== 'approved') {
     await trackServerAnalyticsEvent({
       eventName: 'premium_subscription_activated',
@@ -230,9 +286,13 @@ async function reconcileOneTimePayment(admin: SupabaseClient, payment: MercadoPa
       metadata: {
         provider: 'mercadopago',
         amount_ars: amount,
+        base_amount_ars: Number(attempt.base_amount_ars),
+        discount_amount_ars: Number(attempt.discount_amount_ars),
         offer_code: 'semester',
         billing_mode: 'fixed_term',
         access_months: PREMIUM_SEMESTER_MONTHS,
+        promotion: promotionCode ?? undefined,
+        referral_code_id: attempt.referral_code_id ?? undefined,
       },
     });
   }
@@ -315,7 +375,9 @@ export async function POST(request: Request) {
 
       const { data: attempt, error: attemptError } = await admin
         .from('payment_checkout_attempts')
-        .select('id, user_id, plan_id, promotion_claim_id, amount_ars')
+        .select(
+          'id, user_id, plan_id, promotion_claim_id, referral_code_id, offer_code, base_amount_ars, discount_amount_ars, amount_ars'
+        )
         .eq('id', attemptId)
         .eq('provider_subscription_id', providerSubscription.id)
         .single();
@@ -330,6 +392,7 @@ export async function POST(request: Request) {
         throw new Error('Importe o moneda de la suscripcion no coincide.');
       }
 
+      const promotionCode = await getPromotionCode(admin, attempt.promotion_claim_id);
       const isActive = ACTIVE_PROVIDER_STATUSES.has(providerSubscription.status.toLowerCase());
       const internalStatus = isActive ? 'active' : providerSubscription.status.toLowerCase();
       const { error: subscriptionError } = await admin.from('user_subscriptions').upsert(
@@ -343,7 +406,7 @@ export async function POST(request: Request) {
           amount_ars: providerAmount,
           next_payment_date: providerSubscription.next_payment_date ?? null,
           current_period_end: providerSubscription.next_payment_date ?? null,
-          promotion_code: attempt.promotion_claim_id ? 'founders_2026' : null,
+          promotion_code: promotionCode,
           canceled_at: internalStatus === 'canceled' ? now : null,
           expires_at:
             internalStatus === 'canceled' ? (providerSubscription.next_payment_date ?? now) : null,
@@ -362,8 +425,11 @@ export async function POST(request: Request) {
           metadata: {
             provider: 'mercadopago',
             amount_ars: providerAmount,
-            promotion: attempt.promotion_claim_id ? 'founders_2026' : null,
-            offer_code: attempt.promotion_claim_id ? 'legacy_founder' : 'monthly',
+            base_amount_ars: Number(attempt.base_amount_ars),
+            discount_amount_ars: Number(attempt.discount_amount_ars),
+            promotion: promotionCode ?? undefined,
+            referral_code_id: attempt.referral_code_id ?? undefined,
+            offer_code: attempt.offer_code,
           },
         });
       }
@@ -376,15 +442,10 @@ export async function POST(request: Request) {
         })
         .eq('id', attempt.id);
 
-      if (attempt.promotion_claim_id && isActive) {
-        await admin
-          .from('payment_promotion_claims')
-          .update({
-            status: 'activated',
-            activated_at: now,
-          })
-          .eq('id', attempt.promotion_claim_id)
-          .eq('status', 'pending');
+      if (isActive) {
+        await updatePromotionClaim(admin, attempt.promotion_claim_id, 'activated', now);
+      } else if (internalStatus === 'canceled' || internalStatus === 'cancelled') {
+        await updatePromotionClaim(admin, attempt.promotion_claim_id, 'released', now);
       }
     }
 
