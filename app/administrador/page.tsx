@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, Bot, Megaphone, Users, Waypoints } from 'lucide-react';
+import { BadgePercent, BookOpen, Bot, Megaphone, Users, Waypoints } from 'lucide-react';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -13,6 +13,8 @@ import {
   obtenerUsuariosAdministradorPaginadoCacheado,
 } from './cached-performance-actions';
 import { obtenerLogsAdministradorRapido } from './logs-performance-actions';
+import { obtenerReferidosAdministrador } from './referrals-actions';
+import { ReferralsPanel } from './referrals-panel';
 import { StorageAuditButton } from './storage-audit-button';
 import {
   AICostPanel,
@@ -23,7 +25,7 @@ import {
   UsersPanelV2,
 } from './lazy-panels';
 
-type PanelKey = 'marketing' | 'biblioteca' | 'usuarios' | 'logs' | 'ia';
+type PanelKey = 'marketing' | 'referidos' | 'biblioteca' | 'usuarios' | 'logs' | 'ia';
 
 const PANELS: Array<{
   key: PanelKey;
@@ -31,6 +33,7 @@ const PANELS: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { key: 'marketing', label: 'Producto', icon: Megaphone },
+  { key: 'referidos', label: 'Referidos', icon: BadgePercent },
   { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
   { key: 'logs', label: 'Logs', icon: Waypoints },
@@ -54,7 +57,10 @@ function ErrorPanel({ message }: { message: string }) {
 
 function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey; activePeriod: number }) {
   return (
-    <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible" aria-label="Secciones del administrador">
+    <nav
+      className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible"
+      aria-label="Secciones del administrador"
+    >
       {PANELS.map((panel) => {
         const Icon = panel.icon;
         const active = panel.key === activePanel;
@@ -92,15 +98,18 @@ export default async function AdministradorPage({
   const activePanelMeta = PANELS.find((panel) => panel.key === activePanel) ?? PANELS[0];
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
-  const activePeriodLabel = PERIOD_OPTIONS.find((option) => option.value === activePeriod)?.label ?? '7 días';
+  const activePeriodLabel =
+    PERIOD_OPTIONS.find((option) => option.value === activePeriod)?.label ?? '7 días';
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
 
+  const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsUsers = activePanel === 'usuarios';
   const needsLogs = activePanel === 'logs';
   const needsIA = activePanel === 'ia';
 
   const [
+    referralResult,
     bibliotecaResult,
     bibliotecaStatsResult,
     usersResult,
@@ -111,6 +120,7 @@ export default async function AdministradorPage({
     iaFeedbackReviewResult,
     iaCostResult,
   ] = await Promise.all([
+    needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
@@ -153,6 +163,13 @@ export default async function AdministradorPage({
         <ConversionPanel stats={null} periodLabel={activePeriodLabel} />
       </section>
     );
+  } else if (activePanel === 'referidos') {
+    panelContent =
+      referralResult?.success && referralResult.data ? (
+        <ReferralsPanel data={referralResult.data} />
+      ) : (
+        <ErrorPanel message={referralResult?.message ?? 'No pudimos cargar Referidos.'} />
+      );
   } else if (activePanel === 'biblioteca') {
     if (
       !bibliotecaResult?.success ||
@@ -163,7 +180,13 @@ export default async function AdministradorPage({
       !bibliotecaStatsResult.stats
     ) {
       panelContent = (
-        <ErrorPanel message={bibliotecaResult?.message ?? bibliotecaStatsResult?.message ?? 'No pudimos cargar Biblioteca.'} />
+        <ErrorPanel
+          message={
+            bibliotecaResult?.message ??
+            bibliotecaStatsResult?.message ??
+            'No pudimos cargar Biblioteca.'
+          }
+        />
       );
     } else {
       panelContent = (
@@ -190,14 +213,15 @@ export default async function AdministradorPage({
       );
     }
   } else if (activePanel === 'logs') {
-    panelContent = logsResult?.success && logsResult.data ? (
-      <>
-        <StorageAuditButton scannedAt={logsResult.storageAuditScannedAt ?? null} />
-        <LogsPanel data={logsResult.data} />
-      </>
-    ) : (
-      <ErrorPanel message={logsResult?.message ?? 'No pudimos cargar Logs.'} />
-    );
+    panelContent =
+      logsResult?.success && logsResult.data ? (
+        <>
+          <StorageAuditButton scannedAt={logsResult.storageAuditScannedAt ?? null} />
+          <LogsPanel data={logsResult.data} />
+        </>
+      ) : (
+        <ErrorPanel message={logsResult?.message ?? 'No pudimos cargar Logs.'} />
+      );
   } else if (
     iaPromptResult?.success &&
     iaRankingResult?.success &&
@@ -248,7 +272,9 @@ export default async function AdministradorPage({
         <header className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 lg:mb-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase">Evaluo · Administrador</p>
+              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase">
+                Evaluo · Administrador
+              </p>
               <h1 className="mt-1 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
                 {activePanelMeta.label}
               </h1>
@@ -257,10 +283,16 @@ export default async function AdministradorPage({
               </p>
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <Link href="/administrador/feedback-simulador" className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-slate-600 hover:text-indigo-700">
+              <Link
+                href="/administrador/feedback-simulador"
+                className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-slate-600 hover:text-indigo-700"
+              >
                 Feedback simulador
               </Link>
-              <Link href="/administrador/solicitudes" className="inline-flex min-h-11 items-center rounded-xl bg-slate-950 px-3 text-white hover:bg-slate-800">
+              <Link
+                href="/administrador/solicitudes"
+                className="inline-flex min-h-11 items-center rounded-xl bg-slate-950 px-3 text-white hover:bg-slate-800"
+              >
                 Solicitudes
               </Link>
             </div>
