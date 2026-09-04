@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useShellData } from '@/components/ShellDataProvider';
+import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavLink';
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
 import { supabase } from '@/lib/supabase-client';
@@ -162,6 +163,8 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 dataTourAttr={item.label === 'Mi espacio' ? 'data-tour-nav-espacio' : undefined}
               />
             ))}
+
+            {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} /> : null}
 
             {careerShortcut ? (
               <Link
