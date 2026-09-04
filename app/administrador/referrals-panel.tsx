@@ -85,6 +85,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
           activeCodes: rows.filter((code) => code.isActive).length,
           attributedUsers: rows.reduce((sum, code) => sum + code.attributedUsers, 0),
           approvedCheckouts: rows.reduce((sum, code) => sum + code.approvedCheckouts, 0),
+          approvedPayments: rows.reduce((sum, code) => sum + code.approvedPayments, 0),
           revenueArs: rows.reduce((sum, code) => sum + code.revenueArs, 0),
         };
       }),
@@ -196,7 +197,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
         </div>
       ) : null}
 
-      <div className="mt-5 grid grid-cols-2 gap-y-5 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="mt-5 grid grid-cols-2 gap-y-5 sm:grid-cols-4 lg:grid-cols-8">
         <div className={metricClass()}>
           <p className="text-xs text-slate-500">Marcas</p>
           <p className="mt-1 text-xl font-bold text-slate-950">{data.summary.brands}</p>
@@ -214,8 +215,12 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
           <p className="mt-1 text-xl font-bold text-slate-950">{data.summary.checkouts}</p>
         </div>
         <div className={metricClass()}>
-          <p className="text-xs text-slate-500">Pagos</p>
+          <p className="text-xs text-slate-500">Conversiones</p>
           <p className="mt-1 text-xl font-bold text-slate-950">{data.summary.approvedCheckouts}</p>
+        </div>
+        <div className={metricClass()}>
+          <p className="text-xs text-slate-500">Pagos</p>
+          <p className="mt-1 text-xl font-bold text-slate-950">{data.summary.approvedPayments}</p>
         </div>
         <div className={metricClass()}>
           <p className="text-xs text-slate-500">Facturación</p>
@@ -560,11 +565,11 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
       <div className="mt-8 border-t border-slate-200 pt-5">
         <h3 className="font-bold text-slate-950">Rendimiento por código</h3>
         <p className="mt-1 text-xs leading-5 text-slate-500">
-          Atribuidos = usuarios asociados al código. Pagos = checkouts aprobados por Mercado Pago.
+          Conversiones = checkout o suscripción aprobada. Pagos = transacciones aprobadas realmente cobradas por Mercado Pago.
         </p>
 
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-[1120px] w-full text-left text-xs">
+          <table className="min-w-[1200px] w-full text-left text-xs">
             <thead className="border-y border-slate-200 bg-slate-50 text-slate-500">
               <tr>
                 <th className="px-3 py-3 font-semibold">Código</th>
@@ -572,6 +577,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
                 <th className="px-3 py-3 font-semibold">Descuento</th>
                 <th className="px-3 py-3 font-semibold">Atribuidos</th>
                 <th className="px-3 py-3 font-semibold">Checkouts</th>
+                <th className="px-3 py-3 font-semibold">Conversiones</th>
                 <th className="px-3 py-3 font-semibold">Pagos</th>
                 <th className="px-3 py-3 font-semibold">Conversión</th>
                 <th className="px-3 py-3 font-semibold">Facturación</th>
@@ -605,6 +611,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
                     <td className="px-3 py-3 text-slate-700">{code.attributedUsers}</td>
                     <td className="px-3 py-3 text-slate-700">{code.checkoutAttempts}</td>
                     <td className="px-3 py-3 font-semibold text-slate-900">{code.approvedCheckouts}</td>
+                    <td className="px-3 py-3 font-semibold text-slate-900">{code.approvedPayments}</td>
                     <td className="px-3 py-3 text-slate-700">{formatPercent(conversion)}</td>
                     <td className="px-3 py-3 font-semibold text-slate-900">{formatArs(code.revenueArs)}</td>
                     <td className="px-3 py-3 text-slate-700">{formatArs(code.discountsArs)}</td>
@@ -653,7 +660,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               })}
               {!data.codes.length ? (
                 <tr>
-                  <td colSpan={11} className="px-3 py-8 text-center text-sm text-slate-500">
+                  <td colSpan={12} className="px-3 py-8 text-center text-sm text-slate-500">
                     Todavía no hay códigos. Creá una marca, un referente y el primer código.
                   </td>
                 </tr>
@@ -672,12 +679,13 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               .map((brand) => (
                 <div
                   key={brand.id}
-                  className="grid gap-2 py-3 text-xs sm:grid-cols-[minmax(140px,1.4fr)_repeat(5,minmax(72px,1fr))] sm:items-center"
+                  className="grid gap-2 py-3 text-xs sm:grid-cols-[minmax(140px,1.4fr)_repeat(6,minmax(72px,1fr))] sm:items-center"
                 >
                   <p className="font-semibold text-slate-900">{brand.name}</p>
                   <p className="text-slate-600">{brand.activeCodes}/{brand.codes} códigos</p>
                   <p className="text-slate-600">{brand.attributedUsers} atribuidos</p>
-                  <p className="text-slate-600">{brand.approvedCheckouts} pagos</p>
+                  <p className="text-slate-600">{brand.approvedCheckouts} conv.</p>
+                  <p className="text-slate-600">{brand.approvedPayments} pagos</p>
                   <p className="font-semibold text-slate-900">{formatArs(brand.revenueArs)}</p>
                   <p className="text-slate-500">
                     {brand.attributedUsers
