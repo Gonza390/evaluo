@@ -39,6 +39,7 @@ export type ReferralAdminCodeMetric = {
   approvedCheckouts: number;
   pendingCheckouts: number;
   failedCheckouts: number;
+  approvedPayments: number;
   activatedClaims: number;
   revenueArs: number;
   discountsArs: number;
@@ -54,6 +55,7 @@ export type ReferralAdminData = {
     attributedUsers: number;
     checkouts: number;
     approvedCheckouts: number;
+    approvedPayments: number;
     revenueArs: number;
     discountsArs: number;
   };
@@ -116,7 +118,7 @@ export async function obtenerReferidosAdministrador(): Promise<ActionResult<Refe
         .from('referral_partners')
         .select('id, brand_id, display_name, contact_email, status')
         .order('display_name'),
-      admin.rpc('get_referral_code_metrics'),
+      admin.rpc('get_referral_code_metrics_v2'),
     ]);
 
     if (brandsResult.error) throw brandsResult.error;
@@ -157,6 +159,7 @@ export async function obtenerReferidosAdministrador(): Promise<ActionResult<Refe
         approvedCheckouts: Number(row.approved_checkouts ?? 0),
         pendingCheckouts: Number(row.pending_checkouts ?? 0),
         failedCheckouts: Number(row.failed_checkouts ?? 0),
+        approvedPayments: Number(row.approved_payments ?? 0),
         activatedClaims: Number(row.activated_claims ?? 0),
         revenueArs: Number(row.revenue_ars ?? 0),
         discountsArs: Number(row.discounts_ars ?? 0),
@@ -176,6 +179,7 @@ export async function obtenerReferidosAdministrador(): Promise<ActionResult<Refe
           attributedUsers: codes.reduce((sum, row) => sum + row.attributedUsers, 0),
           checkouts: codes.reduce((sum, row) => sum + row.checkoutAttempts, 0),
           approvedCheckouts: codes.reduce((sum, row) => sum + row.approvedCheckouts, 0),
+          approvedPayments: codes.reduce((sum, row) => sum + row.approvedPayments, 0),
           revenueArs: codes.reduce((sum, row) => sum + row.revenueArs, 0),
           discountsArs: codes.reduce((sum, row) => sum + row.discountsArs, 0),
         },
