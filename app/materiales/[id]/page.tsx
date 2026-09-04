@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { FileText } from 'lucide-react';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
+import { MaterialStudyStatusWorkspace } from '@/components/material-study-status-workspace';
 import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
 import { StudentMaterialShareControl } from '@/components/student-material-share-control';
 import { resolveAdminActor } from '@/lib/access-control';
@@ -33,13 +34,9 @@ function normalizeMaterialVisibility(value: string | null | undefined): 'private
 }
 
 function isMissingStudentMaterialsTableError(error: unknown) {
-  if (!error || typeof error !== 'object') {
-    return false;
-  }
-
+  if (!error || typeof error !== 'object') return false;
   const code = 'code' in error ? String(error.code ?? '') : '';
   const message = 'message' in error ? String(error.message ?? '') : '';
-
   return code === '42P01' || message.toLowerCase().includes('student_materials');
 }
 
@@ -76,7 +73,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const canonicalHref = `/materiales/${buildSeoEntitySlug(material.title, material.id)}`;
     const context = [materia?.nombre, carrera?.nombre, universidad?.nombre].filter(Boolean).join(' · ');
-    const pageDetail = material.page_count ? `${material.page_count} páginas · PDF, resumen y glosario` : 'PDF, resumen y glosario';
+    const pageDetail = material.page_count
+      ? `${material.page_count} páginas · PDF, resumen y glosario`
+      : 'PDF, resumen y glosario';
     const description = materia?.nombre
       ? `Material de ${materia.nombre} compartido en Evaluo. Abrí el PDF procesado junto con su resumen y glosario.`
       : 'Material de estudio compartido en Evaluo con PDF procesado, resumen y glosario.';
@@ -114,9 +113,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
   const { id: routeValue } = await params;
   const materialId = resolveMaterialId(routeValue);
 
-  if (!isUuid(materialId)) {
-    notFound();
-  }
+  if (!isUuid(materialId)) notFound();
 
   const supabase = await createClientServer();
   const {
@@ -125,10 +122,6 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
   try {
     const admin = createAdminClient();
-
-    // Vercel puede cortar un worker largo antes de que llegue a ejecutar su catch.
-    // Antes de mostrar el estado, liberamos cualquier lease vencido y reflejamos
-    // el fallo en student_materials para que el usuario pueda reintentarlo.
     await recoverStaleStudentMaterialJobs(admin, materialId);
 
     const { data: material, error } = await supabase
@@ -139,13 +132,8 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       .eq('id', materialId)
       .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
-
-    if (!material) {
-      notFound();
-    }
+    if (error) throw error;
+    if (!material) notFound();
 
     const canonicalSegment = buildSeoEntitySlug(material.title, material.id);
     if (routeValue.includes('--') && routeValue !== canonicalSegment) {
@@ -155,85 +143,53 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
     const [{ data: carrera }, { data: universidad }, { data: materia }, signedUrlResult] =
       await Promise.all([
         admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
-        admin
-          .from('universidades')
-          .select('nombre')
-          .eq('id', material.universidad_id)
-          .maybeSingle(),
+        admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
         admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
         admin.storage.from('biblioteca').createSignedUrl(material.file_path, 60 * 15),
       ]);
 
     const viewerUrl = signedUrlResult.data?.signedUrl;
-    if (!viewerUrl || signedUrlResult.error) {
-      notFound();
-    }
+    if (!viewerUrl || signedUrlResult.error) notFound();
 
     const isOwner = user?.id === material.user_id;
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
+    const backHref = isOwner
+      ? '/dashboard/materiales'
+      : getMateriaRoute(material.materia_id, material.carrera_id);
 
     if (material.processing_status !== 'ready') {
+      const failed = material.processing_status === 'failed';
       return (
-        <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
-          <div className="surface-panel flex w-full flex-col gap-4 border-slate-200 bg-white px-6 py-8 sm:px-8">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF4FF] text-[#2563EB]">
-              <FileText className="h-7 w-7" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">
-                {material.processing_status === 'failed'
-                  ? 'El procesamiento se interrumpió'
-                  : 'Estamos preparando este material'}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {material.processing_status === 'failed'
-                  ? (material.processing_error ??
-                    'No pudimos generar el espacio de estudio del PDF.')
-                  : (material.processing_message ??
-                    'Seguimos generando el resumen y el glosario del documento.')}
-              </p>
-              <p className="mt-3 text-xs leading-5 text-slate-500">
-                Progreso actual: {material.processing_progress ?? 0}%.
-              </p>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white">
-              <div
-                className={`h-full rounded-full ${
-                  material.processing_status === 'failed'
-                    ? 'bg-red-400'
-                    : 'bg-[linear-gradient(90deg,#F59E0B_0%,#FB923C_45%,#2563EB_100%)]'
-                }`}
-                style={{
-                  width: `${Math.min(100, Math.max(0, material.processing_progress ?? 0))}%`,
-                }}
-              />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {material.processing_status === 'failed' && isOwner ? (
-                <StudentMaterialProcessingRetry materialId={material.id} />
-              ) : null}
-              <Link
-                href="/dashboard/materiales"
-                className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                Volver a materiales
-              </Link>
-              {material.processing_status !== 'failed' ? (
+        <MaterialStudyStatusWorkspace
+          backHref={backHref}
+          carreraName={carrera?.nombre ?? 'Carrera'}
+          universidadName={universidad?.nombre ?? 'Universidad'}
+          materiaName={materia?.nombre ?? 'Materia'}
+          title={material.title}
+          fileName={material.file_name}
+          viewerUrl={viewerUrl}
+          status={failed ? 'failed' : 'processing'}
+          progress={material.processing_progress}
+          message={
+            failed
+              ? material.processing_error ?? 'No pudimos generar el espacio de estudio del PDF.'
+              : material.processing_message ?? 'Seguimos generando el resumen y el glosario del documento.'
+          }
+          actions={
+            <>
+              {failed && isOwner ? <StudentMaterialProcessingRetry materialId={material.id} /> : null}
+              {!failed ? (
                 <Link
-                  href={
-                    isOwner
-                      ? '/dashboard/materiales'
-                      : getMateriaRoute(material.materia_id, material.carrera_id)
-                  }
+                  href={backHref}
                   className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  Actualizar luego
+                  Continuar luego
                 </Link>
               ) : null}
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
       );
     }
 
@@ -250,35 +206,26 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     if (studySummary.status !== 'ready') {
       return (
-        <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
-          <div className="surface-panel flex w-full flex-col gap-4 border-slate-200 bg-white px-6 py-8 sm:px-8">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF4FF] text-[#2563EB]">
-              <FileText className="h-7 w-7" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">
-                Estamos sincronizando el material
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                El PDF ya figura como listo, pero todavía no encontramos todos los artefactos
-                persistidos. En breve debería aparecer el resumen y el glosario sin reprocesar desde
-                esta vista.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href={
-                  isOwner
-                    ? '/dashboard/materiales'
-                    : getMateriaRoute(material.materia_id, material.carrera_id)
-                }
-                className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:from-[#1D4ED8] hover:to-[#4F46E5]"
-              >
-                Volver
-              </Link>
-            </div>
-          </div>
-        </div>
+        <MaterialStudyStatusWorkspace
+          backHref={backHref}
+          carreraName={carrera?.nombre ?? 'Carrera'}
+          universidadName={universidad?.nombre ?? 'Universidad'}
+          materiaName={materia?.nombre ?? 'Materia'}
+          title={material.title}
+          fileName={material.file_name}
+          viewerUrl={viewerUrl}
+          status="syncing"
+          progress={100}
+          message="El PDF ya está procesado. Estamos terminando de sincronizar el resumen, el glosario y el resto de tu espacio de estudio."
+          actions={
+            <Link
+              href={backHref}
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Continuar luego
+            </Link>
+          }
+        />
       );
     }
 
@@ -339,11 +286,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
           />
         ) : null}
         <MaterialStudyWorkspace
-          backHref={
-            isOwner
-              ? '/dashboard/materiales'
-              : getMateriaRoute(material.materia_id, material.carrera_id)
-          }
+          backHref={backHref}
           canRegenerate={canRegenerate}
           carreraName={carrera?.nombre ?? 'Carrera'}
           fileName={material.file_name}
@@ -363,9 +306,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       </>
     );
   } catch (error) {
-    if (!isMissingStudentMaterialsTableError(error)) {
-      throw error;
-    }
+    if (!isMissingStudentMaterialsTableError(error)) throw error;
 
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
