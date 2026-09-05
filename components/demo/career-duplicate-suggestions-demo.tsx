@@ -131,7 +131,6 @@ export function CareerDuplicateSuggestionsDemo({ universityName, careers }: Prop
                 {matches.length ? (
                   <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
                     <div className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600">¿Buscabas alguna de estas?</div>
-                    <p className="mt-0.5 text-xs leading-5 text-slate-500">Ya están disponibles en Evaluo.</p>
                     <div className="mt-2 space-y-2">
                       {matches.map(({ career }) => (
                         <button
