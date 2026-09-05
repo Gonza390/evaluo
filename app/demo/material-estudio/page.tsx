@@ -1,4 +1,5 @@
 import { AppShellProviders } from '@/components/app-shell-providers';
+import { DemoMaterialGuidedTour } from '@/components/demo-material-guided-tour';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
@@ -10,13 +11,21 @@ const GENERAL_STUDY_SUMMARY = demoArtifacts.summary as StudentMaterialSummary;
 const GENERAL_STUDY_GLOSSARY = demoArtifacts.glossary as StudyGlossaryItem[];
 const START_WITH_OWN_MATERIAL =
   '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
+const GUIDED_TOUR_UPLOAD = '/dashboard/materiales/subir?source=demo_material_tour';
 
-export default async function DemoMaterialEstudioPage() {
+export default async function DemoMaterialEstudioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ source?: string; tour?: string }>;
+}) {
+  const { source = '', tour = '' } = await searchParams;
   const supabase = await createClientServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   const isPremium = user?.id ? await hasPremiumAccess(user.id) : false;
+  const guidedTourEnabled = tour === '1' || source === 'onboarding_missing_catalog';
+  const forceGuidedTour = tour === '1';
 
   return (
     <>
@@ -72,6 +81,12 @@ export default async function DemoMaterialEstudioPage() {
           visibility="shared"
           studyGlossary={GENERAL_STUDY_GLOSSARY}
           studySummary={GENERAL_STUDY_SUMMARY}
+        />
+        <DemoMaterialGuidedTour
+          enabled={guidedTourEnabled}
+          force={forceGuidedTour}
+          source={source || (forceGuidedTour ? 'forced_preview' : 'demo_material')}
+          uploadHref={GUIDED_TOUR_UPLOAD}
         />
       </AppShellProviders>
     </>
