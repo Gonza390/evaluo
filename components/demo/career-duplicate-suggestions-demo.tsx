@@ -433,36 +433,36 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'done' && selectedUniversity ? (
             <div className="flex h-full flex-col justify-center">
               <div className="text-center">
-                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)]"><Check className="h-6 w-6" /></span>
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-[0_10px_24px_rgba(79,70,229,0.18)]"><Check className="h-6 w-6" /></span>
                 <h1 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950">Empezá con tu primer material</h1>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
                   Tu solicitud quedó registrada. Podés subir un PDF propio o ver un ejemplo para conocer cómo lo transforma Evaluo.
                 </p>
               </div>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+              <div className="mt-6 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
                 <a
                   href="/dashboard/materiales/subir?source=onboarding_missing_catalog"
-                  className="group relative overflow-hidden rounded-2xl border-2 border-indigo-500 bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 p-5 text-left text-white shadow-[0_16px_36px_rgba(79,70,229,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(79,70,229,0.34)]"
+                  className="group relative rounded-2xl border-2 border-indigo-200 bg-white p-5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition hover:border-indigo-300 hover:shadow-[0_14px_32px_rgba(79,70,229,0.10)]"
                 >
-                  <span className="absolute right-3 top-3 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white ring-1 ring-white/20">
+                  <span className="absolute right-3 top-3 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-indigo-600">
                     Recomendado
                   </span>
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/20 transition group-hover:bg-white/20">
-                    <FileUp className="h-6 w-6" />
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition group-hover:bg-indigo-100">
+                    <FileUp className="h-5 w-5" />
                   </span>
-                  <h2 className="mt-4 text-lg font-bold">Subir mi PDF</h2>
-                  <p className="mt-1.5 max-w-[220px] text-sm leading-5 text-indigo-100">Usá tu propio material y empezá a prepararlo para estudiar.</p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-white">
+                  <h2 className="mt-4 text-lg font-bold text-slate-950">Subir mi PDF</h2>
+                  <p className="mt-1.5 max-w-[230px] text-sm leading-5 text-slate-500">Usá tu propio material y preparalo para estudiar con Evaluo.</p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600">
                     Elegir PDF <ArrowRight className="h-4 w-4" />
                   </span>
                 </a>
 
                 <a
                   href="/demo/material-estudio?source=onboarding_missing_catalog"
-                  className="group rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
+                  className="group rounded-2xl border border-slate-200 bg-white p-4 text-left transition hover:border-slate-300 hover:bg-slate-50/60"
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition group-hover:bg-slate-200/70">
                     <FileText className="h-5 w-5" />
                   </span>
                   <h2 className="mt-3 text-base font-bold text-slate-950">Ver un PDF de ejemplo</h2>
