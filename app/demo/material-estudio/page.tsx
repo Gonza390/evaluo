@@ -90,7 +90,7 @@ export default async function DemoMaterialEstudioPage({
           > div.pointer-events-none.absolute.border-2:first-of-type,
         div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 5 de 6'])
           > div.pointer-events-none.absolute.border-2:first-of-type {
-          transform: scale(0.97, 0.92);
+          transform: translateX(3px) scale(0.97, 0.92);
           transform-origin: center;
           border-radius: 12px !important;
           box-shadow:
@@ -108,7 +108,7 @@ export default async function DemoMaterialEstudioPage({
           > svg mask rect:nth-of-type(2) {
           transform-box: fill-box;
           transform-origin: center;
-          transform: scale(0.97, 0.92);
+          transform: translateX(3px) scale(0.97, 0.92);
         }
 
         div[aria-live='polite'] > svg {
