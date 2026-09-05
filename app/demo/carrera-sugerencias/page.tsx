@@ -1,6 +1,24 @@
 import { CareerDuplicateSuggestionsDemo } from '@/components/demo/career-duplicate-suggestions-demo';
 
+const demoUniversities = [
+  {
+    id: 'demo-uba',
+    nombre: 'Universidad de Buenos Aires',
+    aliases: ['UBA', 'U.B.A.', 'Universidad Buenos Aires'],
+  },
+  {
+    id: 'demo-siglo21',
+    nombre: 'Universidad Siglo 21',
+    aliases: ['Siglo 21', 'Siglo XXI', 'UES21'],
+  },
+];
+
 const demoCareers = [
+  {
+    id: 'demo-uba-medicina',
+    nombre: 'Medicina',
+    universidad_id: 'demo-uba',
+  },
   {
     id: 'demo-abogacia',
     nombre: 'Abogacía',
@@ -29,10 +47,5 @@ const demoCareers = [
 ];
 
 export default function CareerDuplicateSuggestionsDemoPage() {
-  return (
-    <CareerDuplicateSuggestionsDemo
-      universityName="Universidad Siglo 21"
-      careers={demoCareers}
-    />
-  );
+  return <CareerDuplicateSuggestionsDemo universities={demoUniversities} careers={demoCareers} />;
 }
