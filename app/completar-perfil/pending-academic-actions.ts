@@ -4,6 +4,13 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 import { isUuid } from '@/lib/uuid';
+import { findStrongCareerMatch, normalizeCareerName } from '@/lib/career-matching';
+import { findStrongUniversityMatch, normalizeUniversityName } from '@/lib/university-matching';
+
+type PendingUniversityInput = {
+  universidadNombre: string;
+  ciudad?: string;
+};
 
 type PendingCareerInput = {
   universidadId: string;
@@ -15,6 +22,17 @@ type PendingSubjectInput = {
   carreraId: string;
   materiaNombre: string;
 };
+
+type PendingUniversityResult =
+  | {
+      success: true;
+      universidad: {
+        id: string;
+        nombre: string;
+        approval_status: 'approved' | 'pending';
+      };
+    }
+  | { success: false; message: string };
 
 type PendingCareerResult =
   | {
@@ -61,6 +79,109 @@ function visibleToUser(row: { approval_status?: string | null; owner_user_id?: s
   return row.approval_status === 'approved' || row.owner_user_id === userId;
 }
 
+async function recordPendingUniversityRequest(
+  admin: any,
+  userId: string,
+  universidad: { nombre: string; city?: string | null; approval_status?: string | null },
+  carreraNombre: string
+) {
+  if (universidad.approval_status !== 'pending') return;
+
+  const { data: existing, error: existingError } = await admin
+    .from('university_requests')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .eq('university_name', universidad.nombre)
+    .eq('career_name', carreraNombre)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (existing) return;
+
+  const { error } = await admin.from('university_requests').insert({
+    user_id: userId,
+    university_name: universidad.nombre,
+    country: 'Argentina',
+    city: universidad.city ?? null,
+    career_name: carreraNombre,
+    note: 'Solicitud creada desde el onboarding académico.',
+    status: 'pending',
+  });
+
+  if (error) throw error;
+}
+
+export async function createPrivatePendingUniversityAction(
+  input: PendingUniversityInput
+): Promise<PendingUniversityResult> {
+  try {
+    const user = await requireUser();
+    const universidadNombre = normalizeName(input.universidadNombre, 160);
+    const ciudad = normalizeName(input.ciudad, 120);
+
+    if (universidadNombre.length < 3) {
+      return { success: false, message: 'Escribí el nombre completo de tu universidad.' };
+    }
+
+    const admin = createAdminClient() as any;
+    const { data: universidades, error: universidadesError } = await admin
+      .from('universidades')
+      .select('id, nombre, approval_status, owner_user_id, city')
+      .limit(500);
+
+    if (universidadesError) throw universidadesError;
+
+    const visibles = (universidades ?? []).filter((row: any) => visibleToUser(row, user.id));
+    const exacta = visibles.find(
+      (row: any) => normalizeUniversityName(row.nombre) === normalizeUniversityName(universidadNombre)
+    );
+    const aprobadas = visibles.filter((row: any) => row.approval_status === 'approved');
+    const coincidenciaFuerte = findStrongUniversityMatch(universidadNombre, aprobadas)?.university ?? null;
+    const existente = exacta ?? coincidenciaFuerte;
+
+    if (existente) {
+      return {
+        success: true,
+        universidad: {
+          id: existente.id,
+          nombre: existente.nombre,
+          approval_status: existente.approval_status === 'approved' ? 'approved' : 'pending',
+        },
+      };
+    }
+
+    const { data: creada, error: crearError } = await admin
+      .from('universidades')
+      .insert({
+        nombre: universidadNombre,
+        city: ciudad || null,
+        approval_status: 'pending',
+        owner_user_id: user.id,
+      })
+      .select('id, nombre, approval_status')
+      .single();
+
+    if (crearError) throw crearError;
+
+    return {
+      success: true,
+      universidad: {
+        id: creada.id,
+        nombre: creada.nombre,
+        approval_status: 'pending',
+      },
+    };
+  } catch (error) {
+    logError('onboarding.createPrivatePendingUniversity', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No pudimos guardar tu universidad.',
+    };
+  }
+}
+
 export async function createPrivatePendingCareerAction(
   input: PendingCareerInput
 ): Promise<PendingCareerResult> {
@@ -80,12 +201,12 @@ export async function createPrivatePendingCareerAction(
     const admin = createAdminClient() as any;
     const { data: universidad, error: universidadError } = await admin
       .from('universidades')
-      .select('id')
+      .select('id, nombre, city, approval_status, owner_user_id')
       .eq('id', universidadId)
       .maybeSingle();
 
     if (universidadError) throw universidadError;
-    if (!universidad) {
+    if (!universidad || !visibleToUser(universidad, user.id)) {
       return { success: false, message: 'No encontramos la universidad seleccionada.' };
     }
 
@@ -93,16 +214,20 @@ export async function createPrivatePendingCareerAction(
       .from('carreras')
       .select('id, nombre, universidad_id, approval_status, owner_user_id, facultad_id')
       .eq('universidad_id', universidadId)
-      .ilike('nombre', carreraNombre)
-      .limit(20);
+      .limit(250);
 
     if (carrerasError) throw carrerasError;
 
-    const carreraExistente = (carrerasExistentes ?? []).find((row: any) =>
-      visibleToUser(row, user.id)
+    const visibles = (carrerasExistentes ?? []).filter((row: any) => visibleToUser(row, user.id));
+    const exacta = visibles.find(
+      (row: any) => normalizeCareerName(row.nombre) === normalizeCareerName(carreraNombre)
     );
+    const aprobadas = visibles.filter((row: any) => row.approval_status === 'approved');
+    const coincidenciaFuerte = findStrongCareerMatch(carreraNombre, aprobadas)?.career ?? null;
+    const carreraExistente = exacta ?? coincidenciaFuerte;
 
     if (carreraExistente) {
+      await recordPendingUniversityRequest(admin, user.id, universidad, carreraExistente.nombre);
       return {
         success: true,
         carrera: {
@@ -167,6 +292,7 @@ export async function createPrivatePendingCareerAction(
       .single();
 
     if (crearCarreraError) throw crearCarreraError;
+    await recordPendingUniversityRequest(admin, user.id, universidad, carreraCreada.nombre);
 
     return {
       success: true,
