@@ -87,12 +87,35 @@ function findButtonByText(text: string, selector = 'button') {
   );
 }
 
-function clickStudyTab(label: string) {
-  findButtonByText(label, '[role="tab"]')?.click();
+function findStudyTab(label: string) {
+  return (
+    Array.from(document.querySelectorAll<HTMLElement>('[role="tab"]')).find(
+      (element) => isVisible(element) && element.textContent?.trim().includes(label)
+    ) ?? null
+  );
+}
+
+function isStudyTabActive(label: string) {
+  const tab = findStudyTab(label);
+  if (!tab) return false;
+  return tab.getAttribute('aria-selected') === 'true' || tab.getAttribute('data-state') === 'active';
+}
+
+function activateStudyTab(label: string) {
+  const tab = findStudyTab(label);
+  if (!tab) return false;
+  if (tab.getAttribute('aria-selected') !== 'true' && tab.getAttribute('data-state') !== 'active') {
+    tab.click();
+  }
+  return true;
+}
+
+function isPdfVisible() {
+  return Boolean(findVisible<HTMLElement>('[aria-label="Ocultar PDF"]'));
 }
 
 function ensurePdfVisible() {
-  if (findVisible<HTMLElement>('[aria-label="Ocultar PDF"]')) return;
+  if (isPdfVisible()) return;
   findButtonByText('Mostrar PDF')?.click();
 }
 
@@ -124,6 +147,7 @@ export function DemoMaterialGuidedTourV2({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const [stepReady, setStepReady] = useState(false);
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [cardSize, setCardSize] = useState({ width: 360, height: 360 });
@@ -184,29 +208,65 @@ export function DemoMaterialGuidedTourV2({
   useEffect(() => {
     if (!open) return;
 
-    let timer: number | undefined;
-    if (currentStep.tab) {
-      clickStudyTab(currentStep.tab);
-      timer = window.setTimeout(() => {
-        if (stepIndex === 0) ensurePdfVisible();
-        else hidePdf();
-      }, 60);
+    setStepReady(false);
+    setTargetRect(null);
+
+    if (!currentStep.tab) {
+      setStepReady(true);
+      trackMarketingEvent('demo_material_tour_step_viewed', {
+        source,
+        step: stepIndex + 1,
+        total_steps: TOUR_STEPS.length,
+        target: currentStep.target ?? 'conversion',
+      });
+      return;
     }
 
-    trackMarketingEvent('demo_material_tour_step_viewed', {
-      source,
-      step: stepIndex + 1,
-      total_steps: TOUR_STEPS.length,
-      target: currentStep.target ?? 'conversion',
-    });
+    let cancelled = false;
+    let attempts = 0;
+    let timer: number | undefined;
+
+    const prepare = () => {
+      if (cancelled) return;
+      attempts += 1;
+
+      activateStudyTab(currentStep.tab);
+
+      if (stepIndex === 0) {
+        ensurePdfVisible();
+      } else {
+        hidePdf();
+      }
+
+      const tabReady = isStudyTabActive(currentStep.tab);
+      const viewerReady = stepIndex === 0 ? isPdfVisible() : !isPdfVisible();
+
+      if (tabReady && viewerReady) {
+        setStepReady(true);
+        trackMarketingEvent('demo_material_tour_step_viewed', {
+          source,
+          step: stepIndex + 1,
+          total_steps: TOUR_STEPS.length,
+          target: currentStep.target ?? 'conversion',
+        });
+        return;
+      }
+
+      if (attempts < 30) {
+        timer = window.setTimeout(prepare, attempts < 6 ? 90 : 140);
+      }
+    };
+
+    timer = window.setTimeout(prepare, 40);
 
     return () => {
+      cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
   }, [currentStep.tab, currentStep.target, open, source, stepIndex]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !stepReady) return;
 
     let cancelled = false;
     let timer: number | undefined;
@@ -228,6 +288,11 @@ export function DemoMaterialGuidedTourV2({
       if (!element) {
         attempts += 1;
         if (attempts < 20) timer = window.setTimeout(() => measure(shouldScroll), 100);
+        return;
+      }
+
+      if (currentStep.tab && !isStudyTabActive(currentStep.tab)) {
+        setStepReady(false);
         return;
       }
 
@@ -258,7 +323,7 @@ export function DemoMaterialGuidedTourV2({
       });
     };
 
-    timer = window.setTimeout(() => measure(true), stepIndex === 0 ? 460 : 240);
+    timer = window.setTimeout(() => measure(true), stepIndex === 0 ? 260 : 160);
     const update = () => measure(false);
     window.addEventListener('resize', update);
     window.addEventListener('scroll', update, true);
@@ -269,7 +334,7 @@ export function DemoMaterialGuidedTourV2({
       window.removeEventListener('resize', update);
       window.removeEventListener('scroll', update, true);
     };
-  }, [currentStep.target, open, stepIndex]);
+  }, [currentStep.tab, currentStep.target, open, stepIndex, stepReady]);
 
   useEffect(() => {
     if (!open || !cardRef.current) return;
