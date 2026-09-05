@@ -1,5 +1,5 @@
 import { AppShellProviders } from '@/components/app-shell-providers';
-import { DemoMaterialGuidedTour } from '@/components/demo-material-guided-tour';
+import { DemoMaterialGuidedTourV2 } from '@/components/demo-material-guided-tour-v2';
 import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
@@ -82,7 +82,7 @@ export default async function DemoMaterialEstudioPage({
           studyGlossary={GENERAL_STUDY_GLOSSARY}
           studySummary={GENERAL_STUDY_SUMMARY}
         />
-        <DemoMaterialGuidedTour
+        <DemoMaterialGuidedTourV2
           enabled={guidedTourEnabled}
           force={forceGuidedTour}
           source={source || (forceGuidedTour ? 'forced_preview' : 'demo_material')}
