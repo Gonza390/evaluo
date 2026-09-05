@@ -78,7 +78,37 @@ export default async function DemoMaterialEstudioPage({
             width 220ms cubic-bezier(0.22, 1, 0.36, 1),
             height 220ms cubic-bezier(0.22, 1, 0.36, 1),
             border-radius 220ms ease,
+            transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
             opacity 180ms ease;
+        }
+
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 2 de 6'])
+          > div.pointer-events-none.absolute.border-2:first-of-type,
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 3 de 6'])
+          > div.pointer-events-none.absolute.border-2:first-of-type,
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 4 de 6'])
+          > div.pointer-events-none.absolute.border-2:first-of-type,
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 5 de 6'])
+          > div.pointer-events-none.absolute.border-2:first-of-type {
+          transform: scale(0.97, 0.92);
+          transform-origin: center;
+          border-radius: 12px !important;
+          box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.34),
+            0 5px 14px rgba(15, 23, 42, 0.1) !important;
+        }
+
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 2 de 6'])
+          > svg mask rect:nth-of-type(2),
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 3 de 6'])
+          > svg mask rect:nth-of-type(2),
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 4 de 6'])
+          > svg mask rect:nth-of-type(2),
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 5 de 6'])
+          > svg mask rect:nth-of-type(2) {
+          transform-box: fill-box;
+          transform-origin: center;
+          transform: scale(0.97, 0.92);
         }
 
         div[aria-live='polite'] > svg {
