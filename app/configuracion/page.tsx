@@ -2,18 +2,34 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Globe2, GraduationCap, MapPin, Phone, Save, School, Settings } from 'lucide-react';
+import {
+  CheckCircle2,
+  Globe2,
+  GraduationCap,
+  MapPin,
+  Phone,
+  Save,
+  School,
+  Settings,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { useUser } from '@/hooks/useUser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { logError } from '@/lib/observability';
 import { resolveProfileSettingsState } from '@/lib/profile-settings';
 import { SubscriptionSettings } from '@/components/pricing/SubscriptionSettings';
+import { findCareerMatches, normalizeCareerName } from '@/lib/career-matching';
 
 type Universidad = {
   id: string;
@@ -66,9 +82,7 @@ export default function ConfiguracionPage() {
 
     async function loadProfile() {
       if (!user) {
-        if (active) {
-          setLoadingProfile(false);
-        }
+        if (active) setLoadingProfile(false);
         return;
       }
 
@@ -79,9 +93,7 @@ export default function ConfiguracionPage() {
           .eq('id', user.id)
           .maybeSingle();
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         const resolvedProfileState = resolveProfileSettingsState({
           profile,
@@ -89,9 +101,7 @@ export default function ConfiguracionPage() {
           fallbackName: getUserName(),
         });
 
-        if (!active) {
-          return;
-        }
+        if (!active) return;
 
         setNombre(resolvedProfileState.nombre);
         setPais(resolvedProfileState.pais);
@@ -108,9 +118,7 @@ export default function ConfiguracionPage() {
             .eq('id', resolvedProfileState.universidadId)
             .maybeSingle();
 
-          if (active) {
-            setUniversidadSearch(universidad?.nombre ?? '');
-          }
+          if (active) setUniversidadSearch(universidad?.nombre ?? '');
         }
 
         if (resolvedProfileState.carreraId) {
@@ -120,9 +128,7 @@ export default function ConfiguracionPage() {
             .eq('id', resolvedProfileState.carreraId)
             .maybeSingle();
 
-          if (active) {
-            setCarreraSearch(carrera?.nombre ?? '');
-          }
+          if (active) setCarreraSearch(carrera?.nombre ?? '');
         }
       } catch (error) {
         logError('configuracion.loadProfile', error);
@@ -132,9 +138,7 @@ export default function ConfiguracionPage() {
           variant: 'destructive',
         });
       } finally {
-        if (active) {
-          setLoadingProfile(false);
-        }
+        if (active) setLoadingProfile(false);
       }
     }
 
@@ -173,9 +177,7 @@ export default function ConfiguracionPage() {
           userId: user.id,
         });
       } finally {
-        if (active) {
-          setLoadingUniversidades(false);
-        }
+        if (active) setLoadingUniversidades(false);
       }
     }
 
@@ -199,33 +201,23 @@ export default function ConfiguracionPage() {
       setLoadingCarreras(true);
 
       try {
-        let query = supabase
+        const { data, error } = await supabase
           .from('carreras')
           .select('id, nombre, universidad_id')
           .eq('universidad_id', universidadId)
-          .order('nombre')
-          .limit(12);
+          .order('nombre');
 
-        const normalizedSearch = carreraSearch.trim();
-        if (normalizedSearch.length >= 2) {
-          query = query.ilike('nombre', `%${normalizedSearch}%`);
-        }
-
-        const { data, error } = await query;
         if (error) throw error;
         if (!active) return;
 
         setCarreras(data ?? []);
       } catch (error) {
         logError('configuracion.loadCarreras', error, {
-          search: carreraSearch.trim(),
           universidadId,
           userId: user.id,
         });
       } finally {
-        if (active) {
-          setLoadingCarreras(false);
-        }
+        if (active) setLoadingCarreras(false);
       }
     }
 
@@ -234,12 +226,31 @@ export default function ConfiguracionPage() {
     return () => {
       active = false;
     };
-  }, [carreraSearch, universidadId, user]);
+  }, [universidadId, user]);
 
   const universidadSeleccionada = useMemo(
     () => universidades.find((universidad) => universidad.id === universidadId) ?? null,
     [universidadId, universidades]
   );
+
+  const carrerasFiltradas = useMemo(() => {
+    const normalizedSearch = normalizeCareerName(carreraSearch);
+
+    if (!normalizedSearch) {
+      return carreras.slice(0, 12);
+    }
+
+    if (normalizedSearch.length < 3) {
+      return carreras
+        .filter((carrera) => normalizeCareerName(carrera.nombre).includes(normalizedSearch))
+        .slice(0, 12);
+    }
+
+    return findCareerMatches(carreraSearch, carreras, {
+      limit: 12,
+      minScore: 0.58,
+    }).map((match) => match.career);
+  }, [carreraSearch, carreras]);
 
   const currentProfileState = {
     nombre: nombre.trim(),
@@ -255,8 +266,7 @@ export default function ConfiguracionPage() {
         nombre: currentProfileState.nombre !== initialProfileState.nombre.trim(),
         pais: currentProfileState.pais !== initialProfileState.pais.trim(),
         telefono: currentProfileState.telefono !== initialProfileState.telefono.trim(),
-        anioCarrera:
-          currentProfileState.anioCarrera !== initialProfileState.anioCarrera.trim(),
+        anioCarrera: currentProfileState.anioCarrera !== initialProfileState.anioCarrera.trim(),
         universidadId:
           currentProfileState.universidadId !== initialProfileState.universidadId.trim(),
         carreraId: currentProfileState.carreraId !== initialProfileState.carreraId.trim(),
@@ -295,9 +305,7 @@ export default function ConfiguracionPage() {
         ...(changedFields.nombre ? { nombre: cleanNombre } : {}),
         ...(changedFields.pais ? { pais: cleanPais } : {}),
         ...(changedFields.telefono ? { telefono: cleanTelefono || null } : {}),
-        ...(changedFields.anioCarrera
-          ? { anio_carrera: cleanAnioCarrera || null }
-          : {}),
+        ...(changedFields.anioCarrera ? { anio_carrera: cleanAnioCarrera || null } : {}),
         ...(changedFields.universidadId
           ? { universidad_id: currentProfileState.universidadId || null }
           : {}),
@@ -306,9 +314,7 @@ export default function ConfiguracionPage() {
           : {}),
       });
 
-      if (profileError) {
-        throw profileError;
-      }
+      if (profileError) throw profileError;
 
       const authData: Record<string, string> = {};
       if (changedFields.nombre) {
@@ -319,18 +325,12 @@ export default function ConfiguracionPage() {
         authData.country = cleanPais;
         authData.pais = cleanPais;
       }
-      if (changedFields.telefono) {
-        authData.telefono = cleanTelefono;
-      }
-      if (changedFields.anioCarrera) {
-        authData.anio_carrera = cleanAnioCarrera;
-      }
+      if (changedFields.telefono) authData.telefono = cleanTelefono;
+      if (changedFields.anioCarrera) authData.anio_carrera = cleanAnioCarrera;
 
       if (Object.keys(authData).length > 0) {
         const { error: authError } = await supabase.auth.updateUser({ data: authData });
-        if (authError) {
-          throw authError;
-        }
+        if (authError) throw authError;
       }
 
       setInitialProfileState({ ...currentProfileState });
@@ -368,9 +368,7 @@ export default function ConfiguracionPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
     <div className="animate-page-enter mx-auto w-full max-w-6xl space-y-6">
@@ -564,12 +562,12 @@ export default function ConfiguracionPage() {
                   <div className="px-4 py-4 text-sm text-muted-foreground">
                     Primero seleccioná una universidad.
                   </div>
-                ) : carreras.length === 0 ? (
+                ) : carrerasFiltradas.length === 0 ? (
                   <div className="px-4 py-4 text-sm text-muted-foreground">
                     No encontramos carreras para esa búsqueda.
                   </div>
                 ) : (
-                  carreras.map((carrera) => (
+                  carrerasFiltradas.map((carrera) => (
                     <button
                       key={carrera.id}
                       type="button"
@@ -597,7 +595,8 @@ export default function ConfiguracionPage() {
 
           <div className="space-y-2">
             <Label htmlFor="anio-carrera" className="font-medium text-foreground">
-              Año de carrera que cursás <span className="font-normal text-muted-foreground">(opcional)</span>
+              Año de carrera que cursás{' '}
+              <span className="font-normal text-muted-foreground">(opcional)</span>
             </Label>
             <Select value={anioCarrera || undefined} onValueChange={setAnioCarrera}>
               <SelectTrigger id="anio-carrera" className="h-12 w-full rounded-xl border-input bg-card">
