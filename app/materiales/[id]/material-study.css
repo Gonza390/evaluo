@@ -36,6 +36,11 @@
   color: var(--primary) !important;
 }
 
+/* El mapa se presenta como una herramienta más; el bloqueo Premium aparece recién al abrirlo. */
+.material-study-editorial [role='tab'][aria-controls$='content-mapa'] > span {
+  display: none !important;
+}
+
 /* La carcasa principal y el PDF conservan estructura, pero sin elevación decorativa. */
 .material-study-editorial [class*='shadow-[0_24px_70px'],
 .material-study-editorial [class*='shadow-[0_22px_54px'],
