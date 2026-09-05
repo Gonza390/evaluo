@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import {
   ArrowDown,
   ArrowLeft,
-  ArrowRight,
   ArrowUp,
   Check,
   Expand,
@@ -58,6 +57,7 @@ export function StudentMaterialFlashcards({
   const [flipped, setFlipped] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
+  const [sessionRecall, setSessionRecall] = useState<Record<number, RecallResult>>({});
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
@@ -65,16 +65,17 @@ export function StudentMaterialFlashcards({
 
   const currentCardIndex = order[position] ?? 0;
   const currentCard = cards[currentCardIndex];
-  const knownCount = Object.values(recallByCard).filter((result) => result === 'known').length;
-  const unknownCount = Object.values(recallByCard).filter((result) => result === 'unknown').length;
+  const knownCount = Object.values(sessionRecall).filter((result) => result === 'known').length;
+  const unknownCount = Object.values(sessionRecall).filter((result) => result === 'unknown').length;
   const reviewedCount = knownCount + unknownCount;
-  const progress = cards.length > 0 ? Math.round((reviewedCount / cards.length) * 100) : 0;
-  const currentRecall = recallByCard[currentCardIndex];
+  const progress = order.length > 0 ? Math.round((reviewedCount / order.length) * 100) : 0;
+  const currentRecall = sessionRecall[currentCardIndex];
   const currentVote = voteByCard[currentCardIndex];
-  const allReviewed = cards.length > 0 && reviewedCount >= cards.length;
+  const allReviewed = started && order.length > 0 && reviewedCount >= order.length;
 
   const startSession = useCallback(() => {
     setOrder(buildSessionOrder(recallByCard, cards.length));
+    setSessionRecall({});
     setPosition(0);
     setFlipped(false);
     setStarted(true);
@@ -82,32 +83,39 @@ export function StudentMaterialFlashcards({
 
   const restartFromScratch = useCallback(() => {
     setRecallByCard({});
+    setSessionRecall({});
     setVoteByCard({});
     setOrder(buildSessionOrder({}, cards.length));
     setPosition(0);
     setFlipped(false);
+    setIsFullscreen(false);
     setStarted(true);
   }, [cards.length]);
 
+  const finishSession = useCallback(() => {
+    setStarted(false);
+    setOrder([]);
+    setSessionRecall({});
+    setPosition(0);
+    setFlipped(false);
+    setIsFullscreen(false);
+  }, []);
+
   const reviewDifficult = useCallback(() => {
-    const unknownIndexes = Object.entries(recallByCard)
+    const unknownIndexes = Object.entries(sessionRecall)
       .filter(([, result]) => result === 'unknown')
       .map(([index]) => Number(index))
       .filter((index) => index >= 0 && index < cards.length);
-    const remaining = shuffledIndexes(cards.length).filter(
-      (index) => !unknownIndexes.includes(index)
-    );
-    const nextRecall = { ...recallByCard };
-    unknownIndexes.forEach((index) => delete nextRecall[index]);
-    setRecallByCard(nextRecall);
-    setOrder([
-      ...shuffledIndexes(unknownIndexes.length).map((index) => unknownIndexes[index]!),
-      ...remaining,
-    ]);
+
+    if (unknownIndexes.length === 0) return;
+
+    setOrder(shuffledIndexes(unknownIndexes.length).map((index) => unknownIndexes[index]!));
+    setSessionRecall({});
     setPosition(0);
     setFlipped(false);
+    setIsFullscreen(false);
     setStarted(true);
-  }, [cards.length, recallByCard]);
+  }, [cards.length, sessionRecall]);
 
   useEffect(() => {
     try {
@@ -178,20 +186,28 @@ export function StudentMaterialFlashcards({
     return () => window.clearTimeout(timer);
   }, [hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
 
-  const navigate = useCallback(
-    (direction: -1 | 1) => {
-      setPosition((current) => Math.min(Math.max(0, current + direction), order.length - 1));
-      setFlipped(false);
-    },
-    [order.length]
-  );
+  const navigateBack = useCallback(() => {
+    setPosition((current) => Math.max(0, current - 1));
+    setFlipped(false);
+  }, []);
 
   const markRecall = useCallback(
     (result: RecallResult) => {
-      if (!flipped) return;
+      if (!flipped || !currentCard) return;
+
       setRecallByCard((current) => ({ ...current, [currentCardIndex]: result }));
+      setSessionRecall((current) => ({ ...current, [currentCardIndex]: result }));
+
+      if (position < order.length - 1) {
+        setPosition((current) => Math.min(order.length - 1, current + 1));
+        setFlipped(false);
+        return;
+      }
+
+      setFlipped(false);
+      setIsFullscreen(false);
     },
-    [currentCardIndex, flipped]
+    [currentCard, currentCardIndex, flipped, order.length, position]
   );
 
   useEffect(() => {
@@ -206,11 +222,7 @@ export function StudentMaterialFlashcards({
       } else if (event.key === 'ArrowLeft') {
         if (target?.closest('button')) return;
         event.preventDefault();
-        navigate(-1);
-      } else if (event.key === 'ArrowRight') {
-        if (target?.closest('button')) return;
-        event.preventDefault();
-        navigate(1);
+        navigateBack();
       } else if (event.key === 'ArrowUp') {
         if (target?.closest('button')) return;
         event.preventDefault();
@@ -225,7 +237,7 @@ export function StudentMaterialFlashcards({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, markRecall, navigate, started]);
+  }, [isFullscreen, markRecall, navigateBack, started]);
 
   const referenceLabel = useMemo(() => {
     if (!currentCard) return '';
@@ -274,31 +286,41 @@ export function StudentMaterialFlashcards({
           <Check className="h-5 w-5" />
         </div>
         <h3 className="mt-4 text-xl font-bold tracking-[-0.04em] text-slate-950">
-          ¡Repasaste todas las tarjetas!
+          ¡Terminaste esta sesión!
         </h3>
         <p className="mt-2 text-sm font-semibold text-slate-700">
           {knownCount} lo sabías · {unknownCount} no lo sabías
         </p>
         {unknownCount > 0 ? (
           <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-500">
-            Volvé a repasar las {unknownCount} que no sabías para afianzarlas.
+            Podés cerrar la sesión o volver a practicar únicamente las {unknownCount} que no sabías.
           </p>
         ) : (
           <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-500">
-            Perfecto. Volvé cuando quieras para reforzar con recuperación activa.
+            Completaste todas las tarjetas sin pendientes para repasar.
           </p>
         )}
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-          <Button type="button" onClick={reviewDifficult} className="rounded-2xl px-6">
-            Repasar las difíciles
+          {unknownCount > 0 ? (
+            <Button type="button" onClick={reviewDifficult} className="rounded-2xl px-6">
+              <RotateCcw className="h-4 w-4" /> Repasar las que no sabía
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant={unknownCount > 0 ? 'outline' : 'default'}
+            onClick={finishSession}
+            className="rounded-2xl px-6"
+          >
+            <Check className="h-4 w-4" /> Finalizar
           </Button>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={restartFromScratch}
             className="rounded-2xl px-6"
           >
-            <RotateCcw className="h-4 w-4" /> Empezar de nuevo
+            Empezar de nuevo
           </Button>
         </div>
       </div>
@@ -317,7 +339,7 @@ export function StudentMaterialFlashcards({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-slate-950">
-            Tarjeta {position + 1} de {cards.length}
+            Tarjeta {position + 1} de {order.length}
           </p>
           <p className="mt-0.5 flex gap-4 text-sm font-semibold">
             <span className="text-emerald-700">
@@ -469,32 +491,24 @@ export function StudentMaterialFlashcards({
             <ThumbsDown className="h-4 w-4" />
           </Button>
         </div>
+        <p className="text-xs font-medium text-slate-500">Al marcar una respuesta avanzás automáticamente.</p>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-start gap-3">
         <Button
           type="button"
           variant="outline"
-          onClick={() => navigate(-1)}
+          onClick={navigateBack}
           disabled={position === 0}
           className="rounded-xl"
         >
           <ArrowLeft className="h-4 w-4" /> Anterior
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => navigate(1)}
-          disabled={position >= order.length - 1}
-          className="rounded-xl"
-        >
-          Siguiente <ArrowRight className="h-4 w-4" />
-        </Button>
       </div>
 
       <div className="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-center text-xs leading-6 text-slate-500">
         Presioná <Kbd>Espacio</Kbd> para voltear. Usá <Kbd>↑</Kbd> para “Lo sé”, <Kbd>↓</Kbd> para
-        “No lo sé” y <Kbd>←</Kbd> <Kbd>→</Kbd> para navegar.
+        “No lo sé”. Al responder avanzás automáticamente.
       </div>
     </div>
   );
