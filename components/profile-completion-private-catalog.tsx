@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, GraduationCap, LockKeyhole, Plus, School, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, GraduationCap, LockKeyhole, Plus, School, SearchCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase-client';
 import { updateProfile } from '@/lib/actions/perfil';
+import { findCareerMatches } from '@/lib/career-matching';
 import { getAcademicProfileActiveSubjectIds } from '@/lib/profile-completion';
 import { getMateriasByCarrera } from '@/services/api';
 import {
@@ -102,6 +103,7 @@ export function ProfileCompletionPrivateCatalog({
   const [showMissingCareer, setShowMissingCareer] = useState(false);
   const [missingFacultyName, setMissingFacultyName] = useState('');
   const [missingCareerName, setMissingCareerName] = useState('');
+  const [serverCareerMatches, setServerCareerMatches] = useState<Carrera[]>([]);
   const [pendingCareer, setPendingCareer] = useState(false);
 
   const [materias, setMaterias] = useState<Materia[]>([]);
@@ -126,6 +128,25 @@ export function ProfileCompletionPrivateCatalog({
       .filter((item) => item.nombre.toLocaleLowerCase('es').includes(needle))
       .slice(0, 14);
   }, [carreraSearch, carreras]);
+
+  const duplicateCareerMatches = useMemo(() => {
+    const query = (missingCareerName || carreraSearch).trim();
+    const localMatches = findCareerMatches(query, carreras, { threshold: 0.72, limit: 3 });
+    const combined = [
+      ...serverCareerMatches,
+      ...localMatches.map((match) => ({
+        id: match.id,
+        nombre: match.nombre,
+        universidad_id: match.universidad_id,
+      })),
+    ];
+    const seen = new Set<string>();
+    return combined.filter((candidate) => {
+      if (seen.has(candidate.id)) return false;
+      seen.add(candidate.id);
+      return true;
+    }).slice(0, 3);
+  }, [carreraSearch, carreras, missingCareerName, serverCareerMatches]);
 
   useEffect(() => {
     if (!isOpen || initialized) return;
@@ -291,6 +312,7 @@ export function ProfileCompletionPrivateCatalog({
     setCarreraNombre('');
     setCarreraSearch('');
     setPendingCareer(false);
+    setServerCareerMatches([]);
     setMaterias([]);
     setSelectedMateriaIds([]);
     setPendingMateriaIds([]);
@@ -303,6 +325,7 @@ export function ProfileCompletionPrivateCatalog({
     setCarreraNombre(career.nombre);
     setCarreraSearch(career.nombre);
     setPendingCareer(false);
+    setServerCareerMatches([]);
     setMaterias([]);
     setSelectedMateriaIds([]);
     setPendingMateriaIds([]);
@@ -310,7 +333,7 @@ export function ProfileCompletionPrivateCatalog({
     window.setTimeout(() => setStep(3), 180);
   }, []);
 
-  const addMissingCareer = async () => {
+  const addMissingCareer = async (forceCreate = false) => {
     if (busy) return;
     setBusy(true);
     try {
@@ -318,8 +341,16 @@ export function ProfileCompletionPrivateCatalog({
         universidadId,
         facultadNombre: missingFacultyName,
         carreraNombre: missingCareerName || carreraSearch,
+        forceCreate,
       });
       if (!result.success) {
+        if (result.code === 'possible_duplicate' && result.candidates?.length) {
+          setServerCareerMatches(result.candidates.map((candidate) => ({
+            ...candidate,
+            universidad_id: universidadId,
+          })));
+          return;
+        }
         toast({ variant: 'destructive', title: 'No pudimos agregar la carrera', description: result.message });
         return;
       }
@@ -328,6 +359,7 @@ export function ProfileCompletionPrivateCatalog({
       setCarreraNombre(result.carrera.nombre);
       setCarreraSearch(result.carrera.nombre);
       setPendingCareer(result.carrera.approval_status === 'pending');
+      setServerCareerMatches([]);
       setCarreras((prev) => [
         { id: result.carrera.id, nombre: result.carrera.nombre, universidad_id: result.carrera.universidad_id },
         ...prev.filter((item) => item.id !== result.carrera.id),
@@ -486,7 +518,7 @@ export function ProfileCompletionPrivateCatalog({
                     ))}
                   </div>
                 </div>
-                <button type="button" onClick={() => { setMissingCareerName(carreraSearch); setShowMissingCareer(true); }} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-700">
+                <button type="button" onClick={() => { setMissingCareerName(carreraSearch); setServerCareerMatches([]); setShowMissingCareer(true); }} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-700">
                   <Plus className="h-4 w-4" /> Mi carrera no aparece
                 </button>
               </>
@@ -498,15 +530,38 @@ export function ProfileCompletionPrivateCatalog({
                 </div>
                 <div>
                   <Label htmlFor="missing-career">Nombre de tu carrera</Label>
-                  <Input id="missing-career" className="mt-2 h-11" value={missingCareerName} onChange={(e) => setMissingCareerName(e.target.value)} placeholder="Ej. Licenciatura en Ciencias de la Computación" />
+                  <Input id="missing-career" className="mt-2 h-11" value={missingCareerName} onChange={(e) => { setMissingCareerName(e.target.value); setServerCareerMatches([]); }} placeholder="Ej. Licenciatura en Ciencias de la Computación" />
                 </div>
+
+                {duplicateCareerMatches.length > 0 ? (
+                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm"><SearchCheck className="h-4 w-4" /></span>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">Encontramos carreras parecidas</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">Si una coincide con la tuya, elegila para mantener todos los materiales y estudiantes en la misma carrera.</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 overflow-hidden rounded-xl border border-indigo-100 bg-white">
+                      {duplicateCareerMatches.map((candidate) => (
+                        <button key={candidate.id} type="button" onClick={() => selectCareer(candidate)} className="flex w-full items-center justify-between gap-3 border-b border-slate-100 px-3 py-3 text-left last:border-0 hover:bg-slate-50">
+                          <span className="text-sm font-semibold text-slate-800">{candidate.nombre}</span>
+                          <span className="shrink-0 text-xs font-bold text-indigo-700">Usar esta</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="flex items-start gap-2 text-xs leading-5 text-slate-500">
                   <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
-                  <p>La carrera queda asignada sólo a tu perfil. No aparecerá para otros estudiantes hasta que Evaluo la revise y apruebe.</p>
+                  <p>Si solicitás una carrera nueva, quedará asignada sólo a tu perfil hasta que Evaluo la revise y apruebe.</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" type="button" onClick={() => setShowMissingCareer(false)}>Cancelar</Button>
-                  <Button type="button" disabled={busy || (missingCareerName || carreraSearch).trim().length < 3} onClick={() => void addMissingCareer()} className="bg-indigo-600 hover:bg-indigo-700">{busy ? 'Guardando...' : 'Usar esta carrera'}</Button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button variant="outline" type="button" onClick={() => { setServerCareerMatches([]); setShowMissingCareer(false); }}>Cancelar</Button>
+                  <Button type="button" disabled={busy || (missingCareerName || carreraSearch).trim().length < 3} onClick={() => void addMissingCareer(duplicateCareerMatches.length > 0)} className="bg-indigo-600 hover:bg-indigo-700">
+                    {busy ? 'Guardando...' : duplicateCareerMatches.length > 0 ? 'No es ninguna · Solicitar igual' : 'Solicitar esta carrera'}
+                  </Button>
                 </div>
               </div>
             )}
