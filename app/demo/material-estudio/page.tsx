@@ -32,26 +32,109 @@ export default async function DemoMaterialEstudioPage({
       <style>{`
         div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] {
           transition:
-            left 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            top 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            width 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            opacity 140ms ease;
-          will-change: left, top, transform;
+            left 240ms cubic-bezier(0.22, 1, 0.36, 1),
+            top 240ms cubic-bezier(0.22, 1, 0.36, 1),
+            width 240ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+            opacity 180ms ease;
+          will-change: left, top, transform, opacity;
+        }
+
+        div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] > div {
+          transition:
+            opacity 180ms ease,
+            transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+          will-change: opacity, transform;
+        }
+
+        div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 1 de 6'] > div,
+        div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 3 de 6'] > div,
+        div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 5 de 6'] > div {
+          animation: evaluo-tour-card-enter-a 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 2 de 6'] > div,
+        div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 4 de 6'] > div,
+        div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 6 de 6'] > div {
+          animation: evaluo-tour-card-enter-b 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo']:has(svg.animate-spin) {
+          opacity: 0.02;
+          pointer-events: none;
+        }
+
+        div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo']:has(svg.animate-spin) > div {
+          opacity: 0 !important;
+          transform: translateY(5px) scale(0.992) !important;
         }
 
         div[aria-live='polite'] > div.pointer-events-none.absolute.border-2 {
+          animation: evaluo-tour-spotlight-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
           transition:
-            left 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            top 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            width 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            height 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            border-radius 180ms ease,
-            opacity 140ms ease;
+            left 220ms cubic-bezier(0.22, 1, 0.36, 1),
+            top 220ms cubic-bezier(0.22, 1, 0.36, 1),
+            width 220ms cubic-bezier(0.22, 1, 0.36, 1),
+            height 220ms cubic-bezier(0.22, 1, 0.36, 1),
+            border-radius 220ms ease,
+            opacity 180ms ease;
         }
 
         div[aria-live='polite'] > svg {
-          transition: opacity 140ms ease;
+          animation: evaluo-tour-mask-in 220ms ease-out both;
+        }
+
+        div[aria-live='polite'] > div[class*='bg-slate-950/60'] {
+          animation: evaluo-tour-cover-in 160ms ease-out both;
+        }
+
+        @keyframes evaluo-tour-card-enter-a {
+          from {
+            opacity: 0;
+            transform: translateY(6px) scale(0.992);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes evaluo-tour-card-enter-b {
+          from {
+            opacity: 0;
+            transform: translateY(6px) scale(0.992);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        @keyframes evaluo-tour-spotlight-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes evaluo-tour-mask-in {
+          from {
+            opacity: 0.78;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes evaluo-tour-cover-in {
+          from {
+            opacity: 0.72;
+          }
+          to {
+            opacity: 1;
+          }
         }
 
         @media (min-width: 768px) {
@@ -90,8 +173,11 @@ export default async function DemoMaterialEstudioPage({
 
         @media (prefers-reduced-motion: reduce) {
           div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'],
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] > div,
           div[aria-live='polite'] > div.pointer-events-none.absolute.border-2,
-          div[aria-live='polite'] > svg {
+          div[aria-live='polite'] > svg,
+          div[aria-live='polite'] > div[class*='bg-slate-950/60'] {
+            animation: none !important;
             transition: none !important;
           }
         }
