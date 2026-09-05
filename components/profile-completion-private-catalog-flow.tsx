@@ -37,8 +37,14 @@ import { supabase } from '@/lib/supabase-client';
 import { findUniversityMatches } from '@/lib/university-matching';
 import { getMateriasByCarrera } from '@/services/api';
 
-type Universidad = { id: string; nombre: string };
-type Carrera = { id: string; nombre: string; universidad_id: string | null };
+type ApprovalStatus = 'approved' | 'pending' | 'rejected';
+type Universidad = { id: string; nombre: string; approval_status?: ApprovalStatus | null };
+type Carrera = {
+  id: string;
+  nombre: string;
+  universidad_id: string | null;
+  approval_status?: ApprovalStatus | null;
+};
 type Materia = { id: string; nombre: string };
 
 type Props = {
@@ -100,6 +106,7 @@ export function ProfileCompletionPrivateCatalog({
   allowSkip = false,
 }: Props) {
   const { toast } = useToast();
+  const db = supabase as any;
   const [initialized, setInitialized] = useState(false);
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
@@ -141,7 +148,6 @@ export function ProfileCompletionPrivateCatalog({
         : universidades.slice(0, 8),
     [universidadSearch, universityMatches, universidades]
   );
-
   const careerMatches = useMemo(
     () => findCareerMatches(carreraSearch, carreras, { limit: 3, minScore: 0.66 }),
     [carreraSearch, carreras]
@@ -162,21 +168,19 @@ export function ProfileCompletionPrivateCatalog({
       try {
         const persisted = readState(userId);
         const [profileResult, universityResult] = await Promise.all([
-          supabase
+          db
             .from('profiles')
             .select('universidad_id, carrera_id, active_subjects')
             .eq('id', userId)
             .maybeSingle(),
-          supabase.from('universidades').select('id, nombre').order('nombre'),
+          db.from('universidades').select('id, nombre, approval_status').order('nombre'),
         ]);
-
         if (!active) return;
         if (profileResult.error) throw profileResult.error;
         if (universityResult.error) throw universityResult.error;
 
-        const availableUniversities = universityResult.data ?? [];
+        const availableUniversities = (universityResult.data ?? []) as Universidad[];
         setUniversidades(availableUniversities);
-
         const profile = profileResult.data;
         const dbUniversidadId = String(profile?.universidad_id ?? '').trim();
         const dbCarreraId = String(profile?.carrera_id ?? '').trim();
@@ -191,30 +195,36 @@ export function ProfileCompletionPrivateCatalog({
           setUniversidadId(effectiveUniversidadId);
           setUniversidadNombre(name);
           setUniversidadSearch(name);
+          setPendingUniversity(uni?.approval_status === 'pending' || Boolean(persisted?.pendingUniversity));
+        } else {
+          setPendingUniversity(Boolean(persisted?.pendingUniversity));
         }
-        setPendingUniversity(Boolean(persisted?.pendingUniversity));
 
         if (effectiveCarreraId) {
-          const { data: career } = await supabase
+          const { data: career, error: careerError } = await db
             .from('carreras')
-            .select('id, nombre, universidad_id')
+            .select('id, nombre, universidad_id, approval_status')
             .eq('id', effectiveCarreraId)
             .maybeSingle();
+          if (careerError) throw careerError;
           if (!active) return;
           if (career) {
             setCarreraId(career.id);
             setCarreraNombre(career.nombre);
             setCarreraSearch(career.nombre);
+            setPendingCareer(career.approval_status === 'pending' || Boolean(persisted?.pendingCareer));
           } else if (persisted?.carreraNombre) {
             setCarreraId(effectiveCarreraId);
             setCarreraNombre(persisted.carreraNombre);
             setCarreraSearch(persisted.carreraNombre);
+            setPendingCareer(Boolean(persisted.pendingCareer));
           }
+        } else {
+          setPendingCareer(Boolean(persisted?.pendingCareer));
         }
-        setPendingCareer(Boolean(persisted?.pendingCareer));
+
         setSelectedMateriaIds(effectiveMateriaIds);
         setPendingMateriaIds(persisted?.pendingMateriaIds ?? []);
-
         if (persisted?.step && persisted.step >= 1 && persisted.step <= TOTAL_STEPS) {
           setStep(persisted.step);
         } else if (effectiveUniversidadId && effectiveCarreraId) {
@@ -236,7 +246,7 @@ export function ProfileCompletionPrivateCatalog({
     return () => {
       active = false;
     };
-  }, [initialized, isOpen, toast, userId]);
+  }, [db, initialized, isOpen, toast, userId]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -269,31 +279,40 @@ export function ProfileCompletionPrivateCatalog({
     if (!initialized || !universidadId || step !== 2) return;
     let active = true;
     setLoadingCarreras(true);
-    void supabase
-      .from('carreras')
-      .select('id, nombre, universidad_id')
-      .eq('universidad_id', universidadId)
-      .order('nombre')
-      .then(({ data, error }) => {
-        if (!active) return;
+    void (async () => {
+      try {
+        const { data, error } = await db
+          .from('carreras')
+          .select('id, nombre, universidad_id, approval_status')
+          .eq('universidad_id', universidadId)
+          .order('nombre');
         if (error) throw error;
-        setCarreras(data ?? []);
-      })
-      .catch(() => active && toast({ variant: 'destructive', title: 'No pudimos cargar las carreras' }))
-      .finally(() => active && setLoadingCarreras(false));
+        if (active) setCarreras((data ?? []) as Carrera[]);
+      } catch {
+        if (active) toast({ variant: 'destructive', title: 'No pudimos cargar las carreras' });
+      } finally {
+        if (active) setLoadingCarreras(false);
+      }
+    })();
     return () => {
       active = false;
     };
-  }, [initialized, step, toast, universidadId]);
+  }, [db, initialized, step, toast, universidadId]);
 
   useEffect(() => {
     if (!initialized || !carreraId || step !== 3) return;
     let active = true;
     setLoadingMaterias(true);
     void getMateriasByCarrera(carreraId)
-      .then((rows) => active && setMaterias(rows.map((row) => ({ id: row.id, nombre: row.nombre }))))
-      .catch(() => active && toast({ variant: 'destructive', title: 'No pudimos cargar las materias' }))
-      .finally(() => active && setLoadingMaterias(false));
+      .then((rows) => {
+        if (active) setMaterias(rows.map((row) => ({ id: row.id, nombre: row.nombre })));
+      })
+      .catch(() => {
+        if (active) toast({ variant: 'destructive', title: 'No pudimos cargar las materias' });
+      })
+      .finally(() => {
+        if (active) setLoadingMaterias(false);
+      });
     return () => {
       active = false;
     };
@@ -313,16 +332,15 @@ export function ProfileCompletionPrivateCatalog({
 
   const selectUniversity = useCallback(
     (uni: Universidad) => {
-      const keepPending = uni.id === universidadId && pendingUniversity;
       setUniversidadId(uni.id);
       setUniversidadNombre(uni.nombre);
       setUniversidadSearch(uni.nombre);
-      setPendingUniversity(keepPending);
+      setPendingUniversity(uni.approval_status === 'pending');
       setShowMissingUniversity(false);
       resetAfterUniversity();
       window.setTimeout(() => setStep(2), 140);
     },
-    [pendingUniversity, resetAfterUniversity, universidadId]
+    [resetAfterUniversity]
   );
 
   async function addMissingUniversity() {
@@ -337,12 +355,16 @@ export function ProfileCompletionPrivateCatalog({
         toast({ variant: 'destructive', title: 'No pudimos agregar la universidad', description: result.message });
         return;
       }
-      const uni = { id: result.universidad.id, nombre: result.universidad.nombre };
+      const uni: Universidad = {
+        id: result.universidad.id,
+        nombre: result.universidad.nombre,
+        approval_status: result.universidad.approval_status,
+      };
       setUniversidades((prev) => [uni, ...prev.filter((item) => item.id !== uni.id)]);
       setUniversidadId(uni.id);
       setUniversidadNombre(uni.nombre);
       setUniversidadSearch(uni.nombre);
-      setPendingUniversity(result.universidad.approval_status === 'pending');
+      setPendingUniversity(uni.approval_status === 'pending');
       setShowMissingUniversity(false);
       resetAfterUniversity();
       setStep(2);
@@ -351,21 +373,17 @@ export function ProfileCompletionPrivateCatalog({
     }
   }
 
-  const selectCareer = useCallback(
-    (career: Carrera) => {
-      const keepPending = career.id === carreraId && pendingCareer;
-      setCarreraId(career.id);
-      setCarreraNombre(career.nombre);
-      setCarreraSearch(career.nombre);
-      setPendingCareer(keepPending);
-      setMaterias([]);
-      setSelectedMateriaIds([]);
-      setPendingMateriaIds([]);
-      setShowMissingCareer(false);
-      window.setTimeout(() => setStep(3), 140);
-    },
-    [carreraId, pendingCareer]
-  );
+  const selectCareer = useCallback((career: Carrera) => {
+    setCarreraId(career.id);
+    setCarreraNombre(career.nombre);
+    setCarreraSearch(career.nombre);
+    setPendingCareer(career.approval_status === 'pending');
+    setMaterias([]);
+    setSelectedMateriaIds([]);
+    setPendingMateriaIds([]);
+    setShowMissingCareer(false);
+    window.setTimeout(() => setStep(3), 140);
+  }, []);
 
   async function addMissingCareer() {
     if (busy) return;
@@ -380,14 +398,17 @@ export function ProfileCompletionPrivateCatalog({
         toast({ variant: 'destructive', title: 'No pudimos agregar la carrera', description: result.message });
         return;
       }
-      setCarreraId(result.carrera.id);
-      setCarreraNombre(result.carrera.nombre);
-      setCarreraSearch(result.carrera.nombre);
-      setPendingCareer(result.carrera.approval_status === 'pending');
-      setCarreras((prev) => [
-        { id: result.carrera.id, nombre: result.carrera.nombre, universidad_id: result.carrera.universidad_id },
-        ...prev.filter((item) => item.id !== result.carrera.id),
-      ]);
+      const career: Carrera = {
+        id: result.carrera.id,
+        nombre: result.carrera.nombre,
+        universidad_id: result.carrera.universidad_id,
+        approval_status: result.carrera.approval_status,
+      };
+      setCarreraId(career.id);
+      setCarreraNombre(career.nombre);
+      setCarreraSearch(career.nombre);
+      setPendingCareer(career.approval_status === 'pending');
+      setCarreras((prev) => [career, ...prev.filter((item) => item.id !== career.id)]);
       setMaterias([]);
       setSelectedMateriaIds([]);
       setPendingMateriaIds([]);
