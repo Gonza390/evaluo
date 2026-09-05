@@ -1,7 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, GraduationCap, MapPin, School, Search } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  FileUp,
+  GraduationCap,
+  MapPin,
+  School,
+  Search,
+} from 'lucide-react';
 import { findCareerMatches, type CareerMatchCandidate } from '@/lib/career-matching';
 
 type DemoUniversity = {
@@ -20,7 +29,6 @@ type Props = {
 };
 
 type View = 'university' | 'missing-university' | 'career' | 'request-career' | 'done';
-
 type SelectedUniversity = DemoUniversity & { pending?: boolean };
 
 function normalize(value: string) {
@@ -62,12 +70,11 @@ function universityScore(query: string, university: DemoUniversity) {
   const compactQuery = compact(query);
   if (normalizedQuery.length < 2) return 0;
 
-  const names = [university.nombre, ...(university.aliases ?? [])];
   let best = 0;
-
-  for (const name of names) {
+  for (const name of [university.nombre, ...(university.aliases ?? [])]) {
     const normalizedName = normalize(name);
     const compactName = compact(name);
+
     if (normalizedQuery === normalizedName || compactQuery === compactName) return 1;
     if (
       normalizedName.includes(normalizedQuery) ||
@@ -76,10 +83,10 @@ function universityScore(query: string, university: DemoUniversity) {
     ) {
       best = Math.max(best, 0.93);
     }
+
     const maxLength = Math.max(compactQuery.length, compactName.length);
     if (maxLength >= 4) {
-      const similarity = 1 - editDistance(compactQuery, compactName) / maxLength;
-      best = Math.max(best, similarity);
+      best = Math.max(best, 1 - editDistance(compactQuery, compactName) / maxLength);
     }
   }
 
@@ -96,15 +103,18 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
   const [facultyName, setFacultyName] = useState('');
   const [selectedCareer, setSelectedCareer] = useState<DemoCareer | null>(null);
 
-  const step = view === 'university' || view === 'missing-university' ? 1 : 2;
+  const step = view === 'done' ? 4 : view === 'university' || view === 'missing-university' ? 1 : 2;
+  const pageLabel = step === 1 ? 'Tu universidad' : step === 2 ? 'Tu carrera' : 'Empezá a estudiar';
 
-  const universityMatches = useMemo(() => {
-    return universities
-      .map((university) => ({ university, score: universityScore(universityQuery, university) }))
-      .filter((match) => match.score >= 0.7)
-      .sort((left, right) => right.score - left.score)
-      .slice(0, 3);
-  }, [universities, universityQuery]);
+  const universityMatches = useMemo(
+    () =>
+      universities
+        .map((university) => ({ university, score: universityScore(universityQuery, university) }))
+        .filter((match) => match.score >= 0.7)
+        .sort((left, right) => right.score - left.score)
+        .slice(0, 3),
+    [universities, universityQuery]
+  );
 
   const careersForUniversity = useMemo(
     () => careers.filter((career) => career.universidad_id === selectedUniversity?.id),
@@ -133,6 +143,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
   function continueWithMissingUniversity() {
     const name = missingUniversityName.trim();
     if (name.length < 3) return;
+
     setSelectedUniversity({ id: 'demo-pending-university', nombre: name, pending: true });
     setCareerQuery('');
     setFacultyName('');
@@ -141,31 +152,19 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
   }
 
   function useCareer(career: CareerMatchCandidate) {
-    const selected = careersForUniversity.find((item) => item.id === career.id) ?? null;
-    setSelectedCareer(selected);
+    setSelectedCareer(careersForUniversity.find((item) => item.id === career.id) ?? null);
   }
 
   function goBack() {
-    if (view === 'missing-university') {
-      setView('university');
-      return;
-    }
-    if (view === 'request-career') {
-      setView('career');
-      return;
-    }
-    if (view === 'done') {
-      setView('career');
-      return;
-    }
+    if (view === 'missing-university') return setView('university');
+    if (view === 'request-career') return setView('career');
+    if (view === 'done') return setView('career');
     if (view === 'career') {
       setSelectedUniversity(null);
       setSelectedCareer(null);
       setView('university');
     }
   }
-
-  const pageLabel = step === 1 ? 'Tu universidad' : 'Tu carrera';
 
   return (
     <main className="h-[100svh] overflow-hidden bg-[radial-gradient(circle_at_top,#eef2ff_0,white_46%)] p-3 sm:p-5">
@@ -221,9 +220,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                         onClick={() => useUniversity(university)}
                         className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
                       >
-                        <div className="min-w-0">
-                          <p className="font-bold leading-5 text-slate-950">{university.nombre}</p>
-                        </div>
+                        <p className="min-w-0 font-bold leading-5 text-slate-950">{university.nombre}</p>
                         <span className="shrink-0 text-xs font-bold text-indigo-600">Usar esta universidad</span>
                       </button>
                     ))}
@@ -247,9 +244,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'missing-university' ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                  <School className="h-5 w-5" />
-                </span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white"><School className="h-5 w-5" /></span>
                 <div>
                   <h1 className="text-[1.4rem] font-bold tracking-[-0.04em] text-slate-950">Agregá tu universidad</h1>
                   <p className="mt-0.5 text-sm leading-5 text-slate-500">La revisamos después. Podés seguir completando tu carrera ahora.</p>
@@ -296,9 +291,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'career' && selectedUniversity ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                  <GraduationCap className="h-5 w-5" />
-                </span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white"><GraduationCap className="h-5 w-5" /></span>
                 <div>
                   <h1 className="text-[1.4rem] font-bold tracking-[-0.04em] text-slate-950">¿Qué carrera estudiás?</h1>
                   <p className="mt-0.5 text-sm leading-5 text-slate-500">{selectedUniversity.nombre}</p>
@@ -398,9 +391,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'request-career' && selectedUniversity ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                  <GraduationCap className="h-5 w-5" />
-                </span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white"><GraduationCap className="h-5 w-5" /></span>
                 <div>
                   <h1 className="text-[1.4rem] font-bold tracking-[-0.04em] text-slate-950">Solicitá tu carrera</h1>
                   <p className="mt-0.5 text-sm leading-5 text-slate-500">{selectedUniversity.nombre}</p>
@@ -439,17 +430,27 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           ) : null}
 
           {view === 'done' && selectedUniversity ? (
-            <div className="flex h-full flex-col justify-center">
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center">
-                <span className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white"><Check className="h-5 w-5" /></span>
-                <h1 className="mt-3 text-xl font-bold tracking-[-0.03em] text-slate-950">Solicitud lista</h1>
-                <p className="mt-1 text-sm leading-5 text-slate-600">Podés seguir con tus materias mientras Evaluo revisa los datos académicos.</p>
-              </div>
+            <div className="flex h-full flex-col justify-center text-center">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white"><Check className="h-7 w-7" /></span>
+              <h1 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950">Tu espacio está listo</h1>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                Registramos los datos que faltaban. No hace falta esperar a que los revisemos para empezar a estudiar con tu material.
+              </p>
+
+              <a
+                href="/dashboard/materiales/subir?source=onboarding_missing_catalog"
+                className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700"
+              >
+                <FileUp className="h-4 w-4" /> Subir mi PDF
+              </a>
+              <a href="/dashboard" className="mt-3 text-sm font-semibold text-slate-500 transition hover:text-slate-800">
+                Ir al inicio
+              </a>
             </div>
           ) : null}
         </div>
 
-        {view !== 'university' ? (
+        {view !== 'university' && view !== 'done' ? (
           <div className="shrink-0 border-t border-slate-100 px-5 py-3 sm:px-8">
             <button type="button" onClick={goBack} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800">
               <ArrowLeft className="h-4 w-4" /> Atrás
