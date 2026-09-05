@@ -29,6 +29,74 @@ export default async function DemoMaterialEstudioPage({
 
   return (
     <>
+      <style>{`
+        div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] {
+          transition:
+            left 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            top 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            width 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            opacity 140ms ease;
+          will-change: left, top, transform;
+        }
+
+        div[aria-live='polite'] > div.pointer-events-none.absolute.border-2 {
+          transition:
+            left 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            top 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            width 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            height 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            border-radius 180ms ease,
+            opacity 140ms ease;
+        }
+
+        div[aria-live='polite'] > svg {
+          transition: opacity 140ms ease;
+        }
+
+        @media (min-width: 768px) {
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 1 de 6'] {
+            left: 28px !important;
+            top: clamp(118px, 21vh, 178px) !important;
+            width: 292px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 1 de 6'] > div {
+            padding: 16px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 1 de 6'] h2 {
+            margin-top: 12px !important;
+            font-size: 1.15rem !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 1 de 6'] p {
+            margin-top: 7px !important;
+            font-size: 13px !important;
+            line-height: 1.45 !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 1 de 6'] div.mt-5 {
+            margin-top: 14px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 6 de 6'] {
+            left: 50% !important;
+            top: 50% !important;
+            width: min(360px, calc(100vw - 40px)) !important;
+            transform: translate(-50%, -50%) !important;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'],
+          div[aria-live='polite'] > div.pointer-events-none.absolute.border-2,
+          div[aria-live='polite'] > svg {
+            transition: none !important;
+          }
+        }
+      `}</style>
+
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
