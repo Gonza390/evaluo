@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  FileText,
   FileUp,
   GraduationCap,
   MapPin,
@@ -430,20 +431,40 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           ) : null}
 
           {view === 'done' && selectedUniversity ? (
-            <div className="flex h-full flex-col justify-center text-center">
-              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white"><Check className="h-7 w-7" /></span>
-              <h1 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950">Tu espacio está listo</h1>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
-                Registramos los datos que faltaban. No hace falta esperar a que los revisemos para empezar a estudiar con tu material.
-              </p>
+            <div className="flex h-full flex-col justify-center">
+              <div className="text-center">
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)]"><Check className="h-6 w-6" /></span>
+                <h1 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950">Empezá con tu primer material</h1>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
+                  Tu solicitud quedó registrada. Podés subir un PDF propio o ver un ejemplo para conocer cómo lo transforma Evaluo.
+                </p>
+              </div>
 
-              <a
-                href="/dashboard/materiales/subir?source=onboarding_missing_catalog"
-                className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700"
-              >
-                <FileUp className="h-4 w-4" /> Subir mi PDF
-              </a>
-              <a href="/dashboard" className="mt-3 text-sm font-semibold text-slate-500 transition hover:text-slate-800">
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <a
+                  href="/dashboard/materiales/subir?source=onboarding_missing_catalog"
+                  className="group rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-indigo-300 hover:shadow-[0_12px_30px_rgba(79,70,229,0.10)]"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition group-hover:bg-indigo-100">
+                    <FileUp className="h-5 w-5" />
+                  </span>
+                  <h2 className="mt-3 text-base font-bold text-slate-950">Subir mi PDF</h2>
+                  <p className="mt-1 text-sm leading-5 text-slate-500">Preparalo para estudiar con Evaluo.</p>
+                </a>
+
+                <a
+                  href="/demo/material-estudio?source=onboarding_missing_catalog"
+                  className="group rounded-2xl border-2 border-slate-200 bg-white p-4 text-left transition hover:border-indigo-300 hover:shadow-[0_12px_30px_rgba(79,70,229,0.10)]"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition group-hover:bg-indigo-100">
+                    <FileText className="h-5 w-5" />
+                  </span>
+                  <h2 className="mt-3 text-base font-bold text-slate-950">Ver un PDF de ejemplo</h2>
+                  <p className="mt-1 text-sm leading-5 text-slate-500">Mirá cómo queda un material dentro de Evaluo.</p>
+                </a>
+              </div>
+
+              <a href="/dashboard" className="mt-4 text-center text-sm font-semibold text-slate-500 transition hover:text-slate-800">
                 Ir al inicio
               </a>
             </div>
