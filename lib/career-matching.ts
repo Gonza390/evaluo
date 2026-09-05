@@ -54,6 +54,16 @@ function typoSimilarity(left: string, right: string) {
   return 1 - levenshtein(left, right) / maxLength;
 }
 
+function tokenPrefixMatches(queryTokens: string[], candidateTokens: string[]) {
+  return queryTokens.filter((queryToken) =>
+    candidateTokens.some((candidateToken) => {
+      if (candidateToken.startsWith(queryToken)) return true;
+      if (candidateToken.length >= 5 && queryToken.startsWith(candidateToken)) return true;
+      return false;
+    })
+  ).length;
+}
+
 export function scoreCareerMatch(query: string, candidateName: string) {
   const normalizedQuery = normalizeCareerName(query);
   const normalizedCandidate = normalizeCareerName(candidateName);
@@ -79,6 +89,7 @@ export function scoreCareerMatch(query: string, candidateName: string) {
 
   if (queryTokens.length) {
     const exactTokenMatches = queryTokens.filter((token) => candidateTokens.includes(token)).length;
+    const prefixMatches = tokenPrefixMatches(queryTokens, candidateTokens);
     const fuzzyTokenMatches = queryTokens.filter((queryToken) =>
       candidateTokens.some((candidateToken) => {
         if (queryToken === candidateToken) return true;
@@ -86,10 +97,16 @@ export function scoreCareerMatch(query: string, candidateName: string) {
         return typoSimilarity(queryToken, candidateToken) >= 0.82;
       })
     ).length;
-    const coverage = Math.max(exactTokenMatches, fuzzyTokenMatches) / queryTokens.length;
+    const coverage = Math.max(exactTokenMatches, prefixMatches, fuzzyTokenMatches) / queryTokens.length;
 
     if (coverage === 1 && queryTokens.length <= candidateTokens.length) {
-      return { score: exactTokenMatches === queryTokens.length ? 0.91 : 0.86, reason: 'token' as const };
+      if (exactTokenMatches === queryTokens.length) {
+        return { score: 0.91, reason: 'token' as const };
+      }
+      if (prefixMatches === queryTokens.length) {
+        return { score: 0.89, reason: 'prefix' as const };
+      }
+      return { score: 0.86, reason: 'token' as const };
     }
 
     if (coverage >= 0.67) {
