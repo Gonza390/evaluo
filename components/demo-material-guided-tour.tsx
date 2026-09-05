@@ -10,31 +10,37 @@ const TOUR_SEEN_KEY = 'evaluo_demo_material_tour_seen_v1';
 const TOUR_STEPS = [
   {
     target: 'pdf-viewer',
+    tab: 'Resumen',
     title: 'Este es el PDF original',
     body: 'Podés leerlo acá y volver a la fuente cuando quieras. Todo lo que Evaluo prepara parte de este documento.',
   },
   {
-    target: 'study-summary',
+    target: 'active-panel',
+    tab: 'Resumen',
     title: 'Empezá por el resumen',
     body: 'Evaluo organiza el material y destaca los puntos importantes para que puedas repasar sin releer todo desde cero.',
   },
   {
-    target: 'study-glossary',
+    target: 'active-panel',
+    tab: 'Glosario',
     title: 'Revisá los conceptos clave',
     body: 'El glosario reúne términos y definiciones importantes detectados dentro del PDF para que no pierdas tiempo buscándolos.',
   },
   {
-    target: 'study-cards',
+    target: 'active-panel',
+    tab: 'Tarjetas',
     title: 'Memorizá con tarjetas',
     body: 'Convertí el contenido del documento en flashcards y comprobá qué conceptos ya recordás y cuáles necesitás repetir.',
   },
   {
-    target: 'study-exam',
+    target: 'active-panel',
+    tab: 'Examen',
     title: 'Ponete a prueba',
     body: 'Practicá con preguntas generadas a partir del mismo material y detectá qué temas necesitás reforzar antes del parcial.',
   },
   {
     target: null,
+    tab: null,
     title: 'Ahora probalo con tu material',
     body: 'Este es sólo un ejemplo. Subí un PDF de tu materia y Evaluo puede prepararlo para que estudies, practiques y repases desde el mismo lugar.',
   },
@@ -53,22 +59,57 @@ type Props = {
   enabled: boolean;
   force?: boolean;
   source?: string;
-  onStepChange: (index: number) => void;
   uploadHref: string;
 };
 
-function findVisibleTarget(target: string) {
-  const candidates = Array.from(
-    document.querySelectorAll<HTMLElement>(`[data-demo-tour="${target}"]`)
-  );
+function isVisible(element: HTMLElement) {
+  const rect = element.getBoundingClientRect();
+  const style = window.getComputedStyle(element);
+  return rect.width > 4 && rect.height > 4 && style.display !== 'none' && style.visibility !== 'hidden';
+}
 
+function findVisible<T extends HTMLElement>(selector: string) {
+  return Array.from(document.querySelectorAll<T>(selector)).find(isVisible) ?? null;
+}
+
+function findButtonByText(text: string, selector = 'button') {
   return (
-    candidates.find((element) => {
-      const rect = element.getBoundingClientRect();
-      const style = window.getComputedStyle(element);
-      return rect.width > 4 && rect.height > 4 && style.display !== 'none' && style.visibility !== 'hidden';
-    }) ?? null
+    Array.from(document.querySelectorAll<HTMLElement>(selector)).find(
+      (element) => isVisible(element) && element.textContent?.trim().includes(text)
+    ) ?? null
   );
+}
+
+function clickStudyTab(label: string) {
+  const tab = findButtonByText(label, '[role="tab"]');
+  tab?.click();
+}
+
+function ensurePdfVisible() {
+  if (findVisible<HTMLElement>('#study-viewer-panel')) return;
+  if (findVisible<HTMLElement>('[aria-label="Ocultar PDF"]')) return;
+  findButtonByText('Mostrar PDF')?.click();
+}
+
+function hidePdf() {
+  const hideButton = findVisible<HTMLButtonElement>('[aria-label="Ocultar PDF"]');
+  if (hideButton) hideButton.click();
+}
+
+function findTourTarget(target: string) {
+  if (target === 'pdf-viewer') {
+    const desktopViewer = findVisible<HTMLElement>('#study-viewer-panel');
+    if (desktopViewer) return desktopViewer;
+
+    const hideButton = findVisible<HTMLButtonElement>('[aria-label="Ocultar PDF"]');
+    return hideButton?.closest<HTMLElement>('.relative') ?? hideButton;
+  }
+
+  if (target === 'active-panel') {
+    return findVisible<HTMLElement>('[role="tabpanel"][data-state="active"]');
+  }
+
+  return null;
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -79,7 +120,6 @@ export function DemoMaterialGuidedTour({
   enabled,
   force = false,
   source = 'demo_material',
-  onStepChange,
   uploadHref,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -146,14 +186,26 @@ export function DemoMaterialGuidedTour({
   useEffect(() => {
     if (!open) return;
 
-    onStepChange(stepIndex);
+    let prepareTimer: number | undefined;
+    if (currentStep.tab) {
+      clickStudyTab(currentStep.tab);
+      prepareTimer = window.setTimeout(() => {
+        if (stepIndex === 0) ensurePdfVisible();
+        else hidePdf();
+      }, 50);
+    }
+
     trackMarketingEvent('demo_material_tour_step_viewed', {
       source,
       step: stepIndex + 1,
       total_steps: TOUR_STEPS.length,
       target: currentStep.target ?? 'conversion',
     });
-  }, [currentStep.target, onStepChange, open, source, stepIndex]);
+
+    return () => {
+      if (prepareTimer) window.clearTimeout(prepareTimer);
+    };
+  }, [currentStep.tab, currentStep.target, open, source, stepIndex]);
 
   useEffect(() => {
     if (!open) return;
@@ -172,10 +224,10 @@ export function DemoMaterialGuidedTour({
         return;
       }
 
-      const element = findVisibleTarget(currentStep.target);
+      const element = findTourTarget(currentStep.target);
       if (!element) {
         attempts += 1;
-        if (attempts < 15) timer = window.setTimeout(() => measure(shouldScroll), 90);
+        if (attempts < 18) timer = window.setTimeout(() => measure(shouldScroll), 100);
         return;
       }
 
@@ -184,7 +236,7 @@ export function DemoMaterialGuidedTour({
         const needsScroll = rect.top < 76 || rect.bottom > window.innerHeight - 76;
         if (needsScroll) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-          timer = window.setTimeout(() => measure(false), 320);
+          timer = window.setTimeout(() => measure(false), 360);
           return;
         }
       }
@@ -206,7 +258,7 @@ export function DemoMaterialGuidedTour({
       });
     };
 
-    timer = window.setTimeout(() => measure(true), 160);
+    timer = window.setTimeout(() => measure(true), stepIndex === 0 ? 420 : 220);
     const handleViewportChange = () => measure(false);
     window.addEventListener('resize', handleViewportChange);
     window.addEventListener('scroll', handleViewportChange, true);
