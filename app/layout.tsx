@@ -88,11 +88,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-AR" className={inter.className}>
       <body className="bg-background text-foreground min-h-screen text-[0.92rem]">
-        <style>{`
-          button[role='tab'][aria-controls*='-content-mapa'] > span {
-            display: none !important;
-          }
-        `}</style>
         <SessionIdleGuard />
         {children}
         <ContextualPdfNudge />
