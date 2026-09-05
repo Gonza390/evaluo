@@ -38,6 +38,7 @@ export default async function DemoMaterialEstudioPage({
             transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
             opacity 180ms ease;
           will-change: left, top, transform, opacity;
+          overscroll-behavior: contain;
         }
 
         div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] > div {
@@ -88,6 +89,13 @@ export default async function DemoMaterialEstudioPage({
           animation: evaluo-tour-cover-in 160ms ease-out both;
         }
 
+        div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 6 de 6'])
+          > div[class*='bg-slate-950/60'] {
+          background: rgba(15, 23, 42, 0.44) !important;
+          -webkit-backdrop-filter: blur(7px);
+          backdrop-filter: blur(7px);
+        }
+
         @keyframes evaluo-tour-card-enter-a {
           from {
             opacity: 0;
@@ -134,6 +142,50 @@ export default async function DemoMaterialEstudioPage({
           }
           to {
             opacity: 1;
+          }
+        }
+
+        @media (max-width: 767px) {
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] {
+            left: max(12px, env(safe-area-inset-left)) !important;
+            right: max(12px, env(safe-area-inset-right)) !important;
+            bottom: max(12px, env(safe-area-inset-bottom)) !important;
+            width: auto !important;
+            max-height: calc(100svh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+            border-radius: 20px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] > div {
+            padding: 16px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] h2 {
+            margin-top: 12px !important;
+            font-size: 1.125rem !important;
+            line-height: 1.28 !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] p {
+            margin-top: 7px !important;
+            font-size: 13px !important;
+            line-height: 1.48 !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] div.mt-5 {
+            margin-top: 14px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] button.h-10 {
+            height: 44px !important;
+          }
+
+          div[aria-live='polite'] > section[role='dialog'][aria-label='Recorrido de Evaluo, paso 6 de 6'] {
+            left: 50% !important;
+            right: auto !important;
+            top: 50% !important;
+            bottom: auto !important;
+            width: min(360px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right))) !important;
+            transform: translate(-50%, -50%) !important;
           }
         }
 
