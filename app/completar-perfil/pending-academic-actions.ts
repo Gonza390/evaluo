@@ -1,5 +1,6 @@
 'use server';
 
+import { findCareerMatches } from '@/lib/career-matching';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
@@ -9,6 +10,7 @@ type PendingCareerInput = {
   universidadId: string;
   facultadNombre?: string;
   carreraNombre: string;
+  forceCreate?: boolean;
 };
 
 type PendingSubjectInput = {
@@ -27,7 +29,12 @@ type PendingCareerResult =
       };
       facultad: { id: string; nombre: string; approval_status: 'approved' | 'pending' } | null;
     }
-  | { success: false; message: string };
+  | {
+      success: false;
+      message: string;
+      code?: 'possible_duplicate';
+      candidates?: Array<{ id: string; nombre: string }>;
+    };
 
 type PendingSubjectResult =
   | {
@@ -93,14 +100,18 @@ export async function createPrivatePendingCareerAction(
       .from('carreras')
       .select('id, nombre, universidad_id, approval_status, owner_user_id, facultad_id')
       .eq('universidad_id', universidadId)
-      .ilike('nombre', carreraNombre)
-      .limit(20);
+      .limit(500);
 
     if (carrerasError) throw carrerasError;
 
-    const carreraExistente = (carrerasExistentes ?? []).find((row: any) =>
+    const carrerasVisibles = (carrerasExistentes ?? []).filter((row: any) =>
       visibleToUser(row, user.id)
     );
+    const coincidenciasExactas = findCareerMatches(carreraNombre, carrerasVisibles, {
+      threshold: 0.985,
+      limit: 1,
+    });
+    const carreraExistente = coincidenciasExactas[0];
 
     if (carreraExistente) {
       return {
@@ -113,6 +124,25 @@ export async function createPrivatePendingCareerAction(
         },
         facultad: null,
       };
+    }
+
+    if (!input.forceCreate) {
+      const posiblesDuplicados = findCareerMatches(carreraNombre, carrerasVisibles, {
+        threshold: 0.72,
+        limit: 3,
+      });
+
+      if (posiblesDuplicados.length > 0) {
+        return {
+          success: false,
+          code: 'possible_duplicate',
+          message: 'Encontramos carreras parecidas. Revisalas antes de solicitar una nueva.',
+          candidates: posiblesDuplicados.map((candidate) => ({
+            id: candidate.id,
+            nombre: candidate.nombre,
+          })),
+        };
+      }
     }
 
     let facultad: { id: string; nombre: string; approval_status: 'approved' | 'pending' } | null = null;
