@@ -62,6 +62,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
             <p className="mt-2 max-w-xs text-xs text-white/70">
               Te ayudamos a aprobar, te impulsamos a crecer.
             </p>
+            <p className="mt-2 max-w-sm text-[11px] leading-5 text-white/55">
+              Desde tus apuntes o PDFs podés crear resúmenes, mapas mentales, glosarios, flashcards y ejercicios para estudiar el mismo material de distintas formas.
+            </p>
             <div className="mt-4 flex gap-3">
               <a
                 href={SOCIAL_LINKS.instagram}
