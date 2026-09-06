@@ -48,6 +48,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.78,
     },
     {
+      url: `${baseUrl}/funciones/crear-mapa-mental-desde-pdf`,
+      changeFrequency: 'monthly',
+      priority: 0.78,
+    },
+    {
       url: `${baseUrl}/pricing`,
       changeFrequency: 'weekly',
       priority: 0.7,
