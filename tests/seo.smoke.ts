@@ -25,6 +25,7 @@ assertIncludesAll('app/sitemap.ts', [
   '/estudiar-pdf-con-ia',
   '/funciones/resumir-pdf-con-ia',
   '/funciones/crear-flashcards-desde-pdf',
+  '/funciones/crear-mapa-mental-desde-pdf',
 ]);
 
 assertIncludesAll('app/explorar/materia/[id]/page.tsx', [
@@ -113,15 +114,15 @@ for (const unsupportedClaim of [
 }
 
 const aiStudyPages = [
-  'app/ia-para-estudiantes/page.tsx',
-  'app/estudiar-pdf-con-ia/page.tsx',
-  'app/funciones/resumir-pdf-con-ia/page.tsx',
-  'app/funciones/crear-flashcards-desde-pdf/page.tsx',
-];
+  ['app/ia-para-estudiantes/page.tsx', 'IaParaEstudiantesExperience'],
+  ['app/estudiar-pdf-con-ia/page.tsx', 'EstudiarPdfExperience'],
+  ['app/funciones/resumir-pdf-con-ia/page.tsx', 'ResumirPdfExperience'],
+  ['app/funciones/crear-flashcards-desde-pdf/page.tsx', 'FlashcardsPdfExperience'],
+] as const;
 
-for (const pagePath of aiStudyPages) {
+for (const [pagePath, experience] of aiStudyPages) {
   assertIncludesAll(pagePath, [
-    'SeoStudyLanding',
+    experience,
     'toAbsoluteUrl(path)',
     'canonical: toAbsoluteUrl(path)',
     'index: true',
@@ -138,15 +139,46 @@ for (const pagePath of aiStudyPages) {
   }
 }
 
-assertIncludesAll('components/marketing/seo-study-landing.tsx', [
+assertIncludesAll('components/marketing/seo-study-experiences.tsx', [
+  'export function IaParaEstudiantesExperience()',
+  'export function EstudiarPdfExperience()',
+  'export function ResumirPdfExperience()',
+  'export function FlashcardsPdfExperience()',
+  '/funciones/crear-mapa-mental-desde-pdf',
+  'Mapa mental',
   'PublicSiteHeader',
   'FooterHome',
   'buildBreadcrumbJsonLd',
   '<h1',
-  'href={item.href}',
   '<details',
 ]);
-assertIncludesAll('components/footer-home.tsx', ['href="/ia-para-estudiantes"']);
+
+const mindMapPagePath = 'app/funciones/crear-mapa-mental-desde-pdf/page.tsx';
+assertIncludesAll(mindMapPagePath, [
+  'toAbsoluteUrl(path)',
+  'canonical: toAbsoluteUrl(path)',
+  'index: true',
+  'follow: true',
+  'openGraph',
+  'buildBreadcrumbJsonLd',
+  'PublicSiteHeader',
+  'FooterHome',
+  '<h1',
+  'mapa mental',
+]);
+const mindMapPageSource = source(mindMapPagePath).toLowerCase();
+for (const unsupportedClaim of ['100% preciso', 'garantizado', 'preguntas reales', 'examen real']) {
+  assert.ok(
+    !mindMapPageSource.includes(unsupportedClaim),
+    `${mindMapPagePath} must not claim ${unsupportedClaim}`
+  );
+}
+
+assertIncludesAll('components/footer-home.tsx', [
+  'href="/ia-para-estudiantes"',
+  'href="/funciones/crear-mapa-mental-desde-pdf"',
+  'mapas mentales',
+]);
 
 const packageJson = source('package.json');
 assert.ok(packageJson.includes('"tw-animate-css"'), 'tw-animate-css must remain installed');
