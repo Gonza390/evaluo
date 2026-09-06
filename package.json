@@ -9,7 +9,9 @@
     "performance:budget": "node scripts/check-performance-budget.mjs",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts"
+    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts",
+    "video:studio": "remotion studio video/index.ts",
+    "video:render": "remotion render video/index.ts EvaluoLaunchVideo out/evaluo-launch.mp4"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -40,6 +42,7 @@
     "@radix-ui/react-toggle": "1.1.10",
     "@radix-ui/react-toggle-group": "1.1.11",
     "@radix-ui/react-tooltip": "1.2.8",
+    "@remotion/cli": "4.0.521",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/auth-helpers-react": "^0.15.0",
     "@supabase/ssr": "^0.10.2",
@@ -67,6 +70,7 @@
     "react-pdf": "^10.4.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
+    "remotion": "4.0.521",
     "sharp": "^0.35.3",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
