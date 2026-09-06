@@ -74,13 +74,14 @@ async function claimPendingAccess(admin: SupabaseClient, user: User) {
 export async function getReferralPortalData(user: User): Promise<ReferralPortalData | null> {
   const admin = adminClient();
 
-  let { data: accesses, error: accessError } = await admin
+  const { data: initialAccesses, error: accessError } = await admin
     .from('referral_partner_access')
     .select('partner_id')
     .eq('user_id', user.id)
     .eq('status', 'active');
   if (accessError) throw accessError;
 
+  let accesses = initialAccesses;
   if (!accesses?.length) {
     await claimPendingAccess(admin, user);
     const retry = await admin
