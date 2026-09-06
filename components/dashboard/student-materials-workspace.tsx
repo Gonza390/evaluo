@@ -12,7 +12,6 @@ import {
   Files,
   Globe,
   GraduationCap,
-  HelpCircle,
   Loader2,
   Lock,
   Plus,
@@ -527,12 +526,6 @@ export function StudentMaterialsWorkspace({
     }
   }, [user]);
 
-  const reopenMaterialsTour = useCallback(() => {
-    materialsTourDismissedRef.current = false;
-    setMaterialsTourStepIndex(0);
-    setShowMaterialsTour(true);
-  }, []);
-
   const handleMaterialsTourNext = useCallback(() => {
     if (materialsTourStepIndex >= materialsTourSteps.length - 1) {
       closeMaterialsTour();
@@ -577,16 +570,6 @@ export function StudentMaterialsWorkspace({
               Subí tus materiales y convertilos en resúmenes, glosario, tarjetas y ejercicios con
               IA.
             </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={reopenMaterialsTour}
-              className="mt-3 rounded-xl border-slate-200 bg-white text-xs"
-            >
-              <HelpCircle className="h-4 w-4" />
-              Volver a ver la guía
-            </Button>
             {isContributor ? (
               <div className="mx-auto mt-3 flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 sm:inline-flex sm:rounded-full">
                 <Globe className="h-3.5 w-3.5 text-emerald-600" />
