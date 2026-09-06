@@ -124,7 +124,8 @@ assert.match(materiaStudyHomeSource, /La práctica de esta materia está en prep
 assert.match(materiaStudyHomeSource, /Crear ejercicios con mi PDF/);
 assert.doesNotMatch(materiaStudyHomeSource, />Sin preguntas</);
 assert.match(dashboardSource, /Empezá a estudiar en 4 pasos/);
-assert.match(dashboardSource, /Volver a ver la guía/);
+assert.match(dashboardSource, /const dashboardTourSteps: GuidedTourStep\[\]/);
+assert.match(dashboardSource, /Este es tu tablero/);
 assert.match(exploreClientSource, /readyMateriasCount/);
 assert.match(exploreClientSource, /Ver las \$\{rankedCarreras\.length\} carreras/);
 assert.match(loginSource, /getAuthContextCopy/);
