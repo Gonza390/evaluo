@@ -21,6 +21,10 @@ assertIncludesAll('app/sitemap.ts', [
   '/pregunteros/',
   '/resumenes/',
   '/landings/estudiar/',
+  '/ia-para-estudiantes',
+  '/estudiar-pdf-con-ia',
+  '/funciones/resumir-pdf-con-ia',
+  '/funciones/crear-flashcards-desde-pdf',
 ]);
 
 assertIncludesAll('app/explorar/materia/[id]/page.tsx', [
@@ -107,6 +111,42 @@ for (const unsupportedClaim of [
     `study landing must not claim ${unsupportedClaim}`
   );
 }
+
+const aiStudyPages = [
+  'app/ia-para-estudiantes/page.tsx',
+  'app/estudiar-pdf-con-ia/page.tsx',
+  'app/funciones/resumir-pdf-con-ia/page.tsx',
+  'app/funciones/crear-flashcards-desde-pdf/page.tsx',
+];
+
+for (const pagePath of aiStudyPages) {
+  assertIncludesAll(pagePath, [
+    'SeoStudyLanding',
+    'toAbsoluteUrl(path)',
+    'canonical: toAbsoluteUrl(path)',
+    'index: true',
+    'follow: true',
+    'openGraph',
+  ]);
+
+  const pageSource = source(pagePath).toLowerCase();
+  for (const unsupportedClaim of ['100% preciso', 'garantizado', 'preguntas reales', 'examen real']) {
+    assert.ok(
+      !pageSource.includes(unsupportedClaim),
+      `${pagePath} must not claim ${unsupportedClaim}`
+    );
+  }
+}
+
+assertIncludesAll('components/marketing/seo-study-landing.tsx', [
+  'PublicSiteHeader',
+  'FooterHome',
+  'buildBreadcrumbJsonLd',
+  '<h1',
+  'href={item.href}',
+  '<details',
+]);
+assertIncludesAll('components/footer-home.tsx', ['href="/ia-para-estudiantes"']);
 
 const packageJson = source('package.json');
 assert.ok(packageJson.includes('"tw-animate-css"'), 'tw-animate-css must remain installed');
