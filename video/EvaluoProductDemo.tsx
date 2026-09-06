@@ -11,19 +11,67 @@ import {
 
 const BRAND = '#2563eb';
 const BRAND2 = '#6366f1';
-const INK = '#0f172a';
+const INK = '#111827';
 const MUTED = '#64748b';
 const LINE = '#e2e8f0';
-const clamp = {extrapolateLeft: 'clamp' as const, extrapolateRight: 'clamp' as const};
-const r = (frame: number, input: number[], output: number[]) => interpolate(frame, input, output, clamp);
+const STAGE = '#17191c';
+
+const clamp = {
+  extrapolateLeft: 'clamp' as const,
+  extrapolateRight: 'clamp' as const,
+};
+
+const rr = (frame: number, input: number[], output: number[]) =>
+  interpolate(frame, input, output, clamp);
 
 type Feature = 'summary' | 'glossary' | 'cards' | 'exam';
 
-const featureMeta: Record<Feature, {label: string; subtitle: string}> = {
+const meta: Record<Feature, {label: string; subtitle: string}> = {
   summary: {label: 'RESUMEN', subtitle: 'Entendé lo importante'},
   glossary: {label: 'GLOSARIO', subtitle: 'Dominá los conceptos'},
   cards: {label: 'FLASHCARDS', subtitle: 'Recordá activamente'},
   exam: {label: 'EXAMEN', subtitle: 'Comprobá lo que sabés'},
+};
+
+const featureStarts: Record<Feature, number> = {
+  summary: 0,
+  glossary: 140,
+  cards: 280,
+  exam: 420,
+};
+
+const FeatureIcon: React.FC<{feature: Feature; size?: number}> = ({feature, size = 28}) => {
+  const s = size;
+  if (feature === 'summary') {
+    return (
+      <div style={{width: s, height: s, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4}}>
+        {[1, 0.72, 0.88].map((w, i) => (
+          <div key={i} style={{width: `${w * 100}%`, height: 3, borderRadius: 99, background: BRAND}} />
+        ))}
+      </div>
+    );
+  }
+  if (feature === 'glossary') {
+    return (
+      <div style={{width: s, height: s, position: 'relative'}}>
+        <div style={{position: 'absolute', left: 2, top: 3, width: s * 0.38, height: s * 0.72, border: `3px solid ${BRAND}`, borderRadius: 5}} />
+        <div style={{position: 'absolute', right: 2, top: 3, width: s * 0.38, height: s * 0.72, border: `3px solid ${BRAND}`, borderRadius: 5}} />
+      </div>
+    );
+  }
+  if (feature === 'cards') {
+    return (
+      <div style={{width: s, height: s, position: 'relative'}}>
+        <div style={{position: 'absolute', left: 1, top: 7, width: s * 0.7, height: s * 0.52, border: `3px solid ${BRAND}`, borderRadius: 5, transform: 'rotate(-8deg)'}} />
+        <div style={{position: 'absolute', right: 1, top: 2, width: s * 0.7, height: s * 0.52, border: `3px solid ${BRAND}`, borderRadius: 5, background: '#fff'}} />
+      </div>
+    );
+  }
+  return (
+    <div style={{width: s, height: s, borderRadius: 999, border: `3px solid ${BRAND}`, position: 'relative'}}>
+      <div style={{position: 'absolute', width: s * 0.38, height: s * 0.2, borderLeft: `3px solid ${BRAND}`, borderBottom: `3px solid ${BRAND}`, transform: 'rotate(-45deg)', left: s * 0.28, top: s * 0.28}} />
+    </div>
+  );
 };
 
 const Mouse: React.FC<{x: number; y: number; click?: number}> = ({x, y, click = 0}) => (
@@ -32,43 +80,24 @@ const Mouse: React.FC<{x: number; y: number; click?: number}> = ({x, y, click = 
       position: 'absolute',
       left: x,
       top: y,
-      zIndex: 200,
-      transform: `scale(${1 - click * 0.12})`,
+      zIndex: 300,
+      transform: `scale(${1 - click * 0.1})`,
       transformOrigin: '0 0',
-      filter: 'drop-shadow(0 8px 12px rgba(0,0,0,.35))',
+      filter: 'drop-shadow(0 6px 8px rgba(0,0,0,.32))',
     }}
   >
-    <div
-      style={{
-        width: 0,
-        height: 0,
-        borderTop: '30px solid #ffffff',
-        borderRight: '18px solid transparent',
-        transform: 'rotate(-28deg)',
-      }}
-    />
-    <div
-      style={{
-        position: 'absolute',
-        left: 3,
-        top: 1,
-        width: 0,
-        height: 0,
-        borderTop: '24px solid #111827',
-        borderRight: '14px solid transparent',
-        transform: 'rotate(-28deg)',
-      }}
-    />
+    <div style={{width: 0, height: 0, borderTop: '32px solid #fff', borderRight: '19px solid transparent', transform: 'rotate(-28deg)'}} />
+    <div style={{position: 'absolute', left: 3, top: 2, width: 0, height: 0, borderTop: '25px solid #15171a', borderRight: '14px solid transparent', transform: 'rotate(-28deg)'}} />
     {click > 0 ? (
       <div
         style={{
           position: 'absolute',
-          left: -15 - click * 11,
-          top: -15 - click * 11,
-          width: 42 + click * 22,
-          height: 42 + click * 22,
+          left: -15 - click * 12,
+          top: -15 - click * 12,
+          width: 42 + click * 24,
+          height: 42 + click * 24,
           borderRadius: 999,
-          border: `3px solid rgba(96,165,250,${0.7 - click * 0.5})`,
+          border: `3px solid rgba(96,165,250,${0.72 - click * 0.52})`,
         }}
       />
     ) : null}
@@ -76,289 +105,275 @@ const Mouse: React.FC<{x: number; y: number; click?: number}> = ({x, y, click = 
 );
 
 const Brand: React.FC = () => (
-  <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
-    <Img src={staticFile('icon.png')} style={{width: 34, height: 34, objectFit: 'contain'}} />
-    <div style={{fontSize: 24, fontWeight: 900, color: INK, letterSpacing: '-0.04em'}}>Evaluo</div>
+  <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+    <Img src={staticFile('icon.png')} style={{width: 27, height: 27, objectFit: 'contain'}} />
+    <div style={{fontSize: 19, fontWeight: 900, color: INK, letterSpacing: '-0.045em'}}>Evaluo</div>
   </div>
 );
 
-const BrowserChrome: React.FC = () => (
-  <div
-    style={{
-      height: 52,
-      background: '#f8fafc',
-      borderBottom: `1px solid ${LINE}`,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      padding: '0 18px',
-    }}
-  >
-    {[0, 1, 2].map((i) => (
-      <div key={i} style={{width: 10, height: 10, borderRadius: 99, background: '#cbd5e1'}} />
-    ))}
-    <div
-      style={{
-        marginLeft: 10,
-        flex: 1,
-        height: 30,
-        borderRadius: 9,
-        border: `1px solid ${LINE}`,
-        background: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        paddingLeft: 12,
-        color: '#94a3b8',
-        fontSize: 12,
-      }}
-    >
-      evaluo.com.ar
-    </div>
-  </div>
-);
-
-const Sidebar: React.FC<{active: Feature}> = ({active}) => {
-  const items: Array<[Feature, string]> = [
-    ['summary', 'Resumen'],
-    ['glossary', 'Glosario'],
-    ['cards', 'Flashcards'],
-    ['exam', 'Examen'],
+const Nav: React.FC<{active: Feature}> = ({active}) => {
+  const items: Array<{key: Feature; label: string}> = [
+    {key: 'summary', label: 'Resumen'},
+    {key: 'glossary', label: 'Glosario'},
+    {key: 'cards', label: 'Flashcards'},
+    {key: 'exam', label: 'Examen'},
   ];
+
   return (
-    <div style={{width: 180, padding: 18, borderRight: `1px solid ${LINE}`, background: '#fbfdff'}}>
+    <div style={{width: 152, padding: '18px 14px', background: '#fbfcfe', borderRight: `1px solid ${LINE}`}}>
       <Brand />
-      <div style={{fontSize: 10, fontWeight: 900, letterSpacing: '.14em', color: '#94a3b8', marginTop: 28, marginBottom: 10}}>
-        ESTUDIO
-      </div>
-      {items.map(([key, label]) => {
-        const on = key === active;
-        return (
-          <div
-            key={key}
-            style={{
-              height: 48,
-              borderRadius: 13,
-              padding: '0 13px',
-              marginBottom: 6,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              color: on ? BRAND : '#64748b',
-              background: on ? '#eff6ff' : 'transparent',
-              border: on ? '1px solid #dbeafe' : '1px solid transparent',
-              fontSize: 14,
-              fontWeight: on ? 900 : 750,
-            }}
-          >
+      <div style={{marginTop: 24, fontSize: 9, color: '#94a3b8', fontWeight: 900, letterSpacing: '.14em'}}>ESTUDIO</div>
+      <div style={{marginTop: 9}}>
+        {items.map((item) => {
+          const on = item.key === active;
+          return (
             <div
+              key={item.key}
               style={{
-                width: 22,
-                height: 22,
-                borderRadius: 7,
-                border: `2px solid ${on ? BRAND : '#cbd5e1'}`,
+                height: 41,
+                padding: '0 10px',
+                borderRadius: 11,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 10,
-                fontWeight: 900,
+                gap: 9,
+                marginBottom: 5,
+                background: on ? '#eff6ff' : 'transparent',
+                border: on ? '1px solid #dbeafe' : '1px solid transparent',
+                color: on ? BRAND : '#64748b',
+                fontSize: 11,
+                fontWeight: on ? 900 : 750,
               }}
             >
-              {key === 'summary' ? '≡' : key === 'glossary' ? 'D' : key === 'cards' ? '↻' : '✓'}
+              <FeatureIcon feature={item.key} size={16} />
+              {item.label}
             </div>
-            {label}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      <div style={{marginTop: 22, height: 1, background: LINE}} />
+      <div style={{marginTop: 14, fontSize: 9, color: '#94a3b8', fontWeight: 900, letterSpacing: '.13em'}}>MATERIAL</div>
+      <div style={{marginTop: 10, padding: 10, borderRadius: 11, border: `1px solid ${LINE}`, background: '#fff'}}>
+        <div style={{fontSize: 9, fontWeight: 900, color: INK}}>Marketing I.pdf</div>
+        <div style={{fontSize: 8, color: MUTED, marginTop: 3}}>Procesado · listo</div>
+      </div>
     </div>
   );
 };
 
-const SummaryView: React.FC = () => (
-  <div style={{padding: '28px 34px'}}>
-    <div style={{fontSize: 11, color: BRAND, fontWeight: 900, letterSpacing: '.13em'}}>RESUMEN</div>
-    <div style={{fontSize: 25, fontWeight: 950, color: INK, marginTop: 7}}>Marketing I · guía para el parcial</div>
-    <div
-      style={{
-        marginTop: 20,
-        padding: 18,
-        borderRadius: 16,
-        border: '1px solid #dbeafe',
-        background: 'linear-gradient(135deg,#f8fbff,#f5f3ff)',
-        color: '#475569',
-        fontSize: 14,
-        lineHeight: 1.45,
-      }}
-    >
-      El material explica cómo segmentar un mercado, construir posicionamiento y definir una propuesta de valor clara.
+const Header: React.FC<{active: Feature}> = ({active}) => (
+  <div style={{height: 48, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 22px', borderBottom: `1px solid ${LINE}`, background: '#fff'}}>
+    <div>
+      <div style={{fontSize: 9, color: '#94a3b8', fontWeight: 800}}>Marketing I</div>
+      <div style={{fontSize: 12, color: INK, fontWeight: 900, marginTop: 2}}>{meta[active].label[0] + meta[active].label.slice(1).toLowerCase()}</div>
     </div>
-    <div style={{marginTop: 22, fontSize: 15, fontWeight: 900, color: INK}}>Puntos clave</div>
-    {[
-      ['Segmentación', 'Agrupá consumidores con necesidades similares.'],
-      ['Posicionamiento', 'Definí el lugar que querés ocupar frente a alternativas.'],
-      ['Propuesta de valor', 'Explicá por qué deberían elegir tu oferta.'],
-    ].map(([title, body], i) => (
-      <div
-        key={title}
-        style={{
-          marginTop: 10,
-          minHeight: 66,
-          borderRadius: 14,
-          border: `1px solid ${LINE}`,
-          background: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-          padding: '10px 14px',
-        }}
-      >
-        <div style={{width: 28, height: 28, borderRadius: 9, background: BRAND, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900}}>
-          {i + 1}
-        </div>
-        <div>
-          <div style={{fontSize: 14, fontWeight: 900, color: INK}}>{title}</div>
-          <div style={{fontSize: 11, color: MUTED, marginTop: 3}}>{body}</div>
-        </div>
-      </div>
-    ))}
+    <div style={{display: 'flex', gap: 7}}>
+      <div style={{padding: '6px 9px', borderRadius: 9, background: '#f8fafc', border: `1px solid ${LINE}`, fontSize: 8, color: MUTED}}>PDF</div>
+      <div style={{padding: '6px 10px', borderRadius: 9, background: INK, color: '#fff', fontSize: 8, fontWeight: 850}}>Estudiar</div>
+    </div>
   </div>
 );
 
-const GlossaryView: React.FC = () => (
-  <div style={{padding: '28px 34px'}}>
-    <div style={{fontSize: 11, color: BRAND, fontWeight: 900, letterSpacing: '.13em'}}>GLOSARIO</div>
-    <div style={{fontSize: 25, fontWeight: 950, color: INK, marginTop: 7}}>Conceptos del mismo material</div>
-    <div style={{marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12}}>
+const SummaryView: React.FC = () => (
+  <div style={{padding: '22px 27px'}}>
+    <div style={{fontSize: 9, color: BRAND, fontWeight: 900, letterSpacing: '.12em'}}>RESUMEN</div>
+    <div style={{fontSize: 21, fontWeight: 950, color: INK, marginTop: 6}}>Qué tenés que saber para el parcial</div>
+    <div style={{marginTop: 16, padding: 15, borderRadius: 13, background: '#f8faff', border: '1px solid #dbeafe', fontSize: 11, lineHeight: 1.45, color: '#475569'}}>
+      Evaluo ordena el PDF y convierte el contenido en una guía clara para empezar a estudiar.
+    </div>
+    <div style={{marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9}}>
       {[
-        ['Segmentación', 'Agrupar consumidores según características o necesidades comunes.'],
-        ['Posicionamiento', 'Lugar que una marca busca ocupar en la mente del público.'],
-        ['Propuesta de valor', 'Beneficio diferencial que justifica elegir una oferta.'],
-        ['Público objetivo', 'Grupo de personas al que se dirige una estrategia.'],
-      ].map(([term, def]) => (
-        <div key={term} style={{minHeight: 118, borderRadius: 16, border: `1px solid ${LINE}`, padding: 16, background: '#fff'}}>
-          <div style={{fontSize: 15, fontWeight: 900, color: INK}}>{term}</div>
-          <div style={{fontSize: 11, lineHeight: 1.45, color: MUTED, marginTop: 8}}>{def}</div>
+        ['Segmentación', 'Agrupá públicos con necesidades similares.'],
+        ['Posicionamiento', 'Definí el lugar que querés ocupar.'],
+        ['Propuesta de valor', 'Explicá por qué elegir tu oferta.'],
+        ['Público objetivo', 'Identificá a quién le hablás.'],
+      ].map(([title, body], i) => (
+        <div key={title} style={{minHeight: 78, borderRadius: 12, border: `1px solid ${LINE}`, padding: 12, background: '#fff'}}>
+          <div style={{width: 22, height: 22, borderRadius: 7, background: i === 0 ? BRAND : '#eff6ff', color: i === 0 ? '#fff' : BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 900}}>{i + 1}</div>
+          <div style={{fontSize: 10, fontWeight: 900, color: INK, marginTop: 8}}>{title}</div>
+          <div style={{fontSize: 8, lineHeight: 1.4, color: MUTED, marginTop: 3}}>{body}</div>
         </div>
       ))}
     </div>
   </div>
 );
 
-const CardsView: React.FC<{frame: number}> = ({frame}) => {
-  const flip = r(frame, [330, 360], [0, 180]);
-  return (
-    <div style={{padding: '28px 34px'}}>
-      <div style={{fontSize: 11, color: BRAND, fontWeight: 900, letterSpacing: '.13em'}}>FLASHCARDS</div>
-      <div style={{fontSize: 25, fontWeight: 950, color: INK, marginTop: 7}}>Repasá sin volver a leer todo</div>
-      <div style={{height: 330, marginTop: 24, perspective: 1200, position: 'relative'}}>
-        <div style={{position: 'absolute', inset: '0 34px', transformStyle: 'preserve-3d', transform: `rotateY(${flip}deg)`}}>
-          <div style={{position: 'absolute', inset: 0, borderRadius: 22, border: '1px solid #cfe0ff', background: 'linear-gradient(145deg,#fff,#f8fbff)', boxShadow: '0 18px 40px rgba(37,99,235,.12)', padding: 28, backfaceVisibility: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}>
-            <div style={{fontSize: 11, fontWeight: 900, color: BRAND, letterSpacing: '.13em'}}>PREGUNTA</div>
-            <div style={{fontSize: 27, lineHeight: 1.2, fontWeight: 950, color: INK}}>¿Qué diferencia hay entre segmentación y posicionamiento?</div>
-            <div style={{fontSize: 12, color: MUTED}}>Click para revelar</div>
-          </div>
-          <div style={{position: 'absolute', inset: 0, borderRadius: 22, background: `linear-gradient(145deg,${BRAND},${BRAND2})`, color: '#fff', padding: 28, backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 20px 46px rgba(37,99,235,.25)'}}>
-            <div style={{fontSize: 11, fontWeight: 900, opacity: .75, letterSpacing: '.13em'}}>RESPUESTA</div>
-            <div style={{fontSize: 23, lineHeight: 1.3, fontWeight: 850}}>La segmentación define grupos de público; el posicionamiento define el lugar que la marca quiere ocupar frente a ellos.</div>
-            <div style={{fontSize: 12, opacity: .8}}>Generada desde el mismo PDF</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ExamView: React.FC<{frame: number}> = ({frame}) => {
-  const selected = frame >= 475;
-  return (
-    <div style={{padding: '28px 34px'}}>
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <div>
-          <div style={{fontSize: 11, color: BRAND, fontWeight: 900, letterSpacing: '.13em'}}>EXAMEN</div>
-          <div style={{fontSize: 25, fontWeight: 950, color: INK, marginTop: 7}}>Comprobá si realmente lo entendiste</div>
-        </div>
-        <div style={{fontSize: 12, color: MUTED}}>Pregunta 1 de 5</div>
-      </div>
-      <div style={{marginTop: 20, padding: 18, borderRadius: 16, background: '#f8fafc', border: `1px solid ${LINE}`, fontSize: 17, fontWeight: 900, color: INK}}>
-        ¿Cuál describe mejor una propuesta de valor?
-      </div>
+const GlossaryView: React.FC = () => (
+  <div style={{padding: '22px 27px'}}>
+    <div style={{fontSize: 9, color: BRAND, fontWeight: 900, letterSpacing: '.12em'}}>GLOSARIO</div>
+    <div style={{fontSize: 21, fontWeight: 950, color: INK, marginTop: 6}}>Conceptos del mismo material</div>
+    <div style={{marginTop: 17, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10}}>
       {[
-        'Una lista de segmentos de mercado',
-        'El beneficio diferencial por el que elegir una oferta',
-        'El precio promedio del mercado',
-      ].map((option, index) => {
-        const correct = index === 1;
-        const on = selected && correct;
-        return (
-          <div key={option} style={{marginTop: 11, minHeight: 58, borderRadius: 14, border: `2px solid ${on ? '#86efac' : LINE}`, background: on ? '#f0fdf4' : '#fff', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px'}}>
-            <div style={{width: 24, height: 24, borderRadius: 99, border: `2px solid ${on ? '#22c55e' : '#cbd5e1'}`, background: on ? '#22c55e' : '#fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900}}>
-              {on ? '✓' : ''}
-            </div>
-            <div style={{fontSize: 13, fontWeight: 750, color: INK}}>{option}</div>
+        ['Segmentación', 'Agrupar consumidores según características o necesidades comunes.'],
+        ['Posicionamiento', 'Lugar que una marca busca ocupar en la mente del público.'],
+        ['Propuesta de valor', 'Beneficio diferencial que justifica elegir una oferta.'],
+        ['Público objetivo', 'Grupo específico al que se dirige una estrategia.'],
+      ].map(([term, def]) => (
+        <div key={term} style={{minHeight: 105, borderRadius: 13, border: `1px solid ${LINE}`, padding: 13, background: '#fff'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+            <div style={{width: 26, height: 26, borderRadius: 8, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><FeatureIcon feature="glossary" size={14} /></div>
+            <div style={{fontSize: 11, fontWeight: 900, color: INK}}>{term}</div>
           </div>
-        );
-      })}
-      <div style={{marginTop: 13, opacity: selected ? 1 : 0, padding: '13px 16px', borderRadius: 14, background: INK, color: '#fff', fontSize: 12, fontWeight: 800}}>
-        Correcto · detectá qué dominás y qué necesitás reforzar.
-      </div>
-    </div>
-  );
-};
-
-const ProductScreen: React.FC<{active: Feature; frame: number}> = ({active, frame}) => (
-  <div style={{width: 960, height: 560, borderRadius: 22, overflow: 'hidden', background: '#fff', border: '1px solid rgba(255,255,255,.12)', boxShadow: '0 40px 90px rgba(0,0,0,.45)'}}>
-    <BrowserChrome />
-    <div style={{display: 'flex', height: 508}}>
-      <Sidebar active={active} />
-      <div style={{flex: 1, overflow: 'hidden'}}>
-        {active === 'summary' ? <SummaryView /> : null}
-        {active === 'glossary' ? <GlossaryView /> : null}
-        {active === 'cards' ? <CardsView frame={frame} /> : null}
-        {active === 'exam' ? <ExamView frame={frame} /> : null}
-      </div>
+          <div style={{fontSize: 8.5, lineHeight: 1.45, color: MUTED, marginTop: 9}}>{def}</div>
+        </div>
+      ))}
     </div>
   </div>
 );
 
-const FloatingBadge: React.FC<{feature: Feature; frame: number}> = ({feature, frame}) => {
-  const pop = spring({frame: Math.max(0, frame - 22), fps: 30, config: {damping: 14, stiffness: 115}});
+const FlashcardsView: React.FC<{local: number}> = ({local}) => {
+  const flip = rr(local, [70, 100], [0, 180]);
+  const face: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    borderRadius: 18,
+    backfaceVisibility: 'hidden',
+    padding: 24,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  };
+
   return (
-    <div style={{position: 'absolute', left: '50%', top: 92, transform: `translateX(-50%) translateY(${(1 - pop) * -24}px) scale(${0.88 + pop * 0.12})`, zIndex: 120}}>
-      <div style={{minWidth: 210, height: 76, padding: '0 24px', borderRadius: 20, background: '#fff', color: INK, display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 18px 50px rgba(0,0,0,.28)', border: `1px solid ${LINE}`}}>
-        <div style={{width: 42, height: 42, borderRadius: 13, background: '#eff6ff', color: BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 950}}>
-          {feature === 'summary' ? '≡' : feature === 'glossary' ? 'D' : feature === 'cards' ? '↻' : '✓'}
-        </div>
-        <div>
-          <div style={{fontSize: 16, fontWeight: 950, letterSpacing: '.04em'}}>{featureMeta[feature].label}</div>
-          <div style={{fontSize: 11, color: MUTED, marginTop: 2}}>{featureMeta[feature].subtitle}</div>
+    <div style={{padding: '22px 27px'}}>
+      <div style={{fontSize: 9, color: BRAND, fontWeight: 900, letterSpacing: '.12em'}}>FLASHCARDS</div>
+      <div style={{fontSize: 21, fontWeight: 950, color: INK, marginTop: 6}}>Pasá de leer a recordar</div>
+      <div style={{height: 265, marginTop: 18, perspective: 1200, position: 'relative'}}>
+        <div style={{position: 'absolute', inset: '0 45px', transformStyle: 'preserve-3d', transform: `rotateY(${flip}deg)`}}>
+          <div style={{...face, background: '#fff', border: '1px solid #cfe0ff', boxShadow: '0 15px 34px rgba(37,99,235,.10)'}}>
+            <div style={{fontSize: 9, color: BRAND, fontWeight: 900, letterSpacing: '.12em'}}>PREGUNTA</div>
+            <div style={{fontSize: 21, lineHeight: 1.18, color: INK, fontWeight: 950}}>¿Qué diferencia hay entre segmentación y posicionamiento?</div>
+            <div style={{fontSize: 9, color: MUTED}}>Click para revelar</div>
+          </div>
+          <div style={{...face, transform: 'rotateY(180deg)', background: `linear-gradient(145deg,${BRAND},${BRAND2})`, color: '#fff', boxShadow: '0 17px 38px rgba(37,99,235,.22)'}}>
+            <div style={{fontSize: 9, fontWeight: 900, opacity: .76, letterSpacing: '.12em'}}>RESPUESTA</div>
+            <div style={{fontSize: 17, lineHeight: 1.32, fontWeight: 850}}>La segmentación define grupos de público; el posicionamiento define el lugar que la marca quiere ocupar frente a ellos.</div>
+            <div style={{fontSize: 9, opacity: .78}}>Generada desde el mismo PDF</div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-const Stage: React.FC<{active: Feature; frame: number}> = ({active, frame}) => {
-  const intro = spring({frame, fps: 30, config: {damping: 16, stiffness: 95}});
-  const cameraX = active === 'summary' ? 0 : active === 'glossary' ? -36 : active === 'cards' ? 28 : -18;
-  const cameraY = active === 'summary' ? 0 : active === 'glossary' ? 8 : active === 'cards' ? -14 : 10;
-  const cameraScale = active === 'summary' ? 0.88 : active === 'glossary' ? 0.94 : active === 'cards' ? 1.02 : 0.97;
-  const tilt = active === 'summary' ? -1.4 : active === 'glossary' ? 1.3 : active === 'cards' ? -0.7 : 0.9;
-
+const ExamView: React.FC<{local: number}> = ({local}) => {
+  const selected = local >= 88;
   return (
-    <div style={{position: 'absolute', left: 112, right: 112, top: 118, bottom: 104, borderRadius: 34, overflow: 'hidden', background: '#15171a', boxShadow: '0 38px 80px rgba(15,23,42,.18)'}}>
-      <div style={{position: 'absolute', left: 0, right: 0, top: '50%', height: 8, background: '#2a2d31', transform: 'translateY(-50%)'}} />
-      <div style={{position: 'absolute', width: 760, height: 760, borderRadius: 999, left: 570, top: 70, background: 'radial-gradient(circle,rgba(37,99,235,.17),rgba(37,99,235,0) 65%)', filter: 'blur(12px)'}} />
-      <div style={{position: 'absolute', left: '50%', top: '54%', perspective: 1800, transform: 'translate(-50%,-50%)'}}>
-        <div
-          style={{
-            transform: `translate(${cameraX}px, ${cameraY}px) scale(${(0.78 + intro * 0.22) * cameraScale}) rotateX(2deg) rotateY(${tilt}deg)`,
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          <ProductScreen active={active} frame={frame} />
+    <div style={{padding: '22px 27px'}}>
+      <div style={{display: 'flex', justifyContent: 'space-between'}}>
+        <div>
+          <div style={{fontSize: 9, color: BRAND, fontWeight: 900, letterSpacing: '.12em'}}>EXAMEN</div>
+          <div style={{fontSize: 21, fontWeight: 950, color: INK, marginTop: 6}}>Comprobá si realmente lo entendiste</div>
+        </div>
+        <div style={{fontSize: 9, color: MUTED}}>1 de 5</div>
+      </div>
+      <div style={{marginTop: 16, padding: 14, borderRadius: 12, border: `1px solid ${LINE}`, background: '#f8fafc', fontSize: 13, fontWeight: 900, color: INK}}>¿Cuál describe mejor una propuesta de valor?</div>
+      {[
+        'Una lista de segmentos de mercado',
+        'El beneficio diferencial por el que elegir una oferta',
+        'El precio promedio del mercado',
+      ].map((option, i) => {
+        const correct = i === 1;
+        const on = selected && correct;
+        return (
+          <div key={option} style={{marginTop: 8, minHeight: 43, borderRadius: 11, border: `2px solid ${on ? '#86efac' : LINE}`, background: on ? '#f0fdf4' : '#fff', display: 'flex', alignItems: 'center', gap: 9, padding: '7px 11px'}}>
+            <div style={{width: 19, height: 19, borderRadius: 999, border: `2px solid ${on ? '#22c55e' : '#cbd5e1'}`, background: on ? '#22c55e' : '#fff', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 900}}>{on ? '✓' : ''}</div>
+            <div style={{fontSize: 10, fontWeight: 750, color: INK}}>{option}</div>
+          </div>
+        );
+      })}
+      <div style={{opacity: selected ? 1 : 0, marginTop: 8, borderRadius: 10, background: INK, color: '#fff', padding: '9px 11px', fontSize: 9, fontWeight: 800}}>Correcto · reforzá solo lo que todavía te cuesta.</div>
+    </div>
+  );
+};
+
+const AppScreen: React.FC<{feature: Feature; local: number}> = ({feature, local}) => {
+  const contentIn = spring({frame: local, fps: 30, config: {damping: 18, stiffness: 125}});
+  return (
+    <div style={{width: 760, height: 430, borderRadius: 10, overflow: 'hidden', background: '#fff', border: '1px solid #303237', boxShadow: '0 24px 70px rgba(0,0,0,.42)'}}>
+      <div style={{height: 28, display: 'flex', alignItems: 'center', gap: 6, padding: '0 11px', background: '#f8fafc', borderBottom: `1px solid ${LINE}`}}>
+        {[0, 1, 2].map((i) => <div key={i} style={{width: 6, height: 6, borderRadius: 99, background: '#cbd5e1'}} />)}
+        <div style={{marginLeft: 7, flex: 1, height: 17, borderRadius: 6, background: '#fff', border: `1px solid ${LINE}`, color: '#94a3b8', fontSize: 7, display: 'flex', alignItems: 'center', paddingLeft: 7}}>evaluo.com.ar</div>
+      </div>
+      <div style={{display: 'flex', height: 402}}>
+        <Nav active={feature} />
+        <div style={{flex: 1}}>
+          <Header active={feature} />
+          <div style={{opacity: contentIn, transform: `translateY(${(1 - contentIn) * 10}px)`}}>
+            {feature === 'summary' ? <SummaryView /> : null}
+            {feature === 'glossary' ? <GlossaryView /> : null}
+            {feature === 'cards' ? <FlashcardsView local={local} /> : null}
+            {feature === 'exam' ? <ExamView local={local} /> : null}
+          </div>
         </div>
       </div>
-      <FloatingBadge feature={active} frame={frame} />
     </div>
+  );
+};
+
+const FloatingBadge: React.FC<{feature: Feature; local: number}> = ({feature, local}) => {
+  const pop = spring({frame: local, fps: 30, config: {damping: 14, stiffness: 115}});
+  return (
+    <div style={{position: 'absolute', left: '50%', top: 34, zIndex: 100, transform: `translateX(-50%) translateY(${(1 - pop) * -18}px) scale(${0.88 + pop * 0.12})`, opacity: pop}}>
+      <div style={{height: 72, minWidth: 225, padding: '0 22px', borderRadius: 17, background: '#fff', display: 'flex', alignItems: 'center', gap: 13, border: `1px solid ${LINE}`, boxShadow: '0 18px 44px rgba(0,0,0,.28)'}}>
+        <div style={{width: 42, height: 42, borderRadius: 12, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+          <FeatureIcon feature={feature} size={22} />
+        </div>
+        <div>
+          <div style={{fontSize: 16, fontWeight: 950, color: INK, letterSpacing: '.02em'}}>{meta[feature].label}</div>
+          <div style={{fontSize: 10, color: MUTED, marginTop: 2}}>{meta[feature].subtitle}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ShowcaseStage: React.FC<{feature: Feature; local: number}> = ({feature, local}) => {
+  const enter = spring({frame: local, fps: 30, config: {damping: 18, stiffness: 95}});
+  const drift = Math.sin(local / 42) * 4;
+  const camera = {
+    summary: {x: -10, y: 7, scale: 0.92, ry: -2.4, rx: 1.2},
+    glossary: {x: 13, y: -3, scale: 0.95, ry: 2.2, rx: 1.0},
+    cards: {x: -4, y: -7, scale: 0.98, ry: -1.2, rx: 1.6},
+    exam: {x: 10, y: 5, scale: 0.96, ry: 1.8, rx: 1.1},
+  }[feature];
+
+  return (
+    <div style={{position: 'absolute', left: 190, right: 190, top: 264, height: 610, borderRadius: 24, overflow: 'hidden', background: STAGE, boxShadow: '0 34px 70px rgba(15,23,42,.18)'}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: '50%', height: 8, background: '#303338', transform: 'translateY(-50%)'}} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 'calc(50% + 9px)', height: 1, background: 'rgba(255,255,255,.04)'}} />
+      <div style={{position: 'absolute', width: 680, height: 680, borderRadius: 999, left: 430, top: -50, background: 'radial-gradient(circle,rgba(37,99,235,.15),rgba(37,99,235,0) 66%)', filter: 'blur(18px)'}} />
+      <div style={{position: 'absolute', left: '50%', top: '56%', perspective: 1700, transform: 'translate(-50%,-50%)'}}>
+        <div
+          style={{
+            width: 820,
+            height: 488,
+            borderRadius: 18,
+            padding: 21,
+            background: '#25282c',
+            boxShadow: '0 34px 86px rgba(0,0,0,.52)',
+            transformStyle: 'preserve-3d',
+            transform: `translate(${camera.x + drift}px, ${camera.y}px) scale(${(0.82 + enter * 0.18) * camera.scale}) rotateX(${camera.rx}deg) rotateY(${camera.ry}deg)`,
+          }}
+        >
+          <AppScreen feature={feature} local={local} />
+        </div>
+      </div>
+      <FloatingBadge feature={feature} local={local} />
+    </div>
+  );
+};
+
+const Final: React.FC<{frame: number}> = ({frame}) => {
+  const p = spring({frame: Math.max(0, frame - 545), fps: 30, config: {damping: 16, stiffness: 105}});
+  return (
+    <AbsoluteFill style={{opacity: rr(frame, [535, 565], [0, 1]), background: '#fff', alignItems: 'center', justifyContent: 'center'}}>
+      <div style={{display: 'flex', alignItems: 'center', gap: 14, transform: `scale(${0.84 + p * 0.16})`}}>
+        <Img src={staticFile('icon.png')} style={{width: 60, height: 60, objectFit: 'contain'}} />
+        <div style={{fontSize: 45, fontWeight: 950, letterSpacing: '-0.055em', color: INK}}>Evaluo</div>
+      </div>
+      <div style={{fontSize: 58, lineHeight: 1.02, fontWeight: 950, letterSpacing: '-0.06em', color: INK, textAlign: 'center', marginTop: 28}}>Un PDF. Todo tu estudio.</div>
+      <div style={{fontSize: 18, color: MUTED, marginTop: 16}}>Resumen · Glosario · Flashcards · Examen</div>
+    </AbsoluteFill>
   );
 };
 
@@ -366,67 +381,52 @@ export const EvaluoProductDemo: React.FC = () => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
 
-  const active: Feature = frame < 150 ? 'summary' : frame < 285 ? 'glossary' : frame < 410 ? 'cards' : 'exam';
+  const feature: Feature = frame < 140 ? 'summary' : frame < 280 ? 'glossary' : frame < 420 ? 'cards' : 'exam';
+  const local = frame - featureStarts[feature];
+  const finalOpacity = rr(frame, [532, 562], [0, 1]);
 
-  const mouseX =
-    frame < 140
-      ? r(frame, [40, 110], [1380, 430])
-      : frame < 280
-        ? r(frame, [150, 220], [420, 430])
-        : frame < 405
-          ? r(frame, [285, 350], [430, 1060])
-          : r(frame, [420, 480], [430, 1040]);
-  const mouseY =
-    frame < 140
-      ? r(frame, [40, 110], [780, 380])
-      : frame < 280
-        ? r(frame, [150, 220], [380, 430])
-        : frame < 405
-          ? r(frame, [285, 350], [430, 610])
-          : r(frame, [420, 480], [430, 620]);
+  const mouseX = feature === 'summary'
+    ? rr(local, [18, 90], [1450, 1060])
+    : feature === 'glossary'
+      ? rr(local, [10, 42, 96], [700, 620, 1030])
+      : feature === 'cards'
+        ? rr(local, [8, 38, 82], [710, 620, 1090])
+        : rr(local, [8, 38, 88], [710, 620, 1120]);
 
-  const click = Math.max(
-    r(frame, [105, 112, 122], [0, 1, 0]),
-    r(frame, [214, 221, 231], [0, 1, 0]),
-    r(frame, [345, 352, 362], [0, 1, 0]),
-    r(frame, [472, 479, 489], [0, 1, 0]),
-  );
+  const mouseY = feature === 'summary'
+    ? rr(local, [18, 90], [720, 555])
+    : feature === 'glossary'
+      ? rr(local, [10, 42, 96], [520, 566, 585])
+      : feature === 'cards'
+        ? rr(local, [8, 38, 82], [555, 606, 620])
+        : rr(local, [8, 38, 88], [590, 646, 666]);
 
-  const titleIn = spring({frame, fps, config: {damping: 16, stiffness: 105}});
-  const final = r(frame, [520, 555, 600], [0, 1, 1]);
+  const click = feature === 'summary'
+    ? rr(local, [84, 91, 101], [0, 1, 0])
+    : feature === 'glossary'
+      ? Math.max(rr(local, [34, 41, 51], [0, 1, 0]), rr(local, [90, 97, 107], [0, 1, 0]))
+      : feature === 'cards'
+        ? Math.max(rr(local, [31, 38, 48], [0, 1, 0]), rr(local, [74, 82, 92], [0, 1, 0]))
+        : Math.max(rr(local, [31, 38, 48], [0, 1, 0]), rr(local, [80, 88, 98], [0, 1, 0]));
+
+  const pillIn = spring({frame, fps, config: {damping: 16, stiffness: 105}});
 
   return (
-    <AbsoluteFill style={{background: '#ffffff', fontFamily: 'Inter, Arial, sans-serif', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', top: 32, left: 0, right: 0, textAlign: 'center', opacity: 1 - final}}>
-        <div style={{fontSize: 13, fontWeight: 850, color: MUTED, letterSpacing: '.14em'}}>EVALUO EN ACCIÓN</div>
-        <div style={{fontSize: 42, fontWeight: 950, letterSpacing: '-0.055em', color: INK, marginTop: 8, transform: `translateY(${(1 - titleIn) * 18}px)`}}>
-          Del PDF a estudiar de verdad.
-        </div>
+    <AbsoluteFill style={{background: '#fff', fontFamily: 'Inter, Arial, sans-serif', overflow: 'hidden'}}>
+      <div style={{position: 'absolute', top: 78, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: 1 - finalOpacity}}>
+        <div style={{padding: '12px 20px', borderRadius: 999, background: '#eff6ff', color: BRAND, fontSize: 12, fontWeight: 900, letterSpacing: '.08em', transform: `translateY(${(1 - pillIn) * 14}px)`}}>CÓMO FUNCIONA</div>
+      </div>
+      <div style={{position: 'absolute', top: 132, left: 0, right: 0, textAlign: 'center', opacity: 1 - finalOpacity}}>
+        <div style={{fontSize: 34, color: INK, fontWeight: 950, letterSpacing: '-0.045em'}}>Del PDF a estudiar de verdad.</div>
+        <div style={{fontSize: 15, color: MUTED, marginTop: 8}}>Una sola plataforma. Todo conectado.</div>
       </div>
 
-      <div style={{opacity: 1 - final}}>
-        <Stage active={active} frame={frame} />
+      <div style={{opacity: 1 - finalOpacity}}>
+        <ShowcaseStage feature={feature} local={local} />
         <Mouse x={mouseX} y={mouseY} click={click} />
       </div>
 
-      <AbsoluteFill style={{opacity: final, alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at 50% 45%,rgba(37,99,235,.12),#fff 52%)'}}>
-        <div style={{display: 'flex', alignItems: 'center', gap: 16}}>
-          <Img src={staticFile('icon.png')} style={{width: 72, height: 72, objectFit: 'contain'}} />
-          <div style={{fontSize: 52, fontWeight: 950, letterSpacing: '-0.055em', color: INK}}>Evaluo</div>
-        </div>
-        <div style={{fontSize: 64, lineHeight: 1.02, fontWeight: 950, letterSpacing: '-0.065em', color: INK, textAlign: 'center', marginTop: 34}}>
-          Un PDF.
-          <br />
-          Todo tu estudio.
-        </div>
-        <div style={{display: 'flex', gap: 12, marginTop: 32}}>
-          {['Resumen', 'Glosario', 'Flashcards', 'Examen'].map((label) => (
-            <div key={label} style={{padding: '12px 18px', borderRadius: 999, background: '#eff6ff', color: BRAND, fontSize: 15, fontWeight: 900}}>
-              {label}
-            </div>
-          ))}
-        </div>
-      </AbsoluteFill>
+      <Final frame={frame} />
     </AbsoluteFill>
   );
 };
