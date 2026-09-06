@@ -349,8 +349,8 @@ export function DemoMaterialGuidedTourV3({
       const raw = element.getBoundingClientRect();
       const safe = vw < 768 ? SAFE_MOBILE : SAFE_DESKTOP;
       const padding = currentStep.target === 'pdf' ? 2 : 4;
-      let top = clamp(raw.top - padding, safe, vh - safe - 1);
-      let left = clamp(raw.left - padding, safe, vw - safe - 1);
+      const top = clamp(raw.top - padding, safe, vh - safe - 1);
+      const left = clamp(raw.left - padding, safe, vw - safe - 1);
       let right = clamp(raw.right + padding, left + 1, vw - safe);
       let bottom = clamp(raw.bottom + padding, top + 1, vh - safe);
 
