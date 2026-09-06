@@ -146,6 +146,13 @@ export function IaParaEstudiantesExperience() {
       href: '/funciones/resumir-pdf-con-ia',
     },
     {
+      icon: Brain,
+      eyebrow: 'Conectar',
+      title: 'Quiero ver cómo se relacionan los conceptos',
+      description: 'Creá un mapa mental para organizar visualmente temas, subtemas y relaciones del material.',
+      href: '/funciones/crear-mapa-mental-desde-pdf',
+    },
+    {
       icon: Layers3,
       eyebrow: 'Memorizar',
       title: 'Quiero repasar conceptos',
@@ -186,7 +193,7 @@ export function IaParaEstudiantesExperience() {
               <PrimaryCta label="Subir mi material" trackingPrefix="seo_ia_estudiantes" location="hero" />
             </div>
 
-            <div className="mt-12 grid gap-4 text-left sm:grid-cols-2">
+            <div className="mt-12 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
               {intents.map((intent) => {
                 const Icon = intent.icon;
                 return (
@@ -216,7 +223,7 @@ export function IaParaEstudiantesExperience() {
             <SectionIntro
               eyebrow="Una sola fuente"
               title="La IA cambia de tarea; tu material sigue siendo el contexto."
-              description="En vez de copiar y pegar el mismo texto en herramientas separadas, el recorrido parte del contenido que vos elegís y te deja moverte entre comprensión, repaso y práctica."
+              description="En vez de copiar y pegar el mismo texto en herramientas separadas, el recorrido parte del contenido que vos elegís y te deja moverte entre comprensión, organización visual, repaso y práctica."
             />
             <div className="rounded-[28px] border border-slate-200 bg-slate-50/60 p-5 sm:p-7">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -228,9 +235,10 @@ export function IaParaEstudiantesExperience() {
                   </div>
                 </div>
               </div>
-              <div className="grid gap-3 pt-4 sm:grid-cols-3">
+              <div className="grid gap-3 pt-4 sm:grid-cols-2">
                 {[
                   ['Entender', 'Resumen + glosario'],
+                  ['Conectar', 'Mapa mental'],
                   ['Recordar', 'Flashcards'],
                   ['Comprobar', 'Ejercicios'],
                 ].map(([title, value]) => (
@@ -248,14 +256,14 @@ export function IaParaEstudiantesExperience() {
           title="Entrá por la necesidad que tengas ahora."
           links={[
             { href: '/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', description: 'Mirá el recorrido completo desde el documento hasta el repaso y la práctica.' },
-            { href: '/funciones/resumir-pdf-con-ia', title: 'Resumir un PDF con IA', description: 'Ordená el contenido y detectá los ejes principales antes de seguir.' },
+            { href: '/funciones/crear-mapa-mental-desde-pdf', title: 'Crear un mapa mental desde un PDF', description: 'Organizá visualmente los temas y relaciones que aparecen en tu material.' },
             { href: '/funciones/crear-flashcards-desde-pdf', title: 'Crear flashcards desde un PDF', description: 'Convertí conceptos del material en tarjetas para repasar.' },
           ]}
         />
         <FaqSection
           title="Sobre estudiar con IA"
           items={[
-            { question: '¿La IA reemplaza el material original?', answer: 'No. El material que subís sigue siendo la fuente. Evaluo lo transforma en distintas vistas para ayudarte a entender, repasar y practicar.' },
+            { question: '¿La IA reemplaza el material original?', answer: 'No. El material que subís sigue siendo la fuente. Evaluo lo transforma en distintas vistas para ayudarte a entender, organizar visualmente, repasar y practicar.' },
             { question: '¿Tengo que usar todas las herramientas?', answer: 'No. Podés empezar por la necesidad que tengas en ese momento y volver al resto cuando te sirva.' },
             { question: '¿Puedo trabajar con mis propios PDFs?', answer: 'Sí. El flujo parte de los PDFs que elegís como material de estudio.' },
           ]}
@@ -279,7 +287,7 @@ export function EstudiarPdfExperience() {
                 Convertí tu PDF en una <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">sesión de estudio</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Subí el documento que estás preparando y usá el mismo contenido para entender, repasar conceptos y practicar sin tener que volver a cargarlo en cada paso.
+                Subí el documento que estás preparando y usá el mismo contenido para entender, organizar conceptos, repasar y practicar sin tener que volver a cargarlo en cada paso.
               </p>
               <div className="mt-8">
                 <PrimaryCta label="Estudiar mi PDF" trackingPrefix="seo_estudiar_pdf_ia" location="hero" />
@@ -300,6 +308,7 @@ export function EstudiarPdfExperience() {
                   {[
                     ['Resumen', 'Ideas centrales organizadas', ScanText],
                     ['Glosario', 'Conceptos y definiciones', BookOpen],
+                    ['Mapa mental', 'Temas y relaciones conectados', Brain],
                     ['Flashcards', 'Tarjetas para repasar', Layers3],
                     ['Ejercicios', 'Práctica sobre el material', ListChecks],
                   ].map(([label, text, Icon]) => {
@@ -321,16 +330,17 @@ export function EstudiarPdfExperience() {
         <section className="py-16 sm:py-24">
           <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
             <SectionIntro
-              eyebrow="Un documento, cuatro usos"
+              eyebrow="Un documento, cinco usos"
               title="No es solamente resumir el PDF. Es seguir estudiándolo."
-              description="Cada salida responde a una etapa distinta. Podés empezar entendiendo el material y, cuando estés listo, pasar al recuerdo activo y a la práctica sin perder la fuente original."
+              description="Cada salida responde a una etapa distinta. Podés empezar entendiendo el material, ordenar visualmente sus relaciones y después pasar al recuerdo activo y a la práctica sin perder la fuente original."
             />
-            <div className="mt-10 grid gap-4 md:grid-cols-4">
+            <div className="mt-10 grid gap-4 md:grid-cols-5">
               {[
                 ['01', 'Entender', 'Resumen para ordenar la primera lectura.'],
                 ['02', 'Ubicar conceptos', 'Glosario para volver sobre términos importantes.'],
-                ['03', 'Recordar', 'Flashcards para recuperar conceptos activamente.'],
-                ['04', 'Practicar', 'Ejercicios para comprobar qué quedó claro.'],
+                ['03', 'Conectar', 'Mapa mental para visualizar temas y relaciones.'],
+                ['04', 'Recordar', 'Flashcards para recuperar conceptos activamente.'],
+                ['05', 'Practicar', 'Ejercicios para comprobar qué quedó claro.'],
               ].map(([n, title, text]) => (
                 <div key={n} className="border-t-2 border-indigo-200 pt-5">
                   <p className="text-[10px] font-black text-indigo-700">{n}</p>
@@ -346,7 +356,7 @@ export function EstudiarPdfExperience() {
           <div className="mx-auto grid w-full max-w-[1100px] gap-8 px-4 sm:px-8 lg:grid-cols-3">
             {[
               ['1', 'Subí el material real', 'Usá tus apuntes, una guía o el capítulo que estés preparando.'],
-              ['2', 'Elegí la vista', 'Resumen, glosario o flashcards según lo que necesites hacer en ese momento.'],
+              ['2', 'Elegí la vista', 'Resumen, glosario, mapa mental o flashcards según lo que necesites hacer en ese momento.'],
               ['3', 'Terminá practicando', 'Volvé al mismo contenido mediante ejercicios cuando quieras comprobar comprensión.'],
             ].map(([n, title, text]) => (
               <div key={n} className="rounded-[24px] border border-slate-200 bg-white p-6">
@@ -361,8 +371,8 @@ export function EstudiarPdfExperience() {
         <RelatedSection
           title="¿Querés ir directo a una tarea específica?"
           links={[
-            { href: '/ia-para-estudiantes', title: 'IA para estudiantes', description: 'Elegí la herramienta según lo que necesitás hacer para estudiar.' },
             { href: '/funciones/resumir-pdf-con-ia', title: 'Resumir PDF con IA', description: 'Mirá cómo se transforma un texto largo en una estructura de estudio más clara.' },
+            { href: '/funciones/crear-mapa-mental-desde-pdf', title: 'Crear mapa mental desde PDF', description: 'Visualizá temas, subtemas y relaciones del documento.' },
             { href: '/funciones/crear-flashcards-desde-pdf', title: 'Crear flashcards desde PDF', description: 'Convertí conceptos del documento en tarjetas para repasarlos.' },
           ]}
         />
@@ -370,7 +380,7 @@ export function EstudiarPdfExperience() {
           title="Antes de subir tu PDF"
           items={[
             { question: '¿Tengo que convertir el PDF antes?', answer: 'No. El flujo parte directamente del PDF que elegís como material.' },
-            { question: '¿Evaluo solamente resume el documento?', answer: 'No. El recorrido actual incluye resumen, glosario, flashcards y ejercicios sobre el mismo contenido.' },
+            { question: '¿Evaluo solamente resume el documento?', answer: 'No. El recorrido actual incluye resumen, glosario, mapa mental, flashcards y ejercicios sobre el mismo contenido.' },
             { question: '¿Puedo volver al material original?', answer: 'Sí. El PDF sigue siendo la fuente de la sesión de estudio y podés usar las distintas vistas como apoyo.' },
           ]}
         />
@@ -446,7 +456,7 @@ export function ResumirPdfExperience() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-indigo-700 uppercase">Siguiente paso</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-700">Volver al glosario para definiciones o llevar estos conceptos a flashcards.</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-700">Volver al glosario, llevar estos conceptos a un mapa mental o convertirlos en flashcards.</p>
                   </div>
                 </div>
               </div>
@@ -465,7 +475,7 @@ export function ResumirPdfExperience() {
               {[
                 ['1', 'Ejes principales', 'Separá las ideas que estructuran el tema antes de profundizar en detalles.'],
                 ['2', 'Conceptos vinculados', 'Detectá términos que conviene volver a revisar en el glosario o el PDF original.'],
-                ['3', 'Puente al repaso', 'Usá los conceptos del resumen para pasar a flashcards o ejercicios sin cambiar de material.'],
+                ['3', 'Puente al repaso', 'Usá los conceptos del resumen para pasar a un mapa mental, flashcards o ejercicios sin cambiar de material.'],
               ].map(([n, title, text]) => (
                 <article key={n} className="rounded-[24px] border border-slate-200 p-6">
                   <span className="text-xs font-black text-indigo-700">0{n}</span>
@@ -481,8 +491,8 @@ export function ResumirPdfExperience() {
           title="El resumen puede ser el primer paso, no el último."
           links={[
             { href: '/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', description: 'Mirá todo lo que podés hacer después de subir el documento.' },
+            { href: '/funciones/crear-mapa-mental-desde-pdf', title: 'Crear mapa mental desde PDF', description: 'Organizá visualmente los conceptos y relaciones que detectaste en el resumen.' },
             { href: '/funciones/crear-flashcards-desde-pdf', title: 'Crear flashcards desde PDF', description: 'Llevá los conceptos del material a tarjetas de repaso.' },
-            { href: '/ia-para-estudiantes', title: 'IA para estudiantes', description: 'Elegí una herramienta según la etapa de estudio en la que estés.' },
           ]}
         />
         <FaqSection
@@ -490,7 +500,7 @@ export function ResumirPdfExperience() {
           items={[
             { question: '¿El resumen se basa en el PDF que subo?', answer: 'Sí. El documento que elegís funciona como fuente para la herramienta.' },
             { question: '¿El PDF original deja de ser necesario?', answer: 'No. El resumen organiza el contenido, pero el documento original sigue siendo la referencia y podés volver a él cuando lo necesites.' },
-            { question: '¿Puedo seguir con flashcards después?', answer: 'Sí. El mismo material puede continuar en el recorrido de flashcards, glosario y ejercicios.' },
+            { question: '¿Puedo seguir estudiando después del resumen?', answer: 'Sí. El mismo material puede continuar en mapas mentales, flashcards, glosario y ejercicios.' },
           ]}
         />
       </main>
@@ -584,11 +594,11 @@ export function FlashcardsPdfExperience() {
               <SectionIntro
                 eyebrow="Repaso con contexto"
                 title="Si una tarjeta no alcanza, volvés al material."
-                description="El valor de mantener todo conectado es que una duda no termina en la flashcard. Podés volver al resumen o al glosario del mismo contenido y después seguir practicando."
+                description="El valor de mantener todo conectado es que una duda no termina en la flashcard. Podés volver al resumen, al glosario o al mapa mental del mismo contenido y después seguir practicando."
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  ['No recuerdo el concepto', 'Volver al glosario o al resumen.'],
+                  ['No recuerdo el concepto', 'Volver al glosario, al resumen o al mapa mental.'],
                   ['Ya lo entiendo', 'Seguir con otra tarjeta o pasar a ejercicios.'],
                 ].map(([title, text]) => (
                   <div key={title} className="rounded-[22px] border border-slate-200 bg-white p-5">
@@ -606,15 +616,15 @@ export function FlashcardsPdfExperience() {
           title="Conectá las tarjetas con el resto del estudio."
           links={[
             { href: '/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', description: 'Mirá el recorrido completo del mismo material.' },
+            { href: '/funciones/crear-mapa-mental-desde-pdf', title: 'Crear mapa mental desde PDF', description: 'Volvé a una vista visual de los conceptos y relaciones antes de seguir repasando.' },
             { href: '/funciones/resumir-pdf-con-ia', title: 'Resumir PDF con IA', description: 'Ordená el tema antes de convertir conceptos en tarjetas.' },
-            { href: '/ia-para-estudiantes', title: 'IA para estudiantes', description: 'Elegí la herramienta según la etapa de estudio en la que estés.' },
           ]}
         />
         <FaqSection
           title="Sobre las flashcards"
           items={[
             { question: '¿Las tarjetas parten del PDF que subo?', answer: 'Sí. El material que elegís funciona como fuente para el recorrido de estudio.' },
-            { question: '¿Tengo que usar flashcards como único método?', answer: 'No. Podés combinarlas con resumen, glosario y ejercicios del mismo material.' },
+            { question: '¿Tengo que usar flashcards como único método?', answer: 'No. Podés combinarlas con resumen, glosario, mapa mental y ejercicios del mismo material.' },
             { question: '¿Puedo volver al contexto de una tarjeta?', answer: 'Sí. La idea del flujo es mantener el repaso conectado con el contenido que subiste.' },
           ]}
         />
