@@ -94,6 +94,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               <Link href="/#producto" className="text-xs text-white/80 transition hover:text-white">
                 Producto
               </Link>
+              <Link href="/ia-para-estudiantes" className="text-xs text-white/80 transition hover:text-white">
+                IA para estudiar
+              </Link>
               <Link href="/#como-funciona" className="text-xs text-white/80 transition hover:text-white">
                 Cómo funciona
               </Link>
