@@ -28,6 +28,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.85,
     },
     {
+      url: `${baseUrl}/ia-para-estudiantes`,
+      changeFrequency: 'weekly',
+      priority: 0.82,
+    },
+    {
+      url: `${baseUrl}/estudiar-pdf-con-ia`,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/funciones/resumir-pdf-con-ia`,
+      changeFrequency: 'monthly',
+      priority: 0.78,
+    },
+    {
+      url: `${baseUrl}/funciones/crear-flashcards-desde-pdf`,
+      changeFrequency: 'monthly',
+      priority: 0.78,
+    },
+    {
+      url: `${baseUrl}/funciones/crear-mapa-mental-desde-pdf`,
+      changeFrequency: 'monthly',
+      priority: 0.78,
+    },
+    {
       url: `${baseUrl}/pricing`,
       changeFrequency: 'weekly',
       priority: 0.7,

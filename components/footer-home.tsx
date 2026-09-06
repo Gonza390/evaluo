@@ -62,6 +62,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
             <p className="mt-2 max-w-xs text-xs text-white/70">
               Te ayudamos a aprobar, te impulsamos a crecer.
             </p>
+            <p className="mt-2 max-w-sm text-[11px] leading-5 text-white/55">
+              Desde tus apuntes o PDFs podés crear resúmenes, mapas mentales, glosarios, flashcards y ejercicios para estudiar el mismo material de distintas formas.
+            </p>
             <div className="mt-4 flex gap-3">
               <a
                 href={SOCIAL_LINKS.instagram}
@@ -93,6 +96,12 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
             <nav className="mt-3 flex flex-col gap-2">
               <Link href="/#producto" className="text-xs text-white/80 transition hover:text-white">
                 Producto
+              </Link>
+              <Link href="/ia-para-estudiantes" className="text-xs text-white/80 transition hover:text-white">
+                IA para estudiar
+              </Link>
+              <Link href="/funciones/crear-mapa-mental-desde-pdf" className="text-xs text-white/80 transition hover:text-white">
+                Mapas mentales con IA
               </Link>
               <Link href="/#como-funciona" className="text-xs text-white/80 transition hover:text-white">
                 Cómo funciona
