@@ -20,7 +20,6 @@ import {
   Flame,
   GraduationCap,
   Heart,
-  HelpCircle,
   PlayCircle,
   Plus,
   Search,
@@ -955,12 +954,6 @@ export function DashboardContent({
     }
   }, [user]);
 
-  const reopenDashboardTour = useCallback(() => {
-    dashboardTourDismissedRef.current = false;
-    setDashboardTourStepIndex(0);
-    setShowDashboardTour(true);
-  }, []);
-
   const handleDashboardTourNext = useCallback(() => {
     if (dashboardTourStepIndex >= dashboardTourSteps.length - 1) {
       closeDashboardTour();
@@ -1260,16 +1253,6 @@ export function DashboardContent({
               {isSaving ? (
                 <span className="pl-1 text-xs text-slate-500">Sincronizando cambios...</span>
               ) : null}
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={reopenDashboardTour}
-                className="rounded-xl border-slate-200 bg-white text-xs"
-              >
-                <HelpCircle className="h-4 w-4" />
-                Volver a ver la guía
-              </Button>
             </div>
           </div>
           {dashboardError ? (
