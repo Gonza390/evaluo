@@ -56,6 +56,17 @@ function getMaterialsTourStorageKey(userId: string) {
   return `evaluo_mi_espacio_tour_seen:${userId}`;
 }
 
+function getTitleFromFileName(fileName: string) {
+  return (
+    fileName
+      .replace(/\.pdf$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 180) || 'Material de estudio'
+  );
+}
+
 type UniversidadOption = {
   id: string;
   nombre: string;
@@ -354,7 +365,7 @@ export function StudentMaterialsWorkspace({
 
     const file = selectedFile;
     const metadata = {
-      title: title.trim(),
+      title: title.trim() || getTitleFromFileName(file.name),
       description: description.trim(),
       universidadId,
       carreraId,
@@ -427,7 +438,7 @@ export function StudentMaterialsWorkspace({
         if (result.materialId) {
           setActiveProcessing({
             materialId: result.materialId,
-            title: metadata.title || file.name.replace(/\.pdf$/i, ''),
+            title: metadata.title,
             fileName: file.name,
             status: 'uploaded',
             stage: 'uploaded',
@@ -500,7 +511,7 @@ export function StudentMaterialsWorkspace({
     {
       title: 'Subí el PDF de tu materia',
       description:
-        'Acá cargás el documento de tu curso. Completás título, alcance del material, universidad, carrera y materia.',
+        'Elegí tu PDF, indicá a qué materia y parcial corresponde, y Evaluo prepara el espacio de estudio por vos.',
       target: { type: 'ref', ref: uploadHeroTourRef },
     },
     {
@@ -884,67 +895,82 @@ export function StudentMaterialsWorkspace({
 
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto rounded-[1.5rem] border-slate-200 bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
-          <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
+          <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_52%,#EEF4FF_100%)] px-4 py-4 sm:px-5">
             <DialogHeader className="text-left">
-              <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
-                Subí tu material
-              </DialogTitle>
-              <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                Completá la estructura base del documento antes de cargarlo. Después podremos
-                trabajar el resumen y el espacio de estudio sobre este mismo PDF.
-              </DialogDescription>
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-[0_10px_24px_rgba(245,158,11,0.16)]">
+                  <Upload className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
+                    Subí tu PDF
+                  </DialogTitle>
+                  <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                    Lo convertimos en un espacio de estudio con resumen, conceptos clave, tarjetas y
+                    ejercicios.
+                  </DialogDescription>
+                </div>
+              </div>
             </DialogHeader>
           </div>
 
-          <div className="grid gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5">
+          <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
             <div className="sm:col-span-2">
               <label
-                htmlFor="material-title"
-                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                htmlFor="material-file"
+                className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-slate-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-5 py-6 text-center transition hover:border-[#F59E0B]/60 hover:bg-amber-50/30"
               >
-                Título
+                <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#FFF7ED] text-[#F59E0B] transition group-hover:scale-105">
+                  <Upload className="h-5 w-5" />
+                </span>
+                <span className="mt-3 text-sm font-semibold text-slate-950">
+                  {selectedFile ? 'Cambiar PDF' : 'Seleccioná tu PDF'}
+                </span>
+                <span className="mt-1 text-[12.5px] leading-5 text-slate-500">
+                  PDF de hasta 20 MB. El nombre del archivo se usa automáticamente como título.
+                </span>
+                <Input
+                  id="material-file"
+                  key={fileInputKey}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="sr-only"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setSelectedFile(file);
+                    setTitle(file ? getTitleFromFileName(file.name) : '');
+                  }}
+                />
               </label>
-              <Input
-                id="material-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                maxLength={180}
-                placeholder="Ej. Resumen completo para el primer parcial"
-              />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="material-description"
-                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-              >
-                Descripción breve
-              </label>
-              <Textarea
-                id="material-description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                maxLength={240}
-                rows={3}
-                placeholder="Ej. Parcial 1 · Módulos 1 al 4 · incluye obligaciones y contratos"
-              />
-              <div className="mt-1.5 flex items-center justify-between gap-3 text-[11.5px] text-slate-500">
-                <span>Indicá a qué parcial, módulos o temas corresponde. Es obligatorio.</span>
-                <span>{description.length}/240</span>
-              </div>
+              {selectedFile ? (
+                <div className="mt-2.5 flex items-center gap-3 rounded-[1rem] border border-emerald-100 bg-emerald-50/60 px-3.5 py-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                    <FileText className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-semibold text-slate-900">
+                      {selectedFile.name}
+                    </p>
+                    <p className="mt-0.5 text-[11.5px] text-slate-500">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB · Título automático: {title}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {hasAcademicProfile ? (
               <div className="rounded-[1rem] border border-blue-100 bg-blue-50/70 px-4 py-3 sm:col-span-2">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-blue-700 uppercase">
+                <p className="text-[11px] font-semibold tracking-[0.15em] text-blue-700 uppercase">
                   Tu contexto académico
                 </p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  {universityNameById.get(universidadId) ?? 'Tu universidad'}
-                </p>
-                <p className="mt-0.5 text-[13px] text-slate-600">
-                  {careerNameById.get(carreraId) ?? 'Tu carrera'}
-                </p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-700">
+                  <span className="font-semibold text-slate-950">
+                    {universityNameById.get(universidadId) ?? 'Tu universidad'}
+                  </span>
+                  <span className="text-slate-300">·</span>
+                  <span>{careerNameById.get(carreraId) ?? 'Tu carrera'}</span>
+                </div>
               </div>
             ) : (
               <>
@@ -1027,46 +1053,61 @@ export function StudentMaterialsWorkspace({
 
             <div className="sm:col-span-2">
               <label
-                htmlFor="material-file"
+                htmlFor="material-description"
                 className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
               >
-                Archivo PDF
+                ¿Qué incluye este material?
               </label>
-              <Input
-                id="material-file"
-                key={fileInputKey}
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+              <Textarea
+                id="material-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                maxLength={240}
+                rows={3}
+                placeholder="Ej. Parcial 1 · Módulos 1 al 4 · obligaciones y contratos"
               />
-              {selectedFile ? (
-                <p className="mt-2 text-xs text-slate-500">
-                  {selectedFile.name} · {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-              ) : null}
+              <div className="mt-1.5 flex items-center justify-between gap-3 text-[11.5px] text-slate-500">
+                <span>Contanos brevemente a qué parcial, módulos o temas corresponde.</span>
+                <span>{description.length}/240</span>
+              </div>
             </div>
 
             <div className="sm:col-span-2">
-              <label className="flex items-start gap-3 rounded-[1rem] border border-slate-200 bg-white px-3.5 py-3 text-[13px] text-slate-700">
+              <label className="flex cursor-pointer items-start gap-3 rounded-[1.15rem] border border-emerald-200 bg-emerald-50/60 px-4 py-3.5 text-[13px] text-slate-700 transition hover:bg-emerald-50">
                 <input
                   type="checkbox"
                   checked={shareWithCatalog}
                   onChange={(event) => setShareWithCatalog(event.target.checked)}
                   className="mt-1"
                 />
-                <span>
-                  Compartir públicamente en esta materia y carrera. Otros alumnos podrán abrir el
-                  documento y su contenido procesado. Dejalo desmarcado para mantenerlo privado.
+                <span className="flex min-w-0 gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                    <Globe className="h-4 w-4" />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-slate-950">
+                      Compartir con otros estudiantes
+                    </span>
+                    <span className="mt-1 block text-[12.5px] leading-5 text-slate-600">
+                      Tu material puede ayudar a otros alumnos de esta materia. Podés cambiar esta
+                      opción cuando quieras.
+                    </span>
+                  </span>
                 </span>
               </label>
-              {shareWithCatalog ? (
-                <p className="mt-2 rounded-[1rem] border border-amber-200 bg-amber-50/70 px-3.5 py-2.5 text-[12px] leading-5 text-amber-800">
-                  Al compartir declarás que tenés derecho a publicar este material (es tuyo, de tu
-                  cátedra con autorización, o de dominio público) y que no infringe derechos de
-                  terceros. Si no estás seguro, mantenelo privado.
-                </p>
-              ) : null}
             </div>
+
+            <p className="text-center text-[11.5px] leading-5 text-slate-400 sm:col-span-2">
+              Al subir este material, aceptás los{' '}
+              <Link
+                href="/terminos"
+                target="_blank"
+                className="font-medium text-slate-600 underline underline-offset-2"
+              >
+                Términos y Condiciones
+              </Link>
+              .
+            </p>
           </div>
 
           <DialogFooter className="border-t border-slate-100 px-4 py-4 sm:px-5">
@@ -1094,13 +1135,14 @@ export function StudentMaterialsWorkspace({
                 !materiaId ||
                 !selectedFile
               }
+              className="bg-[#F59E0B] text-white hover:bg-[#E58E08]"
             >
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Upload className="h-4 w-4" />
               )}
-              Subir PDF
+              Procesar PDF
             </Button>
           </DialogFooter>
         </DialogContent>
