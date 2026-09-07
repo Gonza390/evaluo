@@ -207,19 +207,6 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   {!collapsed ? <p className="text-sm font-semibold">Planes y suscripción</p> : null}
                 </Link>
 
-                <Link
-                  href="/configuracion"
-                  title={collapsed ? 'Configuración' : undefined}
-                  className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
-                    collapsed
-                      ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
-                      : 'w-full gap-2.5 px-3 py-2.5'
-                  }`}
-                >
-                  <Settings className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className="text-sm font-medium">Configuración</p> : null}
-                </Link>
-
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
@@ -246,6 +233,12 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                     ) : null}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link href="/configuracion" className="w-full text-sm">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Configuración
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
                       onClick={async () => {
