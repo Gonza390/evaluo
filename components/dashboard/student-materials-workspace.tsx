@@ -66,15 +66,6 @@ function getTitleFromFileName(fileName: string) {
   );
 }
 
-type ExamInstance = 'parcial_1' | 'parcial_2' | 'final' | 'otro';
-
-const EXAM_OPTIONS: Array<{ value: ExamInstance; label: string }> = [
-  { value: 'parcial_1', label: 'Parcial 1' },
-  { value: 'parcial_2', label: 'Parcial 2' },
-  { value: 'final', label: 'Final' },
-  { value: 'otro', label: 'Otro' },
-];
-
 type UniversidadOption = {
   id: string;
   nombre: string;
@@ -163,7 +154,6 @@ export function StudentMaterialsWorkspace({
   const [universidadId, setUniversidadId] = useState(initialUniversidadId);
   const [carreraId, setCarreraId] = useState(initialCarreraId);
   const [materiaId, setMateriaId] = useState(initialMateriaId);
-  const [examInstance, setExamInstance] = useState<ExamInstance | ''>('');
   const [examDate, setExamDate] = useState('');
   const [shareWithCatalog, setShareWithCatalog] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -236,7 +226,6 @@ export function StudentMaterialsWorkspace({
     setUniversidadId(initialUniversidadId);
     setCarreraId(initialCarreraId);
     setMateriaId(initialMateriaId);
-    setExamInstance('');
     setExamDate('');
     setShareWithCatalog(true);
     setSelectedFile(null);
@@ -385,14 +374,6 @@ export function StudentMaterialsWorkspace({
       return;
     }
 
-    if (!examInstance) {
-      toast({
-        description: 'Indicá qué estás preparando para continuar.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (selectedFile.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
       toast({
         description: 'El PDF supera el limite de 20 MB. Reduce el archivo e intentalo nuevamente.',
@@ -413,9 +394,8 @@ export function StudentMaterialsWorkspace({
     }
 
     const file = selectedFile;
-    const examLabel = EXAM_OPTIONS.find((option) => option.value === examInstance)?.label ?? 'Examen';
     const materiaNombre = materiaNameById.get(materiaId) ?? 'Materia';
-    const generatedDescription = [examLabel, materiaNombre, examDate ? `Fecha ${examDate}` : null]
+    const generatedDescription = [materiaNombre, examDate ? `Fecha ${examDate}` : null]
       .filter(Boolean)
       .join(' · ')
       .slice(0, 240);
@@ -493,7 +473,7 @@ export function StudentMaterialsWorkspace({
         if (result.materialId) {
           const examContextResult = await saveStudentMaterialExamContextAction({
             materialId: result.materialId,
-            examInstance,
+            examInstance: null,
             examDate: examDate || null,
           });
 
@@ -575,8 +555,7 @@ export function StudentMaterialsWorkspace({
   const materialsTourSteps: GuidedTourStep[] = [
     {
       title: 'Subí el PDF de tu materia',
-      description:
-        'Elegí tu PDF y después indicá la materia, qué examen estás preparando y cuándo rendís.',
+      description: 'Elegí tu PDF y después indicá la materia y, si querés, cuándo rendís.',
       target: { type: 'ref', ref: uploadHeroTourRef },
     },
     {
@@ -956,7 +935,7 @@ export function StudentMaterialsWorkspace({
           if (!open && !isPending) resetForm();
         }}
       >
-        <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto rounded-[1.5rem] border-slate-200 bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+        <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-[1.5rem] border-slate-200 bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_52%,#EEF4FF_100%)] px-4 py-4 sm:px-5">
             <DialogHeader className="text-left">
               <div className="flex items-start gap-3">
@@ -969,7 +948,7 @@ export function StudentMaterialsWorkspace({
                   </DialogTitle>
                   <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
                     {selectedFile
-                      ? 'Ya tenemos el archivo. Contanos para qué materia y examen lo estás usando.'
+                      ? 'Ya tenemos el archivo. Elegí la materia y, si querés, agregá la fecha del examen.'
                       : 'Primero elegí el archivo que querés convertir en tu espacio de estudio.'}
                   </DialogDescription>
                 </div>
@@ -1121,32 +1100,6 @@ export function StudentMaterialsWorkspace({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                    ¿Qué estás preparando?
-                  </p>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {EXAM_OPTIONS.map((option) => {
-                      const active = examInstance === option.value;
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          aria-pressed={active}
-                          onClick={() => setExamInstance(option.value)}
-                          className={`rounded-[0.9rem] border px-3 py-2.5 text-sm font-semibold transition ${
-                            active
-                              ? 'border-[#F59E0B] bg-amber-50 text-amber-800 shadow-sm'
-                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="sm:col-span-2">
                   <label
                     htmlFor="material-exam-date"
                     className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
@@ -1228,7 +1181,6 @@ export function StudentMaterialsWorkspace({
                   !universidadId ||
                   !carreraId ||
                   !materiaId ||
-                  !examInstance ||
                   !selectedFile
                 }
                 className="bg-[#F59E0B] text-white hover:bg-[#E58E08]"
