@@ -16,9 +16,14 @@ export const metadata: Metadata = {
     template: '%s | Evaluo',
   },
   description:
-    'Estudia con resúmenes, preguntas y simuladores universitarios en un solo lugar. Organiza tus materiales y mejora tu rendimiento con Evaluo.',
+    'Estudiá con resúmenes, pregunteros y simuladores universitarios en un solo lugar. Encontrá material para Universidad Siglo 21 y prepará tus parciales con Evaluo.',
   keywords: [
     'evaluo',
+    'pregunteros',
+    'pregunteros Siglo 21',
+    'Universidad Siglo 21',
+    'primer parcial',
+    'segundo parcial',
     'simulador de exámenes',
     'resúmenes universitarios',
     'preguntas de parcial',
@@ -34,20 +39,22 @@ export const metadata: Metadata = {
     siteName: 'Evaluo',
     title: 'Evaluo | Simulador de exámenes y materiales universitarios',
     description:
-      'Resúmenes, preguntas, simuladores y seguimiento de progreso para estudiar mejor en la universidad.',
+      'Pregunteros, resúmenes, preguntas y simuladores para preparar parciales universitarios, con foco en Universidad Siglo 21.',
     locale: 'es_AR',
+    images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Evaluo | Simulador de exámenes y materiales universitarios',
     description:
-      'Resúmenes, preguntas y simuladores para preparar tus parciales desde un solo lugar.',
+      'Pregunteros, resúmenes y simuladores para preparar tus parciales universitarios.',
+    images: ['/opengraph-image.png'],
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es-AR" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className="bg-background text-foreground min-h-screen font-sans text-[0.92rem]"
