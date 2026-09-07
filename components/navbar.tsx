@@ -211,6 +211,23 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   {!collapsed ? <p className="text-sm font-semibold">Planes y suscripción</p> : null}
                 </Link>
 
+                <button
+                  type="button"
+                  title={collapsed ? 'Ayuda' : undefined}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setFeedbackOpen(true);
+                  }}
+                  className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
+                    collapsed
+                      ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
+                      : 'w-full gap-2.5 px-3 py-2.5'
+                  }`}
+                >
+                  <CircleHelp className="h-4 w-4 shrink-0" />
+                  {!collapsed ? <p className="text-sm font-medium">Ayuda</p> : null}
+                </button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
@@ -242,10 +259,6 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                         <Settings className="mr-2 h-4 w-4" />
                         Configuración
                       </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-sm" onSelect={() => setFeedbackOpen(true)}>
-                      <CircleHelp className="mr-2 h-4 w-4" />
-                      Ayuda
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
