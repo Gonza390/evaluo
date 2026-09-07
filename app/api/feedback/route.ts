@@ -46,12 +46,14 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       category?: string;
       message?: string;
+      phone?: string;
       source_path?: string;
       session_key?: string;
     };
 
     const category = (body.category ?? '').trim() as FeedbackCategory;
     const message = (body.message ?? '').trim();
+    const phone = (body.phone ?? '').trim();
     const sourcePath = (body.source_path ?? '').trim();
     const sessionKey = (body.session_key ?? '').trim();
 
@@ -59,6 +61,7 @@ export async function POST(request: Request) {
       !ALLOWED_CATEGORIES.has(category) ||
       message.length < 3 ||
       message.length > 1200 ||
+      phone.length > 40 ||
       !sessionKey ||
       sessionKey.length > 120 ||
       sourcePath.length > 240
@@ -76,13 +79,14 @@ export async function POST(request: Request) {
       event_name: 'product_feedback',
       user_id: user.id,
       session_key: sessionKey,
-      path: sourcePath || '/ayuda',
+      path: sourcePath || '/dashboard',
       device_type: detectDeviceType(userAgent),
       metadata: {
         category,
         message,
+        phone: phone || null,
         source_path: sourcePath || null,
-        entry_point: 'profile_menu',
+        entry_point: 'navbar_help',
       },
     });
 
