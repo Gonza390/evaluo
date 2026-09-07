@@ -7,7 +7,7 @@ import { createClientServer } from '@/lib/supabase-server';
 
 const examContextSchema = z.object({
   materialId: z.string().uuid(),
-  examInstance: z.enum(['parcial_1', 'parcial_2', 'final', 'otro']),
+  examInstance: z.enum(['parcial_1', 'parcial_2', 'final', 'otro']).nullable().optional(),
   examDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -17,7 +17,7 @@ const examContextSchema = z.object({
 
 export async function saveStudentMaterialExamContextAction(input: {
   materialId: string;
-  examInstance: 'parcial_1' | 'parcial_2' | 'final' | 'otro';
+  examInstance?: 'parcial_1' | 'parcial_2' | 'final' | 'otro' | null;
   examDate?: string | null;
 }) {
   try {
@@ -40,7 +40,7 @@ export async function saveStudentMaterialExamContextAction(input: {
     const { data, error } = await admin
       .from('student_materials')
       .update({
-        exam_instance: parsed.data.examInstance,
+        exam_instance: parsed.data.examInstance ?? null,
         exam_date: parsed.data.examDate || null,
       } as never)
       .eq('id', parsed.data.materialId)
