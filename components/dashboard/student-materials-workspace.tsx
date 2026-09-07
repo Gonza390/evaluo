@@ -175,7 +175,9 @@ export function StudentMaterialsWorkspace({
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
   const [showPremiumUpsell, setShowPremiumUpsell] = useState(false);
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
-  const hasAcademicProfile = Boolean(initialUniversidadId && initialCarreraId);
+  const [editingAcademicContext, setEditingAcademicContext] = useState(
+    !initialUniversidadId || !initialCarreraId
+  );
 
   const featuredMaterial = initialMaterials[0] ?? null;
 
@@ -238,6 +240,7 @@ export function StudentMaterialsWorkspace({
     setExamDate('');
     setShareWithCatalog(true);
     setSelectedFile(null);
+    setEditingAcademicContext(!initialUniversidadId || !initialCarreraId);
     setFileInputKey((current) => current + 1);
   };
 
@@ -1010,25 +1013,29 @@ export function StudentMaterialsWorkspace({
 
             {selectedFile ? (
               <>
-                {hasAcademicProfile ? (
-                  <div className="rounded-[1rem] border border-blue-100 bg-blue-50/70 px-4 py-3 sm:col-span-2">
-                    <p className="text-[11px] font-semibold tracking-[0.15em] text-blue-700 uppercase">
-                      Tu contexto académico
-                    </p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-700">
+                {!editingAcademicContext && universidadId && carreraId ? (
+                  <button
+                    type="button"
+                    onClick={() => setEditingAcademicContext(true)}
+                    className="flex min-w-0 items-center justify-between gap-3 rounded-[0.9rem] border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50/50 sm:col-span-2"
+                  >
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-slate-700">
                       <span className="font-semibold text-slate-950">
-                        {universityNameById.get(universidadId) ?? 'Tu universidad'}
+                        {universityNameById.get(universidadId) ?? 'Universidad'}
                       </span>
                       <span className="text-slate-300">·</span>
-                      <span>{careerNameById.get(carreraId) ?? 'Tu carrera'}</span>
-                    </div>
-                  </div>
+                      <span className="min-w-0 truncate">
+                        {careerNameById.get(carreraId) ?? 'Carrera'}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-[12px] font-semibold text-blue-700">Cambiar</span>
+                  </button>
                 ) : (
-                  <>
+                  <div className="grid gap-2 rounded-[1rem] border border-slate-200 bg-slate-50/60 p-3 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
                     <div>
                       <label
                         htmlFor="material-universidad"
-                        className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                        className="mb-1 block text-[11px] font-semibold tracking-[0.12em] text-slate-500 uppercase"
                       >
                         Universidad
                       </label>
@@ -1040,7 +1047,7 @@ export function StudentMaterialsWorkspace({
                           setCarreraId('');
                           setMateriaId('');
                         }}
-                        className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
+                        className="h-10 w-full rounded-[0.8rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
                       >
                         <option value="">Seleccionar universidad</option>
                         {universidades.map((universidad) => (
@@ -1054,7 +1061,7 @@ export function StudentMaterialsWorkspace({
                     <div>
                       <label
                         htmlFor="material-carrera"
-                        className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                        className="mb-1 block text-[11px] font-semibold tracking-[0.12em] text-slate-500 uppercase"
                       >
                         Carrera
                       </label>
@@ -1066,7 +1073,7 @@ export function StudentMaterialsWorkspace({
                           setMateriaId('');
                         }}
                         disabled={!universidadId}
-                        className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
+                        className="h-10 w-full rounded-[0.8rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-slate-50"
                       >
                         <option value="">Seleccionar carrera</option>
                         {filteredCarreras.map((carrera) => (
@@ -1076,7 +1083,18 @@ export function StudentMaterialsWorkspace({
                         ))}
                       </select>
                     </div>
-                  </>
+
+                    {universidadId && carreraId ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingAcademicContext(false)}
+                      >
+                        Listo
+                      </Button>
+                    ) : null}
+                  </div>
                 )}
 
                 <div className="sm:col-span-2">
