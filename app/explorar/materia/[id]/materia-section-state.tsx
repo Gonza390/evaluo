@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import type { LucideIcon } from 'lucide-react';
 
 interface MateriaSectionStateProps {
@@ -12,6 +13,11 @@ interface MateriaSectionStateProps {
   onAction?: () => void;
 }
 
+interface EmptyStateAction {
+  label: string;
+  href: string;
+}
+
 export function MateriaSectionState({
   icon: Icon,
   title,
@@ -20,12 +26,51 @@ export function MateriaSectionState({
   actionLabel,
   onAction,
 }: MateriaSectionStateProps) {
+  const params = useParams();
   const isWarning = tone === 'warning';
+  const normalizedTitle = title.toLocaleLowerCase('es-AR');
+  const materiaId = typeof params?.id === 'string' ? params.id : null;
+  const uploadHref = '/dashboard/materiales?openUpload=1';
+  const practiceHref = materiaId ? `/simulador/${encodeURIComponent(materiaId)}/1` : '/dashboard';
+  const hasExplicitAction = Boolean(actionLabel && onAction);
   const showCommunityContribution =
     !isWarning &&
-    !actionLabel &&
-    !onAction &&
-    title.toLocaleLowerCase('es-AR').includes('pdfs de estudiantes');
+    !hasExplicitAction &&
+    normalizedTitle.includes('pdfs de estudiantes');
+
+  let primaryEmptyAction: EmptyStateAction | null = null;
+  let secondaryEmptyAction: EmptyStateAction | null = null;
+
+  if (!isWarning && !hasExplicitAction && !showCommunityContribution) {
+    if (normalizedTitle.includes('resúmenes para este módulo')) {
+      primaryEmptyAction = {
+        label: 'Subir un apunte y estudiarlo',
+        href: uploadHref,
+      };
+      secondaryEmptyAction = {
+        label: 'Practicar esta materia',
+        href: practiceHref,
+      };
+    } else if (normalizedTitle.includes('trabajos prácticos')) {
+      primaryEmptyAction = {
+        label: 'Subir un PDF',
+        href: uploadHref,
+      };
+      secondaryEmptyAction = {
+        label: 'Practicar esta materia',
+        href: practiceHref,
+      };
+    } else if (normalizedTitle.includes('pregunteros')) {
+      primaryEmptyAction = {
+        label: 'Practicar ahora',
+        href: practiceHref,
+      };
+      secondaryEmptyAction = {
+        label: 'Subir mi propio material',
+        href: uploadHref,
+      };
+    }
+  }
 
   return (
     <div
@@ -49,6 +94,24 @@ export function MateriaSectionState({
           {actionLabel}
         </button>
       ) : null}
+      {primaryEmptyAction ? (
+        <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row">
+          <Link
+            href={primaryEmptyAction.href}
+            className="inline-flex min-h-10 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          >
+            {primaryEmptyAction.label}
+          </Link>
+          {secondaryEmptyAction ? (
+            <Link
+              href={secondaryEmptyAction.href}
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              {secondaryEmptyAction.label}
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
       {showCommunityContribution ? (
         <div className="mx-auto mt-5 max-w-lg rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3">
           <p className="text-sm font-semibold text-emerald-900">
@@ -59,7 +122,7 @@ export function MateriaSectionState({
             podés mantenerlo privado.
           </p>
           <Link
-            href="/dashboard/materiales?openUpload=1"
+            href={uploadHref}
             className="mt-3 inline-flex rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
             Aportar material a la comunidad
