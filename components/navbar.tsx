@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -22,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FeedbackDialog } from '@/components/FeedbackDialog';
 import { useShellData } from '@/components/ShellDataProvider';
 import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavLink';
 import { logError } from '@/lib/observability';
@@ -109,6 +111,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
   const { profileSummary } = useShellData();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
   const dashboardNavLabel = isNavItemActive(pathname, '/dashboard') ? 'Inicio' : 'Dashboard';
   const careerShortcut =
@@ -240,14 +243,9 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                         Configuración
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/ayuda?from=${encodeURIComponent(pathname)}`}
-                        className="w-full text-sm"
-                      >
-                        <CircleHelp className="mr-2 h-4 w-4" />
-                        Ayuda
-                      </Link>
+                    <DropdownMenuItem className="text-sm" onSelect={() => setFeedbackOpen(true)}>
+                      <CircleHelp className="mr-2 h-4 w-4" />
+                      Ayuda
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
@@ -287,6 +285,11 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
           </div>
         </div>
       </div>
+      <FeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={setFeedbackOpen}
+        sourcePath={pathname}
+      />
     </aside>
   );
 }
