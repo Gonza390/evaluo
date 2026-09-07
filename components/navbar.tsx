@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   CalendarDays,
+  CircleHelp,
   Crown,
   FileText,
   Home,
@@ -237,6 +238,15 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                       <Link href="/configuracion" className="w-full text-sm">
                         <Settings className="mr-2 h-4 w-4" />
                         Configuración
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={`/ayuda?from=${encodeURIComponent(pathname)}`}
+                        className="w-full text-sm"
+                      >
+                        <CircleHelp className="mr-2 h-4 w-4" />
+                        Ayuda
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
