@@ -25,6 +25,7 @@ import {
   type StudentMaterialProcessingState,
   updateStudentMaterialVisibilityAction,
 } from '@/app/dashboard/materiales/actions';
+import { saveStudentMaterialExamContextAction } from '@/app/dashboard/materiales/context-actions';
 import {
   cancelStudentMaterialUploadAction,
   finalizeStudentMaterialUploadAction,
@@ -42,7 +43,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
@@ -65,6 +65,15 @@ function getTitleFromFileName(fileName: string) {
       .slice(0, 180) || 'Material de estudio'
   );
 }
+
+type ExamInstance = 'parcial_1' | 'parcial_2' | 'final' | 'otro';
+
+const EXAM_OPTIONS: Array<{ value: ExamInstance; label: string }> = [
+  { value: 'parcial_1', label: 'Parcial 1' },
+  { value: 'parcial_2', label: 'Parcial 2' },
+  { value: 'final', label: 'Final' },
+  { value: 'otro', label: 'Otro' },
+];
 
 type UniversidadOption = {
   id: string;
@@ -149,11 +158,13 @@ export function StudentMaterialsWorkspace({
   const uploadHeroTourRef = useRef<HTMLElement | null>(null);
   const libraryTourRef = useRef<HTMLElement | null>(null);
   const materialEntryTourRef = useRef<HTMLElement | null>(null);
+  const pdfPickerRef = useRef<HTMLInputElement | null>(null);
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
   const [universidadId, setUniversidadId] = useState(initialUniversidadId);
   const [carreraId, setCarreraId] = useState(initialCarreraId);
   const [materiaId, setMateriaId] = useState(initialMateriaId);
+  const [examInstance, setExamInstance] = useState<ExamInstance | ''>('');
+  const [examDate, setExamDate] = useState('');
   const [shareWithCatalog, setShareWithCatalog] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -220,14 +231,50 @@ export function StudentMaterialsWorkspace({
 
   const resetForm = () => {
     setTitle('');
-    setDescription('');
     setUniversidadId(initialUniversidadId);
     setCarreraId(initialCarreraId);
     setMateriaId(initialMateriaId);
+    setExamInstance('');
+    setExamDate('');
     setShareWithCatalog(true);
     setSelectedFile(null);
     setFileInputKey((current) => current + 1);
   };
+
+  const openPdfPicker = useCallback(() => {
+    if (isPending) return;
+    pdfPickerRef.current?.click();
+  }, [isPending]);
+
+  const handlePickedPdf = useCallback(
+    (file: File | null) => {
+      if (!file) return;
+
+      if (
+        !file.name.toLowerCase().endsWith('.pdf') ||
+        (file.type && file.type !== 'application/pdf')
+      ) {
+        toast({
+          description: 'Por ahora solo aceptamos archivos PDF.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (file.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
+        toast({
+          description: 'El PDF supera el límite de 20 MB. Elegí un archivo más liviano.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setSelectedFile(file);
+      setTitle(getTitleFromFileName(file.name));
+      setIsUploadDialogOpen(true);
+    },
+    [toast]
+  );
 
   useEffect(() => {
     if (!activeProcessing) {
@@ -335,9 +382,9 @@ export function StudentMaterialsWorkspace({
       return;
     }
 
-    if (description.trim().length < 3) {
+    if (!examInstance) {
       toast({
-        description: 'Indicá brevemente a qué parcial, módulos o temas corresponde el material.',
+        description: 'Indicá qué estás preparando para continuar.',
         variant: 'destructive',
       });
       return;
@@ -363,9 +410,15 @@ export function StudentMaterialsWorkspace({
     }
 
     const file = selectedFile;
+    const examLabel = EXAM_OPTIONS.find((option) => option.value === examInstance)?.label ?? 'Examen';
+    const materiaNombre = materiaNameById.get(materiaId) ?? 'Materia';
+    const generatedDescription = [examLabel, materiaNombre, examDate ? `Fecha ${examDate}` : null]
+      .filter(Boolean)
+      .join(' · ')
+      .slice(0, 240);
     const metadata = {
       title: title.trim() || getTitleFromFileName(file.name),
-      description: description.trim(),
+      description: generatedDescription,
       universidadId,
       carreraId,
       materiaId,
@@ -435,6 +488,16 @@ export function StudentMaterialsWorkspace({
         toast({ description: result.message });
 
         if (result.materialId) {
+          const examContextResult = await saveStudentMaterialExamContextAction({
+            materialId: result.materialId,
+            examInstance,
+            examDate: examDate || null,
+          });
+
+          if (!examContextResult.success) {
+            toast({ description: examContextResult.message });
+          }
+
           setActiveProcessing({
             materialId: result.materialId,
             title: metadata.title,
@@ -510,7 +573,7 @@ export function StudentMaterialsWorkspace({
     {
       title: 'Subí el PDF de tu materia',
       description:
-        'Elegí tu PDF, indicá a qué materia y parcial corresponde, y Evaluo prepara el espacio de estudio por vos.',
+        'Elegí tu PDF y después indicá la materia, qué examen estás preparando y cuándo rendís.',
       target: { type: 'ref', ref: uploadHeroTourRef },
     },
     {
@@ -568,6 +631,18 @@ export function StudentMaterialsWorkspace({
 
   return (
     <>
+      <input
+        ref={pdfPickerRef}
+        key={fileInputKey}
+        type="file"
+        accept=".pdf,application/pdf"
+        className="sr-only"
+        onChange={(event) => {
+          handlePickedPdf(event.target.files?.[0] ?? null);
+          event.currentTarget.value = '';
+        }}
+      />
+
       <div className="min-w-0 space-y-4 overflow-x-clip">
         <section
           ref={uploadHeroTourRef}
@@ -650,7 +725,7 @@ export function StudentMaterialsWorkspace({
                     <>
                       <Button
                         type="button"
-                        onClick={() => setIsUploadDialogOpen(true)}
+                        onClick={openPdfPicker}
                         className="bg-[#F59E0B] from-[#F59E0B] to-[#FB923C] text-white hover:opacity-95"
                       >
                         Subir primer PDF
@@ -685,8 +760,8 @@ export function StudentMaterialsWorkspace({
                     Subí tu material del curso
                   </h2>
                   <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                    Mantendremos una estructura simple para que después puedas convertir cada PDF en
-                    un espacio de estudio más completo.
+                    Elegí tu PDF primero. Después te pedimos solo la información necesaria para
+                    ubicarlo y personalizar tu estudio.
                   </p>
                 </div>
               </div>
@@ -705,7 +780,7 @@ export function StudentMaterialsWorkspace({
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => setIsUploadDialogOpen(true)}
+                  onClick={openPdfPicker}
                   className="group hover:border-primary/35 hover:bg-primary/5 focus-visible:ring-primary rounded-[1rem] border border-slate-200 bg-white p-3.5 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                 >
                   <span className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-xl shadow-sm">
@@ -718,7 +793,7 @@ export function StudentMaterialsWorkspace({
                     Subir un PDF
                   </span>
                   <span className="mt-1 block text-[12.5px] leading-5 text-slate-500">
-                    Convertí tu apunte en un espacio de estudio.
+                    Elegí el archivo y después completamos el contexto.
                   </span>
                 </button>
 
@@ -758,12 +833,7 @@ export function StudentMaterialsWorkspace({
                 Tus materiales
               </h2>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => setIsUploadDialogOpen(true)}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={openPdfPicker}>
               <Plus className="h-4 w-4" />
               Nuevo material
             </Button>
@@ -876,7 +946,13 @@ export function StudentMaterialsWorkspace({
         </section>
       </div>
 
-      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+      <Dialog
+        open={isUploadDialogOpen}
+        onOpenChange={(open) => {
+          setIsUploadDialogOpen(open);
+          if (!open && !isPending) resetForm();
+        }}
+      >
         <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto rounded-[1.5rem] border-slate-200 bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
           <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_52%,#EEF4FF_100%)] px-4 py-4 sm:px-5">
             <DialogHeader className="text-left">
@@ -886,11 +962,12 @@ export function StudentMaterialsWorkspace({
                 </div>
                 <div>
                   <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
-                    Subí tu PDF
+                    {selectedFile ? 'Completá la información' : 'Elegí tu PDF'}
                   </DialogTitle>
                   <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
-                    Lo convertimos en un espacio de estudio con resumen, conceptos clave, tarjetas y
-                    ejercicios.
+                    {selectedFile
+                      ? 'Ya tenemos el archivo. Contanos para qué materia y examen lo estás usando.'
+                      : 'Primero elegí el archivo que querés convertir en tu espacio de estudio.'}
                   </DialogDescription>
                 </div>
               </div>
@@ -898,199 +975,216 @@ export function StudentMaterialsWorkspace({
           </div>
 
           <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="material-file"
-                className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-slate-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-5 py-6 text-center transition hover:border-[#F59E0B]/60 hover:bg-amber-50/30"
+            {selectedFile ? (
+              <div className="flex items-center gap-3 rounded-[1rem] border border-emerald-100 bg-emerald-50/60 px-3.5 py-3 sm:col-span-2">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-semibold text-slate-900">
+                    {selectedFile.name}
+                  </p>
+                  <p className="mt-0.5 text-[11.5px] text-slate-500">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <Button type="button" size="sm" variant="outline" onClick={openPdfPicker}>
+                  Cambiar
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={openPdfPicker}
+                className="group flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-slate-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-5 py-6 text-center transition hover:border-[#F59E0B]/60 hover:bg-amber-50/30 sm:col-span-2"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#FFF7ED] text-[#F59E0B] transition group-hover:scale-105">
                   <Upload className="h-5 w-5" />
                 </span>
-                <span className="mt-3 text-sm font-semibold text-slate-950">
-                  {selectedFile ? 'Cambiar PDF' : 'Seleccioná tu PDF'}
-                </span>
+                <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
                 <span className="mt-1 text-[12.5px] leading-5 text-slate-500">
-                  PDF de hasta 20 MB. El nombre del archivo se usa automáticamente como título.
+                  PDF de hasta 20 MB.
                 </span>
-                <Input
-                  id="material-file"
-                  key={fileInputKey}
-                  type="file"
-                  accept=".pdf,application/pdf"
-                  className="sr-only"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setSelectedFile(file);
-                    setTitle(file ? getTitleFromFileName(file.name) : '');
-                  }}
-                />
-              </label>
-              {selectedFile ? (
-                <div className="mt-2.5 flex items-center gap-3 rounded-[1rem] border border-emerald-100 bg-emerald-50/60 px-3.5 py-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-                    <FileText className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-semibold text-slate-900">
-                      {selectedFile.name}
-                    </p>
-                    <p className="mt-0.5 text-[11.5px] text-slate-500">
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB · Título automático: {title}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {hasAcademicProfile ? (
-              <div className="rounded-[1rem] border border-blue-100 bg-blue-50/70 px-4 py-3 sm:col-span-2">
-                <p className="text-[11px] font-semibold tracking-[0.15em] text-blue-700 uppercase">
-                  Tu contexto académico
-                </p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-700">
-                  <span className="font-semibold text-slate-950">
-                    {universityNameById.get(universidadId) ?? 'Tu universidad'}
-                  </span>
-                  <span className="text-slate-300">·</span>
-                  <span>{careerNameById.get(carreraId) ?? 'Tu carrera'}</span>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label
-                    htmlFor="material-universidad"
-                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-                  >
-                    Universidad
-                  </label>
-                  <select
-                    id="material-universidad"
-                    value={universidadId}
-                    onChange={(event) => {
-                      setUniversidadId(event.target.value);
-                      setCarreraId('');
-                      setMateriaId('');
-                    }}
-                    className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
-                  >
-                    <option value="">Seleccionar universidad</option>
-                    {universidades.map((universidad) => (
-                      <option key={universidad.id} value={universidad.id}>
-                        {universidad.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="material-carrera"
-                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-                  >
-                    Carrera
-                  </label>
-                  <select
-                    id="material-carrera"
-                    value={carreraId}
-                    onChange={(event) => {
-                      setCarreraId(event.target.value);
-                      setMateriaId('');
-                    }}
-                    disabled={!universidadId}
-                    className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
-                  >
-                    <option value="">Seleccionar carrera</option>
-                    {filteredCarreras.map((carrera) => (
-                      <option key={carrera.id} value={carrera.id}>
-                        {carrera.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
+              </button>
             )}
 
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="material-materia"
-                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-              >
-                Materia
-              </label>
-              <select
-                id="material-materia"
-                value={materiaId}
-                onChange={(event) => setMateriaId(event.target.value)}
-                disabled={!carreraId}
-                className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
-              >
-                <option value="">Seleccionar materia</option>
-                {filteredMaterias.map((materia) => (
-                  <option key={materia.id} value={materia.id}>
-                    {materia.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {selectedFile ? (
+              <>
+                {hasAcademicProfile ? (
+                  <div className="rounded-[1rem] border border-blue-100 bg-blue-50/70 px-4 py-3 sm:col-span-2">
+                    <p className="text-[11px] font-semibold tracking-[0.15em] text-blue-700 uppercase">
+                      Tu contexto académico
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-slate-700">
+                      <span className="font-semibold text-slate-950">
+                        {universityNameById.get(universidadId) ?? 'Tu universidad'}
+                      </span>
+                      <span className="text-slate-300">·</span>
+                      <span>{careerNameById.get(carreraId) ?? 'Tu carrera'}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label
+                        htmlFor="material-universidad"
+                        className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                      >
+                        Universidad
+                      </label>
+                      <select
+                        id="material-universidad"
+                        value={universidadId}
+                        onChange={(event) => {
+                          setUniversidadId(event.target.value);
+                          setCarreraId('');
+                          setMateriaId('');
+                        }}
+                        className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
+                      >
+                        <option value="">Seleccionar universidad</option>
+                        {universidades.map((universidad) => (
+                          <option key={universidad.id} value={universidad.id}>
+                            {universidad.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="material-description"
-                className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-              >
-                ¿Qué incluye este material?
-              </label>
-              <Textarea
-                id="material-description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                maxLength={240}
-                rows={3}
-                placeholder="Ej. Parcial 1 · Módulos 1 al 4 · obligaciones y contratos"
-              />
-              <div className="mt-1.5 flex items-center justify-between gap-3 text-[11.5px] text-slate-500">
-                <span>Contanos brevemente a qué parcial, módulos o temas corresponde.</span>
-                <span>{description.length}/240</span>
-              </div>
-            </div>
+                    <div>
+                      <label
+                        htmlFor="material-carrera"
+                        className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                      >
+                        Carrera
+                      </label>
+                      <select
+                        id="material-carrera"
+                        value={carreraId}
+                        onChange={(event) => {
+                          setCarreraId(event.target.value);
+                          setMateriaId('');
+                        }}
+                        disabled={!universidadId}
+                        className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
+                      >
+                        <option value="">Seleccionar carrera</option>
+                        {filteredCarreras.map((carrera) => (
+                          <option key={carrera.id} value={carrera.id}>
+                            {carrera.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </>
+                )}
 
-            <div className="sm:col-span-2">
-              <label className="flex cursor-pointer items-start gap-3 rounded-[1.15rem] border border-emerald-200 bg-emerald-50/60 px-4 py-3.5 text-[13px] text-slate-700 transition hover:bg-emerald-50">
-                <input
-                  type="checkbox"
-                  checked={shareWithCatalog}
-                  onChange={(event) => setShareWithCatalog(event.target.checked)}
-                  className="mt-1"
-                />
-                <span className="flex min-w-0 gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-                    <Globe className="h-4 w-4" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-semibold text-slate-950">
-                      Compartir con otros estudiantes
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="material-materia"
+                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                  >
+                    Materia
+                  </label>
+                  <select
+                    id="material-materia"
+                    value={materiaId}
+                    onChange={(event) => setMateriaId(event.target.value)}
+                    disabled={!carreraId}
+                    className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
+                  >
+                    <option value="">Seleccionar materia</option>
+                    {filteredMaterias.map((materia) => (
+                      <option key={materia.id} value={materia.id}>
+                        {materia.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <p className="mb-1.5 text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                    ¿Qué estás preparando?
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    {EXAM_OPTIONS.map((option) => {
+                      const active = examInstance === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => setExamInstance(option.value)}
+                          className={`rounded-[0.9rem] border px-3 py-2.5 text-sm font-semibold transition ${
+                            active
+                              ? 'border-[#F59E0B] bg-amber-50 text-amber-800 shadow-sm'
+                              : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label
+                    htmlFor="material-exam-date"
+                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                  >
+                    ¿Cuándo rendís? <span className="font-medium tracking-normal normal-case">(opcional)</span>
+                  </label>
+                  <Input
+                    id="material-exam-date"
+                    type="date"
+                    value={examDate}
+                    onChange={(event) => setExamDate(event.target.value)}
+                    className="rounded-[1rem]"
+                  />
+                  <p className="mt-1.5 text-[11.5px] leading-5 text-slate-500">
+                    La fecha nos sirve para ordenar tu estudio y mostrarte contenido en el momento adecuado.
+                  </p>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-[1.15rem] border border-emerald-200 bg-emerald-50/60 px-4 py-3.5 text-[13px] text-slate-700 transition hover:bg-emerald-50">
+                    <input
+                      type="checkbox"
+                      checked={shareWithCatalog}
+                      onChange={(event) => setShareWithCatalog(event.target.checked)}
+                      className="mt-1"
+                    />
+                    <span className="flex min-w-0 gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                        <Globe className="h-4 w-4" />
+                      </span>
+                      <span>
+                        <span className="block text-sm font-semibold text-slate-950">
+                          Compartir con otros estudiantes
+                        </span>
+                        <span className="mt-1 block text-[12.5px] leading-5 text-slate-600">
+                          Tu material puede ayudar a otros alumnos de esta materia. Podés cambiar esta
+                          opción cuando quieras.
+                        </span>
+                      </span>
                     </span>
-                    <span className="mt-1 block text-[12.5px] leading-5 text-slate-600">
-                      Tu material puede ayudar a otros alumnos de esta materia. Podés cambiar esta
-                      opción cuando quieras.
-                    </span>
-                  </span>
-                </span>
-              </label>
-            </div>
+                  </label>
+                </div>
 
-            <p className="text-center text-[11.5px] leading-5 text-slate-400 sm:col-span-2">
-              Al subir este material, aceptás los{' '}
-              <Link
-                href="/terminos"
-                target="_blank"
-                className="font-medium text-slate-600 underline underline-offset-2"
-              >
-                Términos y Condiciones
-              </Link>
-              .
-            </p>
+                <p className="text-center text-[11.5px] leading-5 text-slate-400 sm:col-span-2">
+                  Al subir este material, aceptás los{' '}
+                  <Link
+                    href="/terminos"
+                    target="_blank"
+                    className="font-medium text-slate-600 underline underline-offset-2"
+                  >
+                    Términos y Condiciones
+                  </Link>
+                  .
+                </p>
+              </>
+            ) : null}
           </div>
 
           <DialogFooter className="border-t border-slate-100 px-4 py-4 sm:px-5">
@@ -1105,28 +1199,30 @@ export function StudentMaterialsWorkspace({
             >
               Cancelar
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleUpload}
-              disabled={
-                isPending ||
-                !title.trim() ||
-                description.trim().length < 3 ||
-                !universidadId ||
-                !carreraId ||
-                !materiaId ||
-                !selectedFile
-              }
-              className="bg-[#F59E0B] text-white hover:bg-[#E58E08]"
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
-              Procesar PDF
-            </Button>
+            {selectedFile ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleUpload}
+                disabled={
+                  isPending ||
+                  !title.trim() ||
+                  !universidadId ||
+                  !carreraId ||
+                  !materiaId ||
+                  !examInstance ||
+                  !selectedFile
+                }
+                className="bg-[#F59E0B] text-white hover:bg-[#E58E08]"
+              >
+                {isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                Procesar PDF
+              </Button>
+            ) : null}
           </DialogFooter>
         </DialogContent>
       </Dialog>
