@@ -59,23 +59,31 @@ async function handle(request: Request) {
   }
 
   const url = new URL(request.url);
-  const days = Number(url.searchParams.get('days'));
-  if (days !== 3 && days !== 1) {
-    return NextResponse.json({ success: false, message: 'days must be 3 or 1' }, { status: 400 });
-  }
-
-  const envName = days === 3 ? 'SENDER_TEMPLATE_EXAM_3D' : 'SENDER_TEMPLATE_EXAM_1D';
-  const templateId = process.env[envName]?.trim();
-  if (!templateId) {
-    return NextResponse.json({ success: false, message: `Falta ${envName}.` }, { status: 500 });
-  }
-
   const admin = createAdminClient();
 
   try {
     const consumed = await consumeToken(request, admin);
     if (!consumed) {
       return NextResponse.json({ success: false, message: 'Unauthorized or already used.' }, { status: 401 });
+    }
+
+    if (url.searchParams.get('mode') === 'diagnose') {
+      return NextResponse.json({
+        success: true,
+        template3d: process.env.SENDER_TEMPLATE_EXAM_3D?.trim() || null,
+        template1d: process.env.SENDER_TEMPLATE_EXAM_1D?.trim() || null,
+      });
+    }
+
+    const days = Number(url.searchParams.get('days'));
+    if (days !== 3 && days !== 1) {
+      return NextResponse.json({ success: false, message: 'days must be 3 or 1' }, { status: 400 });
+    }
+
+    const envName = days === 3 ? 'SENDER_TEMPLATE_EXAM_3D' : 'SENDER_TEMPLATE_EXAM_1D';
+    const templateId = process.env[envName]?.trim();
+    if (!templateId) {
+      return NextResponse.json({ success: false, message: `Falta ${envName}.` }, { status: 500 });
     }
 
     const { data: profile, error: profileError } = await admin
@@ -123,9 +131,9 @@ async function handle(request: Request) {
     });
 
     logInfo('senderReminderTemplate.test', { success: true, days, templateId, emailId: result.emailId });
-    return NextResponse.json({ success: true, days, emailId: result.emailId });
+    return NextResponse.json({ success: true, days, emailId: result.emailId, templateId });
   } catch (error) {
-    logError('senderReminderTemplate.test', error, { days });
+    logError('senderReminderTemplate.test', error);
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : 'Error desconocido.' },
       { status: 500 }
