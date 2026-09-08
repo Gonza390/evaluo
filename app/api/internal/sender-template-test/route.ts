@@ -60,6 +60,40 @@ async function consumeOneTimeAuthorization(request: Request, admin: ReturnType<t
   return consumed?.id ?? null;
 }
 
+async function verifySenderAuthentication() {
+  const token = process.env.SENDER_API_TOKEN?.trim();
+  if (!token) {
+    throw new Error('Falta SENDER_API_TOKEN.');
+  }
+
+  const response = await fetch('https://api.sender.net/v2/subscribers?limit=1', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(12_000),
+  });
+
+  const raw = await response.text();
+  let message: string | null = null;
+
+  try {
+    const parsed = raw ? (JSON.parse(raw) as { message?: string }) : {};
+    message = parsed.message ?? null;
+  } catch {
+    message = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Sender auth check HTTP ${response.status}${message ? `: ${message}` : ''}`);
+  }
+
+  return response.status;
+}
+
 async function handle(request: Request) {
   if (getTodayUtc() !== TEST_DATE_UTC) {
     return NextResponse.json({ success: true, skipped: true, reason: 'outside_test_date' });
@@ -81,6 +115,8 @@ async function handle(request: Request) {
     if (!consumedTokenId) {
       return NextResponse.json({ success: false, message: 'Unauthorized or already used.' }, { status: 401 });
     }
+
+    const senderAuthStatus = await verifySenderAuthentication();
 
     const { data: profile, error: profileError } = await admin
       .from('profiles')
@@ -126,11 +162,12 @@ async function handle(request: Request) {
 
     logInfo('senderTemplate.test', {
       success: true,
+      senderAuthStatus,
       templateId,
       emailId: result.emailId,
     });
 
-    return NextResponse.json({ success: true, emailId: result.emailId });
+    return NextResponse.json({ success: true, senderAuthStatus, emailId: result.emailId });
   } catch (error) {
     if (consumedTokenId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
