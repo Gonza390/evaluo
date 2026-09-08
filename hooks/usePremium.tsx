@@ -1,8 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { getPremiumStatus } from '@/lib/actions/premium';
 import { useUser } from '@/hooks/useUser';
+
+// Permite abrir features concretas en una sección sin alterar el estado real
+// de la suscripción del usuario ni desbloquear Premium globalmente.
+const PremiumAccessOverrideContext = createContext(false);
+
+export function PremiumAccessOverrideProvider({
+  children,
+  enabled = true,
+}: {
+  children: ReactNode;
+  enabled?: boolean;
+}) {
+  return (
+    <PremiumAccessOverrideContext.Provider value={enabled}>
+      {children}
+    </PremiumAccessOverrideContext.Provider>
+  );
+}
 
 // Caché compartida a nivel de módulo: evita un round-trip al servidor por cada
 // consumidor de usePremium dentro de la misma sesión de página. La promesa se
@@ -37,6 +55,7 @@ function resolvePremium(userId: string): Promise<boolean> {
 }
 
 export function usePremium() {
+  const premiumAccessOverride = useContext(PremiumAccessOverrideContext);
   const { user, loading } = useUser();
   const [isPremium, setIsPremium] = useState(false);
   const [premiumLoading, setPremiumLoading] = useState(true);
@@ -67,5 +86,8 @@ export function usePremium() {
     };
   }, [loading, user]);
 
-  return { isPremium, premiumLoading };
+  return {
+    isPremium: premiumAccessOverride || isPremium,
+    premiumLoading: premiumAccessOverride ? false : premiumLoading,
+  };
 }
