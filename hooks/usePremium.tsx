@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { getPremiumStatus } from '@/lib/actions/premium';
 import { useUser } from '@/hooks/useUser';
 
@@ -38,24 +37,12 @@ function resolvePremium(userId: string): Promise<boolean> {
 }
 
 export function usePremium() {
-  const pathname = usePathname();
   const { user, loading } = useUser();
   const [isPremium, setIsPremium] = useState(false);
   const [premiumLoading, setPremiumLoading] = useState(true);
-  const calendarIsFree = pathname === '/calendario';
 
   useEffect(() => {
     let active = true;
-
-    // El calendario es una herramienta de retención para todos los usuarios.
-    // Dentro de esta ruta tratamos las capacidades antes gated (eventos y
-    // recordatorios) como incluidas en Free, sin alterar el estado de suscripción
-    // en el resto del producto.
-    if (calendarIsFree) {
-      setIsPremium(true);
-      setPremiumLoading(false);
-      return;
-    }
 
     if (loading) return;
 
@@ -78,7 +65,7 @@ export function usePremium() {
     return () => {
       active = false;
     };
-  }, [calendarIsFree, loading, user]);
+  }, [loading, user]);
 
   return { isPremium, premiumLoading };
 }
