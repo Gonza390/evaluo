@@ -1,6 +1,15 @@
 import 'server-only';
 
 export type SenderTemplateVariables = Record<string, string | number | boolean | null | undefined>;
+export type SenderEventProperties = Record<string, string | number | boolean | null | undefined>;
+
+function getSenderToken() {
+  const token = process.env.SENDER_API_TOKEN?.trim();
+  if (!token) {
+    throw new Error('Falta SENDER_API_TOKEN.');
+  }
+  return token;
+}
 
 export async function sendSenderTemplate(input: {
   templateId: string;
@@ -10,10 +19,7 @@ export async function sendSenderTemplate(input: {
   text?: string;
   html?: string;
 }) {
-  const token = process.env.SENDER_API_TOKEN?.trim();
-  if (!token) {
-    throw new Error('Falta SENDER_API_TOKEN.');
-  }
+  const token = getSenderToken();
 
   const variables = Object.fromEntries(
     Object.entries(input.variables)
@@ -59,5 +65,52 @@ export async function sendSenderTemplate(input: {
 
   return {
     emailId: payload.emailId ?? null,
+  };
+}
+
+export async function sendSenderCustomEvent(input: {
+  type: string;
+  subscriberEmail: string;
+  properties?: SenderEventProperties;
+}) {
+  const token = getSenderToken();
+  const properties = Object.fromEntries(
+    Object.entries(input.properties ?? {}).filter(([, value]) => value !== null && value !== undefined)
+  );
+
+  const response = await fetch('https://api.sender.net/v2/events', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      subscriber: {
+        email: input.subscriberEmail,
+      },
+      type: input.type,
+      properties,
+    }),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(12_000),
+  });
+
+  const raw = await response.text();
+  let payload: { success?: boolean; message?: string } = {};
+
+  try {
+    payload = raw ? JSON.parse(raw) : {};
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok || payload.success === false) {
+    throw new Error(payload.message || `Sender respondió HTTP ${response.status}.`);
+  }
+
+  return {
+    success: true,
+    message: payload.message ?? 'Event created',
   };
 }
