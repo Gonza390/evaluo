@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { sendSenderTemplate } from '@/lib/email/sender';
@@ -8,6 +9,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const TEST_DATE_UTC = '2026-09-08';
+const TEST_PURPOSE = 'sender_template_test';
 
 function getTodayUtc() {
   return new Date().toISOString().slice(0, 10);
@@ -18,11 +20,47 @@ function firstName(value: string | null | undefined) {
   return normalized?.split(/\s+/)[0] || 'Gonzalo';
 }
 
-async function handle(request: Request) {
-  if (!isInternalQueueRequestAuthorized(request)) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+async function consumeOneTimeAuthorization(request: Request, admin: ReturnType<typeof createAdminClient>) {
+  // Esta tabla es deliberadamente temporal y no forma parte del tipo generado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+  const now = new Date().toISOString();
+  const internalRequest = isInternalQueueRequestAuthorized(request);
+
+  let tokenQuery = db
+    .from('internal_one_time_tokens')
+    .select('id')
+    .eq('purpose', TEST_PURPOSE)
+    .gt('expires_at', now)
+    .is('used_at', null)
+    .order('created_at', { ascending: true })
+    .limit(1);
+
+  if (!internalRequest) {
+    const provided = new URL(request.url).searchParams.get('token')?.trim();
+    if (!provided) return null;
+
+    const tokenHash = createHash('sha256').update(provided).digest('hex');
+    tokenQuery = tokenQuery.eq('token_hash', tokenHash);
   }
 
+  const { data: tokenRow, error: tokenError } = await tokenQuery.maybeSingle();
+  if (tokenError) throw tokenError;
+  if (!tokenRow?.id) return null;
+
+  const { data: consumed, error: consumeError } = await db
+    .from('internal_one_time_tokens')
+    .update({ used_at: new Date().toISOString() })
+    .eq('id', tokenRow.id)
+    .is('used_at', null)
+    .select('id')
+    .maybeSingle();
+
+  if (consumeError) throw consumeError;
+  return consumed?.id ?? null;
+}
+
+async function handle(request: Request) {
   if (getTodayUtc() !== TEST_DATE_UTC) {
     return NextResponse.json({ success: true, skipped: true, reason: 'outside_test_date' });
   }
@@ -35,8 +73,15 @@ async function handle(request: Request) {
     );
   }
 
+  const admin = createAdminClient();
+  let consumedTokenId: string | null = null;
+
   try {
-    const admin = createAdminClient();
+    consumedTokenId = await consumeOneTimeAuthorization(request, admin);
+    if (!consumedTokenId) {
+      return NextResponse.json({ success: false, message: 'Unauthorized or already used.' }, { status: 401 });
+    }
+
     const { data: profile, error: profileError } = await admin
       .from('profiles')
       .select('id,nombre')
@@ -46,13 +91,13 @@ async function handle(request: Request) {
 
     if (profileError) throw profileError;
     if (!profile) {
-      return NextResponse.json({ success: false, message: 'No hay usuario admin para la prueba.' }, { status: 500 });
+      throw new Error('No hay usuario admin para la prueba.');
     }
 
     const { data: userData, error: userError } = await admin.auth.admin.getUserById(profile.id);
     if (userError) throw userError;
     if (!userData.user?.email) {
-      return NextResponse.json({ success: false, message: 'El admin no tiene email.' }, { status: 500 });
+      throw new Error('El admin no tiene email.');
     }
 
     const nombre = firstName(profile.nombre || userData.user.user_metadata?.name || userData.user.user_metadata?.full_name);
@@ -87,6 +132,18 @@ async function handle(request: Request) {
 
     return NextResponse.json({ success: true, emailId: result.emailId });
   } catch (error) {
+    if (consumedTokenId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = admin as any;
+      const { error: resetError } = await db
+        .from('internal_one_time_tokens')
+        .update({ used_at: null })
+        .eq('id', consumedTokenId);
+      if (resetError) {
+        logError('senderTemplate.test.resetToken', resetError);
+      }
+    }
+
     logError('senderTemplate.test', error);
     return NextResponse.json(
       { success: false, message: error instanceof Error ? error.message : 'Error desconocido.' },
