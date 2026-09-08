@@ -30,6 +30,10 @@ export default async function DemoMaterialEstudioPage({
   return (
     <>
       <style>{`
+        [role='tablist'] > [role='tab']:nth-child(5) > span {
+          display: none !important;
+        }
+
         div[aria-live='polite'] > section[role='dialog'][aria-label^='Recorrido de Evaluo'] {
           transition:
             left 240ms cubic-bezier(0.22, 1, 0.36, 1),
