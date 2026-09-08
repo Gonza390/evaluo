@@ -7,6 +7,8 @@ export async function sendSenderTemplate(input: {
   toEmail: string;
   toName?: string | null;
   variables: SenderTemplateVariables;
+  text?: string;
+  html?: string;
 }) {
   const token = process.env.SENDER_API_TOKEN?.trim();
   if (!token) {
@@ -34,6 +36,8 @@ export async function sendSenderTemplate(input: {
           ...(input.toName ? { name: input.toName } : {}),
         },
         variables,
+        ...(input.text ? { text: input.text } : {}),
+        ...(input.html ? { html: input.html } : {}),
       }),
       cache: 'no-store',
       signal: AbortSignal.timeout(12_000),
