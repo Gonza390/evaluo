@@ -601,15 +601,7 @@ export default function CalendarioPage() {
       return;
     }
 
-    const examEventCount = events.filter((event) => event.type === 'exam').length;
-    if (payload.type === 'exam' && !isPremium && examEventCount >= 3) {
-      trackMarketingEvent('limit_reached_calendar_exam', {
-        exam_event_count: examEventCount,
-        limit: 3,
-      });
-      setShowPremiumUpsell(true);
-      return;
-    }
+    // El calendario no limita la cantidad de parciales según el plan del usuario.
 
     if (storageMode === 'local') {
       const newEvent: StudyCalendarEvent = {
