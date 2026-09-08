@@ -2,9 +2,10 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
-import { sendSenderTemplate } from '@/lib/email/sender';
+import { sendSenderCustomEvent } from '@/lib/email/sender';
 
 const CAMPAIGN_KEY = 'reactivation_next_subject_30d_v1';
+const SENDER_EVENT_TYPE = 'reactivation_next_subject_30d';
 const INACTIVE_DAYS = 30;
 const DAILY_BATCH_SIZE = 20;
 
@@ -39,7 +40,6 @@ function buildUploadUrl() {
 export async function runReactivationNextSubjectDispatch(options?: { dryRun?: boolean }) {
   const dryRun = Boolean(options?.dryRun);
   const enabled = process.env.REACTIVATION_NEXT_SUBJECT_ENABLED?.trim() === '1';
-  const templateId = process.env.SENDER_TEMPLATE_REACTIVATION_30D?.trim() || null;
   const cutoff = new Date(Date.now() - INACTIVE_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const admin = createAdminClient();
@@ -59,16 +59,15 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
     success: true,
     dryRun,
     enabled,
-    templateConfigured: Boolean(templateId),
     campaignKey: CAMPAIGN_KEY,
+    senderEventType: SENDER_EVENT_TYPE,
     inactiveDays: INACTIVE_DAYS,
     batchSize: DAILY_BATCH_SIZE,
     cutoff,
     candidates: candidates.length,
-    sent: 0,
+    triggered: 0,
     duplicates: 0,
     skippedDisabled: 0,
-    missingTemplate: 0,
     failed: 0,
   };
 
@@ -79,12 +78,6 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
 
   if (!enabled) {
     summary.skippedDisabled = candidates.length;
-    logInfo('reactivationNextSubject.dispatch', summary);
-    return summary;
-  }
-
-  if (!templateId) {
-    summary.missingTemplate = candidates.length;
     logInfo('reactivationNextSubject.dispatch', summary);
     return summary;
   }
@@ -100,6 +93,7 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
         materia_id: candidate.materia_id,
         status: 'sending',
         context: {
+          sender_event_type: SENDER_EVENT_TYPE,
           materia: candidate.materia_nombre,
           last_parcial: candidate.last_parcial,
           last_simulator_at: candidate.last_simulator_at,
@@ -121,11 +115,11 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
       const displayFirstName = firstName(candidate.display_name);
       const subject = `¿Qué materia sigue después de ${candidate.materia_nombre}?`;
 
-      const senderResult = await sendSenderTemplate({
-        templateId,
-        toEmail: candidate.email,
-        toName: candidate.display_name,
-        variables: {
+      await sendSenderCustomEvent({
+        type: SENDER_EVENT_TYPE,
+        subscriberEmail: candidate.email,
+        properties: {
+          campaign_key: CAMPAIGN_KEY,
           subject,
           firstname: displayFirstName,
           nombre: displayFirstName,
@@ -138,33 +132,33 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
         },
       });
 
-      const { error: markSentError } = await db
+      const now = new Date().toISOString();
+      const { error: markTriggeredError } = await db
         .from('email_campaign_deliveries')
         .update({
-          status: 'sent',
-          sender_email_id: senderResult.emailId,
-          sent_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          status: 'triggered',
+          triggered_at: now,
+          updated_at: now,
         })
         .eq('id', reservation.id);
 
-      if (markSentError) {
-        logError('reactivationNextSubject.markSent', markSentError, {
+      if (markTriggeredError) {
+        logError('reactivationNextSubject.markTriggered', markTriggeredError, {
           deliveryId: reservation.id,
           campaignKey: CAMPAIGN_KEY,
         });
       }
 
-      summary.sent += 1;
+      summary.triggered += 1;
     } catch (error) {
       summary.failed += 1;
-      logError('reactivationNextSubject.send', error, {
+      logError('reactivationNextSubject.trigger', error, {
         userId: candidate.user_id,
         materiaId: candidate.materia_id,
         campaignKey: CAMPAIGN_KEY,
       });
 
-      // Si Sender falla, liberamos la reserva para que el cron pueda reintentar otro día.
+      // Si Sender rechaza el evento, liberamos la reserva para que el cron pueda reintentar.
       const { error: cleanupError } = await db
         .from('email_campaign_deliveries')
         .delete()
