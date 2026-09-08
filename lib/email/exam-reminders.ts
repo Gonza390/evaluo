@@ -68,6 +68,12 @@ function getTemplateId(days: ReminderDays) {
   return process.env[envName]?.trim() || null;
 }
 
+function getReminderSubject(days: ReminderDays, materia: string) {
+  if (days === 7) return `Tu examen de ${materia} es en una semana`;
+  if (days === 3) return `Te quedan 3 días para tu examen de ${materia}`;
+  return `Mañana rendís ${materia}`;
+}
+
 function buildMaterialUrl(materialId: string, days: ReminderDays) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
   const url = new URL(getStudentMaterialRoute(materialId), baseUrl);
@@ -216,20 +222,28 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
             ? user.user_metadata.name
             : null;
       const displayName = profileName || fallbackName;
+      const displayFirstName = firstName(displayName);
       const materia = materiaNameById.get(material.materia_id) || 'tu materia';
+      const formattedExamDate = formatExamDate(material.exam_date);
+      const materialUrl = buildMaterialUrl(material.id, days);
+      const subject = getReminderSubject(days, materia);
 
       const senderResult = await sendSenderTemplate({
         templateId,
         toEmail: user.email,
         toName: displayName,
         variables: {
-          firstname: firstName(displayName),
+          subject,
+          firstname: displayFirstName,
+          nombre: displayFirstName,
           materia,
-          exam_date: formatExamDate(material.exam_date),
+          exam_date: formattedExamDate,
+          fecha_del_examen: formattedExamDate,
           exam_date_iso: material.exam_date,
           days_left: days,
           material_title: material.title,
-          material_url: buildMaterialUrl(material.id, days),
+          titulo_del_material: material.title,
+          material_url: materialUrl,
         },
       });
 
