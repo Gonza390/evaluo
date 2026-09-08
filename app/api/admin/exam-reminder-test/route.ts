@@ -64,9 +64,13 @@ async function handle(request: Request) {
   }
 
   const admin = createAdminClient();
+  // exam_date ya existe en producción, pero el tipo generado todavía no fue regenerado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+
   const [{ data: profile }, { data: material }] = await Promise.all([
     admin.from('profiles').select('nombre').eq('id', access.user.id).maybeSingle(),
-    admin
+    db
       .from('student_materials')
       .select('id,title,materia_id,exam_date')
       .eq('user_id', access.user.id)
