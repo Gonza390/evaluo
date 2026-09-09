@@ -66,7 +66,7 @@ export function UsersPanelV2({
       <div>
         <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">Usuarios</h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">
-          Lista paginada y métricas agregadas. Sólo se consultan los usuarios visibles en esta página.
+          Las métricas usan todas las cuentas registradas y el detalle se consulta por página. El estado activo indica un ingreso en los últimos 30 días.
         </p>
       </div>
 
