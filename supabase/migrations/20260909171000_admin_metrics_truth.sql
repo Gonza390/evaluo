@@ -115,13 +115,13 @@ insert into public.rag_question_stats (
 )
 select
   w.pregunta_id,
-  max(w.materia_id) as materia_id,
+  q.materia_id,
   count(*)::integer as veces_fallada,
   max(w.created_at) as updated_at
 from public.simulator_attempt_wrong_questions w
 join public.preguntas_banco q on q.id = w.pregunta_id
 where w.pregunta_id is not null
-group by w.pregunta_id;
+group by w.pregunta_id, q.materia_id;
 
 create or replace function public.refresh_rag_question_stat(p_pregunta_id uuid)
 returns void
