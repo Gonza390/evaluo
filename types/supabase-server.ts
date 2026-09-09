@@ -34,6 +34,30 @@ type AdminPerformanceFunctions = {
       correctas: number;
     }>;
   };
+  admin_product_user_journeys: {
+    Args: {
+      p_period_days?: number;
+      p_excluded_user_ids?: string[];
+    };
+    Returns: Array<{
+      user_id: string;
+      email: string;
+      registered_at: string;
+      source: string;
+      materia_id: string | null;
+      materia_name: string | null;
+      reached_materia: boolean;
+      content_available: boolean;
+      content_opened: boolean;
+      meaningful_study: boolean;
+      returned_48h: boolean;
+      active_days: number;
+      simulator_attempts: number;
+      pdf_selected: number;
+      pdf_uploads: number;
+      excluded_admin_sessions: number;
+    }>;
+  };
 };
 
 export type ServerDatabase = Omit<Database, 'public'> & {
