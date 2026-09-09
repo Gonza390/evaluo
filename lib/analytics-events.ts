@@ -1,5 +1,6 @@
 const ANALYTICS_EVENT_NAMES = [
   'page_view',
+  'acquisition_touch',
   'session_ping',
   'client_error',
   'login_success',
