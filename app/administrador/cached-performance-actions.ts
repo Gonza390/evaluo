@@ -112,7 +112,7 @@ async function loadUsuariosPageRows(
     admin.from('profiles').select('id, role').in('id', userIds),
     admin
       .from('user_subscriptions')
-      .select('user_id, status, plan_id, expires_at, current_period_end')
+      .select('user_id, status, plan_id, expires_at')
       .in('user_id', userIds),
     admin.rpc('admin_user_simulator_aggregates', { target_user_ids: userIds }),
   ]);
@@ -138,11 +138,10 @@ async function loadUsuariosPageRows(
     if (!row.user_id || row.status !== 'active') continue;
     if (planCodeById.get(row.plan_id) !== 'premium') continue;
 
-    const expirationDates = [row.expires_at, row.current_period_end]
-      .filter((value): value is string => typeof value === 'string' && value.length > 0)
-      .map((value) => new Date(value).getTime())
-      .filter(Number.isFinite);
-    if (expirationDates.some((timestamp) => timestamp <= now)) continue;
+    if (row.expires_at) {
+      const expiresAt = new Date(row.expires_at).getTime();
+      if (Number.isFinite(expiresAt) && expiresAt <= now) continue;
+    }
 
     premiumUsers.add(row.user_id);
   }
