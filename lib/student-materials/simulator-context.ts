@@ -106,10 +106,14 @@ function buildQuestionQuery(question: QuestionContextInput) {
   return cleanLine(`${question.enunciado} ${question.respuesta_correcta} ${options}`);
 }
 
-function computeMaterialPriority(material: StudentMaterialRow, question: QuestionContextInput, userId: string) {
+function computeMaterialPriority(
+  material: StudentMaterialRow,
+  question: QuestionContextInput,
+  userId: string | null
+) {
   let score = 0;
 
-  if (material.user_id === userId) score += 6;
+  if (userId && material.user_id === userId) score += 6;
   if (material.visibility === 'shared') score += 1;
   if (question.material_id && material.id === question.material_id) score += 10;
   if (question.carrera_id && material.carrera_id === question.carrera_id) score += 3;
@@ -150,12 +154,18 @@ export async function buildStudentMaterialContextsForQuestions(input: {
     return new Map<string, StudentMaterialQuestionContext>();
   }
 
-  const { data: materialRows, error: materialsError } = await input.admin
+  const userId = input.userId.trim() || null;
+  let materialsQuery = input.admin
     .from('student_materials')
     .select('id, user_id, materia_id, carrera_id, universidad_id, title, visibility, processing_status')
     .eq('materia_id', input.materiaId)
-    .eq('processing_status', 'ready')
-    .or(`user_id.eq.${input.userId},visibility.eq.shared`)
+    .eq('processing_status', 'ready');
+
+  materialsQuery = userId
+    ? materialsQuery.or(`user_id.eq.${userId},visibility.eq.shared`)
+    : materialsQuery.eq('visibility', 'shared');
+
+  const { data: materialRows, error: materialsError } = await materialsQuery
     .order('updated_at', { ascending: false })
     .limit(20);
 
@@ -212,7 +222,7 @@ export async function buildStudentMaterialContextsForQuestions(input: {
     const rankedMaterials = materials
       .map((material) => ({
         material,
-        priority: computeMaterialPriority(material, question, input.userId),
+        priority: computeMaterialPriority(material, question, userId),
       }))
       .sort((a, b) => b.priority - a.priority)
       .slice(0, 6);
