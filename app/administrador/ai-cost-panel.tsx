@@ -74,8 +74,8 @@ export function AICostPanel({
             <h2 className="text-lg font-semibold tracking-tight">PDFs · consumo y costo IA</h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Telemetría real de procesamiento. El costo equivalente usa la tarifa paga de Gemini 2.5
-            Flash-Lite para dimensionar cuánto costaría el mismo consumo fuera del Free Tier.
+            Telemetría real de procesamiento. El costo equivalente usa la tarifa paga vigente del
+            modelo fijado para dimensionar cuánto costaría el mismo consumo fuera del Free Tier.
           </p>
         </div>
         <div className="rounded-xl border border-border bg-muted/40 px-3 py-2 text-xs">
