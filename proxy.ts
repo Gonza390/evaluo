@@ -23,8 +23,14 @@ function createClient(request: NextRequest, response: NextResponse) {
 }
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
+  const isMarketingPanel =
+    pathname === '/administrador' && request.nextUrl.searchParams.get('panel') === 'marketing';
+  const marketingUrl = request.nextUrl.clone();
+  if (isMarketingPanel) {
+    marketingUrl.pathname = '/administrador/marketing';
+  }
+  const response = isMarketingPanel ? NextResponse.rewrite(marketingUrl) : NextResponse.next();
 
   const isRegularSimulatorRoute =
     pathname === '/simulador' || /^\/simulador\/[^/]+\/\d+$/.test(pathname);
