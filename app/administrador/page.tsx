@@ -53,6 +53,7 @@ const PANELS: Array<{
 const PERIOD_OPTIONS = [
   { value: 1, label: 'Hoy' },
   { value: 7, label: '7 días' },
+  { value: 14, label: '14 días' },
   { value: 30, label: '30 días' },
 ] as const;
 
@@ -146,7 +147,9 @@ export default async function AdministradorPage({
     iaFeedbackReviewResult,
     iaCostResult,
   ] = await Promise.all([
-    needsAcquisition ? obtenerAdquisicionAdministrador(activePeriod) : Promise.resolve(null),
+    needsAcquisition
+      ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
+      : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
@@ -171,7 +174,7 @@ export default async function AdministradorPage({
               Activación, conversión, cobertura y retención de los usuarios.
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1">
+          <div className="grid grid-cols-4 gap-1 rounded-xl border border-slate-200 bg-white p-1">
             {PERIOD_OPTIONS.map((option) => (
               <Link
                 key={option.value}
