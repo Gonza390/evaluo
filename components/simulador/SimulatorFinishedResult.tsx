@@ -11,6 +11,7 @@ import {
   TrendingUp,
   UploadCloud,
 } from 'lucide-react';
+import { TrackedLink } from '@/components/marketing/tracked-link';
 import { supabase } from '@/lib/supabase-client';
 import { getMateriaRoute } from '@/lib/routes';
 import { logError } from '@/lib/observability';
@@ -73,6 +74,9 @@ export function SimulatorFinishedResult({
   const materiaHref = getMateriaRoute(materiaId, carreraId);
   const errorsHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
   const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
+  const ownMaterialHref = userId
+    ? uploadHref
+    : `/login?mode=signup&next=${encodeURIComponent(uploadHref)}`;
 
   const previousGrade = useMemo(() => {
     if (!previousAttempt || previousAttempt.total_questions <= 0) return null;
@@ -317,53 +321,63 @@ export function SimulatorFinishedResult({
                 {hasMaterial === null ? (
                   <p className="mt-3 text-sm text-slate-500">Buscando material disponible...</p>
                 ) : hasMaterial ? (
-                  <div className="mt-3">
-                    <div className="flex items-start gap-3">
-                      <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
-                      <div>
-                        <h3 className="text-lg font-bold tracking-[-0.025em] text-slate-950">
-                          Hay material disponible para seguir estudiando
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">
-                          Revisá los resúmenes y recursos compartidos de {materiaNombre || 'esta materia'} antes de volver a rendir.
-                        </p>
-                        <Link
-                          href={materiaHref}
-                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5] transition hover:text-[#4338CA]"
-                        >
-                          Ver material de la materia
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">
-                      ¿Preferís estudiar con tus propios apuntes?{' '}
-                      <Link href={uploadHref} className="font-semibold text-slate-700 hover:text-[#4F46E5]">
-                        Preparar mis apuntes →
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
                   <div className="mt-3 flex items-start gap-3">
-                    <UploadCloud className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
+                    <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
                     <div>
                       <h3 className="text-lg font-bold tracking-[-0.025em] text-slate-950">
-                        ¿Tenés apuntes de {materiaNombre || 'esta materia'}?
+                        Hay material disponible para seguir estudiando
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Convertí tu PDF en resumen, glosario y flashcards para seguir preparando esta materia desde Evaluo.
+                        Revisá los resúmenes y recursos compartidos de {materiaNombre || 'esta materia'} antes de volver a rendir.
                       </p>
                       <Link
-                        href={uploadHref}
+                        href={materiaHref}
                         className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5] transition hover:text-[#4338CA]"
                       >
-                        Preparar mis apuntes
+                        Ver material de la materia
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                     </div>
                   </div>
-                )}
+                ) : null}
+
+                <div className="mt-6 overflow-hidden rounded-[22px] border border-blue-200 bg-[linear-gradient(135deg,#EFF6FF_0%,#FFFFFF_48%,#EEF2FF_100%)] p-4 shadow-[0_14px_34px_rgba(37,99,235,0.08)] sm:p-5">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#2563EB] text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)]">
+                        <UploadCloud className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold tracking-[0.14em] text-blue-600 uppercase">
+                          Tu próximo paso
+                        </p>
+                        <h3 className="mt-1 text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">
+                          Ahora estudiá {materiaNombre || 'esta materia'} con tus propios apuntes
+                        </h3>
+                        <p className="mt-1.5 max-w-xl text-[13px] leading-5 text-slate-600">
+                          Subí tu PDF y Evaluo te prepara resumen, glosario, tarjetas y ejercicios sobre tu propio material.
+                        </p>
+                      </div>
+                    </div>
+
+                    <TrackedLink
+                      href={ownMaterialHref}
+                      eventName="cta_click"
+                      payload={{
+                        location: 'simulator_result_pdf_activation',
+                        cta_name: 'upload_own_pdf_after_simulator',
+                        materia_id: materiaId,
+                        materia_nombre: materiaNombre || null,
+                        parcial,
+                        destination: ownMaterialHref,
+                      }}
+                      className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
+                    >
+                      Subir mis apuntes{materiaNombre ? ` de ${materiaNombre}` : ''}
+                      <ArrowRight className="h-4 w-4" />
+                    </TrackedLink>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
