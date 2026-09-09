@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BadgePercent, BookOpen, Bot, Megaphone, Users, Waypoints } from 'lucide-react';
+import { BadgePercent, BookOpen, Bot, Megaphone, Search, Users, Waypoints } from 'lucide-react';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -15,6 +15,8 @@ import {
 import { obtenerLogsAdministradorRapido } from './logs-performance-actions';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
+import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
+import { AcquisitionPanel } from './acquisition-panel';
 import { StorageAuditButton } from './storage-audit-button';
 import {
   AICostPanel,
@@ -25,7 +27,14 @@ import {
   UsersPanelV2,
 } from './lazy-panels';
 
-type PanelKey = 'marketing' | 'referidos' | 'biblioteca' | 'usuarios' | 'logs' | 'ia';
+type PanelKey =
+  | 'marketing'
+  | 'adquisicion'
+  | 'referidos'
+  | 'biblioteca'
+  | 'usuarios'
+  | 'logs'
+  | 'ia';
 
 const PANELS: Array<{
   key: PanelKey;
@@ -33,6 +42,7 @@ const PANELS: Array<{
   icon: React.ComponentType<{ className?: string }>;
 }> = [
   { key: 'marketing', label: 'Producto', icon: Megaphone },
+  { key: 'adquisicion', label: 'Adquisición', icon: Search },
   { key: 'referidos', label: 'Referidos', icon: BadgePercent },
   { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
@@ -45,6 +55,13 @@ const PERIOD_OPTIONS = [
   { value: 7, label: '7 días' },
   { value: 30, label: '30 días' },
 ] as const;
+
+const ACQUISITION_SOURCE_KEYS: AcquisitionSourceKey[] = [
+  'google',
+  'whatsapp',
+  'instagram',
+  'linkedin',
+];
 
 function ErrorPanel({ message }: { message: string }) {
   return (
@@ -90,6 +107,7 @@ export default async function AdministradorPage({
     panel?: string;
     period?: string;
     usersPage?: string;
+    source?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -101,7 +119,14 @@ export default async function AdministradorPage({
   const activePeriodLabel =
     PERIOD_OPTIONS.find((option) => option.value === activePeriod)?.label ?? '7 días';
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
+  const requestedSource = String(params.source ?? '').trim().toLowerCase();
+  const selectedAcquisitionSource = ACQUISITION_SOURCE_KEYS.includes(
+    requestedSource as AcquisitionSourceKey
+  )
+    ? (requestedSource as AcquisitionSourceKey)
+    : null;
 
+  const needsAcquisition = activePanel === 'adquisicion';
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsUsers = activePanel === 'usuarios';
@@ -109,6 +134,7 @@ export default async function AdministradorPage({
   const needsIA = activePanel === 'ia';
 
   const [
+    acquisitionResult,
     referralResult,
     bibliotecaResult,
     bibliotecaStatsResult,
@@ -120,6 +146,7 @@ export default async function AdministradorPage({
     iaFeedbackReviewResult,
     iaCostResult,
   ] = await Promise.all([
+    needsAcquisition ? obtenerAdquisicionAdministrador(activePeriod) : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
@@ -163,6 +190,17 @@ export default async function AdministradorPage({
         <ConversionPanel stats={null} periodLabel={activePeriodLabel} />
       </section>
     );
+  } else if (activePanel === 'adquisicion') {
+    panelContent =
+      acquisitionResult?.success && acquisitionResult.stats ? (
+        <AcquisitionPanel
+          stats={acquisitionResult.stats}
+          activePeriod={activePeriod}
+          selectedSource={selectedAcquisitionSource}
+        />
+      ) : (
+        <ErrorPanel message={acquisitionResult?.message ?? 'No pudimos cargar Adquisición.'} />
+      );
   } else if (activePanel === 'referidos') {
     panelContent =
       referralResult?.success && referralResult.data ? (
