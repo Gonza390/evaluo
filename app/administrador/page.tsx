@@ -81,6 +81,7 @@ function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey;
           <Link
             key={panel.key}
             href={`/administrador?panel=${panel.key}&period=${activePeriod}`}
+            prefetch={false}
             className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition lg:w-full ${
               active
                 ? 'bg-indigo-50 text-indigo-700'
@@ -171,6 +172,7 @@ export default async function AdministradorPage({
               <Link
                 key={option.value}
                 href={`/administrador?panel=marketing&period=${option.value}`}
+                prefetch={false}
                 className={`inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-semibold transition ${
                   option.value === activePeriod
                     ? 'bg-indigo-50 text-indigo-700'
@@ -308,12 +310,14 @@ export default async function AdministradorPage({
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
               <Link
                 href="/administrador/feedback-simulador"
+                prefetch={false}
                 className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-slate-600 hover:text-indigo-700"
               >
                 Feedback simulador
               </Link>
               <Link
                 href="/administrador/solicitudes"
+                prefetch={false}
                 className="inline-flex min-h-11 items-center rounded-xl bg-slate-950 px-3 text-white hover:bg-slate-800"
               >
                 Solicitudes
