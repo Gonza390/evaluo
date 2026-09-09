@@ -12,7 +12,6 @@ export const AICostPanel = dynamic(() =>
   import('./ai-cost-panel').then((module) => module.AICostPanel)
 );
 export const IAPanel = dynamic(() => import('./ia-panel').then((module) => module.IAPanel));
-export const LogsPanel = dynamic(() => import('./logs-panel').then((module) => module.LogsPanel));
 export const UsersPanelV2 = dynamic(() =>
   import('./users-panel-v2').then((module) => module.UsersPanelV2)
 );
