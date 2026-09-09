@@ -16,7 +16,7 @@ import {
 
 type ProductAnalytics = {
   generatedAt: string;
-  period: 1 | 7 | 30;
+  period: 1 | 7 | 14 | 30;
   kpis: {
     newUsers: number;
     activationPct: number;
@@ -94,8 +94,9 @@ type ProductAnalytics = {
   };
 };
 
-function periodFromLabel(label: string): 1 | 7 | 30 {
+function periodFromLabel(label: string): 1 | 7 | 14 | 30 {
   if (label.toLowerCase().includes('hoy')) return 1;
+  if (label.includes('14')) return 14;
   if (label.includes('30')) return 30;
   return 7;
 }
