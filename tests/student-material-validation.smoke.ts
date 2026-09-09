@@ -5,6 +5,8 @@ import {
   buildStudentMaterialStoragePath,
   isOwnedStudentMaterialStoragePath,
   isPdfFileSignature,
+  MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+  MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES,
   MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
   MAX_STUDENT_MATERIAL_PDF_PAGES,
   studentMaterialIdSchema,
@@ -37,7 +39,9 @@ async function createPdfWithPages(pageCount: number) {
 }
 
 assert.equal(MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES, 20 * 1024 * 1024);
-assert.equal(MAX_STUDENT_MATERIAL_PDF_PAGES, 30);
+assert.equal(MAX_FREE_STUDENT_MATERIAL_PDF_PAGES, 50);
+assert.equal(MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES, 100);
+assert.equal(MAX_STUDENT_MATERIAL_PDF_PAGES, MAX_FREE_STUDENT_MATERIAL_PDF_PAGES);
 assert.equal(isPdfFileSignature(new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d])), true);
 assert.equal(isPdfFileSignature(new Uint8Array([0x25, 0x50, 0x44, 0x46])), false);
 assert.equal(studentMaterialIdSchema.safeParse('not-an-id').success, false);
@@ -107,18 +111,32 @@ assert.equal(
   'La subida firmada debe rechazar MIME types incompatibles.'
 );
 
-const thirtyPagePdf = await createPdfWithPages(30);
+const fiftyPagePdf = await createPdfWithPages(50);
 assert.equal(
-  await assertStudentMaterialPdfPageLimit(thirtyPagePdf, { isPremium: false }),
-  30,
-  'Un PDF de exactamente 30 páginas debe ser válido para Free.'
+  await assertStudentMaterialPdfPageLimit(fiftyPagePdf, { isPremium: false }),
+  50,
+  'Un PDF de exactamente 50 páginas debe ser válido para Free.'
 );
 
-const thirtyOnePagePdf = await createPdfWithPages(31);
+const fiftyOnePagePdf = await createPdfWithPages(51);
 await assert.rejects(
-  () => assertStudentMaterialPdfPageLimit(thirtyOnePagePdf, { isPremium: false }),
-  /31 páginas.*Free.*30 páginas/i,
-  'Un PDF de 31 páginas debe rechazarse para Free.'
+  () => assertStudentMaterialPdfPageLimit(fiftyOnePagePdf, { isPremium: false }),
+  /51 páginas.*Free.*50 páginas.*Premium.*100/i,
+  'Un PDF de 51 páginas debe rechazarse para Free e informar el límite Premium.'
+);
+
+const oneHundredPagePdf = await createPdfWithPages(100);
+assert.equal(
+  await assertStudentMaterialPdfPageLimit(oneHundredPagePdf, { isPremium: true }),
+  100,
+  'Un PDF de exactamente 100 páginas debe ser válido para Premium.'
+);
+
+const oneHundredOnePagePdf = await createPdfWithPages(101);
+await assert.rejects(
+  () => assertStudentMaterialPdfPageLimit(oneHundredOnePagePdf, { isPremium: true }),
+  /101 páginas.*Premium.*100 páginas/i,
+  'Un PDF de 101 páginas debe rechazarse para Premium.'
 );
 
 await assert.rejects(
