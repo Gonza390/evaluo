@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BadgePercent, BookOpen, Bot, Megaphone, Search, Users, Waypoints } from 'lucide-react';
+import { BadgePercent, BookOpen, Bot, Megaphone, Search, Users } from 'lucide-react';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -12,18 +12,15 @@ import {
   obtenerBibliotecaResumenAdministradorCacheado,
   obtenerUsuariosAdministradorPaginadoCacheado,
 } from './cached-performance-actions';
-import { obtenerLogsAdministradorRapido } from './logs-performance-actions';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
 import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
 import { AcquisitionPanel } from './acquisition-panel';
-import { StorageAuditButton } from './storage-audit-button';
 import {
   AICostPanel,
   BibliotecaPanel,
   ConversionPanel,
   IAPanel,
-  LogsPanel,
   UsersPanelV2,
 } from './lazy-panels';
 
@@ -33,7 +30,6 @@ type PanelKey =
   | 'referidos'
   | 'biblioteca'
   | 'usuarios'
-  | 'logs'
   | 'ia';
 
 const PANELS: Array<{
@@ -46,7 +42,6 @@ const PANELS: Array<{
   { key: 'referidos', label: 'Referidos', icon: BadgePercent },
   { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
-  { key: 'logs', label: 'Logs', icon: Waypoints },
   { key: 'ia', label: 'IA', icon: Bot },
 ];
 
@@ -131,7 +126,6 @@ export default async function AdministradorPage({
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsUsers = activePanel === 'usuarios';
-  const needsLogs = activePanel === 'logs';
   const needsIA = activePanel === 'ia';
 
   const [
@@ -140,7 +134,6 @@ export default async function AdministradorPage({
     bibliotecaResult,
     bibliotecaStatsResult,
     usersResult,
-    logsResult,
     iaPromptResult,
     iaRankingResult,
     iaFeedbackStatsResult,
@@ -154,7 +147,6 @@ export default async function AdministradorPage({
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
-    needsLogs ? obtenerLogsAdministradorRapido() : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -253,16 +245,6 @@ export default async function AdministradorPage({
         />
       );
     }
-  } else if (activePanel === 'logs') {
-    panelContent =
-      logsResult?.success && logsResult.data ? (
-        <>
-          <StorageAuditButton scannedAt={logsResult.storageAuditScannedAt ?? null} />
-          <LogsPanel data={logsResult.data} />
-        </>
-      ) : (
-        <ErrorPanel message={logsResult?.message ?? 'No pudimos cargar Logs.'} />
-      );
   } else if (
     iaPromptResult?.success &&
     iaRankingResult?.success &&
