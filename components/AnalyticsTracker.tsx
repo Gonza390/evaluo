@@ -33,6 +33,18 @@ function getRouteContext() {
   };
 }
 
+function getEntryPageType(pathname: string) {
+  if (pathname === '/') return 'home';
+  if (pathname.startsWith('/explorar/materia/')) return 'materia';
+  if (pathname === '/explorar' || pathname.startsWith('/explorar/')) return 'explorar';
+  if (pathname.startsWith('/pregunteros')) return 'pregunteros';
+  if (pathname.startsWith('/simulador')) return 'simulador';
+  if (pathname.startsWith('/materias')) return 'materias';
+  if (pathname.startsWith('/recursos')) return 'recursos';
+  if (pathname.startsWith('/dashboard')) return 'dashboard';
+  return 'other';
+}
+
 async function track(eventName: string, payload: Record<string, unknown>) {
   try {
     await fetch('/api/analytics/track', {
@@ -55,6 +67,7 @@ export default function AnalyticsTracker() {
   const { user, loading } = useUser();
   const visibleSinceRef = useRef<number>(Date.now());
   const previousUserIdRef = useRef<string | null | undefined>(undefined);
+  const acquisitionTrackedRef = useRef(false);
   const queryString = searchParams.toString();
 
   useEffect(() => {
@@ -64,16 +77,42 @@ export default function AnalyticsTracker() {
 
     const sessionKey = getSessionKey();
     const deviceType = getDeviceType();
-    captureAttributionFromLocation(window.location.search, window.location.pathname);
+    const currentTouch = captureAttributionFromLocation(
+      window.location.search,
+      window.location.pathname,
+      document.referrer
+    );
     const attribution = getAttributionSnapshot();
     const routeContext = getRouteContext();
+
+    if (!acquisitionTrackedRef.current) {
+      acquisitionTrackedRef.current = true;
+      const landingPath = queryString ? `${pathname}?${queryString}` : pathname;
+
+      void track('acquisition_touch', {
+        session_key: sessionKey,
+        path: pathname,
+        device_type: deviceType,
+        user_id: user?.id ?? null,
+        metadata: {
+          source: currentTouch?.source ?? 'direct',
+          landing_path: landingPath,
+          referrer: document.referrer || null,
+          entry_page_type: getEntryPageType(pathname),
+          attribution: currentTouch,
+        },
+      });
+    }
 
     void track('page_view', {
       session_key: sessionKey,
       path: pathname,
       device_type: deviceType,
       user_id: user?.id ?? null,
-      metadata: attribution || Object.keys(routeContext).length > 0 ? { attribution, ...routeContext } : undefined,
+      metadata:
+        attribution || Object.keys(routeContext).length > 0
+          ? { attribution, ...routeContext }
+          : undefined,
     });
   }, [loading, pathname, queryString, user?.id]);
 
