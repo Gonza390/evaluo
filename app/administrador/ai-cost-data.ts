@@ -5,8 +5,10 @@ import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 const USAGE_ROW_LIMIT = 10_000;
-const GEMINI_INPUT_USD_PER_MILLION = 0.1;
-const GEMINI_OUTPUT_USD_PER_MILLION = 0.4;
+// Gemini 3.5 Flash-Lite standard paid-tier pricing per 1M tokens.
+// Source of truth: https://ai.google.dev/gemini-api/docs/pricing
+const GEMINI_INPUT_USD_PER_MILLION = 0.3;
+const GEMINI_OUTPUT_USD_PER_MILLION = 2.5;
 
 type UsageRow = {
   student_material_id: string;
