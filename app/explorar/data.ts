@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase-public';
-import { fetchExplorarCatalogData } from '@/lib/data/catalog';
+import { fetchExplorarCatalogDataRpc } from '@/lib/data/catalog-performance';
 
 export type ExplorarUniversidad = {
   id: string;
@@ -25,7 +25,7 @@ export type ExplorarData = {
 };
 
 const loadExplorarData = unstable_cache(
-  async () => fetchExplorarCatalogData(createPublicClient()) as Promise<ExplorarData>,
+  async () => fetchExplorarCatalogDataRpc(createPublicClient()) as Promise<ExplorarData>,
   ['explorar-catalog'],
   {
     revalidate: 600,
