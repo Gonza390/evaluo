@@ -27,10 +27,21 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
+    type: 'website',
+    siteName: 'Evaluo',
+    locale: 'es_AR',
     title: 'Evaluo | Prepará mejor tu próximo parcial',
     description:
       'Materiales de tu materia, apuntes transformados en herramientas de estudio y práctica para llegar mejor preparado al parcial.',
     url: '/',
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Evaluo | Prepará mejor tu próximo parcial',
+      },
+    ],
   },
 };
 
@@ -71,6 +82,12 @@ export default function Home() {
   const primaryHref = '/login?mode=signup';
   return (
     <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+      <a
+        href="#producto"
+        className="fixed top-3 left-3 z-[100] -translate-y-20 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-lg transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
+      >
+        Saltar al contenido
+      </a>
       <MarketingAnalyticsSlot />
       <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(FAQ_ITEMS)]} />
 
