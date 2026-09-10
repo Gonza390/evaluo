@@ -1,11 +1,10 @@
-import type { buildPedagogicalArtifacts as BuildPedagogicalArtifacts } from '@/lib/student-material-summary';
 import { buildPedagogicalArtifacts } from '@/lib/student-material-summary';
 import { logError } from '@/lib/observability';
 
 export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = 1;
 
-type BuildInput = Parameters<typeof BuildPedagogicalArtifacts>[0];
-type Artifacts = ReturnType<typeof BuildPedagogicalArtifacts>;
+type BuildInput = Parameters<typeof buildPedagogicalArtifacts>[0];
+type Artifacts = ReturnType<typeof buildPedagogicalArtifacts>;
 type UntypedAdmin = {
   from: (table: string) => any;
 };
@@ -30,7 +29,11 @@ export async function loadOrBuildPedagogicalArtifacts({
     .eq('id', materialId)
     .maybeSingle();
 
-  if (!cachedError && cachedRow?.pedagogical_artifacts_version === CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION && cachedRow?.pedagogical_artifacts) {
+  if (
+    !cachedError &&
+    cachedRow?.pedagogical_artifacts_version === CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION &&
+    cachedRow?.pedagogical_artifacts
+  ) {
     return cachedRow.pedagogical_artifacts as Artifacts;
   }
 
