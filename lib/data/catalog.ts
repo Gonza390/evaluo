@@ -4,6 +4,23 @@ import { isUuid } from '@/lib/uuid';
 
 type QueryClient = Pick<SupabaseClient<Database>, 'from'>;
 
+type CatalogSignalRpcRow = {
+  materia_id: string | null;
+  has_questions: boolean | null;
+  has_summary: boolean | null;
+  has_resources: boolean | null;
+  has_shared_material: boolean | null;
+};
+
+type CatalogRpcResult = {
+  data: CatalogSignalRpcRow[] | null;
+  error: { message?: string } | null;
+};
+
+type CatalogRpcClient = {
+  rpc: (fn: 'get_catalog_content_signals') => PromiseLike<CatalogRpcResult>;
+};
+
 export interface CatalogCarrera {
   id: string;
   nombre: string;
@@ -48,7 +65,7 @@ export type CatalogContentSignals = {
   questionMateriaIds: string[];
 };
 
-export async function fetchCatalogContentSignals(
+async function fetchCatalogContentSignalsLegacy(
   client: QueryClient
 ): Promise<CatalogContentSignals> {
   const [questionsResult, summariesResult, resourcesResult, studentMaterialsResult] =
@@ -81,6 +98,36 @@ export async function fetchCatalogContentSignals(
     contentMateriaIds: [...contentMateriaIds],
     questionMateriaIds: [...questionMateriaIds],
   };
+}
+
+export async function fetchCatalogContentSignals(
+  client: QueryClient
+): Promise<CatalogContentSignals> {
+  try {
+    const rpcClient = client as unknown as CatalogRpcClient;
+    const { data, error } = await rpcClient.rpc('get_catalog_content_signals');
+
+    if (error) throw new Error(error.message || 'No se pudieron cargar las señales del catálogo.');
+
+    const questionMateriaIds = new Set<string>();
+    const contentMateriaIds = new Set<string>();
+
+    for (const row of data ?? []) {
+      if (!row.materia_id) continue;
+      const materiaId = String(row.materia_id);
+      if (row.has_questions) questionMateriaIds.add(materiaId);
+      if (row.has_questions || row.has_summary || row.has_resources || row.has_shared_material) {
+        contentMateriaIds.add(materiaId);
+      }
+    }
+
+    return {
+      contentMateriaIds: [...contentMateriaIds],
+      questionMateriaIds: [...questionMateriaIds],
+    };
+  } catch {
+    return fetchCatalogContentSignalsLegacy(client);
+  }
 }
 
 export async function fetchCarrerasByUniversidad(
