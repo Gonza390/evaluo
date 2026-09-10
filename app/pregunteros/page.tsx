@@ -9,10 +9,7 @@ import { createPublicClient } from '@/lib/supabase-public';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { isSiglo21University } from '@/lib/seo-search-copy';
-import {
-  PregunteroHubClient,
-  type PregunteroHubCarrera,
-} from './preguntero-hub-client';
+import { PregunteroHubClient, type PregunteroHubCarrera } from './preguntero-hub-client';
 
 export const revalidate = 600;
 
@@ -50,22 +47,20 @@ export const metadata: Metadata = {
 const loadPregunteroHubData = unstable_cache(
   async (): Promise<PregunteroHubCarrera[]> => {
     const client = createPublicClient();
-    const [universidadesResult, carrerasResult, relacionesResult, materiasResult, preguntasResult] =
-      await Promise.all([
-        client.from('universidades').select('id, nombre').order('nombre'),
-        client.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-        client.from('carrera_materias').select('carrera_id, materia_id').limit(10000),
-        client.from('materias').select('id, nombre').order('nombre').limit(10000),
-        client.from('preguntas_banco_public').select('materia_id').limit(10000),
-      ]);
+    const [universidadesResult, carrerasResult] = await Promise.all([
+      client.from('universidades').select('id, nombre').order('nombre'),
+      // Consultar existencia por materia evita inferir el catálogo desde las primeras
+      // 1.000 preguntas/relaciones que permite devolver la API de Supabase.
+      client
+        .from('carreras')
+        .select(
+          'id, nombre, universidad_id, carrera_materias!inner(materias!inner(id, nombre, preguntas_banco_public!inner(id)))'
+        )
+        .limit(1, { referencedTable: 'carrera_materias.materias.preguntas_banco_public' })
+        .order('nombre'),
+    ]);
 
-    for (const result of [
-      universidadesResult,
-      carrerasResult,
-      relacionesResult,
-      materiasResult,
-      preguntasResult,
-    ]) {
+    for (const result of [universidadesResult, carrerasResult]) {
       if (result.error) throw result.error;
     }
 
@@ -75,39 +70,27 @@ const loadPregunteroHubData = unstable_cache(
         universidad.nombre.trim(),
       ])
     );
-    const materiaById = new Map(
-      (materiasResult.data ?? []).map((materia) => [materia.id, materia.nombre.trim()])
-    );
-    const questionMateriaIds = new Set(
-      (preguntasResult.data ?? [])
-        .map((row) => row.materia_id)
-        .filter((materiaId): materiaId is string => Boolean(materiaId))
-    );
-    const materiaIdsByCarrera = new Map<string, Set<string>>();
-
-    for (const relation of relacionesResult.data ?? []) {
-      if (!relation.carrera_id || !relation.materia_id || !questionMateriaIds.has(relation.materia_id)) {
-        continue;
-      }
-      const current = materiaIdsByCarrera.get(relation.carrera_id) ?? new Set<string>();
-      current.add(relation.materia_id);
-      materiaIdsByCarrera.set(relation.carrera_id, current);
-    }
-
     return (carrerasResult.data ?? [])
       .flatMap((carrera) => {
         const universidadNombre = carrera.universidad_id
           ? universidadById.get(carrera.universidad_id)
           : null;
-        const materiaIds = materiaIdsByCarrera.get(carrera.id);
-        if (!universidadNombre || !materiaIds || materiaIds.size === 0) return [];
+        if (!universidadNombre) return [];
 
-        const materias = Array.from(materiaIds)
-          .flatMap((materiaId) => {
-            const materiaNombre = materiaById.get(materiaId);
-            return materiaNombre ? [{ materiaId, materiaNombre }] : [];
-          })
-          .sort((a, b) => a.materiaNombre.localeCompare(b.materiaNombre, 'es'));
+        const materias = Array.from(
+          new Map(
+            carrera.carrera_materias.flatMap(({ materias: materia }) =>
+              materia
+                ? [
+                    [
+                      materia.id,
+                      { materiaId: materia.id, materiaNombre: materia.nombre.trim() },
+                    ] as const,
+                  ]
+                : []
+            )
+          ).values()
+        ).sort((a, b) => a.materiaNombre.localeCompare(b.materiaNombre, 'es'));
 
         if (materias.length === 0) return [];
         return [
@@ -127,7 +110,7 @@ const loadPregunteroHubData = unstable_cache(
         return byUniversity || a.carreraNombre.localeCompare(b.carreraNombre, 'es');
       });
   },
-  ['preguntero-hub-v5'],
+  ['preguntero-hub-v6'],
   { revalidate: 600, tags: ['universidad-data'] }
 );
 
