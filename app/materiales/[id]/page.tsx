@@ -16,10 +16,8 @@ import { recoverStaleStudentMaterialJobs } from '@/lib/student-material-jobs';
 import { isUuid } from '@/lib/uuid';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildShareCardPath } from '@/lib/share-card';
-import {
-  buildPedagogicalArtifacts,
-  ensureStudentMaterialStudyArtifacts,
-} from '@/lib/student-material-summary';
+import { ensureStudentMaterialStudyArtifacts } from '@/lib/student-material-summary';
+import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-pedagogical-cache';
 import { createClientServer } from '@/lib/supabase-server';
 
 type PageProps = {
@@ -243,34 +241,11 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       });
     }
 
-    const [{ data: sourceChunks }, modelResult] = await Promise.all([
-      admin
-        .from('student_material_chunks')
-        .select('chunk_text, page_start, page_end, section_title')
-        .eq('student_material_id', material.id)
-        .order('chunk_index', { ascending: true }),
-      (admin as unknown as { from: (table: string) => any })
-        .from('student_materials')
-        .select('pedagogical_model')
-        .eq('id', material.id)
-        .maybeSingle(),
-    ]);
-
-    const canonicalModel = (modelResult.data?.pedagogical_model ?? null) as Parameters<
-      typeof buildPedagogicalArtifacts
-    >[0]['canonicalModel'];
-
-    const pedagogicalArtifacts = buildPedagogicalArtifacts({
+    const pedagogicalArtifacts = await loadOrBuildPedagogicalArtifacts({
+      admin,
+      materialId: material.id,
       summary: studySummary,
       glossary: studyGlossary,
-      canonicalModel,
-      chunks: (sourceChunks ?? []).map((chunk) => ({
-        text: chunk.chunk_text,
-        pageStart: chunk.page_start,
-        pageEnd: chunk.page_end,
-        sectionTitle: chunk.section_title,
-        excerpt: '',
-      })),
     });
 
     const visibility = normalizeMaterialVisibility(material.visibility);
