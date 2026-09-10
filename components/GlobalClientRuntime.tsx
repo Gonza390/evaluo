@@ -25,6 +25,10 @@ function isLightweightPublicRoute(pathname: string) {
     '/pregunteros',
     '/resumenes',
     '/materias',
+    '/explorar',
+    '/login',
+    '/empezar',
+    '/demo',
     '/pricing',
     '/copyright',
     '/terminos',
@@ -38,7 +42,10 @@ function isLightweightPublicRoute(pathname: string) {
     pathname.startsWith('/funciones/') ||
     pathname.startsWith('/pregunteros/') ||
     pathname.startsWith('/resumenes/') ||
-    pathname.startsWith('/universidad/')
+    pathname.startsWith('/universidad/') ||
+    pathname.startsWith('/explorar/') ||
+    pathname.startsWith('/estudiar/') ||
+    pathname.startsWith('/landings/')
   );
 }
 
