@@ -1,13 +1,13 @@
 import { unstable_cache } from 'next/cache';
 import MateriaList from '@/components/materia-list';
 import { fetchSharedStudentMaterialsByCarrera } from '@/lib/data/student-materials';
-import { fetchCatalogContentSignals } from '@/lib/data/catalog';
+import { fetchCatalogContentSignalsRpc } from '@/lib/data/catalog-performance';
 import { createPublicClient } from '@/lib/supabase-public';
 import { getMateriasByCarrera } from '@/services/api-server';
 
 const loadCatalogContentSignals = unstable_cache(
-  () => fetchCatalogContentSignals(createPublicClient()),
-  ['catalog-content-signals'],
+  () => fetchCatalogContentSignalsRpc(createPublicClient()),
+  ['catalog-content-signals-v2'],
   { revalidate: 600, tags: ['catalog-content-signals'] }
 );
 
