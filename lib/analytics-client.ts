@@ -17,7 +17,7 @@ type AnalyticsQueueItem = {
 };
 
 const analyticsQueue: AnalyticsQueueItem[] = [];
-let analyticsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+let analyticsFlushTimer: number | null = null;
 let lifecycleListenersInstalled = false;
 
 function randomId() {
