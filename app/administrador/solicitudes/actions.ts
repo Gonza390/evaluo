@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { requireAdminAccess } from '@/lib/auth';
 import { logError } from '@/lib/observability';
@@ -101,9 +101,12 @@ async function resolveAdminUserEmails(userIds: Array<string | null | undefined>)
 }
 
 function revalidateAcademicCatalog() {
+  updateTag('explorar-catalog');
+  updateTag('universidad-data');
   revalidatePath('/administrador');
   revalidatePath('/administrador/solicitudes');
   revalidatePath('/explorar');
+  revalidatePath('/universidad/[id]', 'page');
   revalidatePath('/materias');
   revalidatePath('/empezar');
   revalidatePath('/dashboard/materiales');
