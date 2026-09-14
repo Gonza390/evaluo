@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { createPublicClient } from '@/lib/supabase-public';
+import { withTransientDataRetry } from '@/lib/data/transient-retry';
 import {
   fetchCarreraById,
   fetchCarrerasByUniversidad,
@@ -17,25 +18,25 @@ export type { Carrera, Materia, Universidad };
 const getPublicCatalogClient = cache(() => createPublicClient());
 
 export const getCarrerasByUni = cache(async (uniId: string): Promise<Carrera[]> => {
-  return fetchCarrerasByUniversidad(getPublicCatalogClient(), uniId);
+  return withTransientDataRetry(() => fetchCarrerasByUniversidad(getPublicCatalogClient(), uniId));
 });
 
 export const getMateriasByCarrera = cache(async (carreraId: string): Promise<Materia[]> => {
-  return fetchMateriasByCarrera(getPublicCatalogClient(), carreraId);
+  return withTransientDataRetry(() => fetchMateriasByCarrera(getPublicCatalogClient(), carreraId));
 });
 
 export const getMateriaById = cache(async (materiaId: string): Promise<Materia | null> => {
-  return fetchMateriaById(getPublicCatalogClient(), materiaId);
+  return withTransientDataRetry(() => fetchMateriaById(getPublicCatalogClient(), materiaId));
 });
 
 export const getCarreraById = cache(async (carreraId: string): Promise<Carrera | null> => {
-  return fetchCarreraById(getPublicCatalogClient(), carreraId);
+  return withTransientDataRetry(() => fetchCarreraById(getPublicCatalogClient(), carreraId));
 });
 
 export const getUniversidadById = cache(async (uniId: string): Promise<Universidad | null> => {
-  return fetchUniversidadById(getPublicCatalogClient(), uniId);
+  return withTransientDataRetry(() => fetchUniversidadById(getPublicCatalogClient(), uniId));
 });
 
 export const getUniversidades = cache(async () => {
-  return fetchUniversidades(getPublicCatalogClient());
+  return withTransientDataRetry(() => fetchUniversidades(getPublicCatalogClient()));
 });
