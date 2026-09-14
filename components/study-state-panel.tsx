@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { BookOpen, type LucideIcon } from 'lucide-react';
+import { BookOpen, Building2, type LucideIcon } from 'lucide-react';
 
-type StudyStateIconName = 'book-open';
+type StudyStateIconName = 'book-open' | 'building';
 
 interface StudyStatePanelProps {
   icon?: LucideIcon;
@@ -23,6 +23,7 @@ interface StudyStatePanelProps {
 
 function resolveSerializableIcon(iconName: StudyStateIconName | undefined) {
   if (iconName === 'book-open') return BookOpen;
+  if (iconName === 'building') return Building2;
   return null;
 }
 
