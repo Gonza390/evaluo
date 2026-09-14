@@ -309,11 +309,11 @@ export default async function AdministradorPage({
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
               <Link
-                href="/administrador/feedback-simulador"
+                href="/administrador/feedback"
                 prefetch={false}
                 className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-slate-600 hover:text-indigo-700"
               >
-                Feedback simulador
+                Feedback
               </Link>
               <Link
                 href="/administrador/solicitudes"
