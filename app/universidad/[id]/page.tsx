@@ -12,9 +12,11 @@ import {
 import { createPublicClient } from '@/lib/supabase-public';
 import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { StudyStatePanel } from '@/components/study-state-panel';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { getUniversityProfile } from '@/lib/university-profiles';
 import { getFacultyProfile } from '@/lib/faculty-profiles';
+import { withTransientDataRetry } from '@/lib/data/transient-retry';
 
 const CareerListClient = dynamic(() => import('./career-list-client'), {
   loading: () => (
@@ -64,7 +66,7 @@ async function fetchAllCarreraMateriaRelations(
       .in('carrera_id', carreraIds)
       .range(from, to);
 
-    if (error) throw error;
+    if (error) throw new Error(error.message);
 
     const rows = data ?? [];
     allRows.push(...rows);
@@ -83,97 +85,108 @@ type UniversidadPageData = {
 } | null;
 
 const loadUniversidadPageData = unstable_cache(
-  async (id: string): Promise<UniversidadPageData> => {
-    const supabase = createPublicClient();
-    const catalog = supabase as any;
+  async (id: string): Promise<UniversidadPageData> =>
+    withTransientDataRetry(async () => {
+      const supabase = createPublicClient();
+      const catalog = supabase as any;
 
-    const { data: universidad } = await supabase
-      .from('universidades')
-      .select('id, nombre')
-      .eq('id', id)
-      .single();
-
-    if (!universidad) return null;
-
-    const [facultadesResult, carrerasResult] = await Promise.all([
-      catalog
-        .from('facultades')
+      const { data: universidad, error: universidadError } = await supabase
+        .from('universidades')
         .select('id, nombre')
-        .eq('universidad_id', id)
-        .order('nombre'),
-      catalog
-        .from('carreras')
-        .select('id, nombre, facultad_id')
-        .eq('universidad_id', id)
-        .order('nombre'),
-    ]);
+        .eq('id', id)
+        .maybeSingle();
 
-    if (facultadesResult.error) throw facultadesResult.error;
-    if (carrerasResult.error) throw carrerasResult.error;
+      if (universidadError) throw new Error(universidadError.message);
+      if (!universidad) return null;
 
-    const facultades = (facultadesResult.data ?? []) as FacultadRow[];
-    const allCarreras = (carrerasResult.data ?? []) as CarreraRow[];
-    const carreraIds = allCarreras.map((carrera) => carrera.id);
-    const materiaCountByCarrera: Record<string, number> = {};
-    const uniqueMateriaIds = new Set<string>();
+      const [facultadesResult, carrerasResult] = await Promise.all([
+        catalog
+          .from('facultades')
+          .select('id, nombre')
+          .eq('universidad_id', id)
+          .order('nombre'),
+        catalog
+          .from('carreras')
+          .select('id, nombre, facultad_id')
+          .eq('universidad_id', id)
+          .order('nombre'),
+      ]);
 
-    if (carreraIds.length > 0) {
-      const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
-      const materiaIdsByCarrera = new Map<string, Set<string>>();
+      if (facultadesResult.error) throw new Error(facultadesResult.error.message);
+      if (carrerasResult.error) throw new Error(carrerasResult.error.message);
 
-      for (const item of carreraMaterias) {
-        if (!item.carrera_id || !item.materia_id) continue;
-        uniqueMateriaIds.add(item.materia_id);
-        const materiaIds = materiaIdsByCarrera.get(item.carrera_id) ?? new Set<string>();
-        materiaIds.add(item.materia_id);
-        materiaIdsByCarrera.set(item.carrera_id, materiaIds);
+      const facultades = (facultadesResult.data ?? []) as FacultadRow[];
+      const allCarreras = (carrerasResult.data ?? []) as CarreraRow[];
+      const carreraIds = allCarreras.map((carrera) => carrera.id);
+      const materiaCountByCarrera: Record<string, number> = {};
+      const uniqueMateriaIds = new Set<string>();
+
+      if (carreraIds.length > 0) {
+        const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
+        const materiaIdsByCarrera = new Map<string, Set<string>>();
+
+        for (const item of carreraMaterias) {
+          if (!item.carrera_id || !item.materia_id) continue;
+          uniqueMateriaIds.add(item.materia_id);
+          const materiaIds = materiaIdsByCarrera.get(item.carrera_id) ?? new Set<string>();
+          materiaIds.add(item.materia_id);
+          materiaIdsByCarrera.set(item.carrera_id, materiaIds);
+        }
+
+        for (const [carreraId, materiaIds] of materiaIdsByCarrera.entries()) {
+          materiaCountByCarrera[carreraId] = materiaIds.size;
+        }
       }
 
-      for (const [carreraId, materiaIds] of materiaIdsByCarrera.entries()) {
-        materiaCountByCarrera[carreraId] = materiaIds.size;
-      }
-    }
-
-    return {
-      universidad,
-      facultades,
-      allCarreras,
-      materiaCountByCarrera,
-      totalUniqueMaterias: uniqueMateriaIds.size,
-    };
-  },
+      return {
+        universidad,
+        facultades,
+        allCarreras,
+        materiaCountByCarrera,
+        totalUniqueMaterias: uniqueMateriaIds.size,
+      };
+    }),
   ['universidad-data-v2'],
   { revalidate: 600, tags: ['universidad-data'] }
 );
 
 export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
   const { id } = await params;
-  const data = await loadUniversidadPageData(id);
 
-  if (!data) {
+  try {
+    const data = await loadUniversidadPageData(id);
+
+    if (!data) {
+      return {
+        title: 'Universidad',
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const { universidad, allCarreras, totalUniqueMaterias } = data;
+    const profile = getUniversityProfile(universidad.nombre);
+    const hasAcademicCatalog = allCarreras.length > 0 && totalUniqueMaterias > 0;
+
     return {
-      title: 'Universidad',
-      robots: { index: false, follow: false },
+      title: `${universidad.nombre} | Universidad`,
+      description:
+        profile?.description ??
+        `Explorá la estructura académica, carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
+      alternates: { canonical: `/universidad/${universidad.id}` },
+      robots: { index: hasAcademicCatalog, follow: true },
+      openGraph: {
+        title: `${universidad.nombre} | Evaluo`,
+        description:
+          profile?.subtitle ?? `Facultades, carreras y materias disponibles de ${universidad.nombre}.`,
+        url: `/universidad/${universidad.id}`,
+      },
+    };
+  } catch {
+    return {
+      title: 'Universidad | Evaluo',
+      robots: { index: false, follow: true },
     };
   }
-
-  const { universidad, allCarreras, totalUniqueMaterias } = data;
-  const profile = getUniversityProfile(universidad.nombre);
-  const hasAcademicCatalog = allCarreras.length > 0 && totalUniqueMaterias > 0;
-
-  return {
-    title: `${universidad.nombre} | Universidad`,
-    description:
-      profile?.description ??
-      `Explorá la estructura académica, carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
-    alternates: { canonical: `/universidad/${universidad.id}` },
-    robots: { index: hasAcademicCatalog, follow: true },
-    openGraph: {
-      title: `${universidad.nombre} | Evaluo`,
-      description: profile?.subtitle ?? `Facultades, carreras y materias disponibles de ${universidad.nombre}.`,
-      url: `/universidad/${universidad.id}`,
-    },
-  };
 }
 
 function FacultyGrid({ universidadId, facultades }: { universidadId: string; facultades: FacultadRow[] }) {
@@ -220,14 +233,35 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
   ]);
 
   const activeTab = resolvedSearchParams?.tab === 'informacion' ? 'informacion' : 'carreras';
-  const data = await loadUniversidadPageData(id);
+  let data: UniversidadPageData;
+
+  try {
+    data = await loadUniversidadPageData(id);
+  } catch {
+    return (
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+        <StudyStatePanel
+          iconName="building"
+          tone="warning"
+          className="w-full"
+          title="No pudimos cargar esta universidad"
+          description="El catálogo no está respondiendo correctamente en este momento."
+          secondaryText="Probá nuevamente en unos segundos. Si el problema continúa, podés volver a explorar otras universidades."
+          primaryActionLabel="Volver a intentar"
+          primaryActionHref={`/universidad/${id}`}
+          secondaryActionLabel="Volver a explorar"
+          secondaryActionHref="/explorar"
+        />
+      </div>
+    );
+  }
+
   if (!data) notFound();
 
   const { universidad, facultades, allCarreras, totalUniqueMaterias } = data;
   const universityProfile = getUniversityProfile(universidad.nombre);
-  const selectedFacultad = facultades.find(
-    (facultad) => facultad.id === resolvedSearchParams?.facultadId
-  ) ?? null;
+  const selectedFacultad =
+    facultades.find((facultad) => facultad.id === resolvedSearchParams?.facultadId) ?? null;
   const facultyProfile = selectedFacultad
     ? getFacultyProfile(universidad.nombre, selectedFacultad.nombre)
     : null;
@@ -246,7 +280,12 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
           { name: 'Explorar', path: '/explorar' },
           { name: universidad.nombre, path: `/universidad/${id}` },
           ...(selectedFacultad
-            ? [{ name: selectedFacultyName ?? selectedFacultad.nombre, path: `/universidad/${id}?facultadId=${selectedFacultad.id}` }]
+            ? [
+                {
+                  name: selectedFacultyName ?? selectedFacultad.nombre,
+                  path: `/universidad/${id}?facultadId=${selectedFacultad.id}`,
+                },
+              ]
             : []),
         ])}
       />
@@ -282,16 +321,19 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 {usesFaculties ? (
                   <span className="inline-flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-blue-600" />
-                    <strong className="font-semibold text-slate-950">{facultades.length}</strong> facultades en Evaluo
+                    <strong className="font-semibold text-slate-950">{facultades.length}</strong>{' '}
+                    facultades en Evaluo
                   </span>
                 ) : null}
                 <span className="inline-flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-blue-600" />
-                  <strong className="font-semibold text-slate-950">{allCarreras.length}</strong> carreras en Evaluo
+                  <strong className="font-semibold text-slate-950">{allCarreras.length}</strong>{' '}
+                  carreras en Evaluo
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-blue-600" />
-                  <strong className="font-semibold text-slate-950">{totalUniqueMaterias}</strong> materias en Evaluo
+                  <strong className="font-semibold text-slate-950">{totalUniqueMaterias}</strong>{' '}
+                  materias en Evaluo
                 </span>
               </>
             )}
@@ -341,9 +383,14 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                 <div className="mt-8 border-t border-slate-200">
                   {universityProfile?.facts?.length ? (
                     universityProfile.facts.map((fact) => (
-                      <div key={fact.label} className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-center">
+                      <div
+                        key={fact.label}
+                        className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-center"
+                      >
                         <span className="text-sm text-slate-500">{fact.label}</span>
-                        <span className="text-sm font-semibold text-slate-950 sm:text-right">{fact.value}</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                          {fact.value}
+                        </span>
                       </div>
                     ))
                   ) : (
@@ -351,16 +398,22 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                       {usesFaculties ? (
                         <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                           <span className="text-sm text-slate-500">Facultades en Evaluo</span>
-                          <span className="text-sm font-semibold text-slate-950 sm:text-right">{facultades.length}</span>
+                          <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                            {facultades.length}
+                          </span>
                         </div>
                       ) : null}
                       <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                         <span className="text-sm text-slate-500">Carreras en Evaluo</span>
-                        <span className="text-sm font-semibold text-slate-950 sm:text-right">{allCarreras.length}</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                          {allCarreras.length}
+                        </span>
                       </div>
                       <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
                         <span className="text-sm text-slate-500">Materias en Evaluo</span>
-                        <span className="text-sm font-semibold text-slate-950 sm:text-right">{totalUniqueMaterias}</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                          {totalUniqueMaterias}
+                        </span>
                       </div>
                     </>
                   )}
@@ -370,12 +423,15 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
               <aside className="border-t border-slate-200 pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
                 {universityProfile ? (
                   <>
-                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">Fuente institucional</p>
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">
+                      Fuente institucional
+                    </p>
                     <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
                       Información verificada con la universidad.
                     </h3>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
-                      Los datos institucionales de esta ficha se basan en información publicada por {universityProfile.sourceName}.
+                      Los datos institucionales de esta ficha se basan en información publicada por{' '}
+                      {universityProfile.sourceName}.
                     </p>
                     <a
                       href={universityProfile.officialUrl}
@@ -388,12 +444,15 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   </>
                 ) : (
                   <>
-                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">En Evaluo</p>
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">
+                      En Evaluo
+                    </p>
                     <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
                       El contenido se conecta por materia.
                     </h3>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
-                      Cuando una materia corresponde a más de una carrera, el material puede compartirse sin duplicar contenido.
+                      Cuando una materia corresponde a más de una carrera, el material puede compartirse
+                      sin duplicar contenido.
                     </p>
                   </>
                 )}
@@ -428,7 +487,9 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   {facultyProfile ? (
                     <div className="grid gap-8 border-b border-slate-200 py-7 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
                       <div>
-                        <h3 className="text-lg font-bold tracking-[-0.035em] text-slate-950">Sobre la facultad</h3>
+                        <h3 className="text-lg font-bold tracking-[-0.035em] text-slate-950">
+                          Sobre la facultad
+                        </h3>
                         <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
                           {facultyProfile.description}
                         </p>
@@ -444,8 +505,12 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                       <div className="border-t border-slate-200 pt-5 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
                         {facultyProfile.facts.map((fact) => (
                           <div key={fact.label} className="border-b border-slate-200 py-3 first:pt-0">
-                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">{fact.label}</p>
-                            <p className="mt-1 text-sm font-semibold leading-6 text-slate-950">{fact.value}</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
+                              {fact.label}
+                            </p>
+                            <p className="mt-1 text-sm font-semibold leading-6 text-slate-950">
+                              {fact.value}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -462,7 +527,9 @@ export default async function UniversidadPage({ params, searchParams }: Props) {
                   <FacultyGrid universidadId={id} facultades={facultades} />
                   {carrerasDirectas.length > 0 ? (
                     <div className="mt-12 border-t border-slate-200 pt-8">
-                      <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">Carreras directas</p>
+                      <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">
+                        Carreras directas
+                      </p>
                       <CareerListClient
                         initialCarreras={carrerasDirectas}
                         universityName={universidad.nombre}
