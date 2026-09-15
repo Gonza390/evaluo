@@ -1,10 +1,21 @@
 import { PDFDocument } from 'pdf-lib';
 import { hasPremiumAccess } from '@/lib/premium';
 import { createClientServer } from '@/lib/supabase-server';
-import {
-  MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
-  MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES,
-} from '@/lib/student-materials/validation';
+import { MAX_FREE_STUDENT_MATERIAL_PDF_PAGES } from '@/lib/student-materials/validation';
+
+export class StudentMaterialPdfPageLimitError extends Error {
+  readonly code = 'student_material_pdf_page_limit' as const;
+
+  constructor(
+    readonly pageCount: number,
+    readonly maxPages: number
+  ) {
+    super(
+      `El PDF tiene ${pageCount} páginas. El plan Free permite hasta ${maxPages} páginas por documento; Premium no tiene límite de páginas.`
+    );
+    this.name = 'StudentMaterialPdfPageLimitError';
+  }
+}
 
 export async function getStudentMaterialPdfPageCount(bytes: Uint8Array) {
   try {
@@ -18,9 +29,7 @@ export async function getStudentMaterialPdfPageCount(bytes: Uint8Array) {
 async function getStudentMaterialPdfPageLimit(accessOverride?: { isPremium: boolean }) {
   if (accessOverride) {
     return {
-      maxPages: accessOverride.isPremium
-        ? MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES
-        : MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+      maxPages: accessOverride.isPremium ? null : MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
       isPremium: accessOverride.isPremium,
     };
   }
@@ -39,9 +48,7 @@ async function getStudentMaterialPdfPageLimit(accessOverride?: { isPremium: bool
 
   const isPremium = await hasPremiumAccess(user.id);
   return {
-    maxPages: isPremium
-      ? MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES
-      : MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
+    maxPages: isPremium ? null : MAX_FREE_STUDENT_MATERIAL_PDF_PAGES,
     isPremium,
   };
 }
@@ -56,14 +63,10 @@ export async function assertStudentMaterialPdfPageLimit(
     throw new Error('El PDF debe contener al menos una página.');
   }
 
-  const { maxPages, isPremium } = await getStudentMaterialPdfPageLimit(accessOverride);
+  const { maxPages } = await getStudentMaterialPdfPageLimit(accessOverride);
 
-  if (pageCount > maxPages) {
-    throw new Error(
-      isPremium
-        ? `El PDF tiene ${pageCount} páginas. Premium permite hasta ${maxPages} páginas por documento.`
-        : `El PDF tiene ${pageCount} páginas. El plan Free permite hasta ${maxPages} páginas por documento; Premium admite hasta ${MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES}.`
-    );
+  if (maxPages !== null && pageCount > maxPages) {
+    throw new StudentMaterialPdfPageLimitError(pageCount, maxPages);
   }
 
   return pageCount;
