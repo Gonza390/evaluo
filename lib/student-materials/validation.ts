@@ -80,7 +80,7 @@ export function buildStudentMaterialStoragePath(
   const parsedUserId = uuidSchema.parse(userId);
   const parsedUploadId = uuidSchema.parse(uploadId);
   const safeName = sanitizeStudentMaterialFileName(fileName) || 'material.pdf';
-  return `student-materials/${parsedUserId.data}/${parsedUploadId.data}-${safeName}`;
+  return `student-materials/${parsedUserId}/${parsedUploadId}-${safeName}`;
 }
 
 export function isOwnedStudentMaterialStoragePath(filePath: string, userId: string) {
