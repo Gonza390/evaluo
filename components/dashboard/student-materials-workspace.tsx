@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   BookOpenCheck,
+  CircleAlert,
   Clock3,
   Eye,
   FileText,
@@ -31,6 +32,10 @@ import {
   finalizeStudentMaterialUploadAction,
   prepareStudentMaterialUploadAction,
 } from '@/app/dashboard/materiales/upload-actions';
+import {
+  StudentMaterialUploadErrorScreen,
+  type StudentMaterialUploadConstraint,
+} from '@/components/dashboard/student-material-upload-error';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { getCareerRoute, getMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
@@ -143,6 +148,9 @@ export function StudentMaterialsWorkspace({
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [uploadConstraint, setUploadConstraint] = useState<StudentMaterialUploadConstraint | null>(
+    null
+  );
   const [showMaterialsTour, setShowMaterialsTour] = useState(false);
   const [materialsTourStepIndex, setMaterialsTourStepIndex] = useState(0);
   const materialsTourDismissedRef = useRef(false);
@@ -179,6 +187,7 @@ export function StudentMaterialsWorkspace({
 
   useEffect(() => {
     if (initialOpenUpload) {
+      setShowMaterialsTour(false);
       setIsUploadDialogOpen(true);
     }
   }, [initialOpenUpload]);
@@ -229,14 +238,26 @@ export function StudentMaterialsWorkspace({
     setExamDate('');
     setShareWithCatalog(true);
     setSelectedFile(null);
+    setUploadConstraint(null);
     setEditingAcademicContext(!initialUniversidadId || !initialCarreraId);
     setFileInputKey((current) => current + 1);
   };
 
   const openPdfPicker = useCallback(() => {
     if (isPending) return;
+    setShowMaterialsTour(false);
     pdfPickerRef.current?.click();
   }, [isPending]);
+
+  const retryWithAnotherFile = useCallback(() => {
+    setUploadConstraint(null);
+    setSelectedFile(null);
+    setTitle('');
+    setFileInputKey((current) => current + 1);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => pdfPickerRef.current?.click());
+    });
+  }, []);
 
   const handlePickedPdf = useCallback(
     (file: File | null) => {
@@ -254,18 +275,28 @@ export function StudentMaterialsWorkspace({
       }
 
       if (file.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
-        toast({
-          description: 'El PDF supera el límite de 20 MB. Elegí un archivo más liviano.',
-          variant: 'destructive',
+        trackMarketingEvent('student_material_pdf_size_limit_exceeded', {
+          file_size_bytes: file.size,
+          max_size_bytes: MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
+          materia_id: materiaId || undefined,
         });
+        setSelectedFile(null);
+        setUploadConstraint({
+          kind: 'size',
+          fileName: file.name,
+          fileSizeBytes: file.size,
+          maxSizeBytes: MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
+        });
+        setIsUploadDialogOpen(true);
         return;
       }
 
+      setUploadConstraint(null);
       setSelectedFile(file);
       setTitle(getTitleFromFileName(file.name));
       setIsUploadDialogOpen(true);
     },
-    [toast]
+    [materiaId, toast]
   );
 
   useEffect(() => {
@@ -375,9 +406,16 @@ export function StudentMaterialsWorkspace({
     }
 
     if (selectedFile.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
-      toast({
-        description: 'El PDF supera el limite de 20 MB. Reduce el archivo e intentalo nuevamente.',
-        variant: 'destructive',
+      trackMarketingEvent('student_material_pdf_size_limit_exceeded', {
+        file_size_bytes: selectedFile.size,
+        max_size_bytes: MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
+        materia_id: materiaId || undefined,
+      });
+      setUploadConstraint({
+        kind: 'size',
+        fileName: selectedFile.name,
+        fileSizeBytes: selectedFile.size,
+        maxSizeBytes: MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES,
       });
       return;
     }
@@ -464,6 +502,26 @@ export function StudentMaterialsWorkspace({
 
         if (!result.success) {
           await cancelStudentMaterialUploadAction(prepared.filePath);
+          if (
+            result.errorCode === 'page_limit' &&
+            typeof result.pageCount === 'number' &&
+            typeof result.maxPages === 'number'
+          ) {
+            trackMarketingEvent('student_material_pdf_page_limit_exceeded', {
+              page_count: result.pageCount,
+              max_pages: result.maxPages,
+              file_size_bytes: file.size,
+              materia_id: materiaId || undefined,
+              plan: 'free',
+            });
+            setUploadConstraint({
+              kind: 'pages',
+              fileName: file.name,
+              pageCount: result.pageCount,
+              maxPages: result.maxPages,
+            });
+            return;
+          }
           showUploadFailure(result.message);
           return;
         }
@@ -598,7 +656,18 @@ export function StudentMaterialsWorkspace({
   }, [materialsTourStepIndex]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !user || materialsTourDismissedRef.current) {
+    if (
+      typeof window === 'undefined' ||
+      !user ||
+      materialsTourDismissedRef.current ||
+      initialOpenUpload ||
+      isUploadDialogOpen ||
+      uploadConstraint ||
+      activeProcessing
+    ) {
+      if (isUploadDialogOpen || uploadConstraint || activeProcessing) {
+        setShowMaterialsTour(false);
+      }
       return;
     }
     if (window.localStorage.getItem(getMaterialsTourStorageKey(user.id)) === 'done') {
@@ -609,7 +678,7 @@ export function StudentMaterialsWorkspace({
       setShowMaterialsTour(true);
     }, 400);
     return () => window.clearTimeout(timeoutId);
-  }, [user]);
+  }, [activeProcessing, initialOpenUpload, isUploadDialogOpen, uploadConstraint, user]);
 
   return (
     <>
@@ -835,6 +904,7 @@ export function StudentMaterialsWorkspace({
             ) : (
               initialMaterials.map((material, index) => {
                 const isShared = material.visibility === 'shared';
+                const isFailed = material.processing_status === 'failed';
 
                 return (
                   <article
@@ -863,7 +933,12 @@ export function StudentMaterialsWorkspace({
                             )}
                             {isShared ? 'Compartido' : 'Privado'}
                           </span>
-                          {material.processing_status !== 'ready' ? (
+                          {isFailed ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[12px] font-semibold text-red-700">
+                              <CircleAlert className="h-3.5 w-3.5" />
+                              Necesita revisión
+                            </span>
+                          ) : material.processing_status !== 'ready' ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-700">
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               Procesando
@@ -901,7 +976,11 @@ export function StudentMaterialsWorkspace({
                         <Button asChild size="sm" onClick={(event) => event.stopPropagation()}>
                           <Link href={getStudentMaterialRoute(material.id)}>
                             <Eye className="h-4 w-4" />
-                            {material.processing_status === 'ready' ? 'Abrir' : 'Ver estado'}
+                            {material.processing_status === 'ready'
+                              ? 'Abrir'
+                              : isFailed
+                                ? 'Revisar'
+                                : 'Ver estado'}
                           </Link>
                         </Button>
                         <Button
@@ -936,264 +1015,280 @@ export function StudentMaterialsWorkspace({
         }}
       >
         <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden rounded-[1.5rem] border-slate-200 bg-white p-0 shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
-          <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_52%,#EEF4FF_100%)] px-4 py-4 sm:px-5">
-            <DialogHeader className="text-left">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-[0_10px_24px_rgba(245,158,11,0.16)]">
-                  <Upload className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
-                    {selectedFile ? 'Completá la información' : 'Elegí tu PDF'}
-                  </DialogTitle>
-                  <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
-                    {selectedFile
-                      ? 'Ya tenemos el archivo. Elegí la materia y, si querés, agregá la fecha del examen.'
-                      : 'Primero elegí el archivo que querés convertir en tu espacio de estudio.'}
-                  </DialogDescription>
-                </div>
+          {uploadConstraint ? (
+            <StudentMaterialUploadErrorScreen
+              constraint={uploadConstraint}
+              onRetry={retryWithAnotherFile}
+              premiumHref={`/premium/mapa-mental?step=3${
+                materiaId ? `&materia=${encodeURIComponent(materiaId)}` : ''
+              }`}
+            />
+          ) : (
+            <>
+              <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_52%,#EEF4FF_100%)] px-4 py-4 sm:px-5">
+                <DialogHeader className="text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-[0_10px_24px_rgba(245,158,11,0.16)]">
+                      <Upload className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
+                        {selectedFile ? 'Completá la información' : 'Elegí tu PDF'}
+                      </DialogTitle>
+                      <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                        {selectedFile
+                          ? 'Ya tenemos el archivo. Elegí la materia y, si querés, agregá la fecha del examen.'
+                          : 'Primero elegí el archivo que querés convertir en tu espacio de estudio.'}
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
               </div>
-            </DialogHeader>
-          </div>
 
-          <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
-            {selectedFile ? (
-              <div className="flex items-center gap-3 rounded-[1rem] border border-emerald-100 bg-emerald-50/60 px-3.5 py-3 sm:col-span-2">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-                  <FileText className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold text-slate-900">
-                    {selectedFile.name}
-                  </p>
-                  <p className="mt-0.5 text-[11.5px] text-slate-500">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-                <Button type="button" size="sm" variant="outline" onClick={openPdfPicker}>
-                  Cambiar
-                </Button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={openPdfPicker}
-                className="group flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-slate-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-5 py-6 text-center transition hover:border-[#F59E0B]/60 hover:bg-amber-50/30 sm:col-span-2"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#FFF7ED] text-[#F59E0B] transition group-hover:scale-105">
-                  <Upload className="h-5 w-5" />
-                </span>
-                <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
-                <span className="mt-1 text-[12.5px] leading-5 text-slate-500">
-                  PDF de hasta 20 MB.
-                </span>
-              </button>
-            )}
-
-            {selectedFile ? (
-              <>
-                {!editingAcademicContext && universidadId && carreraId ? (
+              <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 sm:px-5">
+                {selectedFile ? (
+                  <div className="flex items-center gap-3 rounded-[1rem] border border-emerald-100 bg-emerald-50/60 px-3.5 py-3 sm:col-span-2">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold text-slate-900">
+                        {selectedFile.name}
+                      </p>
+                      <p className="mt-0.5 text-[11.5px] text-slate-500">
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                    <Button type="button" size="sm" variant="outline" onClick={openPdfPicker}>
+                      Cambiar
+                    </Button>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => setEditingAcademicContext(true)}
-                    className="flex min-w-0 items-center justify-between gap-3 rounded-[0.9rem] border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50/50 sm:col-span-2"
+                    onClick={openPdfPicker}
+                    className="group flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-[1.2rem] border border-dashed border-slate-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFC_100%)] px-5 py-6 text-center transition hover:border-[#F59E0B]/60 hover:bg-amber-50/30 sm:col-span-2"
                   >
-                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-slate-700">
-                      <span className="font-semibold text-slate-950">
-                        {universityNameById.get(universidadId) ?? 'Universidad'}
-                      </span>
-                      <span className="text-slate-300">·</span>
-                      <span className="min-w-0 truncate">
-                        {careerNameById.get(carreraId) ?? 'Carrera'}
-                      </span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#FFF7ED] text-[#F59E0B] transition group-hover:scale-105">
+                      <Upload className="h-5 w-5" />
                     </span>
-                    <span className="shrink-0 text-[12px] font-semibold text-blue-700">Cambiar</span>
+                    <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
+                    <span className="mt-1 text-[12.5px] leading-5 text-slate-500">
+                      Free: hasta 100 páginas · Premium: sin límite de páginas · 20 MB máximo.
+                    </span>
                   </button>
-                ) : (
-                  <div className="grid gap-2 rounded-[1rem] border border-slate-200 bg-slate-50/60 p-3 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-                    <div>
-                      <label
-                        htmlFor="material-universidad"
-                        className="mb-1 block text-[11px] font-semibold tracking-[0.12em] text-slate-500 uppercase"
-                      >
-                        Universidad
-                      </label>
-                      <select
-                        id="material-universidad"
-                        value={universidadId}
-                        onChange={(event) => {
-                          setUniversidadId(event.target.value);
-                          setCarreraId('');
-                          setMateriaId('');
-                        }}
-                        className="h-10 w-full rounded-[0.8rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
-                      >
-                        <option value="">Seleccionar universidad</option>
-                        {universidades.map((universidad) => (
-                          <option key={universidad.id} value={universidad.id}>
-                            {universidad.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                )}
 
-                    <div>
-                      <label
-                        htmlFor="material-carrera"
-                        className="mb-1 block text-[11px] font-semibold tracking-[0.12em] text-slate-500 uppercase"
-                      >
-                        Carrera
-                      </label>
-                      <select
-                        id="material-carrera"
-                        value={carreraId}
-                        onChange={(event) => {
-                          setCarreraId(event.target.value);
-                          setMateriaId('');
-                        }}
-                        disabled={!universidadId}
-                        className="h-10 w-full rounded-[0.8rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-slate-50"
-                      >
-                        <option value="">Seleccionar carrera</option>
-                        {filteredCarreras.map((carrera) => (
-                          <option key={carrera.id} value={carrera.id}>
-                            {carrera.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {universidadId && carreraId ? (
-                      <Button
+                {selectedFile ? (
+                  <>
+                    {!editingAcademicContext && universidadId && carreraId ? (
+                      <button
                         type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingAcademicContext(false)}
+                        onClick={() => setEditingAcademicContext(true)}
+                        className="flex min-w-0 items-center justify-between gap-3 rounded-[0.9rem] border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-left transition hover:border-blue-200 hover:bg-blue-50/50 sm:col-span-2"
                       >
-                        Listo
-                      </Button>
-                    ) : null}
-                  </div>
-                )}
-
-                <div className="sm:col-span-2">
-                  <label
-                    htmlFor="material-materia"
-                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-                  >
-                    Materia
-                  </label>
-                  <select
-                    id="material-materia"
-                    value={materiaId}
-                    onChange={(event) => setMateriaId(event.target.value)}
-                    disabled={!carreraId}
-                    className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
-                  >
-                    <option value="">Seleccionar materia</option>
-                    {filteredMaterias.map((materia) => (
-                      <option key={materia.id} value={materia.id}>
-                        {materia.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label
-                    htmlFor="material-exam-date"
-                    className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
-                  >
-                    ¿Cuándo rendís? <span className="font-medium tracking-normal normal-case">(opcional)</span>
-                  </label>
-                  <Input
-                    id="material-exam-date"
-                    type="date"
-                    value={examDate}
-                    onChange={(event) => setExamDate(event.target.value)}
-                    className="rounded-[1rem]"
-                  />
-                  <p className="mt-1.5 text-[11.5px] leading-5 text-slate-500">
-                    La fecha nos sirve para ordenar tu estudio y mostrarte contenido en el momento adecuado.
-                  </p>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="flex cursor-pointer items-start gap-3 rounded-[1.15rem] border border-emerald-200 bg-emerald-50/60 px-4 py-3.5 text-[13px] text-slate-700 transition hover:bg-emerald-50">
-                    <input
-                      type="checkbox"
-                      checked={shareWithCatalog}
-                      onChange={(event) => setShareWithCatalog(event.target.checked)}
-                      className="mt-1"
-                    />
-                    <span className="flex min-w-0 gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
-                        <Globe className="h-4 w-4" />
-                      </span>
-                      <span>
-                        <span className="block text-sm font-semibold text-slate-950">
-                          Compartir con otros estudiantes
+                        <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-slate-700">
+                          <span className="font-semibold text-slate-950">
+                            {universityNameById.get(universidadId) ?? 'Universidad'}
+                          </span>
+                          <span className="text-slate-300">·</span>
+                          <span className="min-w-0 truncate">
+                            {careerNameById.get(carreraId) ?? 'Carrera'}
+                          </span>
                         </span>
-                        <span className="mt-1 block text-[12.5px] leading-5 text-slate-600">
-                          Tu material puede ayudar a otros alumnos de esta materia. Podés cambiar esta
-                          opción cuando quieras.
+                        <span className="shrink-0 text-[12px] font-semibold text-blue-700">
+                          Cambiar
                         </span>
-                      </span>
-                    </span>
-                  </label>
-                </div>
+                      </button>
+                    ) : (
+                      <div className="grid gap-2 rounded-[1rem] border border-slate-200 bg-slate-50/60 p-3 sm:col-span-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                        <div>
+                          <label
+                            htmlFor="material-universidad"
+                            className="mb-1 block text-[11px] font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                          >
+                            Universidad
+                          </label>
+                          <select
+                            id="material-universidad"
+                            value={universidadId}
+                            onChange={(event) => {
+                              setUniversidadId(event.target.value);
+                              setCarreraId('');
+                              setMateriaId('');
+                            }}
+                            className="h-10 w-full rounded-[0.8rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none"
+                          >
+                            <option value="">Seleccionar universidad</option>
+                            {universidades.map((universidad) => (
+                              <option key={universidad.id} value={universidad.id}>
+                                {universidad.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                <p className="text-center text-[11.5px] leading-5 text-slate-400 sm:col-span-2">
-                  Al subir este material, aceptás los{' '}
-                  <Link
-                    href="/terminos"
-                    target="_blank"
-                    className="font-medium text-slate-600 underline underline-offset-2"
+                        <div>
+                          <label
+                            htmlFor="material-carrera"
+                            className="mb-1 block text-[11px] font-semibold tracking-[0.12em] text-slate-500 uppercase"
+                          >
+                            Carrera
+                          </label>
+                          <select
+                            id="material-carrera"
+                            value={carreraId}
+                            onChange={(event) => {
+                              setCarreraId(event.target.value);
+                              setMateriaId('');
+                            }}
+                            disabled={!universidadId}
+                            className="h-10 w-full rounded-[0.8rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-slate-50"
+                          >
+                            <option value="">Seleccionar carrera</option>
+                            {filteredCarreras.map((carrera) => (
+                              <option key={carrera.id} value={carrera.id}>
+                                {carrera.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {universidadId && carreraId ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingAcademicContext(false)}
+                          >
+                            Listo
+                          </Button>
+                        ) : null}
+                      </div>
+                    )}
+
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="material-materia"
+                        className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                      >
+                        Materia
+                      </label>
+                      <select
+                        id="material-materia"
+                        value={materiaId}
+                        onChange={(event) => setMateriaId(event.target.value)}
+                        disabled={!carreraId}
+                        className="h-10 w-full rounded-[1rem] border border-slate-200 bg-white px-3 text-[13px] text-slate-700 outline-none disabled:bg-white"
+                      >
+                        <option value="">Seleccionar materia</option>
+                        {filteredMaterias.map((materia) => (
+                          <option key={materia.id} value={materia.id}>
+                            {materia.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="material-exam-date"
+                        className="mb-1.5 block text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase"
+                      >
+                        ¿Cuándo rendís?{' '}
+                        <span className="font-medium tracking-normal normal-case">(opcional)</span>
+                      </label>
+                      <Input
+                        id="material-exam-date"
+                        type="date"
+                        value={examDate}
+                        onChange={(event) => setExamDate(event.target.value)}
+                        className="rounded-[1rem]"
+                      />
+                      <p className="mt-1.5 text-[11.5px] leading-5 text-slate-500">
+                        La fecha nos sirve para ordenar tu estudio y mostrarte contenido en el momento
+                        adecuado.
+                      </p>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="flex cursor-pointer items-start gap-3 rounded-[1.15rem] border border-emerald-200 bg-emerald-50/60 px-4 py-3.5 text-[13px] text-slate-700 transition hover:bg-emerald-50">
+                        <input
+                          type="checkbox"
+                          checked={shareWithCatalog}
+                          onChange={(event) => setShareWithCatalog(event.target.checked)}
+                          className="mt-1"
+                        />
+                        <span className="flex min-w-0 gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
+                            <Globe className="h-4 w-4" />
+                          </span>
+                          <span>
+                            <span className="block text-sm font-semibold text-slate-950">
+                              Compartir con otros estudiantes
+                            </span>
+                            <span className="mt-1 block text-[12.5px] leading-5 text-slate-600">
+                              Tu material puede ayudar a otros alumnos de esta materia. Podés cambiar
+                              esta opción cuando quieras.
+                            </span>
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+
+                    <p className="text-center text-[11.5px] leading-5 text-slate-400 sm:col-span-2">
+                      Al subir este material, aceptás los{' '}
+                      <Link
+                        href="/terminos"
+                        target="_blank"
+                        className="font-medium text-slate-600 underline underline-offset-2"
+                      >
+                        Términos y Condiciones
+                      </Link>
+                      .
+                    </p>
+                  </>
+                ) : null}
+              </div>
+
+              <DialogFooter className="border-t border-slate-100 px-4 py-4 sm:px-5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIsUploadDialogOpen(false);
+                    resetForm();
+                  }}
+                >
+                  Cancelar
+                </Button>
+                {selectedFile ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleUpload}
+                    disabled={
+                      isPending ||
+                      !title.trim() ||
+                      !universidadId ||
+                      !carreraId ||
+                      !materiaId ||
+                      !selectedFile
+                    }
+                    className="bg-[#F59E0B] text-white hover:bg-[#E58E08]"
                   >
-                    Términos y Condiciones
-                  </Link>
-                  .
-                </p>
-              </>
-            ) : null}
-          </div>
-
-          <DialogFooter className="border-t border-slate-100 px-4 py-4 sm:px-5">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setIsUploadDialogOpen(false);
-                resetForm();
-              }}
-            >
-              Cancelar
-            </Button>
-            {selectedFile ? (
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleUpload}
-                disabled={
-                  isPending ||
-                  !title.trim() ||
-                  !universidadId ||
-                  !carreraId ||
-                  !materiaId ||
-                  !selectedFile
-                }
-                className="bg-[#F59E0B] text-white hover:bg-[#E58E08]"
-              >
-                {isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-                Procesar PDF
-              </Button>
-            ) : null}
-          </DialogFooter>
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                    Procesar PDF
+                  </Button>
+                ) : null}
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
