@@ -7,7 +7,10 @@ import { logError } from '@/lib/observability';
 import { hasPremiumAccess } from '@/lib/premium';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
-import { assertStudentMaterialPdfPageLimit } from '@/lib/student-materials/pdf-validation';
+import {
+  assertStudentMaterialPdfPageLimit,
+  StudentMaterialPdfPageLimitError,
+} from '@/lib/student-materials/pdf-validation';
 import { stripStudocuCoverPage } from '@/lib/student-materials/studocu-cover';
 import {
   buildStudentMaterialStoragePath,
@@ -50,6 +53,9 @@ export type PrepareStudentMaterialUploadResult = ActionResult & {
 
 export type FinalizeStudentMaterialUploadResult = ActionResult & {
   materialId?: string;
+  errorCode?: 'page_limit';
+  pageCount?: number;
+  maxPages?: number;
 };
 
 type StudentMaterialUploadInput = {
@@ -476,11 +482,21 @@ export async function finalizeStudentMaterialUploadAction(
         : 'PDF subido a tu espacio privado. Ahora empezamos a procesarlo.',
     };
   } catch (error) {
-    logError('studentMaterials.finalizeUpload', error, { filePath: input.filePath });
-
     if (shouldCleanup && userId) {
       await removeOwnedUpload(input.filePath, userId);
     }
+
+    if (error instanceof StudentMaterialPdfPageLimitError) {
+      return {
+        success: false,
+        message: error.message,
+        errorCode: 'page_limit',
+        pageCount: error.pageCount,
+        maxPages: error.maxPages,
+      };
+    }
+
+    logError('studentMaterials.finalizeUpload', error, { filePath: input.filePath });
 
     return {
       success: false,
