@@ -4,9 +4,19 @@ import { createClientServer } from '@/lib/supabase-server';
 export default async function QuickPdfUploadPage({
   searchParams,
 }: {
-  searchParams: Promise<{ materiaId?: string; source?: string }>;
+  searchParams: Promise<{
+    materiaId?: string;
+    source?: string;
+    examDate?: string;
+    dailyMinutes?: string;
+  }>;
 }) {
-  const { materiaId: requestedMateriaId = '', source = '' } = await searchParams;
+  const {
+    materiaId: requestedMateriaId = '',
+    source = '',
+    examDate = '',
+    dailyMinutes = '',
+  } = await searchParams;
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -16,6 +26,8 @@ export default async function QuickPdfUploadPage({
     const legacyParams = new URLSearchParams();
     if (requestedMateriaId) legacyParams.set('materiaId', requestedMateriaId);
     if (source) legacyParams.set('source', source);
+    if (examDate) legacyParams.set('examDate', examDate);
+    if (dailyMinutes) legacyParams.set('dailyMinutes', dailyMinutes);
     const nextPath = `/dashboard/materiales/subir${legacyParams.toString() ? `?${legacyParams.toString()}` : ''}`;
     redirect(`/login?next=${encodeURIComponent(nextPath)}&reason=prepare-material`);
   }
@@ -83,6 +95,9 @@ export default async function QuickPdfUploadPage({
   if (initialUniversidadId) params.set('universidadId', initialUniversidadId);
   if (initialCarreraId) params.set('carreraId', initialCarreraId);
   if (initialMateriaId) params.set('materiaId', initialMateriaId);
+  if (source) params.set('source', source);
+  if (examDate) params.set('examDate', examDate);
+  if (dailyMinutes) params.set('dailyMinutes', dailyMinutes);
 
   redirect(`/dashboard/materiales?${params.toString()}`);
 }
