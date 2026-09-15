@@ -8,6 +8,7 @@ import { MateriaPracticeLinks } from '@/components/seo/materia-practice-links';
 import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
 import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildMateriaSearchTitle } from '@/lib/seo-search-copy';
 import { buildShareCardPath } from '@/lib/share-card';
 import {
   buildMateriaSharePath,
@@ -112,20 +113,18 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
   let description: string;
   if (contentSignals.questionCount > 0) {
-    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con modelos de examen para practicar y explicación de cada respuesta${hasStudyMaterial ? ', más resúmenes y material de estudio' : ''}.`;
+    description = `Parciales y preguntas de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''}. Practicá modelos de examen con respuestas explicadas${hasStudyMaterial ? ' y repasá con resúmenes y material de estudio' : ''}.`;
   } else if (hasStudyMaterial) {
-    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con resúmenes y material de estudio disponibles en Evaluo.`;
+    description = `Resúmenes y material de estudio de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} para preparar parciales y repasar en Evaluo.`;
   } else {
-    description = `Prepará ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} con material de estudio, práctica y herramientas de Evaluo.`;
+    description = `Material de estudio y práctica de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} para preparar tus parciales en Evaluo.`;
   }
 
   if (creatorLabel) {
     description = `${description} Contenido compartido con ${creatorLabel}.`;
   }
 
-  const seoTitle = universidadNombre
-    ? `${materiaNombre} - ${universidadNombre}`
-    : `Guía y recursos de ${materiaNombre}`;
+  const seoTitle = buildMateriaSearchTitle(materiaNombre, universidadNombre);
   const socialTitle = creatorLabel
     ? `${materiaNombre} — con ${creatorLabel} | Evaluo`
     : `${seoTitle} | Evaluo`;
