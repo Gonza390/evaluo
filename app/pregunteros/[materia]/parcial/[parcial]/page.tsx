@@ -11,6 +11,7 @@ import {
   Target,
 } from 'lucide-react';
 import { PregunteroPersonasJuridicasExperiment } from '@/components/marketing/preguntero-personas-juridicas-experiment';
+import { PregunteroSucesorioStudyPlan } from '@/components/marketing/preguntero-sucesorio-study-plan';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
@@ -26,6 +27,7 @@ import {
 export const revalidate = 600;
 
 const PERSONAS_JURIDICAS_MATERIA_ID = '5a10b059-546d-41a1-8ed8-d9fb1dd7581d';
+const DERECHO_SUCESORIO_MATERIA_ID = '555d3d0a-206e-42e2-adf8-08f1063448e6';
 
 type PageProps = {
   params: Promise<{
@@ -251,6 +253,10 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
                 ))}
               </ul>
             )}
+
+            {data.materiaId === DERECHO_SUCESORIO_MATERIA_ID && data.parcial === '2' ? (
+              <PregunteroSucesorioStudyPlan materiaId={data.materiaId} />
+            ) : null}
 
             <div className="mt-6 flex flex-wrap gap-2">
               <Link
