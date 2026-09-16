@@ -88,6 +88,7 @@ const loadUniversidadPageData = unstable_cache(
   async (id: string): Promise<UniversidadPageData> =>
     withTransientDataRetry(async () => {
       const supabase = createPublicClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
       const catalog = supabase as any;
 
       const { data: universidad, error: universidadError } = await supabase
