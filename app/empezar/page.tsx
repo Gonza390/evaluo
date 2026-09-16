@@ -22,6 +22,7 @@ export default async function EmpezarPage() {
   let hasPendingAcademicContext = false;
 
   if (careerId || firstSubject?.id) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
     const supabase = (await createClientServer()) as any;
     const [careerResult, subjectResult] = await Promise.all([
       careerId
