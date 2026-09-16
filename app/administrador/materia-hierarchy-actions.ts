@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 
+type AdminCatalog = ReturnType<typeof createAdminClient>;
+
 function normalizeName(value: string) {
   return value
     .trim()
@@ -19,7 +21,7 @@ function revalidateAdmin() {
   revalidatePath('/administrador');
 }
 
-async function getCareer(catalog: any, carreraId: string) {
+async function getCareer(catalog: AdminCatalog, carreraId: string) {
   const { data, error } = await catalog
     .from('carreras')
     .select('id, universidad_id')
@@ -30,7 +32,7 @@ async function getCareer(catalog: any, carreraId: string) {
   return data as { id: string; universidad_id: string | null } | null;
 }
 
-async function materiaBelongsToUniversity(catalog: any, materiaId: string, universidadId: string) {
+async function materiaBelongsToUniversity(catalog: AdminCatalog, materiaId: string, universidadId: string) {
   const { data: materia, error: materiaError } = await catalog
     .from('materias')
     .select('id, carrera_id')
@@ -61,7 +63,7 @@ async function materiaBelongsToUniversity(catalog: any, materiaId: string, unive
     .in('id', Array.from(careerIds));
 
   if (careersError) throw careersError;
-  return (careers ?? []).some((career: any) => String(career.universidad_id ?? '') === universidadId);
+  return (careers ?? []).some((career: { universidad_id?: string | null }) => String(career.universidad_id ?? '') === universidadId);
 }
 
 export async function crearMateriaEnCarreraAdministrador(input: {
@@ -70,7 +72,7 @@ export async function crearMateriaEnCarreraAdministrador(input: {
 }): Promise<{ success: boolean; message: string; materiaId?: string }> {
   try {
     await requireAdminAccess();
-    const catalog = createAdminClient() as any;
+    const catalog = createAdminClient();
     const nombre = input.nombre.trim();
 
     if (!nombre || !input.carreraId) {
@@ -90,7 +92,7 @@ export async function crearMateriaEnCarreraAdministrador(input: {
     if (materiasError) throw materiasError;
 
     const normalized = normalizeName(nombre);
-    const sameName = (materias ?? []).filter((materia: any) => normalizeName(String(materia.nombre ?? '')) === normalized);
+    const sameName = (materias ?? []).filter((materia: { nombre?: string | null }) => normalizeName(String(materia.nombre ?? '')) === normalized);
 
     let materiaId: string | null = null;
     for (const materia of sameName) {
@@ -163,7 +165,7 @@ export async function vincularMateriaExistenteAdministrador(input: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     await requireAdminAccess();
-    const catalog = createAdminClient() as any;
+    const catalog = createAdminClient();
 
     if (!input.materiaId || !input.carreraId) {
       return { success: false, message: 'Selecciona una materia para vincular.' };
