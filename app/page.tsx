@@ -78,8 +78,11 @@ const demoJourney = [
   ['03', 'Practicá para el parcial', 'Preguntas con feedback para comprobar qué entendiste.'],
 ] as const;
 
+/** Signup → materiales with open-upload modal (post-#70 PDF-first activation). */
+const primaryHref =
+  '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
+
 export default function Home() {
-  const primaryHref = '/login?mode=signup';
   return (
     <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <a
