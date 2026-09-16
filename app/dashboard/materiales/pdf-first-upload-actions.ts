@@ -75,7 +75,10 @@ async function hasUnlimitedStudentMaterialUploads(userId: string) {
     .maybeSingle();
 
   if (error) throw error;
-  return Boolean(data?.student_material_uploads_unlimited);
+  return Boolean(
+    (data as { student_material_uploads_unlimited?: boolean } | null)
+      ?.student_material_uploads_unlimited
+  );
 }
 
 async function assertStudentMaterialQuota(userId: string) {
