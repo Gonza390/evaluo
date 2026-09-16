@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
+import { PdfFirstUpload } from '@/components/dashboard/pdf-first-upload';
 import { createClientServer } from '@/lib/supabase-server';
 
-export default async function QuickPdfUploadPage({
+export default async function PdfFirstUploadPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -17,45 +18,61 @@ export default async function QuickPdfUploadPage({
     examDate = '',
     dailyMinutes = '',
   } = await searchParams;
+
   const supabase = await createClientServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const legacyParams = new URLSearchParams();
-    if (requestedMateriaId) legacyParams.set('materiaId', requestedMateriaId);
-    if (source) legacyParams.set('source', source);
-    if (examDate) legacyParams.set('examDate', examDate);
-    if (dailyMinutes) legacyParams.set('dailyMinutes', dailyMinutes);
-    const nextPath = `/dashboard/materiales/subir${legacyParams.toString() ? `?${legacyParams.toString()}` : ''}`;
+    const params = new URLSearchParams();
+    if (requestedMateriaId) params.set('materiaId', requestedMateriaId);
+    if (source) params.set('source', source);
+    if (examDate) params.set('examDate', examDate);
+    if (dailyMinutes) params.set('dailyMinutes', dailyMinutes);
+    const nextPath = `/dashboard/materiales/subir${params.toString() ? `?${params.toString()}` : ''}`;
     redirect(`/login?next=${encodeURIComponent(nextPath)}&reason=prepare-material`);
   }
 
-  const [carrerasResult, materiasResult, relacionesResult, profileResult] = await Promise.all([
-    supabase.from('carreras').select('id, universidad_id'),
-    supabase.from('materias').select('id, carrera_id'),
-    supabase.from('carrera_materias').select('carrera_id, materia_id'),
-    supabase
-      .from('profiles')
-      .select('universidad_id, carrera_id')
-      .eq('id', user.id)
-      .maybeSingle(),
-  ]);
+  const [universidadesResult, carrerasResult, materiasResult, relationsResult, profileResult] =
+    await Promise.all([
+      supabase.from('universidades').select('id, nombre').order('nombre'),
+      supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+      supabase.from('materias').select('id, nombre, carrera_id').order('nombre'),
+      supabase.from('carrera_materias').select('carrera_id, materia_id'),
+      supabase
+        .from('profiles')
+        .select('universidad_id, carrera_id, last_subject_id')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ]);
 
+  if (universidadesResult.error) throw universidadesResult.error;
   if (carrerasResult.error) throw carrerasResult.error;
   if (materiasResult.error) throw materiasResult.error;
-  if (relacionesResult.error) throw relacionesResult.error;
+  if (relationsResult.error) throw relationsResult.error;
   if (profileResult.error) throw profileResult.error;
 
+  const universidades = universidadesResult.data ?? [];
   const carreras = carrerasResult.data ?? [];
   const materias = materiasResult.data ?? [];
-  const carreraMaterias = relacionesResult.data ?? [];
-  const profileCarreraId = String(profileResult.data?.carrera_id ?? '');
-  const profileUniversidadId = String(profileResult.data?.universidad_id ?? '');
+  const carreraMaterias = relationsResult.data ?? [];
 
-  const validCareer = (careerId: string) => carreras.some((item) => item.id === careerId);
-  const materiaBelongsToCareer = (subjectId: string, careerId: string) => {
+  const profileUniversidadId = universidades.some(
+    (item) => item.id === profileResult.data?.universidad_id
+  )
+    ? String(profileResult.data?.universidad_id ?? '')
+    : '';
+
+  const profileCarreraId = carreras.some(
+    (item) =>
+      item.id === profileResult.data?.carrera_id &&
+      (!profileUniversidadId || item.universidad_id === profileUniversidadId)
+  )
+    ? String(profileResult.data?.carrera_id ?? '')
+    : '';
+
+  const subjectBelongsToCareer = (subjectId: string, careerId: string) => {
     const subject = materias.find((item) => item.id === subjectId);
     if (!subject || !careerId) return false;
     if (subject.carrera_id === careerId) return true;
@@ -65,16 +82,19 @@ export default async function QuickPdfUploadPage({
   };
 
   let initialUniversidadId = profileUniversidadId;
-  let initialCarreraId = validCareer(profileCarreraId) ? profileCarreraId : '';
+  let initialCarreraId = profileCarreraId;
   let initialMateriaId = '';
 
   const requestedSubject = materias.find((item) => item.id === requestedMateriaId);
   if (requestedSubject) {
     let contextualCareerId = '';
 
-    if (profileCarreraId && materiaBelongsToCareer(requestedSubject.id, profileCarreraId)) {
+    if (profileCarreraId && subjectBelongsToCareer(requestedSubject.id, profileCarreraId)) {
       contextualCareerId = profileCarreraId;
-    } else if (requestedSubject.carrera_id && validCareer(requestedSubject.carrera_id)) {
+    } else if (
+      requestedSubject.carrera_id &&
+      carreras.some((item) => item.id === requestedSubject.carrera_id)
+    ) {
       contextualCareerId = requestedSubject.carrera_id;
     } else {
       contextualCareerId =
@@ -89,15 +109,24 @@ export default async function QuickPdfUploadPage({
       initialUniversidadId = contextualCareer.universidad_id ?? initialUniversidadId;
       initialMateriaId = requestedSubject.id;
     }
+  } else {
+    const lastSubjectId = String(profileResult.data?.last_subject_id ?? '');
+    if (initialCarreraId && subjectBelongsToCareer(lastSubjectId, initialCarreraId)) {
+      initialMateriaId = lastSubjectId;
+    }
   }
 
-  const params = new URLSearchParams({ openUpload: '1' });
-  if (initialUniversidadId) params.set('universidadId', initialUniversidadId);
-  if (initialCarreraId) params.set('carreraId', initialCarreraId);
-  if (initialMateriaId) params.set('materiaId', initialMateriaId);
-  if (source) params.set('source', source);
-  if (examDate) params.set('examDate', examDate);
-  if (dailyMinutes) params.set('dailyMinutes', dailyMinutes);
-
-  redirect(`/dashboard/materiales?${params.toString()}`);
+  return (
+    <main className="min-h-screen bg-white px-4 py-5 sm:px-6 lg:px-8">
+      <PdfFirstUpload
+        universidades={universidades}
+        carreras={carreras}
+        materias={materias}
+        carreraMaterias={carreraMaterias}
+        initialUniversidadId={initialUniversidadId}
+        initialCarreraId={initialCarreraId}
+        initialMateriaId={initialMateriaId}
+      />
+    </main>
+  );
 }
