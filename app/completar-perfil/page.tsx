@@ -6,7 +6,10 @@ import { ProfileCompletionPrivateCatalog } from '@/components/profile-completion
 import { Spinner } from '@/components/ui/spinner';
 import { useUser } from '@/hooks/useUser';
 import { logError } from '@/lib/observability';
-import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
+import {
+  hasCompleteAcademicProfile,
+  isPdfFirstActivationPath,
+} from '@/lib/profile-completion';
 import { DEMO_MIGRATION_FLAG_KEY } from '@/lib/simulator-persistence';
 import { supabase } from '@/lib/supabase-client';
 
@@ -67,7 +70,7 @@ function CompletarPerfilContent() {
         return;
       }
 
-      if (nextPath.startsWith('/dashboard/materiales/nuevo')) {
+      if (isPdfFirstActivationPath(nextPath)) {
         if (active) {
           setRequiresCompletion(false);
           setIsCheckingProfile(false);

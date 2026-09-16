@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getDashboardBootstrapStream } from '@/lib/data/dashboard-bootstrap';
-import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
+import {
+  getPdfFirstActivationHref,
+  hasCompleteAcademicProfile,
+} from '@/lib/profile-completion';
 import { LazyDashboardContent } from '@/components/dashboard/lazy-dashboard-content';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 
@@ -24,7 +27,8 @@ export default async function DashboardPage() {
     });
 
   if (bootstrap.status === 'complete-profile' || needsSubjectCompletion) {
-    redirect('/completar-perfil?next=%2Fdashboard');
+    // Ship B.1: activación PDF-first sin gate de perfil académico.
+    redirect(getPdfFirstActivationHref());
   }
 
   return (
