@@ -137,7 +137,7 @@ export async function createPrivatePendingUniversityAction(
 
     const visibles = (universidades ?? []).filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => visibleToUser(row, user.id));
     const exacta = visibles.find(
-      (row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => normalizeUniversityName(row.nombre) === normalizeUniversityName(universidadNombre)
+      (row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => normalizeUniversityName(String(row.nombre ?? '')) === normalizeUniversityName(universidadNombre)
     );
     const aprobadas = visibles.filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => row.approval_status === 'approved');
     const coincidenciaFuerte = findStrongUniversityMatch(universidadNombre, aprobadas)?.university ?? null;
@@ -223,7 +223,7 @@ export async function createPrivatePendingCareerAction(
 
     const visibles = (carrerasExistentes ?? []).filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => visibleToUser(row, user.id));
     const exacta = visibles.find(
-      (row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => normalizeCareerName(row.nombre) === normalizeCareerName(carreraNombre)
+      (row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => normalizeCareerName(String(row.nombre ?? '')) === normalizeCareerName(carreraNombre)
     );
     const aprobadas = visibles.filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => row.approval_status === 'approved');
     const coincidenciaFuerte = findStrongCareerMatch(carreraNombre, aprobadas)?.career ?? null;
@@ -404,7 +404,7 @@ export async function createPrivatePendingSubjectAction(
       materia: {
         id: materiaCreada.id,
         nombre: materiaCreada.nombre,
-        approval_status: 'pending',
+        approval_status: materiaCreada.approval_status === 'approved' ? 'approved' : 'pending',
       },
     };
   } catch (error) {
