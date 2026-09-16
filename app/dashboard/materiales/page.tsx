@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { CalendarDays, Clock3, FileText, Sparkles } from 'lucide-react';
+import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { createClientServer } from '@/lib/supabase-server';
@@ -100,7 +101,12 @@ export default async function DashboardMaterialsPage({
     const materias = materiasResult.data ?? [];
     const carreraMaterias = carreraMateriasResult.data ?? [];
 
-    const profileUniversidadId = String(profileResult.data?.universidad_id ?? '');
+    const rawProfileUniversidadId = String(profileResult.data?.universidad_id ?? '');
+    const profileUniversidadId = universidades.some(
+      (universidad) => universidad.id === rawProfileUniversidadId
+    )
+      ? rawProfileUniversidadId
+      : '';
     const requestedUniversidadId = String(universidadId ?? '');
     const resolvedUniversidadId = universidades.some(
       (universidad) => universidad.id === requestedUniversidadId
@@ -108,30 +114,47 @@ export default async function DashboardMaterialsPage({
       ? requestedUniversidadId
       : profileUniversidadId;
 
-    const isCareerValid = (candidateId: string) =>
-      carreras.some(
-        (carrera) =>
-          carrera.id === candidateId &&
-          (!resolvedUniversidadId || carrera.universidad_id === resolvedUniversidadId)
+    const careerBelongsToUniversity = (candidateId: string, universityId: string) =>
+      Boolean(
+        candidateId &&
+          universityId &&
+          carreras.some(
+            (carrera) =>
+              carrera.id === candidateId && carrera.universidad_id === universityId
+          )
       );
     const requestedCarreraId = String(carreraId ?? '');
     const profileCarreraId = String(profileResult.data?.carrera_id ?? '');
-    const resolvedCarreraId = isCareerValid(requestedCarreraId)
+    const resolvedCarreraId = careerBelongsToUniversity(requestedCarreraId, resolvedUniversidadId)
       ? requestedCarreraId
-      : isCareerValid(profileCarreraId)
+      : careerBelongsToUniversity(profileCarreraId, resolvedUniversidadId)
         ? profileCarreraId
         : '';
 
-    const requestedMateriaId = String(materiaId ?? '');
-    const isMateriaValid = materias.some((materia) => {
-      if (materia.id !== requestedMateriaId || !resolvedCarreraId) return false;
-      if (materia.carrera_id === resolvedCarreraId) return true;
+    const subjectBelongsToCareer = (subjectId: string, careerId: string) => {
+      if (!subjectId || !careerId) return false;
+      const subject = materias.find((materia) => materia.id === subjectId);
+      if (!subject) return false;
+      if (subject.carrera_id === careerId) return true;
       return carreraMaterias.some(
-        (relation) =>
-          relation.carrera_id === resolvedCarreraId && relation.materia_id === requestedMateriaId
+        (relation) => relation.carrera_id === careerId && relation.materia_id === subjectId
       );
-    });
-    const resolvedMateriaId = isMateriaValid ? requestedMateriaId : '';
+    };
+
+    const requestedMateriaId = String(materiaId ?? '');
+    const resolvedMateriaId = subjectBelongsToCareer(requestedMateriaId, resolvedCarreraId)
+      ? requestedMateriaId
+      : '';
+
+    const uploadCarreraId = careerBelongsToUniversity(requestedCarreraId, profileUniversidadId)
+      ? requestedCarreraId
+      : careerBelongsToUniversity(profileCarreraId, profileUniversidadId)
+        ? profileCarreraId
+        : '';
+    const uploadMateriaId = subjectBelongsToCareer(requestedMateriaId, uploadCarreraId)
+      ? requestedMateriaId
+      : '';
+
     const isSucesorioPlan = source === 'preguntero-derecho-sucesorio-p2';
     const formattedExamDate = formatExamDate(examDate);
     const parsedDailyMinutes = Number.parseInt(dailyMinutes, 10);
@@ -177,17 +200,29 @@ export default async function DashboardMaterialsPage({
             </section>
           ) : null}
 
-          <StudentMaterialsWorkspace
-            initialMaterials={materials}
+          <PdfFirstUploadShell
             universidades={universidades}
             carreras={carreras}
             materias={materias}
             carreraMaterias={carreraMaterias}
-            initialUniversidadId={resolvedUniversidadId}
-            initialCarreraId={resolvedCarreraId}
-            initialMateriaId={resolvedMateriaId}
-            initialOpenUpload={openUpload === '1'}
-          />
+            initialUniversidadId={profileUniversidadId}
+            initialCarreraId={uploadCarreraId}
+            initialMateriaId={uploadMateriaId}
+            initialExamDate={examDate}
+            initialOpen={openUpload === '1'}
+          >
+            <StudentMaterialsWorkspace
+              initialMaterials={materials}
+              universidades={universidades}
+              carreras={carreras}
+              materias={materias}
+              carreraMaterias={carreraMaterias}
+              initialUniversidadId={resolvedUniversidadId}
+              initialCarreraId={resolvedCarreraId}
+              initialMateriaId={resolvedMateriaId}
+              initialOpenUpload={false}
+            />
+          </PdfFirstUploadShell>
         </div>
       </div>
     );

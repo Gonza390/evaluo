@@ -67,6 +67,44 @@ function normalizeName(value: string) {
   return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase('es-AR');
 }
 
+function FlowSteps({ activeStep }: { activeStep: number }) {
+  const steps = ['PDF', 'Contexto', 'Estudiar'];
+
+  return (
+    <div className="flex items-center gap-2" aria-label="Progreso de carga">
+      {steps.map((step, index) => {
+        const completed = index < activeStep;
+        const active = index === activeStep;
+        return (
+          <div key={step} className="flex min-w-0 flex-1 items-center gap-2 last:flex-initial">
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                completed
+                  ? 'bg-slate-950 text-white'
+                  : active
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-100 text-slate-400'
+              }`}
+            >
+              {completed ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
+            </div>
+            <span
+              className={`hidden text-xs font-semibold sm:block ${
+                active || completed ? 'text-slate-900' : 'text-slate-400'
+              }`}
+            >
+              {step}
+            </span>
+            {index < steps.length - 1 ? (
+              <div className={`h-px min-w-5 flex-1 ${completed ? 'bg-slate-900' : 'bg-slate-200'}`} />
+            ) : null}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function PdfFirstUpload({
   universidades,
   carreras,
@@ -350,12 +388,14 @@ export function PdfFirstUpload({
 
   if (uploadConstraint) {
     return (
-      <div className="mx-auto w-full max-w-2xl border-y border-slate-200 bg-white">
-        <StudentMaterialUploadErrorScreen
-          constraint={uploadConstraint}
-          onRetry={resetFile}
-          premiumHref="/pricing"
-        />
+      <div className="mx-auto w-full max-w-3xl py-6 sm:py-10">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+          <StudentMaterialUploadErrorScreen
+            constraint={uploadConstraint}
+            onRetry={resetFile}
+            premiumHref="/pricing"
+          />
+        </div>
       </div>
     );
   }
@@ -364,59 +404,89 @@ export function PdfFirstUpload({
     const ready = processing.status === 'ready';
     const failed = processing.status === 'failed';
     const progress = ready ? 100 : Math.min(96, Math.max(displayProgress, processing.progress));
+    const activeStep = contextDecision === 'pending' ? 1 : ready ? 2 : 1;
 
     return (
-      <div className="mx-auto w-full max-w-3xl py-4 sm:py-8">
-        <section className="border-y border-slate-200 bg-white py-6 sm:py-8">
-          <div className="flex items-start gap-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-              {failed ? <FileText className="h-5 w-5" /> : ready ? <CheckCircle2 className="h-5 w-5" /> : <Loader2 className="h-5 w-5 animate-spin" />}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
-                {failed ? 'Procesamiento interrumpido' : ready ? 'PDF listo' : 'Procesando'}
-              </p>
-              <h1 className="mt-2 text-2xl font-bold tracking-[-0.05em] text-slate-950 sm:text-3xl">
-                {failed ? 'No pudimos terminar tu PDF' : ready ? 'Tu PDF ya está listo' : 'Estamos procesando tu PDF'}
-              </h1>
-              <p className="mt-2 truncate text-sm text-slate-500">{processing.title}</p>
-            </div>
-          </div>
+      <div className="mx-auto w-full max-w-6xl py-3 sm:py-8">
+        <div className="mx-auto max-w-3xl">
+          <FlowSteps activeStep={activeStep} />
+        </div>
 
-          <div className="mt-6">
-            <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
-              <span>{failed ? 'Necesita revisión' : processing.message}</span>
-              <span>{progress}%</span>
+        <div className="mt-7 grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <section className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_24px_80px_rgba(15,23,42,0.14)] sm:p-8">
+            <div className="flex items-start justify-between gap-5">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-indigo-200 uppercase">
+                  {failed ? <FileText className="h-4 w-4" /> : ready ? <CheckCircle2 className="h-4 w-4" /> : <Loader2 className="h-4 w-4 animate-spin" />}
+                  {failed ? 'Procesamiento interrumpido' : ready ? 'PDF listo' : 'Procesando ahora'}
+                </div>
+                <h1 className="mt-4 max-w-md text-3xl font-bold tracking-[-0.055em] sm:text-4xl">
+                  {failed
+                    ? 'No pudimos terminar este PDF'
+                    : ready
+                      ? 'Tu material ya está listo'
+                      : 'Estamos procesando tu PDF'}
+                </h1>
+                <p className="mt-3 truncate text-sm text-slate-300">{processing.title}</p>
+              </div>
+              <span className="text-4xl font-bold tracking-[-0.06em] text-white sm:text-5xl">{progress}%</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-indigo-600 transition-[width] duration-500" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
 
-          {failed ? (
-            <div className="mt-6 border-t border-slate-200 pt-5">
-              <p className="text-sm text-red-700">{processing.error ?? 'No recibimos más detalle del error.'}</p>
-              <Button asChild variant="outline" className="mt-4">
+            <div className="mt-8 h-2 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-white transition-[width] duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              {failed
+                ? processing.error ?? 'No recibimos más detalle del error.'
+                : ready && contextDecision === 'pending'
+                  ? 'Terminamos el PDF. Podés guardar el contexto académico o saltarlo para entrar.'
+                  : processing.message}
+            </p>
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.06] p-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                  <Lock className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold">Este material es privado</p>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-400">Solo vos podés verlo mientras lo preparás.</p>
+                </div>
+              </div>
+            </div>
+
+            {failed ? (
+              <Button asChild variant="secondary" className="mt-6 w-full">
                 <Link href="/dashboard/materiales">Volver a mis materiales</Link>
               </Button>
-            </div>
-          ) : contextDecision === 'pending' ? (
-            <div className="mt-8 border-t border-slate-200 pt-6">
-              <div className="flex items-start gap-3">
-                <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-indigo-700" />
-                <div>
-                  <h2 className="text-lg font-bold tracking-[-0.035em] text-slate-950">
-                    Mientras procesamos, ¿dónde estudiás?
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Es opcional. Nos ayuda a entender mejor a quién usa Evaluo. Si algo no aparece, escribilo y lo creamos para vos.
-                  </p>
+            ) : null}
+          </section>
+
+          {!failed && contextDecision === 'pending' ? (
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.07)] sm:p-8">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                    <GraduationCap className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">¿Dónde estudiás?</h2>
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold tracking-[0.12em] text-slate-500 uppercase">Opcional</span>
+                    </div>
+                    <p className="mt-2 max-w-lg text-sm leading-6 text-slate-500">
+                      Completalo mientras trabajamos. No frena el PDF y, si una opción no existe, la creamos como privada para vos.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-4">
+              <div className="mt-7 grid gap-5">
                 <div>
-                  <label htmlFor="pdf-first-universidad" className="mb-1.5 block text-xs font-semibold text-slate-700">Universidad</label>
+                  <label htmlFor="pdf-first-universidad" className="mb-2 block text-xs font-bold text-slate-700">Universidad</label>
                   <Input
                     id="pdf-first-universidad"
                     list="pdf-first-universidades"
@@ -428,84 +498,107 @@ export function PdfFirstUpload({
                     }}
                     placeholder="Ej. Universidad de Buenos Aires"
                     autoComplete="off"
+                    className="h-12 rounded-xl"
                   />
                   <datalist id="pdf-first-universidades">
                     {universidades.map((item) => <option key={item.id} value={item.nombre} />)}
                   </datalist>
                 </div>
 
-                <div>
-                  <label htmlFor="pdf-first-carrera" className="mb-1.5 block text-xs font-semibold text-slate-700">Carrera</label>
-                  <Input
-                    id="pdf-first-carrera"
-                    list="pdf-first-carreras"
-                    value={carreraNombre}
-                    onChange={(event) => {
-                      setCarreraNombre(event.target.value);
-                      setMateriaNombre('');
-                    }}
-                    placeholder="Ej. Medicina"
-                    autoComplete="off"
-                    disabled={!universidadNombre.trim()}
-                  />
-                  <datalist id="pdf-first-carreras">
-                    {filteredCareers.map((item) => <option key={item.id} value={item.nombre} />)}
-                  </datalist>
-                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="pdf-first-carrera" className="mb-2 block text-xs font-bold text-slate-700">Carrera</label>
+                    <Input
+                      id="pdf-first-carrera"
+                      list="pdf-first-carreras"
+                      value={carreraNombre}
+                      onChange={(event) => {
+                        setCarreraNombre(event.target.value);
+                        setMateriaNombre('');
+                      }}
+                      placeholder="Ej. Medicina"
+                      autoComplete="off"
+                      disabled={!universidadNombre.trim()}
+                      className="h-12 rounded-xl"
+                    />
+                    <datalist id="pdf-first-carreras">
+                      {filteredCareers.map((item) => <option key={item.id} value={item.nombre} />)}
+                    </datalist>
+                  </div>
 
-                <div>
-                  <label htmlFor="pdf-first-materia" className="mb-1.5 block text-xs font-semibold text-slate-700">Materia</label>
-                  <Input
-                    id="pdf-first-materia"
-                    list="pdf-first-materias"
-                    value={materiaNombre}
-                    onChange={(event) => setMateriaNombre(event.target.value)}
-                    placeholder="Ej. Biología celular"
-                    autoComplete="off"
-                    disabled={!carreraNombre.trim()}
-                  />
-                  <datalist id="pdf-first-materias">
-                    {filteredSubjects.map((item) => <option key={item.id} value={item.nombre} />)}
-                  </datalist>
+                  <div>
+                    <label htmlFor="pdf-first-materia" className="mb-2 block text-xs font-bold text-slate-700">Materia</label>
+                    <Input
+                      id="pdf-first-materia"
+                      list="pdf-first-materias"
+                      value={materiaNombre}
+                      onChange={(event) => setMateriaNombre(event.target.value)}
+                      placeholder="Ej. Biología celular"
+                      autoComplete="off"
+                      disabled={!carreraNombre.trim()}
+                      className="h-12 rounded-xl"
+                    />
+                    <datalist id="pdf-first-materias">
+                      {filteredSubjects.map((item) => <option key={item.id} value={item.nombre} />)}
+                    </datalist>
+                  </div>
                 </div>
               </div>
 
-              {contextMessage ? <p className="mt-3 text-sm text-red-600">{contextMessage}</p> : null}
+              {contextMessage ? (
+                <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{contextMessage}</p>
+              ) : null}
 
-              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button type="button" variant="ghost" onClick={skipAcademicContext} disabled={savingContext}>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  onClick={skipAcademicContext}
+                  disabled={savingContext}
+                  className="text-sm font-semibold text-slate-500 transition hover:text-slate-900 disabled:opacity-50"
+                >
                   Saltar por ahora
-                </Button>
+                </button>
                 <Button
                   type="button"
+                  size="lg"
                   onClick={saveAcademicContext}
                   disabled={savingContext || !universidadNombre.trim()}
+                  className="min-w-44 rounded-xl"
                 >
                   {savingContext ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Guardar y continuar
+                  Guardar datos
+                  {!savingContext ? <ArrowRight className="h-4 w-4" /> : null}
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="mt-7 flex items-start gap-3 border-t border-slate-200 pt-5">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900">
-                  {contextDecision === 'saved' ? 'Datos académicos guardados' : 'Podés completar estos datos más adelante'}
-                </p>
-                <p className="mt-1 text-sm text-slate-500">
-                  {ready ? 'Abriendo tu espacio de estudio…' : 'Seguimos procesando el PDF. No tenés que hacer nada más.'}
-                </p>
-              </div>
-            </div>
-          )}
-        </section>
+            </section>
+          ) : !failed ? (
+            <section className="rounded-3xl border border-slate-200 bg-white p-7 shadow-[0_24px_80px_rgba(15,23,42,0.07)] sm:p-8">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                <CheckCircle2 className="h-6 w-6" />
+              </span>
+              <h2 className="mt-5 text-2xl font-bold tracking-[-0.045em] text-slate-950">
+                {contextDecision === 'saved' ? 'Contexto guardado' : 'Perfecto, seguimos sin esos datos'}
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-500">
+                {ready
+                  ? 'Tu material está listo. Estamos abriendo tu espacio de estudio…'
+                  : 'No tenés que hacer nada más. El PDF sigue procesándose y entraremos apenas termine.'}
+              </p>
+              {!ready ? (
+                <div className="mt-6 flex items-center gap-2 text-sm font-semibold text-indigo-700">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Seguimos trabajando en tu PDF
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl py-4 sm:py-8">
+    <div className="mx-auto w-full max-w-6xl py-3 sm:py-8">
       <input
         ref={pickerRef}
         type="file"
@@ -517,70 +610,124 @@ export function PdfFirstUpload({
         }}
       />
 
-      <section className="border-y border-slate-200 bg-white py-7 sm:py-10">
-        <div className="max-w-2xl">
-          <div className="flex items-center gap-2 text-indigo-700">
-            <Lock className="h-4 w-4" />
-            <span className="text-[11px] font-bold tracking-[0.16em] uppercase">Tu material es privado</span>
-          </div>
-          <h1 className="mt-3 text-[2rem] leading-[1.02] font-bold tracking-[-0.06em] text-slate-950 sm:text-[2.8rem]">
-            Subí el PDF que querés estudiar.
-          </h1>
-          <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-            Evaluo procesa ese mismo documento y prepara tu espacio de estudio. Universidad, carrera y materia no son necesarias para empezar.
-          </p>
-        </div>
+      <div className="mx-auto max-w-3xl">
+        <FlowSteps activeStep={0} />
+      </div>
 
-        <div className="mt-8">
-          {!selectedFile ? (
-            <button
-              type="button"
-              onClick={openPicker}
-              className="flex min-h-56 w-full flex-col items-center justify-center border border-dashed border-slate-300 bg-slate-50/40 px-6 py-10 text-center transition hover:border-indigo-300 hover:bg-indigo-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-                <Upload className="h-5 w-5" />
-              </span>
-              <span className="mt-4 text-base font-bold text-slate-950">Elegir PDF</span>
-              <span className="mt-1 text-sm text-slate-500">Free: hasta 100 páginas · Premium: sin límite de páginas · 20 MB máximo</span>
-            </button>
-          ) : (
-            <div className="border border-slate-200 bg-white p-5 sm:p-6">
-              <div className="flex items-start gap-3 border-b border-slate-200 pb-5">
-                <FileText className="mt-0.5 h-5 w-5 shrink-0 text-indigo-700" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-950">{selectedFile.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                </div>
-                <button type="button" onClick={openPicker} className="text-xs font-semibold text-indigo-700 hover:text-indigo-900">Cambiar</button>
-              </div>
-
-              <div className="mt-5">
-                <label htmlFor="pdf-first-title" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Nombre del material <span className="font-normal text-slate-400">(opcional)</span>
-                </label>
-                <Input
-                  id="pdf-first-title"
-                  value={title}
-                  maxLength={180}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder={getTitleFromFileName(selectedFile.name)}
-                />
-                <p className="mt-1.5 text-xs text-slate-500">Si no lo cambiás, usamos el nombre del archivo.</p>
-              </div>
-
-              <Button type="button" className="mt-6 w-full sm:w-auto" onClick={startProcessing} disabled={uploading}>
-                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                {uploading ? 'Subiendo PDF…' : 'Procesar PDF'}
-                {!uploading ? <ArrowRight className="h-4 w-4" /> : null}
-              </Button>
+      <section className="mt-7 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.08)]">
+        <div className="grid lg:grid-cols-[0.82fr_1.18fr]">
+          <div className="bg-slate-950 p-7 text-white sm:p-9 lg:p-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-bold tracking-[0.12em] text-indigo-200 uppercase">
+              <Lock className="h-3.5 w-3.5" />
+              Privado por defecto
             </div>
-          )}
-        </div>
 
-        <p className="mt-5 text-xs leading-5 text-slate-400">
-          Al subir el archivo aceptás los <Link href="/terminos" className="underline underline-offset-2">Términos y Condiciones</Link>. El PDF queda privado por defecto.
-        </p>
+            <h1 className="mt-7 max-w-md text-[2.6rem] leading-[0.98] font-bold tracking-[-0.065em] sm:text-[3.2rem]">
+              Tu PDF primero. Los datos después.
+            </h1>
+            <p className="mt-5 max-w-md text-sm leading-7 text-slate-300 sm:text-base">
+              Subí el material y empezamos a procesarlo enseguida. Universidad, carrera y materia son opcionales y se completan mientras trabajamos.
+            </p>
+
+            <div className="mt-9 space-y-4 border-t border-white/10 pt-7">
+              <div className="flex gap-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold">1</span>
+                <div>
+                  <p className="text-sm font-semibold">Elegís un PDF</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">El nombre se completa solo y podés cambiarlo.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold">2</span>
+                <div>
+                  <p className="text-sm font-semibold">Procesamos inmediatamente</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">No esperamos datos académicos para arrancar.</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold">3</span>
+                <div>
+                  <p className="text-sm font-semibold">Entrás a estudiar</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">Guardás contexto o lo saltás. El PDF sigue avanzando igual.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-9 lg:p-10">
+            <div>
+              <p className="text-xs font-bold tracking-[0.14em] text-indigo-700 uppercase">Paso 1</p>
+              <h2 className="mt-2 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">Subí tu material</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">Solo necesitamos el PDF para empezar.</p>
+            </div>
+
+            {!selectedFile ? (
+              <button
+                type="button"
+                onClick={openPicker}
+                className="group mt-7 flex min-h-64 w-full flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50/70 px-6 py-10 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              >
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200 transition group-hover:-translate-y-0.5">
+                  <Upload className="h-6 w-6" />
+                </span>
+                <span className="mt-5 text-base font-bold text-slate-950">Elegir un PDF</span>
+                <span className="mt-2 max-w-sm text-sm leading-6 text-slate-500">Hacé click para buscar el archivo en tu dispositivo.</span>
+                <span className="mt-4 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200">PDF · hasta 20 MB</span>
+              </button>
+            ) : (
+              <div className="mt-7">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-slate-950">{selectedFile.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB · listo para subir</p>
+                    </div>
+                    <button type="button" onClick={openPicker} className="shrink-0 text-xs font-bold text-indigo-700 hover:text-indigo-900">Cambiar</button>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <label htmlFor="pdf-first-title" className="text-xs font-bold text-slate-700">Nombre del material</label>
+                    <span className="text-[11px] font-medium text-slate-400">Opcional</span>
+                  </div>
+                  <Input
+                    id="pdf-first-title"
+                    value={title}
+                    maxLength={180}
+                    onChange={(event) => setTitle(event.target.value)}
+                    placeholder={getTitleFromFileName(selectedFile.name)}
+                    className="mt-2 h-12 rounded-xl"
+                  />
+                  <p className="mt-2 text-xs leading-5 text-slate-500">Si lo dejás como está, usamos el nombre del archivo.</p>
+                </div>
+
+                <Button
+                  type="button"
+                  size="lg"
+                  className="mt-7 h-12 w-full rounded-xl text-sm font-bold"
+                  onClick={startProcessing}
+                  disabled={uploading}
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploading ? 'Subiendo PDF…' : 'Subir y empezar a procesar'}
+                  {!uploading ? <ArrowRight className="h-4 w-4" /> : null}
+                </Button>
+              </div>
+            )}
+
+            <div className="mt-7 flex items-start gap-2 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-400">
+              <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <p>
+                El PDF queda privado por defecto. Al subirlo aceptás los{' '}
+                <Link href="/terminos" className="font-semibold text-slate-500 underline underline-offset-2">Términos y Condiciones</Link>.
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );
