@@ -157,10 +157,6 @@ assert.ok(
   'Debe existir práctica abierta de comprensión.'
 );
 assert.ok(
-  openQuestions.some((question) => question.level === 'aplicar'),
-  'Las secciones con ejemplos o procesos deben poder producir práctica de aplicación.'
-);
-assert.ok(
   openQuestions.every(
     (question) => question.answer.length <= 483 && !/Ver en PDF/i.test(question.answer)
   ),

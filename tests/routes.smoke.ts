@@ -126,8 +126,8 @@ assert.doesNotMatch(materiaStudyHomeSource, />Sin preguntas</);
 assert.match(dashboardSource, /Empezá a estudiar en 4 pasos/);
 assert.match(dashboardSource, /const dashboardTourSteps: GuidedTourStep\[\]/);
 assert.match(dashboardSource, /Este es tu tablero/);
-assert.match(exploreClientSource, /readyMateriasCount/);
-assert.match(exploreClientSource, /Ver las \$\{rankedCarreras\.length\} carreras/);
+assert.match(exploreClientSource, /sortedCarreras/);
+assert.match(exploreClientSource, /Ver las \$\{sortedCarreras\.length\} carreras/);
 assert.match(loginSource, /getAuthContextCopy/);
 
 for (const href of ['/explorar', '/pregunteros', '/']) {

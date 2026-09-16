@@ -190,7 +190,7 @@ export function PdfFirstUploadShell({
   };
 
   const startProcessing = async () => {
-    if (!file || !hasValidTitle || !examDate || uploading) return;
+    if (!file || !hasValidTitle || uploading) return;
     setUploading(true);
     let preparedPath: string | null = null;
 
@@ -227,13 +227,15 @@ export function PdfFirstUploadShell({
         throw new Error(result.message);
       }
 
-      const examResult = await saveStudentMaterialExamContextAction({
-        materialId: result.materialId,
-        examInstance: null,
-        examDate,
-      });
-      if (!examResult.success) {
-        toast({ description: examResult.message, variant: 'destructive' });
+      if (examDate) {
+        const examResult = await saveStudentMaterialExamContextAction({
+          materialId: result.materialId,
+          examInstance: null,
+          examDate,
+        });
+        if (!examResult.success) {
+          toast({ description: examResult.message, variant: 'destructive' });
+        }
       }
 
       const initialState: StudentMaterialProcessingState = {
@@ -328,7 +330,7 @@ export function PdfFirstUploadShell({
                         ? 'Terminamos de preparar tu material.'
                         : 'El material ya está listo. Podés completar los datos o saltarlos.'
                       : 'Mientras lo preparamos, vinculalo con tu carrera y materia.'
-                    : 'Elegí el archivo, poné un nombre y la fecha de examen.'}
+                    : 'Elegí el archivo y poné un nombre. La fecha de examen es opcional.'}
                 </p>
               </div>
               <button
@@ -402,13 +404,13 @@ export function PdfFirstUploadShell({
                         <label htmlFor="pdf-first-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                           <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
                           Fecha de examen
+                          <span className="font-medium text-slate-400">(opcional)</span>
                         </label>
                         <Input
                           id="pdf-first-exam-date"
                           type="date"
                           value={examDate}
                           onChange={(event) => setExamDate(event.target.value)}
-                          required
                         />
                       </div>
                     ) : null}
@@ -417,7 +419,7 @@ export function PdfFirstUploadShell({
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>Cancelar</Button>
-                  <Button type="button" disabled={!file || !hasValidTitle || !examDate || uploading} onClick={startProcessing}>
+                  <Button type="button" disabled={!file || !hasValidTitle || uploading} onClick={startProcessing}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Continuar
                   </Button>

@@ -5,15 +5,16 @@ import { MAX_FREE_STUDENT_MATERIAL_PDF_PAGES } from '@/lib/student-materials/val
 
 export class StudentMaterialPdfPageLimitError extends Error {
   readonly code = 'student_material_pdf_page_limit' as const;
+  readonly pageCount: number;
+  readonly maxPages: number;
 
-  constructor(
-    readonly pageCount: number,
-    readonly maxPages: number
-  ) {
+  constructor(pageCount: number, maxPages: number) {
     super(
       `El PDF tiene ${pageCount} páginas. El plan Free permite hasta ${maxPages} páginas por documento; Premium no tiene límite de páginas.`
     );
     this.name = 'StudentMaterialPdfPageLimitError';
+    this.pageCount = pageCount;
+    this.maxPages = maxPages;
   }
 }
 

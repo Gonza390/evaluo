@@ -15,6 +15,7 @@ export async function crearFacultadAdministrador(input: {
   try {
     await requireAdminAccess();
     const admin = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
     const catalog = admin as any;
     const nombre = input.nombre.trim();
 
@@ -69,6 +70,7 @@ export async function crearCarreraDirectaUniversidadAdministrador(input: {
   try {
     await requireAdminAccess();
     const admin = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
     const catalog = admin as any;
     const nombre = input.nombre.trim();
 
@@ -125,6 +127,7 @@ export async function crearCarreraEnFacultadAdministrador(input: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     await requireAdminAccess();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
     const catalog = createAdminClient() as any;
     const nombre = input.nombre.trim();
 
@@ -183,6 +186,7 @@ export async function obtenerEstructuraUniversidadAdministrador(
 }> {
   try {
     await requireAdminAccess();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
     const catalog = createAdminClient() as any;
 
     if (!universidadId) {
@@ -207,12 +211,12 @@ export async function obtenerEstructuraUniversidadAdministrador(
 
     return {
       success: true,
-      facultades: (facultadesRes.data ?? []).map((row: any) => ({
+      facultades: (facultadesRes.data ?? []).map((row: { id: string; nombre: string | null; universidad_id?: string | null; facultad_id?: string | null }) => ({
         id: String(row.id),
         nombre: String(row.nombre ?? ''),
         universidadId: String(row.universidad_id),
       })),
-      carreras: (carrerasRes.data ?? []).map((row: any) => ({
+      carreras: (carrerasRes.data ?? []).map((row: { id: string; nombre: string | null; universidad_id?: string | null; facultad_id?: string | null }) => ({
         id: String(row.id),
         nombre: String(row.nombre ?? ''),
         universidadId: row.universidad_id ? String(row.universidad_id) : null,

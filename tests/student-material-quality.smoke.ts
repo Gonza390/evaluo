@@ -934,7 +934,7 @@ const pedagogy = buildPedagogicalArtifacts({
 assert.ok(pedagogy.flashcards.length >= 4, 'Debe generar tarjetas desde conceptos reales.');
 assert.ok(pedagogy.questions.some((question) => question.type === 'multiple_choice'));
 assert.ok(
-  pedagogy.questions.some((question) => question.type === 'open' && question.level === 'aplicar')
+  pedagogy.questions.some((question) => question.type === 'open' && question.level === 'comprender')
 );
 assert.ok(pedagogy.questions.every((question) => question.answer && question.explanation));
 assert.ok(

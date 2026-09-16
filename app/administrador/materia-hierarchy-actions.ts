@@ -19,6 +19,7 @@ function revalidateAdmin() {
   revalidatePath('/administrador');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
 async function getCareer(catalog: any, carreraId: string) {
   const { data, error } = await catalog
     .from('carreras')
@@ -30,6 +31,7 @@ async function getCareer(catalog: any, carreraId: string) {
   return data as { id: string; universidad_id: string | null } | null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
 async function materiaBelongsToUniversity(catalog: any, materiaId: string, universidadId: string) {
   const { data: materia, error: materiaError } = await catalog
     .from('materias')
@@ -61,7 +63,7 @@ async function materiaBelongsToUniversity(catalog: any, materiaId: string, unive
     .in('id', Array.from(careerIds));
 
   if (careersError) throw careersError;
-  return (careers ?? []).some((career: any) => String(career.universidad_id ?? '') === universidadId);
+  return (careers ?? []).some((career: { universidad_id?: string | null }) => String(career.universidad_id ?? '') === universidadId);
 }
 
 export async function crearMateriaEnCarreraAdministrador(input: {
@@ -70,6 +72,7 @@ export async function crearMateriaEnCarreraAdministrador(input: {
 }): Promise<{ success: boolean; message: string; materiaId?: string }> {
   try {
     await requireAdminAccess();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
     const catalog = createAdminClient() as any;
     const nombre = input.nombre.trim();
 
@@ -90,7 +93,7 @@ export async function crearMateriaEnCarreraAdministrador(input: {
     if (materiasError) throw materiasError;
 
     const normalized = normalizeName(nombre);
-    const sameName = (materias ?? []).filter((materia: any) => normalizeName(String(materia.nombre ?? '')) === normalized);
+    const sameName = (materias ?? []).filter((materia: { nombre?: string | null }) => normalizeName(String(materia.nombre ?? '')) === normalized);
 
     let materiaId: string | null = null;
     for (const materia of sameName) {
@@ -163,6 +166,7 @@ export async function vincularMateriaExistenteAdministrador(input: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     await requireAdminAccess();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
     const catalog = createAdminClient() as any;
 
     if (!input.materiaId || !input.carreraId) {

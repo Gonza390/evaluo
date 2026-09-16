@@ -6,6 +6,7 @@ export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = 1;
 type BuildInput = Parameters<typeof buildPedagogicalArtifacts>[0];
 type Artifacts = ReturnType<typeof buildPedagogicalArtifacts>;
 type UntypedAdmin = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
   from: (table: string) => any;
 };
 

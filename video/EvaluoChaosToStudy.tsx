@@ -20,13 +20,6 @@ const r = (frame: number, input: number[], output: number[]) => interpolate(fram
 
 type Feature = 'summary' | 'cards' | 'exam' | 'glossary';
 
-const featureLabels: Record<Feature, string> = {
-  summary: 'Resumen',
-  cards: 'Flashcards',
-  exam: 'Examen',
-  glossary: 'Glosario',
-};
-
 const Brand: React.FC<{light?: boolean}> = ({light = false}) => (
   <div style={{display: 'flex', alignItems: 'center', gap: 11}}>
     <Img src={staticFile('icon.png')} style={{width: 38, height: 38, objectFit: 'contain'}} />

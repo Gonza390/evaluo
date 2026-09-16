@@ -362,7 +362,7 @@ async function buildSourceDetail({
   currentRows,
   recognizedEntries,
   trend,
-  timeline,
+  timeline: _timeline,
   rangeDays,
   currentStart,
   now,
