@@ -4,8 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 
-type AdminCatalog = ReturnType<typeof createAdminClient>;
-
 function normalizeName(value: string) {
   return value
     .trim()
@@ -21,7 +19,8 @@ function revalidateAdmin() {
   revalidatePath('/administrador');
 }
 
-async function getCareer(catalog: AdminCatalog, carreraId: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+async function getCareer(catalog: any, carreraId: string) {
   const { data, error } = await catalog
     .from('carreras')
     .select('id, universidad_id')
@@ -32,7 +31,8 @@ async function getCareer(catalog: AdminCatalog, carreraId: string) {
   return data as { id: string; universidad_id: string | null } | null;
 }
 
-async function materiaBelongsToUniversity(catalog: AdminCatalog, materiaId: string, universidadId: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+async function materiaBelongsToUniversity(catalog: any, materiaId: string, universidadId: string) {
   const { data: materia, error: materiaError } = await catalog
     .from('materias')
     .select('id, carrera_id')
@@ -72,7 +72,8 @@ export async function crearMateriaEnCarreraAdministrador(input: {
 }): Promise<{ success: boolean; message: string; materiaId?: string }> {
   try {
     await requireAdminAccess();
-    const catalog = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+    const catalog = createAdminClient() as any;
     const nombre = input.nombre.trim();
 
     if (!nombre || !input.carreraId) {
@@ -165,7 +166,8 @@ export async function vincularMateriaExistenteAdministrador(input: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     await requireAdminAccess();
-    const catalog = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+    const catalog = createAdminClient() as any;
 
     if (!input.materiaId || !input.carreraId) {
       return { success: false, message: 'Selecciona una materia para vincular.' };

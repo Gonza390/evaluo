@@ -4,8 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 
-type AdminCatalog = ReturnType<typeof createAdminClient>;
-
 function revalidateAdministrador() {
   revalidatePath('/administrador');
 }
@@ -17,7 +15,8 @@ export async function crearFacultadAdministrador(input: {
   try {
     await requireAdminAccess();
     const admin = createAdminClient();
-    const catalog: AdminCatalog = admin;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+    const catalog = admin as any;
     const nombre = input.nombre.trim();
 
     if (!nombre || !input.universidadId) {
@@ -71,7 +70,8 @@ export async function crearCarreraDirectaUniversidadAdministrador(input: {
   try {
     await requireAdminAccess();
     const admin = createAdminClient();
-    const catalog: AdminCatalog = admin;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+    const catalog = admin as any;
     const nombre = input.nombre.trim();
 
     if (!nombre || !input.universidadId) {
@@ -127,7 +127,8 @@ export async function crearCarreraEnFacultadAdministrador(input: {
 }): Promise<{ success: boolean; message: string }> {
   try {
     await requireAdminAccess();
-    const catalog = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+    const catalog = createAdminClient() as any;
     const nombre = input.nombre.trim();
 
     if (!nombre || !input.universidadId || !input.facultadId) {
@@ -185,7 +186,8 @@ export async function obtenerEstructuraUniversidadAdministrador(
 }> {
   try {
     await requireAdminAccess();
-    const catalog = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin catalog incompleto en ServerDatabase
+    const catalog = createAdminClient() as any;
 
     if (!universidadId) {
       return { success: false, message: 'Falta la universidad.' };
@@ -209,26 +211,17 @@ export async function obtenerEstructuraUniversidadAdministrador(
 
     return {
       success: true,
-      facultades: (facultadesRes.data ?? []).map(
-        (row: { id: string; nombre: string | null; universidad_id: string }) => ({
-          id: String(row.id),
-          nombre: String(row.nombre ?? ''),
-          universidadId: String(row.universidad_id),
-        })
-      ),
-      carreras: (carrerasRes.data ?? []).map(
-        (row: {
-          id: string;
-          nombre: string | null;
-          universidad_id: string | null;
-          facultad_id: string | null;
-        }) => ({
-          id: String(row.id),
-          nombre: String(row.nombre ?? ''),
-          universidadId: row.universidad_id ? String(row.universidad_id) : null,
-          facultadId: row.facultad_id ? String(row.facultad_id) : null,
-        })
-      ),
+      facultades: (facultadesRes.data ?? []).map((row: { id: string; nombre: string | null; universidad_id?: string | null; facultad_id?: string | null }) => ({
+        id: String(row.id),
+        nombre: String(row.nombre ?? ''),
+        universidadId: String(row.universidad_id),
+      })),
+      carreras: (carrerasRes.data ?? []).map((row: { id: string; nombre: string | null; universidad_id?: string | null; facultad_id?: string | null }) => ({
+        id: String(row.id),
+        nombre: String(row.nombre ?? ''),
+        universidadId: row.universidad_id ? String(row.universidad_id) : null,
+        facultadId: row.facultad_id ? String(row.facultad_id) : null,
+      })),
     };
   } catch (error) {
     return {
