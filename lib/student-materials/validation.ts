@@ -8,10 +8,6 @@ export const MAX_PREMIUM_STUDENT_MATERIAL_PDF_PAGES: number | null = null;
 export const MAX_STUDENT_MATERIAL_PDF_PAGES = MAX_FREE_STUDENT_MATERIAL_PDF_PAGES;
 
 const uuidSchema = z.string().uuid();
-const optionalAcademicIdSchema = z.preprocess(
-  (value) => (value === '' || typeof value === 'undefined' ? null : value),
-  uuidSchema.nullable()
-);
 
 export const studentMaterialIdSchema = uuidSchema;
 
@@ -23,9 +19,9 @@ export const studentMaterialVisibilityInputSchema = z.object({
 });
 
 export const studentMaterialUploadMetadataSchema = z.object({
-  universidadId: optionalAcademicIdSchema.default(null),
-  carreraId: optionalAcademicIdSchema.default(null),
-  materiaId: optionalAcademicIdSchema.default(null),
+  universidadId: uuidSchema,
+  carreraId: uuidSchema,
+  materiaId: uuidSchema,
   title: z
     .string()
     .trim()
@@ -36,7 +32,7 @@ export const studentMaterialUploadMetadataSchema = z.object({
     .trim()
     .min(3, 'Indicá brevemente a qué parcial, módulos o temas corresponde el material.')
     .max(240, 'La descripción no puede superar los 240 caracteres.'),
-  shareWithCatalog: z.boolean().default(false),
+  shareWithCatalog: z.boolean(),
 });
 
 export const studentMaterialUploadFileMetadataSchema = z.object({
