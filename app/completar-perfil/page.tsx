@@ -67,6 +67,15 @@ function CompletarPerfilContent() {
         return;
       }
 
+      if (nextPath.startsWith('/dashboard/materiales/nuevo')) {
+        if (active) {
+          setRequiresCompletion(false);
+          setIsCheckingProfile(false);
+          router.replace(nextPath);
+        }
+        return;
+      }
+
       setIsCheckingProfile(true);
 
       try {
