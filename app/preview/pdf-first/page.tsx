@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { CalendarDays, FileText, Plus, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { CalendarDays, FileText, Loader2, Plus, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -15,12 +15,40 @@ function titleFromFile(name: string) {
   );
 }
 
+function countWords(value: string) {
+  const normalized = value.trim();
+  return normalized ? normalized.split(/\s+/).filter(Boolean).length : 0;
+}
+
+type Stage = 'upload' | 'processing';
+
 export default function PdfFirstPublicPreviewPage() {
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<Stage>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [examDate, setExamDate] = useState('');
+  const [career, setCareer] = useState('');
+  const [subject, setSubject] = useState('');
+  const [progress, setProgress] = useState(14);
+  const [contextSaved, setContextSaved] = useState(false);
+
+  const wordCount = countWords(title);
+  const hasValidTitle = wordCount >= 3;
+
+  useEffect(() => {
+    if (!open || stage !== 'processing') return;
+
+    const interval = window.setInterval(() => {
+      setProgress((current) => {
+        if (current >= 94) return current;
+        return Math.min(94, current + Math.max(1, Math.round((94 - current) / 12)));
+      });
+    }, 900);
+
+    return () => window.clearInterval(interval);
+  }, [open, stage]);
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
@@ -29,14 +57,27 @@ export default function PdfFirstPublicPreviewPage() {
     setExamDate('');
   };
 
-  const close = () => {
-    setOpen(false);
+  const reset = () => {
     setFile(null);
     setTitle('');
     setExamDate('');
+    setCareer('');
+    setSubject('');
+    setProgress(14);
+    setContextSaved(false);
+    setStage('upload');
   };
 
-  const canSetExamDate = title.trim().length >= 3;
+  const close = () => {
+    setOpen(false);
+    reset();
+  };
+
+  const startProcessing = () => {
+    if (!file || !hasValidTitle) return;
+    setProgress(14);
+    setStage('processing');
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50">
@@ -90,9 +131,13 @@ export default function PdfFirstPublicPreviewPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="pdf-modal-title" className="text-xl font-bold tracking-[-0.035em] text-slate-950">
-                  Subir PDF
+                  {stage === 'upload' ? 'Subir PDF' : 'Estamos procesando tu PDF'}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">Elegí el archivo y, si querés, cambiá su nombre.</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  {stage === 'upload'
+                    ? 'Elegí el archivo y poné un nombre claro para reconocerlo.'
+                    : 'Mientras lo preparamos, contanos a qué carrera y materia pertenece.'}
+                </p>
               </div>
               <button
                 type="button"
@@ -104,83 +149,160 @@ export default function PdfFirstPublicPreviewPage() {
               </button>
             </div>
 
-            <input
-              ref={pickerRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              className="sr-only"
-              onChange={(event) => {
-                selectFile(event.currentTarget.files?.[0] ?? null);
-                event.currentTarget.value = '';
-              }}
-            />
+            {stage === 'upload' ? (
+              <>
+                <input
+                  ref={pickerRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="sr-only"
+                  onChange={(event) => {
+                    selectFile(event.currentTarget.files?.[0] ?? null);
+                    event.currentTarget.value = '';
+                  }}
+                />
 
-            {!file ? (
-              <button
-                type="button"
-                onClick={() => pickerRef.current?.click()}
-                className="mt-6 flex min-h-44 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                  <Upload className="h-5 w-5" />
-                </span>
-                <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
-                <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
-              </button>
+                {!file ? (
+                  <button
+                    type="button"
+                    onClick={() => pickerRef.current?.click()}
+                    className="mt-6 flex min-h-44 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                      <Upload className="h-5 w-5" />
+                    </span>
+                    <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
+                    <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
+                  </button>
+                ) : (
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => pickerRef.current?.click()}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-300"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                        <FileText className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-slate-900">{file.name}</span>
+                        <span className="mt-0.5 block text-xs text-slate-400">Tocá para cambiar archivo</span>
+                      </span>
+                    </button>
+
+                    <div className="mt-4">
+                      <label htmlFor="preview-pdf-title" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                        Nombre
+                      </label>
+                      <Input
+                        id="preview-pdf-title"
+                        value={title}
+                        onChange={(event) => {
+                          const nextTitle = event.target.value;
+                          setTitle(nextTitle);
+                          if (countWords(nextTitle) < 3) setExamDate('');
+                        }}
+                        placeholder={titleFromFile(file.name)}
+                      />
+                      <div className="mt-1.5 flex items-center justify-between text-[11px]">
+                        <span className={hasValidTitle ? 'text-emerald-600' : 'text-slate-400'}>
+                          Mínimo 3 palabras
+                        </span>
+                        <span className={hasValidTitle ? 'font-semibold text-emerald-600' : 'text-slate-400'}>
+                          {Math.min(wordCount, 3)}/3
+                        </span>
+                      </div>
+                    </div>
+
+                    {hasValidTitle ? (
+                      <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <label htmlFor="preview-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                          <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
+                          Fecha de examen <span className="font-normal text-slate-400">(opcional)</span>
+                        </label>
+                        <Input
+                          id="preview-exam-date"
+                          type="date"
+                          value={examDate}
+                          onChange={(event) => setExamDate(event.target.value)}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
+                <div className="mt-6 flex items-center justify-end gap-2">
+                  <Button type="button" variant="ghost" onClick={close}>Cancelar</Button>
+                  <Button type="button" disabled={!file || !hasValidTitle} onClick={startProcessing}>
+                    Continuar
+                  </Button>
+                </div>
+              </>
             ) : (
               <div className="mt-6">
-                <button
-                  type="button"
-                  onClick={() => pickerRef.current?.click()}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-300"
-                >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
-                    <FileText className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-900">{file.name}</span>
-                    <span className="mt-0.5 block text-xs text-slate-400">Tocá para cambiar archivo</span>
-                  </span>
-                </button>
-
-                <div className="mt-4">
-                  <label htmlFor="preview-pdf-title" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Nombre <span className="font-normal text-slate-400">(opcional)</span>
-                  </label>
-                  <Input
-                    id="preview-pdf-title"
-                    value={title}
-                    onChange={(event) => {
-                      setTitle(event.target.value);
-                      if (event.target.value.trim().length < 3) setExamDate('');
-                    }}
-                    placeholder={titleFromFile(file.name)}
-                  />
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">Leyendo y organizando el contenido…</p>
+                    </div>
+                    <span className="text-xs font-semibold tabular-nums text-slate-500">{progress}%</span>
+                  </div>
+                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
+                  </div>
                 </div>
 
-                {canSetExamDate ? (
-                  <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <label htmlFor="preview-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
-                      Fecha de examen <span className="font-normal text-slate-400">(opcional)</span>
+                <div className="mt-5">
+                  <div>
+                    <label htmlFor="preview-career" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                      Carrera
                     </label>
                     <Input
-                      id="preview-exam-date"
-                      type="date"
-                      value={examDate}
-                      onChange={(event) => setExamDate(event.target.value)}
+                      id="preview-career"
+                      value={career}
+                      onChange={(event) => {
+                        setCareer(event.target.value);
+                        setContextSaved(false);
+                      }}
+                      placeholder="Ej. Abogacía"
                     />
                   </div>
-                ) : null}
+
+                  <div className="mt-4">
+                    <label htmlFor="preview-subject" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                      Materia
+                    </label>
+                    <Input
+                      id="preview-subject"
+                      value={subject}
+                      onChange={(event) => {
+                        setSubject(event.target.value);
+                        setContextSaved(false);
+                      }}
+                      placeholder="Ej. Derecho sucesorio"
+                    />
+                  </div>
+
+                  {contextSaved ? (
+                    <p className="mt-3 text-xs font-medium text-emerald-600">Listo. Guardamos carrera y materia.</p>
+                  ) : null}
+                </div>
+
+                <div className="mt-6 flex items-center justify-end">
+                  <Button
+                    type="button"
+                    disabled={!career.trim() || !subject.trim()}
+                    onClick={() => setContextSaved(true)}
+                  >
+                    Guardar
+                  </Button>
+                </div>
               </div>
             )}
-
-            <div className="mt-6 flex items-center justify-end gap-2">
-              <Button type="button" variant="ghost" onClick={close}>Cancelar</Button>
-              <Button type="button" disabled={!file} onClick={() => setOpen(false)}>
-                Continuar
-              </Button>
-            </div>
           </section>
         </div>
       ) : null}
