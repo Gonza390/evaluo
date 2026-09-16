@@ -15,12 +15,28 @@ function titleFromFile(name: string) {
   );
 }
 
-function countWords(value: string) {
-  const normalized = value.trim();
-  return normalized ? normalized.split(/\s+/).filter(Boolean).length : 0;
-}
-
 type Stage = 'upload' | 'processing';
+type Career = { id: string; name: string };
+type Subject = { id: string; careerId: string; name: string };
+
+const PROFILE_UNIVERSITY = {
+  id: 'uba',
+  name: 'Universidad de Buenos Aires',
+};
+
+const INITIAL_CAREERS: Career[] = [
+  { id: 'abogacia', name: 'Abogacía' },
+  { id: 'medicina', name: 'Medicina' },
+  { id: 'psicologia', name: 'Psicología' },
+];
+
+const INITIAL_SUBJECTS: Subject[] = [
+  { id: 'sucesorio', careerId: 'abogacia', name: 'Derecho Sucesorio' },
+  { id: 'constitucional', careerId: 'abogacia', name: 'Derecho Constitucional' },
+  { id: 'anatomia', careerId: 'medicina', name: 'Anatomía' },
+  { id: 'fisiologia', careerId: 'medicina', name: 'Fisiología' },
+  { id: 'psico-general', careerId: 'psicologia', name: 'Psicología General' },
+];
 
 export default function PdfFirstPublicPreviewPage() {
   const pickerRef = useRef<HTMLInputElement | null>(null);
@@ -29,13 +45,19 @@ export default function PdfFirstPublicPreviewPage() {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [examDate, setExamDate] = useState('');
-  const [career, setCareer] = useState('');
-  const [subject, setSubject] = useState('');
+  const [careers, setCareers] = useState<Career[]>(INITIAL_CAREERS);
+  const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
+  const [careerId, setCareerId] = useState('');
+  const [subjectId, setSubjectId] = useState('');
+  const [addingCareer, setAddingCareer] = useState(false);
+  const [addingSubject, setAddingSubject] = useState(false);
+  const [newCareer, setNewCareer] = useState('');
+  const [newSubject, setNewSubject] = useState('');
   const [progress, setProgress] = useState(14);
   const [contextSaved, setContextSaved] = useState(false);
 
-  const wordCount = countWords(title);
-  const hasValidTitle = wordCount >= 3;
+  const hasValidTitle = title.trim().length >= 3;
+  const availableSubjects = subjects.filter((subject) => subject.careerId === careerId);
 
   useEffect(() => {
     if (!open || stage !== 'processing') return;
@@ -61,8 +83,12 @@ export default function PdfFirstPublicPreviewPage() {
     setFile(null);
     setTitle('');
     setExamDate('');
-    setCareer('');
-    setSubject('');
+    setCareerId('');
+    setSubjectId('');
+    setAddingCareer(false);
+    setAddingSubject(false);
+    setNewCareer('');
+    setNewSubject('');
     setProgress(14);
     setContextSaved(false);
     setStage('upload');
@@ -77,6 +103,29 @@ export default function PdfFirstPublicPreviewPage() {
     if (!file || !hasValidTitle) return;
     setProgress(14);
     setStage('processing');
+  };
+
+  const addCareer = () => {
+    const name = newCareer.trim();
+    if (!name) return;
+    const id = `career-${Date.now()}`;
+    setCareers((current) => [...current, { id, name }]);
+    setCareerId(id);
+    setSubjectId('');
+    setNewCareer('');
+    setAddingCareer(false);
+    setContextSaved(false);
+  };
+
+  const addSubject = () => {
+    const name = newSubject.trim();
+    if (!name || !careerId) return;
+    const id = `subject-${Date.now()}`;
+    setSubjects((current) => [...current, { id, careerId, name }]);
+    setSubjectId(id);
+    setNewSubject('');
+    setAddingSubject(false);
+    setContextSaved(false);
   };
 
   return (
@@ -135,8 +184,8 @@ export default function PdfFirstPublicPreviewPage() {
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   {stage === 'upload'
-                    ? 'Elegí el archivo y poné un nombre claro para reconocerlo.'
-                    : 'Mientras lo preparamos, contanos a qué carrera y materia pertenece.'}
+                    ? 'Elegí el archivo y poné un nombre para reconocerlo.'
+                    : 'Mientras lo preparamos, vinculalo con tu carrera y materia.'}
                 </p>
               </div>
               <button
@@ -200,18 +249,13 @@ export default function PdfFirstPublicPreviewPage() {
                         onChange={(event) => {
                           const nextTitle = event.target.value;
                           setTitle(nextTitle);
-                          if (countWords(nextTitle) < 3) setExamDate('');
+                          if (nextTitle.trim().length < 3) setExamDate('');
                         }}
                         placeholder={titleFromFile(file.name)}
                       />
-                      <div className="mt-1.5 flex items-center justify-between text-[11px]">
-                        <span className={hasValidTitle ? 'text-emerald-600' : 'text-slate-400'}>
-                          Mínimo 3 palabras
-                        </span>
-                        <span className={hasValidTitle ? 'font-semibold text-emerald-600' : 'text-slate-400'}>
-                          {Math.min(wordCount, 3)}/3
-                        </span>
-                      </div>
+                      <p className={`mt-1.5 text-[11px] ${hasValidTitle ? 'font-medium text-emerald-600' : 'text-slate-400'}`}>
+                        Mínimo 3 letras
+                      </p>
                     </div>
 
                     {hasValidTitle ? (
@@ -256,46 +300,103 @@ export default function PdfFirstPublicPreviewPage() {
                   </div>
                 </div>
 
-                <div className="mt-5">
-                  <div>
-                    <label htmlFor="preview-career" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                      Carrera
-                    </label>
-                    <Input
-                      id="preview-career"
-                      value={career}
-                      onChange={(event) => {
-                        setCareer(event.target.value);
-                        setContextSaved(false);
-                      }}
-                      placeholder="Ej. Abogacía"
-                    />
-                  </div>
+                <div className="mt-5 rounded-2xl border border-slate-200 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Tu universidad</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{PROFILE_UNIVERSITY.name}</p>
+                </div>
 
-                  <div className="mt-4">
+                <div className="mt-4">
+                  <label htmlFor="preview-career" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                    Carrera
+                  </label>
+                  <select
+                    id="preview-career"
+                    value={careerId}
+                    onChange={(event) => {
+                      setCareerId(event.target.value);
+                      setSubjectId('');
+                      setAddingSubject(false);
+                      setContextSaved(false);
+                    }}
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  >
+                    <option value="">Seleccionar carrera</option>
+                    {careers.map((career) => (
+                      <option key={career.id} value={career.id}>{career.name}</option>
+                    ))}
+                  </select>
+
+                  {!addingCareer ? (
+                    <button
+                      type="button"
+                      onClick={() => setAddingCareer(true)}
+                      className="mt-2 text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+                    >
+                      + Añadir carrera
+                    </button>
+                  ) : (
+                    <div className="mt-2 flex gap-2">
+                      <Input
+                        value={newCareer}
+                        onChange={(event) => setNewCareer(event.target.value)}
+                        placeholder="Nombre de la carrera"
+                        autoFocus
+                      />
+                      <Button type="button" size="sm" disabled={!newCareer.trim()} onClick={addCareer}>Añadir</Button>
+                    </div>
+                  )}
+                </div>
+
+                {careerId ? (
+                  <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
                     <label htmlFor="preview-subject" className="mb-1.5 block text-xs font-semibold text-slate-700">
                       Materia
                     </label>
-                    <Input
+                    <select
                       id="preview-subject"
-                      value={subject}
+                      value={subjectId}
                       onChange={(event) => {
-                        setSubject(event.target.value);
+                        setSubjectId(event.target.value);
                         setContextSaved(false);
                       }}
-                      placeholder="Ej. Derecho sucesorio"
-                    />
-                  </div>
+                      className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                    >
+                      <option value="">Seleccionar materia</option>
+                      {availableSubjects.map((subject) => (
+                        <option key={subject.id} value={subject.id}>{subject.name}</option>
+                      ))}
+                    </select>
 
-                  {contextSaved ? (
-                    <p className="mt-3 text-xs font-medium text-emerald-600">Listo. Guardamos carrera y materia.</p>
-                  ) : null}
-                </div>
+                    {!addingSubject ? (
+                      <button
+                        type="button"
+                        onClick={() => setAddingSubject(true)}
+                        className="mt-2 text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+                      >
+                        + Añadir materia
+                      </button>
+                    ) : (
+                      <div className="mt-2 flex gap-2">
+                        <Input
+                          value={newSubject}
+                          onChange={(event) => setNewSubject(event.target.value)}
+                          placeholder="Nombre de la materia"
+                          autoFocus
+                        />
+                        <Button type="button" size="sm" disabled={!newSubject.trim()} onClick={addSubject}>Añadir</Button>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
+
+                {contextSaved ? (
+                  <p className="mt-3 text-xs font-medium text-emerald-600">Listo. El PDF quedó vinculado a tu carrera y materia.</p>
+                ) : null}
 
                 <div className="mt-6 flex items-center justify-end">
                   <Button
                     type="button"
-                    disabled={!career.trim() || !subject.trim()}
+                    disabled={!careerId || !subjectId}
                     onClick={() => setContextSaved(true)}
                   >
                     Guardar
