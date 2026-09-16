@@ -80,6 +80,7 @@ function visibleToUser(row: { approval_status?: string | null; owner_user_id?: s
 }
 
 async function recordPendingUniversityRequest(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pending academic catalog incompleto en ServerDatabase
   admin: any,
   userId: string,
   universidad: { nombre: string; city?: string | null; approval_status?: string | null },
@@ -125,6 +126,7 @@ export async function createPrivatePendingUniversityAction(
       return { success: false, message: 'Escribí el nombre completo de tu universidad.' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pending academic catalog incompleto en ServerDatabase
     const admin = createAdminClient() as any;
     const { data: universidades, error: universidadesError } = await admin
       .from('universidades')
@@ -133,11 +135,11 @@ export async function createPrivatePendingUniversityAction(
 
     if (universidadesError) throw universidadesError;
 
-    const visibles = (universidades ?? []).filter((row: any) => visibleToUser(row, user.id));
+    const visibles = (universidades ?? []).filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => visibleToUser(row, user.id));
     const exacta = visibles.find(
-      (row: any) => normalizeUniversityName(row.nombre) === normalizeUniversityName(universidadNombre)
+      (row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => normalizeUniversityName(String(row.nombre ?? '')) === normalizeUniversityName(universidadNombre)
     );
-    const aprobadas = visibles.filter((row: any) => row.approval_status === 'approved');
+    const aprobadas = visibles.filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => row.approval_status === 'approved');
     const coincidenciaFuerte = findStrongUniversityMatch(universidadNombre, aprobadas)?.university ?? null;
     const existente = exacta ?? coincidenciaFuerte;
 
@@ -198,6 +200,7 @@ export async function createPrivatePendingCareerAction(
       return { success: false, message: 'Escribí el nombre completo de tu carrera.' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pending academic catalog incompleto en ServerDatabase
     const admin = createAdminClient() as any;
     const { data: universidad, error: universidadError } = await admin
       .from('universidades')
@@ -218,11 +221,11 @@ export async function createPrivatePendingCareerAction(
 
     if (carrerasError) throw carrerasError;
 
-    const visibles = (carrerasExistentes ?? []).filter((row: any) => visibleToUser(row, user.id));
+    const visibles = (carrerasExistentes ?? []).filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => visibleToUser(row, user.id));
     const exacta = visibles.find(
-      (row: any) => normalizeCareerName(row.nombre) === normalizeCareerName(carreraNombre)
+      (row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => normalizeCareerName(String(row.nombre ?? '')) === normalizeCareerName(carreraNombre)
     );
-    const aprobadas = visibles.filter((row: any) => row.approval_status === 'approved');
+    const aprobadas = visibles.filter((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => row.approval_status === 'approved');
     const coincidenciaFuerte = findStrongCareerMatch(carreraNombre, aprobadas)?.career ?? null;
     const carreraExistente = exacta ?? coincidenciaFuerte;
 
@@ -252,7 +255,7 @@ export async function createPrivatePendingCareerAction(
 
       if (facultadesError) throw facultadesError;
 
-      const facultadExistente = (facultadesExistentes ?? []).find((row: any) =>
+      const facultadExistente = (facultadesExistentes ?? []).find((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) =>
         visibleToUser(row, user.id)
       );
 
@@ -328,6 +331,7 @@ export async function createPrivatePendingSubjectAction(
       return { success: false, message: 'Escribí el nombre de la materia.' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pending academic catalog incompleto en ServerDatabase
     const admin = createAdminClient() as any;
     const { data: carrera, error: carreraError } = await admin
       .from('carreras')
@@ -349,7 +353,7 @@ export async function createPrivatePendingSubjectAction(
 
     if (relacionesError) throw relacionesError;
 
-    const relacionExistente = (relaciones ?? []).find((row: any) => {
+    const relacionExistente = (relaciones ?? []).find((row: { nombre?: string | null; approval_status?: string | null; [key: string]: unknown }) => {
       const materia = Array.isArray(row.materias) ? row.materias[0] : row.materias;
       return visibleToUser(row, user.id) && materia && visibleToUser(materia, user.id);
     });

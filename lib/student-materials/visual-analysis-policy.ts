@@ -3,6 +3,7 @@ import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 type StructuralAdminClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
   from: (table: string) => any;
 };
 
