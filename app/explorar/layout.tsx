@@ -2,16 +2,14 @@ import type { Metadata } from 'next';
 import ClientLayout from '@/components/ClientLayout';
 
 export const metadata: Metadata = {
-  title: 'Explorar universidades y materias',
-  description:
-    'Descubrí universidades, carreras y materias disponibles en Evaluo para estudiar con resúmenes, preguntas y simuladores.',
+  title: 'Universidades y carreras',
+  description: 'Buscá universidades y carreras disponibles en Evaluo.',
   alternates: {
     canonical: '/explorar',
   },
   openGraph: {
-    title: 'Explorar universidades y materias',
-    description:
-      'Encontrá tu universidad, carrera y materia para estudiar con recursos, preguntas y simuladores en Evaluo.',
+    title: 'Universidades y carreras',
+    description: 'Buscá universidades y carreras disponibles en Evaluo.',
     url: '/explorar',
   },
 };
