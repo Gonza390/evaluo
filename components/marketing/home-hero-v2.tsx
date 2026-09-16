@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   FileText,
   ListChecks,
-  PlayCircle,
   Sparkles,
   UploadCloud,
 } from 'lucide-react';
@@ -51,63 +50,46 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             <div className="animate-surface-reveal flex min-w-0 flex-col items-start text-left">
               <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                <span className="min-w-0">Tu próximo parcial empieza acá</span>
+                <span className="min-w-0">Estudiá desde tu propio material</span>
               </span>
 
-              <h1 className="text-foreground mt-5 max-w-[680px] text-[2.55rem] leading-[0.98] font-bold tracking-[-0.055em] sm:text-6xl lg:text-[68px]">
-                Prepará mejor tu próximo{' '}
-                <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">
-                  parcial.
-                </span>
+              <h1 className="text-foreground mt-5 max-w-[680px] text-[2.35rem] leading-[1.02] font-bold tracking-[-0.055em] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
+                Subí tu PDF y en minutos estudiás.
               </h1>
 
-              <p className="mt-5 max-w-[610px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Encontrá materiales de tu materia o subí tus propios apuntes. Evaluo los convierte
-                en resumen, glosario, flashcards y ejercicios para que estudies y después practiques
-                en un solo lugar.
+              <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
+                Resumen, preguntero y flashcards armados desde tu apunte — sin armar el caos vos.
               </p>
 
-              <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:gap-3">
+              <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
                 <TrackedLink
                   href={primaryHref}
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
-                    cta_name: 'crear_cuenta_gratis',
+                    cta_name: 'subi_tu_pdf',
                     destination: primaryHref,
                   }}
-                  className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:px-8"
+                  className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto sm:px-8"
                 >
-                  Crear cuenta gratis
+                  <UploadCloud className="h-4.5 w-4.5 shrink-0" />
+                  Subí tu PDF
                   <ArrowRight className="h-4 w-4 shrink-0" />
-                </TrackedLink>
-                <TrackedLink
-                  href="/explorar"
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_hero',
-                    cta_name: 'explorar_materias',
-                    destination: '/explorar',
-                  }}
-                  className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:px-7"
-                >
-                  <PlayCircle className="h-4.5 w-4.5 shrink-0" />
-                  Explorar materias
                 </TrackedLink>
               </div>
 
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  Resumen + preguntero + flashcards
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  Desde tu propio apunte
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
                   Gratis para empezar
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Materiales por materia
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Estudio + práctica conectados
                 </span>
               </div>
             </div>
@@ -158,12 +140,12 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
 
               <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs font-bold">
                 <TrackedLink
-                  href="/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1"
+                  href={primaryHref}
                   eventName="cta_click"
                   payload={{
                     location: 'home_product_overview',
                     cta_name: 'subir_pdf',
-                    destination: '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1',
+                    destination: primaryHref,
                   }}
                   className="inline-flex items-center gap-2 text-indigo-700 transition hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
