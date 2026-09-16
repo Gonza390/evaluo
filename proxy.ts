@@ -101,6 +101,18 @@ export async function proxy(request: NextRequest) {
 
   const isLoginRoute = pathname.startsWith('/login');
 
+  if (
+    isLoginRoute &&
+    request.nextUrl.searchParams.get('mode') === 'signup' &&
+    !request.nextUrl.searchParams.get('next') &&
+    !request.nextUrl.searchParams.get('redirectTo')
+  ) {
+    const signupUrl = request.nextUrl.clone();
+    signupUrl.searchParams.set('next', '/dashboard/materiales/nuevo');
+    signupUrl.searchParams.set('reason', 'prepare-material');
+    return persistReferralCookie(request, NextResponse.redirect(signupUrl));
+  }
+
   if (!isProtectedRoute && !isLoginRoute) {
     return persistReferralCookie(request, response);
   }
@@ -130,7 +142,7 @@ export async function proxy(request: NextRequest) {
 
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('next', pathname);
+    loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
     return persistReferralCookie(request, NextResponse.redirect(loginUrl));
   }
 
