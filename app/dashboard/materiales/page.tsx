@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { CalendarDays, Clock3, FileText, Sparkles } from 'lucide-react';
+import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { createClientServer } from '@/lib/supabase-server';
@@ -177,8 +178,7 @@ export default async function DashboardMaterialsPage({
             </section>
           ) : null}
 
-          <StudentMaterialsWorkspace
-            initialMaterials={materials}
+          <PdfFirstUploadShell
             universidades={universidades}
             carreras={carreras}
             materias={materias}
@@ -186,8 +186,21 @@ export default async function DashboardMaterialsPage({
             initialUniversidadId={resolvedUniversidadId}
             initialCarreraId={resolvedCarreraId}
             initialMateriaId={resolvedMateriaId}
-            initialOpenUpload={openUpload === '1'}
-          />
+            initialExamDate={examDate}
+            initialOpen={openUpload === '1'}
+          >
+            <StudentMaterialsWorkspace
+              initialMaterials={materials}
+              universidades={universidades}
+              carreras={carreras}
+              materias={materias}
+              carreraMaterias={carreraMaterias}
+              initialUniversidadId={resolvedUniversidadId}
+              initialCarreraId={resolvedCarreraId}
+              initialMateriaId={resolvedMateriaId}
+              initialOpenUpload={false}
+            />
+          </PdfFirstUploadShell>
         </div>
       </div>
     );
