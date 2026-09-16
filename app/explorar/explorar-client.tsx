@@ -11,9 +11,9 @@ import {
   Search,
 } from 'lucide-react';
 import { getCareerRoute, getUniversityRoute } from '@/lib/routes';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import type { ExplorarCarrera, ExplorarData } from './data';
+import type { ExplorarData } from './data';
 
 type ExploreMode = 'todo' | 'universidades' | 'carreras';
 
@@ -22,22 +22,6 @@ const FILTERS: Array<{ id: ExploreMode; label: string }> = [
   { id: 'universidades', label: 'Universidades' },
   { id: 'carreras', label: 'Carreras' },
 ];
-
-function getCareerBadge(carrera: ExplorarCarrera, topReadyMaterias: number) {
-  if (carrera.readyMateriasCount === topReadyMaterias && topReadyMaterias > 0) {
-    return 'Más contenido disponible';
-  }
-
-  if (carrera.questionMateriasCount > 0) {
-    return 'Con práctica disponible';
-  }
-
-  if (carrera.readyMateriasCount > 0) {
-    return 'Con materiales';
-  }
-
-  return 'Catálogo cargado';
-}
 
 export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,23 +52,11 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
     [carreras, normalizedSearch]
   );
 
-  const topReadyMaterias = useMemo(
-    () => Math.max(...carreras.map((carrera) => carrera.readyMateriasCount), 0),
-    [carreras]
-  );
-
-  const rankedCarreras = useMemo(
+  const sortedCarreras = useMemo(
     () =>
       [...filteredCarreras].sort((a, b) => {
-        if (b.readyMateriasCount !== a.readyMateriasCount) {
-          return b.readyMateriasCount - a.readyMateriasCount;
-        }
-        if (b.questionMateriasCount !== a.questionMateriasCount) {
-          return b.questionMateriasCount - a.questionMateriasCount;
-        }
-        if (b.materiasCount !== a.materiasCount) {
-          return b.materiasCount - a.materiasCount;
-        }
+        const byUniversity = a.universidadNombre.localeCompare(b.universidadNombre, 'es');
+        if (byUniversity !== 0) return byUniversity;
         return a.nombre.localeCompare(b.nombre, 'es');
       }),
     [filteredCarreras]
@@ -92,31 +64,18 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
 
   const visibleCarreras =
     normalizedSearch.length > 0 || activeFilter === 'carreras' || showAllCareers
-      ? rankedCarreras
-      : rankedCarreras.slice(0, 8);
+      ? sortedCarreras
+      : sortedCarreras.slice(0, 8);
 
-  const featuredUniversidades = useMemo(
-    () =>
-      [...filteredUniversidades]
-        .sort((a, b) => {
-          if (b.materiasCount !== a.materiasCount) {
-            return b.materiasCount - a.materiasCount;
-          }
-
-          if (b.carrerasCount !== a.carrerasCount) {
-            return b.carrerasCount - a.carrerasCount;
-          }
-
-          return a.nombre.localeCompare(b.nombre, 'es');
-        })
-        .slice(0, 6),
+  const sortedUniversidades = useMemo(
+    () => [...filteredUniversidades].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
     [filteredUniversidades]
   );
 
   const visibleUniversidades =
     activeFilter === 'universidades' || normalizedSearch.length > 0
-      ? filteredUniversidades
-      : featuredUniversidades;
+      ? sortedUniversidades
+      : sortedUniversidades.slice(0, 6);
 
   const showUniversidades = activeFilter !== 'carreras';
   const showCarreras = activeFilter !== 'universidades';
@@ -172,18 +131,14 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
 
       {showUniversidades ? (
         <section className="mt-6">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+          <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-600 uppercase">
                 Universidades
               </p>
               <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
-                Empezá desde tu facultad si todavía no tenés definida la carrera
+                Seleccioná una universidad
               </h2>
-              <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
-                Entrá por universidad para ver carreras activas y el contenido disponible en cada
-                una.
-              </p>
             </div>
             <p className="shrink-0 text-sm font-semibold text-slate-500">
               {visibleUniversidades.length} resultados
@@ -219,31 +174,16 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                     className="surface-card animate-surface-reveal h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]"
                     style={{ animationDelay: `${index * 40}ms` }}
                   >
-                    <CardContent className="flex h-full flex-col justify-between gap-4 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                    <CardContent className="flex h-full items-center justify-between gap-4 p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                           <Building2 className="h-5 w-5" />
                         </div>
-                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-bold tracking-[0.14em] text-slate-500 uppercase">
-                          {universidad.carrerasCount} carreras
-                        </span>
-                      </div>
-
-                      <div>
-                        <CardTitle className="text-[1.05rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
+                        <CardTitle className="min-w-0 text-[1.05rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
                           {universidad.nombre}
                         </CardTitle>
-                        <p className="mt-1.5 text-[13px] leading-5 text-slate-500 sm:text-sm sm:leading-6">
-                          {universidad.materiasCount > 0
-                            ? `${universidad.materiasCount} materias visibles para explorar desde aquí.`
-                            : 'Explorá las carreras disponibles y descubrí el contenido activo.'}
-                        </p>
                       </div>
-
-                      <div className="inline-flex h-8 w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
-                        Ver carreras
-                        <ArrowRight className="h-4 w-4" />
-                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
                     </CardContent>
                   </Card>
                 </Link>
@@ -255,18 +195,14 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
 
       {showCarreras ? (
         <section className="mt-6">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
+          <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-600 uppercase">
                 Carreras
               </p>
               <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
-                Entrá directo a tu ruta académica
+                Seleccioná una carrera
               </h2>
-              <p className="mt-1 text-[13px] text-slate-500 sm:text-sm">
-                Priorizamos las carreras con materiales o preguntas disponibles para que empieces
-                por una experiencia lista.
-              </p>
             </div>
             <p className="shrink-0 text-sm font-semibold text-slate-500">
               {filteredCarreras.length} resultados
@@ -289,42 +225,29 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                     className="surface-card animate-surface-reveal h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                    <CardContent className="flex h-full items-center justify-between gap-4 p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                           <GraduationCap className="h-5 w-5" />
                         </div>
-                        <span className="inline-flex max-w-full items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[12px] font-bold tracking-[0.16em] text-indigo-600 uppercase">
-                          {getCareerBadge(carrera, topReadyMaterias)}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-0">
-                      <div>
-                        <CardTitle className="text-[1.15rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.2rem]">
-                          {carrera.nombre}
-                        </CardTitle>
-                        <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">
-                          {carrera.universidadNombre}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-2">
-                        <div className="text-[12px] leading-5 text-slate-500 sm:text-xs">
-                          Entrá a las materias de esta carrera sin pasos extra.
-                        </div>
-                        <div className="inline-flex h-8 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800">
-                          Ver materias
-                          <ArrowRight className="h-4 w-4" />
+                        <div className="min-w-0">
+                          <CardTitle className="text-[1.1rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.15rem]">
+                            {carrera.nombre}
+                          </CardTitle>
+                          <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">
+                            {carrera.universidadNombre}
+                          </p>
                         </div>
                       </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
                     </CardContent>
                   </Card>
                 </Link>
               ))}
             </div>
           )}
-          {normalizedSearch.length === 0 && activeFilter === 'todo' && rankedCarreras.length > 8 ? (
+
+          {normalizedSearch.length === 0 && activeFilter === 'todo' && sortedCarreras.length > 8 ? (
             <div className="mt-5 flex justify-center">
               <button
                 type="button"
@@ -332,9 +255,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                 className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700"
                 aria-expanded={showAllCareers}
               >
-                {showAllCareers
-                  ? 'Ver carreras destacadas'
-                  : `Ver las ${rankedCarreras.length} carreras`}
+                {showAllCareers ? 'Ver menos carreras' : `Ver las ${sortedCarreras.length} carreras`}
                 <ChevronDown
                   className={`h-4 w-4 transition ${showAllCareers ? 'rotate-180' : ''}`}
                 />
@@ -345,9 +266,9 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
       ) : null}
 
       <p className="mt-8 text-center text-[11px] leading-5 text-slate-400">
-        Los nombres de universidades se utilizan únicamente para organizar e identificar el catálogo
-        académico. Evaluo es una plataforma independiente y no representa ni está afiliada a las
-        instituciones listadas.
+        Los nombres de universidades se utilizan únicamente para identificar las instituciones.
+        Evaluo es una plataforma independiente y no representa ni está afiliada a las instituciones
+        listadas.
       </p>
     </>
   );
