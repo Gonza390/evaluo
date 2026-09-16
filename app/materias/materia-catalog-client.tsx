@@ -76,6 +76,18 @@ export function MateriaCatalogClient({
   const [catalog, setCatalog] = useState<CatalogState | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const clientCarreraData = carreraData
+    ? {
+        id: carreraData.id,
+        nombre: carreraData.nombre,
+        universidad_id: carreraData.universidad_id ?? null,
+        ...(carreraData.descripcion ? { descripcion: carreraData.descripcion } : {}),
+        ...(carreraData.nivel ? { nivel: carreraData.nivel } : {}),
+        ...(carreraData.carga_horaria ? { carga_horaria: carreraData.carga_horaria } : {}),
+        ...(carreraData.modalidad ? { modalidad: carreraData.modalidad } : {}),
+        ...(carreraData.director ? { director: carreraData.director } : {}),
+      }
+    : undefined;
 
   useEffect(() => {
     let active = true;
@@ -133,7 +145,7 @@ export function MateriaCatalogClient({
         initialMaterias={catalog.materias}
         carreraId={carreraId}
         carreraNombre={carreraNombre}
-        carreraData={carreraData}
+        carreraData={clientCarreraData}
         universidadNombre={universidadNombre}
         universidadId={universidadId}
         sharedStudentMaterials={catalog.sharedStudentMaterials}
