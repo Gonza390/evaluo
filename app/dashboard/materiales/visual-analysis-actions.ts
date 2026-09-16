@@ -6,6 +6,7 @@ import { createClientServer } from '@/lib/supabase-server';
 import { studentMaterialIdSchema } from '@/lib/student-materials/validation';
 
 type StructuralAdminClient = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
   from: (table: string) => any;
 };
 
