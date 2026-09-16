@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { CalendarDays, FileText, Loader2, Plus, Upload, X } from 'lucide-react';
+import { CalendarDays, Check, FileText, Loader2, Plus, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -57,20 +57,23 @@ export default function PdfFirstPublicPreviewPage() {
   const [contextSaved, setContextSaved] = useState(false);
 
   const hasValidTitle = title.trim().length >= 3;
+  const canContinue = Boolean(file && hasValidTitle && examDate);
   const availableSubjects = subjects.filter((subject) => subject.careerId === careerId);
+  const processingDone = progress >= 100;
 
   useEffect(() => {
-    if (!open || stage !== 'processing') return;
+    if (!open || stage !== 'processing' || progress >= 100) return;
 
     const interval = window.setInterval(() => {
       setProgress((current) => {
-        if (current >= 94) return current;
-        return Math.min(94, current + Math.max(1, Math.round((94 - current) / 12)));
+        if (current >= 100) return 100;
+        const increment = current < 60 ? 8 : current < 85 ? 5 : 3;
+        return Math.min(100, current + increment);
       });
-    }, 900);
+    }, 700);
 
     return () => window.clearInterval(interval);
-  }, [open, stage]);
+  }, [open, progress, stage]);
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
@@ -100,7 +103,7 @@ export default function PdfFirstPublicPreviewPage() {
   };
 
   const startProcessing = () => {
-    if (!file || !hasValidTitle) return;
+    if (!canContinue) return;
     setProgress(14);
     setStage('processing');
   };
@@ -180,12 +183,14 @@ export default function PdfFirstPublicPreviewPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="pdf-modal-title" className="text-xl font-bold tracking-[-0.035em] text-slate-950">
-                  {stage === 'upload' ? 'Subir PDF' : 'Estamos procesando tu PDF'}
+                  {stage === 'upload' ? 'Subir PDF' : processingDone ? 'Tu PDF está listo' : 'Estamos procesando tu PDF'}
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   {stage === 'upload'
-                    ? 'Elegí el archivo y poné un nombre para reconocerlo.'
-                    : 'Mientras lo preparamos, vinculalo con tu carrera y materia.'}
+                    ? 'Elegí el archivo, poné un nombre y la fecha de examen.'
+                    : processingDone
+                      ? 'Terminamos de preparar el material.'
+                      : 'Mientras lo preparamos, vinculalo con tu carrera y materia.'}
                 </p>
               </div>
               <button
@@ -253,22 +258,20 @@ export default function PdfFirstPublicPreviewPage() {
                         }}
                         placeholder={titleFromFile(file.name)}
                       />
-                      <p className={`mt-1.5 text-[11px] ${hasValidTitle ? 'font-medium text-emerald-600' : 'text-slate-400'}`}>
-                        Mínimo 3 letras
-                      </p>
                     </div>
 
                     {hasValidTitle ? (
                       <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
                         <label htmlFor="preview-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                           <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
-                          Fecha de examen <span className="font-normal text-slate-400">(opcional)</span>
+                          Fecha de examen
                         </label>
                         <Input
                           id="preview-exam-date"
                           type="date"
                           value={examDate}
                           onChange={(event) => setExamDate(event.target.value)}
+                          required
                         />
                       </div>
                     ) : null}
@@ -277,131 +280,144 @@ export default function PdfFirstPublicPreviewPage() {
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close}>Cancelar</Button>
-                  <Button type="button" disabled={!file || !hasValidTitle} onClick={startProcessing}>
+                  <Button type="button" disabled={!canContinue} onClick={startProcessing}>
                     Continuar
                   </Button>
                 </div>
               </>
             ) : (
               <div className="mt-6">
-                <div className="rounded-2xl bg-slate-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">Leyendo y organizando el contenido…</p>
-                    </div>
-                    <span className="text-xs font-semibold tabular-nums text-slate-500">{progress}%</span>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center text-indigo-600">
+                    {processingDone ? <Check className="h-5 w-5" /> : <Loader2 className="h-5 w-5 animate-spin" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {processingDone ? 'Procesamiento terminado' : 'Leyendo y organizando el contenido…'}
+                    </p>
                   </div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
-                  </div>
+                  <span className="text-xs font-semibold tabular-nums text-slate-500">{progress}%</span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
                 </div>
 
-                <div className="mt-5 rounded-2xl border border-slate-200 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">Tu universidad</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">{PROFILE_UNIVERSITY.name}</p>
-                </div>
+                <p className="mt-5 text-xs text-slate-500">
+                  Universidad · <span className="font-semibold text-slate-700">{PROFILE_UNIVERSITY.name}</span>
+                </p>
 
-                <div className="mt-4">
-                  <label htmlFor="preview-career" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                    Carrera
-                  </label>
-                  <select
-                    id="preview-career"
-                    value={careerId}
-                    onChange={(event) => {
-                      setCareerId(event.target.value);
-                      setSubjectId('');
-                      setAddingSubject(false);
-                      setContextSaved(false);
-                    }}
-                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                  >
-                    <option value="">Seleccionar carrera</option>
-                    {careers.map((career) => (
-                      <option key={career.id} value={career.id}>{career.name}</option>
-                    ))}
-                  </select>
-
-                  {!addingCareer ? (
-                    <button
-                      type="button"
-                      onClick={() => setAddingCareer(true)}
-                      className="mt-2 text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
-                    >
-                      + Añadir carrera
-                    </button>
-                  ) : (
-                    <div className="mt-2 flex gap-2">
-                      <Input
-                        value={newCareer}
-                        onChange={(event) => setNewCareer(event.target.value)}
-                        placeholder="Nombre de la carrera"
-                        autoFocus
-                      />
-                      <Button type="button" size="sm" disabled={!newCareer.trim()} onClick={addCareer}>Añadir</Button>
-                    </div>
-                  )}
-                </div>
-
-                {careerId ? (
-                  <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                    <label htmlFor="preview-subject" className="mb-1.5 block text-xs font-semibold text-slate-700">
-                      Materia
-                    </label>
-                    <select
-                      id="preview-subject"
-                      value={subjectId}
-                      onChange={(event) => {
-                        setSubjectId(event.target.value);
-                        setContextSaved(false);
-                      }}
-                      className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                    >
-                      <option value="">Seleccionar materia</option>
-                      {availableSubjects.map((subject) => (
-                        <option key={subject.id} value={subject.id}>{subject.name}</option>
-                      ))}
-                    </select>
-
-                    {!addingSubject ? (
-                      <button
-                        type="button"
-                        onClick={() => setAddingSubject(true)}
-                        className="mt-2 text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+                {!contextSaved ? (
+                  <>
+                    <div className="mt-4">
+                      <label htmlFor="preview-career" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                        Carrera
+                      </label>
+                      <select
+                        id="preview-career"
+                        value={careerId}
+                        onChange={(event) => {
+                          setCareerId(event.target.value);
+                          setSubjectId('');
+                          setAddingSubject(false);
+                        }}
+                        className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                       >
-                        + Añadir materia
-                      </button>
-                    ) : (
-                      <div className="mt-2 flex gap-2">
-                        <Input
-                          value={newSubject}
-                          onChange={(event) => setNewSubject(event.target.value)}
-                          placeholder="Nombre de la materia"
-                          autoFocus
-                        />
-                        <Button type="button" size="sm" disabled={!newSubject.trim()} onClick={addSubject}>Añadir</Button>
+                        <option value="">Seleccionar carrera</option>
+                        {careers.map((career) => (
+                          <option key={career.id} value={career.id}>{career.name}</option>
+                        ))}
+                      </select>
+
+                      {!addingCareer ? (
+                        <button
+                          type="button"
+                          onClick={() => setAddingCareer(true)}
+                          className="mt-2 text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+                        >
+                          + Añadir carrera
+                        </button>
+                      ) : (
+                        <div className="mt-2 flex gap-2">
+                          <Input
+                            value={newCareer}
+                            onChange={(event) => setNewCareer(event.target.value)}
+                            placeholder="Nombre de la carrera"
+                            autoFocus
+                          />
+                          <Button type="button" size="sm" disabled={!newCareer.trim()} onClick={addCareer}>Añadir</Button>
+                        </div>
+                      )}
+                    </div>
+
+                    {careerId ? (
+                      <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <label htmlFor="preview-subject" className="mb-1.5 block text-xs font-semibold text-slate-700">
+                          Materia
+                        </label>
+                        <select
+                          id="preview-subject"
+                          value={subjectId}
+                          onChange={(event) => setSubjectId(event.target.value)}
+                          className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                        >
+                          <option value="">Seleccionar materia</option>
+                          {availableSubjects.map((subject) => (
+                            <option key={subject.id} value={subject.id}>{subject.name}</option>
+                          ))}
+                        </select>
+
+                        {!addingSubject ? (
+                          <button
+                            type="button"
+                            onClick={() => setAddingSubject(true)}
+                            className="mt-2 text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+                          >
+                            + Añadir materia
+                          </button>
+                        ) : (
+                          <div className="mt-2 flex gap-2">
+                            <Input
+                              value={newSubject}
+                              onChange={(event) => setNewSubject(event.target.value)}
+                              placeholder="Nombre de la materia"
+                              autoFocus
+                            />
+                            <Button type="button" size="sm" disabled={!newSubject.trim()} onClick={addSubject}>Añadir</Button>
+                          </div>
+                        )}
                       </div>
+                    ) : null}
+
+                    <div className="mt-6 flex items-center justify-end gap-2">
+                      {processingDone ? (
+                        <Button type="button" variant="ghost" onClick={close}>Saltar</Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        disabled={!careerId || !subjectId}
+                        onClick={() => setContextSaved(true)}
+                      >
+                        Guardar
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-5">
+                    <p className="flex items-center gap-2 text-sm text-slate-600">
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      Carrera y materia guardadas.
+                    </p>
+
+                    {processingDone ? (
+                      <div className="mt-6 flex justify-end">
+                        <Button type="button" onClick={close}>Abrir PDF</Button>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-400">Podés esperar mientras terminamos de procesarlo.</p>
                     )}
                   </div>
-                ) : null}
-
-                {contextSaved ? (
-                  <p className="mt-3 text-xs font-medium text-emerald-600">Listo. El PDF quedó vinculado a tu carrera y materia.</p>
-                ) : null}
-
-                <div className="mt-6 flex items-center justify-end">
-                  <Button
-                    type="button"
-                    disabled={!careerId || !subjectId}
-                    onClick={() => setContextSaved(true)}
-                  >
-                    Guardar
-                  </Button>
-                </div>
+                )}
               </div>
             )}
           </section>
