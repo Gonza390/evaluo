@@ -1,0 +1,541 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { CalendarDays, CheckCircle2, FileText, Loader2, Upload, X } from 'lucide-react';
+import {
+  getStudentMaterialProcessingStateAction,
+  processStudentMaterialAction,
+  type StudentMaterialProcessingState,
+} from '@/app/dashboard/materiales/actions';
+import { saveStudentMaterialExamContextAction } from '@/app/dashboard/materiales/context-actions';
+import { savePdfFirstAcademicContextAction } from '@/app/dashboard/materiales/pdf-first-context-actions';
+import {
+  cancelPdfFirstUploadAction,
+  finalizePdfFirstUploadAction,
+  preparePdfFirstUploadAction,
+} from '@/app/dashboard/materiales/pdf-first-upload-actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import { getStudentMaterialRoute } from '@/lib/routes';
+import { getSupabaseBrowserClient } from '@/lib/supabase-client';
+import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+
+type UniversidadOption = { id: string; nombre: string };
+type CarreraOption = { id: string; nombre: string; universidad_id: string | null };
+type MateriaOption = { id: string; nombre: string; carrera_id?: string | null };
+type CarreraMateriaRelation = { carrera_id: string | null; materia_id: string | null };
+
+type Props = {
+  children: ReactNode;
+  universidades: UniversidadOption[];
+  carreras: CarreraOption[];
+  materias: MateriaOption[];
+  carreraMaterias: CarreraMateriaRelation[];
+  initialUniversidadId?: string;
+  initialCarreraId?: string;
+  initialMateriaId?: string;
+  initialExamDate?: string;
+  initialOpen?: boolean;
+};
+
+function titleFromFile(name: string) {
+  return (
+    name
+      .replace(/\.pdf$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 180) || 'Material de estudio'
+  );
+}
+
+function isUploadTriggerLabel(label: string) {
+  const normalized = label.toLocaleLowerCase('es-AR').replace(/\s+/g, ' ').trim();
+  return normalized.includes('subir') && (normalized.includes('pdf') || normalized.includes('material'));
+}
+
+export function PdfFirstUploadShell({
+  children,
+  universidades,
+  carreras,
+  materias,
+  carreraMaterias,
+  initialUniversidadId = '',
+  initialCarreraId = '',
+  initialMateriaId = '',
+  initialExamDate = '',
+  initialOpen = false,
+}: Props) {
+  const router = useRouter();
+  const { toast } = useToast();
+  const pickerRef = useRef<HTMLInputElement | null>(null);
+  const [open, setOpen] = useState(initialOpen);
+  const [file, setFile] = useState<File | null>(null);
+  const [title, setTitle] = useState('');
+  const [examDate, setExamDate] = useState(initialExamDate);
+  const [uploading, setUploading] = useState(false);
+  const [processing, setProcessing] = useState<StudentMaterialProcessingState | null>(null);
+  const [displayProgress, setDisplayProgress] = useState(0);
+  const [careerId, setCareerId] = useState(initialCarreraId);
+  const [subjectId, setSubjectId] = useState(initialMateriaId);
+  const [addingCareer, setAddingCareer] = useState(false);
+  const [addingSubject, setAddingSubject] = useState(false);
+  const [newCareer, setNewCareer] = useState('');
+  const [newSubject, setNewSubject] = useState('');
+  const [savingContext, setSavingContext] = useState(false);
+  const [contextSaved, setContextSaved] = useState(false);
+  const [savedContextLabel, setSavedContextLabel] = useState('');
+
+  const university = universidades.find((item) => item.id === initialUniversidadId) ?? null;
+  const availableCareers = useMemo(
+    () => carreras.filter((item) => item.universidad_id === initialUniversidadId),
+    [carreras, initialUniversidadId]
+  );
+  const selectedCareer = availableCareers.find((item) => item.id === careerId) ?? null;
+  const availableSubjects = useMemo(() => {
+    if (!careerId) return [];
+    const relatedIds = new Set(
+      carreraMaterias
+        .filter((relation) => relation.carrera_id === careerId && relation.materia_id)
+        .map((relation) => relation.materia_id as string)
+    );
+    return materias.filter((item) => item.carrera_id === careerId || relatedIds.has(item.id));
+  }, [careerId, carreraMaterias, materias]);
+  const selectedSubject = availableSubjects.find((item) => item.id === subjectId) ?? null;
+
+  const hasValidTitle = title.trim().length >= 3;
+  const careerName = addingCareer ? newCareer.trim() : selectedCareer?.nombre ?? '';
+  const subjectName = addingSubject ? newSubject.trim() : selectedSubject?.nombre ?? '';
+  const canSaveContext = Boolean(initialUniversidadId && careerName && subjectName && !contextSaved);
+  const ready = processing?.status === 'ready';
+  const failed = processing?.status === 'failed';
+  const progress = processing
+    ? ready
+      ? 100
+      : Math.min(96, Math.max(displayProgress, processing.progress))
+    : 0;
+
+  useEffect(() => {
+    if (initialOpen) setOpen(true);
+  }, [initialOpen]);
+
+  useEffect(() => {
+    if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
+    const interval = window.setInterval(async () => {
+      const state = await getStudentMaterialProcessingStateAction(processing.materialId);
+      if (!state) return;
+      setProcessing(state);
+      setDisplayProgress((current) => Math.max(current, state.progress));
+      if (state.status === 'ready') router.refresh();
+    }, 1400);
+    return () => window.clearInterval(interval);
+  }, [processing?.materialId, processing?.status, router]);
+
+  useEffect(() => {
+    if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
+    const interval = window.setInterval(() => {
+      setDisplayProgress((current) => Math.min(94, Math.max(current, processing.progress) + 1));
+    }, 700);
+    return () => window.clearInterval(interval);
+  }, [processing]);
+
+  const reset = useCallback(() => {
+    setFile(null);
+    setTitle('');
+    setExamDate(initialExamDate);
+    setUploading(false);
+    setProcessing(null);
+    setDisplayProgress(0);
+    setCareerId(initialCarreraId);
+    setSubjectId(initialMateriaId);
+    setAddingCareer(false);
+    setAddingSubject(false);
+    setNewCareer('');
+    setNewSubject('');
+    setSavingContext(false);
+    setContextSaved(false);
+    setSavedContextLabel('');
+  }, [initialCarreraId, initialExamDate, initialMateriaId]);
+
+  const close = useCallback(() => {
+    if (uploading) return;
+    setOpen(false);
+    reset();
+  }, [reset, uploading]);
+
+  const handleCapturedClick = (event: MouseEvent<HTMLDivElement>) => {
+    const element = event.target as HTMLElement | null;
+    const button = element?.closest('button');
+    if (!button || !isUploadTriggerLabel(button.textContent ?? '')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setOpen(true);
+  };
+
+  const selectFile = (selected: File | null) => {
+    if (!selected) return;
+    if (!selected.name.toLowerCase().endsWith('.pdf') || (selected.type && selected.type !== 'application/pdf')) {
+      toast({ description: 'Por ahora solo aceptamos archivos PDF.', variant: 'destructive' });
+      return;
+    }
+    if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
+      toast({ description: 'El PDF supera el tamaño máximo permitido de 20 MB.', variant: 'destructive' });
+      return;
+    }
+    setFile(selected);
+    setTitle('');
+    setExamDate(initialExamDate);
+  };
+
+  const startProcessing = async () => {
+    if (!file || !hasValidTitle || !examDate || uploading) return;
+    setUploading(true);
+    let preparedPath: string | null = null;
+
+    try {
+      const metadata = { title: title.trim() };
+      const fileMetadata = {
+        name: file.name,
+        mimeType: file.type || 'application/pdf',
+        size: file.size,
+      };
+      const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata });
+      if (!prepared.success || !prepared.filePath || !prepared.token) {
+        throw new Error(prepared.message);
+      }
+      preparedPath = prepared.filePath;
+
+      const supabase = getSupabaseBrowserClient();
+      const { error: uploadError } = await supabase.storage
+        .from('biblioteca')
+        .uploadToSignedUrl(prepared.filePath, prepared.token, file, {
+          contentType: fileMetadata.mimeType,
+        });
+      if (uploadError) throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
+
+      const result = await finalizePdfFirstUploadAction({
+        metadata,
+        file: fileMetadata,
+        filePath: prepared.filePath,
+      });
+      if (!result.success || !result.materialId) {
+        if (result.errorCode === 'page_limit' && result.maxPages) {
+          throw new Error(`Este PDF supera el límite de ${result.maxPages} páginas de tu plan.`);
+        }
+        throw new Error(result.message);
+      }
+
+      const examResult = await saveStudentMaterialExamContextAction({
+        materialId: result.materialId,
+        examInstance: null,
+        examDate,
+      });
+      if (!examResult.success) {
+        toast({ description: examResult.message, variant: 'destructive' });
+      }
+
+      const initialState: StudentMaterialProcessingState = {
+        materialId: result.materialId,
+        title: metadata.title,
+        fileName: file.name,
+        status: 'uploaded',
+        stage: 'uploaded',
+        progress: 10,
+        message: 'PDF subido. Empezamos a procesarlo.',
+        error: null,
+      };
+      setProcessing(initialState);
+      setDisplayProgress(10);
+      void processStudentMaterialAction(result.materialId);
+      preparedPath = null;
+    } catch (error) {
+      if (preparedPath) {
+        await cancelPdfFirstUploadAction(preparedPath).catch(() => undefined);
+      }
+      toast({
+        description: error instanceof Error ? error.message : 'No pudimos subir tu PDF.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveContext = async () => {
+    if (!processing || !canSaveContext || savingContext || !university) return;
+    setSavingContext(true);
+    const result = await savePdfFirstAcademicContextAction({
+      materialId: processing.materialId,
+      universidadId: university.id,
+      universidadNombre: university.nombre,
+      carreraId: addingCareer ? null : selectedCareer?.id ?? null,
+      carreraNombre: careerName,
+      materiaId: addingSubject ? null : selectedSubject?.id ?? null,
+      materiaNombre: subjectName,
+    });
+
+    if (!result.success) {
+      toast({ description: result.message, variant: 'destructive' });
+      setSavingContext(false);
+      return;
+    }
+
+    setContextSaved(true);
+    setSavedContextLabel(
+      [result.context.carreraNombre, result.context.materiaNombre].filter(Boolean).join(' · ')
+    );
+    setSavingContext(false);
+    router.refresh();
+  };
+
+  const openMaterial = () => {
+    if (!processing) return;
+    setOpen(false);
+    router.push(getStudentMaterialRoute(processing.materialId));
+    router.refresh();
+  };
+
+  return (
+    <div className="relative">
+      <div
+        onClickCapture={handleCapturedClick}
+        className={`transition duration-200 ${open ? 'pointer-events-none select-none blur-[5px]' : ''}`}
+        aria-hidden={open}
+      >
+        {children}
+      </div>
+
+      {open ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/25 px-4 py-8" onMouseDown={close}>
+          <section
+            className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/70 bg-white p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)] [scrollbar-width:none] sm:p-6 [&::-webkit-scrollbar]:hidden"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pdf-first-modal-title"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 id="pdf-first-modal-title" className="text-xl font-bold tracking-[-0.035em] text-slate-950">
+                  {processing ? (failed ? 'No pudimos procesar tu PDF' : ready ? 'Tu PDF está listo' : 'Estamos procesando tu PDF') : 'Subir PDF'}
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  {processing
+                    ? ready
+                      ? contextSaved
+                        ? 'Terminamos de preparar tu material.'
+                        : 'El material ya está listo. Podés completar los datos o saltarlos.'
+                      : 'Mientras lo preparamos, vinculalo con tu carrera y materia.'
+                    : 'Elegí el archivo, poné un nombre y la fecha de examen.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={close}
+                disabled={uploading}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <input
+              ref={pickerRef}
+              type="file"
+              accept=".pdf,application/pdf"
+              className="sr-only"
+              onChange={(event) => {
+                selectFile(event.currentTarget.files?.[0] ?? null);
+                event.currentTarget.value = '';
+              }}
+            />
+
+            {!processing ? (
+              <>
+                {!file ? (
+                  <button
+                    type="button"
+                    onClick={() => pickerRef.current?.click()}
+                    className="mt-6 flex min-h-44 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                      <Upload className="h-5 w-5" />
+                    </span>
+                    <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
+                    <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
+                  </button>
+                ) : (
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => pickerRef.current?.click()}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-300"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                        <FileText className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-slate-900">{file.name}</span>
+                        <span className="mt-0.5 block text-xs text-slate-400">Tocá para cambiar archivo</span>
+                      </span>
+                    </button>
+
+                    <div className="mt-4">
+                      <label htmlFor="pdf-first-title" className="mb-1.5 block text-xs font-semibold text-slate-700">Nombre</label>
+                      <Input
+                        id="pdf-first-title"
+                        value={title}
+                        onChange={(event) => {
+                          const next = event.target.value;
+                          setTitle(next);
+                          if (next.trim().length < 3) setExamDate('');
+                        }}
+                        placeholder={titleFromFile(file.name)}
+                      />
+                    </div>
+
+                    {hasValidTitle ? (
+                      <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <label htmlFor="pdf-first-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                          <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
+                          Fecha de examen
+                        </label>
+                        <Input
+                          id="pdf-first-exam-date"
+                          type="date"
+                          value={examDate}
+                          onChange={(event) => setExamDate(event.target.value)}
+                          required
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
+                <div className="mt-6 flex items-center justify-end gap-2">
+                  <Button type="button" variant="ghost" onClick={close} disabled={uploading}>Cancelar</Button>
+                  <Button type="button" disabled={!file || !hasValidTitle || !examDate || uploading} onClick={startProcessing}>
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Continuar
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="mt-6">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center text-indigo-600">
+                    {ready ? <CheckCircle2 className="h-5 w-5" /> : failed ? <FileText className="h-5 w-5" /> : <Loader2 className="h-5 w-5 animate-spin" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">{processing.title}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{failed ? processing.error ?? 'El procesamiento se interrumpió.' : ready ? 'Procesamiento completado' : processing.message}</p>
+                  </div>
+                  <span className="text-xs font-semibold tabular-nums text-slate-500">{progress}%</span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
+                </div>
+
+                {!failed ? (
+                  <>
+                    <p className="mt-5 text-xs text-slate-500">
+                      <span className="font-semibold text-slate-700">Universidad</span> · {university?.nombre ?? 'Sin universidad vinculada al perfil'}
+                    </p>
+
+                    {!contextSaved ? (
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <label htmlFor="pdf-first-career" className="mb-1.5 block text-xs font-semibold text-slate-700">Carrera</label>
+                          {!addingCareer ? (
+                            <>
+                              <select
+                                id="pdf-first-career"
+                                value={careerId}
+                                onChange={(event) => {
+                                  setCareerId(event.target.value);
+                                  setSubjectId('');
+                                  setAddingSubject(false);
+                                  setNewSubject('');
+                                }}
+                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                disabled={!initialUniversidadId}
+                              >
+                                <option value="">Seleccionar carrera</option>
+                                {availableCareers.map((career) => <option key={career.id} value={career.id}>{career.nombre}</option>)}
+                              </select>
+                              <button type="button" onClick={() => { setAddingCareer(true); setCareerId(''); setSubjectId(''); setAddingSubject(false); }} className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                                + Añadir carrera
+                              </button>
+                            </>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Input value={newCareer} onChange={(event) => setNewCareer(event.target.value)} placeholder="Nombre de la carrera" autoFocus />
+                              <Button type="button" variant="outline" onClick={() => { setAddingCareer(false); setNewCareer(''); }}>Cancelar</Button>
+                            </div>
+                          )}
+                        </div>
+
+                        {careerName ? (
+                          <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                            <label htmlFor="pdf-first-subject" className="mb-1.5 block text-xs font-semibold text-slate-700">Materia</label>
+                            {!addingSubject && !addingCareer ? (
+                              <>
+                                <select
+                                  id="pdf-first-subject"
+                                  value={subjectId}
+                                  onChange={(event) => setSubjectId(event.target.value)}
+                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                >
+                                  <option value="">Seleccionar materia</option>
+                                  {availableSubjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.nombre}</option>)}
+                                </select>
+                                <button type="button" onClick={() => { setAddingSubject(true); setSubjectId(''); }} className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                                  + Añadir materia
+                                </button>
+                              </>
+                            ) : (
+                              <div className="flex gap-2">
+                                <Input value={newSubject} onChange={(event) => setNewSubject(event.target.value)} placeholder="Nombre de la materia" autoFocus />
+                                {!addingCareer ? <Button type="button" variant="outline" onClick={() => { setAddingSubject(false); setNewSubject(''); }}>Cancelar</Button> : null}
+                              </div>
+                            )}
+                          </div>
+                        ) : null}
+
+                        {university ? null : (
+                          <p className="text-xs leading-5 text-amber-700">Necesitás una universidad vinculada a tu cuenta para guardar carrera y materia.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-sm font-medium text-emerald-700">Guardado · {savedContextLabel}</p>
+                    )}
+
+                    <div className="mt-6 flex items-center justify-end gap-2">
+                      {!contextSaved && ready ? (
+                        <Button type="button" variant="ghost" onClick={openMaterial}>Saltar</Button>
+                      ) : null}
+                      {!contextSaved ? (
+                        <Button type="button" disabled={!canSaveContext || savingContext} onClick={saveContext}>
+                          {savingContext ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                          Guardar
+                        </Button>
+                      ) : null}
+                      {contextSaved && ready ? <Button type="button" onClick={openMaterial}>Abrir PDF</Button> : null}
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-6 flex justify-end">
+                    <Button type="button" variant="outline" onClick={close}>Cerrar</Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        </div>
+      ) : null}
+    </div>
+  );
+}
