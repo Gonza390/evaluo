@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { FileText, Plus, Upload, X } from 'lucide-react';
+import { CalendarDays, FileText, Plus, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -20,18 +20,23 @@ export default function PdfFirstPublicPreviewPage() {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
+  const [examDate, setExamDate] = useState('');
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
     setFile(selected);
-    setTitle(titleFromFile(selected.name));
+    setTitle('');
+    setExamDate('');
   };
 
   const close = () => {
     setOpen(false);
     setFile(null);
     setTitle('');
+    setExamDate('');
   };
+
+  const canSetExamDate = title.trim().length >= 3;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50">
@@ -145,10 +150,28 @@ export default function PdfFirstPublicPreviewPage() {
                   <Input
                     id="preview-pdf-title"
                     value={title}
-                    onChange={(event) => setTitle(event.target.value)}
+                    onChange={(event) => {
+                      setTitle(event.target.value);
+                      if (event.target.value.trim().length < 3) setExamDate('');
+                    }}
                     placeholder={titleFromFile(file.name)}
                   />
                 </div>
+
+                {canSetExamDate ? (
+                  <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <label htmlFor="preview-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                      <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
+                      Fecha de examen <span className="font-normal text-slate-400">(opcional)</span>
+                    </label>
+                    <Input
+                      id="preview-exam-date"
+                      type="date"
+                      value={examDate}
+                      onChange={(event) => setExamDate(event.target.value)}
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
 
