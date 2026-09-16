@@ -26,3 +26,22 @@ export function hasCompleteAcademicProfile({
     getAcademicProfileActiveSubjectIds(activeSubjects).length > 0
   );
 }
+
+
+/** Destinos del loop PDF-first (upload/modal). */
+export function isPdfFirstActivationPath(path: string) {
+  const pathname = path.split('?')[0].split('#')[0];
+  return (
+    pathname === '/dashboard/materiales' ||
+    pathname === '/dashboard/materiales/' ||
+    pathname.startsWith('/dashboard/materiales/')
+  );
+}
+
+export function getPdfFirstActivationHref(existingSearch = '') {
+  const params = new URLSearchParams(
+    existingSearch.startsWith('?') ? existingSearch.slice(1) : existingSearch
+  );
+  params.set('openUpload', '1');
+  return `/dashboard/materiales?${params.toString()}`;
+}

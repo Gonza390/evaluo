@@ -108,7 +108,7 @@ export async function proxy(request: NextRequest) {
     !request.nextUrl.searchParams.get('redirectTo')
   ) {
     const signupUrl = request.nextUrl.clone();
-    signupUrl.searchParams.set('next', '/dashboard/materiales/nuevo');
+    signupUrl.searchParams.set('next', '/dashboard/materiales?openUpload=1');
     signupUrl.searchParams.set('reason', 'prepare-material');
     return persistReferralCookie(request, NextResponse.redirect(signupUrl));
   }

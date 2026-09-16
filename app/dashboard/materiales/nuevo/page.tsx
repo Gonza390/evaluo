@@ -1,5 +1,25 @@
 import { redirect } from 'next/navigation';
 
-export default function NewStudentMaterialPage() {
-  redirect('/dashboard/materiales/subir');
+export default async function NewStudentMaterialPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    universidadId?: string;
+    carreraId?: string;
+    materiaId?: string;
+    source?: string;
+    examDate?: string;
+    dailyMinutes?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const next = new URLSearchParams();
+  next.set('openUpload', '1');
+  if (params.universidadId) next.set('universidadId', params.universidadId);
+  if (params.carreraId) next.set('carreraId', params.carreraId);
+  if (params.materiaId) next.set('materiaId', params.materiaId);
+  if (params.source) next.set('source', params.source);
+  if (params.examDate) next.set('examDate', params.examDate);
+  if (params.dailyMinutes) next.set('dailyMinutes', params.dailyMinutes);
+  redirect(`/dashboard/materiales?${next.toString()}`);
 }

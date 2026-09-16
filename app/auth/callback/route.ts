@@ -2,7 +2,11 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
-import { hasCompleteAcademicProfile } from '@/lib/profile-completion';
+import {
+  getPdfFirstActivationHref,
+  hasCompleteAcademicProfile,
+  isPdfFirstActivationPath,
+} from '@/lib/profile-completion';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -59,6 +63,13 @@ export async function GET(request: Request) {
           activeSubjects: profile?.active_subjects,
         })
       ) {
+        // Ship B.1: no bloquear activación PDF-first con el gate de perfil académico.
+        if (isPdfFirstActivationPath(nextPath)) {
+          return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
+        }
+        if (nextPath === '/dashboard') {
+          return NextResponse.redirect(`${requestUrl.origin}${getPdfFirstActivationHref()}`);
+        }
         return NextResponse.redirect(
           `${requestUrl.origin}/completar-perfil?next=${encodeURIComponent(nextPath)}`
         );
