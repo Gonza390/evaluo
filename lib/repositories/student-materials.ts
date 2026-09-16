@@ -18,9 +18,9 @@ export type StudentMaterialProcessingUpdate = {
 export type ProcessableStudentMaterial = {
   id: string;
   user_id: string;
-  universidad_id: string;
-  carrera_id: string;
-  materia_id: string;
+  universidad_id: string | null;
+  carrera_id: string | null;
+  materia_id: string | null;
   title: string;
   file_name: string;
   file_path: string;
@@ -57,14 +57,23 @@ export async function loadStudentMaterialProcessingContext(
 ) {
   const [fileResult, carreraResult, universidadResult, materiaResult] = await Promise.all([
     admin.storage.from('biblioteca').download(material.file_path),
-    admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
-    admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
-    admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
+    material.carrera_id
+      ? admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    material.universidad_id
+      ? admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    material.materia_id
+      ? admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   if (fileResult.error || !fileResult.data) {
     throw new Error('No pudimos volver a leer el PDF desde almacenamiento.');
   }
+  if (carreraResult.error) throw carreraResult.error;
+  if (universidadResult.error) throw universidadResult.error;
+  if (materiaResult.error) throw materiaResult.error;
 
   return {
     file: fileResult.data,
