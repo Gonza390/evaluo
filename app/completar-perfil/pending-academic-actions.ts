@@ -404,7 +404,7 @@ export async function createPrivatePendingSubjectAction(
       materia: {
         id: materiaCreada.id,
         nombre: materiaCreada.nombre,
-        approval_status: materiaCreada.approval_status === 'approved' ? 'approved' : 'pending',
+        approval_status: 'pending',
       },
     };
   } catch (error) {
