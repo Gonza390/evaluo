@@ -20,7 +20,7 @@ const r = (frame: number, input: number[], output: number[]) => interpolate(fram
 
 type Feature = 'summary' | 'cards' | 'exam' | 'glossary';
 
-const featureLabels: Record<Feature, string> = {
+const _featureLabels: Record<Feature, string> = {
   summary: 'Resumen',
   cards: 'Flashcards',
   exam: 'Examen',
