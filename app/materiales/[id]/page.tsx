@@ -39,6 +39,42 @@ function isMissingStudentMaterialsTableError(error: unknown) {
   return code === '42P01' || message.toLowerCase().includes('student_materials');
 }
 
+async function loadAcademicLabels(
+  admin: ReturnType<typeof createAdminClient>,
+  input: {
+    universidadId: string | null | undefined;
+    carreraId: string | null | undefined;
+    materiaId: string | null | undefined;
+  }
+) {
+  const adminClient = admin as any;
+  const [carreraResult, universidadResult, materiaResult] = await Promise.all([
+    input.carreraId
+      ? adminClient.from('carreras').select('nombre').eq('id', input.carreraId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    input.universidadId
+      ? adminClient
+          .from('universidades')
+          .select('nombre')
+          .eq('id', input.universidadId)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    input.materiaId
+      ? adminClient.from('materias').select('nombre').eq('id', input.materiaId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  if (carreraResult.error) throw carreraResult.error;
+  if (universidadResult.error) throw universidadResult.error;
+  if (materiaResult.error) throw materiaResult.error;
+
+  return {
+    carrera: carreraResult.data as { nombre: string } | null,
+    universidad: universidadResult.data as { nombre: string } | null,
+    materia: materiaResult.data as { nombre: string } | null,
+  };
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id: routeValue } = await params;
   const materialId = resolveMaterialId(routeValue);
@@ -64,11 +100,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     const admin = createAdminClient();
-    const [{ data: carrera }, { data: universidad }, { data: materia }] = await Promise.all([
-      admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
-      admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
-      admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
-    ]);
+    const { carrera, universidad, materia } = await loadAcademicLabels(admin, {
+      universidadId: material.universidad_id,
+      carreraId: material.carrera_id,
+      materiaId: material.materia_id,
+    });
 
     const canonicalHref = `/materiales/${buildSeoEntitySlug(material.title, material.id)}`;
     const context = [materia?.nombre, carrera?.nombre, universidad?.nombre].filter(Boolean).join(' · ');
@@ -139,13 +175,14 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       redirect(`/materiales/${canonicalSegment}`);
     }
 
-    const [{ data: carrera }, { data: universidad }, { data: materia }, signedUrlResult] =
-      await Promise.all([
-        admin.from('carreras').select('nombre').eq('id', material.carrera_id).maybeSingle(),
-        admin.from('universidades').select('nombre').eq('id', material.universidad_id).maybeSingle(),
-        admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle(),
-        admin.storage.from('biblioteca').createSignedUrl(material.file_path, 60 * 15),
-      ]);
+    const [{ carrera, universidad, materia }, signedUrlResult] = await Promise.all([
+      loadAcademicLabels(admin, {
+        universidadId: material.universidad_id,
+        carreraId: material.carrera_id,
+        materiaId: material.materia_id,
+      }),
+      admin.storage.from('biblioteca').createSignedUrl(material.file_path, 60 * 15),
+    ]);
 
     const viewerUrl = signedUrlResult.data?.signedUrl;
     if (!viewerUrl || signedUrlResult.error) notFound();
@@ -153,18 +190,23 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
     const isOwner = user?.id === material.user_id;
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
+    const hasFullAcademicContext = Boolean(
+      material.universidad_id && material.carrera_id && material.materia_id
+    );
     const backHref = isOwner
       ? '/dashboard/materiales'
-      : getMateriaRoute(material.materia_id, material.carrera_id);
+      : material.materia_id
+        ? getMateriaRoute(material.materia_id, material.carrera_id)
+        : '/explorar';
 
     if (material.processing_status !== 'ready') {
       const failed = material.processing_status === 'failed';
       return (
         <MaterialStudyStatusWorkspace
           backHref={backHref}
-          carreraName={carrera?.nombre ?? 'Carrera'}
-          universidadName={universidad?.nombre ?? 'Universidad'}
-          materiaName={materia?.nombre ?? 'Materia'}
+          carreraName={carrera?.nombre ?? 'Sin carrera'}
+          universidadName={universidad?.nombre ?? 'Sin universidad'}
+          materiaName={materia?.nombre ?? 'Sin materia'}
           title={material.title}
           fileName={material.file_name}
           viewerUrl={viewerUrl}
@@ -207,9 +249,9 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
       return (
         <MaterialStudyStatusWorkspace
           backHref={backHref}
-          carreraName={carrera?.nombre ?? 'Carrera'}
-          universidadName={universidad?.nombre ?? 'Universidad'}
-          materiaName={materia?.nombre ?? 'Materia'}
+          carreraName={carrera?.nombre ?? 'Sin carrera'}
+          universidadName={universidad?.nombre ?? 'Sin universidad'}
+          materiaName={materia?.nombre ?? 'Sin materia'}
           title={material.title}
           fileName={material.file_name}
           viewerUrl={viewerUrl}
@@ -250,13 +292,10 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     const visibility = normalizeMaterialVisibility(material.visibility);
     const sharePath = `/materiales/${canonicalSegment}`;
-    const uploadParams = new URLSearchParams({
-      openUpload: '1',
-      universidadId: material.universidad_id,
-      carreraId: material.carrera_id,
-      materiaId: material.materia_id,
-      source: 'shared_material',
-    });
+    const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
+    if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
+    if (material.carrera_id) uploadParams.set('carreraId', material.carrera_id);
+    if (material.materia_id) uploadParams.set('materiaId', material.materia_id);
     const uploadPath = `/dashboard/materiales?${uploadParams.toString()}`;
     const ownMaterialHref = user?.id
       ? uploadPath
@@ -264,7 +303,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
 
     return (
       <>
-        {isOwner ? (
+        {isOwner && hasFullAcademicContext ? (
           <StudentMaterialShareControl
             materialId={material.id}
             title={material.title}
@@ -275,15 +314,15 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
         <MaterialStudyWorkspace
           backHref={backHref}
           canRegenerate={canRegenerate}
-          carreraName={carrera?.nombre ?? 'Carrera'}
+          carreraName={carrera?.nombre ?? 'Sin carrera'}
           fileName={material.file_name}
           isPremium={isPremium}
           materialId={material.id}
           isOwner={isOwner}
-          materiaName={materia?.nombre ?? 'Materia'}
+          materiaName={materia?.nombre ?? 'Sin materia'}
           pageCount={material.page_count}
           title={material.title}
-          universidadName={universidad?.nombre ?? 'Universidad'}
+          universidadName={universidad?.nombre ?? 'Sin universidad'}
           viewerUrl={viewerUrl}
           visibility={visibility}
           studyGlossary={studyGlossary}
