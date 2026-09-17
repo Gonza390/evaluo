@@ -9,6 +9,7 @@ module.exports = {
         'http://localhost:3000/',
         'http://localhost:3000/explorar',
         'http://localhost:3000/materias?carreraId=5f53394d-4f86-4d81-a8de-b88dc08b3e38',
+        'http://localhost:3000/pregunteros',
         'http://localhost:3000/pricing',
         'http://localhost:3000/demo/material-estudio',
       ],
