@@ -27,11 +27,15 @@ type CarreraOption = { id: string; nombre: string; universidad_id: string | null
 type MateriaOption = { id: string; nombre: string; carrera_id?: string | null };
 type CarreraMateriaRelation = { carrera_id: string | null; materia_id: string | null };
 
+const MISSING_UNIVERSITY_VALUE = '__missing_university__';
+
 type Props = {
   children: ReactNode;
   universidades: UniversidadOption[];
   carreras: CarreraOption[];
+  /** Kept for call-site compatibility; Ship I soft-ask does not require materia. */
   materias: MateriaOption[];
+  /** Kept for call-site compatibility; Ship I soft-ask does not require materia. */
   carreraMaterias: CarreraMateriaRelation[];
   initialUniversidadId?: string;
   initialCarreraId?: string;
@@ -60,11 +64,11 @@ export function PdfFirstUploadShell({
   children,
   universidades,
   carreras,
-  materias,
-  carreraMaterias,
+  materias: _materias,
+  carreraMaterias: _carreraMaterias,
   initialUniversidadId = '',
   initialCarreraId = '',
-  initialMateriaId = '',
+  initialMateriaId: _initialMateriaId = '',
   initialExamDate = '',
   initialOpen = false,
 }: Props) {
@@ -78,37 +82,29 @@ export function PdfFirstUploadShell({
   const [uploading, setUploading] = useState(false);
   const [processing, setProcessing] = useState<StudentMaterialProcessingState | null>(null);
   const [displayProgress, setDisplayProgress] = useState(0);
+  const [universityId, setUniversityId] = useState(initialUniversidadId);
+  const [requestingUniversity, setRequestingUniversity] = useState(false);
+  const [newUniversity, setNewUniversity] = useState('');
   const [careerId, setCareerId] = useState(initialCarreraId);
-  const [subjectId, setSubjectId] = useState(initialMateriaId);
   const [addingCareer, setAddingCareer] = useState(false);
-  const [addingSubject, setAddingSubject] = useState(false);
   const [newCareer, setNewCareer] = useState('');
-  const [newSubject, setNewSubject] = useState('');
   const [savingContext, setSavingContext] = useState(false);
   const [contextSaved, setContextSaved] = useState(false);
   const [savedContextLabel, setSavedContextLabel] = useState('');
 
-  const university = universidades.find((item) => item.id === initialUniversidadId) ?? null;
+  const selectedUniversity = universidades.find((item) => item.id === universityId) ?? null;
   const availableCareers = useMemo(
-    () => carreras.filter((item) => item.universidad_id === initialUniversidadId),
-    [carreras, initialUniversidadId]
+    () => (universityId ? carreras.filter((item) => item.universidad_id === universityId) : []),
+    [carreras, universityId]
   );
   const selectedCareer = availableCareers.find((item) => item.id === careerId) ?? null;
-  const availableSubjects = useMemo(() => {
-    if (!careerId) return [];
-    const relatedIds = new Set(
-      carreraMaterias
-        .filter((relation) => relation.carrera_id === careerId && relation.materia_id)
-        .map((relation) => relation.materia_id as string)
-    );
-    return materias.filter((item) => item.carrera_id === careerId || relatedIds.has(item.id));
-  }, [careerId, carreraMaterias, materias]);
-  const selectedSubject = availableSubjects.find((item) => item.id === subjectId) ?? null;
 
   const hasValidTitle = title.trim().length >= 3;
+  const universityName = requestingUniversity ? newUniversity.trim() : selectedUniversity?.nombre ?? '';
   const careerName = addingCareer ? newCareer.trim() : selectedCareer?.nombre ?? '';
-  const subjectName = addingSubject ? newSubject.trim() : selectedSubject?.nombre ?? '';
-  const canSaveContext = Boolean(initialUniversidadId && careerName && subjectName && !contextSaved);
+  const hasUniversity = requestingUniversity ? universityName.length >= 3 : Boolean(universityId);
+  const hasCareer = addingCareer ? careerName.length >= 3 : Boolean(careerId);
+  const canSaveContext = Boolean(hasUniversity && hasCareer && !contextSaved);
   const ready = processing?.status === 'ready';
   const failed = processing?.status === 'failed';
   const progress = processing
@@ -148,16 +144,16 @@ export function PdfFirstUploadShell({
     setUploading(false);
     setProcessing(null);
     setDisplayProgress(0);
+    setUniversityId(initialUniversidadId);
+    setRequestingUniversity(false);
+    setNewUniversity('');
     setCareerId(initialCarreraId);
-    setSubjectId(initialMateriaId);
     setAddingCareer(false);
-    setAddingSubject(false);
     setNewCareer('');
-    setNewSubject('');
     setSavingContext(false);
     setContextSaved(false);
     setSavedContextLabel('');
-  }, [initialCarreraId, initialExamDate, initialMateriaId]);
+  }, [initialCarreraId, initialExamDate, initialUniversidadId]);
 
   const close = useCallback(() => {
     if (uploading) return;
@@ -268,16 +264,16 @@ export function PdfFirstUploadShell({
   };
 
   const saveContext = async () => {
-    if (!processing || !canSaveContext || savingContext || !university) return;
+    if (!processing || !canSaveContext || savingContext) return;
     setSavingContext(true);
     const result = await savePdfFirstAcademicContextAction({
       materialId: processing.materialId,
-      universidadId: university.id,
-      universidadNombre: university.nombre,
+      universidadId: requestingUniversity ? null : universityId || null,
+      universidadNombre: requestingUniversity ? universityName : selectedUniversity?.nombre ?? null,
       carreraId: addingCareer ? null : selectedCareer?.id ?? null,
       carreraNombre: careerName,
-      materiaId: addingSubject ? null : selectedSubject?.id ?? null,
-      materiaNombre: subjectName,
+      materiaId: null,
+      materiaNombre: null,
     });
 
     if (!result.success) {
@@ -288,7 +284,7 @@ export function PdfFirstUploadShell({
 
     setContextSaved(true);
     setSavedContextLabel(
-      [result.context.carreraNombre, result.context.materiaNombre].filter(Boolean).join(' · ')
+      [result.context.universidadNombre, result.context.carreraNombre].filter(Boolean).join(' · ')
     );
     setSavingContext(false);
     router.refresh();
@@ -300,6 +296,18 @@ export function PdfFirstUploadShell({
     router.push(getStudentMaterialRoute(processing.materialId));
     router.refresh();
   };
+
+  /** Skip never blocks upload or studying: ready → open material; otherwise close + refresh library. */
+  const skipContext = () => {
+    if (!processing) return;
+    if (ready) {
+      openMaterial();
+      return;
+    }
+    close();
+  };
+
+  const universitySelectValue = requestingUniversity ? MISSING_UNIVERSITY_VALUE : universityId;
 
   return (
     <div className="relative">
@@ -330,8 +338,8 @@ export function PdfFirstUploadShell({
                     ? ready
                       ? contextSaved
                         ? 'Terminamos de preparar tu material.'
-                        : 'El material ya está listo. Podés completar los datos o saltarlos.'
-                      : 'Mientras lo preparamos, vinculalo con tu carrera y materia.'
+                        : 'Listo. Si querés, contanos universidad y carrera — o saltá.'
+                      : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
                     : 'Elegí el archivo y poné un nombre. La fecha de examen es opcional.'}
                 </p>
               </div>
@@ -445,81 +453,152 @@ export function PdfFirstUploadShell({
 
                 {!failed ? (
                   <>
-                    <p className="mt-5 text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">Universidad</span> · {university?.nombre ?? 'Sin universidad vinculada al perfil'}
-                    </p>
-
                     {!contextSaved ? (
-                      <div className="mt-4 space-y-4">
+                      <div className="mt-5 space-y-4">
+                        <p className="text-xs leading-5 text-slate-500">
+                          Opcional · universidad y carrera ayudan a ordenar tu espacio. La materia no es necesaria acá.
+                        </p>
+
                         <div>
-                          <label htmlFor="pdf-first-career" className="mb-1.5 block text-xs font-semibold text-slate-700">Carrera</label>
-                          {!addingCareer ? (
+                          <label htmlFor="pdf-first-university" className="mb-1.5 block text-xs font-semibold text-slate-700">Universidad</label>
+                          {!requestingUniversity ? (
                             <>
                               <select
-                                id="pdf-first-career"
-                                value={careerId}
+                                id="pdf-first-university"
+                                value={universitySelectValue}
                                 onChange={(event) => {
-                                  setCareerId(event.target.value);
-                                  setSubjectId('');
-                                  setAddingSubject(false);
-                                  setNewSubject('');
+                                  const value = event.target.value;
+                                  if (value === MISSING_UNIVERSITY_VALUE) {
+                                    setRequestingUniversity(true);
+                                    setUniversityId('');
+                                    setCareerId('');
+                                    setAddingCareer(false);
+                                    setNewCareer('');
+                                    return;
+                                  }
+                                  setRequestingUniversity(false);
+                                  setNewUniversity('');
+                                  setUniversityId(value);
+                                  setCareerId('');
+                                  setAddingCareer(false);
+                                  setNewCareer('');
                                 }}
                                 className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-                                disabled={!initialUniversidadId}
                               >
-                                <option value="">Seleccionar carrera</option>
-                                {availableCareers.map((career) => <option key={career.id} value={career.id}>{career.nombre}</option>)}
+                                <option value="">Seleccionar universidad</option>
+                                {universidades.map((uni) => (
+                                  <option key={uni.id} value={uni.id}>{uni.nombre}</option>
+                                ))}
+                                <option value={MISSING_UNIVERSITY_VALUE}>Mi universidad no aparece</option>
                               </select>
-                              <button type="button" onClick={() => { setAddingCareer(true); setCareerId(''); setSubjectId(''); setAddingSubject(false); }} className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700">
-                                + Añadir carrera
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRequestingUniversity(true);
+                                  setUniversityId('');
+                                  setCareerId('');
+                                  setAddingCareer(false);
+                                  setNewCareer('');
+                                }}
+                                className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                              >
+                                Mi universidad no aparece
                               </button>
                             </>
                           ) : (
-                            <div className="flex gap-2">
-                              <Input value={newCareer} onChange={(event) => setNewCareer(event.target.value)} placeholder="Nombre de la carrera" autoFocus />
-                              <Button type="button" variant="outline" onClick={() => { setAddingCareer(false); setNewCareer(''); }}>Cancelar</Button>
+                            <div className="space-y-2">
+                              <Input
+                                value={newUniversity}
+                                onChange={(event) => setNewUniversity(event.target.value)}
+                                placeholder="Nombre de tu universidad"
+                                autoFocus
+                              />
+                              <p className="text-[11px] leading-4 text-slate-400">
+                                La pedimos para vos; queda privada hasta que la revisemos.
+                              </p>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setRequestingUniversity(false);
+                                  setNewUniversity('');
+                                  setUniversityId(initialUniversidadId);
+                                }}
+                              >
+                                Volver al listado
+                              </Button>
                             </div>
                           )}
                         </div>
 
-                        {careerName ? (
+                        {hasUniversity ? (
                           <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-                            <label htmlFor="pdf-first-subject" className="mb-1.5 block text-xs font-semibold text-slate-700">Materia</label>
-                            {!addingSubject && !addingCareer ? (
+                            <label htmlFor="pdf-first-career" className="mb-1.5 block text-xs font-semibold text-slate-700">Carrera</label>
+                            {!addingCareer ? (
                               <>
                                 <select
-                                  id="pdf-first-subject"
-                                  value={subjectId}
-                                  onChange={(event) => setSubjectId(event.target.value)}
+                                  id="pdf-first-career"
+                                  value={careerId}
+                                  onChange={(event) => setCareerId(event.target.value)}
                                   className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                  disabled={requestingUniversity}
                                 >
-                                  <option value="">Seleccionar materia</option>
-                                  {availableSubjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.nombre}</option>)}
+                                  <option value="">Seleccionar carrera</option>
+                                  {availableCareers.map((career) => (
+                                    <option key={career.id} value={career.id}>{career.nombre}</option>
+                                  ))}
                                 </select>
-                                <button type="button" onClick={() => { setAddingSubject(true); setSubjectId(''); }} className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700">
-                                  + Añadir materia
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setAddingCareer(true);
+                                    setCareerId('');
+                                  }}
+                                  className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                >
+                                  {requestingUniversity || availableCareers.length === 0
+                                    ? 'Solicitar carrera'
+                                    : '+ Añadir carrera'}
                                 </button>
                               </>
                             ) : (
-                              <div className="flex gap-2">
-                                <Input value={newSubject} onChange={(event) => setNewSubject(event.target.value)} placeholder="Nombre de la materia" autoFocus />
-                                {!addingCareer ? <Button type="button" variant="outline" onClick={() => { setAddingSubject(false); setNewSubject(''); }}>Cancelar</Button> : null}
+                              <div className="space-y-2">
+                                <div className="flex gap-2">
+                                  <Input
+                                    value={newCareer}
+                                    onChange={(event) => setNewCareer(event.target.value)}
+                                    placeholder="Nombre de la carrera"
+                                    autoFocus
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setAddingCareer(false);
+                                      setNewCareer('');
+                                    }}
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
+                                <p className="text-[11px] leading-4 text-slate-400">
+                                  Si no está en el listado, la pedimos para tu uso privado.
+                                </p>
                               </div>
                             )}
                           </div>
                         ) : null}
-
-                        {university ? null : (
-                          <p className="text-xs leading-5 text-amber-700">Necesitás una universidad vinculada a tu cuenta para guardar carrera y materia.</p>
-                        )}
                       </div>
                     ) : (
                       <p className="mt-4 text-sm font-medium text-emerald-700">Guardado · {savedContextLabel}</p>
                     )}
 
-                    <div className="mt-6 flex items-center justify-end gap-2">
-                      {!contextSaved && ready ? (
-                        <Button type="button" variant="ghost" onClick={openMaterial}>Saltar</Button>
+                    <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
+                      {!contextSaved ? (
+                        <Button type="button" variant="ghost" onClick={skipContext}>
+                          Saltar
+                        </Button>
                       ) : null}
                       {!contextSaved ? (
                         <Button type="button" disabled={!canSaveContext || savingContext} onClick={saveContext}>
@@ -528,6 +607,11 @@ export function PdfFirstUploadShell({
                         </Button>
                       ) : null}
                       {contextSaved && ready ? <Button type="button" onClick={openMaterial}>Abrir PDF</Button> : null}
+                      {contextSaved && !ready ? (
+                        <Button type="button" variant="outline" onClick={close}>
+                          Seguir en mi biblioteca
+                        </Button>
+                      ) : null}
                     </div>
                   </>
                 ) : (
