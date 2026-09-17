@@ -290,7 +290,7 @@ export function StudentMaterialsWorkspace({
                 </DialogTitle>
                 <DialogDescription className="mt-1.5 text-[13px] leading-5 text-slate-600">
                   Se borrará el PDF y todo su espacio de estudio (resumen, glosario, tarjetas y
-                  ejercicios). Esta acción no se puede deshacer.
+                  práctica). Esta acción no se puede deshacer.
                 </DialogDescription>
               </div>
             </div>

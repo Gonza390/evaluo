@@ -59,7 +59,7 @@ export function StudyFirstVisitNudge({ materialsCount, onUploadClick }: Props) {
           >
             Subí tu PDF
           </button>{' '}
-          y en unos minutos tenés resumen, glosario y ejercicios.
+          y en unos minutos tenés resumen, glosario, tarjetas y práctica.
         </p>
       </div>
       <button
