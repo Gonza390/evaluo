@@ -6,8 +6,11 @@ function source(path: string) {
 }
 
 const pagePath = 'app/como-estudiar-ingreso-unlam/page.tsx';
+const componentPath = 'components/marketing/unlam-editorial-guide.tsx';
 const page = source(pagePath);
-const lower = page.toLowerCase();
+const component = source(componentPath);
+const combined = `${page}\n${component}`;
+const lower = combined.toLowerCase();
 
 for (const token of [
   "const path = '/como-estudiar-ingreso-unlam'",
@@ -28,8 +31,10 @@ for (const token of [
   'https://www.unlam.edu.ar/calendario-academico/',
   'Evaluo no está afiliado a UNLaM',
   '<h1',
+  'En esta guía',
+  'La IA no reemplaza el manual',
 ]) {
-  assert.ok(page.includes(token), `${pagePath} must include ${token}`);
+  assert.ok(combined.includes(token), `UNLaM guide must include ${token}`);
 }
 
 for (const unsupportedClaim of [
@@ -39,7 +44,7 @@ for (const unsupportedClaim of [
   'examen real',
   'aprobá seguro',
 ]) {
-  assert.ok(!lower.includes(unsupportedClaim), `${pagePath} must not claim ${unsupportedClaim}`);
+  assert.ok(!lower.includes(unsupportedClaim), `UNLaM guide must not claim ${unsupportedClaim}`);
 }
 
 assert.ok(
