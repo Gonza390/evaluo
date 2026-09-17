@@ -1,23 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Check,
-  FileText,
-  Lightbulb,
-  RotateCcw,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, FileText } from 'lucide-react';
 
 const topics = [
   'Dogmática y teoría del delito',
   'Concepciones dogmáticas',
-  'Normativismo o teleologismo',
+  'Normativismo',
   'Finalismo',
-  'Funcionalismo moderado',
+  'Funcionalismo',
   'Estructura del delito',
 ];
 
@@ -29,67 +20,58 @@ const options = [
 ];
 
 export default function PdfReadyPreviewPage() {
-  const [screen, setScreen] = useState<'ready' | 'diagnostic' | 'summary'>('ready');
+  const [screen, setScreen] = useState<'ready' | 'diagnostic'>('ready');
   const [selected, setSelected] = useState<number | null>(null);
 
   if (screen === 'diagnostic') {
     return (
-      <main className="min-h-screen bg-[#f7f8fb] px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl">
+      <main className="min-h-screen bg-white px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
           <button
             type="button"
             onClick={() => {
               setScreen('ready');
               setSelected(null);
             }}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al material
+            Volver
           </button>
 
-          <section className="mt-6 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-            <div className="border-b border-slate-100 px-5 py-5 sm:px-8 sm:py-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">
-                    Diagnóstico · 1 de 6
-                  </p>
-                  <h1 className="mt-2 text-2xl font-bold tracking-[-0.04em] sm:text-3xl">
-                    Veamos qué tanto dominás
-                  </h1>
-                </div>
-                <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
-                  ~4 min
-                </span>
+          <section className="mt-5 max-w-2xl rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-5 sm:px-6 sm:py-6">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">
+                  Diagnóstico · 1 de 6
+                </p>
+                <h1 className="mt-1.5 text-[1.45rem] font-bold tracking-[-0.045em] text-slate-950 sm:text-[1.65rem]">
+                  Una pregunta rápida
+                </h1>
               </div>
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full w-1/6 rounded-full bg-blue-600" />
-              </div>
+              <span className="text-[12px] font-medium text-slate-400">~4 min total</span>
             </div>
 
-            <div className="px-5 py-6 sm:px-8 sm:py-8">
-              <p className="text-xs font-bold tracking-[0.13em] text-slate-400 uppercase">
-                Dogmática y teoría del delito
-              </p>
-              <h2 className="mt-3 text-xl font-bold leading-8 tracking-[-0.03em] sm:text-2xl">
+            <div className="pt-5">
+              <p className="text-[12px] font-semibold text-blue-600">Dogmática y teoría del delito</p>
+              <h2 className="mt-2 text-[1.05rem] font-bold leading-6 tracking-[-0.025em] text-slate-950 sm:text-[1.12rem]">
                 ¿Cuál describe mejor la función de la teoría del delito?
               </h2>
 
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 space-y-2">
                 {options.map((option, index) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => setSelected(index)}
-                    className={`flex w-full items-start gap-3 rounded-2xl border px-4 py-4 text-left text-sm leading-6 transition sm:text-[15px] ${
+                    className={`flex w-full items-start gap-3 rounded-xl border px-3.5 py-3 text-left text-[13.5px] leading-5 transition ${
                       selected === index
-                        ? 'border-blue-500 bg-blue-50 text-slate-950 ring-2 ring-blue-100'
-                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-blue-300 bg-blue-50/70 text-slate-950'
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                     }`}
                   >
                     <span
-                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold ${
                         selected === index
                           ? 'border-blue-600 bg-blue-600 text-white'
                           : 'border-slate-300 text-slate-500'
@@ -102,14 +84,14 @@ export default function PdfReadyPreviewPage() {
                 ))}
               </div>
 
-              <div className="mt-7 flex justify-end">
+              <div className="mt-5 flex justify-end">
                 <button
                   type="button"
                   disabled={selected === null}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-[13px] font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Responder
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -119,143 +101,66 @@ export default function PdfReadyPreviewPage() {
     );
   }
 
-  if (screen === 'summary') {
-    return (
-      <main className="min-h-screen bg-[#f7f8fb] px-4 py-8 text-slate-950 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          <button
-            type="button"
-            onClick={() => setScreen('ready')}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver
-          </button>
-          <section className="mt-6 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
-            <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">Resumen</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em]">Derecho Penal · Módulo 2</h1>
-            <p className="mt-5 text-[15px] leading-7 text-slate-600">
-              El material recorre las principales concepciones dogmáticas de la teoría del delito y cómo cambia la ubicación y función de sus elementos según cada corriente.
-            </p>
-            <div className="mt-7 grid gap-3 sm:grid-cols-2">
-              {topics.map((topic) => (
-                <div key={topic} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">
-                  {topic}
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-[#f7f8fb] px-4 py-6 text-slate-950 sm:px-6 sm:py-8 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-            Preview de producto
-          </div>
-          <button
-            type="button"
-            onClick={() => setScreen('ready')}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-700"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reiniciar
-          </button>
-        </div>
+    <main className="min-h-screen bg-white px-4 py-6 text-slate-950 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        <section className="max-w-3xl rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-5 sm:px-6 sm:py-6">
+          <div className="flex items-start gap-3.5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <Check className="h-5 w-5" strokeWidth={2.4} />
+            </span>
 
-        <section className="overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_26px_80px_rgba(15,23,42,0.08)]">
-          <div className="border-b border-slate-100 bg-[linear-gradient(180deg,#fbfdff_0%,#ffffff_100%)] px-5 py-8 text-center sm:px-8 sm:py-10">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/60">
-              <Check className="h-7 w-7" strokeWidth={2.5} />
-            </div>
-            <h1 className="mt-6 text-[2rem] font-bold leading-tight tracking-[-0.055em] sm:text-[2.6rem]">
-              Tu PDF está listo
-            </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-[15px] leading-6 text-slate-600 sm:text-base sm:leading-7">
-              Encontramos 6 temas principales. Antes de ponerte a leer todo, veamos cuáles ya dominás y cuáles necesitás practicar.
-            </p>
-          </div>
-
-          <div className="px-5 py-6 sm:px-8 sm:py-8">
-            <div className="flex flex-col gap-4 rounded-[22px] border border-slate-200 bg-slate-50/60 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div className="flex min-w-0 items-center gap-4">
-                <div className="flex h-14 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-blue-600 shadow-sm">
-                  <FileText className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-[15px] font-bold tracking-[-0.02em] text-slate-950">
-                    Módulo 2 · Lectura 1 Derecho Penal
-                  </p>
-                  <p className="mt-1 text-[13px] text-slate-500">3 páginas · Procesado</p>
-                </div>
-              </div>
-              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                <Check className="h-3.5 w-3.5" />
-                Listo para estudiar
-              </span>
-            </div>
-
-            <div className="mt-7">
-              <div className="flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">Tu material</p>
-                  <h2 className="mt-1.5 text-xl font-bold tracking-[-0.04em]">6 temas detectados</h2>
-                </div>
-                <BookOpen className="h-5 w-5 text-slate-300" />
-              </div>
-
-              <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
-                {topics.map((topic, index) => (
-                  <div
-                    key={topic}
-                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3.5"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-bold text-blue-700">
-                      {index + 1}
-                    </span>
-                    <span className="text-[13.5px] font-semibold leading-5 text-slate-700">{topic}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-violet-100 bg-violet-50/70 px-4 py-3.5">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-violet-600 shadow-sm">
-                <Lightbulb className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-[13px] font-bold text-slate-900">También encontramos 2 confusiones frecuentes</p>
-                <p className="mt-1 text-[12.5px] leading-5 text-slate-600">
-                  Las vamos a tener en cuenta para elegir qué preguntarte y qué reforzar.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-7 flex flex-col items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setScreen('diagnostic')}
-                className="inline-flex min-h-12 w-full max-w-md items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition hover:bg-slate-800 sm:text-[15px]"
-              >
-                Empezar diagnóstico
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setScreen('summary')}
-                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
-              >
-                Ver resumen del material
-              </button>
-              <p className="mt-1 text-center text-[12px] text-slate-400">
-                6 preguntas · aproximadamente 4 minutos
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">PDF listo</p>
+              <h1 className="mt-1 text-[1.45rem] font-bold tracking-[-0.045em] text-slate-950 sm:text-[1.65rem]">
+                Ya podés estudiar este material
+              </h1>
+              <p className="mt-1.5 max-w-xl text-[13.5px] leading-5 text-slate-500">
+                Detectamos 6 temas. Podés empezar con un diagnóstico corto para saber qué conviene repasar primero.
               </p>
             </div>
+          </div>
+
+          <div className="mt-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/50 px-3.5 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 ring-1 ring-slate-200">
+              <FileText className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[13.5px] font-semibold text-slate-800">Módulo 2 · Lectura 1 Derecho Penal</p>
+              <p className="mt-0.5 text-[12px] text-slate-400">3 páginas · procesado</p>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-slate-400 uppercase">Temas detectados</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              {topics.map((topic) => (
+                <span
+                  key={topic}
+                  className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600"
+                >
+                  {topic}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+            <button
+              type="button"
+              onClick={() => setScreen('diagnostic')}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-[13px] font-semibold text-white transition hover:bg-slate-800"
+            >
+              Empezar diagnóstico
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50"
+            >
+              Ir al material
+            </button>
+            <span className="text-[12px] text-slate-400">6 preguntas · ~4 min</span>
           </div>
         </section>
       </div>
