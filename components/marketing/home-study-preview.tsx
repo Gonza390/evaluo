@@ -1,6 +1,6 @@
 import { FileText, Sparkles } from 'lucide-react';
 
-const previewLabels = ['Resumen', 'Flashcards', 'Glosario', 'Ejercicios', 'Tu PDF'] as const;
+const previewLabels = ['Resumen', 'Tarjetas', 'Glosario', 'Práctica', 'Tu PDF'] as const;
 
 export function HomeStudyPreview() {
   return (
