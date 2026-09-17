@@ -44,7 +44,7 @@ export function MaeveStudyHero({
         </h1>
         <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-5 text-slate-500">
           {materialsCount === 0
-            ? 'Subí tu PDF y armá resúmenes, glosario, tarjetas y ejercicios sin armar el caos vos.'
+            ? 'Subí tu PDF y armá resumen, glosario, tarjetas y práctica desde tu propio material.'
             : 'Tus materiales primero. Seguí donde dejaste o sumá otro PDF cuando lo necesites.'}
         </p>
         {isContributor ? (
@@ -72,7 +72,7 @@ export function MaeveStudyHero({
             href={initialCarreraId ? getCareerRoute(initialCarreraId) : '/explorar'}
             className="text-[12.5px] font-medium text-slate-400 underline-offset-2 transition hover:text-slate-600 hover:underline"
           >
-            Explorar catálogo de materias
+            Explorar materias
           </Link>
         </div>
       </div>
