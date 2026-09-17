@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation';
-import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
-import { MaeveDashboardChrome } from '@/components/dashboard/maeve-dashboard-chrome';
-import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
+import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { createClientServer } from '@/lib/supabase-server';
@@ -127,7 +125,8 @@ export default async function DashboardPage({
       <div className="animate-page-enter min-h-screen bg-white px-4 py-6 sm:px-6 lg:px-8">
         <ReferralPortalDashboardShortcut />
         <div className="mx-auto max-w-6xl">
-          <PdfFirstUploadShell
+          <LazyMaeveStudySpace
+            materials={materials}
             universidades={universidades}
             carreras={carreras}
             materias={materias}
@@ -137,25 +136,7 @@ export default async function DashboardPage({
             initialMateriaId={uploadMateriaId}
             initialExamDate={examDate}
             initialOpen={openUpload === '1'}
-          >
-            <MaeveDashboardChrome
-              materialsCount={materials.length}
-              sharedMaterialsCount={materials.filter((m) => m.visibility === 'shared').length}
-              initialCarreraId={resolvedCarreraId}
-            >
-              <StudentMaterialsWorkspace
-                initialMaterials={materials}
-                universidades={universidades}
-                carreras={carreras}
-                materias={materias}
-                carreraMaterias={carreraMaterias}
-                initialUniversidadId={profileUniversidadId}
-                initialCarreraId={resolvedCarreraId}
-                initialMateriaId={uploadMateriaId}
-                initialOpenUpload={false}
-              />
-            </MaeveDashboardChrome>
-          </PdfFirstUploadShell>
+          />
         </div>
       </div>
     );
