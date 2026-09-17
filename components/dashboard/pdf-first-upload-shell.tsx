@@ -1,1 +1,1 @@
-PLACEHOLDER
+/tmp/shipg-file-0.tsx
