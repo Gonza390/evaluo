@@ -30,7 +30,16 @@ export function hasCompleteAcademicProfile({
 
 /** Destinos del loop PDF-first (upload/modal). */
 export function isPdfFirstActivationPath(path: string) {
-  const pathname = path.split('?')[0].split('#')[0];
+  const [pathnamePart, search = ''] = path.split('?');
+  const pathname = pathnamePart.split('#')[0];
+  const params = new URLSearchParams(search.split('#')[0]);
+  const openUpload = params.get('openUpload') === '1';
+
+  // Ship E: Maeve dashboard counts as activation only when openUpload is requested.
+  if (pathname === '/dashboard' || pathname === '/dashboard/') {
+    return openUpload;
+  }
+
   return (
     pathname === '/dashboard/materiales' ||
     pathname === '/dashboard/materiales/' ||
@@ -43,5 +52,6 @@ export function getPdfFirstActivationHref(existingSearch = '') {
     existingSearch.startsWith('?') ? existingSearch.slice(1) : existingSearch
   );
   params.set('openUpload', '1');
-  return `/dashboard/materiales?${params.toString()}`;
+  // Ship E: logged-in home is Maeve «mi espacio de estudio».
+  return `/dashboard?${params.toString()}`;
 }
