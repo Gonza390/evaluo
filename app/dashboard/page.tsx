@@ -1,42 +1,175 @@
 import { redirect } from 'next/navigation';
-import { getDashboardBootstrapStream } from '@/lib/data/dashboard-bootstrap';
-import {
-  getPdfFirstActivationHref,
-  hasCompleteAcademicProfile,
-} from '@/lib/profile-completion';
-import { LazyDashboardContent } from '@/components/dashboard/lazy-dashboard-content';
+import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
+import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
+import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { createClientServer } from '@/lib/supabase-server';
 
-export default async function DashboardPage() {
-  const { initial: bootstrap, deferred } = await getDashboardBootstrapStream();
-
-  if (bootstrap.status === 'login') {
-    redirect('/login?next=%2Fdashboard');
+function isMissingStudentMaterialsTableError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false;
   }
 
-  const hasResolvedAcademicProfile = Boolean(
-    bootstrap.academicProfile?.universidadId && bootstrap.academicProfile?.carreraId
-  );
-  const needsSubjectCompletion =
-    bootstrap.status === 'ok' &&
-    hasResolvedAcademicProfile &&
-    !hasCompleteAcademicProfile({
-      universidadId: bootstrap.academicProfile?.universidadId,
-      carreraId: bootstrap.academicProfile?.carreraId,
-      activeSubjects: bootstrap.state.activeSubjects,
-    });
+  const code = 'code' in error ? String(error.code ?? '') : '';
+  const message = 'message' in error ? String(error.message ?? '') : '';
 
-  if (bootstrap.status === 'complete-profile' || needsSubjectCompletion) {
-    // Ship B.1: activación PDF-first sin gate de perfil académico.
-    redirect(getPdfFirstActivationHref());
+  return code === '42P01' || message.toLowerCase().includes('student_materials');
+}
+
+/**
+ * Ship E — Dashboard = Maeve «mi espacio de estudio».
+ * Own materials first + empty CTA «Subí tu PDF» (PdfFirstUploadShell / ?openUpload=1).
+ * University/career catalog is demoted to a secondary link inside the workspace.
+ */
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    openUpload?: string;
+    universidadId?: string;
+    carreraId?: string;
+    materiaId?: string;
+    examDate?: string;
+  }>;
+}) {
+  const { openUpload, universidadId, carreraId, materiaId, examDate = '' } = await searchParams;
+  const supabase = await createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    const params = new URLSearchParams();
+    if (openUpload === '1') params.set('openUpload', '1');
+    if (universidadId) params.set('universidadId', universidadId);
+    if (carreraId) params.set('carreraId', carreraId);
+    if (materiaId) params.set('materiaId', materiaId);
+    if (examDate) params.set('examDate', examDate);
+    const query = params.toString();
+    const nextPath = query ? `/dashboard?${query}` : '/dashboard';
+    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
 
-  return (
-    <div className="animate-page-enter min-h-screen bg-white [&_.surface-card]:shadow-none [&_.surface-panel]:shadow-none [&_[data-tour-target-hero]]:rounded-2xl [&_[data-tour-target-hero]]:bg-none [&_[data-tour-target-hero]]:bg-indigo-600 [&_[data-tour-target-hero]]:shadow-none [&_[data-tour-target-hero]_button]:shadow-none [&_[data-tour-target-hero]_img]:opacity-80 [&_[data-tour-target-checklist]]:max-w-none [&_[data-tour-target-checklist]]:rounded-none [&_[data-tour-target-checklist]]:border-x-0 [&_[data-tour-target-checklist]]:border-slate-200 [&_[data-tour-target-checklist]]:bg-slate-50/60 [&_[data-tour-target-checklist]]:shadow-none [&_#materias-favoritas]:rounded-none [&_#materias-favoritas]:border-x-0 [&_#materias-favoritas]:border-t-0 [&_#materias-favoritas]:bg-transparent [&_#materias-favoritas]:shadow-none [&_#materias-favoritas_button]:shadow-none">
-      <ReferralPortalDashboardShortcut />
-      <div className="flex flex-1">
-        <LazyDashboardContent initialBootstrap={bootstrap} deferredBootstrap={deferred} />
+  try {
+    const [
+      materials,
+      universidadesResult,
+      carrerasResult,
+      materiasResult,
+      carreraMateriasResult,
+      profileResult,
+    ] = await Promise.all([
+      fetchStudentMaterialsByUser(supabase, user.id),
+      supabase.from('universidades').select('id, nombre').order('nombre'),
+      supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+      supabase.from('materias').select('id, nombre, carrera_id').order('nombre'),
+      supabase.from('carrera_materias').select('carrera_id, materia_id'),
+      supabase
+        .from('profiles')
+        .select('universidad_id, carrera_id')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ]);
+
+    if (universidadesResult.error) throw universidadesResult.error;
+    if (carrerasResult.error) throw carrerasResult.error;
+    if (materiasResult.error) throw materiasResult.error;
+    if (carreraMateriasResult.error) throw carreraMateriasResult.error;
+    if (profileResult.error) throw profileResult.error;
+
+    const universidades = universidadesResult.data ?? [];
+    const carreras = carrerasResult.data ?? [];
+    const materias = materiasResult.data ?? [];
+    const carreraMaterias = carreraMateriasResult.data ?? [];
+
+    const rawProfileUniversidadId = String(profileResult.data?.universidad_id ?? '');
+    const profileUniversidadId = universidades.some(
+      (universidad) => universidad.id === rawProfileUniversidadId
+    )
+      ? rawProfileUniversidadId
+      : '';
+
+    const careerBelongsToUniversity = (candidateId: string, universityId: string) =>
+      Boolean(
+        candidateId &&
+          universityId &&
+          carreras.some(
+            (carrera) =>
+              carrera.id === candidateId && carrera.universidad_id === universityId
+          )
+      );
+
+    const requestedCarreraId = String(carreraId ?? '');
+    const profileCarreraId = String(profileResult.data?.carrera_id ?? '');
+    const resolvedCarreraId = careerBelongsToUniversity(requestedCarreraId, profileUniversidadId)
+      ? requestedCarreraId
+      : careerBelongsToUniversity(profileCarreraId, profileUniversidadId)
+        ? profileCarreraId
+        : '';
+
+    const subjectBelongsToCareer = (subjectId: string, careerId: string) => {
+      if (!subjectId || !careerId) return false;
+      const subject = materias.find((materia) => materia.id === subjectId);
+      if (!subject) return false;
+      if (subject.carrera_id === careerId) return true;
+      return carreraMaterias.some(
+        (relation) => relation.carrera_id === careerId && relation.materia_id === subjectId
+      );
+    };
+
+    const requestedMateriaId = String(materiaId ?? '');
+    const uploadMateriaId = subjectBelongsToCareer(requestedMateriaId, resolvedCarreraId)
+      ? requestedMateriaId
+      : '';
+
+    return (
+      <div className="animate-page-enter min-h-screen bg-white px-4 py-6 sm:px-6 lg:px-8">
+        <ReferralPortalDashboardShortcut />
+        <div className="mx-auto max-w-6xl">
+          <PdfFirstUploadShell
+            universidades={universidades}
+            carreras={carreras}
+            materias={materias}
+            carreraMaterias={carreraMaterias}
+            initialUniversidadId={profileUniversidadId}
+            initialCarreraId={resolvedCarreraId}
+            initialMateriaId={uploadMateriaId}
+            initialExamDate={examDate}
+            initialOpen={openUpload === '1'}
+          >
+            <StudentMaterialsWorkspace
+              initialMaterials={materials}
+              universidades={universidades}
+              carreras={carreras}
+              materias={materias}
+              carreraMaterias={carreraMaterias}
+              initialUniversidadId={profileUniversidadId}
+              initialCarreraId={resolvedCarreraId}
+              initialMateriaId={uploadMateriaId}
+              initialOpenUpload={false}
+            />
+          </PdfFirstUploadShell>
+        </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    if (!isMissingStudentMaterialsTableError(error)) {
+      throw error;
+    }
+
+    // Table missing: keep a calm empty shell message (do not loop to /dashboard).
+    return (
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+        <div className="w-full rounded-2xl border border-amber-200 bg-amber-50/70 px-6 py-8 text-center">
+          <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">
+            Falta activar el espacio de materiales
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            La tabla `student_materials` todavía no está disponible, así que este espacio no puede
+            cargar ni guardar PDFs todavía.
+          </p>
+        </div>
+      </div>
+    );
+  }
 }
