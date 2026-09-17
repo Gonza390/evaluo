@@ -66,7 +66,7 @@ const STUDY_TABS: Array<{
   { id: 'resumen', label: 'Resumen', icon: BookOpenText },
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'tarjetas', label: 'Tarjetas', icon: Sparkles },
-  { id: 'ejercicios', label: 'Examen', icon: BrainCircuit },
+  { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit },
   { id: 'mapa', label: 'Mapa mental', icon: Map, premium: true },
 ];
 
