@@ -3,9 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GlobalClientRuntime } from '@/components/GlobalClientRuntime';
 import { SITE_URL } from '@/lib/site';
-import './globals.css';
-import './fullscreen-exit.css';
-import './performance-overrides.css';
+import './root.css';
 
 const inter = Inter({
   subsets: ['latin'],
