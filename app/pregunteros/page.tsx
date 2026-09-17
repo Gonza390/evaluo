@@ -8,7 +8,7 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { isSiglo21University } from '@/lib/seo-search-copy';
 import { PregunteroHubClient } from './preguntero-hub-client';
-import { loadPregunteroHubData } from './data';
+import { loadPregunteroHubData, summarizePregunteroHubData } from './data';
 
 export const revalidate = 600;
 
@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 
 export default async function PregunteroHubPage() {
   const carreras = await loadPregunteroHubData();
+  const carreraSummaries = summarizePregunteroHubData(carreras);
   const siglo21Materias = Array.from(
     new Map(
       carreras
@@ -106,14 +107,14 @@ export default async function PregunteroHubPage() {
         </section>
 
         <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          {carreras.length === 0 ? (
+          {carreraSummaries.length === 0 ? (
             <div className="border-y border-dashed border-slate-300 py-12 text-center">
               <p className="text-sm text-slate-600">
                 Todavía estamos cargando los pregunteros por materia. Probá de nuevo en unos días.
               </p>
             </div>
           ) : (
-            <PregunteroHubClient carreras={carreras} />
+            <PregunteroHubClient carreras={carreraSummaries} />
           )}
 
           <div className="mt-10 border-t border-slate-200 pt-6">
