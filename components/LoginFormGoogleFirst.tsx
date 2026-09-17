@@ -37,13 +37,13 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean)
   }
   if (nextPath.startsWith('/dashboard/materiales')) {
     return isSignUp
-      ? 'Creá tu cuenta para subir tu PDF y convertirlo en resumen, glosario, tarjetas y ejercicios.'
+      ? 'Creá tu cuenta para subir tu PDF y convertirlo en resumen, glosario, tarjetas y práctica.'
       : 'Ingresá para subir tu PDF o continuar trabajando con tus materiales.';
   }
   if (nextPath.startsWith('/simulador')) {
     return isSignUp
-      ? 'Creá tu cuenta para continuar la práctica y guardar tus resultados.'
-      : 'Ingresá para continuar la práctica desde donde la dejaste.';
+      ? 'Creá tu cuenta para continuar el Simulador y guardar tus resultados.'
+      : 'Ingresá para continuar el Simulador desde donde lo dejaste.';
   }
   if (nextPath === '/empezar') {
     return isSignUp
