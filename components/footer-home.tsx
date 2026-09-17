@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Instagram, Linkedin } from 'lucide-react';
+import { SeoContextualCtaSlot } from '@/components/marketing/seo-contextual-cta-slot';
 
 const SOCIAL_LINKS = {
   instagram: 'https://www.instagram.com/evaluo.app/',
@@ -51,6 +52,8 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
   }
 
   return (
+    <>
+      <SeoContextualCtaSlot />
     <footer className="bg-[#050B2C] text-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
         <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
@@ -146,5 +149,6 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
         </div>
       </div>
     </footer>
+    </>
   );
 }
