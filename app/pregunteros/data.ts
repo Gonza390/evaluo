@@ -1,7 +1,25 @@
 import { unstable_cache } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase-public';
 import { isSiglo21University } from '@/lib/seo-search-copy';
-import type { PregunteroHubCarrera } from './preguntero-hub-client';
+
+export type PregunteroHubMateria = {
+  materiaId: string;
+  materiaNombre: string;
+};
+
+export type PregunteroHubCarrera = {
+  carreraId: string;
+  carreraNombre: string;
+  universidadNombre: string;
+  materias: PregunteroHubMateria[];
+};
+
+export type PregunteroHubCarreraSummary = {
+  carreraId: string;
+  carreraNombre: string;
+  universidadNombre: string;
+  materiaCount: number;
+};
 
 type PregunteroRow = {
   universidad_id: string;
@@ -18,6 +36,17 @@ type RpcResult = { data: unknown; error: { message?: string } | null };
 type RpcClient = {
   rpc: (name: string) => PromiseLike<RpcResult>;
 };
+
+export function summarizePregunteroHubData(
+  carreras: PregunteroHubCarrera[]
+): PregunteroHubCarreraSummary[] {
+  return carreras.map((carrera) => ({
+    carreraId: carrera.carreraId,
+    carreraNombre: carrera.carreraNombre,
+    universidadNombre: carrera.universidadNombre,
+    materiaCount: carrera.materias.length,
+  }));
+}
 
 export const loadPregunteroHubData = unstable_cache(
   async (): Promise<PregunteroHubCarrera[]> => {
