@@ -123,6 +123,7 @@ const aiStudyPages = [
 for (const [pagePath, experience] of aiStudyPages) {
   assertIncludesAll(pagePath, [
     experience,
+    'seo-study-experiences-v2',
     'toAbsoluteUrl(path)',
     'canonical: toAbsoluteUrl(path)',
     'index: true',
@@ -137,6 +138,43 @@ for (const [pagePath, experience] of aiStudyPages) {
       `${pagePath} must not claim ${unsupportedClaim}`
     );
   }
+}
+
+assertIncludesAll('components/marketing/seo-study-experiences-v2.tsx', [
+  'export function IaParaEstudiantesExperience()',
+  'export function EstudiarPdfExperience()',
+  'export function ResumirPdfExperience()',
+  'export function FlashcardsPdfExperience()',
+  'IA para estudiantes:',
+  'Estudiá un PDF con IA:',
+  'Resumí un PDF con IA',
+  'Creá flashcards con IA',
+  '/demo/material-estudio',
+  '/ia-para-estudiantes',
+  '/estudiar-pdf-con-ia',
+  '/funciones/resumir-pdf-con-ia',
+  '/funciones/crear-flashcards-desde-pdf',
+  'PublicSiteHeader',
+  'FooterHome',
+  'buildBreadcrumbJsonLd',
+  '<h1',
+  '<details',
+]);
+
+const optimizedAiStudySource = source('components/marketing/seo-study-experiences-v2.tsx').toLowerCase();
+assert.ok(
+  !optimizedAiStudySource.includes('ver página'),
+  'optimized AI study links must use descriptive visible anchor copy instead of generic Ver página'
+);
+assert.ok(
+  !optimizedAiStudySource.includes('faqpage'),
+  'AI study pages should keep useful visible FAQs without adding FAQ rich-result schema'
+);
+for (const unsupportedClaim of ['100% preciso', 'garantizado', 'preguntas reales', 'examen real']) {
+  assert.ok(
+    !optimizedAiStudySource.includes(unsupportedClaim),
+    `optimized AI study experiences must not claim ${unsupportedClaim}`
+  );
 }
 
 assertIncludesAll('components/marketing/seo-study-experiences.tsx', [
