@@ -21,5 +21,5 @@ export default async function PdfFirstUploadPage({
   if (params.source) next.set('source', params.source);
   if (params.examDate) next.set('examDate', params.examDate);
   if (params.dailyMinutes) next.set('dailyMinutes', params.dailyMinutes);
-  redirect(`/dashboard/materiales?${next.toString()}`);
+  redirect(`/dashboard?${next.toString()}`);
 }
