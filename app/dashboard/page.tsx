@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
+import { MaeveDashboardChrome } from '@/components/dashboard/maeve-dashboard-chrome';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
@@ -137,17 +138,23 @@ export default async function DashboardPage({
             initialExamDate={examDate}
             initialOpen={openUpload === '1'}
           >
-            <StudentMaterialsWorkspace
-              initialMaterials={materials}
-              universidades={universidades}
-              carreras={carreras}
-              materias={materias}
-              carreraMaterias={carreraMaterias}
-              initialUniversidadId={profileUniversidadId}
+            <MaeveDashboardChrome
+              materialsCount={materials.length}
+              sharedMaterialsCount={materials.filter((m) => m.visibility === 'shared').length}
               initialCarreraId={resolvedCarreraId}
-              initialMateriaId={uploadMateriaId}
-              initialOpenUpload={false}
-            />
+            >
+              <StudentMaterialsWorkspace
+                initialMaterials={materials}
+                universidades={universidades}
+                carreras={carreras}
+                materias={materias}
+                carreraMaterias={carreraMaterias}
+                initialUniversidadId={profileUniversidadId}
+                initialCarreraId={resolvedCarreraId}
+                initialMateriaId={uploadMateriaId}
+                initialOpenUpload={false}
+              />
+            </MaeveDashboardChrome>
           </PdfFirstUploadShell>
         </div>
       </div>
@@ -157,7 +164,6 @@ export default async function DashboardPage({
       throw error;
     }
 
-    // Table missing: keep a calm empty shell message (do not loop to /dashboard).
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
         <div className="w-full rounded-2xl border border-amber-200 bg-amber-50/70 px-6 py-8 text-center">
