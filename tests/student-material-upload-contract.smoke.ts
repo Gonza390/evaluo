@@ -5,8 +5,8 @@ const legacyActionsSource = readFileSync(
   new URL('../app/dashboard/materiales/actions.ts', import.meta.url),
   'utf8'
 );
-const uploadActionsSource = readFileSync(
-  new URL('../app/dashboard/materiales/upload-actions.ts', import.meta.url),
+const pdfFirstUploadActionsSource = readFileSync(
+  new URL('../app/dashboard/materiales/pdf-first-upload-actions.ts', import.meta.url),
   'utf8'
 );
 const pdfFirstUploadShellSource = readFileSync(
@@ -21,9 +21,9 @@ assert.doesNotMatch(
 );
 
 assert.match(
-  uploadActionsSource,
+  pdfFirstUploadActionsSource,
   /createSignedUploadUrl\(/,
-  'La preparación debe firmar una subida de Storage desde servidor.'
+  'La preparación PDF-first debe firmar una subida de Storage desde servidor.'
 );
 assert.match(
   pdfFirstUploadShellSource,
@@ -36,9 +36,11 @@ assert.doesNotMatch(
   'El cliente PDF-first no debe adjuntar el PDF a un FormData enviado a una Server Action.'
 );
 
-const finalizeStart = uploadActionsSource.indexOf('export async function finalizeStudentMaterialUploadAction');
-assert.ok(finalizeStart >= 0, 'Debe existir la acción de finalización de la subida.');
-const finalizeSource = uploadActionsSource.slice(finalizeStart);
+const finalizeStart = pdfFirstUploadActionsSource.indexOf(
+  'export async function finalizePdfFirstUploadAction'
+);
+assert.ok(finalizeStart >= 0, 'Debe existir la acción PDF-first de finalización de la subida.');
+const finalizeSource = pdfFirstUploadActionsSource.slice(finalizeStart);
 
 const downloadIndex = finalizeSource.indexOf('.download(input.filePath)');
 const sizeValidationIndex = finalizeSource.indexOf('fileBytes.byteLength !== parsed.file.size');
@@ -71,7 +73,7 @@ assert.match(
   'Si finalize falla después del upload, debe limpiar el objeto huérfano.'
 );
 assert.match(
-  uploadActionsSource,
+  pdfFirstUploadActionsSource,
   /await assertStudentMaterialQuota\(user\.id\);[\s\S]*createSignedUploadUrl/,
   'La cuota debe validarse antes de emitir la signed upload URL.'
 );
@@ -81,9 +83,9 @@ assert.match(
   'La cuota debe volver a validarse al finalizar para reducir carreras entre prepare y finalize.'
 );
 assert.match(
-  uploadActionsSource,
+  pdfFirstUploadActionsSource,
   /isOwnedStudentMaterialStoragePath\(input\.filePath, user\.id\)/,
   'Finalize debe comprobar ownership del path firmado.'
 );
 
-console.log('Student material direct upload contract smoke tests passed.');
+console.log('Student material PDF-first direct upload contract smoke tests passed.');
