@@ -161,9 +161,11 @@ export function PdfFirstUploadShell({
 
   const close = useCallback(() => {
     if (uploading) return;
+    const shouldRefresh = Boolean(processing);
     setOpen(false);
     reset();
-  }, [reset, uploading]);
+    if (shouldRefresh) router.refresh();
+  }, [processing, reset, router, uploading]);
 
   const handleCapturedClick = (event: MouseEvent<HTMLDivElement>) => {
     const element = event.target as HTMLElement | null;
