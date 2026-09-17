@@ -1,1 +1,1 @@
-@file:///tmp/shell_content_only.txt
+LOAD:/tmp/ship_g_cou_shell.json
