@@ -1,1 +1,1 @@
-/tmp/shipg-file-0.tsx
+@file:///tmp/shell_content_only.txt
