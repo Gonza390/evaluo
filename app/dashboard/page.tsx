@@ -175,7 +175,7 @@ export default async function DashboardPage({
                     Subí tus apuntes para empezar con el plan que armaste
                   </h1>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, flashcards y ejercicios.
+                    La materia ya está preseleccionada. El PDF que subas será la fuente para resumen, glosario, tarjetas y práctica.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
                     {formattedExamDate ? (

@@ -347,7 +347,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
                       ¿Tenés tus propios apuntes de {materia?.nombre ?? 'esta materia'}?
                     </h2>
                     <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-slate-600">
-                      Subí tu PDF y convertí tus apuntes en un espacio de estudio como este: resumen, glosario, tarjetas y ejercicios sobre tu propio material.
+                      Subí tu PDF y convertí tus apuntes en un espacio de estudio como este: resumen, glosario, tarjetas y práctica sobre tu propio material.
                     </p>
                   </div>
                 </div>

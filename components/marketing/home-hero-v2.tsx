@@ -16,12 +16,12 @@ const studyCapabilities = [
   {
     icon: FileText,
     title: 'Estudiá tus materiales',
-    description: 'Resumen, glosario, flashcards y ejercicios construidos desde el contenido que estás estudiando.',
+    description: 'Resumen, glosario, tarjetas y práctica construidos desde el contenido que estás estudiando.',
   },
   {
     icon: ListChecks,
     title: 'Practicá como vas a rendir',
-    description: 'Pasá del repaso a preguntas, pregunteros y simuladores sin salir de la misma materia.',
+    description: 'Pasá del repaso al Preguntero y al Simulador sin salir de la misma materia.',
   },
   {
     icon: BookOpen,
@@ -31,7 +31,7 @@ const studyCapabilities = [
   {
     icon: Brain,
     title: 'Reforzá lo que te cuesta',
-    description: 'Usá tus resultados para volver sobre los temas donde todavía necesitás otra vuelta.',
+    description: 'Usá tus resultados para repasar errores y volver sobre los temas que todavía necesitás reforzar.',
   },
 ];
 
@@ -58,7 +58,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </h1>
 
               <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Resumen, preguntero y flashcards armados desde tu apunte — sin armar el caos vos.
+                Resumen, tarjetas y práctica armados desde tu apunte — sin armar el caos vos.
               </p>
 
               <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
@@ -81,7 +81,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Resumen + preguntero + flashcards
+                  Resumen + tarjetas + práctica
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -192,8 +192,8 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                     {[
                       ['Resumen', true],
                       ['Glosario', false],
-                      ['Flashcards', false],
-                      ['Ejercicios', false],
+                      ['Tarjetas', false],
+                      ['Práctica', false],
                     ].map(([label, active]) => (
                       <div
                         key={String(label)}
@@ -205,7 +205,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                       </div>
                     ))}
                     <div className="mt-5 border-t border-slate-200 pt-4">
-                      <p className="px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Práctica</p>
+                      <p className="px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Para el parcial</p>
                       <div className="mt-2 flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-600">Preguntero</div>
                       <div className="flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-600">Simulador</div>
                     </div>
@@ -238,7 +238,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
 
                     <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
                       <p className="min-w-0 text-[10px] leading-5 text-slate-600">
-                        Terminaste de leer. Ahora podés pasar a tarjetas o practicar preguntas del mismo tema.
+                        Terminaste de leer. Ahora podés pasar a tarjetas, practicar este material o prepararte con el Preguntero y el Simulador.
                       </p>
                       <ArrowRight className="h-4 w-4 shrink-0 text-indigo-700" />
                     </div>
