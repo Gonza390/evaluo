@@ -99,7 +99,7 @@ export default function Home() {
               ¿Cómo funciona Evaluo?
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Del PDF a estudiar, en 3 pasos. Sin armar el catálogo primero.
+              Del PDF a estudiar, en 3 pasos.
             </p>
           </div>
 
@@ -155,7 +155,10 @@ export default function Home() {
 
             <div className="mt-8 border-t border-slate-200">
               {demoJourney.map(([number, title, description]) => (
-                <div key={number} className="grid grid-cols-[38px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-4.5 sm:py-5">
+                <div
+                  key={number}
+                  className="grid grid-cols-[38px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-4.5 sm:py-5"
+                >
                   <span className="pt-0.5 text-[10px] font-black text-indigo-800">{number}</span>
                   <div className="min-w-0">
                     <h3 className="text-sm font-bold tracking-tight text-slate-950">{title}</h3>
@@ -232,8 +235,7 @@ export default function Home() {
                 Subí tu PDF y empezá a estudiar.
               </h2>
               <p className="mt-4 max-w-xl text-xs leading-6 text-white/90 sm:text-sm">
-                Resumen, preguntero y flashcards desde tu apunte. El catálogo queda como opción
-                secundaria si preferís explorar materias.
+                Resumen, preguntero y flashcards desde tu apunte — listo para estudiar en minutos.
               </p>
 
               <CatalogStats />
