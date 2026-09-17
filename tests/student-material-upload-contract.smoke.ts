@@ -9,8 +9,8 @@ const uploadActionsSource = readFileSync(
   new URL('../app/dashboard/materiales/upload-actions.ts', import.meta.url),
   'utf8'
 );
-const workspaceSource = readFileSync(
-  new URL('../components/dashboard/student-materials-workspace.tsx', import.meta.url),
+const pdfFirstUploadShellSource = readFileSync(
+  new URL('../components/dashboard/pdf-first-upload-shell.tsx', import.meta.url),
   'utf8'
 );
 
@@ -26,14 +26,14 @@ assert.match(
   'La preparación debe firmar una subida de Storage desde servidor.'
 );
 assert.match(
-  workspaceSource,
+  pdfFirstUploadShellSource,
   /uploadToSignedUrl\(/,
-  'El navegador debe transferir el PDF directamente a Supabase Storage.'
+  'El navegador debe transferir el PDF directamente a Supabase Storage desde el shell PDF-first.'
 );
 assert.doesNotMatch(
-  workspaceSource,
+  pdfFirstUploadShellSource,
   /formData\.set\(\s*['"]file['"]/,
-  'El cliente no debe adjuntar el PDF a un FormData enviado a una Server Action.'
+  'El cliente PDF-first no debe adjuntar el PDF a un FormData enviado a una Server Action.'
 );
 
 const finalizeStart = uploadActionsSource.indexOf('export async function finalizeStudentMaterialUploadAction');
