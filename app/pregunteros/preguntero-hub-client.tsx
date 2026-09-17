@@ -1,23 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, ChevronDown, ChevronRight, Search, X } from 'lucide-react';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
-
-export type PregunteroHubMateria = {
-  materiaId: string;
-  materiaNombre: string;
-};
-
-export type PregunteroHubCarrera = {
-  carreraId: string;
-  carreraNombre: string;
-  universidadNombre: string;
-  materias: PregunteroHubMateria[];
-};
+import type {
+  PregunteroHubCarrera,
+  PregunteroHubCarreraSummary,
+  PregunteroHubMateria,
+} from './data';
 
 const PAGE_SIZE = 10;
+
+type DisplayCarrera = PregunteroHubCarreraSummary & {
+  materias?: PregunteroHubMateria[];
+};
 
 function normalize(value: string) {
   return value
@@ -27,33 +24,99 @@ function normalize(value: string) {
     .trim();
 }
 
-export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarrera[] }) {
+export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarreraSummary[] }) {
   const [query, setQuery] = useState('');
   const [universidad, setUniversidad] = useState('all');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [catalog, setCatalog] = useState<PregunteroHubCarrera[] | null>(null);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [expandingCareer, setExpandingCareer] = useState<string | null>(null);
+  const catalogPromiseRef = useRef<Promise<PregunteroHubCarrera[]> | null>(null);
 
   const universidades = useMemo(
     () => Array.from(new Set(carreras.map((carrera) => carrera.universidadNombre))).sort((a, b) => a.localeCompare(b, 'es')),
     [carreras]
   );
 
-  const filteredCarreras = useMemo(() => {
+  const ensureCatalog = useCallback(async () => {
+    if (catalog) return catalog;
+    if (!catalogPromiseRef.current) {
+      setCatalogLoading(true);
+      setCatalogError(null);
+      catalogPromiseRef.current = fetch('/api/pregunteros/catalog', {
+        headers: { Accept: 'application/json' },
+      })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`No se pudo cargar el catálogo (${response.status}).`);
+          return (await response.json()) as PregunteroHubCarrera[];
+        })
+        .then((data) => {
+          setCatalog(data);
+          return data;
+        })
+        .catch((error: unknown) => {
+          catalogPromiseRef.current = null;
+          const message = error instanceof Error ? error.message : 'No se pudo cargar el catálogo.';
+          setCatalogError(message);
+          throw error;
+        })
+        .finally(() => setCatalogLoading(false));
+    }
+    return catalogPromiseRef.current;
+  }, [catalog]);
+
+  useEffect(() => {
+    if (!query.trim() || catalog) return;
+    const timer = window.setTimeout(() => {
+      void ensureCatalog().catch(() => undefined);
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [catalog, ensureCatalog, query]);
+
+  const catalogByCareer = useMemo(
+    () => new Map((catalog ?? []).map((carrera) => [carrera.carreraId, carrera] as const)),
+    [catalog]
+  );
+
+  const filteredCarreras = useMemo<DisplayCarrera[]>(() => {
     const normalizedQuery = normalize(query);
+    const base = carreras.filter(
+      (carrera) => universidad === 'all' || carrera.universidadNombre === universidad
+    );
 
-    return carreras.flatMap((carrera) => {
+    if (!normalizedQuery) return base;
+
+    if (!catalog) {
+      return base.filter((carrera) =>
+        normalize(`${carrera.universidadNombre} ${carrera.carreraNombre}`).includes(normalizedQuery)
+      );
+    }
+
+    return catalog.flatMap((carrera) => {
       if (universidad !== 'all' && carrera.universidadNombre !== universidad) return [];
-      if (!normalizedQuery) return [carrera];
-
-      const contextMatches = normalize(`${carrera.universidadNombre} ${carrera.carreraNombre}`).includes(normalizedQuery);
+      const contextMatches = normalize(
+        `${carrera.universidadNombre} ${carrera.carreraNombre}`
+      ).includes(normalizedQuery);
       const matchingMaterias = contextMatches
         ? carrera.materias
-        : carrera.materias.filter((materia) => normalize(materia.materiaNombre).includes(normalizedQuery));
+        : carrera.materias.filter((materia) =>
+            normalize(materia.materiaNombre).includes(normalizedQuery)
+          );
 
       if (matchingMaterias.length === 0) return [];
-      return [{ ...carrera, materias: matchingMaterias }];
+      return [
+        {
+          carreraId: carrera.carreraId,
+          carreraNombre: carrera.carreraNombre,
+          universidadNombre: carrera.universidadNombre,
+          materiaCount: matchingMaterias.length,
+          materias: matchingMaterias,
+        },
+      ];
     });
-  }, [carreras, query, universidad]);
+  }, [carreras, catalog, query, universidad]);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
@@ -62,14 +125,30 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
 
   const visibleCarreras = filteredCarreras.slice(0, visibleCount);
   const hasMore = visibleCount < filteredCarreras.length;
+  const isSearchingCatalog = Boolean(query.trim()) && !catalog && !catalogError;
 
-  function toggleCarrera(carreraId: string) {
-    setExpanded((current) => {
-      const next = new Set(current);
-      if (next.has(carreraId)) next.delete(carreraId);
-      else next.add(carreraId);
-      return next;
-    });
+  async function toggleCarrera(carreraId: string) {
+    if (expanded.has(carreraId)) {
+      setExpanded((current) => {
+        const next = new Set(current);
+        next.delete(carreraId);
+        return next;
+      });
+      return;
+    }
+
+    if (!catalog) {
+      setExpandingCareer(carreraId);
+      try {
+        await ensureCatalog();
+      } catch {
+        return;
+      } finally {
+        setExpandingCareer(null);
+      }
+    }
+
+    setExpanded((current) => new Set(current).add(carreraId));
   }
 
   return (
@@ -82,6 +161,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
             <input
               type="search"
               value={query}
+              onFocus={() => void ensureCatalog().catch(() => undefined)}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar universidad, carrera o materia"
               className="h-11 w-full rounded-xl border border-slate-300 bg-white pr-11 pl-10 text-sm text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
@@ -114,13 +194,17 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
         </div>
 
         <p className="mt-3 text-sm text-slate-600" role="status" aria-live="polite">
-          {filteredCarreras.length === 0
-            ? 'No encontramos pregunteros con esos filtros.'
-            : `${filteredCarreras.length} ${filteredCarreras.length === 1 ? 'carrera encontrada' : 'carreras encontradas'}. Abrí una carrera para ver sus materias.`}
+          {isSearchingCatalog
+            ? 'Buscando también por materia…'
+            : catalogError && query.trim()
+              ? 'No pudimos completar la búsqueda por materia. Podés buscar por carrera o intentar de nuevo.'
+              : filteredCarreras.length === 0
+                ? 'No encontramos pregunteros con esos filtros.'
+                : `${filteredCarreras.length} ${filteredCarreras.length === 1 ? 'carrera encontrada' : 'carreras encontradas'}. Abrí una carrera para ver sus materias.`}
         </p>
       </div>
 
-      {filteredCarreras.length === 0 ? (
+      {!isSearchingCatalog && filteredCarreras.length === 0 ? (
         <div className="border-b border-slate-200 py-12 text-center">
           <p className="font-semibold text-slate-900">Probá con otro término o universidad.</p>
           <button
@@ -138,22 +222,27 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
         <div className="divide-y divide-slate-200 border-b border-slate-200">
           {visibleCarreras.map((carrera) => {
             const isExpanded = expanded.has(carrera.carreraId);
+            const isLoadingCareer = expandingCareer === carrera.carreraId;
             const panelId = `preguntero-carrera-${carrera.carreraId}`;
+            const materias = carrera.materias ?? catalogByCareer.get(carrera.carreraId)?.materias ?? [];
 
             return (
               <section key={carrera.carreraId} className="py-1">
                 <button
                   type="button"
-                  onClick={() => toggleCarrera(carrera.carreraId)}
+                  onClick={() => void toggleCarrera(carrera.carreraId)}
                   aria-expanded={isExpanded}
                   aria-controls={panelId}
+                  aria-busy={isLoadingCareer}
                   className="group flex w-full min-w-0 items-center gap-3 px-1 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-bold tracking-[0.08em] text-indigo-700 uppercase">{carrera.universidadNombre}</p>
                     <h2 className="mt-1 break-words text-base font-bold tracking-[-0.025em] text-slate-950 sm:text-lg">{carrera.carreraNombre}</h2>
                     <p className="mt-1 text-sm text-slate-600">
-                      {carrera.materias.length} {carrera.materias.length === 1 ? 'materia con preguntero' : 'materias con preguntero'}
+                      {isLoadingCareer
+                        ? 'Cargando materias…'
+                        : `${carrera.materiaCount} ${carrera.materiaCount === 1 ? 'materia con preguntero' : 'materias con preguntero'}`}
                     </p>
                   </div>
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition group-hover:bg-slate-100 group-hover:text-indigo-700">
@@ -163,7 +252,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
 
                 {isExpanded ? (
                   <ul id={panelId} className="grid gap-1 pb-4 sm:grid-cols-2">
-                    {carrera.materias.map((materia) => (
+                    {materias.map((materia) => (
                       <li key={materia.materiaId} className="min-w-0">
                         <Link
                           href={`/pregunteros/${buildSeoEntitySlug(materia.materiaNombre, materia.materiaId)}`}
