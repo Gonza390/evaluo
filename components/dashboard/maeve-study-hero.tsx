@@ -37,7 +37,7 @@ export function MaeveStudyHero({
     >
       <div className="mx-auto max-w-xl text-center">
         <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">
-          Maeve · tu espacio
+          Tu espacio
         </p>
         <h1 className="mt-2 text-[1.65rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2rem]">
           {personalized}
