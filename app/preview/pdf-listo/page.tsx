@@ -191,26 +191,25 @@ export default function PdfReadyPreviewPage() {
             </div>
 
             <div className="p-4 sm:p-5">
-              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/55 px-4 py-3.5">
+              <div className="max-w-3xl border-b border-slate-100 pb-5">
                 <p className="text-xs font-semibold text-indigo-600">Según tu diagnóstico</p>
-                <p className="mt-1 text-sm font-semibold text-slate-900">Empezá por {firstWeakTopic}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Marcamos primero los temas donde tuviste más dificultad para que no tengas que recorrer todo el resumen.
+                <h2 className="mt-1 text-lg font-bold tracking-[-0.03em] text-slate-950">
+                  Empezá por {firstWeakTopic}
+                </h2>
+                <p className="mt-1.5 text-sm leading-6 text-slate-500">
+                  Fue uno de los temas donde más dificultad tuviste. Ordenamos el resumen para que arranques por ahí.
                 </p>
               </div>
 
               <div className="mt-5 max-w-3xl space-y-6">
                 <section>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                    <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">{firstWeakTopic}</h2>
-                  </div>
+                  <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">{firstWeakTopic}</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-600">
                     Este enfoque explica cómo se organizan y valoran los elementos del delito dentro de una teoría sistemática. Para el examen, lo importante es entender qué cambia respecto de las concepciones anteriores y cómo se ubican acción, tipicidad, antijuridicidad y culpabilidad.
                   </p>
-                  <div className="mt-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm leading-6 text-slate-600">
+                  <p className="mt-3 text-sm leading-6 text-slate-600">
                     <span className="font-semibold text-slate-800">Prestá atención:</span> compará este enfoque con causalismo, normativismo y finalismo; ahí suelen aparecer las confusiones.
-                  </div>
+                  </p>
                 </section>
 
                 <section className="border-t border-slate-100 pt-5">
