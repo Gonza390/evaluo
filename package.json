@@ -9,7 +9,7 @@
     "performance:budget": "node scripts/check-performance-budget.mjs",
     "start": "next start",
     "lint": "eslint .",
-    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/dashboard-single-space.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/glossary-noise.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts",
+    "test": "node --import ./tests/alias-loader.mjs --experimental-strip-types tests/routes.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/dashboard-single-space.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/seo-unlam.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/text-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/flow.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-validation.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-upload-contract.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/student-material-quality.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/glossary-noise.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/pdf-study-artifacts.smoke.ts && node --import ./tests/alias-loader.mjs --experimental-strip-types tests/ai-pipeline.smoke.ts",
     "video:studio": "remotion studio video/index.ts",
     "video:render": "remotion render video/index.ts EvaluoLaunchVideo out/evaluo-launch.mp4"
   },
@@ -88,7 +88,7 @@
     "eslint": "^10.2.1",
     "eslint-config-next": "^16.3.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-hooks": "^7.71.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "postcss": "^8.5.26",
@@ -96,8 +96,8 @@
     "prettier-plugin-tailwindcss": "^0.0.0-insiders.f7d2598",
     "supabase": "^2.92.1",
     "tailwindcss": "^4.2.4",
-    "tw-animate-css": "1.3.3",
-    "typescript": "5.7.3",
+    "tw-animate-css": "^1.3.3",
+    "typescript": "^5.7.3",
     "typescript-eslint": "^8.59.0"
   }
 }
