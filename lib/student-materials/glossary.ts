@@ -1,1 +1,1 @@
-PLACEHOLDER
+@/workspace/evaluo-clone/lib/student-materials/glossary.ts
