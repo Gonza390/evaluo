@@ -3,7 +3,7 @@ import ClientLayout from '@/components/ClientLayout';
 import './dashboard-responsive.css';
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Mi espacio',
   robots: {
     index: false,
     follow: false,

@@ -75,6 +75,27 @@ function enforceProxyApiProtection(request: NextRequest, pathname: string): Next
   return null;
 }
 
+function canonicalizeLegacyMiEspacioPath(value: string | null) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null;
+
+  try {
+    const target = new URL(value, 'https://evaluo.local');
+    const isLegacyMaterialsRoot =
+      target.pathname === '/dashboard/materiales' || target.pathname === '/dashboard/materiales/';
+    const isLegacyUploadEntry =
+      target.pathname === '/dashboard/materiales/nuevo' ||
+      target.pathname === '/dashboard/materiales/subir';
+
+    if (!isLegacyMaterialsRoot && !isLegacyUploadEntry) return null;
+    if (isLegacyUploadEntry) target.searchParams.set('openUpload', '1');
+
+    const query = target.searchParams.toString();
+    return query ? `/dashboard?${query}` : '/dashboard';
+  } catch {
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
@@ -101,6 +122,22 @@ export async function proxy(request: NextRequest) {
 
   const isLoginRoute = pathname.startsWith('/login');
 
+  if (isLoginRoute) {
+    const requestedNext =
+      request.nextUrl.searchParams.get('next') ?? request.nextUrl.searchParams.get('redirectTo');
+    const canonicalNext = canonicalizeLegacyMiEspacioPath(requestedNext);
+
+    if (canonicalNext && canonicalNext !== requestedNext) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.searchParams.set('next', canonicalNext);
+      loginUrl.searchParams.delete('redirectTo');
+      if (canonicalNext.includes('openUpload=1')) {
+        loginUrl.searchParams.set('reason', 'prepare-material');
+      }
+      return persistReferralCookie(request, NextResponse.redirect(loginUrl));
+    }
+  }
+
   if (
     isLoginRoute &&
     request.nextUrl.searchParams.get('mode') === 'signup' &&
@@ -108,7 +145,7 @@ export async function proxy(request: NextRequest) {
     !request.nextUrl.searchParams.get('redirectTo')
   ) {
     const signupUrl = request.nextUrl.clone();
-    signupUrl.searchParams.set('next', '/dashboard/materiales?openUpload=1');
+    signupUrl.searchParams.set('next', '/dashboard?openUpload=1');
     signupUrl.searchParams.set('reason', 'prepare-material');
     return persistReferralCookie(request, NextResponse.redirect(signupUrl));
   }

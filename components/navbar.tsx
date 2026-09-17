@@ -7,7 +7,6 @@ import {
   CalendarDays,
   CircleHelp,
   Crown,
-  FileText,
   Home,
   LogIn,
   LogOut,
@@ -52,8 +51,7 @@ function isNavItemActive(pathname: string, href: string) {
 }
 
 const navItems: NavConfigItem[] = [
-  { label: 'Inicio', href: '/dashboard', icon: Home },
-  { label: 'Mi espacio', href: '/dashboard/materiales', icon: FileText },
+  { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario de exámenes', href: '/calendario', icon: CalendarDays },
   { label: 'Explicaciones IA', href: '/dashboard/explicaciones', icon: Sparkles },
 ];
@@ -113,7 +111,6 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
   const { profileSummary } = useShellData();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
-  const dashboardNavLabel = isNavItemActive(pathname, '/dashboard') ? 'Inicio' : 'Dashboard';
   const careerShortcut =
     profileSummary.carreraId && profileSummary.carreraNombre
       ? { id: profileSummary.carreraId, nombre: profileSummary.carreraNombre }
@@ -136,7 +133,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
             >
               <NavItem
                 href={navItems[0].href}
-                label={dashboardNavLabel}
+                label={navItems[0].label}
                 icon={navItems[0].icon}
                 disabled={navItems[0].disabled}
                 collapsed={collapsed}
@@ -164,7 +161,6 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 disabled={item.disabled}
                 collapsed={collapsed}
                 active={!item.disabled && isNavItemActive(pathname, item.href)}
-                dataTourAttr={item.label === 'Mi espacio' ? 'data-tour-nav-espacio' : undefined}
               />
             ))}
 
