@@ -140,7 +140,10 @@ function stripLeadingArticle(value: string) {
 }
 
 function isNoisyGlossaryTerm(term: string) {
-  const clean = cleanLine(term).toLocaleLowerCase('es');
+  const clean = cleanLine(term)
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/\p{M}+/gu, '');
   if (NOISE_GLOSSARY_LABELS.has(clean)) return true;
   if (/^[\p{L}\p{N}\s,;:()-]{45,}[.]$/u.test(clean)) return true;
   if (/—/.test(clean)) return true;
