@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
-import { FlashcardsPdfExperience } from '@/components/marketing/seo-study-experiences';
+import { FlashcardsPdfExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/funciones/crear-flashcards-desde-pdf';
 
 export const metadata: Metadata = {
-  title: 'Crear flashcards desde un PDF con IA',
+  title: 'Crear flashcards con IA desde un PDF y apuntes',
   description:
-    'Convertí conceptos de tu PDF en flashcards para estudiar y repasar con IA. Después seguí con mapas mentales, glosario y ejercicios en Evaluo.',
+    'Creá flashcards con IA desde un PDF o tus apuntes. Convertí conceptos del material en preguntas y respuestas para repasar y seguir practicando en Evaluo.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Crear flashcards desde un PDF con IA | Evaluo',
+    title: 'Crear flashcards con IA desde un PDF y apuntes | Evaluo',
     description:
-      'Transformá conceptos de tus apuntes en tarjetas y seguí estudiando el mismo material con mapas mentales, glosario y ejercicios.',
+      'Transformá conceptos de tu material en tarjetas de preguntas y respuestas y mantené el repaso conectado con la fuente original.',
     url: toAbsoluteUrl(path),
   },
 };
