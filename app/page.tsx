@@ -20,7 +20,7 @@ import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/l
 export const metadata: Metadata = {
   title: 'Subí tu PDF y estudiá en minutos',
   description:
-    'Subí tu apunte en PDF y Evaluo arma resumen, preguntero y flashcards para que estudies sin armar el caos vos.',
+    'Subí tu apunte en PDF y Evaluo arma resumen, tarjetas y práctica para que estudies sin armar el caos vos.',
   alternates: {
     canonical: '/',
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     locale: 'es_AR',
     title: 'Evaluo | Subí tu PDF y estudiá en minutos',
     description:
-      'Resumen, preguntero y flashcards armados desde tu propio apunte. Subí tu PDF y empezá a estudiar.',
+      'Resumen, tarjetas y práctica armados desde tu propio apunte. Subí tu PDF y empezá a estudiar.',
     url: '/',
     images: [
       {
@@ -52,9 +52,9 @@ const steps = [
   },
   {
     icon: FileText,
-    title: 'Resumen, preguntero y flashcards',
+    title: 'Resumen, tarjetas y práctica',
     description:
-      'Tu mismo contenido se transforma en resumen claro, preguntas para practicar y flashcards para repasar.',
+      'Tu mismo contenido se transforma en resumen claro, tarjetas para repasar y preguntas para practicar.',
   },
   {
     icon: CheckCircle2,
@@ -66,7 +66,7 @@ const steps = [
 
 const demoJourney = [
   ['01', 'Estudiá el material', 'Resumen y conceptos ordenados desde el apunte.'],
-  ['02', 'Ponete a prueba', 'Flashcards y ejercicios sobre el mismo contenido.'],
+  ['02', 'Ponete a prueba', 'Tarjetas y práctica sobre el mismo contenido.'],
   ['03', 'Practicá para el parcial', 'Preguntas con feedback para comprobar qué entendiste.'],
 ] as const;
 
@@ -235,7 +235,7 @@ export default function Home() {
                 Subí tu PDF y empezá a estudiar.
               </h2>
               <p className="mt-4 max-w-xl text-xs leading-6 text-white/90 sm:text-sm">
-                Resumen, preguntero y flashcards desde tu apunte — listo para estudiar en minutos.
+                Resumen, tarjetas y práctica desde tu apunte — listo para estudiar en minutos.
               </p>
 
               <CatalogStats />
