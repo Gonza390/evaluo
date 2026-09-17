@@ -4,6 +4,7 @@ import type { ReactNode, RefObject } from 'react';
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MaeveStudyHero } from '@/components/dashboard/maeve-study-hero';
+import { StudyFirstVisitNudge } from '@/components/dashboard/study-first-visit-nudge';
 
 type Props = {
   children: ReactNode;
@@ -13,7 +14,7 @@ type Props = {
 };
 
 /**
- * Ship E chrome: calm Maeve hero on top; hide the legacy dual-card catalog-first hero
+ * Ship E chrome + Ship F one-shot nudge. Hide legacy dual-card catalog-first hero
  * inside StudentMaterialsWorkspace. Primary CTA opens PdfFirstUploadShell via label
  * capture (sr-only "Subir PDF") and also sets ?openUpload=1 as fallback.
  */
@@ -51,6 +52,7 @@ export function MaeveDashboardChrome({
         initialCarreraId={initialCarreraId}
         onUploadClick={openUpload}
       />
+      <StudyFirstVisitNudge materialsCount={materialsCount} onUploadClick={openUpload} />
       <div
         className={[
           // Hide legacy upload hero (first section) — catalog-centered dual cards.
