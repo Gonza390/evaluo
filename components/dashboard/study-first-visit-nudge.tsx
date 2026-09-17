@@ -15,10 +15,7 @@ type Props = {
   onUploadClick: () => void;
 };
 
-/**
- * Ship F — one-shot calm nudge after activation when the library is empty.
- * localStorage, dismissible; no brand string in UI.
- */
+/** One-shot study-first nudge for an empty personal library. */
 export function StudyFirstVisitNudge({ materialsCount, onUploadClick }: Props) {
   const { user } = useUser();
   const [visible, setVisible] = useState(false);
@@ -28,8 +25,6 @@ export function StudyFirstVisitNudge({ materialsCount, onUploadClick }: Props) {
       setVisible(false);
       return;
     }
-    // Suppress legacy multi-step tour that targets the Ship-E-hidden hero.
-    window.localStorage.setItem(`evaluo_mi_espacio_tour_seen:${user.id}`, 'done');
     if (window.localStorage.getItem(storageKey(user.id)) === 'done') {
       setVisible(false);
       return;
@@ -63,8 +58,8 @@ export function StudyFirstVisitNudge({ materialsCount, onUploadClick }: Props) {
             className="font-semibold text-slate-900 underline-offset-2 hover:underline"
           >
             Subí tu PDF
-          </button>
-          {' '}y en unos minutos tenés resumen, glosario y ejercicios.
+          </button>{' '}
+          y en unos minutos tenés resumen, glosario y ejercicios.
         </p>
       </div>
       <button

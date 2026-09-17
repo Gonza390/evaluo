@@ -14,9 +14,8 @@ type Props = {
 };
 
 /**
- * Ship E chrome + Ship F one-shot nudge. Hide legacy dual-card catalog-first hero
- * inside StudentMaterialsWorkspace. Primary CTA opens PdfFirstUploadShell via label
- * capture (sr-only "Subir PDF") and also sets ?openUpload=1 as fallback.
+ * Study-first dashboard chrome. Upload triggers are delegated to PdfFirstUploadShell
+ * through the shared ?openUpload=1 entry point.
  */
 export function MaeveDashboardChrome({
   children,
@@ -53,15 +52,7 @@ export function MaeveDashboardChrome({
         onUploadClick={openUpload}
       />
       <StudyFirstVisitNudge materialsCount={materialsCount} onUploadClick={openUpload} />
-      <div
-        className={[
-          // Hide legacy upload hero (first section) — catalog-centered dual cards.
-          '[&>div>section:first-of-type]:hidden',
-          '[&_button]:shadow-none',
-        ].join(' ')}
-      >
-        {children}
-      </div>
+      <div className="[&_button]:shadow-none">{children}</div>
     </div>
   );
 }

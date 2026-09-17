@@ -114,7 +114,15 @@ const materiaStudyHomeSource = readFileSync(
   resolve('app/explorar/materia/[id]/materia-study-home.tsx'),
   'utf8'
 );
-const dashboardSource = readFileSync(resolve('components/dashboard/dashboard-content.tsx'), 'utf8');
+const dashboardPageSource = readFileSync(resolve('app/dashboard/page.tsx'), 'utf8');
+const dashboardWorkspaceSource = readFileSync(
+  resolve('components/dashboard/student-materials-workspace.tsx'),
+  'utf8'
+);
+const dashboardChromeSource = readFileSync(
+  resolve('components/dashboard/maeve-dashboard-chrome.tsx'),
+  'utf8'
+);
 const exploreClientSource = readFileSync(resolve('app/explorar/explorar-client.tsx'), 'utf8');
 const loginSource = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
 
@@ -123,9 +131,12 @@ assert.match(materiaPageSource, /contentSignals\.hasAcademicContent/);
 assert.match(materiaStudyHomeSource, /La práctica de esta materia está en preparación/);
 assert.match(materiaStudyHomeSource, /Crear ejercicios con mi PDF/);
 assert.doesNotMatch(materiaStudyHomeSource, />Sin preguntas</);
-assert.match(dashboardSource, /Empezá a estudiar en 4 pasos/);
-assert.match(dashboardSource, /const dashboardTourSteps: GuidedTourStep\[\]/);
-assert.match(dashboardSource, /Este es tu tablero/);
+assert.match(dashboardPageSource, /LazyMaeveStudySpace/);
+assert.match(dashboardWorkspaceSource, /Biblioteca personal/);
+assert.match(dashboardWorkspaceSource, /Subí tu PDF/);
+assert.doesNotMatch(dashboardWorkspaceSource, /GuidedTour/);
+assert.doesNotMatch(dashboardWorkspaceSource, /prepareStudentMaterialUploadAction/);
+assert.doesNotMatch(dashboardChromeSource, /section:first-of-type/);
 assert.match(exploreClientSource, /sortedCarreras/);
 assert.match(exploreClientSource, /Ver las \$\{sortedCarreras\.length\} carreras/);
 assert.match(loginSource, /getAuthContextCopy/);
