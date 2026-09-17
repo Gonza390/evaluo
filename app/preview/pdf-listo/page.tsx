@@ -1,7 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpenText,
+  BrainCircuit,
+  CheckCircle2,
+  Map,
+  Sparkles,
+  SquareLibrary,
+  X,
+} from 'lucide-react';
 
 const questions = [
   {
@@ -72,7 +81,15 @@ const questions = [
   },
 ];
 
-type Screen = 'ready' | 'quiz' | 'result';
+const tabs = [
+  { label: 'Resumen', icon: BookOpenText, active: true },
+  { label: 'Glosario', icon: SquareLibrary },
+  { label: 'Tarjetas', icon: Sparkles },
+  { label: 'Examen', icon: BrainCircuit },
+  { label: 'Mapa mental', icon: Map },
+];
+
+type Screen = 'ready' | 'quiz' | 'result' | 'summary';
 
 export default function PdfReadyPreviewPage() {
   const [screen, setScreen] = useState<Screen>('ready');
@@ -117,6 +134,105 @@ export default function PdfReadyPreviewPage() {
   };
 
   const current = questions[index];
+  const firstWeakTopic = weakTopics[0] ?? 'Dogmática y teoría del delito';
+  const secondWeakTopic = weakTopics[1] ?? 'Finalismo';
+
+  if (screen === 'summary') {
+    return (
+      <main className="min-h-screen bg-[#f8fafc] text-slate-950">
+        <div className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
+            <button
+              type="button"
+              onClick={() => setScreen('result')}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Volver al resultado
+            </button>
+            <div className="mt-3 flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-slate-400">Material de estudio</p>
+                <h1 className="mt-1 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                  Módulo 2 · Lectura 1 Derecho Penal
+                </h1>
+              </div>
+              <button
+                type="button"
+                onClick={reset}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                Reiniciar prueba
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+          <section className="rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+            <div className="flex gap-1.5 overflow-x-auto border-b border-slate-200 px-3 py-3 sm:px-4">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.label}
+                    type="button"
+                    className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[14px] border px-3 text-[13px] font-medium ${
+                      tab.active
+                        ? 'border-blue-200 bg-blue-50 text-blue-600'
+                        : 'border-slate-200 bg-white text-slate-500'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-4 sm:p-5">
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/55 px-4 py-3.5">
+                <p className="text-xs font-semibold text-indigo-600">Según tu diagnóstico</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">Empezá por {firstWeakTopic}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Marcamos primero los temas donde tuviste más dificultad para que no tengas que recorrer todo el resumen.
+                </p>
+              </div>
+
+              <div className="mt-5 max-w-3xl space-y-6">
+                <section>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                    <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">{firstWeakTopic}</h2>
+                  </div>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    Este enfoque explica cómo se organizan y valoran los elementos del delito dentro de una teoría sistemática. Para el examen, lo importante es entender qué cambia respecto de las concepciones anteriores y cómo se ubican acción, tipicidad, antijuridicidad y culpabilidad.
+                  </p>
+                  <div className="mt-3 rounded-xl bg-slate-50 px-3.5 py-3 text-sm leading-6 text-slate-600">
+                    <span className="font-semibold text-slate-800">Prestá atención:</span> compará este enfoque con causalismo, normativismo y finalismo; ahí suelen aparecer las confusiones.
+                  </div>
+                </section>
+
+                <section className="border-t border-slate-100 pt-5">
+                  <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">{secondWeakTopic}</h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    La clave es identificar qué elemento pasa a ocupar un lugar central y cómo eso modifica el análisis de la conducta. No hace falta memorizar una definición aislada: conviene poder distinguirlo frente a los otros modelos.
+                  </p>
+                </section>
+
+                <section className="border-t border-slate-100 pt-5">
+                  <h2 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">Estructura general del delito</h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">
+                    Como marco general, el análisis suele recorrer acción, tipicidad, antijuridicidad y culpabilidad. Las distintas corrientes cambian la forma de interpretar o ubicar algunos de estos elementos.
+                  </p>
+                </section>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen bg-white text-slate-950">
@@ -125,8 +241,12 @@ export default function PdfReadyPreviewPage() {
           <section className="rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-6 sm:px-6 sm:py-7">
             <div className="mx-auto max-w-xl text-center">
               <p className="text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase">Tu espacio</p>
-              <h1 className="mt-2 text-[1.65rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2rem]">Tu espacio de estudio</h1>
-              <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-5 text-slate-500">Tus materiales primero. Seguí donde dejaste o sumá otro PDF cuando lo necesites.</p>
+              <h1 className="mt-2 text-[1.65rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2rem]">
+                Tu espacio de estudio
+              </h1>
+              <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-5 text-slate-500">
+                Tus materiales primero. Seguí donde dejaste o sumá otro PDF cuando lo necesites.
+              </p>
             </div>
           </section>
         </div>
@@ -167,8 +287,12 @@ export default function PdfReadyPreviewPage() {
                 <p className="mt-2 text-xs text-slate-400">6 preguntas · ~4 min</p>
 
                 <div className="mt-6 flex items-center justify-end gap-2">
-                  <button type="button" className="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 hover:bg-slate-100">Abrir PDF</button>
-                  <button type="button" onClick={startQuiz} className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700">Ver qué tanto sé</button>
+                  <button type="button" className="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 hover:bg-slate-100">
+                    Abrir PDF
+                  </button>
+                  <button type="button" onClick={startQuiz} className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700">
+                    Ver qué tanto sé
+                  </button>
                 </div>
               </div>
             </>
@@ -197,7 +321,11 @@ export default function PdfReadyPreviewPage() {
                       key={option}
                       type="button"
                       onClick={() => setSelected(optionIndex)}
-                      className={`w-full rounded-xl border px-3.5 py-3 text-left text-sm leading-5 transition ${selected === optionIndex ? 'border-indigo-400 bg-indigo-50 text-slate-950' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}
+                      className={`w-full rounded-xl border px-3.5 py-3 text-left text-sm leading-5 transition ${
+                        selected === optionIndex
+                          ? 'border-indigo-400 bg-indigo-50 text-slate-950'
+                          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                      }`}
                     >
                       {option}
                     </button>
@@ -205,7 +333,12 @@ export default function PdfReadyPreviewPage() {
                 </div>
 
                 <div className="mt-5 flex justify-end">
-                  <button type="button" disabled={selected === null} onClick={next} className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40">
+                  <button
+                    type="button"
+                    disabled={selected === null}
+                    onClick={next}
+                    className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
                     {index === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
                   </button>
                 </div>
@@ -233,8 +366,11 @@ export default function PdfReadyPreviewPage() {
               <div className="mt-5">
                 {weakTopics.length > 0 ? (
                   <>
-                    <p className="text-sm font-semibold text-slate-900">Conviene repasar primero</p>
+                    <p className="text-sm font-semibold text-slate-900">Te conviene repasar primero</p>
                     <p className="mt-1 text-sm leading-6 text-slate-600">{weakTopics.slice(0, 3).join(', ')}.</p>
+                    {weakTopics.length > 3 ? (
+                      <p className="mt-1 text-xs text-slate-400">Y {weakTopics.length - 3} tema{weakTopics.length - 3 === 1 ? '' : 's'} más.</p>
+                    ) : null}
                   </>
                 ) : (
                   <>
@@ -244,9 +380,21 @@ export default function PdfReadyPreviewPage() {
                 )}
               </div>
 
-              <div className="mt-6 flex items-center justify-end gap-2">
-                <button type="button" onClick={reset} className="inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 hover:bg-slate-100">Volver al PDF</button>
-                <button type="button" className="inline-flex h-10 items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700">Practicar lo que me falta</button>
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={() => setScreen('summary')}
+                  className="inline-flex h-10 w-full items-center justify-center rounded-md bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  {weakTopics.length > 0 ? 'Repasar en el resumen' : 'Ir al resumen'}
+                </button>
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="mt-2 inline-flex h-9 w-full items-center justify-center rounded-md text-xs font-semibold text-slate-500 hover:bg-slate-50"
+                >
+                  Volver al material
+                </button>
               </div>
             </>
           ) : null}
