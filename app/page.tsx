@@ -3,12 +3,10 @@ import {
   ArrowRight,
   CheckCircle2,
   FileText,
-  PlayCircle,
   Sparkles,
   UploadCloud,
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
-import { CatalogStats } from '@/components/marketing/catalog-stats';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { HomeHeroV2 } from '@/components/marketing/home-hero-v2';
 import { HomeLiveStudyDemo } from '@/components/marketing/home-live-study-demo';
@@ -20,7 +18,7 @@ import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/l
 export const metadata: Metadata = {
   title: 'Subí tu PDF y estudiá en minutos',
   description:
-    'Subí tu apunte en PDF y Evaluo arma resumen, tarjetas y práctica para que estudies sin armar el caos vos.',
+    'Subí lo que tenés que estudiar y Evaluo te guía para detectar qué reforzar, practicar y preparar el examen.',
   alternates: {
     canonical: '/',
   },
@@ -30,7 +28,7 @@ export const metadata: Metadata = {
     locale: 'es_AR',
     title: 'Evaluo | Subí tu PDF y estudiá en minutos',
     description:
-      'Resumen, tarjetas y práctica armados desde tu propio apunte. Subí tu PDF y empezá a estudiar.',
+      'Estudiá sobre tu propio material, detectá qué necesitás reforzar y practicá antes del examen.',
     url: '/',
     images: [
       {
@@ -46,21 +44,21 @@ export const metadata: Metadata = {
 const steps = [
   {
     icon: UploadCloud,
-    title: 'Subí tu PDF',
+    title: 'Subí lo que tenés que estudiar',
     description:
-      'Cargá tu apunte o resumen en PDF. En minutos Evaluo lo convierte en material de estudio útil.',
-  },
-  {
-    icon: FileText,
-    title: 'Resumen, tarjetas y práctica',
-    description:
-      'Tu mismo contenido se transforma en resumen claro, tarjetas para repasar y preguntas para practicar.',
+      'Cargá tu apunte, resumen o material de la materia en PDF.',
   },
   {
     icon: CheckCircle2,
-    title: 'Estudiá',
+    title: 'Descubrí qué ya sabés',
     description:
-      'Repasá, practicá y llegá al parcial con una guía ordenada desde tu propio material.',
+      'Evaluo te hace unas preguntas para identificar qué dominás y qué conviene reforzar.',
+  },
+  {
+    icon: FileText,
+    title: 'Estudiá lo que necesitás',
+    description:
+      'Repasá y practicá sobre tu propio material hasta estar listo para el parcial.',
   },
 ];
 
@@ -99,7 +97,7 @@ export default function Home() {
               ¿Cómo funciona Evaluo?
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Del PDF a estudiar, en 3 pasos.
+              De tu PDF a saber qué estudiar después, en 3 pasos.
             </p>
           </div>
 
@@ -232,15 +230,13 @@ export default function Home() {
               </span>
 
               <h2 className="mt-6 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Subí tu PDF y empezá a estudiar.
+                Subí tu PDF y empezá a prepararte.
               </h2>
               <p className="mt-4 max-w-xl text-xs leading-6 text-white/90 sm:text-sm">
-                Resumen, tarjetas y práctica desde tu apunte — listo para estudiar en minutos.
+                Estudiá sobre el material que realmente entra en tu examen y descubrí qué necesitás reforzar.
               </p>
 
-              <CatalogStats />
-
-              <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+              <div className="mt-8 flex w-full max-w-md justify-center">
                 <TrackedLink
                   href={primaryHref}
                   eventName="cta_click"
@@ -249,23 +245,10 @@ export default function Home() {
                     cta_name: 'subi_tu_pdf_final',
                     destination: primaryHref,
                   }}
-                  className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
                 >
                   <UploadCloud className="h-4.5 w-4.5 shrink-0" />
                   Subí tu PDF
-                </TrackedLink>
-                <TrackedLink
-                  href="/explorar"
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_final_cta',
-                    cta_name: 'explorar_catalogo_final',
-                    destination: '/explorar',
-                  }}
-                  className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/5 px-6 text-sm font-semibold text-white/90 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                  <PlayCircle className="h-4.5 w-4.5 shrink-0" />
-                  Explorar catálogo
                 </TrackedLink>
               </div>
             </div>
