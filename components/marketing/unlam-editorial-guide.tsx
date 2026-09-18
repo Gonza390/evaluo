@@ -100,11 +100,11 @@ export function UnlamEditorialGuide() {
                   Cómo estudiar para el Curso de Ingreso UNLaM 2027
                 </h1>
                 <p className="mt-5 max-w-3xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
-                  Una guía para organizar el manual, estudiar las materias con un método concreto y llegar a cada evaluación sabiendo qué dominás y qué todavía necesitás practicar.
+                  Si buscás cómo estudiar para el ingreso UNLaM 2027, empezá por organizar las materias y el manual oficial. Después alterná comprensión, práctica y repaso de errores en lugar de limitarte a releer.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> 12 min de lectura</span>
-                  <span>Revisado el 17 de septiembre de 2026</span>
+                  <span>Revisado el 18 de septiembre de 2026</span>
                   <span>Equipo Evaluo</span>
                 </div>
               </div>
@@ -164,10 +164,10 @@ export function UnlamEditorialGuide() {
                   <SectionKicker>01 · Antes de estudiar</SectionKicker>
                   <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Entendé primero qué vas a rendir.</h2>
                   <p className="mt-6 text-[15px] leading-7 text-slate-600">
-                    UNLaM ofrece una primera instancia regular y una segunda intensiva. En ambas se rinde un examen por asignatura. La Universidad informa formatos de tres materias y, para Odontología, Arquitectura y Medicina, un recorrido de cuatro materias dentro de la instancia regular.
+                    El Curso de Ingreso UNLaM 2027 puede cursarse en una instancia regular o intensiva y se rinde un examen por asignatura. La cantidad de materias depende de la carrera.
                   </p>
-                  <p className="mt-5 text-[15px] leading-7 text-slate-600">
-                    Eso significa que tu estrategia no debería arrancar por “hacer resúmenes”, sino por identificar cuántas materias tenés, qué unidades entran y cuánto tiempo real hay entre clases y evaluaciones.
+                  <p className="mt-4 text-[15px] leading-7 text-slate-600">
+                    Antes de resumir o memorizar, definí qué materias tenés, qué unidades entran y cuánto tiempo real hay hasta cada evaluación.
                   </p>
                   <StudyNote>
                     <strong>Primera decisión útil:</strong> armá una lista de materias y unidades antes de estudiar. Si no sabés qué entra, cualquier técnica de estudio se vuelve improvisación.
@@ -185,7 +185,7 @@ export function UnlamEditorialGuide() {
                   <SectionKicker>02 · Material de estudio</SectionKicker>
                   <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">El manual oficial es el centro del plan.</h2>
                   <p className="mt-6 text-[15px] leading-7 text-slate-600">
-                    UNLaM entrega una versión impresa del <strong>Manual del Curso de Ingreso</strong> al completar la inscripción presencial. Ese material, tus apuntes de clase y el contenido de MIeL Ingreso deberían ser la base de tu preparación.
+                    UNLaM entrega una versión impresa del <strong>Manual del Curso de Ingreso</strong> al completar la inscripción presencial. Usalo como fuente principal junto con tus apuntes y el contenido de MIeL Ingreso.
                   </p>
 
                   <div className="mt-7 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-2">
@@ -217,7 +217,7 @@ export function UnlamEditorialGuide() {
                   <SectionKicker>03 · Método</SectionKicker>
                   <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Estudiá en ciclos, no en maratones de lectura.</h2>
                   <p className="mt-6 text-[15px] leading-7 text-slate-600">
-                    Una sesión útil debería terminar con una respuesta concreta a esta pregunta: <em>¿qué puedo recuperar sin mirar el material?</em> Para llegar ahí, conviene alternar comprensión, organización y práctica.
+                    Una sesión útil debería terminar respondiendo una pregunta simple: <em>¿qué puedo recuperar sin mirar el material?</em> Para comprobarlo, alterná comprensión, síntesis y práctica.
                   </p>
 
                   <ol className="mt-8 border-t border-slate-200">
@@ -247,10 +247,17 @@ export function UnlamEditorialGuide() {
                     <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Matemática se aprende resolviendo.</h2>
                   </div>
                   <p className="mt-6 text-[15px] leading-7 text-slate-600">
-                    En una materia práctica, leer un procedimiento y reconocerlo no alcanza. Necesitás resolverlo sin apoyo. Usá la teoría para entender el método y reservá la mayor parte de la sesión para aplicar ese método en ejercicios nuevos.
+                    Leer un procedimiento no alcanza: necesitás resolver ejercicios sin apoyo. Entendé primero el método y después dedicá la mayor parte de la sesión a aplicarlo.
                   </p>
 
-                  <div className="mt-8 border-l border-slate-300 pl-6">
+                  <div className="mt-6 grid gap-2 border border-indigo-100 bg-indigo-50/60 p-4 sm:grid-cols-[120px_1fr]">
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-700">Ejemplo</p>
+                    <p className="text-sm leading-6 text-slate-700">
+                      Si estás trabajando ecuaciones, leé un ejemplo resuelto, cerrá el manual y resolvé <strong>3x + 7 = 22</strong>. Si fallás, identificá el paso exacto antes de intentar otro ejercicio.
+                    </p>
+                  </div>
+
+                  <div className="mt-7 border-l border-slate-300 pl-6">
                     {[
                       ['Concepto', '¿Qué representa y cuándo se usa?'],
                       ['Ejemplo resuelto', 'Seguí cada paso y explicá por qué se hace.'],
@@ -271,9 +278,9 @@ export function UnlamEditorialGuide() {
 
                 <section id="semana-previa" className="scroll-mt-8">
                   <SectionKicker>05 · Antes del examen</SectionKicker>
-                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">La última semana sirve para diagnosticar, no para empezar de cero.</h2>
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Cómo preparar los exámenes del ingreso UNLaM en la última semana.</h2>
                   <p className="mt-6 text-[15px] leading-7 text-slate-600">
-                    Este esquema es orientativo. Ajustalo a la materia y a tu calendario, pero mantené una idea: cada día tiene que reducir incertidumbre sobre lo que todavía no dominás.
+                    Usá esos días para detectar temas débiles, practicar sin apuntes y corregir errores; no para empezar unidades completas desde cero.
                   </p>
 
                   <div className="mt-7 overflow-hidden border border-slate-200 bg-white">
@@ -400,7 +407,7 @@ export function UnlamEditorialGuide() {
               <div className="max-w-[780px]">
                 <section id="errores" className="scroll-mt-8">
                   <SectionKicker>07 · Errores frecuentes</SectionKicker>
-                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Lo que suele hacer perder tiempo.</h2>
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Errores que conviene evitar al preparar el ingreso.</h2>
                   <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
                     {[
                       ['Leer muchas veces sin intentar responder', 'La familiaridad con una página no demuestra que puedas recuperar la información sin verla.'],
@@ -420,7 +427,7 @@ export function UnlamEditorialGuide() {
 
                 <section>
                   <SectionKicker>Preguntas frecuentes</SectionKicker>
-                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Dudas comunes sobre el ingreso UNLaM.</h2>
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Preguntas comunes sobre el Curso de Ingreso UNLaM.</h2>
                   <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
                     {[
                       ['¿Conviene hacer la instancia regular o la intensiva?', 'UNLaM recomienda la regular para quienes hacen el Curso de Ingreso por primera vez. La intensiva concentra más cursadas por semana y suele recomendarse a recursantes o personas con experiencia universitaria.'],
