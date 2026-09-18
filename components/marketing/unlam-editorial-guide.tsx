@@ -300,43 +300,106 @@ export function UnlamEditorialGuide() {
                 </section>
               </div>
 
-              <section id="evaluo" className="scroll-mt-8 my-16 -mx-4 bg-[#17201b] px-4 py-12 text-[#f7f2e8] sm:-mx-8 sm:px-8 lg:-mx-16 lg:px-16 lg:py-16">
-                <div className="max-w-[850px]">
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#e59c7f]">06 · Usar Evaluo dentro del método</p>
-                  <h2 className="mt-4 max-w-3xl font-serif text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl">La IA no reemplaza el manual. Te ayuda a trabajarlo.</h2>
-                  <p className="mt-6 max-w-3xl text-[16px] leading-8 text-[#d6d6cf]">
-                    Podés subir tus apuntes o un PDF y usar el mismo material para obtener una síntesis, identificar conceptos, crear tarjetas y practicar. El valor está en mantener la fuente conectada durante todo el recorrido.
-                  </p>
+              <section id="evaluo" className="scroll-mt-8 my-16 -mx-4 overflow-hidden bg-[#111827] text-white sm:-mx-8 lg:-mx-16">
+                <div className="grid lg:grid-cols-[0.86fr_1.14fr]">
+                  <div className="px-4 py-12 sm:px-8 lg:px-12 lg:py-16">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-indigo-300/20 bg-indigo-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-indigo-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-300" />
+                      Evaluo aplicado a tu material
+                    </div>
+                    <p className="mt-7 text-[11px] font-black uppercase tracking-[0.18em] text-[#e59c7f]">06 · Del manual a una sesión de estudio</p>
+                    <h2 className="mt-4 max-w-xl font-serif text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl">
+                      La guía te dice qué hacer. Evaluo te ayuda a hacerlo con tu material.
+                    </h2>
+                    <p className="mt-6 max-w-xl text-[16px] leading-8 text-slate-300">
+                      Subís tus apuntes o un PDF y mantenés esa misma fuente mientras pasás de entender un tema a recordarlo y practicarlo. No reemplaza el manual: lo convierte en un espacio de estudio activo.
+                    </p>
 
-                  <div className="mt-8 grid gap-3 sm:grid-cols-4">
-                    {['Entender', 'Organizar', 'Recordar', 'Practicar'].map((label, index) => (
-                      <div key={label} className="border border-white/15 px-4 py-4">
-                        <span className="font-mono text-[10px] text-[#e59c7f]">0{index + 1}</span>
-                        <p className="mt-2 text-sm font-bold">{label}</p>
-                      </div>
-                    ))}
+                    <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300">
+                      {['Resumen', 'Conceptos', 'Flashcards', 'Práctica'].map((label) => (
+                        <span key={label} className="inline-flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-indigo-300" aria-hidden="true" />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                      <TrackedLink
+                        href={uploadHref}
+                        eventName="cta_click"
+                        payload={{ location: 'seo_ingreso_unlam_editorial', cta_name: 'subir_material_ingreso', destination: uploadHref }}
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(79,70,229,0.3)] transition hover:bg-indigo-400"
+                      >
+                        <UploadCloud className="h-4 w-4" aria-hidden="true" />
+                        Estudiar mi material
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </TrackedLink>
+                      <TrackedLink
+                        href={demoHref}
+                        eventName="cta_click"
+                        payload={{ location: 'seo_ingreso_unlam_editorial', cta_name: 'ver_demo_material', destination: '/demo/material-estudio' }}
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-3 text-sm font-bold text-white transition hover:border-white/40 hover:bg-white/10"
+                      >
+                        Ver sesión de ejemplo
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </TrackedLink>
+                    </div>
                   </div>
 
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <TrackedLink
-                      href={uploadHref}
-                      eventName="cta_click"
-                      payload={{ location: 'seo_ingreso_unlam_editorial', cta_name: 'subir_material_ingreso', destination: uploadHref }}
-                      className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#f7f2e8] px-5 py-3 text-sm font-bold text-[#17201b] transition hover:bg-white"
-                    >
-                      <UploadCloud className="h-4 w-4" aria-hidden="true" />
-                      Subir mi material de ingreso
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </TrackedLink>
-                    <TrackedLink
-                      href={demoHref}
-                      eventName="cta_click"
-                      payload={{ location: 'seo_ingreso_unlam_editorial', cta_name: 'ver_demo_material', destination: '/demo/material-estudio' }}
-                      className="inline-flex min-h-12 items-center justify-center gap-2 border border-white/25 px-5 py-3 text-sm font-bold text-[#f7f2e8] transition hover:border-white/60"
-                    >
-                      Ver un ejemplo
-                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </TrackedLink>
+                  <div className="border-t border-white/10 bg-[#0b1020] p-4 sm:p-7 lg:border-t-0 lg:border-l lg:p-10">
+                    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[#f7f8fc] text-slate-900 shadow-[0_28px_70px_rgba(0,0,0,0.3)]">
+                      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                            <FileText className="h-4.5 w-4.5" aria-hidden="true" />
+                          </span>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Fuente de estudio</p>
+                            <p className="text-sm font-bold text-slate-950">Manual de ingreso · Matemática</p>
+                          </div>
+                        </div>
+                        <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline">Mismo material</span>
+                      </div>
+
+                      <div className="grid gap-3 p-4 sm:p-5">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">01 · Resumen</p>
+                            <span className="text-[10px] text-slate-400">Ecuaciones</span>
+                          </div>
+                          <p className="mt-3 text-sm font-bold text-slate-950">Idea central</p>
+                          <p className="mt-1 text-xs leading-6 text-slate-600">
+                            Una ecuación expresa una igualdad con una incógnita. Resolverla implica encontrar los valores que mantienen verdadera esa igualdad.
+                          </p>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">02 · Flashcard</p>
+                            <p className="mt-3 text-xs font-bold leading-5 text-slate-900">¿Qué debe conservarse al operar ambos miembros de una ecuación?</p>
+                            <div className="mt-3 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-600">Intentá responder antes de ver la explicación.</div>
+                          </div>
+                          <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">03 · Práctica</p>
+                            <p className="mt-3 text-xs font-bold leading-5 text-slate-900">Resolvé sin mirar el procedimiento:</p>
+                            <p className="mt-3 font-mono text-lg font-bold text-slate-950">3x + 7 = 22</p>
+                            <p className="mt-2 text-[11px] leading-5 text-slate-600">Después compará el error con el concepto del manual.</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between rounded-2xl bg-slate-900 px-4 py-3 text-white">
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-300">Siguiente paso</p>
+                            <p className="mt-1 text-xs font-semibold">Volver solo a lo que todavía cuesta</p>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-indigo-300" aria-hidden="true" />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-center text-[11px] leading-5 text-slate-400">
+                      Ejemplo visual del flujo de estudio. El contenido real depende del material que subas.
+                    </p>
                   </div>
                 </div>
               </section>
