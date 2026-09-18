@@ -1,36 +1,29 @@
 import Link from 'next/link';
 import {
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   RotateCcw,
   TrendingUp,
-  UploadCloud,
 } from 'lucide-react';
 
 type Props = {
   improved?: boolean;
-  hasMaterial?: boolean;
 };
 
 const PREVIEW_MATERIA_ID = 'a3f01be6-2087-493f-b436-83bdd39eed8a';
 
-export function SimulatorResultRedesignPreview({ improved = false, hasMaterial = true }: Props) {
+export function SimulatorResultRedesignPreview({ improved = false }: Props) {
   const correct = 20;
   const total = 30;
   const wrong = total - correct;
   const percentage = Math.round((correct / total) * 100);
   const grade = ((correct / total) * 10).toFixed(1);
   const errorsHref = `/simulador/errores/${PREVIEW_MATERIA_ID}?parcial=1`;
-  const materiaHref = `/explorar/materia/${PREVIEW_MATERIA_ID}`;
   const uploadHref = `/dashboard/materiales?openUpload=1&materiaId=${PREVIEW_MATERIA_ID}`;
 
   const previewStateHref = improved
-    ? `/preview/resultado-simulador${hasMaterial ? '' : '?contenido=sin-material'}`
-    : `/preview/resultado-simulador?estado=mejora${hasMaterial ? '' : '&contenido=sin-material'}`;
-  const previewMaterialHref = hasMaterial
-    ? `/preview/resultado-simulador?contenido=sin-material${improved ? '&estado=mejora' : ''}`
-    : `/preview/resultado-simulador${improved ? '?estado=mejora' : ''}`;
+    ? '/preview/resultado-simulador'
+    : '/preview/resultado-simulador?estado=mejora';
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_26%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] px-4 py-8 sm:px-6 sm:py-12">
@@ -42,20 +35,12 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
               Derecho Procesal Público · Parcial 1
             </h1>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={previewStateHref}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300"
-            >
-              {improved ? 'Ver primer intento' : 'Ver caso con mejora'}
-            </Link>
-            <Link
-              href={previewMaterialHref}
-              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300"
-            >
-              {hasMaterial ? 'Ver caso sin material' : 'Ver caso con material'}
-            </Link>
-          </div>
+          <Link
+            href={previewStateHref}
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm transition hover:border-slate-300"
+          >
+            {improved ? 'Ver primer intento' : 'Ver caso con mejora'}
+          </Link>
         </div>
 
         <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.09)]">
@@ -113,37 +98,10 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
               </div>
 
               <div className="mt-7 border-t border-slate-200 pt-6">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                  <Link
-                    href={materiaHref}
-                    className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
-                  >
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                      <BookOpen className="h-4 w-4" />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-bold text-slate-950">Volver a la materia</span>
-                      <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                        Seguir estudiando
-                      </span>
-                    </span>
-                  </Link>
-
-                  <button
-                    type="button"
-                    className="flex min-h-[78px] items-center gap-3 rounded-[20px] border border-slate-200 bg-white p-4 text-left transition hover:border-indigo-200 hover:bg-indigo-50/30"
-                  >
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                      <RotateCcw className="h-4 w-4" />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-bold text-slate-950">Hacer otro modelo</span>
-                      <span className="mt-0.5 block text-xs leading-5 text-slate-500">
-                        Medir tu próxima mejora
-                      </span>
-                    </span>
-                  </button>
-                </div>
+                <button type="button" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500">
+                  <RotateCcw className="h-4 w-4" />
+                  Hacer otro Simulador
+                </button>
               </div>
             </div>
 
@@ -173,60 +131,22 @@ export function SimulatorResultRedesignPreview({ improved = false, hasMaterial =
               </div>
 
               <div className="py-6">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#5D65F6] uppercase">
-                  Seguí con esta materia
+                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
+                  Seguí estudiando con tus apuntes
                 </p>
-
-                {hasMaterial ? (
-                  <div className="mt-3">
-                    <div className="flex items-start gap-3">
-                      <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
-                      <div>
-                        <h3 className="text-lg font-bold tracking-[-0.025em] text-slate-950">
-                          Hay material disponible para seguir estudiando
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">
-                          Revisá los resúmenes y recursos compartidos de Derecho Procesal Público
-                          antes de volver a rendir.
-                        </p>
-                        <Link
-                          href={materiaHref}
-                          className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5] transition hover:text-[#4338CA]"
-                        >
-                          Ver material de la materia
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">
-                      ¿Preferís estudiar con tus propios apuntes?{' '}
-                      <Link href={uploadHref} className="font-semibold text-slate-700 hover:text-[#4F46E5]">
-                        Preparar mis apuntes →
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-3 flex items-start gap-3">
-                    <UploadCloud className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
-                    <div>
-                      <h3 className="text-lg font-bold tracking-[-0.025em] text-slate-950">
-                        ¿Tenés apuntes de Derecho Procesal Público?
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Convertí tu PDF en resumen, glosario y flashcards para seguir preparando esta
-                        materia desde Evaluo.
-                      </p>
-                      <Link
-                        href={uploadHref}
-                        className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5] transition hover:text-[#4338CA]"
-                      >
-                        Preparar mis apuntes
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </div>
-                )}
+                <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                  Prepará Derecho Procesal Público con tu propio PDF
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                  Subí tus apuntes y Evaluo te guía para repasar y practicar sobre el material que realmente entra en tu examen.
+                </p>
+                <Link
+                  href={uploadHref}
+                  className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
+                >
+                  Subir mi PDF
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
