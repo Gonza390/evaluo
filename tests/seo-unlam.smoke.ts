@@ -32,7 +32,7 @@ for (const token of [
   'Evaluo no está afiliado a UNLaM',
   '<h1',
   'En esta guía',
-  'La IA no reemplaza el manual',
+  'No reemplaza el manual',
 ]) {
   assert.ok(combined.includes(token), `UNLaM guide must include ${token}`);
 }
