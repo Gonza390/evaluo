@@ -51,7 +51,7 @@ function SectionKicker({ children }: { children: React.ReactNode }) {
 
 function StudyNote({ children }: { children: React.ReactNode }) {
   return (
-    <aside className="my-8 border-l-4 border-indigo-500 bg-indigo-50/80 px-5 py-4 text-[15px] leading-7 text-slate-700">
+    <aside className="my-6 border-l-4 border-indigo-500 bg-indigo-50/80 px-4 py-3.5 text-sm leading-6 text-slate-700">
       <div className="flex gap-3">
         <Lightbulb className="mt-1 h-4.5 w-4.5 shrink-0 text-indigo-700" aria-hidden="true" />
         <div>{children}</div>
@@ -89,20 +89,20 @@ export function UnlamEditorialGuide() {
       <main>
         <section className="border-b border-slate-200 bg-[radial-gradient(circle_at_88%_12%,rgba(99,102,241,0.08),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto grid w-full max-w-[1240px] lg:grid-cols-[minmax(0,1.25fr)_360px]">
-            <div className="px-4 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
+            <div className="px-4 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
               <div className="max-w-[820px]">
                 <div className="flex flex-wrap items-center gap-3 text-[11px] font-black uppercase tracking-[0.17em] text-indigo-700">
                   <span>Guía 2027</span>
                   <span className="h-1 w-1 rounded-full bg-gradient-to-r from-brand to-brand-2" />
                   <span>Universidad Nacional de La Matanza</span>
                 </div>
-                <h1 className="mt-6 font-serif text-[3rem] leading-[0.98] font-semibold tracking-[-0.045em] text-slate-950 sm:text-[4.5rem] lg:text-[5.4rem]">
+                <h1 className="mt-5 max-w-[760px] font-serif text-[2.6rem] leading-[1.01] font-semibold tracking-[-0.04em] text-slate-950 sm:text-[3.45rem] lg:text-[4.1rem]">
                   Cómo estudiar para el Curso de Ingreso UNLaM 2027
                 </h1>
-                <p className="mt-7 max-w-3xl text-[17px] leading-8 text-slate-600 sm:text-[19px] sm:leading-9">
+                <p className="mt-5 max-w-3xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
                   Una guía para organizar el manual, estudiar las materias con un método concreto y llegar a cada evaluación sabiendo qué dominás y qué todavía necesitás practicar.
                 </p>
-                <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-5 text-xs text-slate-500">
+                <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> 12 min de lectura</span>
                   <span>Revisado el 17 de septiembre de 2026</span>
                   <span>Equipo Evaluo</span>
@@ -110,12 +110,12 @@ export function UnlamEditorialGuide() {
               </div>
             </div>
 
-            <aside className="border-t border-slate-200 bg-indigo-50/60 px-5 py-8 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-12">
+            <aside className="border-t border-slate-200 bg-indigo-50/60 px-5 py-8 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-10">
               <div className="flex items-center gap-3">
                 <CalendarDays className="h-5 w-5 text-indigo-700" aria-hidden="true" />
                 <p className="text-[11px] font-black uppercase tracking-[0.17em] text-indigo-700">Segunda instancia 2027</p>
               </div>
-              <h2 className="mt-4 font-serif text-3xl font-semibold leading-tight">Las fechas que importan</h2>
+              <h2 className="mt-3 font-serif text-2xl font-semibold leading-tight sm:text-[28px]">Las fechas que importan</h2>
               <dl className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
                 {[
                   ['Preinscripción', '28 sep. – 26 oct. 2026'],
@@ -123,7 +123,7 @@ export function UnlamEditorialGuide() {
                   ['Cursada intensiva', '1 feb. – 6 mar. 2027'],
                   ['Exámenes', '8 – 12 mar. 2027'],
                 ].map(([label, value]) => (
-                  <div key={label} className="py-4">
+                  <div key={label} className="py-3.5">
                     <dt className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">{label}</dt>
                     <dd className="mt-1 text-[15px] font-bold text-slate-950">{value}</dd>
                   </div>
@@ -141,10 +141,10 @@ export function UnlamEditorialGuide() {
 
         <section className="border-b border-slate-200 bg-slate-50/40">
           <div className="mx-auto grid w-full max-w-[1240px] gap-0 lg:grid-cols-[250px_minmax(0,1fr)]">
-            <aside className="hidden border-r border-slate-200 bg-white/70 px-8 py-14 lg:block">
+            <aside className="hidden border-r border-slate-200 bg-white/70 px-7 py-11 lg:block">
               <div className="sticky top-8">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-700">En esta guía</p>
-                <nav className="mt-5 flex flex-col gap-3">
+                <nav className="mt-4 flex flex-col gap-2.5">
                   {toc.map(([href, label], index) => (
                     <a key={href} href={href} className="group flex gap-3 text-sm leading-5 text-slate-600 hover:text-slate-950">
                       <span className="font-mono text-[11px] text-slate-400 group-hover:text-indigo-700">{String(index + 1).padStart(2, '0')}</span>
@@ -158,15 +158,15 @@ export function UnlamEditorialGuide() {
               </div>
             </aside>
 
-            <article className="min-w-0 px-4 py-12 sm:px-8 sm:py-16 lg:px-16 lg:py-20">
+            <article className="min-w-0 px-4 py-10 sm:px-8 sm:py-12 lg:px-14 lg:py-14">
               <div className="max-w-[780px]">
                 <section id="como-funciona" className="scroll-mt-8">
                   <SectionKicker>01 · Antes de estudiar</SectionKicker>
-                  <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">Entendé primero qué vas a rendir.</h2>
-                  <p className="mt-6 text-[16px] leading-8 text-slate-600">
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Entendé primero qué vas a rendir.</h2>
+                  <p className="mt-6 text-[15px] leading-7 text-slate-600">
                     UNLaM ofrece una primera instancia regular y una segunda intensiva. En ambas se rinde un examen por asignatura. La Universidad informa formatos de tres materias y, para Odontología, Arquitectura y Medicina, un recorrido de cuatro materias dentro de la instancia regular.
                   </p>
-                  <p className="mt-5 text-[16px] leading-8 text-slate-600">
+                  <p className="mt-5 text-[15px] leading-7 text-slate-600">
                     Eso significa que tu estrategia no debería arrancar por “hacer resúmenes”, sino por identificar cuántas materias tenés, qué unidades entran y cuánto tiempo real hay entre clases y evaluaciones.
                   </p>
                   <StudyNote>
@@ -179,16 +179,16 @@ export function UnlamEditorialGuide() {
                   </div>
                 </section>
 
-                <hr className="my-16 border-slate-200" />
+                <hr className="my-12 border-slate-200" />
 
                 <section id="material" className="scroll-mt-8">
                   <SectionKicker>02 · Material de estudio</SectionKicker>
-                  <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">El manual oficial es el centro del plan.</h2>
-                  <p className="mt-6 text-[16px] leading-8 text-slate-600">
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">El manual oficial es el centro del plan.</h2>
+                  <p className="mt-6 text-[15px] leading-7 text-slate-600">
                     UNLaM entrega una versión impresa del <strong>Manual del Curso de Ingreso</strong> al completar la inscripción presencial. Ese material, tus apuntes de clase y el contenido de MIeL Ingreso deberían ser la base de tu preparación.
                   </p>
 
-                  <div className="mt-9 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-2">
+                  <div className="mt-7 grid gap-px border border-slate-200 bg-slate-200 sm:grid-cols-2">
                     {[
                       [FileText, 'Manual', 'Marcá unidades, definiciones, ejemplos y ejercicios que se repiten.'],
                       [NotebookPen, 'Apuntes', 'Usalos para registrar lo que el docente enfatiza o explica de otra manera.'],
@@ -211,16 +211,16 @@ export function UnlamEditorialGuide() {
                   </p>
                 </section>
 
-                <hr className="my-16 border-slate-200" />
+                <hr className="my-12 border-slate-200" />
 
                 <section id="metodo" className="scroll-mt-8">
                   <SectionKicker>03 · Método</SectionKicker>
-                  <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">Estudiá en ciclos, no en maratones de lectura.</h2>
-                  <p className="mt-6 text-[16px] leading-8 text-slate-600">
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Estudiá en ciclos, no en maratones de lectura.</h2>
+                  <p className="mt-6 text-[15px] leading-7 text-slate-600">
                     Una sesión útil debería terminar con una respuesta concreta a esta pregunta: <em>¿qué puedo recuperar sin mirar el material?</em> Para llegar ahí, conviene alternar comprensión, organización y práctica.
                   </p>
 
-                  <ol className="mt-10 border-t border-slate-200">
+                  <ol className="mt-8 border-t border-slate-200">
                     {[
                       ['01', 'Ubicar', 'Leé la unidad completa y marcá qué conceptos, definiciones y procedimientos aparecen.'],
                       ['02', 'Entender', 'Explicá cada idea con tus propias palabras y comparala con el manual.'],
@@ -238,15 +238,15 @@ export function UnlamEditorialGuide() {
                   </ol>
                 </section>
 
-                <hr className="my-16 border-slate-200" />
+                <hr className="my-12 border-slate-200" />
 
                 <section id="matematica" className="scroll-mt-8">
                   <SectionKicker>04 · Materias prácticas</SectionKicker>
                   <div className="flex items-start gap-4">
                     <Sigma className="mt-1 h-7 w-7 shrink-0 text-indigo-700" aria-hidden="true" />
-                    <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">Matemática se aprende resolviendo.</h2>
+                    <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Matemática se aprende resolviendo.</h2>
                   </div>
-                  <p className="mt-6 text-[16px] leading-8 text-slate-600">
+                  <p className="mt-6 text-[15px] leading-7 text-slate-600">
                     En una materia práctica, leer un procedimiento y reconocerlo no alcanza. Necesitás resolverlo sin apoyo. Usá la teoría para entender el método y reservá la mayor parte de la sesión para aplicar ese método en ejercicios nuevos.
                   </p>
 
@@ -267,16 +267,16 @@ export function UnlamEditorialGuide() {
                   </div>
                 </section>
 
-                <hr className="my-16 border-slate-200" />
+                <hr className="my-12 border-slate-200" />
 
                 <section id="semana-previa" className="scroll-mt-8">
                   <SectionKicker>05 · Antes del examen</SectionKicker>
-                  <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">La última semana sirve para diagnosticar, no para empezar de cero.</h2>
-                  <p className="mt-6 text-[16px] leading-8 text-slate-600">
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">La última semana sirve para diagnosticar, no para empezar de cero.</h2>
+                  <p className="mt-6 text-[15px] leading-7 text-slate-600">
                     Este esquema es orientativo. Ajustalo a la materia y a tu calendario, pero mantené una idea: cada día tiene que reducir incertidumbre sobre lo que todavía no dominás.
                   </p>
 
-                  <div className="mt-9 overflow-hidden border border-slate-200 bg-white">
+                  <div className="mt-7 overflow-hidden border border-slate-200 bg-white">
                     {[
                       ['7–6 días antes', 'Hacé una lista de temas y marcá verde, amarillo o rojo según tu nivel.'],
                       ['5–4 días antes', 'Trabajá únicamente los temas amarillos y rojos.'],
@@ -285,30 +285,30 @@ export function UnlamEditorialGuide() {
                       ['1 día antes', 'Repaso breve. Nada de intentar incorporar una unidad completa nueva.'],
                     ].map(([when, action]) => (
                       <div key={when} className="grid border-b border-slate-100 last:border-b-0 sm:grid-cols-[170px_1fr]">
-                        <div className="bg-indigo-50/80 px-5 py-4 text-sm font-bold text-slate-950">{when}</div>
-                        <div className="px-5 py-4 text-sm leading-7 text-slate-600">{action}</div>
+                        <div className="bg-indigo-50/80 px-4 py-3.5 text-sm font-bold text-slate-950">{when}</div>
+                        <div className="px-4 py-3.5 text-sm leading-7 text-slate-600">{action}</div>
                       </div>
                     ))}
                   </div>
                 </section>
               </div>
 
-              <section id="evaluo" className="scroll-mt-8 my-16 -mx-4 overflow-hidden bg-[#050B2C] text-white sm:-mx-8 lg:-mx-16">
+              <section id="evaluo" className="scroll-mt-8 my-12 -mx-4 overflow-hidden bg-[#050B2C] text-white sm:-mx-8 lg:-mx-14">
                 <div className="grid lg:grid-cols-[0.86fr_1.14fr]">
-                  <div className="px-4 py-12 sm:px-8 lg:px-12 lg:py-16">
+                  <div className="px-4 py-9 sm:px-7 lg:px-9 lg:py-11">
                     <div className="inline-flex items-center gap-2 rounded-full border border-indigo-300/20 bg-indigo-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-indigo-200">
                       <span className="h-1.5 w-1.5 rounded-full bg-indigo-300" />
                       Evaluo aplicado a tu material
                     </div>
                     <p className="mt-7 text-[11px] font-black uppercase tracking-[0.18em] text-indigo-300">06 · Del manual a una sesión de estudio</p>
-                    <h2 className="mt-4 max-w-xl font-serif text-4xl font-semibold leading-[1.06] tracking-[-0.03em] sm:text-5xl">
+                    <h2 className="mt-4 max-w-xl font-serif text-[2rem] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[2.35rem]">
                       La guía te dice qué hacer. Evaluo te ayuda a hacerlo con tu material.
                     </h2>
-                    <p className="mt-6 max-w-xl text-[16px] leading-8 text-slate-300">
+                    <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300">
                       Subís tus apuntes o un PDF y mantenés esa misma fuente mientras pasás de entender un tema a recordarlo y practicarlo. No reemplaza el manual: lo convierte en un espacio de estudio activo.
                     </p>
 
-                    <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-300">
+                    <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-slate-300">
                       {['Resumen', 'Conceptos', 'Flashcards', 'Práctica'].map((label) => (
                         <span key={label} className="inline-flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-indigo-300" aria-hidden="true" />
@@ -317,7 +317,7 @@ export function UnlamEditorialGuide() {
                       ))}
                     </div>
 
-                    <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                    <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                       <TrackedLink
                         href={uploadHref}
                         eventName="cta_click"
@@ -340,9 +340,9 @@ export function UnlamEditorialGuide() {
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 bg-[#0f1b3d] p-4 sm:p-7 lg:border-t-0 lg:border-l lg:p-10">
-                    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-slate-50 text-slate-900 shadow-[0_28px_70px_rgba(0,0,0,0.3)]">
-                      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
+                  <div className="border-t border-white/10 bg-[#0f1b3d] p-4 sm:p-6 lg:border-t-0 lg:border-l lg:p-7">
+                    <div className="overflow-hidden rounded-[20px] border border-white/10 bg-slate-50 text-slate-900 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
+                      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
                             <FileText className="h-4.5 w-4.5" aria-hidden="true" />
@@ -355,8 +355,8 @@ export function UnlamEditorialGuide() {
                         <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline">Mismo material</span>
                       </div>
 
-                      <div className="grid gap-3 p-4 sm:p-5">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="grid gap-3 p-3.5 sm:p-4">
+                        <div className="rounded-xl border border-slate-200 bg-white p-4">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">01 · Resumen</p>
                             <span className="text-[10px] text-slate-400">Ecuaciones</span>
@@ -368,12 +368,12 @@ export function UnlamEditorialGuide() {
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
+                          <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
                             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">02 · Flashcard</p>
                             <p className="mt-3 text-xs font-bold leading-5 text-slate-900">¿Qué debe conservarse al operar ambos miembros de una ecuación?</p>
                             <div className="mt-3 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-600">Intentá responder antes de ver la explicación.</div>
                           </div>
-                          <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-4">
+                          <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-4">
                             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">03 · Práctica</p>
                             <p className="mt-3 text-xs font-bold leading-5 text-slate-900">Resolvé sin mirar el procedimiento:</p>
                             <p className="mt-3 font-mono text-lg font-bold text-slate-950">3x + 7 = 22</p>
@@ -381,7 +381,7 @@ export function UnlamEditorialGuide() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between rounded-2xl bg-slate-900 px-4 py-3 text-white">
+                        <div className="flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-white">
                           <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-300">Siguiente paso</p>
                             <p className="mt-1 text-xs font-semibold">Volver solo a lo que todavía cuesta</p>
@@ -400,7 +400,7 @@ export function UnlamEditorialGuide() {
               <div className="max-w-[780px]">
                 <section id="errores" className="scroll-mt-8">
                   <SectionKicker>07 · Errores frecuentes</SectionKicker>
-                  <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">Lo que suele hacer perder tiempo.</h2>
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Lo que suele hacer perder tiempo.</h2>
                   <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
                     {[
                       ['Leer muchas veces sin intentar responder', 'La familiaridad con una página no demuestra que puedas recuperar la información sin verla.'],
@@ -416,11 +416,11 @@ export function UnlamEditorialGuide() {
                   </div>
                 </section>
 
-                <hr className="my-16 border-slate-200" />
+                <hr className="my-12 border-slate-200" />
 
                 <section>
                   <SectionKicker>Preguntas frecuentes</SectionKicker>
-                  <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em]">Dudas comunes sobre el ingreso UNLaM.</h2>
+                  <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Dudas comunes sobre el ingreso UNLaM.</h2>
                   <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
                     {[
                       ['¿Conviene hacer la instancia regular o la intensiva?', 'UNLaM recomienda la regular para quienes hacen el Curso de Ingreso por primera vez. La intensiva concentra más cursadas por semana y suele recomendarse a recursantes o personas con experiencia universitaria.'],
@@ -436,7 +436,7 @@ export function UnlamEditorialGuide() {
                   </div>
                 </section>
 
-                <hr className="my-16 border-slate-200" />
+                <hr className="my-12 border-slate-200" />
 
                 <section id="fuentes" className="scroll-mt-8">
                   <SectionKicker>08 · Fuentes</SectionKicker>
@@ -452,7 +452,7 @@ export function UnlamEditorialGuide() {
                     <OfficialLink href={officialSources.proceso}>Proceso de inscripción y entrega del manual</OfficialLink>
                   </div>
 
-                  <div className="mt-10 border-t border-slate-200 pt-6 text-xs leading-6 text-slate-500">
+                  <div className="mt-8 border-t border-slate-200 pt-6 text-xs leading-6 text-slate-500">
                     Evaluo no está afiliado a UNLaM ni representa a la Universidad Nacional de La Matanza. Las marcas mencionadas pertenecen a sus respectivos titulares.
                   </div>
                 </section>
