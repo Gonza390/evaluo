@@ -72,7 +72,7 @@ function formatDate(value: string) {
 }
 
 /**
- * Personal material library only.
+ * Personal study materials.
  * Upload creation is owned by PdfFirstUploadShell, which wraps every current consumer
  * and captures the "Subí tu PDF" trigger below.
  */
@@ -145,10 +145,10 @@ export function StudentMaterialsWorkspace({
         <div className="flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
-              Biblioteca personal
+              Tu estudio
             </p>
             <h2 className="mt-1.5 text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
-              Tus materiales
+              Tus PDFs
             </h2>
           </div>
           <Button type="button" size="sm" variant="outline">
@@ -162,10 +162,10 @@ export function StudentMaterialsWorkspace({
             <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
               <FileText className="mx-auto h-8 w-8 text-slate-300" />
               <p className="mt-3 text-sm font-semibold text-slate-900">
-                Todavía no subiste materiales
+                Todavía no subiste un PDF
               </p>
               <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                Cuando cargues tu primer PDF, aparecerá acá con su estado y accesos rápidos.
+                Cuando subas tu primer PDF, vas a poder empezar a estudiar directamente desde acá.
               </p>
               <Button type="button" size="sm" className="mt-4">
                 <Upload className="h-4 w-4" />
@@ -228,10 +228,21 @@ export function StudentMaterialsWorkspace({
                     </div>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button asChild size="sm" onClick={(event) => event.stopPropagation()}>
+                        <Link href={getStudentMaterialRoute(material.id)}>
+                          <Eye className="h-4 w-4" />
+                          {material.processing_status === 'ready'
+                            ? 'Continuar estudiando'
+                            : isFailed
+                              ? 'Revisar'
+                              : 'Ver estado'}
+                        </Link>
+                      </Button>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
+                        className="text-slate-500"
                         onClick={(event) => {
                           event.stopPropagation();
                           handleVisibilityChange(material.id, isShared ? 'private' : 'shared');
@@ -239,17 +250,7 @@ export function StudentMaterialsWorkspace({
                         disabled={isPending}
                       >
                         {isShared ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                        {isShared ? 'Ocultar' : 'Compartir'}
-                      </Button>
-                      <Button asChild size="sm" onClick={(event) => event.stopPropagation()}>
-                        <Link href={getStudentMaterialRoute(material.id)}>
-                          <Eye className="h-4 w-4" />
-                          {material.processing_status === 'ready'
-                            ? 'Abrir'
-                            : isFailed
-                              ? 'Revisar'
-                              : 'Ver estado'}
-                        </Link>
+                        {isShared ? 'Dejar de compartir' : 'Compartir'}
                       </Button>
                       <Button
                         type="button"
