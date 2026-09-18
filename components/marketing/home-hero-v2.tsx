@@ -15,23 +15,23 @@ import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
 const studyCapabilities = [
   {
     icon: FileText,
-    title: 'Estudiá tus materiales',
-    description: 'Resumen, glosario, tarjetas y práctica construidos desde el contenido que estás estudiando.',
-  },
-  {
-    icon: ListChecks,
-    title: 'Practicá como vas a rendir',
-    description: 'Pasá del repaso al Preguntero y al Simulador sin salir de la misma materia.',
-  },
-  {
-    icon: BookOpen,
-    title: 'Encontrá material de tu materia',
-    description: 'Entrá por universidad, carrera y materia y aprovechá recursos que otros estudiantes ya compartieron.',
+    title: 'Estudiá tu material',
+    description: 'Evaluo organiza lo importante de lo que realmente tenés que preparar.',
   },
   {
     icon: Brain,
+    title: 'Descubrí qué te falta',
+    description: 'Probate sobre tu PDF y detectá qué temas necesitás reforzar.',
+  },
+  {
+    icon: BookOpen,
     title: 'Reforzá lo que te cuesta',
-    description: 'Usá tus resultados para repasar errores y volver sobre los temas que todavía necesitás reforzar.',
+    description: 'Volvé directamente a los conceptos donde tuviste más dificultad.',
+  },
+  {
+    icon: ListChecks,
+    title: 'Practicá para el parcial',
+    description: 'Respondé preguntas y volvé a probarte hasta llegar preparado.',
   },
 ];
 
@@ -58,7 +58,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </h1>
 
               <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Resumen, tarjetas y práctica armados desde tu apunte — sin armar el caos vos.
+                Evaluo organiza tu material, detecta qué necesitás reforzar y te guía para preparar el examen.
               </p>
 
               <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
@@ -81,15 +81,15 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Resumen + tarjetas + práctica
+                  Sabé qué repasar
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Desde tu propio apunte
+                  Desde tu propio material
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Gratis para empezar
+                  Practicá antes del examen
                 </span>
               </div>
             </div>
@@ -112,8 +112,8 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </h2>
             </div>
             <p className="max-w-[620px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
-              Evaluo conecta el material que estás leyendo con las herramientas que necesitás después.
-              No son funciones sueltas: es un recorrido continuo desde tus apuntes hasta la práctica.
+              Evaluo usa tu propio material para guiarte desde el primer repaso hasta la práctica.
+              Sabés qué reforzar y qué hacer después, sin elegir entre herramientas sueltas.
             </p>
           </div>
 
@@ -151,19 +151,6 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                 >
                   <UploadCloud className="h-4 w-4 shrink-0" />
                   Subir mi PDF
-                  <ArrowRight className="h-3.5 w-3.5 shrink-0" />
-                </TrackedLink>
-                <TrackedLink
-                  href="/explorar"
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_product_overview',
-                    cta_name: 'explorar_materias',
-                    destination: '/explorar',
-                  }}
-                  className="inline-flex items-center gap-2 text-slate-700 transition hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                >
-                  Explorar materias
                   <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                 </TrackedLink>
               </div>
