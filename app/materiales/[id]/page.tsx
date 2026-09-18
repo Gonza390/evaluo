@@ -22,6 +22,7 @@ import { createClientServer } from '@/lib/supabase-server';
 
 type PageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ diagnostico?: string }>;
 };
 
 function resolveMaterialId(routeValue: string) {
@@ -145,8 +146,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export default async function StudentMaterialViewerPage({ params }: PageProps) {
+export default async function StudentMaterialViewerPage({ params, searchParams }: PageProps) {
   const { id: routeValue } = await params;
+  const query = searchParams ? await searchParams : {};
   const materialId = resolveMaterialId(routeValue);
 
   if (!isUuid(materialId)) notFound();
@@ -329,6 +331,7 @@ export default async function StudentMaterialViewerPage({ params }: PageProps) {
           studyGlossary={studyGlossary}
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
+          initialDiagnostic={isOwner && query.diagnostico === '1'}
         />
 
         {!isOwner && visibility === 'shared' ? (
