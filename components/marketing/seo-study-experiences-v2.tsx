@@ -323,6 +323,16 @@ export function IaParaEstudiantesExperience() {
                 </article>
               ))}
             </div>
+            <p className="mt-7 text-sm leading-7 text-slate-600">
+              ¿Estás preparando un ingreso universitario? Mirá un caso concreto en nuestra guía sobre{' '}
+              <Link
+                href="/como-estudiar-ingreso-unlam"
+                className="font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 transition hover:decoration-indigo-500"
+              >
+                cómo preparar el ingreso UNLaM 2027
+              </Link>
+              , usando el material oficial como punto de partida.
+            </p>
           </div>
         </section>
 
