@@ -42,8 +42,8 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean)
   }
   if (nextPath.startsWith('/simulador')) {
     return isSignUp
-      ? 'Creá tu cuenta para continuar el Simulador y guardar tus resultados.'
-      : 'Ingresá para continuar el Simulador desde donde lo dejaste.';
+      ? 'Creá tu cuenta y volvés a este mismo parcial para continuar con tu avance.'
+      : 'Ingresá y volvés a este mismo parcial para continuar desde donde lo dejaste.';
   }
   if (nextPath === '/empezar') {
     return isSignUp
@@ -114,7 +114,8 @@ export default function LoginFormGoogleFirst() {
   }, []);
 
   const isSignUp = mode === 'signup';
-  const location = intent === 'premium' ? 'login_premium_intent' : 'login';
+  const simulatorContext = nextPath.startsWith('/simulador');
+  const location = intent === 'premium' ? 'login_premium_intent' : simulatorContext ? 'login_simulator' : 'login';
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
@@ -218,11 +219,11 @@ export default function LoginFormGoogleFirst() {
     <section className="px-1 py-1 sm:px-2 sm:py-2">
       <div className="flex items-center justify-between gap-3">
         <Link
-          href="/"
+          href={simulatorContext ? nextPath : '/'}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Inicio
+          {simulatorContext ? 'Volver al simulador' : 'Inicio'}
         </Link>
 
         <div className="flex items-center gap-2 text-sm font-bold tracking-tight text-slate-950">
@@ -242,10 +243,20 @@ export default function LoginFormGoogleFirst() {
           <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
             Evaluo Premium
           </span>
+        ) : simulatorContext ? (
+          <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+            Tu simulador sigue esperando
+          </span>
         ) : null}
 
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.15rem]">
-          {isSignUp ? 'Creá tu cuenta' : 'Bienvenido'}
+          {simulatorContext
+            ? isSignUp
+              ? 'Guardá tu avance y seguí'
+              : 'Volvé a tu simulador'
+            : isSignUp
+              ? 'Creá tu cuenta'
+              : 'Bienvenido'}
         </h1>
         <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
 

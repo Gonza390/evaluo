@@ -19,6 +19,10 @@
     {
       "path": "/api/internal/reactivation-next-subject",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/internal/exam-upload-activation",
+      "schedule": "15 14 * * *"
     }
   ]
 }

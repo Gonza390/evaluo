@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
+  CalendarDays,
   CheckCircle2,
   RotateCcw,
   Sparkles,
@@ -12,6 +13,15 @@ import {
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { supabase } from '@/lib/supabase-client';
 import { logError } from '@/lib/observability';
+import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
+import {
+  findSimulatorExamEvent,
+  formatSimulatorExamDate,
+  getDaysUntilExam,
+  getLocalDateKey,
+  saveSimulatorExamEvent,
+  type SimulatorExamEvent,
+} from '@/lib/simulator-exam-date';
 
 type PreviousAttempt = {
   correct_answers: number;
@@ -34,11 +44,29 @@ type SimulatorFinishedResultProps = {
   onNewExam: () => void;
 };
 
-function buildUploadHref(materiaId: string, carreraId?: string, universidadId?: string) {
-  const params = new URLSearchParams({ openUpload: '1', materiaId });
+function buildUploadHref(
+  materiaId: string,
+  carreraId?: string,
+  universidadId?: string,
+  examDate?: string | null
+) {
+  const params = new URLSearchParams({
+    openUpload: '1',
+    materiaId,
+    source: 'simulator-result-exam',
+  });
   if (carreraId) params.set('carreraId', carreraId);
   if (universidadId) params.set('universidadId', universidadId);
-  return `/dashboard/materiales?${params.toString()}`;
+  if (examDate) params.set('examDate', examDate);
+  return `/dashboard?${params.toString()}`;
+}
+
+function getExamTimingLabel(examDate: string) {
+  const days = getDaysUntilExam(examDate);
+  if (days === null) return null;
+  if (days <= 0) return 'Rendís hoy';
+  if (days === 1) return 'Rendís mañana';
+  return `Rendís en ${days} días`;
 }
 
 function getParcialLabel(parcial: number) {
@@ -62,16 +90,28 @@ export function SimulatorFinishedResult({
 }: SimulatorFinishedResultProps) {
   const [previousAttempt, setPreviousAttempt] = useState<PreviousAttempt | null>(null);
   const [comparisonReady, setComparisonReady] = useState(false);
+  const [examEvent, setExamEvent] = useState<SimulatorExamEvent | null>(null);
+  const [examDateDraft, setExamDateDraft] = useState('');
+  const [examDateLoading, setExamDateLoading] = useState(Boolean(userId));
+  const [examDateSaving, setExamDateSaving] = useState(false);
+  const [examDateError, setExamDateError] = useState('');
+  const [editingExamDate, setEditingExamDate] = useState(false);
 
   const safeTotal = Math.max(1, totalPreguntas);
   const percentage = Math.round((aciertos / safeTotal) * 100);
   const grade = (aciertos / safeTotal) * 10;
   const wrong = Math.max(0, respondidas - aciertos);
   const errorsHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
-  const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
+  const uploadHref = buildUploadHref(
+    materiaId,
+    carreraId,
+    universidadId,
+    examEvent?.eventDate
+  );
   const ownMaterialHref = userId
     ? uploadHref
     : `/login?mode=signup&next=${encodeURIComponent(uploadHref)}`;
+  const examTimingLabel = examEvent ? getExamTimingLabel(examEvent.eventDate) : null;
 
   const previousGrade = useMemo(() => {
     if (!previousAttempt || previousAttempt.total_questions <= 0) return null;
@@ -85,6 +125,71 @@ export function SimulatorFinishedResult({
     );
     return percentage - previousPercentage;
   }, [percentage, previousAttempt]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadExamDate() {
+      if (!userId) {
+        setExamDateLoading(false);
+        return;
+      }
+
+      setExamDateLoading(true);
+      try {
+        const existing = await findSimulatorExamEvent({ userId, materiaId, parcial });
+        if (!active) return;
+        setExamEvent(existing);
+        setExamDateDraft(existing?.eventDate ?? '');
+      } catch (error) {
+        if (!active) return;
+        logError('simulatorFinishedResult.examDate', error, { materiaId, parcial });
+      } finally {
+        if (active) setExamDateLoading(false);
+      }
+    }
+
+    void loadExamDate();
+    return () => {
+      active = false;
+    };
+  }, [materiaId, parcial, userId]);
+
+  const saveExamDate = async () => {
+    if (!userId || !examDateDraft || examDateSaving) return;
+
+    setExamDateSaving(true);
+    setExamDateError('');
+    try {
+      const saved = await saveSimulatorExamEvent({
+        userId,
+        materiaId,
+        materiaNombre,
+        parcial,
+        eventDate: examDateDraft,
+        source: examEvent ? 'simulator_edit' : 'simulator_result',
+        existingEventId: examEvent?.id,
+      });
+      setExamEvent(saved);
+      setExamDateDraft(saved.eventDate);
+      setEditingExamDate(false);
+
+      void trackClientAnalyticsEvent({
+        eventName: examEvent ? 'simulator_exam_date_changed' : 'simulator_exam_date_saved',
+        userId,
+        metadata: {
+          materia_id: materiaId,
+          parcial,
+          exam_date: saved.eventDate,
+          source: 'simulator_result',
+        },
+      });
+    } catch (error) {
+      setExamDateError(error instanceof Error ? error.message : 'No pudimos guardar la fecha.');
+    } finally {
+      setExamDateSaving(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -250,6 +355,70 @@ export function SimulatorFinishedResult({
                   Subí tus apuntes y Evaluo te guía para repasar y practicar sobre el material que realmente entra en tu examen.
                 </p>
 
+                {examDateLoading ? (
+                  <p className="mt-4 text-xs font-semibold text-slate-500">Buscando la fecha de tu examen...</p>
+                ) : examEvent && !editingExamDate ? (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 ring-1 ring-blue-100">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      {examTimingLabel ? `${examTimingLabel} · ` : ''}{formatSimulatorExamDate(examEvent.eventDate)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setEditingExamDate(true)}
+                      className="text-xs font-semibold text-slate-500 underline-offset-2 hover:text-blue-700 hover:underline"
+                    >
+                      Cambiar fecha
+                    </button>
+                  </div>
+                ) : userId ? (
+                  <div className="mt-4 max-w-sm">
+                    <label className="text-xs font-bold text-slate-700">
+                      {examEvent ? 'Nueva fecha del examen' : '¿Cuándo rendís?'}
+                      <input
+                        type="date"
+                        min={getLocalDateKey()}
+                        value={examDateDraft}
+                        onChange={(event) => {
+                          setExamDateDraft(event.target.value);
+                          setExamDateError('');
+                        }}
+                        className="mt-2 h-11 w-full rounded-xl border border-blue-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      />
+                    </label>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={!examDateDraft || examDateSaving}
+                        onClick={() => void saveExamDate()}
+                        className="inline-flex min-h-9 items-center justify-center rounded-xl bg-white px-3 text-xs font-bold text-blue-700 ring-1 ring-blue-200 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {examDateSaving ? 'Guardando...' : 'Guardar fecha'}
+                      </button>
+                      {examEvent ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExamDateDraft(examEvent.eventDate);
+                            setEditingExamDate(false);
+                            setExamDateError('');
+                          }}
+                          className="text-xs font-semibold text-slate-500 hover:text-slate-800"
+                        >
+                          Cancelar
+                        </button>
+                      ) : null}
+                    </div>
+                    {examDateError ? (
+                      <p className="mt-2 text-xs font-medium text-rose-600">{examDateError}</p>
+                    ) : (
+                      <p className="mt-2 text-[11px] leading-5 text-slate-500">
+                        Si la guardás, la usamos para mantener este examen conectado con tu preparación.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
                 <TrackedLink
                   href={ownMaterialHref}
                   eventName="cta_click"
@@ -259,11 +428,12 @@ export function SimulatorFinishedResult({
                     materia_id: materiaId,
                     materia_nombre: materiaNombre || null,
                     parcial,
+                    exam_date: examEvent?.eventDate ?? null,
                     destination: ownMaterialHref,
                   }}
                   className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
                 >
-                  Subir mi PDF
+                  {examEvent ? 'Subir mi PDF para este examen' : 'Subir mi PDF'}
                   <ArrowRight className="h-4 w-4" />
                 </TrackedLink>
               </div>

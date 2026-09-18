@@ -10,7 +10,6 @@ import {
   hasCompleteAcademicProfile,
   isPdfFirstActivationPath,
 } from '@/lib/profile-completion';
-import { DEMO_MIGRATION_FLAG_KEY } from '@/lib/simulator-persistence';
 import { supabase } from '@/lib/supabase-client';
 
 function sanitizeNextPath(value: string | null) {
@@ -131,11 +130,8 @@ function CompletarPerfilContent() {
         isOpen={true}
         allowSkip={false}
         onComplete={() => {
-          const cameFromDemo =
-            typeof window !== 'undefined' &&
-            window.localStorage.getItem(DEMO_MIGRATION_FLAG_KEY) === '1';
           const completionDestination = nextPath === '/dashboard' ? '/empezar' : nextPath;
-          router.replace(cameFromDemo ? '/dashboard' : completionDestination);
+          router.replace(completionDestination);
           router.refresh();
         }}
       />
