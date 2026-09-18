@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import {
   ArrowRight,
   BookOpenText,
@@ -122,8 +121,6 @@ function ErrorRow({
 }
 
 export default async function MisErroresPreviewPage({ searchParams }: PageProps) {
-  if (process.env.VERCEL_ENV !== 'preview') notFound();
-
   const params = (await searchParams) ?? {};
   const hasPdf = params.estado === 'con-pdf';
 
