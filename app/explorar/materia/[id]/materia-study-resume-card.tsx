@@ -6,8 +6,10 @@ import { ArrowRight, RotateCcw } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 import { readRecentResources } from '@/lib/dashboard-client';
 import { listPersistedSimulatorStates } from '@/lib/simulator-persistence';
-import { getSimulatorRoute } from '@/lib/routes';
+import { getSimulatorRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { trackMateriaAnalyticsEvent } from '@/lib/materia-analytics';
+import { supabase } from '@/lib/supabase-client';
+import { logError } from '@/lib/observability';
 
 type ResumeItem = {
   href: string;
@@ -43,69 +45,127 @@ export function MateriaStudyResumeCard({
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      setResumeItem(null);
-      setLoaded(true);
-      return;
-    }
+    let active = true;
 
-    const simulatorState = listPersistedSimulatorStates(user.id)
-      .filter(
-        (state) =>
-          state.materiaId === materiaId &&
-          state.mode === 'regular' &&
-          state.hasStarted &&
-          state.preguntas.length > 0
-      )
-      .sort((a, b) => toTimestamp(b.savedAt) - toTimestamp(a.savedAt))[0];
+    async function loadResume() {
+      if (!user) {
+        if (active) {
+          setResumeItem(null);
+          setLoaded(true);
+        }
+        return;
+      }
 
-    const recentResource = readRecentResources()
-      .filter((resource) => resource.subjectId === materiaId && Boolean(resource.href))
-      .sort((a, b) => toTimestamp(b.openedAt) - toTimestamp(a.openedAt))[0];
+      setLoaded(false);
 
-    const simulatorTimestamp = toTimestamp(simulatorState?.savedAt);
-    const resourceTimestamp = toTimestamp(recentResource?.openedAt);
+      try {
+        const { data: ownMaterial, error: ownMaterialError } = await supabase
+          .from('student_materials')
+          .select('id, title, created_at, updated_at')
+          .eq('user_id', user.id)
+          .eq('materia_id', materiaId)
+          .eq('processing_status', 'ready')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-    if (simulatorState && simulatorTimestamp >= resourceTimestamp) {
-      const total = Math.max(1, simulatorState.preguntas.length);
-      const answered = Math.min(total, Object.keys(simulatorState.selectedAnswers ?? {}).length);
-      const progress = Math.round((answered / total) * 100);
-      const parcialLabel =
-        simulatorState.parcial === 3 ? 'Integrador' : `Parcial ${simulatorState.parcial}`;
+        if (!active) return;
 
-      setResumeItem({
-        href: getSimulatorRoute(
+        if (ownMaterialError) {
+          logError('materiaStudyResume.ownMaterial', ownMaterialError, {
+            userId: user.id,
+            materiaId,
+          });
+        } else if (ownMaterial) {
+          setResumeItem({
+            href: getStudentMaterialRoute(ownMaterial.id),
+            eyebrow: 'Tu PDF',
+            title: ownMaterial.title,
+            description: `Seguí estudiando ${materiaNombre} sobre tu propio material.`,
+            cta: 'Continuar con mi PDF',
+            savedAt: ownMaterial.updated_at || ownMaterial.created_at,
+          });
+          setLoaded(true);
+          return;
+        }
+      } catch (error) {
+        if (!active) return;
+        logError('materiaStudyResume.loadOwnMaterial', error, {
+          userId: user.id,
           materiaId,
-          simulatorState.parcial,
-          universidadId,
-          carreraId
-        ),
-        eyebrow: 'Preguntero en curso',
-        title: `${parcialLabel} de ${materiaNombre}`,
-        description: `Llevás ${answered} de ${total} preguntas respondidas. Podés retomar exactamente desde tu intento guardado.`,
-        cta: 'Continuar preguntero',
-        savedAt: simulatorState.savedAt,
-        progress,
-      });
-      setLoaded(true);
-      return;
+        });
+      }
+
+      const simulatorState = listPersistedSimulatorStates(user.id)
+        .filter(
+          (state) =>
+            state.materiaId === materiaId &&
+            state.mode === 'regular' &&
+            state.hasStarted &&
+            state.preguntas.length > 0
+        )
+        .sort((a, b) => toTimestamp(b.savedAt) - toTimestamp(a.savedAt))[0];
+
+      const recentResource = readRecentResources()
+        .filter((resource) => resource.subjectId === materiaId && Boolean(resource.href))
+        .sort((a, b) => toTimestamp(b.openedAt) - toTimestamp(a.openedAt))[0];
+
+      const simulatorTimestamp = toTimestamp(simulatorState?.savedAt);
+      const resourceTimestamp = toTimestamp(recentResource?.openedAt);
+
+      if (simulatorState && simulatorTimestamp >= resourceTimestamp) {
+        const total = Math.max(1, simulatorState.preguntas.length);
+        const answered = Math.min(total, Object.keys(simulatorState.selectedAnswers ?? {}).length);
+        const progress = Math.round((answered / total) * 100);
+        const parcialLabel =
+          simulatorState.parcial === 3 ? 'Integrador' : `Parcial ${simulatorState.parcial}`;
+
+        if (active) {
+          setResumeItem({
+            href: getSimulatorRoute(
+              materiaId,
+              simulatorState.parcial,
+              universidadId,
+              carreraId
+            ),
+            eyebrow: 'Preguntero en curso',
+            title: `${parcialLabel} de ${materiaNombre}`,
+            description: `Llevás ${answered} de ${total} preguntas respondidas. Podés retomar exactamente desde tu intento guardado.`,
+            cta: 'Continuar preguntero',
+            savedAt: simulatorState.savedAt,
+            progress,
+          });
+          setLoaded(true);
+        }
+        return;
+      }
+
+      if (recentResource?.href) {
+        if (active) {
+          setResumeItem({
+            href: recentResource.href,
+            eyebrow: 'Material público reciente',
+            title: recentResource.title,
+            description: `Volvé al ${recentResource.type.toLowerCase()} que estabas consultando para ${materiaNombre}.`,
+            cta: 'Volver al recurso',
+            savedAt: recentResource.openedAt,
+          });
+          setLoaded(true);
+        }
+        return;
+      }
+
+      if (active) {
+        setResumeItem(null);
+        setLoaded(true);
+      }
     }
 
-    if (recentResource?.href) {
-      setResumeItem({
-        href: recentResource.href,
-        eyebrow: 'Último material abierto',
-        title: recentResource.title,
-        description: `Volvé al ${recentResource.type.toLowerCase()} que estabas usando para estudiar ${materiaNombre}.`,
-        cta: 'Continuar estudiando',
-        savedAt: recentResource.openedAt,
-      });
-      setLoaded(true);
-      return;
-    }
+    void loadResume();
 
-    setResumeItem(null);
-    setLoaded(true);
+    return () => {
+      active = false;
+    };
   }, [carreraId, materiaId, materiaNombre, universidadId, user]);
 
   const track = (action: string) => {
