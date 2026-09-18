@@ -6,14 +6,11 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   BookOpen,
-  BookOpenText,
-  BrainCircuit,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   FileText,
   GraduationCap,
-  Layers3,
   Share2,
   Star,
   UploadCloud,
@@ -54,13 +51,6 @@ interface MateriaStudyHomeProps {
   sharedStudentMaterials?: SharedStudentMaterial[];
   questionCounts: QuestionCounts;
 }
-
-const STUDY_OUTPUTS = [
-  { label: 'Resumen', icon: BookOpenText },
-  { label: 'Glosario', icon: BookOpen },
-  { label: 'Tarjetas', icon: Layers3 },
-  { label: 'Ejercicios', icon: BrainCircuit },
-] as const;
 
 const PRACTICE_OPTIONS = [
   { parcial: 1 as const, label: 'Parcial 1', shortLabel: 'P1' },
@@ -369,44 +359,35 @@ export default function MateriaStudyHome({
           uploadHref={uploadHref}
         />
 
-        <section className="grid gap-4 lg:grid-cols-2 lg:gap-5" aria-label="Acciones principales">
+        <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr] lg:gap-5" aria-label="Acciones principales">
           <Link
             href={uploadHref}
             onClick={() =>
               trackAction('materia_upload_notes_clicked', { source: 'materia_action_card' })
             }
-            className="group relative overflow-hidden rounded-[24px] border border-[#D8E5FF] bg-[linear-gradient(145deg,#F8FBFF_0%,#EEF4FF_100%)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#AFC8FF] hover:shadow-[0_18px_44px_rgba(37,99,235,0.10)] sm:p-6"
+            className="group relative overflow-hidden rounded-[24px] border border-[#BFD3FF] bg-[linear-gradient(145deg,#F8FBFF_0%,#EAF2FF_100%)] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#8FB4FF] hover:shadow-[0_18px_44px_rgba(37,99,235,0.12)] sm:p-7"
           >
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-white text-[#2563EB] shadow-[0_10px_25px_rgba(37,99,235,0.10)]">
                 <UploadCloud className="h-7 w-7" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-2xl">
-                  Preparar mis apuntes
+                <p className="text-[11px] font-bold tracking-[0.14em] text-[#2563EB] uppercase">
+                  Estudiá con tu material
+                </p>
+                <h2 className="mt-1.5 text-xl font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.7rem]">
+                  Prepará {nombre} con tu propio PDF
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  Subí un PDF de esta materia y Evaluo lo convierte en resumen, glosario, tarjetas y
-                  ejercicios.
+                  Subí lo que realmente entra en tu examen y Evaluo te guía para repasar, practicar
+                  y reforzar lo que todavía te cuesta.
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {STUDY_OUTPUTS.map(({ label, icon: Icon }) => (
-                <div
-                  key={label}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#DCE7FA] bg-white/85 px-2.5 py-2 text-[12px] font-semibold text-slate-600"
-                >
-                  <Icon className="h-3.5 w-3.5 text-[#2563EB]" />
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-primary hover:bg-primary/90 mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition sm:w-auto">
+            <div className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold text-white shadow-[var(--shadow-card)] transition sm:w-auto">
               <UploadCloud className="h-4 w-4" />
-              Preparar mis apuntes
+              Subir mi PDF
             </div>
           </Link>
 
@@ -539,18 +520,18 @@ export default function MateriaStudyHome({
         <section className="space-y-4" aria-labelledby="contenido-materia-title">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[12px] font-semibold tracking-[0.12em] text-[#2563EB] uppercase">
-                Biblioteca compartida
+              <p className="text-[12px] font-semibold tracking-[0.12em] text-slate-500 uppercase">
+                Material público de referencia
               </p>
               <h2
                 id="contenido-materia-title"
                 className="mt-1 text-[1.55rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-[2rem]"
               >
-                Materiales de {nombre}
+                Recursos compartidos de {nombre}
               </h2>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                Apuntes completos preparados en Evaluo y resúmenes compartidos para estudiar esta
-                materia.
+                Podés consultarlos como referencia. Para estudiar lo que realmente entra en tu
+                examen, usá tu propio PDF.
               </p>
             </div>
             <Link
@@ -558,7 +539,7 @@ export default function MateriaStudyHome({
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#AFC8FF] hover:text-[#2563EB]"
             >
               <UploadCloud className="h-4 w-4" />
-              Aportar un apunte
+              Estudiar con mi PDF
             </Link>
           </div>
 
@@ -661,22 +642,16 @@ export default function MateriaStudyHome({
                 Todavía no hay contenido compartido
               </h3>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-                Podés convertir tus apuntes en una guía privada o compartirlos con la materia.
-                También podés ver un ejemplo antes de registrarte.
+                Podés empezar igual con tus propios apuntes y estudiar directamente sobre el
+                material que te dieron para el examen.
               </p>
-              <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+              <div className="mt-5 flex justify-center">
                 <Link
                   href={uploadHref}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
                 >
                   <UploadCloud className="h-4 w-4" />
-                  Crear guía con mi PDF
-                </Link>
-                <Link
-                  href="/demo/material-estudio"
-                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
-                >
-                  Ver una guía de ejemplo
+                  Estudiar con mi PDF
                 </Link>
               </div>
             </div>
