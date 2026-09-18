@@ -4,16 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   RotateCcw,
   Sparkles,
   TrendingUp,
-  UploadCloud,
 } from 'lucide-react';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { supabase } from '@/lib/supabase-client';
-import { getMateriaRoute } from '@/lib/routes';
 import { logError } from '@/lib/observability';
 
 type PreviousAttempt = {
@@ -65,13 +62,11 @@ export function SimulatorFinishedResult({
 }: SimulatorFinishedResultProps) {
   const [previousAttempt, setPreviousAttempt] = useState<PreviousAttempt | null>(null);
   const [comparisonReady, setComparisonReady] = useState(false);
-  const [hasMaterial, setHasMaterial] = useState<boolean | null>(null);
 
   const safeTotal = Math.max(1, totalPreguntas);
   const percentage = Math.round((aciertos / safeTotal) * 100);
   const grade = (aciertos / safeTotal) * 10;
   const wrong = Math.max(0, respondidas - aciertos);
-  const materiaHref = getMateriaRoute(materiaId, carreraId);
   const errorsHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
   const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
   const ownMaterialHref = userId
@@ -115,18 +110,7 @@ export function SimulatorFinishedResult({
             })()
           : Promise.resolve({ data: [] as PreviousAttempt[], error: null });
 
-        const [attemptsResult, sharedMaterialsResult, resourcesResult] = await Promise.all([
-          attemptsPromise,
-          supabase
-            .from('student_materials')
-            .select('id', { count: 'exact', head: true })
-            .eq('materia_id', materiaId)
-            .eq('processing_status', 'ready'),
-          supabase
-            .from('recursos')
-            .select('id', { count: 'exact', head: true })
-            .eq('materia_id', materiaId),
-        ]);
+        const attemptsResult = await attemptsPromise;
 
         if (!active) return;
 
@@ -141,14 +125,10 @@ export function SimulatorFinishedResult({
         }
         setComparisonReady(true);
 
-        const sharedCount = sharedMaterialsResult.count ?? 0;
-        const resourcesCount = resourcesResult.count ?? 0;
-        setHasMaterial(sharedCount + resourcesCount > 0);
       } catch (error) {
         if (!active) return;
         logError('simulatorFinishedResult.loadContext', error, { materiaId, parcial });
         setComparisonReady(true);
-        setHasMaterial(false);
       }
     }
 
@@ -252,66 +232,40 @@ export function SimulatorFinishedResult({
                 )}
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm">
-                <Link href={materiaHref} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-indigo-700">
-                  <BookOpen className="h-4 w-4" />
-                  Volver a la materia
-                </Link>
-                {wrong > 0 ? (
-                  <button type="button" onClick={onNewExam} className="inline-flex items-center gap-2 font-semibold text-slate-500 transition hover:text-indigo-700">
+              {wrong > 0 ? (
+                <div className="mt-5">
+                  <button type="button" onClick={onNewExam} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-700">
                     <RotateCcw className="h-4 w-4" />
                     Hacer otro Simulador
                   </button>
-                ) : null}
-              </div>
-
-              {hasMaterial === null ? (
-                <p className="mt-7 border-t border-slate-200 pt-6 text-sm text-slate-500">Buscando material disponible...</p>
-              ) : hasMaterial ? (
-                <div className="mt-7 border-t border-slate-200 pt-6">
-                  <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">Para reforzar antes de volver</p>
-                  <div className="mt-3 flex items-start gap-3">
-                    <BookOpen className="mt-0.5 h-5 w-5 shrink-0 text-[#5D65F6]" />
-                    <div>
-                      <h3 className="text-base font-bold tracking-[-0.025em] text-slate-950">Hay material disponible de esta materia</h3>
-                      <p className="mt-1.5 text-sm leading-6 text-slate-600">Revisá resúmenes y recursos compartidos si necesitás reforzar un tema puntual.</p>
-                      <Link href={materiaHref} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5] transition hover:text-[#4338CA]">
-                        Ver material de la materia
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </div>
-                  </div>
                 </div>
               ) : null}
 
-              <div className="mt-7 overflow-hidden rounded-[22px] border border-blue-200 bg-[linear-gradient(135deg,#EFF6FF_0%,#FFFFFF_48%,#EEF2FF_100%)] p-4 shadow-[0_14px_34px_rgba(37,99,235,0.08)] sm:p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-[#2563EB] text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)]"><UploadCloud className="h-5 w-5" /></span>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold tracking-[0.14em] text-blue-600 uppercase">Estudiá con tus apuntes</p>
-                      <h3 className="mt-1 text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">Prepará {materiaNombre || 'esta materia'} desde tu propio PDF</h3>
-                      <p className="mt-1.5 max-w-xl text-[13px] leading-5 text-slate-600">Evaluo te prepara resumen, glosario, tarjetas y práctica sobre tu propio material.</p>
-                    </div>
-                  </div>
+              <div className="mt-7 border-t border-slate-200 pt-6">
+                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">Seguí estudiando con tus apuntes</p>
+                <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                  Prepará {materiaNombre || 'esta materia'} con tu propio PDF
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                  Subí tus apuntes y Evaluo te guía para repasar y practicar sobre el material que realmente entra en tu examen.
+                </p>
 
-                  <TrackedLink
-                    href={ownMaterialHref}
-                    eventName="cta_click"
-                    payload={{
-                      location: 'simulator_result_pdf_activation',
-                      cta_name: 'upload_own_pdf_after_simulator',
-                      materia_id: materiaId,
-                      materia_nombre: materiaNombre || null,
-                      parcial,
-                      destination: ownMaterialHref,
-                    }}
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
-                  >
-                    Subir mi PDF
-                    <ArrowRight className="h-4 w-4" />
-                  </TrackedLink>
-                </div>
+                <TrackedLink
+                  href={ownMaterialHref}
+                  eventName="cta_click"
+                  payload={{
+                    location: 'simulator_result_pdf_activation',
+                    cta_name: 'upload_own_pdf_after_simulator',
+                    materia_id: materiaId,
+                    materia_nombre: materiaNombre || null,
+                    parcial,
+                    destination: ownMaterialHref,
+                  }}
+                  className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
+                >
+                  Subir mi PDF
+                  <ArrowRight className="h-4 w-4" />
+                </TrackedLink>
               </div>
             </div>
           </div>
