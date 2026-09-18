@@ -91,6 +91,7 @@ export function PdfFirstUploadShell({
   const [savingContext, setSavingContext] = useState(false);
   const [contextSaved, setContextSaved] = useState(false);
   const [savedContextLabel, setSavedContextLabel] = useState('');
+  const [showReadyContext, setShowReadyContext] = useState(false);
 
   const selectedUniversity = universidades.find((item) => item.id === universityId) ?? null;
   const availableCareers = useMemo(
@@ -153,6 +154,7 @@ export function PdfFirstUploadShell({
     setSavingContext(false);
     setContextSaved(false);
     setSavedContextLabel('');
+    setShowReadyContext(false);
   }, [initialCarreraId, initialExamDate, initialUniversidadId]);
 
   const close = useCallback(() => {
@@ -287,6 +289,7 @@ export function PdfFirstUploadShell({
       [result.context.universidadNombre, result.context.carreraNombre].filter(Boolean).join(' · ')
     );
     setSavingContext(false);
+    if (ready) setShowReadyContext(false);
     router.refresh();
   };
 
@@ -297,9 +300,20 @@ export function PdfFirstUploadShell({
     router.refresh();
   };
 
+  const openDiagnostic = () => {
+    if (!processing || !ready) return;
+    setOpen(false);
+    router.push(`${getStudentMaterialRoute(processing.materialId)}?diagnostico=1`);
+    router.refresh();
+  };
+
   /** Skip never blocks upload or studying: ready → open material; otherwise close + refresh library. */
   const skipContext = () => {
     if (!processing) return;
+    if (ready && showReadyContext) {
+      setShowReadyContext(false);
+      return;
+    }
     if (ready) {
       openMaterial();
       return;
@@ -336,9 +350,7 @@ export function PdfFirstUploadShell({
                 <p className="mt-1 text-sm leading-6 text-slate-500">
                   {processing
                     ? ready
-                      ? contextSaved
-                        ? 'Terminamos de preparar tu material.'
-                        : 'Listo. Si querés, contanos universidad y carrera — o saltá.'
+                      ? 'Terminamos de preparar tu material.'
                       : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
                     : 'Elegí el archivo y poné un nombre. La fecha de examen es opcional.'}
                 </p>
@@ -451,7 +463,38 @@ export function PdfFirstUploadShell({
                   <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
                 </div>
 
-                {!failed ? (
+                {ready && !showReadyContext ? (
+                  <>
+                    <p className="mt-5 text-sm leading-6 text-slate-600">
+                      Antes de empezar, respondé unas preguntas rápidas para saber qué ya dominás y qué conviene repasar.
+                    </p>
+                    <p className="mt-2 text-xs text-slate-400">6 preguntas · ~4 min</p>
+                    {contextSaved ? (
+                      <p className="mt-4 text-xs font-medium text-emerald-700">Guardado · {savedContextLabel}</p>
+                    ) : null}
+
+                    <div className="mt-6 flex items-center justify-end gap-2">
+                      <Button type="button" variant="ghost" onClick={openMaterial}>
+                        Abrir PDF
+                      </Button>
+                      <Button type="button" onClick={openDiagnostic}>
+                        Ver qué tanto sé
+                      </Button>
+                    </div>
+
+                    {!contextSaved ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowReadyContext(true)}
+                        className="mt-3 w-full text-center text-xs font-semibold text-slate-400 transition hover:text-slate-600"
+                      >
+                        Agregar universidad y carrera
+                      </button>
+                    ) : null}
+                  </>
+                ) : null}
+
+                {!failed && (!ready || showReadyContext) ? (
                   <>
                     {!contextSaved ? (
                       <div className="mt-5 space-y-4">
@@ -614,11 +657,11 @@ export function PdfFirstUploadShell({
                       ) : null}
                     </div>
                   </>
-                ) : (
+                ) : failed ? (
                   <div className="mt-6 flex justify-end">
                     <Button type="button" variant="outline" onClick={close}>Cerrar</Button>
                   </div>
-                )}
+                ) : null}
               </div>
             )}
           </section>
