@@ -40,6 +40,7 @@ import { ExamTimer, formatTime } from '@/components/simulador/ExamTimer';
 import { QuestionOptionButton } from '@/components/simulador/QuestionOptionButton';
 import { QuestionMap } from '@/components/simulador/QuestionMap';
 import { SimulatorLoginGate } from '@/components/simulador/SimulatorLoginGate';
+import { SimulatorIntro } from '@/components/simulador/SimulatorIntro';
 import {
   SimulatorNeedsSurvey,
   type SimulatorNeedsReason,
@@ -51,7 +52,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { useUser } from '@/hooks/useUser';
 import { usePremium } from '@/hooks/usePremium';
 import { buildShareReferralUrl, createShareTrackingId } from '@/lib/attribution';
-import { getMateriaRoute } from '@/lib/routes';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import {
   trackSimulatorAbandonEvent,
@@ -76,6 +76,14 @@ import {
 } from '@/lib/simulator-core';
 import { DEMO_LOGIN_GATE_TOTAL_QUESTIONS, DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
 import { logError } from '@/lib/observability';
+import {
+  clearPendingSimulatorExamDate,
+  findSimulatorExamEvent,
+  getLocalDateKey,
+  readPendingSimulatorExamDate,
+  saveSimulatorExamEvent,
+  writePendingSimulatorExamDate,
+} from '@/lib/simulator-exam-date';
 import { supabase } from '@/lib/supabase-client';
 import { cn } from '@/lib/utils';
 import {
@@ -86,7 +94,6 @@ import {
   Clock3,
   LogOut,
   RefreshCcw,
-  BookOpen,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -476,6 +483,9 @@ export default function SimuladorExamen({
   const [showResultsFace, setShowResultsFace] = useState(false);
   const [isMobileResults, setIsMobileResults] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [examDateDraft, setExamDateDraft] = useState('');
+  const [examEventId, setExamEventId] = useState<string | null>(null);
+  const [examDateSaving, setExamDateSaving] = useState(false);
   const [showSimulatorTour, setShowSimulatorTour] = useState(false);
   const [simulatorTourStepIndex, setSimulatorTourStepIndex] = useState(0);
   const [simulatorTourDirection, setSimulatorTourDirection] =
@@ -1142,6 +1152,71 @@ export default function SimuladorExamen({
     media.addEventListener('change', syncViewport);
     return () => media.removeEventListener('change', syncViewport);
   }, []);
+
+  useEffect(() => {
+    const pending = readPendingSimulatorExamDate(materiaId, parcial);
+    if (pending) setExamDateDraft(pending);
+  }, [materiaId, parcial]);
+
+  useEffect(() => {
+    if (!userId || !materiaNombre || mode !== 'regular') return;
+
+    const currentUserId = userId;
+    const currentMateriaNombre = materiaNombre;
+    let active = true;
+
+    async function syncExamDateContext() {
+      try {
+        const pending = readPendingSimulatorExamDate(materiaId, parcial);
+        const existing = await findSimulatorExamEvent({
+          userId: currentUserId,
+          materiaId,
+          parcial,
+        });
+        if (!active) return;
+
+        if (pending) {
+          const saved = await saveSimulatorExamEvent({
+            userId: currentUserId,
+            materiaId,
+            materiaNombre: currentMateriaNombre,
+            parcial,
+            eventDate: pending,
+            source: 'simulator_intro',
+            existingEventId: existing?.id,
+          });
+          if (!active) return;
+          setExamEventId(saved.id);
+          setExamDateDraft(saved.eventDate);
+          clearPendingSimulatorExamDate(materiaId, parcial);
+          trackMarketingEvent('simulator_exam_date_saved', {
+            location: 'simulator_intro',
+            materia_id: materiaId,
+            parcial,
+            exam_date: saved.eventDate,
+            source: 'pending_after_auth',
+          });
+          return;
+        }
+
+        if (existing) {
+          setExamEventId(existing.id);
+          setExamDateDraft(existing.eventDate);
+        }
+      } catch (error) {
+        logError('simulador.examDate.sync', error, {
+          materiaId,
+          parcial,
+          userId: currentUserId,
+        });
+      }
+    }
+
+    void syncExamDateContext();
+    return () => {
+      active = false;
+    };
+  }, [materiaId, materiaNombre, mode, parcial, userId]);
 
   useEffect(() => {
     async function inicializar() {
@@ -2571,62 +2646,79 @@ export default function SimuladorExamen({
   const isDemoCheckpointQuestion = resolvedDemoMode && currentQuestionIndex === demoCheckpointIndex;
 
   if (estado === 'playing' && !hasStarted) {
-    const returnToMateriaHref = getMateriaRoute(materiaId, carreraId);
+    const handleStartPractice = async () => {
+      if (examDateSaving) return;
+
+      if (examDateDraft) {
+        if (userId) {
+          setExamDateSaving(true);
+          try {
+            const saved = await saveSimulatorExamEvent({
+              userId,
+              materiaId,
+              materiaNombre,
+              parcial,
+              eventDate: examDateDraft,
+              source: 'simulator_intro',
+              existingEventId: examEventId,
+            });
+            setExamEventId(saved.id);
+            setExamDateDraft(saved.eventDate);
+            clearPendingSimulatorExamDate(materiaId, parcial);
+            trackMarketingEvent('simulator_exam_date_saved', {
+              location: 'simulator_intro',
+              materia_id: materiaId,
+              parcial,
+              exam_date: saved.eventDate,
+              source: 'start_authenticated',
+            });
+          } catch (error) {
+            // La fecha suma contexto, pero nunca debe impedir practicar.
+            logError('simulador.examDate.saveOnStart', error, {
+              materiaId,
+              parcial,
+              userId,
+            });
+          } finally {
+            setExamDateSaving(false);
+          }
+        } else {
+          writePendingSimulatorExamDate(materiaId, parcial, examDateDraft);
+          trackMarketingEvent('simulator_exam_date_captured', {
+            location: 'simulator_intro',
+            materia_id: materiaId,
+            parcial,
+            exam_date: examDateDraft,
+            auth_state: 'anonymous',
+          });
+        }
+      } else if (!userId) {
+        clearPendingSimulatorExamDate(materiaId, parcial);
+      }
+
+      simulatorLifecycleRef.current.outcomeTracked = false;
+      setHasStarted(true);
+      persistSimulatorSnapshot({ hasStarted: true });
+      void emitSimulatorEvent('simulator_started', {
+        questionIndex: 1,
+        answered: 0,
+        progress: 0,
+        timeLeft: examDurationSeconds,
+      });
+    };
 
     return (
-      <div className="flex min-h-[600px] items-center justify-center bg-white p-6">
-        <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <h2 className="text-2xl font-extrabold text-slate-900">
-            {`Antes de comenzar el Preguntero de ${materiaNombre || `Materia ${materiaId}`}`}
-          </h2>
-          <p className="mt-3 text-lg leading-7 font-medium text-slate-700">
-            Practicá tu parcial, descubrí qué necesitás reforzar y entendé por qué te equivocaste.
-          </p>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Cada intento combina preguntas disponibles para ofrecerte una práctica diferente y una
-            evaluación más completa de tu preparación.
-          </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
-              <p className="text-xs text-slate-500">Preguntas</p>
-              <p className="font-bold text-slate-900">{preguntasDisponibles}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
-              <p className="text-xs text-slate-500">Tiempo</p>
-              <p className="font-bold text-slate-900">{formatTime(examDurationSeconds)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
-              <p className="text-xs text-slate-500">Parcial</p>
-              <p className="font-bold text-slate-900">{getParcialLabel(parcial)}</p>
-            </div>
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Button
-              onClick={() => {
-                simulatorLifecycleRef.current.outcomeTracked = false;
-                setHasStarted(true);
-                persistSimulatorSnapshot({ hasStarted: true });
-                void emitSimulatorEvent('simulator_started', {
-                  questionIndex: 1,
-                  answered: 0,
-                  progress: 0,
-                  timeLeft: examDurationSeconds,
-                });
-              }}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
-            >
-              Comenzar práctica
-            </Button>
-            <Link
-              href={returnToMateriaHref}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-            >
-              <BookOpen className="h-4 w-4 text-[#4F5DFF]" />
-              Ver resúmenes y material de la materia
-            </Link>
-          </div>
-        </Card>
-      </div>
+      <SimulatorIntro
+        materiaNombre={materiaNombre || `Materia ${materiaId}`}
+        parcialLabel={getParcialLabel(parcial)}
+        preguntasDisponibles={preguntasDisponibles}
+        tiempoLabel={formatTime(examDurationSeconds)}
+        examDate={examDateDraft}
+        minExamDate={getLocalDateKey()}
+        onExamDateChange={setExamDateDraft}
+        onStart={handleStartPractice}
+        starting={examDateSaving}
+      />
     );
   }
 

@@ -86,7 +86,6 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
   const { label } = parcialToPreguntaFilter(data.parcial);
   const canonicalHref = buildParcialHref(data.materiaNombre, data.materiaId, data.parcial);
   const pregunteroHref = `/pregunteros/${MATERIA_SLUG}`;
-  const materiaHref = `/explorar/materia/${MATERIA_SLUG}`;
   const simuladorHref = appendPregunteroAttribution(
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
     resolvedSearchParams
@@ -225,16 +224,11 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
         </section>
 
         <section className="mx-auto w-full max-w-[1160px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="grid min-w-0 gap-4 md:grid-cols-3">
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
             <Link href={pregunteroHref} className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30">
               <ListChecks className="h-5 w-5 text-indigo-600" aria-hidden="true" />
               <p className="mt-3 text-sm font-bold text-slate-950">Preguntero completo</p>
               <p className="mt-1 text-xs leading-5 text-slate-500 [overflow-wrap:anywhere]">Volvé a todas las preguntas de {data.materiaNombre}.</p>
-            </Link>
-            <Link href={materiaHref} className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30">
-              <BookOpen className="h-5 w-5 text-indigo-600" aria-hidden="true" />
-              <p className="mt-3 text-sm font-bold text-slate-950">Ver la materia</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">Entrá al contexto completo de Derecho Sucesorio.</p>
             </Link>
             <Link href={simuladorHref} className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30">
               <Target className="h-5 w-5 text-indigo-600" aria-hidden="true" />
