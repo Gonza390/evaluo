@@ -5,10 +5,11 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/como-estudiar-ingreso-unlam';
-const reviewedAt = '2026-09-18';
+const publishedAt = '2026-09-17';
+const modifiedAt = '2026-09-18';
 
 export const metadata: Metadata = {
-  title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
+  title: 'Cómo estudiar para el ingreso UNLaM 2027',
   description:
     'Guía para preparar el ingreso UNLaM 2027: cómo organizar el manual, estudiar las materias y practicar para los exámenes del Curso de Ingreso.',
   alternates: { canonical: toAbsoluteUrl(path) },
@@ -35,8 +36,8 @@ export default function ComoEstudiarIngresoUnlamPage() {
     headline: 'Cómo estudiar para el Curso de Ingreso UNLaM 2027',
     description:
       'Guía práctica para preparar el Curso de Ingreso de la Universidad Nacional de La Matanza usando el material oficial como fuente de estudio.',
-    datePublished: reviewedAt,
-    dateModified: reviewedAt,
+    datePublished: publishedAt,
+    dateModified: modifiedAt,
     inLanguage: 'es-AR',
     author: { '@type': 'Organization', name: 'Evaluo' },
     publisher: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
