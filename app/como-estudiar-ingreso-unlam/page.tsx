@@ -5,26 +5,26 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/como-estudiar-ingreso-unlam';
-const reviewedAt = '2026-09-17';
+const reviewedAt = '2026-09-18';
 
 export const metadata: Metadata = {
-  title: 'Cómo estudiar para el Curso de Ingreso UNLaM 2027',
+  title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
   description:
-    'Guía para preparar el Curso de Ingreso UNLaM 2027: cómo organizar el manual, estudiar las materias, practicar para los exámenes y repasar mejor.',
+    'Guía para preparar el ingreso UNLaM 2027: cómo organizar el manual, estudiar las materias y practicar para los exámenes del Curso de Ingreso.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'article',
-    title: 'Cómo estudiar para el Curso de Ingreso UNLaM 2027 | Evaluo',
+    title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
     description:
-      'Método práctico para estudiar el material del ingreso UNLaM 2027, organizar temas, repasar y llegar mejor preparado a las evaluaciones.',
+      'Método práctico para preparar el Curso de Ingreso UNLaM 2027: organizá el material, practicá y repasá los temas que todavía cuestan.',
     url: toAbsoluteUrl(path),
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cómo estudiar para el Curso de Ingreso UNLaM 2027 | Evaluo',
+    title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
     description:
-      'Guía práctica para organizar el material del ingreso UNLaM, estudiar las materias y preparar las evaluaciones.',
+      'Guía práctica para organizar el material del ingreso UNLaM 2027 y preparar los exámenes del Curso de Ingreso.',
   },
 };
 
