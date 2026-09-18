@@ -39,9 +39,6 @@ export function MaeveStudySpace({
   initialExamDate = '',
   initialOpen = false,
 }: MaeveStudySpaceProps) {
-  const sharedMaterialsCount = materials.filter((material) => material.visibility === 'shared')
-    .length;
-
   return (
     <PdfFirstUploadShell
       universidades={universidades}
@@ -56,8 +53,6 @@ export function MaeveStudySpace({
     >
       <MaeveDashboardChrome
         materialsCount={materials.length}
-        sharedMaterialsCount={sharedMaterialsCount}
-        initialCarreraId={initialCarreraId}
       >
         <StudentMaterialsWorkspace
           initialMaterials={materials}
