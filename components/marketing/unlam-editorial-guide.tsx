@@ -7,7 +7,6 @@ import {
   Clock3,
   ExternalLink,
   FileText,
-  GraduationCap,
   Lightbulb,
   ListChecks,
   NotebookPen,
@@ -74,7 +73,7 @@ export function UnlamEditorialGuide() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-white text-slate-950 selection:bg-[#d9b8a8] selection:text-slate-950">
+    <div className="min-h-screen bg-white text-slate-950 selection:bg-indigo-100 selection:text-indigo-900">
       <MarketingAnalyticsSlot />
 
       <div className="border-b border-slate-100 bg-white">
@@ -117,7 +116,7 @@ export function UnlamEditorialGuide() {
                 <p className="text-[11px] font-black uppercase tracking-[0.17em] text-indigo-700">Segunda instancia 2027</p>
               </div>
               <h2 className="mt-4 font-serif text-3xl font-semibold leading-tight">Las fechas que importan</h2>
-              <dl className="mt-7 divide-y divide-[#17201b]/12 border-y border-slate-200">
+              <dl className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
                 {[
                   ['Preinscripción', '28 sep. – 26 oct. 2026'],
                   ['Documentación', '5 – 26 oct. 2026'],
@@ -294,7 +293,7 @@ export function UnlamEditorialGuide() {
                 </section>
               </div>
 
-              <section id="evaluo" className="scroll-mt-8 my-16 -mx-4 overflow-hidden bg-[#111827] text-white sm:-mx-8 lg:-mx-16">
+              <section id="evaluo" className="scroll-mt-8 my-16 -mx-4 overflow-hidden bg-[#050B2C] text-white sm:-mx-8 lg:-mx-16">
                 <div className="grid lg:grid-cols-[0.86fr_1.14fr]">
                   <div className="px-4 py-12 sm:px-8 lg:px-12 lg:py-16">
                     <div className="inline-flex items-center gap-2 rounded-full border border-indigo-300/20 bg-indigo-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-indigo-200">
@@ -341,8 +340,8 @@ export function UnlamEditorialGuide() {
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 bg-[#0b1020] p-4 sm:p-7 lg:border-t-0 lg:border-l lg:p-10">
-                    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[#f7f8fc] text-slate-900 shadow-[0_28px_70px_rgba(0,0,0,0.3)]">
+                  <div className="border-t border-white/10 bg-[#0f1b3d] p-4 sm:p-7 lg:border-t-0 lg:border-l lg:p-10">
+                    <div className="overflow-hidden rounded-[24px] border border-white/10 bg-slate-50 text-slate-900 shadow-[0_28px_70px_rgba(0,0,0,0.3)]">
                       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
                         <div className="flex items-center gap-3">
                           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
@@ -402,7 +401,7 @@ export function UnlamEditorialGuide() {
                 <section id="errores" className="scroll-mt-8">
                   <SectionKicker>07 · Errores frecuentes</SectionKicker>
                   <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl">Lo que suele hacer perder tiempo.</h2>
-                  <div className="mt-8 divide-y divide-[#17201b]/12 border-y border-slate-200">
+                  <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
                     {[
                       ['Leer muchas veces sin intentar responder', 'La familiaridad con una página no demuestra que puedas recuperar la información sin verla.'],
                       ['Resumir todo', 'Si el resumen reproduce casi todo el manual, no te obliga a decidir qué es central.'],
@@ -422,7 +421,7 @@ export function UnlamEditorialGuide() {
                 <section>
                   <SectionKicker>Preguntas frecuentes</SectionKicker>
                   <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em]">Dudas comunes sobre el ingreso UNLaM.</h2>
-                  <div className="mt-8 divide-y divide-[#17201b]/12 border-y border-slate-200">
+                  <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
                     {[
                       ['¿Conviene hacer la instancia regular o la intensiva?', 'UNLaM recomienda la regular para quienes hacen el Curso de Ingreso por primera vez. La intensiva concentra más cursadas por semana y suele recomendarse a recursantes o personas con experiencia universitaria.'],
                       ['¿Todas las carreras tienen las mismas materias?', 'No necesariamente. Revisá siempre el formato correspondiente a tu carrera en la información oficial del Curso de Ingreso.'],
