@@ -639,7 +639,7 @@ export default function MateriaStudyHome({
                 <FileText className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-lg font-bold tracking-[-0.03em] text-slate-950">
-                Todavía no hay contenido compartido
+                Todavía no hay recursos públicos
               </h3>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
                 Podés empezar igual con tus propios apuntes y estudiar directamente sobre el
