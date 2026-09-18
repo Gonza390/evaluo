@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { MaterialFeedback } from '@/components/material-feedback';
 import { StudyRichText } from '@/components/study-rich-text';
+import { StudentMaterialDiagnostic } from '@/components/student-material-diagnostic';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
@@ -53,6 +54,7 @@ type MaterialStudyWorkspaceProps = {
   studyGlossary: StudyGlossaryItem[];
   studySummary: StudentMaterialSummary;
   pedagogicalArtifacts?: PedagogicalArtifacts;
+  initialDiagnostic?: boolean;
 };
 
 type StudyTabId = 'resumen' | 'glosario' | 'tarjetas' | 'ejercicios' | 'mapa';
@@ -188,10 +190,13 @@ export function MaterialStudyWorkspace({
   studyGlossary,
   studySummary,
   pedagogicalArtifacts,
+  initialDiagnostic = false,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<StudyTabId>('resumen');
+  const [activeTab, setActiveTab] = useState<StudyTabId>(initialDiagnostic ? 'ejercicios' : 'resumen');
+  const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
+  const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -468,6 +473,20 @@ export function MaterialStudyWorkspace({
 
       <TabsContent value="resumen" className="animate-tab-panel">
         <StudyDocumentShell title={fileName}>
+          {diagnosticReviewTopics.length > 0 ? (
+            <section className="space-y-1 border-b border-slate-200 pb-5">
+              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
+                Según tu diagnóstico
+              </p>
+              <p className="text-[1.02rem] font-bold tracking-[-0.03em] text-slate-950">
+                Empezá por {diagnosticReviewTopics[0]}
+              </p>
+              <p className="text-[13px] leading-5 text-slate-500">
+                Fue uno de los temas donde más dificultad tuviste.
+              </p>
+            </section>
+          ) : null}
+
           <StudyDocumentSection title="Resumen breve">
             <p className="text-[14px] leading-6 text-slate-700">{studySummary.shortSummary}</p>
           </StudyDocumentSection>
@@ -567,7 +586,21 @@ export function MaterialStudyWorkspace({
 
       <TabsContent value="ejercicios" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
-          <StudentMaterialExam artifacts={studyArtifacts} />
+          {diagnosticMode ? (
+            <StudentMaterialDiagnostic
+              artifacts={studyArtifacts}
+              onExit={() => setDiagnosticMode(false)}
+              onReviewTopics={(topics) => {
+                setDiagnosticReviewTopics(topics);
+                setDiagnosticMode(false);
+                setActiveTab('resumen');
+                setIsViewerVisible(false);
+                setCommentsOpen(false);
+              }}
+            />
+          ) : (
+            <StudentMaterialExam artifacts={studyArtifacts} />
+          )}
         </div>
       </TabsContent>
 
