@@ -79,7 +79,6 @@ async function listStorageObjects(bucket, prefix = '') {
       objects.push({
         path: fullPath,
         size,
-        updatedAt: entry.updated_at ?? null,
       });
     }
 
@@ -102,7 +101,7 @@ storageObjects.sort((a, b) => a.path.localeCompare(b.path));
 const storageFingerprint = createHash('sha256')
   .update(
     storageObjects
-      .map((item) => `${item.path}\t${item.size}\t${item.updatedAt ?? ''}`)
+      .map((item) => `${item.path}\t${item.size}`)
       .join('\n')
   )
   .digest('hex');
