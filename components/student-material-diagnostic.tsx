@@ -5,9 +5,11 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
+import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 
 type Props = {
   artifacts: PedagogicalArtifacts;
+  materialId: string;
   onReviewTopics: (topics: string[]) => void;
   onExit: () => void;
 };
@@ -64,7 +66,7 @@ function selectDiagnosticQuestions(artifacts: PedagogicalArtifacts, target = 6) 
   return selected;
 }
 
-export function StudentMaterialDiagnostic({ artifacts, onReviewTopics, onExit }: Props) {
+export function StudentMaterialDiagnostic({ artifacts, materialId, onReviewTopics, onExit }: Props) {
   const questions = useMemo(() => selectDiagnosticQuestions(artifacts), [artifacts]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
@@ -165,6 +167,21 @@ export function StudentMaterialDiagnostic({ artifacts, onReviewTopics, onExit }:
 
   const goNext = () => {
     if (!selectedAnswer) return;
+
+    const wasCorrect = normalize(selectedAnswer) === normalize(current.answer);
+    void recordStudentMaterialStudyResultAction({
+      materialId,
+      sourceType: 'diagnostic',
+      itemKey: `diagnostic:${current.id}`,
+      wasCorrect,
+      topic: current.topic ?? current.reference.sectionTitle,
+      prompt: current.prompt,
+      explanation: current.explanation,
+      correctAnswer: current.answer,
+      selectedAnswer,
+      reference: current.reference,
+    });
+
     if (currentIndex >= questions.length - 1) {
       setFinished(true);
       return;
