@@ -589,6 +589,7 @@ export function MaterialStudyWorkspace({
           {diagnosticMode ? (
             <StudentMaterialDiagnostic
               artifacts={studyArtifacts}
+              materialId={materialId}
               onExit={() => setDiagnosticMode(false)}
               onReviewTopics={(topics) => {
                 setDiagnosticReviewTopics(topics);
@@ -599,7 +600,7 @@ export function MaterialStudyWorkspace({
               }}
             />
           ) : (
-            <StudentMaterialExam artifacts={studyArtifacts} />
+            <StudentMaterialExam artifacts={studyArtifacts} materialId={materialId} />
           )}
         </div>
       </TabsContent>
