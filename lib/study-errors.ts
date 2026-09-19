@@ -67,6 +67,7 @@ export type StudyErrorPdfRecommendation = {
 export type StudyErrorView = {
   id: string;
   materiaId: string | null;
+  parcial: number | null;
   materiaNombre: string | null;
   sourceType: StudyErrorSource;
   sourceKey: string;
@@ -99,6 +100,67 @@ function fallbackTopic(prompt: string) {
   if (normalized.length <= 72) return normalized;
   return `${normalized.slice(0, 69).trimEnd()}…`;
 }
+
+export async function getSimulatorQuestionTopicLabels(
+  admin: ReturnType<typeof createAdminClient>,
+  questionIds: string[]
+) {
+  const ids = Array.from(new Set(questionIds.filter(Boolean)));
+  const labels = new Map<string, string>();
+  if (ids.length === 0) return labels;
+
+  // Las tablas de memoria de temas todavía no están en los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+  const { data: links, error } = await db
+    .from('simulator_question_topic_links')
+    .select('pregunta_id, topic_id, subtopic_id')
+    .in('pregunta_id', ids);
+
+  if (error || !links?.length) {
+    if (error) {
+      logError('studyErrors.topicLabels.links', error, { questionCount: ids.length });
+    }
+    return labels;
+  }
+
+  const topicIds = Array.from(
+    new Set(links.map((row: { topic_id: string | null }) => row.topic_id).filter(Boolean))
+  ) as string[];
+  const subtopicIds = Array.from(
+    new Set(links.map((row: { subtopic_id: string | null }) => row.subtopic_id).filter(Boolean))
+  ) as string[];
+
+  const [{ data: topics }, { data: subtopics }] = await Promise.all([
+    topicIds.length
+      ? db.from('simulator_topics').select('id, title').in('id', topicIds)
+      : Promise.resolve({ data: [] }),
+    subtopicIds.length
+      ? db.from('simulator_subtopics').select('id, title').in('id', subtopicIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const topicById = new Map<string, string>(
+    (topics ?? []).map((row: { id: string; title: string }) => [row.id, clean(row.title)])
+  );
+  const subtopicById = new Map<string, string>(
+    (subtopics ?? []).map((row: { id: string; title: string }) => [row.id, clean(row.title)])
+  );
+
+  for (const link of links as Array<{
+    pregunta_id: string;
+    topic_id: string | null;
+    subtopic_id: string | null;
+  }>) {
+    const label =
+      (link.subtopic_id ? subtopicById.get(link.subtopic_id) : null) ||
+      (link.topic_id ? topicById.get(link.topic_id) : null);
+    if (label) labels.set(link.pregunta_id, label);
+  }
+
+  return labels;
+}
+
 
 export async function recordStudyErrorFailure(input: StudyErrorFailureInput) {
   const admin = createAdminClient();
@@ -291,6 +353,14 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
       return { pending: [], resolved: [] };
     }
 
+    const simulatorTopicLabels = await getSimulatorQuestionTopicLabels(
+      admin,
+      rows
+        .filter((row) => row.source_type === 'simulator')
+        .map((row) => row.question_id)
+        .filter((value): value is string => Boolean(value))
+    );
+
     const materiaIds = Array.from(
       new Set(rows.map((row) => row.materia_id).filter((value): value is string => Boolean(value)))
     );
@@ -438,12 +508,17 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
       const recommendation = recommendations.get(row.id) ?? { primary: null, alternatives: [] };
       const topic =
         clean(row.topic) ||
+        (row.question_id ? clean(simulatorTopicLabels.get(row.question_id)) : '') ||
         clean(recommendation.primary?.sectionTitle) ||
         fallbackTopic(row.prompt);
+
+      const parcialValue = Number(row.metadata?.parcial);
+      const parcial = Number.isInteger(parcialValue) && parcialValue > 0 ? parcialValue : null;
 
       return {
         id: row.id,
         materiaId: row.materia_id,
+        parcial,
         materiaNombre: row.materia_id ? materiaNames.get(row.materia_id) ?? null : null,
         sourceType: row.source_type,
         sourceKey: row.source_key,

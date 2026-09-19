@@ -2540,14 +2540,14 @@ export default function SimuladorExamen({
                         />
                       ) : null
                     ) : null}
-                    {isPremium ? (
+                    {userId ? (
                       <div className="mt-4">
                         <Link
                           href="/dashboard/explicaciones"
                           className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
                         >
                           <Sparkles className="h-4 w-4" />
-                          Ver historial de explicaciones
+                          Ver Mis errores
                         </Link>
                       </div>
                     ) : null}

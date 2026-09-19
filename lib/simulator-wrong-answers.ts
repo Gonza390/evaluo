@@ -10,6 +10,7 @@ import {
 import { buildStudentMaterialContextsForQuestions } from '@/lib/student-materials/simulator-context';
 import { recordExplanationsHistory } from '@/lib/explanations-history';
 import { checkDailyLimit, incrementDailyUsage } from '@/lib/ai/daily-limit';
+import { getSimulatorQuestionTopicLabels } from '@/lib/study-errors';
 
 export type WrongAnswerExplanation = {
   preguntaId: string;
@@ -17,6 +18,7 @@ export type WrongAnswerExplanation = {
   explicacion: string;
   provider: string;
   source: 'cache' | 'generated';
+  tema?: string;
   opciones?: string[];
   respuestaCorrecta?: string;
   opcionElegida?: number | null;
@@ -97,6 +99,7 @@ export async function buildWrongAnswersExplanations(input: {
   const isDemo = input.demo ?? false;
 
   const admin = createAdminClient();
+  const topicLabels = await getSimulatorQuestionTopicLabels(admin, input.wrongQuestionIds);
 
   await hydrateChunksForMateria(input.materiaId);
 
@@ -179,6 +182,7 @@ export async function buildWrongAnswersExplanations(input: {
         explicacion: row.explicacion,
         provider: row.provider ?? 'cache',
         source: 'cache',
+        tema: topicLabels.get(row.pregunta_id),
         opciones: extractStringOptions(question.opciones),
         respuestaCorrecta: includeCorrectAnswer ? question.respuesta_correcta : undefined,
         opcionElegida: normalizeChosenAnswer(input.chosenAnswers?.[row.pregunta_id]),
@@ -320,6 +324,7 @@ export async function buildWrongAnswersExplanations(input: {
             explicacion: generated.text,
             provider: generated.provider,
             source: 'generated',
+            tema: topicLabels.get(question.id),
             opciones: extractStringOptions(question.opciones),
             respuestaCorrecta: includeCorrectAnswer ? question.respuesta_correcta : undefined,
             opcionElegida: normalizeChosenAnswer(input.chosenAnswers?.[question.id]),
