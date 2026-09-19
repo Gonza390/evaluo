@@ -153,11 +153,6 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
           </div>
 
           <div className="mt-7 flex flex-col gap-5 rounded-2xl bg-slate-50 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <p className="text-[9px] font-bold tracking-[0.14em] text-slate-500 uppercase">Fuente activa</p>
-              <p className="mt-1 truncate text-xs font-bold text-slate-900">Marketing I - Parcial 1.pdf</p>
-            </div>
-
             <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
               {['Resumen', 'Glosario', 'Mapa mental', 'Flashcards', 'Práctica', 'Diagnóstico'].map((label) => (
                 <span key={label} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">
