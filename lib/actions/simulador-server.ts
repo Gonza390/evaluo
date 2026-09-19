@@ -18,7 +18,11 @@ import {
   enforceServerActionRateLimit,
   getServerActionClientKey,
 } from '@/lib/rate-limit';
-import { recordStudyErrorCorrect, recordStudyErrorFailure } from '@/lib/study-errors';
+import {
+  getSimulatorQuestionTopicLabels,
+  recordStudyErrorCorrect,
+  recordStudyErrorFailure,
+} from '@/lib/study-errors';
 
 /**
  * Pregunta expuesta al cliente. NUNCA incluye `respuesta_correcta`: la
@@ -791,6 +795,7 @@ export async function finalizarSimuladorAction(data: {
 
     const wrongQuestionIds = [...bancoWrongIds, ...premiumWrongIds];
     const answeredQuestionIds = Array.from(new Set(answeredIds));
+    const simulatorTopicLabels = await getSimulatorQuestionTopicLabels(admin, bancoWrongIds);
 
     await Promise.all(
       respuestas.map(async (entry) => {
@@ -821,6 +826,7 @@ export async function finalizarSimuladorAction(data: {
           sourceType: 'simulator',
           sourceKey,
           questionId: entry.pregunta_id,
+          topic: simulatorTopicLabels.get(entry.pregunta_id) ?? null,
           prompt: question.enunciado,
           correctAnswer: question.respuesta_correcta,
           selectedAnswer,
