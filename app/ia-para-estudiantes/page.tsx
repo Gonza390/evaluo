@@ -5,16 +5,16 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/ia-para-estudiantes';
 
 export const metadata: Metadata = {
-  title: 'IA para estudiantes: estudiá apuntes y PDFs con IA',
+  title: 'IA para estudiar: apuntes, PDFs, flashcards y práctica',
   description:
-    'Estudiá tus apuntes y PDFs con IA en Evaluo: resumen, glosario, mapas mentales, flashcards y ejercicios conectados al mismo material.',
+    'Usá IA para estudiar tus apuntes y PDFs: organizá conceptos, creá flashcards y practicá para exámenes manteniendo el mismo material como fuente.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'IA para estudiantes: estudiá tus apuntes y PDFs con IA | Evaluo',
+    title: 'IA para estudiar: apuntes, PDFs, flashcards y práctica | Evaluo',
     description:
-      'Transformá tus propios materiales en resumen, conceptos, mapas mentales, flashcards y ejercicios para entender, recordar y practicar.',
+      'Estudiá con IA sobre tus propios apuntes y PDFs: entendé el tema, repasá con flashcards y practicá antes del examen sin perder la fuente original.',
     url: toAbsoluteUrl(path),
   },
 };
