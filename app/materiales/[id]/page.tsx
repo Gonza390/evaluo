@@ -22,7 +22,7 @@ import { createClientServer } from '@/lib/supabase-server';
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ diagnostico?: string }>;
+  searchParams?: Promise<{ diagnostico?: string; studyError?: string; page?: string }>;
 };
 
 function resolveMaterialId(routeValue: string) {
@@ -286,6 +286,10 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       });
     }
 
+    const requestedPage = Number(query.page);
+    const initialPdfPage =
+      Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : null;
+
     const pedagogicalArtifacts = await loadOrBuildPedagogicalArtifacts({
       admin,
       materialId: material.id,
@@ -332,6 +336,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
+          initialPdfPage={initialPdfPage}
+          initialViewerVisible={Boolean(query.studyError)}
         />
 
         {!isOwner && visibility === 'shared' ? (
