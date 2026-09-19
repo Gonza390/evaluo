@@ -136,18 +136,28 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             {studyCapabilities.map(({ icon: Icon, title, description }, index) => (
               <article
                 key={title}
-                className={`min-w-0 py-5 sm:px-5 sm:py-6 ${
+                className={`group relative min-w-0 transition hover:bg-slate-50 ${
                   index > 0 ? 'border-t border-slate-200 sm:border-t-0 sm:border-l' : ''
                 } ${index === 2 ? 'sm:border-l-0 lg:border-l' : ''}`}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400">0{index + 1}</span>
+                <div className="h-full py-5 sm:min-h-[190px] sm:px-5 sm:py-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition group-hover:bg-indigo-600 group-hover:text-white">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 transition group-hover:text-indigo-700">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950 transition group-hover:text-indigo-800">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{description}</p>
                 </div>
-                <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950">{title}</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600">{description}</p>
+                <span
+                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-indigo-600 transition-transform duration-200 group-hover:scale-x-100"
+                  aria-hidden="true"
+                />
               </article>
             ))}
           </div>
