@@ -245,11 +245,11 @@ export function SimulatorFinishedResult({
                       </h2>
                       <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
                         Tus {wrong} {wrong === 1 ? 'error quedó guardado' : 'errores quedaron guardados'}.
-                        Evaluo los cruza con tus apuntes para mostrarte qué tema estudiar y dónde encontrarlo antes de volver a probarte.
+                        Evaluo cruza esos errores con tus apuntes para buscar dónde aparece cada tema y ayudarte a decidir qué repasar antes de volver a probarte.
                       </p>
                       <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
                         <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>De tus errores al lugar exacto de tus apuntes que necesitás reforzar.</span>
+                        <span>Encontrá en tus apuntes dónde repasar los temas que te costaron.</span>
                       </div>
                       <Link
                         href={misErroresHref}
@@ -266,7 +266,7 @@ export function SimulatorFinishedResult({
                       </h2>
                       <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
                         Detectamos {wrong} {wrong === 1 ? 'punto' : 'puntos'} que te conviene estudiar.
-                        Subí los apuntes que realmente entran en tu examen y Evaluo los procesa para encontrar dónde aparece cada tema.
+                        Subí los apuntes que realmente entran en tu examen y Evaluo los procesa para buscar referencias de los temas que te conviene reforzar.
                       </p>
                       <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
                         <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
