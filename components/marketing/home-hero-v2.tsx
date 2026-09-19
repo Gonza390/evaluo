@@ -1,7 +1,7 @@
 import {
   ArrowRight,
-  BookOpen,
   Brain,
+  BookOpen,
   CheckCircle2,
   FileText,
   ListChecks,
@@ -11,6 +11,7 @@ import {
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
+import { HomeProductVideo } from '@/components/marketing/home-product-video';
 
 const studyCapabilities = [
   {
@@ -50,7 +51,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             <div className="animate-surface-reveal flex min-w-0 flex-col items-start text-left">
               <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                <span className="min-w-0">Estudiá desde tu propio material</span>
+                <span className="min-w-0">Estudiá con tu propio PDF</span>
               </span>
 
               <h1 className="text-foreground mt-5 max-w-[680px] text-[2.35rem] leading-[1.02] font-bold tracking-[-0.055em] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
@@ -58,7 +59,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </h1>
 
               <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Evaluo organiza tu material, detecta qué necesitás reforzar y te guía para preparar el examen.
+                Convertí tus apuntes en resúmenes, mapas mentales, flashcards y práctica. Ponete a prueba y descubrí qué temas necesitás reforzar antes del examen.
               </p>
 
               <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
@@ -67,29 +68,42 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
-                    cta_name: 'subi_tu_pdf',
+                    cta_name: 'probar_con_mi_pdf',
                     destination: primaryHref,
                   }}
                   className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto sm:px-8"
                 >
                   <UploadCloud className="h-4.5 w-4.5 shrink-0" />
-                  Subí tu PDF
+                  Probar con mi PDF
                   <ArrowRight className="h-4 w-4 shrink-0" />
                 </TrackedLink>
+                <TrackedLink
+                  href="/#video"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_hero',
+                    cta_name: 'ver_como_funciona',
+                    destination: '/#video',
+                  }}
+                  className="inline-flex h-13 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
+                >
+                  Ver cómo funciona
+                </TrackedLink>
               </div>
+              <p className="mt-3 text-[11px] font-semibold text-slate-500 sm:text-xs">Empezá gratis · Sin tarjeta</p>
 
-              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
+              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Sabé qué repasar
+                  Entendé los temas
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Desde tu propio material
+                  Practicá con preguntas
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Practicá antes del examen
+                  Repasá tus errores
                 </span>
               </div>
             </div>
@@ -99,143 +113,81 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
         </div>
       </section>
 
-      <section id="producto" className="border-b border-slate-100 bg-white py-20 sm:py-24 lg:py-28">
+      <HomeProductVideo primaryHref={primaryHref} />
+
+      <section id="producto" className="border-b border-slate-100 bg-white py-14 sm:py-16 lg:py-18">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-          <div className="grid gap-6 border-b border-slate-200 pb-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16 lg:pb-12">
+          <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end lg:gap-16">
             <div>
               <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
                 <span className="h-px w-8 shrink-0 bg-indigo-500" />
-                Todo para preparar una materia
+                Una sola fuente para estudiar
               </div>
-              <h2 className="mt-5 max-w-[620px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
-                Estudiá, practicá y reforzá sin cambiar de lugar.
+              <h2 className="mt-4 max-w-[620px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[42px] lg:leading-[1.05]">
+                Un solo PDF. Distintas formas de aprenderlo.
               </h2>
             </div>
-            <p className="max-w-[620px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
-              Evaluo usa tu propio material para guiarte desde el primer repaso hasta la práctica.
-              Sabés qué reforzar y qué hacer después, sin elegir entre herramientas sueltas.
+            <p className="max-w-[620px] text-sm leading-7 text-slate-600 sm:text-base">
+              Subís una vez tu material y cambiás de forma de estudio sin cambiar de fuente.
             </p>
           </div>
 
-          <div className="grid gap-12 pt-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-16 lg:pt-14">
-            <div className="min-w-0">
-              <div className="border-t border-slate-200">
-                {studyCapabilities.map(({ icon: Icon, title, description }, index) => (
-                  <div key={title} className="grid grid-cols-[34px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-5 sm:grid-cols-[40px_minmax(0,1fr)] sm:py-6">
-                    <div className="flex items-start justify-between pt-0.5">
-                      <Icon className="h-4.5 w-4.5 text-indigo-700" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-baseline justify-between gap-4">
-                        <h3 className="min-w-0 text-sm font-bold tracking-tight text-slate-950 sm:text-[15px]">{title}</h3>
-                        <span className="shrink-0 text-[10px] font-semibold text-slate-600">0{index + 1}</span>
-                      </div>
-                      <p className="mt-2 max-w-[470px] text-xs leading-5 text-slate-600 sm:text-[13px] sm:leading-6">
-                        {description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs font-bold">
-                <TrackedLink
-                  href={primaryHref}
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_product_overview',
-                    cta_name: 'subir_pdf',
-                    destination: primaryHref,
-                  }}
-                  className="inline-flex items-center gap-2 text-indigo-700 transition hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                >
-                  <UploadCloud className="h-4 w-4 shrink-0" />
-                  Subir mi PDF
-                  <ArrowRight className="h-3.5 w-3.5 shrink-0" />
-                </TrackedLink>
-              </div>
-            </div>
-
-            <div className="relative min-w-0">
-              <div className="pointer-events-none absolute -inset-8 rounded-[42px] bg-[radial-gradient(circle_at_60%_35%,rgba(99,102,241,0.15),transparent_58%)] blur-2xl" />
-
-              <div className="relative min-w-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.11)]">
-                <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:gap-4 sm:px-6">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-                      <BookOpen className="h-4 w-4" />
+          <div className="mt-9 grid border-y border-slate-200 sm:grid-cols-2 lg:grid-cols-4">
+            {studyCapabilities.map(({ icon: Icon, title, description }, index) => (
+              <article
+                key={title}
+                className={`group relative min-w-0 transition hover:bg-slate-50 ${
+                  index > 0 ? 'border-t border-slate-200 sm:border-t-0 sm:border-l' : ''
+                } ${index === 2 ? 'sm:border-l-0 lg:border-l' : ''}`}
+              >
+                <div className="h-full py-5 sm:min-h-[190px] sm:px-5 sm:py-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition group-hover:bg-indigo-600 group-hover:text-white">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-slate-600">Tu materia</p>
-                      <p className="truncate text-xs font-bold text-slate-900 sm:text-sm">Marketing I</p>
-                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 transition group-hover:text-indigo-700">
+                      0{index + 1}
+                    </span>
                   </div>
-                  <span className="hidden shrink-0 text-[10px] font-semibold text-emerald-700 sm:inline">Material listo para estudiar</span>
+                  <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950 transition group-hover:text-indigo-800">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{description}</p>
                 </div>
+                <span
+                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-indigo-600 transition-transform duration-200 group-hover:scale-x-100"
+                  aria-hidden="true"
+                />
+              </article>
+            ))}
+          </div>
 
-                <div className="grid min-h-[350px] min-w-0 sm:grid-cols-[150px_minmax(0,1fr)]">
-                  <aside className="hidden border-r border-slate-200 bg-slate-50/70 p-4 sm:block">
-                    <p className="mb-3 px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Estudio</p>
-                    {[
-                      ['Resumen', true],
-                      ['Glosario', false],
-                      ['Tarjetas', false],
-                      ['Práctica', false],
-                    ].map(([label, active]) => (
-                      <div
-                        key={String(label)}
-                        className={`flex items-center gap-2 border-l-2 px-3 py-2.5 text-[10px] font-bold ${
-                          active ? 'border-indigo-600 text-indigo-800' : 'border-transparent text-slate-600'
-                        }`}
-                      >
-                        {label}
-                      </div>
-                    ))}
-                    <div className="mt-5 border-t border-slate-200 pt-4">
-                      <p className="px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Para el parcial</p>
-                      <div className="mt-2 flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-600">Preguntero</div>
-                      <div className="flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-600">Simulador</div>
-                    </div>
-                  </aside>
-
-                  <div className="min-w-0 p-4 sm:p-6 lg:p-7">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-700 uppercase">Resumen</p>
-                        <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-950 sm:text-xl">Qué tenés que saber para el parcial</h3>
-                      </div>
-                      <span className="hidden shrink-0 text-[10px] font-semibold text-slate-600 md:block">10 temas</span>
-                    </div>
-
-                    <div className="mt-6 border-t border-slate-200">
-                      {[
-                        ['Segmentación de mercado', 'Cómo dividir el mercado y elegir segmentos relevantes.'],
-                        ['Posicionamiento', 'Qué lugar busca ocupar una marca frente a sus alternativas.'],
-                        ['Propuesta de valor', 'Por qué un cliente debería elegir una oferta sobre otra.'],
-                      ].map(([title, description], index) => (
-                        <div key={title} className="grid grid-cols-[28px_minmax(0,1fr)] gap-3 border-b border-slate-100 py-4">
-                          <span className="text-[10px] font-black text-indigo-700">0{index + 1}</span>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-bold text-slate-900">{title}</p>
-                            <p className="mt-1 text-[10px] leading-4 text-slate-600">{description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
-                      <p className="min-w-0 text-[10px] leading-5 text-slate-600">
-                        Terminaste de leer. Ahora podés pasar a tarjetas, practicar este material o prepararte con el Preguntero y el Simulador.
-                      </p>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-indigo-700" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className="mt-7 flex flex-col gap-5 rounded-2xl bg-slate-50 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
+              {['Resumen', 'Glosario', 'Mapa mental', 'Flashcards', 'Práctica', 'Diagnóstico'].map((label) => (
+                <span key={label} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">
+                  {label}
+                </span>
+              ))}
             </div>
+
+            <TrackedLink
+              href={primaryHref}
+              eventName="cta_click"
+              payload={{
+                location: 'home_product_overview',
+                cta_name: 'probar_con_mi_pdf_producto',
+                destination: primaryHref,
+              }}
+              className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-indigo-700 transition hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              Probar con mi PDF
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </TrackedLink>
           </div>
         </div>
       </section>
+
     </>
   );
 }

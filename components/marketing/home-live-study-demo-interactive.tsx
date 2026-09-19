@@ -10,13 +10,13 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-type DemoView = 'resumen' | 'flashcard' | 'ejercicio' | 'preguntero';
+type DemoView = 'resumen' | 'flashcard' | 'ejercicio' | 'diagnostico';
 
 const demoViews: Array<{ id: DemoView; label: string }> = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'flashcard', label: 'Flashcard' },
-  { id: 'ejercicio', label: 'Ejercicio' },
-  { id: 'preguntero', label: 'Preguntero' },
+  { id: 'ejercicio', label: 'Práctica' },
+  { id: 'diagnostico', label: 'Diagnóstico' },
 ];
 
 const quizOptions = [
@@ -35,7 +35,7 @@ export function HomeLiveStudyDemo() {
     setActiveView(view);
     if (view !== 'flashcard') setShowFlashcardAnswer(false);
     if (view !== 'ejercicio') setShowExerciseAnswer(false);
-    if (view !== 'preguntero') setSelectedAnswer(null);
+    if (view !== 'diagnostico') setSelectedAnswer(null);
   };
 
   return (
@@ -45,10 +45,10 @@ export function HomeLiveStudyDemo() {
           <span className="flex h-8 w-8 shrink-0 items-center justify-center text-indigo-600">
             <FileText className="h-5 w-5" />
           </span>
-          <p className="truncate text-xs font-bold text-slate-950 sm:text-sm">Marketing I</p>
+          <p className="truncate text-xs font-bold text-slate-950 sm:text-sm">Marketing I - Parcial 1.pdf</p>
         </div>
         <p className="hidden shrink-0 text-[10px] font-semibold text-slate-400 sm:block">
-          Material compartido · 29 páginas
+          Tu PDF · 29 páginas
         </p>
       </div>
 
@@ -82,7 +82,7 @@ export function HomeLiveStudyDemo() {
               Segmentación de mercados
             </h3>
             <p className="mt-2 max-w-[570px] text-xs leading-6 text-slate-500 sm:text-[13px]">
-              Del mismo apunte, Evaluo organiza conceptos que después podés convertir en tarjetas y práctica.
+              Del mismo PDF, Evaluo organiza conceptos que después podés convertir en flashcards, práctica y diagnóstico.
             </p>
 
             <div className="mt-6 border-t border-slate-200">
@@ -235,13 +235,16 @@ export function HomeLiveStudyDemo() {
           </div>
         )}
 
-        {activeView === 'preguntero' && (
+        {activeView === 'diagnostico' && (
           <div className="animate-surface-reveal">
             <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
               <CircleHelp className="h-3.5 w-3.5" />
-              Preguntero
+              Diagnóstico sobre tu PDF
             </div>
-            <h3 className="mt-4 max-w-[590px] text-lg font-bold leading-snug tracking-[-0.025em] text-slate-950 sm:text-xl">
+            <p className="mt-4 text-[10px] font-semibold text-slate-400">
+              Una pregunta para ubicar qué ya dominás
+            </p>
+            <h3 className="mt-2 max-w-[590px] text-lg font-bold leading-snug tracking-[-0.025em] text-slate-950 sm:text-xl">
               ¿Qué requisitos debe cumplir una segmentación para ser efectiva?
             </h3>
 
@@ -254,7 +257,7 @@ export function HomeLiveStudyDemo() {
                   ? isCorrect
                     ? 'border-emerald-300 bg-emerald-50/70 text-emerald-900'
                     : isSelected
-                      ? 'border-red-200 bg-red-50/70 text-red-800'
+                      ? 'border-amber-200 bg-amber-50/70 text-amber-900'
                       : 'border-slate-200 text-slate-400'
                   : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-slate-900';
 
@@ -277,9 +280,11 @@ export function HomeLiveStudyDemo() {
 
             {selectedAnswer !== null && (
               <div className="mt-4 flex items-start gap-2 border-t border-slate-200 pt-4">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                <Check className={`mt-0.5 h-4 w-4 shrink-0 ${selectedAnswer === 0 ? 'text-emerald-600' : 'text-amber-600'}`} />
                 <p className="text-[10px] leading-5 text-slate-500">
-                  El material enumera esos cinco requisitos para que una segmentación sea efectiva.
+                  {selectedAnswer === 0
+                    ? 'Este punto está firme. Podés seguir con el próximo tema del mismo material.'
+                    : 'Este resultado marca segmentación como un punto para reforzar antes de seguir practicando.'}
                 </p>
               </div>
             )}

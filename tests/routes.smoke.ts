@@ -211,7 +211,7 @@ assert.match(pregunteroHubSource, /<FooterHome \/>/);
 
 assert.match(
   homeStudyPreviewSource,
-  /<h2 className="sr-only">Vista previa de una guía de estudio creada con Evaluo<\/h2>/
+  /<h2 className="sr-only">Vista previa de un PDF convertido en distintas formas de estudio<\/h2>/
 );
 assert.doesNotMatch(simulatorPreviewSource, /Preview resultado simulador \| Evaluo/);
 assert.match(simulatorIndexSource, /href="\/explorar"/);
