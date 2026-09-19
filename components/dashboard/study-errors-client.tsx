@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -296,12 +296,11 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
     [data.pending, selectedId]
   );
 
-  useMemo(() => {
+  useEffect(() => {
     trackMarketingEvent('mis_errores_viewed', {
       pending_count: data.pending.length,
       resolved_count: data.resolved.length,
     });
-    return null;
   }, [data.pending.length, data.resolved.length]);
 
   if (data.pending.length === 0) {
