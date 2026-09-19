@@ -25,6 +25,7 @@ const nextConfig = {
     const contentSecurityPolicy = [
       "default-src 'self'",
       "img-src 'self' data: blob: https:",
+      "media-src 'self' https://d2ol7oe51mr4n9.cloudfront.net",
       "font-src 'self' data: https:",
       "style-src 'self' 'unsafe-inline'",
       `script-src ${scriptSrc}`,
