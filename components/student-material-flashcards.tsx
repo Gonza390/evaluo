@@ -21,6 +21,7 @@ import {
   getFlashcardProgressAction,
   saveFlashcardProgressAction,
 } from '@/app/dashboard/materiales/actions';
+import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 type RecallResult = 'known' | 'unknown';
@@ -198,6 +199,19 @@ export function StudentMaterialFlashcards({
       setRecallByCard((current) => ({ ...current, [currentCardIndex]: result }));
       setSessionRecall((current) => ({ ...current, [currentCardIndex]: result }));
 
+      void recordStudentMaterialStudyResultAction({
+        materialId,
+        sourceType: 'flashcard',
+        itemKey: `flashcard:${currentCardIndex}`,
+        wasCorrect: result === 'known',
+        topic: currentCard.reference.sectionTitle ?? currentCard.front,
+        prompt: currentCard.front,
+        explanation: currentCard.back,
+        correctAnswer: currentCard.back,
+        selectedAnswer: result === 'known' ? currentCard.back : 'No lo sabía',
+        reference: currentCard.reference,
+      });
+
       if (position < order.length - 1) {
         setPosition((current) => Math.min(order.length - 1, current + 1));
         setFlipped(false);
@@ -207,7 +221,7 @@ export function StudentMaterialFlashcards({
       setFlipped(false);
       setIsFullscreen(false);
     },
-    [currentCard, currentCardIndex, flipped, order.length, position]
+    [currentCard, currentCardIndex, flipped, materialId, order.length, position]
   );
 
   useEffect(() => {
