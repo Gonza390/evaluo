@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
+import { attachStudyErrorExplanation } from '@/lib/study-errors';
 
 export type ExplanationHistoryItem = {
   id: string;
@@ -85,7 +86,26 @@ export async function recordExplanationsHistory(input: {
 
     if (error) {
       logError('explanationsHistory.record', error, { userId: input.userId });
+      return;
     }
+
+    await Promise.all(
+      input.items.map((item) =>
+        attachStudyErrorExplanation({
+          userId: input.userId,
+          questionId: item.preguntaId,
+          explanation: item.explicacion,
+          correctAnswer: item.respuestaCorrecta ?? null,
+          selectedAnswer:
+            typeof item.opcionElegida === 'number' &&
+            Array.isArray(item.opciones) &&
+            item.opcionElegida >= 0 &&
+            item.opcionElegida < item.opciones.length
+              ? item.opciones[item.opcionElegida] ?? null
+              : null,
+        })
+      )
+    );
   } catch (error) {
     logError('explanationsHistory.record', error, { userId: input.userId });
   }

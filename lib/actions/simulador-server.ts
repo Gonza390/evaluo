@@ -18,6 +18,7 @@ import {
   enforceServerActionRateLimit,
   getServerActionClientKey,
 } from '@/lib/rate-limit';
+import { recordStudyErrorCorrect, recordStudyErrorFailure } from '@/lib/study-errors';
 
 /**
  * Pregunta expuesta al cliente. NUNCA incluye `respuesta_correcta`: la
@@ -790,6 +791,46 @@ export async function finalizarSimuladorAction(data: {
 
     const wrongQuestionIds = [...bancoWrongIds, ...premiumWrongIds];
     const answeredQuestionIds = Array.from(new Set(answeredIds));
+
+    await Promise.all(
+      respuestas.map(async (entry) => {
+        const feedback = resultados.get(entry.pregunta_id);
+        const question = bancoById.get(entry.pregunta_id) ?? premiumById.get(entry.pregunta_id);
+        if (!feedback || !question) return;
+
+        const sourceKey = `question:${entry.pregunta_id}`;
+        if (feedback.correct) {
+          await recordStudyErrorCorrect({
+            userId: data.usuario_id,
+            sourceType: 'simulator',
+            sourceKey,
+          });
+          return;
+        }
+
+        const selectedAnswer = (Array.isArray(entry.respuesta_seleccionada)
+          ? entry.respuesta_seleccionada
+          : [entry.respuesta_seleccionada]
+        )
+          .filter((answer): answer is string => typeof answer === 'string')
+          .join(' · ');
+
+        await recordStudyErrorFailure({
+          userId: data.usuario_id,
+          materiaId: data.materia_id,
+          sourceType: 'simulator',
+          sourceKey,
+          questionId: entry.pregunta_id,
+          prompt: question.enunciado,
+          correctAnswer: question.respuesta_correcta,
+          selectedAnswer,
+          metadata: {
+            parcial: data.parcial,
+            premium: premiumById.has(entry.pregunta_id),
+          },
+        });
+      })
+    );
 
     // 2) Persistir el intento.
     const { data: attemptRow, error: attemptError } = await admin

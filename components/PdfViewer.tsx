@@ -47,6 +47,7 @@ interface PdfViewerProps {
   forcePreviewLock?: boolean;
   showSidebarThumbnails?: boolean;
   theme?: 'default' | 'study';
+  initialPage?: number | null;
 }
 
 const ZOOM_LEVELS = [0.75, 0.9, 1, 1.15, 1.3, 1.5, 1.75] as const;
@@ -95,6 +96,7 @@ export default function PdfViewer({
   forcePreviewLock = false,
   showSidebarThumbnails = true,
   theme = 'default',
+  initialPage = null,
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -182,14 +184,15 @@ export default function PdfViewer({
 
   useEffect(() => {
     const persistedView = readPersistedPdfView(url);
+    const requestedPage = initialPage ?? persistedView?.pageNumber ?? 1;
 
-    setCurrentPage(1);
+    setCurrentPage(requestedPage);
     setZoomIndex(persistedView?.zoomIndex ?? 2);
     setDocumentSourceBlob(null);
     setShowPreviewGate(false);
-    shouldRestoreSavedPageRef.current = (persistedView?.pageNumber ?? 1) > 1;
+    shouldRestoreSavedPageRef.current = requestedPage > 1;
     pageRefs.current = {};
-  }, [url]);
+  }, [initialPage, url]);
 
   useEffect(() => {
     let active = true;
@@ -280,7 +283,7 @@ export default function PdfViewer({
 
     setNumPages(doc.numPages);
     setCurrentPage(() => {
-      const requestedPage = persistedView?.pageNumber ?? 1;
+      const requestedPage = initialPage ?? persistedView?.pageNumber ?? 1;
       return Math.min(Math.max(1, requestedPage), doc.numPages);
     });
   };

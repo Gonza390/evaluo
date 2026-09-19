@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   CalendarDays,
+  CircleAlert,
   CircleHelp,
   Crown,
   Home,
@@ -13,7 +14,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Sparkles,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -53,7 +53,7 @@ function isNavItemActive(pathname: string, href: string) {
 const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario de exámenes', href: '/calendario', icon: CalendarDays },
-  { label: 'Explicaciones IA', href: '/dashboard/explicaciones', icon: Sparkles },
+  { label: 'Mis errores', href: '/dashboard/explicaciones', icon: CircleAlert },
 ];
 
 function NavItem({

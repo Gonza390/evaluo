@@ -1,24 +1,28 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { requirePremiumUser } from '@/lib/premium';
-import { getExplanationHistory } from '@/lib/explanations-history';
-import { ExplanationsHistoryClient } from '@/components/dashboard/explanations-history-client';
+import { createClientServer } from '@/lib/supabase-server';
+import { getStudyErrorsPageData } from '@/lib/study-errors';
+import { StudyErrorsClient } from '@/components/dashboard/study-errors-client';
 
 export const metadata: Metadata = {
-  title: 'Historial de explicaciones',
+  title: 'Mis errores',
   robots: {
     index: false,
     follow: false,
   },
 };
 
-export default async function ExplanationsHistoryPage() {
-  const premiumCheck = await requirePremiumUser();
-  if (!premiumCheck.ok) {
-    redirect('/pricing');
+export default async function StudyErrorsPage() {
+  const supabase = await createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login?next=/dashboard/explicaciones');
   }
 
-  const history = await getExplanationHistory(premiumCheck.user.id);
+  const data = await getStudyErrorsPageData(user.id);
 
-  return <ExplanationsHistoryClient initialHistory={history} />;
+  return <StudyErrorsClient data={data} />;
 }
