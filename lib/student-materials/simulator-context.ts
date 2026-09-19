@@ -1,4 +1,4 @@
-import { normalizeText, scoreChunk, type RagChunkRow } from '@/lib/rag';
+import { normalizeText, scoreChunk } from '@/lib/rag';
 import type { Database } from '@/types/supabase';
 import type { AdminClient, StoredSummaryRow } from '@/lib/student-materials/types';
 
@@ -17,6 +17,9 @@ type StudentMaterialRow = Pick<
 type StudentMaterialChunkRow = {
   student_material_id: string;
   chunk_text: string;
+  page_start: number | null;
+  page_end: number | null;
+  section_title: string | null;
 };
 
 type QuestionContextInput = {
@@ -36,9 +39,21 @@ type MaterialSummarySource = {
   sections: Array<{ title: string; body: string }>;
 };
 
+export type StudentMaterialQuestionMatch = {
+  materialId: string;
+  materialTitle: string;
+  pageStart: number | null;
+  pageEnd: number | null;
+  sectionTitle: string | null;
+  excerpt: string;
+  score: number;
+  relation: 'origin' | 'best';
+};
+
 export type StudentMaterialQuestionContext = {
   context: string[];
   matchedMaterialIds: string[];
+  matches: StudentMaterialQuestionMatch[];
 };
 
 function cleanLine(value: string) {
@@ -80,24 +95,6 @@ function buildSummarySources(rows: Array<StoredSummaryRow & { student_material_i
   }));
 }
 
-function serializeSummarySource(summary: MaterialSummarySource, title: string) {
-  const parts: string[] = [];
-
-  if (summary.shortSummary) {
-    parts.push(`[${title}] Resumen breve: ${summary.shortSummary}`);
-  }
-
-  if (summary.keyPoints.length > 0) {
-    parts.push(`[${title}] Puntos clave: ${summary.keyPoints.join(' | ')}`);
-  }
-
-  for (const section of summary.sections.slice(0, 2)) {
-    parts.push(`[${title}] ${section.title}: ${cleanLine(section.body).slice(0, 700)}`);
-  }
-
-  return parts;
-}
-
 function buildQuestionQuery(question: QuestionContextInput) {
   const options = Array.isArray(question.opciones)
     ? question.opciones.filter((option) => typeof option === 'string').join(' ')
@@ -131,17 +128,99 @@ function computeMaterialPriority(
   return score;
 }
 
-function selectTopChunksForMaterial(chunks: RagChunkRow[], query: string, limit = 2) {
+function selectTopChunksForMaterial(
+  chunks: StudentMaterialChunkRow[],
+  query: string,
+  material: StudentMaterialRow,
+  basePriority: number,
+  relation: 'origin' | 'best',
+  limit = 2
+) {
   return chunks
-    .map((chunk) => ({
-      text: chunk.chunk_text ?? '',
-      title: chunk.source_title ?? null,
-      score: scoreChunk(chunk.chunk_text ?? '', query),
-    }))
-    .filter((chunk) => chunk.score > 0 && chunk.text)
+    .map((chunk) => {
+      const excerpt = cleanLine(chunk.chunk_text ?? '');
+      return {
+        text: `${chunk.section_title ? `[${chunk.section_title}] ` : ''}${excerpt}`,
+        materialId: material.id,
+        materialTitle: material.title,
+        pageStart: chunk.page_start,
+        pageEnd: chunk.page_end,
+        sectionTitle: chunk.section_title,
+        excerpt: excerpt.slice(0, 700),
+        score: basePriority + scoreChunk(excerpt, query),
+        relation,
+      };
+    })
+    .filter((chunk) => chunk.score > 0 && chunk.excerpt)
     .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map((chunk) => `${chunk.title ? `[${chunk.title}] ` : ''}${chunk.text}`);
+    .slice(0, limit);
+}
+
+function summaryContextForMaterial(input: {
+  summary: MaterialSummarySource;
+  material: StudentMaterialRow;
+  query: string;
+  priority: number;
+  relation: 'origin' | 'best';
+}) {
+  const items: Array<{
+    text: string;
+    materialId: string;
+    materialTitle: string;
+    pageStart: number | null;
+    pageEnd: number | null;
+    sectionTitle: string | null;
+    excerpt: string;
+    score: number;
+    relation: 'origin' | 'best';
+  }> = [];
+
+  if (input.summary.shortSummary) {
+    const excerpt = input.summary.shortSummary;
+    items.push({
+      text: `[${input.material.title}] Resumen breve: ${excerpt}`,
+      materialId: input.material.id,
+      materialTitle: input.material.title,
+      pageStart: null,
+      pageEnd: null,
+      sectionTitle: null,
+      excerpt,
+      score: input.priority + scoreChunk(excerpt, input.query) + 1,
+      relation: input.relation,
+    });
+  }
+
+  if (input.summary.keyPoints.length > 0) {
+    const excerpt = input.summary.keyPoints.join(' | ');
+    items.push({
+      text: `[${input.material.title}] Puntos clave: ${excerpt}`,
+      materialId: input.material.id,
+      materialTitle: input.material.title,
+      pageStart: null,
+      pageEnd: null,
+      sectionTitle: 'Puntos clave',
+      excerpt,
+      score: input.priority + scoreChunk(excerpt, input.query) + 1,
+      relation: input.relation,
+    });
+  }
+
+  for (const section of input.summary.sections.slice(0, 2)) {
+    const excerpt = cleanLine(section.body).slice(0, 700);
+    items.push({
+      text: `[${input.material.title}] ${section.title}: ${excerpt}`,
+      materialId: input.material.id,
+      materialTitle: input.material.title,
+      pageStart: null,
+      pageEnd: null,
+      sectionTitle: section.title,
+      excerpt,
+      score: input.priority + scoreChunk(excerpt, input.query) + 1,
+      relation: input.relation,
+    });
+  }
+
+  return items;
 }
 
 export async function buildStudentMaterialContextsForQuestions(input: {
@@ -149,6 +228,7 @@ export async function buildStudentMaterialContextsForQuestions(input: {
   materiaId: string;
   userId: string;
   questions: QuestionContextInput[];
+  ownedOnly?: boolean;
 }) {
   if (input.questions.length === 0) {
     return new Map<string, StudentMaterialQuestionContext>();
@@ -161,9 +241,14 @@ export async function buildStudentMaterialContextsForQuestions(input: {
     .eq('materia_id', input.materiaId)
     .eq('processing_status', 'ready');
 
-  materialsQuery = userId
-    ? materialsQuery.or(`user_id.eq.${userId},visibility.eq.shared`)
-    : materialsQuery.eq('visibility', 'shared');
+  if (input.ownedOnly) {
+    if (!userId) return new Map<string, StudentMaterialQuestionContext>();
+    materialsQuery = materialsQuery.eq('user_id', userId);
+  } else {
+    materialsQuery = userId
+      ? materialsQuery.or(`user_id.eq.${userId},visibility.eq.shared`)
+      : materialsQuery.eq('visibility', 'shared');
+  }
 
   const { data: materialRows, error: materialsError } = await materialsQuery
     .order('updated_at', { ascending: false })
@@ -180,17 +265,20 @@ export async function buildStudentMaterialContextsForQuestions(input: {
 
   const materialIds = materials.map((material) => material.id);
 
-  const [{ data: chunkRows, error: chunksError }, { data: summaryRows, error: summariesError }] = await Promise.all([
-    input.admin
-      .from('student_material_chunks')
-      .select('student_material_id, chunk_text')
-      .in('student_material_id', materialIds),
-    input.admin
-      .from('student_material_summaries')
-      .select('student_material_id, summary_short, key_points, summary_sections, status, provider, source_chunks_count, error_message')
-      .in('student_material_id', materialIds)
-      .eq('status', 'ready'),
-  ]);
+  const [{ data: chunkRows, error: chunksError }, { data: summaryRows, error: summariesError }] =
+    await Promise.all([
+      input.admin
+        .from('student_material_chunks')
+        .select('student_material_id, chunk_text, page_start, page_end, section_title')
+        .in('student_material_id', materialIds),
+      input.admin
+        .from('student_material_summaries')
+        .select(
+          'student_material_id, summary_short, key_points, summary_sections, status, provider, source_chunks_count, error_message'
+        )
+        .in('student_material_id', materialIds)
+        .eq('status', 'ready'),
+    ]);
 
   if (chunksError) {
     throw chunksError;
@@ -200,18 +288,17 @@ export async function buildStudentMaterialContextsForQuestions(input: {
     throw summariesError;
   }
 
-  const chunksByMaterial = new Map<string, RagChunkRow[]>();
+  const chunksByMaterial = new Map<string, StudentMaterialChunkRow[]>();
   for (const row of (chunkRows ?? []) as StudentMaterialChunkRow[]) {
     const current = chunksByMaterial.get(row.student_material_id) ?? [];
-    current.push({
-      chunk_text: row.chunk_text,
-      source_title: materials.find((material) => material.id === row.student_material_id)?.title ?? null,
-    });
+    current.push(row);
     chunksByMaterial.set(row.student_material_id, current);
   }
 
   const summariesByMaterial = new Map<string, MaterialSummarySource>();
-  for (const summary of buildSummarySources((summaryRows ?? []) as Array<StoredSummaryRow & { student_material_id: string }>)) {
+  for (const summary of buildSummarySources(
+    (summaryRows ?? []) as Array<StoredSummaryRow & { student_material_id: string }>
+  )) {
     summariesByMaterial.set(summary.studentMaterialId, summary);
   }
 
@@ -227,43 +314,80 @@ export async function buildStudentMaterialContextsForQuestions(input: {
       .sort((a, b) => b.priority - a.priority)
       .slice(0, 6);
 
-    const serializedContext: Array<{ text: string; materialId: string; score: number }> = [];
+    const serializedContext: Array<{
+      text: string;
+      materialId: string;
+      materialTitle: string;
+      pageStart: number | null;
+      pageEnd: number | null;
+      sectionTitle: string | null;
+      excerpt: string;
+      score: number;
+      relation: 'origin' | 'best';
+    }> = [];
 
     for (const ranked of rankedMaterials) {
+      const relation: 'origin' | 'best' =
+        question.material_id && ranked.material.id === question.material_id ? 'origin' : 'best';
+
       const summary = summariesByMaterial.get(ranked.material.id);
       if (summary) {
-        const summaryParts = serializeSummarySource(summary, ranked.material.title);
-        for (const text of summaryParts) {
-          serializedContext.push({
-            text,
-            materialId: ranked.material.id,
-            score: ranked.priority + scoreChunk(text, query) + 1,
-          });
-        }
+        serializedContext.push(
+          ...summaryContextForMaterial({
+            summary,
+            material: ranked.material,
+            query,
+            priority: ranked.priority,
+            relation,
+          })
+        );
       }
 
       const materialChunks = chunksByMaterial.get(ranked.material.id) ?? [];
-      const topChunks = selectTopChunksForMaterial(materialChunks, query, 2);
-
-      for (const text of topChunks) {
-        serializedContext.push({
-          text,
-          materialId: ranked.material.id,
-          score: ranked.priority + scoreChunk(text, query),
-        });
-      }
+      serializedContext.push(
+        ...selectTopChunksForMaterial(
+          materialChunks,
+          query,
+          ranked.material,
+          ranked.priority,
+          relation,
+          2
+        )
+      );
     }
 
     const rankedContext = serializedContext
       .filter((item) => item.text && item.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+      .slice(0, 8);
 
     if (rankedContext.length === 0) continue;
 
+    const bestByMaterial = new Map<string, (typeof rankedContext)[number]>();
+    for (const item of rankedContext) {
+      if (!bestByMaterial.has(item.materialId)) {
+        bestByMaterial.set(item.materialId, item);
+      }
+    }
+
+    const matches: StudentMaterialQuestionMatch[] = Array.from(bestByMaterial.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map((item, index) => ({
+        materialId: item.materialId,
+        materialTitle: item.materialTitle,
+        pageStart: item.pageStart,
+        pageEnd: item.pageEnd,
+        sectionTitle: item.sectionTitle,
+        excerpt: item.excerpt,
+        score: item.score,
+        relation: item.relation === 'origin' || index === 0 ? item.relation : 'best',
+      }));
+
     contextByQuestion.set(question.id, {
-      context: rankedContext.map((item) => item.text),
-      matchedMaterialIds: Array.from(new Set(rankedContext.map((item) => item.materialId))),
+      context: rankedContext.slice(0, 5).map((item) => item.text),
+      matchedMaterialIds: matches.map((item) => item.materialId),
+      matches,
     });
   }
 
