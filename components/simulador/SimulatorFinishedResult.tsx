@@ -67,7 +67,6 @@ export function SimulatorFinishedResult({
   const percentage = Math.round((aciertos / safeTotal) * 100);
   const grade = (aciertos / safeTotal) * 10;
   const wrong = Math.max(0, respondidas - aciertos);
-  const retryErrorsHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
   const misErroresHref = '/dashboard/explicaciones';
   const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
   const ownMaterialHref = userId
@@ -240,13 +239,14 @@ export function SimulatorFinishedResult({
 
               {wrong > 0 ? (
                 <div className="mt-5">
-                  <Link
-                    href={retryErrorsHref}
+                  <button
+                    type="button"
+                    onClick={onNewExam}
                     className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-700"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Volver a probar estos errores
-                  </Link>
+                    Hacer otro Simulador
+                  </button>
                 </div>
               ) : null}
 
