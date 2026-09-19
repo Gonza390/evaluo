@@ -12,10 +12,18 @@ function assertIncludesAll(path: string, required: string[]) {
   }
 }
 
-assertIncludesAll('app/layout.tsx', ['metadataBase', 'openGraph', 'twitter', 'lang="es-AR"']);
+assertIncludesAll('app/layout.tsx', [
+  'metadataBase',
+  'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+  'openGraph',
+  'twitter',
+  'lang="es-AR"',
+]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
 assertIncludesAll('app/sitemap.ts', [
   'hasAcademicContent',
+  'hasSubstantialStudyLandingContent',
+  'hasIndexableStudyLandingContent',
   'lastModified',
   '/explorar/materia/${materiaSlug}',
   '/pregunteros/',
@@ -95,13 +103,15 @@ assertIncludesAll(studyLandingPath, [
   'getMateriaSeoContentSignals',
   'contentSignals.questionCount',
   'contentSignals.hasSummaries',
-  'index: contentSignals.hasAcademicContent',
+  'hasSubstantialStudyLandingContent',
+  'index: hasSubstantialStudyLandingContent(contentSignals)',
   'twitter',
   'export function generateStaticParams()',
   'return [];',
 ]);
 
 const studyLanding = source(studyLandingPath).toLowerCase();
+assert.ok(!studyLanding.includes('buildcoursejsonld'), 'study landing must not use Course schema');
 for (const unsupportedClaim of [
   'parciales resueltos',
   'preguntas reales',
@@ -217,9 +227,39 @@ for (const unsupportedClaim of ['100% preciso', 'garantizado', 'preguntas reales
 
 assertIncludesAll('components/footer-home.tsx', [
   'href="/ia-para-estudiantes"',
+  'href="/estudiar-pdf-con-ia"',
+  'href="/funciones/resumir-pdf-con-ia"',
+  'href="/funciones/crear-flashcards-desde-pdf"',
   'href="/funciones/crear-mapa-mental-desde-pdf"',
   'mapas mentales',
 ]);
+
+assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [
+  'officialProfile.officialUrl',
+  'officialProfile.sourceName',
+  'información oficial de la carrera',
+]);
+
+for (const path of [
+  'app/demo/layout.tsx',
+  'app/pricing/resultado/layout.tsx',
+  'app/premium/mapa-mental/layout.tsx',
+  'app/empezar/layout.tsx',
+]) {
+  assertIncludesAll(path, ['index: false', 'follow: true']);
+}
+
+assertIncludesAll('vercel.json', [
+  '"www.evaluo.com.ar"',
+  '"https://evaluo.com.ar/:path*"',
+  '"permanent": true',
+]);
+
+const homeHeroSource = source('components/marketing/home-hero-v2.tsx');
+assert.ok(
+  !homeHeroSource.includes('animate-surface-reveal flex min-w-0 flex-col items-start text-left'),
+  'critical home hero copy must render without the reveal animation'
+);
 
 const packageJson = source('package.json');
 assert.ok(packageJson.includes('"tw-animate-css"'), 'tw-animate-css must remain installed');
