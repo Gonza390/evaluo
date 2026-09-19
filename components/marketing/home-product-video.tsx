@@ -52,6 +52,7 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
               controls
               playsInline
               preload="metadata"
+              poster="https://d2ol7oe51mr4n9.cloudfront.net/user_3IRt4tXV383V8Ui3tAw27Nrw3e2/ed16bd28-41f8-41cf-bf34-d40adc339efa.jpg"
               aria-label="Recorrido de 30 segundos por el estudio de un PDF en Evaluo"
               onPlay={() =>
                 trackMarketingEvent('home_product_video_play', {
@@ -65,7 +66,10 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
                 })
               }
             >
-              <source src="/videos/evaluo-pdf-journey.mp4" type="video/mp4" />
+              <source
+                src="https://d2ol7oe51mr4n9.cloudfront.net/user_3IRt4tXV383V8Ui3tAw27Nrw3e2/f50741ae-354a-4e53-a5b9-0bce46b4a9e0.mp4"
+                type="video/mp4"
+              />
               Tu navegador no puede reproducir este video.
             </video>
           </div>
