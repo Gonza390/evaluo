@@ -87,80 +87,74 @@ export default function Home() {
 
       <HomeHeroV2 primaryHref={primaryHref} />
 
-      <section id="como-funciona" className="py-16 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
-              <UploadCloud className="h-3.5 w-3.5" />
-              Así de simple
-            </span>
-            <h2 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              ¿Cómo funciona Evaluo?
-            </h2>
-            <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Subí una vez tu material y usalo para entender, repasar y practicar.
-            </p>
-          </div>
+      <section id="como-funciona" className="border-b border-slate-100 bg-slate-50/70 py-12 sm:py-14">
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+          <div className="grid gap-8 lg:grid-cols-[0.68fr_1.32fr] lg:items-start lg:gap-14">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-bold text-indigo-700 shadow-sm">
+                <UploadCloud className="h-3.5 w-3.5" />
+                Así de simple
+              </span>
+              <h2 className="text-foreground mt-4 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">
+                ¿Cómo funciona Evaluo?
+              </h2>
+              <p className="mt-3 max-w-[420px] text-sm leading-7 text-slate-600">
+                Subí una vez tu material y usalo para entender, repasar y practicar.
+              </p>
+            </div>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <article
-                  key={step.title}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_8px_20px_rgba(0,0,0,0.02)] transition hover:border-indigo-300 hover:shadow-md"
-                >
-                  {index < 2 && (
-                    <div className="absolute top-12 right-[-16px] z-10 hidden h-[2px] w-[32px] bg-white group-hover:bg-indigo-200 sm:block" />
-                  )}
-
-                  <div>
-                    <div className="from-brand to-brand-2 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md">
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="mt-6 flex items-center gap-2">
-                      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[12px] font-bold text-indigo-800">
-                        {index + 1}
+            <div className="grid border-t border-slate-200 sm:grid-cols-3">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <article
+                    key={step.title}
+                    className={`py-5 sm:px-5 sm:py-6 ${index > 0 ? 'border-t border-slate-200 sm:border-t-0 sm:border-l' : ''}`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
                       </span>
-                      <h3 className="text-[15px] font-bold tracking-tight text-slate-800 transition-colors group-hover:text-indigo-700">
-                        {step.title}
-                      </h3>
+                      <span className="text-[10px] font-black text-indigo-700">0{index + 1}</span>
                     </div>
-
-                    <p className="mt-3 text-xs leading-5 text-slate-700">{step.description}</p>
-                  </div>
-                </article>
-              );
-            })}
+                    <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950">{step.title}</h3>
+                    <p className="mt-2 text-xs leading-5 text-slate-600">{step.description}</p>
+                  </article>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="demo" className="border-t border-slate-100 bg-slate-50/40 py-16 sm:py-24">
-        <div className="mx-auto grid w-full max-w-[1240px] gap-12 px-4 sm:px-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center lg:gap-16 lg:px-10">
+      <section
+        id="demo"
+        className="relative overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] py-20 sm:py-24 lg:py-28"
+      >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent" />
+        <div className="mx-auto grid w-full max-w-[1280px] gap-12 px-4 sm:px-8 lg:grid-cols-[0.6fr_1.4fr] lg:items-center lg:gap-16 lg:px-10">
           <div className="min-w-0">
-            <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
-              <span className="h-px w-8 shrink-0 bg-indigo-500" />
-              Ahora probalo vos
+            <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-300 uppercase">
+              <span className="h-px w-8 shrink-0 bg-indigo-400" />
+              Demo interactiva
             </div>
-            <h2 className="mt-5 max-w-[520px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
-              Probalo con este ejemplo.
+            <h2 className="mt-5 max-w-[520px] text-3xl font-bold tracking-[-0.045em] text-white sm:text-4xl lg:text-[48px] lg:leading-[1.03]">
+              Ahora probalo vos.
             </h2>
-            <p className="mt-5 max-w-[520px] text-sm leading-7 text-slate-700 sm:text-base sm:leading-8">
-              Ya viste el recorrido completo. Ahora interactuá con un apunte de Marketing I: leé un concepto, respondé y descubrí qué conviene repasar.
+            <p className="mt-5 max-w-[500px] text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
+              Interactuá con un apunte de Marketing I: leé un concepto, respondé y descubrí qué conviene repasar.
             </p>
 
-            <div className="mt-8 border-t border-slate-200">
+            <div className="mt-8 border-t border-white/10">
               {demoJourney.map(([number, title, description]) => (
                 <div
                   key={number}
-                  className="grid grid-cols-[38px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-4.5 sm:py-5"
+                  className="grid grid-cols-[38px_minmax(0,1fr)] gap-4 border-b border-white/10 py-4 sm:py-4.5"
                 >
-                  <span className="pt-0.5 text-[10px] font-black text-indigo-800">{number}</span>
+                  <span className="pt-0.5 text-[10px] font-black text-indigo-300">{number}</span>
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold tracking-tight text-slate-950">{title}</h3>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-700">{description}</p>
+                    <h3 className="text-sm font-bold tracking-tight text-white">{title}</h3>
+                    <p className="mt-1.5 text-xs leading-5 text-slate-400">{description}</p>
                   </div>
                 </div>
               ))}
@@ -175,7 +169,7 @@ export default function Home() {
                   cta_name: 'probar_con_mi_pdf_demo',
                   destination: primaryHref,
                 }}
-                className="from-brand to-brand-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-xs font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-xs font-bold text-slate-950 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               >
                 <UploadCloud className="h-4 w-4 shrink-0" />
                 Probar con mi PDF
@@ -185,8 +179,11 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="min-w-0">
-            <HomeLiveStudyDemo />
+          <div className="relative min-w-0 lg:scale-[1.02]">
+            <div className="pointer-events-none absolute -inset-8 rounded-[42px] bg-indigo-500/10 blur-3xl" />
+            <div className="relative">
+              <HomeLiveStudyDemo />
+            </div>
           </div>
         </div>
       </section>
