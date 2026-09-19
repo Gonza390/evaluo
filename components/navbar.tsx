@@ -14,7 +14,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Sparkles,
 } from 'lucide-react';
 import {
   DropdownMenu,
