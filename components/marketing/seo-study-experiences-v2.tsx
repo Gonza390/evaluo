@@ -234,15 +234,18 @@ export function IaParaEstudiantesExperience() {
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> IA aplicada a tus propios materiales de estudio
             </span>
             <h1 className="mx-auto mt-5 max-w-5xl text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[66px]">
-              IA para estudiantes: <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">estudiá tus apuntes y PDFs con IA</span>
+              IA para estudiar: <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">entendé, recordá y practicá con tus apuntes</span>
             </h1>
             <p className="mx-auto mt-5 max-w-3xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-              Usá inteligencia artificial para trabajar sobre el material que ya estás estudiando: resumí ideas, ubicá conceptos, armá mapas mentales y flashcards y después practicá sobre la misma fuente.
+              Una IA para estudiar es útil cuando trabaja sobre el material que realmente tenés que rendir. En Evaluo usás tus apuntes o un PDF para entender conceptos, repasarlos con flashcards y practicar antes del examen sin perder la fuente original.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <PrimaryCta label="Subir mis apuntes o PDF" trackingPrefix="seo_ia_estudiantes_v2" location="hero" />
               <DemoCta trackingPrefix="seo_ia_estudiantes_v2" label="Ver cómo se estudia en Evaluo" />
             </div>
+            <p className="mt-4 text-xs font-medium text-slate-500">
+              Pensado para estudiar parciales, finales e ingresos universitarios sobre tu propio material.
+            </p>
 
             <div className="mt-12 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
               {intents.map((intent) => {
@@ -306,15 +309,39 @@ export function IaParaEstudiantesExperience() {
         <section className="border-y border-slate-100 bg-slate-50/50 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
             <SectionIntro
-              eyebrow="Qué significa estudiar con IA"
-              title="La IA organiza y transforma el material; vos seguís haciendo el trabajo de entender y responder."
-              description="La utilidad no está en recibir una respuesta aislada. Está en convertir tus propios apuntes en distintas formas de estudiar: una síntesis para orientarte, un glosario para ubicar términos, tarjetas para intentar recordar y ejercicios para comprobar qué quedó claro."
+              eyebrow="Preparar un examen"
+              title="Cómo usar IA para estudiar para un examen sin quedarte solo con el resumen."
+              description="El objetivo no es generar más contenido. Es llegar al examen sabiendo qué podés explicar sin mirar, qué errores repetís y qué tema necesitás volver a trabajar."
+            />
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ['01', 'Entender', 'Ubicá ideas centrales, definiciones y procedimientos en el material.'],
+                ['02', 'Recuperar', 'Cerrá la fuente e intentá explicar conceptos o responder preguntas sin mirar.'],
+                ['03', 'Practicar', 'Resolvé ejercicios o consignas nuevas sobre el mismo contenido.'],
+                ['04', 'Corregir', 'Volvé al material solo en los puntos donde aparecieron dudas o errores.'],
+              ].map(([number, title, text]) => (
+                <article key={number} className="rounded-[22px] border border-slate-200 bg-white p-5 sm:p-6">
+                  <p className="text-[10px] font-black tracking-[0.14em] text-indigo-700">{number}</p>
+                  <h3 className="mt-3 text-base font-bold text-slate-950">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 sm:py-20">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <SectionIntro
+              eyebrow="Elegir una IA para estudiar"
+              title="Más que una app que genere respuestas, buscá un flujo que te haga volver al material y practicar."
+              description="Para estudiantes universitarios, una página o app para estudiar con IA tiene más valor cuando conserva la fuente, conecta distintas formas de repaso y permite comprobar qué entendiste."
             />
             <div className="mt-10 grid gap-4 md:grid-cols-3">
               {[
-                ['Primero: ubicarte', 'Usá un resumen y conceptos clave cuando el tema todavía está desordenado.'],
-                ['Después: recuperar', 'Intentá recordar conceptos con flashcards antes de mirar la respuesta.'],
-                ['Por último: comprobar', 'Pasá a ejercicios sobre el mismo material para detectar qué conviene volver a revisar.'],
+                ['Mantener la fuente', 'El PDF o apunte original debería seguir disponible como referencia durante todo el estudio.'],
+                ['Conectar las tareas', 'Resumen, conceptos, flashcards y práctica deberían trabajar sobre el mismo contenido, no como salidas aisladas.'],
+                ['Obligarte a responder', 'La herramienta debería llevarte de leer a recuperar y practicar, porque ahí aparecen las dudas reales.'],
               ].map(([title, text]) => (
                 <article key={title} className="rounded-[24px] border border-slate-200 bg-white p-6">
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" aria-hidden="true" />
@@ -324,14 +351,14 @@ export function IaParaEstudiantesExperience() {
               ))}
             </div>
             <p className="mt-7 text-sm leading-7 text-slate-600">
-              ¿Estás preparando un ingreso universitario? Mirá un caso concreto en nuestra guía sobre{' '}
+              Este mismo método también puede aplicarse a un ingreso universitario. Como ejemplo concreto, podés ver{' '}
               <Link
                 href="/como-estudiar-ingreso-unlam"
                 className="font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 transition hover:decoration-indigo-500"
               >
                 cómo preparar el ingreso UNLaM 2027
               </Link>
-              , usando el material oficial como punto de partida.
+              {' '}trabajando desde el material oficial.
             </p>
           </div>
         </section>
@@ -373,6 +400,14 @@ export function IaParaEstudiantesExperience() {
             {
               question: '¿Qué diferencia hay entre estudiar con Evaluo y hacer una pregunta aislada a una IA?',
               answer: 'En Evaluo el punto de partida es el material que vos elegís. El mismo contenido puede convertirse en resumen, glosario, mapa mental, flashcards y ejercicios, para que cada tarea conserve relación con la fuente que estás estudiando.',
+            },
+            {
+              question: '¿Sirve una IA para estudiar para un examen?',
+              answer: 'Puede servir si la usás para trabajar sobre el contenido que realmente vas a rendir: primero para entender y ordenar, después para intentar recordar y finalmente para practicar sin mirar el material. El objetivo no es acumular resúmenes, sino detectar qué todavía no dominás.',
+            },
+            {
+              question: '¿Qué conviene buscar en una app o página para estudiar con IA?',
+              answer: 'Que pueda trabajar sobre tus propios apuntes o PDFs, mantenga esa fuente como referencia y conecte comprensión, repaso y práctica. Así evitás estudiar respuestas aisladas sin relación con el material de la materia.',
             },
             {
               question: '¿Por dónde conviene empezar si tengo muchos apuntes?',
