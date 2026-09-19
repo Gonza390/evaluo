@@ -11,6 +11,18 @@ export type MateriaSeoContentSignals = {
   hasAcademicContent: boolean;
 };
 
+export function hasSubstantialStudyLandingContent(
+  signals: Pick<MateriaSeoContentSignals, 'questionCount' | 'summaryCount' | 'resourceCount'>
+) {
+  const materialCount = signals.summaryCount + signals.resourceCount;
+
+  return (
+    signals.questionCount >= 10 ||
+    materialCount >= 2 ||
+    (signals.questionCount >= 3 && materialCount >= 1)
+  );
+}
+
 const loadMateriaSeoContentSignals = unstable_cache(
   async (materiaId: string): Promise<MateriaSeoContentSignals> => {
     const client = createPublicClient();

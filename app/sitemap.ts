@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { createPublicClient } from '@/lib/supabase-public';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
 import { SITE_URL } from '@/lib/site';
+import { hasSubstantialStudyLandingContent } from '@/lib/seo-content-signals';
 import { fetchExplorarCatalogData } from '@/lib/data/catalog';
 
 function isFulfilled<T>(result: PromiseSettledResult<T>): result is PromiseFulfilledResult<T> {
@@ -129,15 +130,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
 
   const materiaLastModified = new Map<string, Date>();
+  const materiaQuestionCount = new Map<string, number>();
+  const materiaSummaryCount = new Map<string, number>();
+  const materiaResourceCount = new Map<string, number>();
   const materiasConPreguntas = new Set<string>();
   const parcialesConPreguntas = new Set<string>();
   if (isFulfilled(frescuraResult)) {
     for (const row of frescuraResult.value.data ?? []) {
       const materiaId = String(row.materia_id ?? '');
       const creadoAt = row.creado_at;
-      if (!materiaId || !creadoAt) continue;
+      if (!materiaId) continue;
+      materiaQuestionCount.set(materiaId, (materiaQuestionCount.get(materiaId) ?? 0) + 1);
       materiasConPreguntas.add(materiaId);
       parcialesConPreguntas.add(`${materiaId}:${Number(row.parcial ?? 1)}`);
+      if (!creadoAt) continue;
       const date = new Date(creadoAt);
       const current = materiaLastModified.get(materiaId);
       if (!current || date.getTime() > current.getTime()) {
@@ -149,14 +155,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const materiasConResumenes = new Set<string>();
   if (isFulfilled(resumenesResult)) {
     for (const row of resumenesResult.value.data ?? []) {
-      if (row.materia_id) materiasConResumenes.add(String(row.materia_id));
+      if (!row.materia_id) continue;
+      const materiaId = String(row.materia_id);
+      materiasConResumenes.add(materiaId);
+      materiaSummaryCount.set(materiaId, (materiaSummaryCount.get(materiaId) ?? 0) + 1);
     }
   }
 
   const materiasConRecursos = new Set<string>();
   if (isFulfilled(recursosResult)) {
     for (const row of recursosResult.value.data ?? []) {
-      if (row.materia_id) materiasConRecursos.add(String(row.materia_id));
+      if (!row.materia_id) continue;
+      const materiaId = String(row.materia_id);
+      materiasConRecursos.add(materiaId);
+      materiaResourceCount.set(materiaId, (materiaResourceCount.get(materiaId) ?? 0) + 1);
     }
   }
 
@@ -177,6 +189,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const hasSummaries = materiasConResumenes.has(materia.id);
       const hasResources = materiasConRecursos.has(materia.id);
       const hasAcademicContent = hasQuestions || hasSummaries || hasResources;
+      const hasIndexableStudyLandingContent = hasSubstantialStudyLandingContent({
+        questionCount: materiaQuestionCount.get(materia.id) ?? 0,
+        summaryCount: materiaSummaryCount.get(materia.id) ?? 0,
+        resourceCount: materiaResourceCount.get(materia.id) ?? 0,
+      });
 
       if (!hasAcademicContent) continue;
 
@@ -233,11 +250,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
       }
 
-      routes.push({
-        url: `${baseUrl}/landings/estudiar/${materiaSlug}`,
-        changeFrequency: 'monthly',
-        priority: 0.65,
-      });
+      if (hasIndexableStudyLandingContent) {
+        routes.push({
+          url: `${baseUrl}/landings/estudiar/${materiaSlug}`,
+          changeFrequency: 'monthly',
+          priority: 0.65,
+        });
+      }
     }
   }
 

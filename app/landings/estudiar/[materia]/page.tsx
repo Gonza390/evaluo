@@ -5,10 +5,13 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { CheckCircle2, FileText, HelpCircle, Library, PlayCircle, Sparkles } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { SeoBreadcrumbs } from '@/components/seo/SeoBreadcrumbs';
-import { buildBreadcrumbJsonLd, buildCourseJsonLd, buildFaqJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { createPublicClient } from '@/lib/supabase-public';
-import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
+import {
+  getMateriaSeoContentSignals,
+  hasSubstantialStudyLandingContent,
+} from '@/lib/seo-content-signals';
 
 interface PageProps {
   params: Promise<{ materia: string }>;
@@ -76,7 +79,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       images: ['/opengraph-image.png'],
     },
     robots: {
-      index: contentSignals.hasAcademicContent,
+      index: hasSubstantialStudyLandingContent(contentSignals),
       follow: true,
     },
   };
@@ -149,14 +152,6 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             { name: materiaNombre, path: materiaHref },
             { name: `Cómo estudiar ${materiaNombre}`, path: canonicalHref },
           ]),
-          buildCourseJsonLd({
-            name: `Estudiar ${materiaNombre}`,
-            description:
-              availableItemsCount > 0
-                ? `Guía de estudio de ${materiaNombre} con ${availableItemsCount.toLocaleString('es-AR')} elementos académicos disponibles en Evaluo.`
-                : `Guía práctica para organizar el estudio de ${materiaNombre} con Evaluo.`,
-            url: canonicalHref,
-          }),
           buildFaqJsonLd(faqItems),
         ]}
       />
