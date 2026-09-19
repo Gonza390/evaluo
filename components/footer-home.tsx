@@ -141,9 +141,6 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
 
         <div className="mt-6 border-t border-white/10 pt-4 text-center md:text-left">
           <p className="text-[12px] text-white/60">
-            Evaluo no es una institución educativa ni está afiliada, patrocinada o aprobada por ninguna universidad. Los materiales son de estudio y las marcas mencionadas pertenecen a sus respectivos titulares.
-          </p>
-          <p className="mt-2 text-[12px] text-white/60">
             Copyright <span suppressHydrationWarning>{new Date().getFullYear()}</span> Evaluo. Todos los derechos reservados.
           </p>
         </div>
