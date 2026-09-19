@@ -4,6 +4,11 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 import { buildWrongAnswersExplanations } from '@/lib/simulator-wrong-answers';
+import { hasPremiumAccess } from '@/lib/premium';
+import { enforceStrictRateLimit } from '@/lib/rate-limit';
+
+const FREE_STUDY_ERROR_EXPLANATIONS_LIMIT = 5;
+const STUDY_ERROR_EXPLANATION_WINDOW_MS = 3 * 60 * 60 * 1000;
 import {
   markStudyErrorReviewed,
   recordStudyErrorCorrect,
@@ -154,6 +159,23 @@ export async function generateStudyErrorExplanationAction(
 
     const parcialValue = Number(row.metadata?.parcial);
     const parcial = Number.isInteger(parcialValue) && parcialValue > 0 ? parcialValue : 1;
+
+    const isPremium = await hasPremiumAccess(user.id);
+    if (!isPremium) {
+      const rate = await enforceStrictRateLimit({
+        key: `study-errors:explanation:${user.id}`,
+        limit: FREE_STUDY_ERROR_EXPLANATIONS_LIMIT,
+        windowMs: STUDY_ERROR_EXPLANATION_WINDOW_MS,
+      });
+
+      if (!rate.allowed) {
+        return {
+          success: false,
+          message:
+            'Ya usaste las 5 explicaciones con IA incluidas en Free para este período. Tus errores siguen guardados y podés volver a practicar igual.',
+        };
+      }
+    }
 
     const { explanations, dailyLimitReached } = await buildWrongAnswersExplanations({
       materiaId: row.materia_id,
