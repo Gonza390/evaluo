@@ -89,6 +89,6 @@ export const loadPregunteroHubData = unstable_cache(
         return byUniversity || a.carreraNombre.localeCompare(b.carreraNombre, 'es');
       });
   },
-  ['preguntero-hub-v6-rpc'],
-  { revalidate: 600, tags: ['universidad-data'] }
+  ['preguntero-hub-v7-rpc'],
+  { revalidate: 3600, tags: ['universidad-data'] }
 );
