@@ -13,9 +13,14 @@ import {
   FileText,
   Layers3,
   ListChecks,
+  Loader2,
+  Sparkles,
   Target,
 } from 'lucide-react';
-import { markStudyErrorReviewedAction } from '@/lib/actions/study-errors';
+import {
+  generateStudyErrorExplanationAction,
+  markStudyErrorReviewedAction,
+} from '@/lib/actions/study-errors';
 import type { StudyErrorSource, StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
@@ -23,7 +28,7 @@ const sourceConfig: Record<
   StudyErrorSource,
   { label: string; icon: typeof Target }
 > = {
-  simulator: { label: 'Simulador', icon: Target },
+  simulator: { label: 'Preguntero', icon: Target },
   flashcard: { label: 'Flashcards', icon: Layers3 },
   exercise: { label: 'Práctica', icon: ListChecks },
   diagnostic: { label: 'Diagnóstico', icon: CircleAlert },
@@ -31,12 +36,10 @@ const sourceConfig: Record<
 
 function formatRelativeDate(value: string) {
   const date = new Date(value);
-  const now = Date.now();
-  const diff = now - date.getTime();
+  const diff = Date.now() - date.getTime();
   if (!Number.isFinite(diff) || diff < 0) return 'reciente';
 
   const hours = Math.floor(diff / 3_600_000);
-  if (hours < 1) return 'hoy';
   if (hours < 24) return 'hoy';
   const days = Math.floor(hours / 24);
   if (days === 1) return 'ayer';
@@ -72,6 +75,12 @@ function buildUploadHref(item: StudyErrorView) {
   return `/dashboard/materiales?${params.toString()}`;
 }
 
+function buildPracticeHref(item: StudyErrorView) {
+  if (item.sourceType !== 'simulator' || !item.materiaId) return null;
+  const parcial = item.parcial ?? 1;
+  return `/simulador/errores/${item.materiaId}?parcial=${parcial}`;
+}
+
 function ErrorListItem({
   item,
   active,
@@ -99,10 +108,16 @@ function ErrorListItem({
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className={`truncate text-sm font-semibold ${active ? 'text-slate-950' : 'text-slate-700'}`}>
+          <p
+            className={`truncate text-sm font-semibold ${
+              active ? 'text-slate-950' : 'text-slate-700'
+            }`}
+          >
             {item.topic}
           </p>
-          <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-slate-700' : 'text-slate-300'}`} />
+          <ChevronRight
+            className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-slate-700' : 'text-slate-300'}`}
+          />
         </div>
         <p className="mt-1 truncate text-xs text-slate-400">
           {item.materiaNombre ?? config.label}
@@ -115,12 +130,39 @@ function ErrorListItem({
 
 function StudyErrorDetail({ item }: { item: StudyErrorView }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isNavigating, startTransition] = useTransition();
   const [answersOpen, setAnswersOpen] = useState(false);
+  const [explanation, setExplanation] = useState(item.explanation);
+  const [explanationLoading, setExplanationLoading] = useState(false);
+  const [explanationError, setExplanationError] = useState<string | null>(null);
+
   const config = sourceConfig[item.sourceType];
   const Icon = config.icon;
   const recommendation = item.recommendation;
   const materialHref = buildMaterialHref(item);
+  const practiceHref = buildPracticeHref(item);
+  const canGenerateExplanation = item.sourceType === 'simulator' && Boolean(item.questionId);
+
+  const generateExplanation = async () => {
+    if (!canGenerateExplanation || explanationLoading) return;
+
+    setExplanationLoading(true);
+    setExplanationError(null);
+    const result = await generateStudyErrorExplanationAction(item.id);
+    setExplanationLoading(false);
+
+    if (!result.success || !result.explanation) {
+      setExplanationError(result.message ?? 'No pudimos generar esta explicación ahora.');
+      return;
+    }
+
+    setExplanation(result.explanation);
+    trackMarketingEvent('study_error_explanation_reviewed', {
+      study_error_id: item.id,
+      source_type: item.sourceType,
+      materia_id: item.materiaId,
+    });
+  };
 
   const startPdfStudy = () => {
     if (!materialHref) return;
@@ -142,6 +184,25 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
     });
   };
 
+  const startPractice = () => {
+    if (!practiceHref || (!item.lastReviewedAt && !explanation)) return;
+
+    startTransition(() => {
+      void markStudyErrorReviewedAction(item.id).then((result) => {
+        if (!result.success) return;
+
+        trackMarketingEvent('study_error_repractice_started', {
+          study_error_id: item.id,
+          source_type: item.sourceType,
+          materia_id: item.materiaId,
+          used_pdf: Boolean(recommendation),
+        });
+
+        router.push(practiceHref);
+      });
+    });
+  };
+
   return (
     <div className="max-w-[790px]">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
@@ -155,16 +216,54 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
         <span>{formatRelativeDate(item.lastFailedAt)}</span>
       </div>
 
-      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-slate-950">
+      <h2 className="mt-3 text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-3xl">
         {item.topic}
       </h2>
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-5 max-w-2xl">
         <p className="text-[15px] leading-7 text-slate-600">{item.prompt}</p>
-        {item.explanation ? (
-          <p className="mt-3 text-[15px] leading-7 text-slate-700">{item.explanation}</p>
-        ) : null}
       </div>
+
+      <section className="mt-7 border-t border-slate-200 pt-6">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-slate-500" />
+          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
+            Explicación IA
+          </p>
+        </div>
+
+        {explanation ? (
+          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-700">
+            {explanation}
+          </p>
+        ) : canGenerateExplanation ? (
+          <div className="mt-3">
+            <p className="max-w-xl text-sm leading-6 text-slate-500">
+              Podés entender por qué fallaste aunque todavía no hayas subido tus apuntes.
+            </p>
+            <button
+              type="button"
+              disabled={explanationLoading}
+              onClick={() => void generateExplanation()}
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-60 sm:w-auto"
+            >
+              {explanationLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {explanationLoading ? 'Generando explicación...' : 'Entender por qué me equivoqué'}
+            </button>
+            {explanationError ? (
+              <p className="mt-2 text-xs leading-5 text-amber-700">{explanationError}</p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+            Este error ya está conectado con el material donde se originó.
+          </p>
+        )}
+      </section>
 
       {recommendation ? (
         <section className="mt-8 border-t-2 border-slate-950 pt-6">
@@ -175,7 +274,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
             </p>
           </div>
 
-          <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-slate-950">
+          <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">
             {recommendation.materialTitle}
           </h3>
 
@@ -196,24 +295,24 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
           </p>
 
           {recommendation.excerpt ? (
-            <blockquote className="mt-6 border-l-2 border-indigo-200 pl-5 text-[15px] leading-7 text-slate-700">
+            <blockquote className="mt-5 border-l-2 border-indigo-200 pl-4 text-sm leading-6 text-slate-700 sm:pl-5 sm:text-[15px] sm:leading-7">
               “{recommendation.excerpt}”
             </blockquote>
           ) : null}
 
           <button
             type="button"
-            disabled={isPending}
+            disabled={isNavigating}
             onClick={startPdfStudy}
-            className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(79,70,229,0.16)] transition hover:bg-indigo-700 disabled:opacity-60"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(79,70,229,0.16)] transition hover:bg-indigo-700 disabled:opacity-60 sm:w-auto"
           >
             Estudiar este tema en mi PDF
             <ArrowRight className="h-4 w-4" />
           </button>
 
           {item.alternatives.length > 0 ? (
-            <div className="mt-7 border-t border-slate-200 pt-5">
-              <p className="text-xs text-slate-400">
+            <div className="mt-6 border-t border-slate-200 pt-4">
+              <p className="text-xs leading-5 text-slate-400">
                 También aparece en{' '}
                 {item.alternatives.map((alternative) => alternative.materialTitle).join(' · ')}.
               </p>
@@ -225,22 +324,25 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-indigo-600" />
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
-              Estudiá este tema en tu material
+              Recomendado
             </p>
           </div>
-          <h3 className="mt-3 text-xl font-semibold tracking-[-0.035em] text-slate-950">
-            Todavía no encontramos este tema en un PDF tuyo
+          <h3 className="mt-3 text-[1.3rem] font-semibold tracking-[-0.035em] text-slate-950 sm:text-xl">
+            Encontrá {item.topic} en tus apuntes
           </h3>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-            Subí el material que entra en tu examen y Evaluo va a buscar dónde se explica este concepto.
+            Subí el PDF que entra en tu examen y Evaluo busca dónde se explica este tema para llevarte directo a esa parte.
           </p>
           <Link
             href={buildUploadHref(item)}
-            className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white"
+            className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white sm:w-auto"
           >
-            Subir PDF y encontrar este tema
+            Subir mis apuntes
             <ArrowRight className="h-4 w-4" />
           </Link>
+          <p className="mt-3 text-xs leading-5 text-slate-400">
+            No necesitás subir un PDF para entender el error ni para volver a probarte.
+          </p>
         </section>
       )}
 
@@ -279,11 +381,38 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
       ) : null}
 
       <div className="mt-8 border-t border-slate-200 pt-6">
-        <p className="text-sm font-semibold text-slate-900">Cómo se cierra este error</p>
-        <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-          Primero repasalo en tu material. Cuando después vuelvas a acertarlo en {config.label.toLowerCase()},
-          va a pasar automáticamente a Resueltos.
-        </p>
+        {practiceHref ? (
+          <>
+            <p className="text-sm font-semibold text-slate-900">Después de repasarlo</p>
+            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
+              Volvé a responder estas preguntas. Si ahora acertás, el tema pasa automáticamente a Resueltos.
+            </p>
+            {item.lastReviewedAt || (!recommendation && explanation) ? (
+              <button
+                type="button"
+                disabled={isNavigating}
+                onClick={startPractice}
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
+              >
+                Probarme de nuevo
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <p className="mt-3 text-xs font-medium text-slate-400">
+                {recommendation
+                  ? 'Primero abrí el PDF recomendado y repasá el tema.'
+                  : 'Primero revisá la explicación del error.'}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-slate-900">Cómo se cierra este error</p>
+            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
+              Después de repasarlo, cuando vuelvas a acertarlo en {config.label.toLowerCase()} va a pasar automáticamente a Resueltos.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
@@ -291,6 +420,8 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
 
 export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
   const [selectedId, setSelectedId] = useState<string | null>(data.pending[0]?.id ?? null);
+  const [mobileListOpen, setMobileListOpen] = useState(false);
+
   const selected = useMemo(
     () => data.pending.find((item) => item.id === selectedId) ?? data.pending[0] ?? null,
     [data.pending, selectedId]
@@ -305,9 +436,9 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
 
   if (data.pending.length === 0) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
         <h1 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Mis errores</h1>
-        <div className="mt-10 border-y border-slate-200 py-8">
+        <div className="mt-8 border-y border-slate-200 py-7 sm:mt-10 sm:py-8">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
             <div>
@@ -328,8 +459,8 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
   }
 
   return (
-    <div className="mx-auto max-w-[1180px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
-      <header className="border-b border-slate-200 pb-6">
+    <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-9">
+      <header className="border-b border-slate-200 pb-5 sm:pb-6">
         <h1 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2.55rem]">
           Mis errores
         </h1>
@@ -339,8 +470,47 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
         </p>
       </header>
 
+      <div className="lg:hidden">
+        <div className="border-b border-slate-200 py-4">
+          <button
+            type="button"
+            onClick={() => setMobileListOpen((value) => !value)}
+            className="flex w-full items-center justify-between gap-4 py-1 text-left"
+            aria-expanded={mobileListOpen}
+          >
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+                Tema seleccionado
+              </p>
+              <p className="mt-1 truncate text-base font-semibold text-slate-950">
+                {selected?.topic}
+              </p>
+            </div>
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 text-slate-400 transition ${mobileListOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {mobileListOpen ? (
+            <nav className="mt-3 max-h-[52vh] overflow-y-auto border-t border-slate-100 pt-2">
+              {data.pending.map((item) => (
+                <ErrorListItem
+                  key={item.id}
+                  item={item}
+                  active={item.id === selected?.id}
+                  onSelect={() => {
+                    setSelectedId(item.id);
+                    setMobileListOpen(false);
+                  }}
+                />
+              ))}
+            </nav>
+          ) : null}
+        </div>
+      </div>
+
       <div className="grid min-h-[680px] lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="border-b border-slate-200 py-5 lg:border-r lg:border-b-0 lg:pr-5">
+        <aside className="hidden py-5 lg:block lg:border-r lg:border-slate-200 lg:pr-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
               Para estudiar
@@ -378,7 +548,7 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
         </aside>
 
         <section className="py-6 lg:pl-10 lg:py-8">
-          {selected ? <StudyErrorDetail item={selected} /> : null}
+          {selected ? <StudyErrorDetail key={selected.id} item={selected} /> : null}
         </section>
       </div>
     </div>
