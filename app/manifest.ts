@@ -2,10 +2,10 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Evaluo | Simulador de exámenes universitarios',
+    name: 'Evaluo | Estudiá tu PDF con IA',
     short_name: 'Evaluo',
     description:
-      'Estudia y practica parciales universitarios argentinos con simuladores, resúmenes y pregunteros en un solo lugar.',
+      'Subí tus apuntes en PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
     id: '/',
     start_url: '/dashboard',
     scope: '/',
@@ -44,10 +44,10 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: 'Explorar universidades',
-        short_name: 'Explorar',
-        description: 'Abre el catálogo de universidades, carreras y materias.',
-        url: '/explorar',
+        name: 'Estudiar un PDF',
+        short_name: 'Subir PDF',
+        description: 'Subí tus apuntes y empezá a estudiar con Evaluo.',
+        url: '/dashboard/materiales?openUpload=1',
       },
       {
         name: 'Mi dashboard',

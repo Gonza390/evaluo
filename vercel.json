@@ -1,12 +1,27 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["gru1"],
+  "regions": [
+    "gru1"
+  ],
   "git": {
     "deploymentEnabled": {
       "master": true,
       "*": false
     }
   },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.evaluo.com.ar"
+        }
+      ],
+      "destination": "https://evaluo.com.ar/:path*",
+      "permanent": true
+    }
+  ],
   "crons": [
     {
       "path": "/api/internal/explanations/warm?batch_size=30&candidate_pool=4000&max_tokens=65000&lookback_days=120",

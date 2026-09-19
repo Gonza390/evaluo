@@ -15,9 +15,9 @@ import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Subí tu PDF y prepará tu examen',
+  title: { absolute: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen' },
   description:
-    'Convertí tus apuntes en resúmenes, mapas mentales, flashcards y práctica. Detectá qué temas necesitás reforzar antes del examen.',
+    'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
   alternates: {
     canonical: '/',
   },
@@ -25,21 +25,27 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Evaluo',
     locale: 'es_AR',
-    title: 'Evaluo | Subí tu PDF y prepará tu examen',
+    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     description:
-      'Convertí tus apuntes en distintas formas de estudio y practicá sobre el mismo material antes del examen.',
+      'Subí tu PDF y transformalo en resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
     url: '/',
     images: [
       {
         url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Evaluo | Subí tu PDF y prepará tu examen',
+        alt: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
       },
     ],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+    description:
+      'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
+    images: ['/opengraph-image.png'],
+  },
 };
-
 
 const demoJourney = [
   ['01', 'Tu material', 'Partimos de un fragmento del PDF de Marketing I.'],

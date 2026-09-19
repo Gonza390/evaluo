@@ -75,18 +75,18 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Evaluo | Simulador de exámenes y materiales universitarios',
+    default: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     template: '%s | Evaluo',
   },
   description:
-    'Estudiá con resúmenes, pregunteros y simuladores universitarios en un solo lugar. Organizá tus materiales y mejorá tu rendimiento con Evaluo.',
+    'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
   keywords: [
     'evaluo',
-    'simulador de exámenes',
-    'resúmenes universitarios',
-    'pregunteros',
-    'preguntas de parcial',
-    'estudio universitario',
+    'estudiar PDF con IA',
+    'resumir PDF con IA',
+    'flashcards desde PDF',
+    'mapa mental desde PDF',
+    'preparar examen',
     'materiales de estudio',
   ],
   applicationName: 'Evaluo',
@@ -107,24 +107,24 @@ export const metadata: Metadata = {
     type: 'website',
     url: '/',
     siteName: 'Evaluo',
-    title: 'Evaluo | Simulador de exámenes y materiales universitarios',
+    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     description:
-      'Resúmenes, preguntas, simuladores y seguimiento de progreso para estudiar mejor en la universidad.',
+      'Subí tu PDF y transformalo en resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.'
     locale: 'es_AR',
     images: [
       {
         url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Evaluo | Simulador de exámenes y materiales universitarios',
+        alt: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Evaluo | Simulador de exámenes y materiales universitarios',
+    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     description:
-      'Resúmenes, preguntas y simuladores para preparar tus parciales desde un solo lugar.',
+      'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.'
     images: ['/opengraph-image.png'],
   },
   manifest: '/manifest.webmanifest',
