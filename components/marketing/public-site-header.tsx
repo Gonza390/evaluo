@@ -92,16 +92,10 @@ export function PublicSiteHeader({
             Cómo funciona
           </Link>
           <Link
-            href="/explorar"
+            href="/ia-para-estudiantes"
             className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
           >
-            Materias
-          </Link>
-          <Link
-            href="/pregunteros"
-            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Pregunteros
+            IA para estudiar
           </Link>
           <Link
             href="/pricing"
