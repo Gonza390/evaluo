@@ -230,7 +230,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-slate-500" />
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
-            Explicación IA
+            Qué pasó
           </p>
         </div>
 
@@ -241,7 +241,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
         ) : canGenerateExplanation ? (
           <div className="mt-3">
             <p className="max-w-xl text-sm leading-6 text-slate-500">
-              Podés entender por qué fallaste aunque todavía no hayas subido tus apuntes.
+              Entendé por qué esta respuesta no era la correcta. Después, Evaluo puede llevar este error a tus propios apuntes para que estudies lo que realmente entra en tu examen.
             </p>
             <button
               type="button"
@@ -254,7 +254,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              {explanationLoading ? 'Generando explicación...' : 'Entender por qué me equivoqué'}
+              {explanationLoading ? 'Analizando el error...' : 'Entender este error'}
             </button>
             {explanationError ? (
               <p className="mt-2 text-xs leading-5 text-amber-700">{explanationError}</p>
@@ -326,24 +326,24 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-indigo-600" />
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
-              Recomendado
+              Siguiente paso
             </p>
           </div>
           <h3 className="mt-3 text-[1.3rem] font-semibold tracking-[-0.035em] text-slate-950 sm:text-xl">
-            Encontrá {item.topic} en tus apuntes
+            Estudiá {item.topic} en el material que realmente entra en tu examen
           </h3>
           <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-            Subí el PDF que entra en tu examen y Evaluo busca dónde se explica este tema para llevarte directo a esa parte.
+            Subí tus apuntes. Evaluo los procesa, encuentra dónde aparece este tema y te lleva a la parte que necesitás reforzar.
           </p>
           <Link
             href={buildUploadHref(item)}
             className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white sm:w-auto"
           >
-            Subir mis apuntes
+            Subir mis apuntes y encontrar este tema
             <ArrowRight className="h-4 w-4" />
           </Link>
           <p className="mt-3 text-xs leading-5 text-slate-400">
-            No necesitás subir un PDF para entender el error ni para volver a probarte.
+            Cuando el PDF esté listo, este error queda conectado con el lugar exacto donde conviene estudiarlo.
           </p>
         </section>
       )}
@@ -383,9 +383,9 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
       ) : null}
 
       <div className="mt-8 border-t border-slate-200 pt-6">
-        {practiceHref ? (
+        {practiceHref && recommendation ? (
           <>
-            <p className="text-sm font-semibold text-slate-900">Después de repasarlo</p>
+            <p className="text-sm font-semibold text-slate-900">Después de estudiarlo</p>
             <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
               Volvé a responder estas preguntas. Si ahora acertás, el tema pasa automáticamente a Resueltos.
             </p>
@@ -396,14 +396,21 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
                 onClick={startPractice}
                 className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
               >
-                Probarme de nuevo
+                Comprobar si ya lo aprendí
                 <ArrowRight className="h-4 w-4" />
               </button>
             ) : (
               <p className="mt-3 text-xs font-medium text-slate-400">
-                Primero revisá la explicación, tu respuesta o el PDF recomendado.
+                Primero abrí el PDF recomendado y repasá este tema.
               </p>
             )}
+          </>
+        ) : practiceHref ? (
+          <>
+            <p className="text-sm font-semibold text-slate-900">Primero conectalo con tus apuntes</p>
+            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
+              La explicación te muestra qué pasó. El siguiente paso es estudiar este tema en el material que realmente entra en tu examen.
+            </p>
           </>
         ) : (
           <>
