@@ -184,8 +184,10 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
     });
   };
 
+  const hasReviewedError = Boolean(item.lastReviewedAt || explanation || answersOpen);
+
   const startPractice = () => {
-    if (!practiceHref || (!item.lastReviewedAt && !explanation)) return;
+    if (!practiceHref || !hasReviewedError) return;
 
     startTransition(() => {
       void markStudyErrorReviewedAction(item.id).then((result) => {
@@ -387,7 +389,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
             <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
               Volvé a responder estas preguntas. Si ahora acertás, el tema pasa automáticamente a Resueltos.
             </p>
-            {item.lastReviewedAt || (!recommendation && explanation) ? (
+            {hasReviewedError ? (
               <button
                 type="button"
                 disabled={isNavigating}
@@ -399,9 +401,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
               </button>
             ) : (
               <p className="mt-3 text-xs font-medium text-slate-400">
-                {recommendation
-                  ? 'Primero abrí el PDF recomendado y repasá el tema.'
-                  : 'Primero revisá la explicación del error.'}
+                Primero revisá la explicación, tu respuesta o el PDF recomendado.
               </p>
             )}
           </>
