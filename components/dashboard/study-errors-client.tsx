@@ -343,7 +343,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
             <ArrowRight className="h-4 w-4" />
           </Link>
           <p className="mt-3 text-xs leading-5 text-slate-400">
-            Cuando el PDF esté listo, este error queda conectado con el lugar exacto donde conviene estudiarlo.
+            Cuando el PDF esté listo, Evaluo buscará este tema y, si encuentra una referencia, te mostrará dónde repasarlo.
           </p>
         </section>
       )}
@@ -387,7 +387,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
           <>
             <p className="text-sm font-semibold text-slate-900">Después de estudiarlo</p>
             <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-              Volvé a responder estas preguntas. Si ahora acertás, el tema pasa automáticamente a Resueltos.
+              Volvé a responder estas preguntas. Si ahora acertás, el tema pasa a Resueltos para que puedas seguir con el próximo punto.
             </p>
             {hasReviewedError ? (
               <button
@@ -396,7 +396,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
                 onClick={startPractice}
                 className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
               >
-                Comprobar si ya lo aprendí
+                Volver a practicar este tema
                 <ArrowRight className="h-4 w-4" />
               </button>
             ) : (
