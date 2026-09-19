@@ -44,21 +44,21 @@ export const metadata: Metadata = {
 const steps = [
   {
     icon: UploadCloud,
-    title: 'Subí lo que tenés que estudiar',
+    title: 'Subí tu PDF',
     description:
-      'Cargá tu apunte, resumen o material de la materia en PDF.',
+      'Cargá el apunte, resumen o material que realmente tenés que estudiar.',
   },
   {
     icon: CheckCircle2,
-    title: 'Descubrí qué ya sabés',
+    title: 'Detectá qué dominás y qué reforzar',
     description:
-      'Evaluo te hace unas preguntas para identificar qué dominás y qué conviene reforzar.',
+      'Hacé un diagnóstico sobre ese material para ubicar qué está firme y qué conviene trabajar.',
   },
   {
     icon: FileText,
-    title: 'Estudiá lo que necesitás',
+    title: 'Estudiá y practicá sobre el mismo PDF',
     description:
-      'Repasá y practicá sobre tu propio material hasta estar listo para el parcial.',
+      'Pasá de resumen y conceptos a flashcards y práctica sin perder la fuente original.',
   },
 ];
 
@@ -97,7 +97,7 @@ export default function Home() {
               ¿Cómo funciona Evaluo?
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              De tu PDF a saber qué estudiar después, en 3 pasos.
+              Del PDF a un recorrido de estudio sobre la misma fuente, en 3 pasos.
             </p>
           </div>
 
@@ -147,8 +147,7 @@ export default function Home() {
               De estudiar el material a comprobar qué entendiste.
             </h2>
             <p className="mt-5 max-w-[520px] text-sm leading-7 text-slate-700 sm:text-base sm:leading-8">
-              Esta demo muestra cómo un mismo apunte pasa de resumen a práctica. Probá el recorrido y,
-              cuando quieras, subí tu propio PDF.
+              Esta demo muestra cómo un mismo PDF pasa de resumen a flashcards, práctica y diagnóstico. Probá el recorrido y, cuando quieras, subí tu propio material.
             </p>
 
             <div className="mt-8 border-t border-slate-200">
@@ -191,7 +190,7 @@ export default function Home() {
                 }}
                 className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
-                Ver demo Marketing I
+                Ver material de ejemplo
                 <ArrowRight className="h-3.5 w-3.5" />
               </TrackedLink>
             </div>
@@ -210,7 +209,7 @@ export default function Home() {
               Preguntas Frecuentes
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Todo lo que necesitás saber sobre la plataforma y cómo preparar tus parciales.
+              Cómo funciona Evaluo cuando estudiás desde tus propios apuntes y PDFs.
             </p>
           </div>
 
