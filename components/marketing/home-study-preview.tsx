@@ -33,11 +33,11 @@ export function HomeStudyPreview() {
                 Fuente activa
               </p>
               <p className="mt-0.5 truncate text-[11px] font-bold text-slate-900 sm:text-xs">
-                Álgebra - Parcial 1.pdf
+                Marketing I - Parcial 1.pdf
               </p>
             </div>
           </div>
-          <span className="shrink-0 text-[9px] font-semibold text-slate-500">34 páginas</span>
+          <span className="shrink-0 text-[9px] font-semibold text-slate-500">29 páginas</span>
         </div>
 
         <div className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfdff_100%)] px-4 py-3.5 sm:px-6 sm:py-4">
@@ -56,9 +56,9 @@ export function HomeStudyPreview() {
 
             <div className="mt-4 overflow-hidden rounded-xl border border-slate-200/90 bg-white/80">
               {[
-                ['01', 'Sistemas de ecuaciones', 'Métodos, interpretación y resolución.'],
-                ['02', 'Matrices', 'Tipos, operaciones y producto matricial.'],
-                ['03', 'Vectores', 'Combinación y dependencia lineal.'],
+                ['01', 'Mercado meta', 'Grupo de personas al que se dirige la estrategia.'],
+                ['02', 'Segmentación', 'Cómo dividir el mercado en grupos relevantes.'],
+                ['03', 'Posicionamiento', 'Qué lugar busca ocupar una marca frente a sus alternativas.'],
               ].map(([number, title, description], index) => (
                 <div
                   key={title}
@@ -77,7 +77,7 @@ export function HomeStudyPreview() {
               <div className="flex items-start gap-2 rounded-xl bg-indigo-50/80 px-3.5 py-2.5 text-indigo-950">
                 <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-indigo-700" aria-hidden="true" />
                 <p className="min-w-0 text-[9px] leading-4">
-                  <strong>Idea clave:</strong> para multiplicar matrices, las columnas de la primera deben coincidir con las filas de la segunda.
+                  <strong>Idea clave:</strong> una segmentación efectiva debe ser medible, sustancial, accesible, diferenciable y procesable.
                 </p>
               </div>
             </div>
