@@ -172,7 +172,7 @@ export async function generateStudyErrorExplanationAction(
         return {
           success: false,
           message:
-            'Ya usaste las 5 explicaciones con IA incluidas en Free para este período. Tus errores siguen guardados y podés volver a practicar igual.',
+            'Ya usaste las 5 explicaciones con IA incluidas en Free para este período. Podés revisar tu respuesta, estudiar con tus apuntes o volver cuando se renueve el límite.',
         };
       }
     }
