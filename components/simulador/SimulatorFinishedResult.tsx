@@ -67,7 +67,8 @@ export function SimulatorFinishedResult({
   const percentage = Math.round((aciertos / safeTotal) * 100);
   const grade = (aciertos / safeTotal) * 10;
   const wrong = Math.max(0, respondidas - aciertos);
-  const errorsHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
+  const retryErrorsHref = `/simulador/errores/${materiaId}?parcial=${parcial}`;
+  const misErroresHref = '/dashboard/explicaciones';
   const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
   const ownMaterialHref = userId
     ? uploadHref
@@ -157,7 +158,7 @@ export function SimulatorFinishedResult({
           </h1>
         </div>
 
-        <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.09)]">
+        <section className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.09)] sm:rounded-[32px]">
           <div className="grid gap-0 lg:grid-cols-[0.82fr_1.18fr]">
             <div className="border-b border-slate-200 p-6 sm:p-8 lg:border-r lg:border-b-0 lg:p-10">
               <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Tu nota</p>
@@ -207,16 +208,21 @@ export function SimulatorFinishedResult({
 
                 {wrong > 0 ? (
                   <>
-                    <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">Repaso de errores</h2>
+                    <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
+                      Tenés {wrong} {wrong === 1 ? 'error' : 'errores'} para trabajar
+                    </h2>
                     <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
-                      Volvé sólo sobre las {wrong} preguntas que fallaste, entendé la explicación y reforzá esos temas antes de hacer otro Simulador.
+                      Ya quedaron guardados en Mis errores. Primero entendé qué pasó y, si tenés apuntes, Evaluo te muestra dónde estudiar cada tema antes de volver a probarte.
                     </p>
                     <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
                       <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>Primero corregí lo que falló; después medí de nuevo.</span>
+                      <span>Explicación primero. Estudio después. Recién ahí, otra pregunta.</span>
                     </div>
-                    <Link href={errorsHref} className="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95">
-                      Repasar mis errores
+                    <Link
+                      href={misErroresHref}
+                      className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
+                    >
+                      Ir a Mis errores
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </>
@@ -234,20 +240,29 @@ export function SimulatorFinishedResult({
 
               {wrong > 0 ? (
                 <div className="mt-5">
-                  <button type="button" onClick={onNewExam} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-700">
+                  <Link
+                    href={retryErrorsHref}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-700"
+                  >
                     <RotateCcw className="h-4 w-4" />
-                    Hacer otro Simulador
-                  </button>
+                    Volver a probar estos errores
+                  </Link>
                 </div>
               ) : null}
 
               <div className="mt-7 border-t border-slate-200 pt-6">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">Seguí estudiando con tus apuntes</p>
+                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
+                  {wrong > 0 ? 'Conectá tus errores con tus apuntes' : 'Seguí estudiando con tus apuntes'}
+                </p>
                 <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
-                  Prepará {materiaNombre || 'esta materia'} con tu propio PDF
+                  {wrong > 0
+                    ? `Encontrá estos temas en tu PDF de ${materiaNombre || 'la materia'}`
+                    : `Prepará ${materiaNombre || 'esta materia'} con tu propio PDF`}
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  Subí tus apuntes y Evaluo te guía para repasar y practicar sobre el material que realmente entra en tu examen.
+                  {wrong > 0
+                    ? 'El PDF no es obligatorio para entender tus errores. Si lo subís, Evaluo busca esos temas en tus apuntes y te lleva al lugar más útil para estudiarlos.'
+                    : 'Subí tus apuntes y Evaluo te guía para repasar y practicar sobre el material que realmente entra en tu examen.'}
                 </p>
 
                 <TrackedLink
@@ -255,15 +270,15 @@ export function SimulatorFinishedResult({
                   eventName="cta_click"
                   payload={{
                     location: 'simulator_result_pdf_activation',
-                    cta_name: 'upload_own_pdf_after_simulator',
+                    cta_name: wrong > 0 ? 'connect_errors_to_pdf_after_simulator' : 'upload_own_pdf_after_simulator',
                     materia_id: materiaId,
                     materia_nombre: materiaNombre || null,
                     parcial,
                     destination: ownMaterialHref,
                   }}
-                  className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8]"
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"
                 >
-                  Subir mi PDF
+                  {wrong > 0 ? 'Conectar mis errores con mi PDF' : 'Subir mi PDF'}
                   <ArrowRight className="h-4 w-4" />
                 </TrackedLink>
               </div>
