@@ -5,9 +5,11 @@ import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
+import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 
 type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
+  materialId: string;
 };
 
 type OpenAssessment = 'got_it' | 'review';
@@ -217,7 +219,7 @@ function resolveExamQuestions(
   return selected.slice(0, targetCount);
 }
 
-export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
+export function StudentMaterialExam({ artifacts, materialId }: StudentMaterialExamProps) {
   const eligibleQuestions = useMemo(() => {
     const baseEligible = artifacts.questions.filter(isEligibleExamQuestion);
     const canonicalEligible = baseEligible.filter(
@@ -465,6 +467,28 @@ export function StudentMaterialExam({ artifacts }: StudentMaterialExamProps) {
 
   const goNext = () => {
     if (!canAdvance) return;
+
+    const wasCorrect =
+      current.type === 'multiple_choice'
+        ? isCorrect
+        : openAssessments[current.id] === 'got_it';
+
+    void recordStudentMaterialStudyResultAction({
+      materialId,
+      sourceType: 'exercise',
+      itemKey: `exercise:${current.id}`,
+      wasCorrect,
+      topic: current.topic ?? current.reference.sectionTitle,
+      prompt: current.prompt,
+      explanation: current.explanation,
+      correctAnswer: current.answer,
+      selectedAnswer:
+        current.type === 'multiple_choice'
+          ? selectedAnswer
+          : openDrafts[current.id] ?? '',
+      reference: current.reference,
+    });
+
     if (currentIndex >= questions.length - 1) {
       setFinished(true);
       return;
