@@ -16,9 +16,9 @@ import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: 'Subí tu PDF y estudiá en minutos',
+  title: 'Subí tu PDF y prepará tu examen',
   description:
-    'Subí lo que tenés que estudiar y Evaluo te guía para detectar qué reforzar, practicar y preparar el examen.',
+    'Convertí tus apuntes en resúmenes, mapas mentales, flashcards y práctica. Detectá qué temas necesitás reforzar antes del examen.',
   alternates: {
     canonical: '/',
   },
@@ -26,16 +26,16 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Evaluo',
     locale: 'es_AR',
-    title: 'Evaluo | Subí tu PDF y estudiá en minutos',
+    title: 'Evaluo | Subí tu PDF y prepará tu examen',
     description:
-      'Estudiá sobre tu propio material, detectá qué necesitás reforzar y practicá antes del examen.',
+      'Convertí tus apuntes en distintas formas de estudio y practicá sobre el mismo material antes del examen.',
     url: '/',
     images: [
       {
         url: '/opengraph-image.png',
         width: 1200,
         height: 630,
-        alt: 'Evaluo | Subí tu PDF y estudiá en minutos',
+        alt: 'Evaluo | Subí tu PDF y prepará tu examen',
       },
     ],
   },
@@ -46,26 +46,27 @@ const steps = [
     icon: UploadCloud,
     title: 'Subí tu PDF',
     description:
-      'Cargá el apunte, resumen o material que realmente tenés que estudiar.',
+      'Cargá el apunte o material que querés estudiar.',
   },
   {
     icon: CheckCircle2,
-    title: 'Detectá qué dominás y qué reforzar',
+    title: 'Entendé y repasá',
     description:
-      'Hacé un diagnóstico sobre ese material para ubicar qué está firme y qué conviene trabajar.',
+      'Recorré el resumen, conectá conceptos y repasá el contenido con flashcards.',
   },
   {
     icon: FileText,
-    title: 'Estudiá y practicá sobre el mismo PDF',
+    title: 'Practicá y reforzá',
     description:
-      'Pasá de resumen y conceptos a flashcards y práctica sin perder la fuente original.',
+      'Respondé preguntas, revisá tus errores y volvé a los temas que todavía te cuestan.',
   },
 ];
 
 const demoJourney = [
-  ['01', 'Estudiá el material', 'Resumen y conceptos ordenados desde el apunte.'],
-  ['02', 'Ponete a prueba', 'Tarjetas y práctica sobre el mismo contenido.'],
-  ['03', 'Practicá para el parcial', 'Preguntas con feedback para comprobar qué entendiste.'],
+  ['01', 'Tu material', 'Partimos de un fragmento del PDF de Marketing I.'],
+  ['02', 'Entendé el tema', 'El resumen organiza el concepto sin cambiar de fuente.'],
+  ['03', 'Ponete a prueba', 'Respondé una pregunta basada en el mismo contenido.'],
+  ['04', 'Repasá el error', 'Usá el feedback para saber qué tema conviene volver a trabajar.'],
 ] as const;
 
 /** Signup → materiales with open-upload modal (post-#70 PDF-first activation). */
@@ -97,7 +98,7 @@ export default function Home() {
               ¿Cómo funciona Evaluo?
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Del PDF a un recorrido de estudio sobre la misma fuente, en 3 pasos.
+              Subí una vez tu material y usalo para entender, repasar y practicar.
             </p>
           </div>
 
@@ -144,10 +145,10 @@ export default function Home() {
               Evaluo en acción
             </div>
             <h2 className="mt-5 max-w-[520px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
-              De estudiar el material a comprobar qué entendiste.
+              Probá cómo estudiarías tu PDF.
             </h2>
             <p className="mt-5 max-w-[520px] text-sm leading-7 text-slate-700 sm:text-base sm:leading-8">
-              Esta demo muestra cómo un mismo PDF pasa de resumen a flashcards, práctica y diagnóstico. Probá el recorrido y, cuando quieras, subí tu propio material.
+              Este ejemplo usa un apunte de Marketing I. Leé un concepto, ponete a prueba y descubrí qué conviene repasar sin salir del mismo material.
             </p>
 
             <div className="mt-8 border-t border-slate-200">
@@ -171,28 +172,16 @@ export default function Home() {
                 eventName="cta_click"
                 payload={{
                   location: 'home_real_material_demo',
-                  cta_name: 'subi_tu_pdf_demo',
+                  cta_name: 'probar_con_mi_pdf_demo',
                   destination: primaryHref,
                 }}
                 className="from-brand to-brand-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-xs font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 <UploadCloud className="h-4 w-4 shrink-0" />
-                Subí tu PDF
+                Probar con mi PDF
                 <ArrowRight className="h-4 w-4 shrink-0" />
               </TrackedLink>
-              <TrackedLink
-                href="/explorar/materia/4c28f824-1b82-4898-a6d4-3650ba517453"
-                eventName="cta_click"
-                payload={{
-                  location: 'home_real_material_demo',
-                  cta_name: 'explorar_marketing_i',
-                  destination: '/explorar/materia/4c28f824-1b82-4898-a6d4-3650ba517453',
-                }}
-                className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 transition hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-              >
-                Ver material de ejemplo
-                <ArrowRight className="h-3.5 w-3.5" />
-              </TrackedLink>
+
             </div>
           </div>
 
@@ -229,10 +218,10 @@ export default function Home() {
               </span>
 
               <h2 className="mt-6 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Subí tu PDF y empezá a prepararte.
+                Empezá con el PDF que tenés que estudiar.
               </h2>
               <p className="mt-4 max-w-xl text-xs leading-6 text-white/90 sm:text-sm">
-                Estudiá sobre el material que realmente entra en tu examen y descubrí qué necesitás reforzar.
+                Convertí tu material en una experiencia de repaso y práctica.
               </p>
 
               <div className="mt-8 flex w-full max-w-md justify-center">
@@ -241,13 +230,13 @@ export default function Home() {
                   eventName="cta_click"
                   payload={{
                     location: 'home_final_cta',
-                    cta_name: 'subi_tu_pdf_final',
+                    cta_name: 'probar_con_mi_pdf_final',
                     destination: primaryHref,
                   }}
                   className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
                 >
                   <UploadCloud className="h-4.5 w-4.5 shrink-0" />
-                  Subí tu PDF
+                  Probar con mi PDF
                 </TrackedLink>
               </div>
             </div>
