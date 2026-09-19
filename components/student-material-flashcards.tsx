@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import {
   ArrowDown,
   ArrowLeft,
-  ArrowRight,
   ArrowUp,
   Check,
   Expand,
@@ -58,7 +57,6 @@ export function StudentMaterialFlashcards({
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
   const [recallByCard, setRecallByCard] = useState<Record<number, RecallResult>>({});
   const [sessionRecall, setSessionRecall] = useState<Record<number, RecallResult>>({});
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
@@ -74,14 +72,13 @@ export function StudentMaterialFlashcards({
   const progress = order.length > 0 ? Math.round((reviewedCount / order.length) * 100) : 0;
   const currentRecall = sessionRecall[currentCardIndex];
   const currentVote = voteByCard[currentCardIndex];
-  const allReviewed = started && sessionCompleted;
+  const allReviewed = started && order.length > 0 && reviewedCount >= order.length;
 
   const startSession = useCallback(() => {
     setOrder(buildSessionOrder(recallByCard, cards.length));
     setSessionRecall({});
     setPosition(0);
     setFlipped(false);
-    setSessionCompleted(false);
     setStarted(true);
   }, [cards.length, recallByCard]);
 
@@ -93,7 +90,6 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
-    setSessionCompleted(false);
     setStarted(true);
   }, [cards.length]);
 
@@ -104,7 +100,6 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
-    setSessionCompleted(false);
   }, []);
 
   const reviewDifficult = useCallback(() => {
@@ -120,7 +115,6 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
-    setSessionCompleted(false);
     setStarted(true);
   }, [cards.length, sessionRecall]);
 
@@ -198,19 +192,6 @@ export function StudentMaterialFlashcards({
     setFlipped(false);
   }, []);
 
-  const navigateForward = useCallback(() => {
-    if (!currentRecall) return;
-
-    if (position < order.length - 1) {
-      setPosition((current) => Math.min(order.length - 1, current + 1));
-      setFlipped(false);
-      return;
-    }
-
-    setSessionCompleted(true);
-    setFlipped(false);
-    setIsFullscreen(false);
-  }, [currentRecall, order.length, position]);
 
   const markRecall = useCallback(
     (result: RecallResult) => {
@@ -232,8 +213,16 @@ export function StudentMaterialFlashcards({
         reference: currentCard.reference,
       });
 
+      if (position < order.length - 1) {
+        setPosition((current) => Math.min(order.length - 1, current + 1));
+        setFlipped(false);
+        return;
+      }
+
+      setFlipped(false);
+      setIsFullscreen(false);
     },
-    [currentCard, currentCardIndex, flipped, materialId]
+    [currentCard, currentCardIndex, flipped, materialId, order.length, position]
   );
 
   useEffect(() => {
@@ -249,10 +238,6 @@ export function StudentMaterialFlashcards({
         if (target?.closest('button')) return;
         event.preventDefault();
         navigateBack();
-      } else if (event.key === 'ArrowRight') {
-        if (target?.closest('button')) return;
-        event.preventDefault();
-        navigateForward();
       } else if (event.key === 'ArrowUp') {
         if (target?.closest('button')) return;
         event.preventDefault();
@@ -267,7 +252,7 @@ export function StudentMaterialFlashcards({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, markRecall, navigateBack, navigateForward, started]);
+  }, [isFullscreen, markRecall, navigateBack, started]);
 
   const referenceLabel = useMemo(() => {
     if (!currentCard) return '';
@@ -521,10 +506,9 @@ export function StudentMaterialFlashcards({
             <ThumbsDown className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-xs font-medium text-slate-500">Marcá cómo te fue y avanzá cuando quieras.</p>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-start gap-3">
         <Button
           type="button"
           variant="outline"
@@ -534,20 +518,11 @@ export function StudentMaterialFlashcards({
         >
           <ArrowLeft className="h-4 w-4" /> Anterior
         </Button>
-        <Button
-          type="button"
-          onClick={navigateForward}
-          disabled={!currentRecall}
-          className="rounded-xl"
-        >
-          {position === order.length - 1 ? 'Ver resultado' : 'Siguiente'}
-          <ArrowRight className="h-4 w-4" />
-        </Button>
       </div>
 
       <div className="rounded-[16px] border border-slate-200 bg-white px-4 py-3 text-center text-xs leading-6 text-slate-500">
-        Presioná <Kbd>Espacio</Kbd> para voltear. Usá <Kbd>↑</Kbd> para “Lo sé”, <Kbd>↓</Kbd> para
-        “No lo sé” y <Kbd>→</Kbd> para continuar cuando quieras.
+        Presioná <Kbd>Espacio</Kbd> para voltear. Usá <Kbd>↑</Kbd> para “Lo sé” y <Kbd>↓</Kbd> para
+        “No lo sé”.
       </div>
     </div>
   );
