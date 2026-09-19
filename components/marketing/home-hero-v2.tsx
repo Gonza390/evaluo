@@ -50,7 +50,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             <div className="animate-surface-reveal flex min-w-0 flex-col items-start text-left">
               <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                <span className="min-w-0">Estudiá desde tu propio material</span>
+                <span className="min-w-0">Estudiá con tu propio PDF</span>
               </span>
 
               <h1 className="text-foreground mt-5 max-w-[680px] text-[2.35rem] leading-[1.02] font-bold tracking-[-0.055em] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
@@ -58,7 +58,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </h1>
 
               <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Subís tu material una vez y Evaluo lo transforma en distintas formas de estudio para entender, recordar y practicar antes del examen.
+                Convertí tus apuntes en resúmenes, mapas mentales, flashcards y práctica. Ponete a prueba y descubrí qué temas necesitás reforzar antes del examen.
               </p>
 
               <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
@@ -67,29 +67,42 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
-                    cta_name: 'subi_tu_pdf',
+                    cta_name: 'probar_con_mi_pdf',
                     destination: primaryHref,
                   }}
                   className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto sm:px-8"
                 >
                   <UploadCloud className="h-4.5 w-4.5 shrink-0" />
-                  Subí tu PDF
+                  Probar con mi PDF
                   <ArrowRight className="h-4 w-4 shrink-0" />
                 </TrackedLink>
+                <TrackedLink
+                  href="/#demo"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_hero',
+                    cta_name: 'ver_como_funciona',
+                    destination: '/#demo',
+                  }}
+                  className="inline-flex h-13 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
+                >
+                  Ver cómo funciona
+                </TrackedLink>
               </div>
+              <p className="mt-3 text-[11px] font-semibold text-slate-500 sm:text-xs">Empezá gratis · Sin tarjeta</p>
 
-              <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
+              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Detectá qué reforzar
+                  Entendé los temas
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  El mismo PDF como fuente
+                  Practicá con preguntas
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Practicá antes del examen
+                  Repasá tus errores
                 </span>
               </div>
             </div>
@@ -144,13 +157,13 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   eventName="cta_click"
                   payload={{
                     location: 'home_product_overview',
-                    cta_name: 'subir_pdf',
+                    cta_name: 'probar_con_mi_pdf_producto',
                     destination: primaryHref,
                   }}
                   className="inline-flex items-center gap-2 text-indigo-700 transition hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
                   <UploadCloud className="h-4 w-4 shrink-0" />
-                  Subir mi PDF
+                  Probar con mi PDF
                   <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                 </TrackedLink>
               </div>
