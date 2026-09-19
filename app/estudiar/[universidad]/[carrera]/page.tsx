@@ -221,6 +221,19 @@ export default async function CareerStudyIntentPage({ params }: PageProps) {
                   <strong className="text-slate-900">{officialProfile.title}</strong>
                 </p>
               ) : null}
+              {officialProfile ? (
+                <p className="text-sm leading-7 text-slate-600">
+                  Fuente:{' '}
+                  <a
+                    href={officialProfile.officialUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 transition hover:text-indigo-900"
+                  >
+                    {officialProfile.sourceName} — información oficial de la carrera
+                  </a>
+                </p>
+              ) : null}
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">

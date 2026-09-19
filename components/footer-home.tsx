@@ -100,11 +100,20 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               <Link href="/ia-para-estudiantes" className="text-xs text-white/80 transition hover:text-white">
                 IA para estudiar
               </Link>
-              <Link href="/como-estudiar-ingreso-unlam" className="text-xs text-white/80 transition hover:text-white">
-                Cómo estudiar para el Ingreso UNLaM 2027
+              <Link href="/estudiar-pdf-con-ia" className="text-xs text-white/80 transition hover:text-white">
+                Estudiar PDF con IA
+              </Link>
+              <Link href="/funciones/resumir-pdf-con-ia" className="text-xs text-white/80 transition hover:text-white">
+                Resumir PDF con IA
+              </Link>
+              <Link href="/funciones/crear-flashcards-desde-pdf" className="text-xs text-white/80 transition hover:text-white">
+                Crear flashcards desde PDF
               </Link>
               <Link href="/funciones/crear-mapa-mental-desde-pdf" className="text-xs text-white/80 transition hover:text-white">
                 Mapas mentales con IA
+              </Link>
+              <Link href="/como-estudiar-ingreso-unlam" className="text-xs text-white/80 transition hover:text-white">
+                Cómo estudiar para el Ingreso UNLaM 2027
               </Link>
               <Link href="/#como-funciona" className="text-xs text-white/80 transition hover:text-white">
                 Cómo funciona

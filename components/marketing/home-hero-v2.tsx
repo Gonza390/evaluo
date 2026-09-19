@@ -48,7 +48,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
           </div>
 
           <div className="grid items-center gap-10 pt-10 sm:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:pt-18">
-            <div className="animate-surface-reveal flex min-w-0 flex-col items-start text-left">
+            <div className="flex min-w-0 flex-col items-start text-left">
               <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
                 <span className="min-w-0">Estudiá con tu propio PDF</span>
