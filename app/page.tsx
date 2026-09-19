@@ -142,13 +142,13 @@ export default function Home() {
           <div className="min-w-0">
             <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
               <span className="h-px w-8 shrink-0 bg-indigo-500" />
-              Evaluo en acción
+              Ahora probalo vos
             </div>
             <h2 className="mt-5 max-w-[520px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
-              Probá cómo estudiarías tu PDF.
+              Probalo con este ejemplo.
             </h2>
             <p className="mt-5 max-w-[520px] text-sm leading-7 text-slate-700 sm:text-base sm:leading-8">
-              Este ejemplo usa un apunte de Marketing I. Leé un concepto, ponete a prueba y descubrí qué conviene repasar sin salir del mismo material.
+              Ya viste el recorrido completo. Ahora interactuá con un apunte de Marketing I: leé un concepto, respondé y descubrí qué conviene repasar.
             </p>
 
             <div className="mt-8 border-t border-slate-200">
