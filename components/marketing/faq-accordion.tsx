@@ -7,29 +7,34 @@ interface FaqItem {
 
 export const FAQ_ITEMS: FaqItem[] = [
   {
-    question: '¿Qué universidades están disponibles en Evaluo?',
+    question: '¿Qué hace Evaluo con mi PDF?',
     answer:
-      'El catálogo actual comienza con Universidad Siglo 21 y estamos preparando la incorporación de más universidades. Los nombres de instituciones se usan únicamente para organizar el catálogo académico. Evaluo es una plataforma independiente y no está afiliada, patrocinada ni aprobada por las universidades listadas.',
+      'Usa el contenido de tu material como punto de partida para organizar qué tenés que estudiar y ayudarte a pasar de la lectura al repaso y la práctica. La idea es que no tengas que cambiar de fuente cada vez que cambiás de forma de estudiar.',
   },
   {
-    question: '¿El contenido de la plataforma es realmente gratuito?',
+    question: '¿Qué puedo crear desde un PDF?',
     answer:
-      'Sí. Evaluo tiene un plan gratuito para explorar el catálogo y usar funciones iniciales de estudio. Premium amplía las herramientas de práctica, explicación y seguimiento según las condiciones vigentes del plan.',
+      'Desde tu material podés trabajar con resúmenes, glosarios, mapas mentales, flashcards y práctica. También podés usar un diagnóstico para ubicar qué temas dominás y cuáles conviene reforzar.',
   },
   {
-    question: '¿Es obligatorio registrarse para ver los resúmenes y preguntas?',
+    question: '¿Las respuestas se basan en mi material?',
     answer:
-      'No para la navegación inicial. Podés explorar el catálogo, las carreras y las materias disponibles sin crear una cuenta. Para guardar progreso, personalizar tu espacio de estudio, solicitar una universidad y usar funciones que necesitan identificarte, sí necesitás registrarte.',
+      'Las herramientas de estudio de un material parten del contenido extraído de ese PDF para mantener la misma fuente durante el recorrido. Como con cualquier herramienta de IA, si un detalle es importante para tu examen, conviene contrastarlo con el documento original.',
   },
   {
-    question: '¿Cómo funciona el plan Premium y cómo se paga?',
+    question: '¿Puedo usar apuntes de cualquier universidad o materia?',
     answer:
-      'Premium amplía las herramientas de estudio y seguimiento disponibles en Evaluo. La suscripción se gestiona en pesos argentinos mediante Mercado Pago; al abrir el checkout, Mercado Pago te muestra los medios de pago disponibles para tu cuenta. Podés cancelar la renovación desde Mercado Pago.',
+      'Sí. Para estudiar con tu propio material no necesitás que tu universidad o materia esté previamente cargada en el catálogo. Podés subir el PDF que estés usando para preparar esa materia.',
   },
   {
-    question: '¿Los simuladores reproducen los parciales reales?',
+    question: '¿Cómo me ayuda Evaluo a preparar un examen?',
     answer:
-      'No. Los simuladores son prácticas originales construidas a partir de los materiales y temas disponibles en Evaluo. Sirven para practicar preguntas, administrar el tiempo y revisar errores, pero no reproducen exámenes oficiales ni garantizan el formato, la dificultad o los contenidos de un parcial real.',
+      'Podés empezar entendiendo y organizando el material, después intentar recuperarlo con flashcards o preguntas y usar la práctica para detectar qué puntos todavía necesitás reforzar antes del examen.',
+  },
+  {
+    question: '¿Qué incluye el plan gratuito?',
+    answer:
+      'Evaluo tiene un plan gratuito para empezar a estudiar y probar funciones iniciales de la plataforma. Premium amplía las herramientas y los límites disponibles según las condiciones vigentes del plan.',
   },
 ];
 
