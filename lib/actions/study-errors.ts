@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
+import { buildWrongAnswersExplanations } from '@/lib/simulator-wrong-answers';
 import {
   markStudyErrorReviewed,
   recordStudyErrorCorrect,
@@ -120,4 +121,60 @@ export async function markStudyErrorReviewedAction(
 
   const success = await markStudyErrorReviewed(user.id, errorId);
   return { success };
+}
+
+
+export async function generateStudyErrorExplanationAction(
+  errorId: string
+): Promise<{ success: boolean; explanation?: string; message?: string }> {
+  const user = await requireUser();
+  if (!user || !errorId) return { success: false, message: 'Sesión no válida.' };
+
+  try {
+    const admin = createAdminClient();
+    // study_errors todavía no está en los tipos generados.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = admin as any;
+    const { data: row, error } = await db
+      .from('study_errors')
+      .select('id, user_id, materia_id, question_id, source_type, status, explanation, metadata')
+      .eq('id', errorId)
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!row || row.source_type !== 'simulator' || !row.question_id || !row.materia_id) {
+      return { success: false, message: 'Este error no admite una explicación automática.' };
+    }
+
+    if (row.explanation) {
+      return { success: true, explanation: row.explanation };
+    }
+
+    const parcialValue = Number(row.metadata?.parcial);
+    const parcial = Number.isInteger(parcialValue) && parcialValue > 0 ? parcialValue : 1;
+
+    const { explanations, dailyLimitReached } = await buildWrongAnswersExplanations({
+      materiaId: row.materia_id,
+      parcial,
+      wrongQuestionIds: [row.question_id],
+      userId: user.id,
+    });
+
+    const explanation = explanations[0]?.explicacion;
+    if (explanation) {
+      return { success: true, explanation };
+    }
+
+    return {
+      success: false,
+      message: dailyLimitReached
+        ? 'Alcanzaste el límite de explicaciones por hoy.'
+        : 'No pudimos generar esta explicación ahora.',
+    };
+  } catch (error) {
+    logError('studyErrors.generateExplanation', error, { userId: user.id, errorId });
+    return { success: false, message: 'No pudimos generar esta explicación ahora.' };
+  }
 }
