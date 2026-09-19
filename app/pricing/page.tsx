@@ -8,10 +8,10 @@ import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
-  'Empezá gratis o elegí Evaluo Premium mensual o por 6 meses para preparar tus parciales.';
+  'Empezá gratis con tus apuntes. Con Premium, ampliá tus cargas de PDF y las herramientas de práctica, explicación y seguimiento.';
 
 export const metadata: Metadata = {
-  title: 'Planes y precios',
+  title: 'Planes para estudiar tus PDFs',
   description: pricingDescription,
   alternates: { canonical: '/pricing' },
   openGraph: {
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     url: '/pricing',
     siteName: 'Evaluo',
     locale: 'es_AR',
-    title: 'Planes y precios | Evaluo',
+    title: 'Planes para estudiar tus PDFs | Evaluo',
     description: pricingDescription,
     images: [
       {
@@ -32,27 +32,34 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Planes y precios | Evaluo',
+    title: 'Planes para estudiar tus PDFs | Evaluo',
     description: pricingDescription,
     images: ['/opengraph-image.png'],
   },
 };
 
 const premiumFeatures = [
-  'Todo lo de Gratis',
+  'Hasta 3 PDFs por día',
+  'Sin límite de páginas por PDF',
+  'Hasta 20 MB por archivo',
   'Simuladores completos para practicar parciales',
   'Explicaciones de respuestas sin límite diario',
   'Práctica personalizada según tus errores',
   'Seguimiento de progreso por tema',
-  'Convertí tus propios apuntes en material para estudiar',
 ];
 
 const freeFeatures = [
-  'Resúmenes y materiales compartidos por materia',
-  'Pregunteros para practicar',
-  'Simuladores en formato básico',
-  'Una revisión de errores por semana',
+  '2 PDFs dentro de una ventana móvil de 15 días',
+  'Hasta 100 páginas por PDF',
+  'Hasta 20 MB por archivo',
+  'Herramientas iniciales de estudio y práctica',
 ];
+
+const usageComparison = [
+  ['Carga de PDFs', '2 en 15 días', 'Hasta 3 por día'],
+  ['Páginas por PDF', 'Hasta 100', 'Sin límite'],
+  ['Tamaño por archivo', 'Hasta 20 MB', 'Hasta 20 MB'],
+] as const;
 
 const comparison = [
   ['Resúmenes y materiales', true, true],
@@ -93,10 +100,10 @@ export default async function PricingPage({
               Evaluo Premium
             </span>
             <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold tracking-[-0.045em] text-slate-950 sm:text-6xl sm:leading-[1.04]">
-              Estudiá mejor. Elegí el plan que te acompañe.
+              Elegí cómo querés estudiar tus PDFs.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Empezá gratis. Cuando quieras más práctica, explicaciones y seguimiento, pasate a Premium.
+              Empezá gratis con tus apuntes. Con Premium, ampliá tus cargas y las herramientas de práctica y seguimiento.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-indigo-700" aria-hidden="true" />
@@ -165,6 +172,16 @@ export default async function PricingPage({
                 <span className="text-center">Gratis</span>
                 <span className="text-center text-indigo-700">Premium</span>
               </div>
+              {usageComparison.map(([feature, free, premium]) => (
+                <div
+                  key={feature}
+                  className="grid grid-cols-[1fr_76px_92px] items-center border-b border-slate-200 px-4 py-4 text-sm sm:grid-cols-[1fr_140px_140px] sm:px-6"
+                >
+                  <span className="pr-3 leading-5 font-semibold text-slate-900">{feature}</span>
+                  <span className="text-center text-[10px] font-semibold leading-4 text-slate-700 sm:text-sm">{free}</span>
+                  <span className="text-center text-[10px] font-semibold leading-4 text-indigo-700 sm:text-sm">{premium}</span>
+                </div>
+              ))}
               {comparison.map(([feature, free, premium]) => (
                 <div
                   key={feature}
