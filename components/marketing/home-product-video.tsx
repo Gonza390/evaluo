@@ -50,8 +50,7 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
           </h2>
 
           <p className="mt-5 max-w-[520px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
-            En 30 segundos ves cómo el mismo material pasa de tus apuntes al repaso y la práctica,
-            sin dejar de ser la fuente.
+            Ves cómo el mismo material pasa de tus apuntes al repaso y la práctica, sin dejar de ser la fuente.
           </p>
 
           <div className="mt-7 border-y border-slate-200 py-2">
@@ -85,14 +84,11 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
         <div className="relative min-w-0">
           <div className="pointer-events-none absolute -inset-8 rounded-[42px] bg-[radial-gradient(circle_at_55%_35%,rgba(99,102,241,0.16),transparent_60%)] blur-2xl" />
           <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950 shadow-[0_30px_84px_rgba(15,23,42,0.18)] sm:rounded-[30px]">
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                <span className="text-[10px] font-bold tracking-[0.12em] text-white/70 uppercase">
-                  Recorrido real
-                </span>
-              </div>
-              <span className="text-[10px] font-semibold text-white/50">30 segundos</span>
+            <div className="flex items-center gap-2 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-[10px] font-bold tracking-[0.12em] text-white/70 uppercase">
+                Recorrido real
+              </span>
             </div>
 
             <video
