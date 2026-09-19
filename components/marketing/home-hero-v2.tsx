@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   Brain,
+  BookOpen,
   CheckCircle2,
   FileText,
   ListChecks,
