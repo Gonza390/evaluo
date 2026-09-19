@@ -11,6 +11,7 @@ import {
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
+import { HomeProductVideo } from '@/components/marketing/home-product-video';
 
 const studyCapabilities = [
   {
@@ -77,12 +78,12 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   <ArrowRight className="h-4 w-4 shrink-0" />
                 </TrackedLink>
                 <TrackedLink
-                  href="/#demo"
+                  href="/#video"
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
                     cta_name: 'ver_como_funciona',
-                    destination: '/#demo',
+                    destination: '/#video',
                   }}
                   className="inline-flex h-13 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
                 >
@@ -111,6 +112,8 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
           </div>
         </div>
       </section>
+
+      <HomeProductVideo primaryHref={primaryHref} />
 
       <section id="producto" className="border-b border-slate-100 bg-white py-20 sm:py-24 lg:py-28">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
