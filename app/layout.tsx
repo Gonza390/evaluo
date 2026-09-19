@@ -109,7 +109,7 @@ export const metadata: Metadata = {
     siteName: 'Evaluo',
     title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     description:
-      'Subí tu PDF y transformalo en resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.'
+      'Subí tu PDF y transformalo en resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
     locale: 'es_AR',
     images: [
       {
@@ -124,7 +124,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
     description:
-      'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.'
+      'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
     images: ['/opengraph-image.png'],
   },
   manifest: '/manifest.webmanifest',
