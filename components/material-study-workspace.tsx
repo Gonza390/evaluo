@@ -55,6 +55,8 @@ type MaterialStudyWorkspaceProps = {
   studySummary: StudentMaterialSummary;
   pedagogicalArtifacts?: PedagogicalArtifacts;
   initialDiagnostic?: boolean;
+  initialPdfPage?: number | null;
+  initialViewerVisible?: boolean;
 };
 
 type StudyTabId = 'resumen' | 'glosario' | 'tarjetas' | 'ejercicios' | 'mapa';
@@ -191,6 +193,8 @@ export function MaterialStudyWorkspace({
   studySummary,
   pedagogicalArtifacts,
   initialDiagnostic = false,
+  initialPdfPage = null,
+  initialViewerVisible = false,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -198,7 +202,7 @@ export function MaterialStudyWorkspace({
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [isViewerVisible, setIsViewerVisible] = useState(false);
+  const [isViewerVisible, setIsViewerVisible] = useState(initialViewerVisible);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerationStageIndex, setRegenerationStageIndex] = useState(0);
   const [regenerationProgress, setRegenerationProgress] = useState(8);
@@ -751,6 +755,7 @@ export function MaterialStudyWorkspace({
                           pageMaxWidthClassName="max-w-[720px]"
                           showSidebarThumbnails={false}
                           theme="default"
+                          initialPage={initialPdfPage}
                         />
                       </div>
                     </ResizablePanel>
@@ -797,6 +802,7 @@ export function MaterialStudyWorkspace({
                   pageMaxWidthClassName="max-w-[760px]"
                   showSidebarThumbnails={false}
                   theme="default"
+                  initialPage={initialPdfPage}
                 />
               </div>
             ) : (
