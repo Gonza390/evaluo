@@ -323,22 +323,32 @@ export async function POST(request: Request) {
   if (!isValid) return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
 
   const admin = createAdminClient() as unknown as SupabaseClient;
-  const { data: inserted, error: eventError } = await admin
-    .from('payment_webhook_events')
-    .insert({
-      provider_event_id: eventId,
-      event_type: eventType,
-      resource_id: resourceId,
-    })
-    .select('id')
-    .maybeSingle();
+  const { data: claimedRows, error: eventError } = await admin.rpc(
+    'claim_payment_webhook_event',
+    {
+      p_provider_event_id: eventId,
+      p_event_type: eventType,
+      p_resource_id: resourceId,
+    }
+  );
 
   if (eventError) {
-    if (eventError.code === '23505') return NextResponse.json({ ok: true, duplicate: true });
     return NextResponse.json({ error: 'event_not_recorded' }, { status: 500 });
   }
 
-  const eventRowId = inserted?.id;
+  const claim = Array.isArray(claimedRows) ? claimedRows[0] : null;
+  const eventRowId =
+    claim && typeof claim === 'object' && 'event_row_id' in claim
+      ? String(claim.event_row_id ?? '')
+      : '';
+  const shouldProcess =
+    claim && typeof claim === 'object' && 'should_process' in claim
+      ? Boolean(claim.should_process)
+      : false;
+
+  if (!eventRowId || !shouldProcess) {
+    return NextResponse.json({ ok: true, duplicate: true });
+  }
   try {
     const now = new Date().toISOString();
     if (eventType.includes('subscription_authorized_payment')) {
