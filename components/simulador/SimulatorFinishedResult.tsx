@@ -62,6 +62,8 @@ export function SimulatorFinishedResult({
 }: SimulatorFinishedResultProps) {
   const [previousAttempt, setPreviousAttempt] = useState<PreviousAttempt | null>(null);
   const [comparisonReady, setComparisonReady] = useState(false);
+  const [hasReadyOwnMaterial, setHasReadyOwnMaterial] = useState(false);
+  const [materialContextReady, setMaterialContextReady] = useState(!userId);
 
   const safeTotal = Math.max(1, totalPreguntas);
   const percentage = Math.round((aciertos / safeTotal) * 100);
@@ -110,7 +112,20 @@ export function SimulatorFinishedResult({
             })()
           : Promise.resolve({ data: [] as PreviousAttempt[], error: null });
 
-        const attemptsResult = await attemptsPromise;
+        const materialPromise = userId
+          ? supabase
+              .from('student_materials')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('materia_id', materiaId)
+              .eq('processing_status', 'ready')
+              .limit(1)
+          : Promise.resolve({ data: [] as Array<{ id: string }>, error: null });
+
+        const [attemptsResult, materialResult] = await Promise.all([
+          attemptsPromise,
+          materialPromise,
+        ]);
 
         if (!active) return;
 
@@ -123,11 +138,22 @@ export function SimulatorFinishedResult({
         } else {
           setPreviousAttempt((attemptsResult.data?.[0] as PreviousAttempt | undefined) ?? null);
         }
+
+        if (materialResult.error) {
+          logError('simulatorFinishedResult.ownMaterial', materialResult.error, {
+            materiaId,
+          });
+          setHasReadyOwnMaterial(false);
+        } else {
+          setHasReadyOwnMaterial(Boolean(materialResult.data?.[0]?.id));
+        }
+        setMaterialContextReady(true);
         setComparisonReady(true);
 
       } catch (error) {
         if (!active) return;
         logError('simulatorFinishedResult.loadContext', error, { materiaId, parcial });
+        setMaterialContextReady(true);
         setComparisonReady(true);
       }
     }
@@ -206,25 +232,72 @@ export function SimulatorFinishedResult({
                 <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">Siguiente paso recomendado</p>
 
                 {wrong > 0 ? (
-                  <>
-                    <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
-                      Tenés {wrong} {wrong === 1 ? 'error' : 'errores'} para trabajar
-                    </h2>
-                    <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
-                      Ya quedaron guardados en Mis errores. Primero entendé qué pasó y, si tenés apuntes, Evaluo te muestra dónde estudiar cada tema antes de volver a probarte.
-                    </p>
-                    <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
-                      <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>Explicación primero. Estudio después. Recién ahí, otra pregunta.</span>
+                  !materialContextReady && userId ? (
+                    <div className="py-3">
+                      <p className="text-sm font-semibold text-slate-700">
+                        Preparando el mejor próximo paso con tus apuntes...
+                      </p>
                     </div>
-                    <Link
-                      href={misErroresHref}
-                      className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
-                    >
-                      Ir a Mis errores
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </>
+                  ) : hasReadyOwnMaterial ? (
+                    <>
+                      <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
+                        Ya sabemos qué necesitás reforzar
+                      </h2>
+                      <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
+                        Tus {wrong} {wrong === 1 ? 'error quedó guardado' : 'errores quedaron guardados'}.
+                        Evaluo los cruza con tus apuntes para mostrarte qué tema estudiar y dónde encontrarlo antes de volver a probarte.
+                      </p>
+                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>De tus errores al lugar exacto de tus apuntes que necesitás reforzar.</span>
+                      </div>
+                      <Link
+                        href={misErroresHref}
+                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
+                      >
+                        Estudiar lo que fallé en mis apuntes
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
+                        Ya sabemos qué necesitás reforzar
+                      </h2>
+                      <p className="mt-2 max-w-lg text-sm leading-6 text-slate-600">
+                        Detectamos {wrong} {wrong === 1 ? 'punto' : 'puntos'} que te conviene estudiar.
+                        Subí los apuntes que realmente entran en tu examen y Evaluo los procesa para encontrar dónde aparece cada tema.
+                      </p>
+                      <div className="mt-3 flex items-start gap-2 text-sm font-semibold text-[#4F46E5]">
+                        <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>Pasá de “qué me salió mal” a “qué tengo que estudiar en mis apuntes”.</span>
+                      </div>
+                      <TrackedLink
+                        href={ownMaterialHref}
+                        eventName="cta_click"
+                        payload={{
+                          location: 'simulator_result_primary_pdf_activation',
+                          cta_name: 'upload_notes_to_study_detected_errors',
+                          materia_id: materiaId,
+                          materia_nombre: materiaNombre || null,
+                          parcial,
+                          destination: ownMaterialHref,
+                        }}
+                        className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
+                      >
+                        Subir mis apuntes y saber qué estudiar
+                        <ArrowRight className="h-4 w-4" />
+                      </TrackedLink>
+                      {userId ? (
+                        <Link
+                          href={misErroresHref}
+                          className="mt-4 inline-flex text-sm font-semibold text-slate-500 transition hover:text-indigo-700"
+                        >
+                          Ver qué fallé
+                        </Link>
+                      ) : null}
+                    </>
+                  )
                 ) : (
                   <>
                     <h2 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">Confirmá el resultado</h2>
@@ -250,38 +323,50 @@ export function SimulatorFinishedResult({
                 </div>
               ) : null}
 
-              <div className="mt-7 border-t border-slate-200 pt-6">
-                <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
-                  {wrong > 0 ? 'Conectá tus errores con tus apuntes' : 'Seguí estudiando con tus apuntes'}
-                </p>
-                <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
-                  {wrong > 0
-                    ? `Encontrá estos temas en tu PDF de ${materiaNombre || 'la materia'}`
-                    : `Prepará ${materiaNombre || 'esta materia'} con tu propio PDF`}
-                </h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  {wrong > 0
-                    ? 'El PDF no es obligatorio para entender tus errores. Si lo subís, Evaluo busca esos temas en tus apuntes y te lleva al lugar más útil para estudiarlos.'
-                    : 'Subí tus apuntes y Evaluo te guía para repasar y practicar sobre el material que realmente entra en tu examen.'}
-                </p>
+              {wrong === 0 ? (
+                <div className="mt-7 border-t border-slate-200 pt-6">
+                  <p className="text-[12px] font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
+                    Seguí preparando tu examen
+                  </p>
+                  <h3 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                    {hasReadyOwnMaterial
+                      ? `Seguí estudiando ${materiaNombre || 'esta materia'} con tus apuntes`
+                      : `Convertí tus apuntes de ${materiaNombre || 'esta materia'} en un plan de estudio`}
+                  </h3>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                    {hasReadyOwnMaterial
+                      ? 'Evaluo ya tiene tu material: podés seguir repasando, practicando y detectando qué te falta antes del examen.'
+                      : 'Subí el material que realmente entra en tu examen. Evaluo lo procesa para decirte qué estudiar, practicar y reforzar.'}
+                  </p>
 
-                <TrackedLink
-                  href={ownMaterialHref}
-                  eventName="cta_click"
-                  payload={{
-                    location: 'simulator_result_pdf_activation',
-                    cta_name: wrong > 0 ? 'connect_errors_to_pdf_after_simulator' : 'upload_own_pdf_after_simulator',
-                    materia_id: materiaId,
-                    materia_nombre: materiaNombre || null,
-                    parcial,
-                    destination: ownMaterialHref,
-                  }}
-                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"
-                >
-                  {wrong > 0 ? 'Conectar mis errores con mi PDF' : 'Subir mi PDF'}
-                  <ArrowRight className="h-4 w-4" />
-                </TrackedLink>
-              </div>
+                  {hasReadyOwnMaterial ? (
+                    <Link
+                      href="/dashboard"
+                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"
+                    >
+                      Continuar estudiando
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <TrackedLink
+                      href={ownMaterialHref}
+                      eventName="cta_click"
+                      payload={{
+                        location: 'simulator_result_pdf_activation',
+                        cta_name: 'upload_own_pdf_after_simulator',
+                        materia_id: materiaId,
+                        materia_nombre: materiaNombre || null,
+                        parcial,
+                        destination: ownMaterialHref,
+                      }}
+                      className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"
+                    >
+                      Subir mis apuntes
+                      <ArrowRight className="h-4 w-4" />
+                    </TrackedLink>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>

@@ -453,6 +453,7 @@ export default function SimuladorExamen({
   >({});
   const gradedQuestionRef = useRef<Set<number>>(new Set());
   const [materiaNombre, setMateriaNombre] = useState('');
+  const [hasReadyOwnMaterial, setHasReadyOwnMaterial] = useState(false);
   const [wrongExplanations, setWrongExplanations] = useState<
     Array<{
       preguntaId: string;
@@ -460,6 +461,7 @@ export default function SimuladorExamen({
       explicacion: string;
       provider: string;
       source: string;
+      tema?: string;
     }>
   >([]);
   const [loadingExplanations, setLoadingExplanations] = useState(false);
@@ -565,6 +567,19 @@ export default function SimuladorExamen({
   }, [searchParams]);
   const loginHref = `/login?next=${encodeURIComponent(`${pathname}${guidedSearchParams ? `?${guidedSearchParams}` : ''}`)}`;
   const signupHref = `/login?mode=signup&next=${encodeURIComponent(`${pathname}${guidedSearchParams ? `?${guidedSearchParams}` : ''}`)}`;
+  const pdfUploadHref = useMemo(() => {
+    const params = new URLSearchParams({
+      openUpload: '1',
+      materiaId,
+      source: 'simulator_explanation',
+    });
+    if (carreraId) params.set('carreraId', carreraId);
+    if (universidadId) params.set('universidadId', universidadId);
+    return `/dashboard/materiales?${params.toString()}`;
+  }, [carreraId, materiaId, universidadId]);
+  const pdfActivationHref = userId
+    ? pdfUploadHref
+    : `/login?mode=signup&next=${encodeURIComponent(pdfUploadHref)}`;
 
   const emitSimulatorEvent = useCallback(
     async (
@@ -1161,9 +1176,18 @@ export default function SimuladorExamen({
 
         // checkProfileStatus y la query de materias son independientes: se
         // lanzan en paralelo para reducir la latencia de carga inicial.
-        const [profileStatus, materiaResponse] = await Promise.all([
+        const [profileStatus, materiaResponse, ownMaterialResponse] = await Promise.all([
           !resolvedDemoMode && user ? checkProfileStatus(user.id) : Promise.resolve(null),
           supabase.from('materias').select('nombre').eq('id', materiaId).maybeSingle(),
+          user
+            ? supabase
+                .from('student_materials')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('materia_id', materiaId)
+                .eq('processing_status', 'ready')
+                .limit(1)
+            : Promise.resolve({ data: [] as Array<{ id: string }>, error: null }),
         ]);
 
         if (!resolvedDemoMode && profileStatus && !profileStatus.isComplete) {
@@ -1173,6 +1197,13 @@ export default function SimuladorExamen({
 
         if (materiaResponse?.data?.nombre) {
           setMateriaNombre(materiaResponse.data.nombre);
+        }
+
+        if (ownMaterialResponse.error) {
+          logError('simulador.ownMaterialContext', ownMaterialResponse.error, { materiaId });
+          setHasReadyOwnMaterial(false);
+        } else {
+          setHasReadyOwnMaterial(Boolean(ownMaterialResponse.data?.[0]?.id));
         }
 
         const saved = readPersistedSimulatorState(storageKey);
@@ -2322,22 +2353,32 @@ export default function SimuladorExamen({
                       <div>
                         <h3 className="text-xl font-bold text-slate-950">
                           {erroresPendientes > 0
-                            ? `Convertí tus ${erroresPendientes} errores en puntos rápidos`
+                            ? `Detectamos ${erroresPendientes} ${erroresPendientes === 1 ? 'punto' : 'puntos'} para reforzar`
                             : 'Consolidá el resultado con otro modelo'}
                         </h3>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
                           {erroresPendientes > 0
-                            ? 'Volvé a responder solo lo que fallaste antes de repasar teoría o rendir otro modelo.'
+                            ? hasReadyOwnMaterial
+                              ? 'Evaluo puede conectar lo que fallaste con tus propios apuntes para mostrarte qué estudiar antes de volver a probarte.'
+                              : 'Usá los apuntes que realmente entran en tu examen: Evaluo los procesa y encuentra dónde estudiar cada tema que fallaste.'
                             : 'No tuviste errores para revisar. Probá otro simulacro para confirmar el dominio.'}
                         </p>
                       </div>
                       {erroresPendientes > 0 ? (
                         <Button
                           asChild
-                          className="h-12 shrink-0 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700"
+                          className="h-12 w-full shrink-0 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700 lg:w-auto"
                         >
-                          <Link href={`/simulador/errores/${materiaId}?parcial=${resolvedParcial}`}>
-                            Practicar mis {erroresPendientes} errores
+                          <Link
+                            href={
+                              hasReadyOwnMaterial
+                                ? '/dashboard/explicaciones'
+                                : pdfActivationHref
+                            }
+                          >
+                            {hasReadyOwnMaterial
+                              ? 'Estudiar lo que fallé en mis apuntes'
+                              : 'Subir mis apuntes y saber qué estudiar'}
                             <ChevronRight className="h-4 w-4" />
                           </Link>
                         </Button>
@@ -2499,28 +2540,42 @@ export default function SimuladorExamen({
                       </div>
                     )}
                     {!userId && wrongExplanations.length > 0 ? (
-                      <div className="mt-5 rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-white p-4">
+                      <div className="mt-5 border-t border-indigo-100 pt-5">
                         <p className="text-sm font-semibold text-slate-900">
-                          ¿Viste la diferencia? Esto es la IA de Evaluo
+                          Ya viste qué te hizo fallar. Ahora estudiá lo que realmente entra en tu examen.
                         </p>
-                        <p className="mt-1 text-sm leading-6 text-slate-600">
-                          Creá tu cuenta gratis y practicá el simulador completo con explicaciones
-                          de cada error, progreso y probabilidad de aprobar.
+                        <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                          Creá tu cuenta y subí tus apuntes. Evaluo los procesa para encontrar estos temas y decirte dónde conviene estudiar cada uno.
                         </p>
-                        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                          <Link
-                            href={signupHref}
-                            className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.28)] hover:opacity-95"
-                          >
-                            Crear cuenta gratis
-                          </Link>
-                          <Link
-                            href="/pricing"
-                            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-[#5D65F6] hover:bg-[#EEF0FF]"
-                          >
-                            Ver premium
-                          </Link>
-                        </div>
+                        <Link
+                          href={pdfActivationHref}
+                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(99,102,241,0.28)] hover:opacity-95 sm:w-auto"
+                        >
+                          Usar mis apuntes para saber qué estudiar
+                        </Link>
+                      </div>
+                    ) : null}
+                    {userId && wrongExplanations.length > 0 ? (
+                      <div className="mt-5 border-t border-slate-200 pt-5">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {hasReadyOwnMaterial
+                            ? 'Llevá estos errores a tus apuntes'
+                            : 'Ahora llevá estos errores al material que realmente entra en tu examen'}
+                        </p>
+                        <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                          {hasReadyOwnMaterial
+                            ? 'Evaluo busca estos temas dentro de tus PDFs y te muestra dónde conviene estudiarlos antes de volver a practicar.'
+                            : 'Subí tus apuntes y Evaluo los procesa para encontrar dónde aparecen los temas que acabás de fallar.'}
+                        </p>
+                        <Link
+                          href={hasReadyOwnMaterial ? '/dashboard/explicaciones' : pdfUploadHref}
+                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-center text-sm font-semibold text-white transition hover:bg-indigo-700 sm:w-auto"
+                        >
+                          {hasReadyOwnMaterial
+                            ? 'Ver dónde estudiarlos en mis apuntes'
+                            : 'Subir mis apuntes y saber qué estudiar'}
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
                       </div>
                     ) : null}
                     {!isPremium && userId && wrongExplanations.length > 0 ? (
