@@ -9,6 +9,9 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 type BillingMode = 'monthly' | 'semester';
 
+const freePdfHref =
+  '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
+
 type PricingPlanSelectorProps = {
   freeFeatures: string[];
   premiumFeatures: string[];
@@ -85,13 +88,13 @@ export function PricingPlanSelector({
             <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
               Gratis
             </span>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">Empezá sin pagar</h2>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">Probá Evaluo con tus apuntes</h2>
             <div className="mt-3 flex items-end gap-2">
               <span className="text-4xl font-bold tracking-tight text-slate-950">$0</span>
               <span className="pb-1 text-sm text-slate-600">para siempre</span>
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Explorá materias, estudiá materiales compartidos y probá las herramientas básicas de Evaluo.
+              Subí tu PDF y empezá a estudiar y practicar sobre tu propio material.
             </p>
           </div>
 
@@ -108,10 +111,10 @@ export function PricingPlanSelector({
 
           <div className="mt-8">
             <Link
-              href="/explorar"
+              href={freePdfHref}
               className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
-              Seguir gratis
+              Probar con mi PDF
             </Link>
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
               <ShieldCheck className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
