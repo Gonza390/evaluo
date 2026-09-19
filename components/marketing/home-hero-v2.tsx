@@ -58,7 +58,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </h1>
 
               <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Evaluo organiza tu material, detecta qué necesitás reforzar y te guía para preparar el examen.
+                Subís tu material una vez y Evaluo lo transforma en distintas formas de estudio para entender, recordar y practicar antes del examen.
               </p>
 
               <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
@@ -81,11 +81,11 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Sabé qué repasar
+                  Detectá qué reforzar
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  Desde tu propio material
+                  El mismo PDF como fuente
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
@@ -105,15 +105,15 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             <div>
               <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
                 <span className="h-px w-8 shrink-0 bg-indigo-500" />
-                Todo para preparar una materia
+                Una sola fuente para estudiar
               </div>
               <h2 className="mt-5 max-w-[620px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.04]">
-                Estudiá, practicá y reforzá sin cambiar de lugar.
+                Un solo PDF. Distintas formas de aprenderlo.
               </h2>
             </div>
             <p className="max-w-[620px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">
-              Evaluo usa tu propio material para guiarte desde el primer repaso hasta la práctica.
-              Sabés qué reforzar y qué hacer después, sin elegir entre herramientas sueltas.
+              Subís tu material una vez. Evaluo mantiene ese mismo PDF como fuente mientras resumís,
+              conectás conceptos, repasás, practicás y detectás qué necesitás reforzar.
             </p>
           </div>
 
@@ -166,8 +166,8 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                       <BookOpen className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-semibold text-slate-600">Tu materia</p>
-                      <p className="truncate text-xs font-bold text-slate-900 sm:text-sm">Marketing I</p>
+                      <p className="text-[10px] font-semibold text-slate-600">Fuente activa</p>
+                      <p className="truncate text-xs font-bold text-slate-900 sm:text-sm">Marketing I - Parcial 1.pdf</p>
                     </div>
                   </div>
                   <span className="hidden shrink-0 text-[10px] font-semibold text-emerald-700 sm:inline">Material listo para estudiar</span>
@@ -175,27 +175,24 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
 
                 <div className="grid min-h-[350px] min-w-0 sm:grid-cols-[150px_minmax(0,1fr)]">
                   <aside className="hidden border-r border-slate-200 bg-slate-50/70 p-4 sm:block">
-                    <p className="mb-3 px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Estudio</p>
+                    <p className="mb-3 px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Desde tu PDF</p>
                     {[
                       ['Resumen', true],
                       ['Glosario', false],
-                      ['Tarjetas', false],
+                      ['Mapa mental', false],
+                      ['Flashcards', false],
                       ['Práctica', false],
+                      ['Diagnóstico', false],
                     ].map(([label, active]) => (
                       <div
                         key={String(label)}
-                        className={`flex items-center gap-2 border-l-2 px-3 py-2.5 text-[10px] font-bold ${
+                        className={`flex items-center gap-2 border-l-2 px-3 py-2 text-[10px] font-bold ${
                           active ? 'border-indigo-600 text-indigo-800' : 'border-transparent text-slate-600'
                         }`}
                       >
                         {label}
                       </div>
                     ))}
-                    <div className="mt-5 border-t border-slate-200 pt-4">
-                      <p className="px-2 text-[9px] font-bold tracking-[0.14em] text-slate-600 uppercase">Para el parcial</p>
-                      <div className="mt-2 flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-600">Preguntero</div>
-                      <div className="flex items-center gap-2 px-3 py-2.5 text-[10px] font-bold text-slate-600">Simulador</div>
-                    </div>
                   </aside>
 
                   <div className="min-w-0 p-4 sm:p-6 lg:p-7">
@@ -225,7 +222,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
 
                     <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-200 pt-4">
                       <p className="min-w-0 text-[10px] leading-5 text-slate-600">
-                        Terminaste de leer. Ahora podés pasar a tarjetas, practicar este material o prepararte con el Preguntero y el Simulador.
+                        Este mismo PDF sigue siendo la fuente cuando pasás a mapa mental, flashcards, práctica o diagnóstico.
                       </p>
                       <ArrowRight className="h-4 w-4 shrink-0 text-indigo-700" />
                     </div>
