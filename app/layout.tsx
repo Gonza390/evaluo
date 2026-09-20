@@ -80,15 +80,6 @@ export const metadata: Metadata = {
   },
   description:
     'Subí tus apuntes en PDF y estudiá con IA: resúmenes, mapas mentales, flashcards y práctica para preparar tus exámenes.',
-  keywords: [
-    'evaluo',
-    'estudiar PDF con IA',
-    'resumir PDF con IA',
-    'flashcards desde PDF',
-    'mapa mental desde PDF',
-    'preparar examen',
-    'materiales de estudio',
-  ],
   applicationName: 'Evaluo',
   authors: [{ name: 'Evaluo' }],
   creator: 'Evaluo',

@@ -115,7 +115,7 @@ function RelatedSection({ title, links }: { title: string; links: RelatedLink[] 
     <section className="border-t border-slate-100 bg-slate-50/50 py-16 sm:py-20">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
         <h2 className="max-w-2xl text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">{title}</h2>
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {links.map((item) => (
             <Link
               key={item.href}
@@ -398,6 +398,12 @@ export function IaParaEstudiantesExperience() {
               description: 'Transformá conceptos del material en preguntas y respuestas para repasar.',
               cta: 'Cómo crear flashcards con IA',
             },
+            {
+              href: '/funciones/crear-mapa-mental-desde-pdf',
+              title: 'Crear un mapa mental desde un PDF',
+              description: 'Visualizá temas, subtemas y relaciones sin salir del mismo material.',
+              cta: 'Cómo crear un mapa mental con IA',
+            },
           ]}
         />
 
@@ -559,6 +565,12 @@ export function EstudiarPdfExperience() {
               title: 'Crear flashcards con IA desde PDF',
               description: 'Convertí conceptos del documento en preguntas y respuestas de repaso.',
               cta: 'Crear flashcards desde un PDF',
+            },
+            {
+              href: '/funciones/crear-mapa-mental-desde-pdf',
+              title: 'Crear un mapa mental desde un PDF',
+              description: 'Organizá visualmente temas y relaciones antes de seguir repasando.',
+              cta: 'Crear un mapa mental con IA',
             },
             {
               href: '/ia-para-estudiantes',
@@ -740,6 +752,12 @@ export function ResumirPdfExperience() {
               cta: 'Crear flashcards con IA',
             },
             {
+              href: '/funciones/crear-mapa-mental-desde-pdf',
+              title: 'Crear un mapa mental desde un PDF',
+              description: 'Pasá de la lectura lineal a una vista visual de temas y relaciones.',
+              cta: 'Crear un mapa mental con IA',
+            },
+            {
               href: '/ia-para-estudiantes',
               title: 'IA para estudiantes',
               description: 'Conocé cómo encajan resumen, organización, recuerdo y práctica en un mismo flujo.',
@@ -844,7 +862,7 @@ export function FlashcardsPdfExperience() {
                   <div key={String(title)} className="relative rounded-[22px] border border-slate-200 p-5">
                     <div className="flex items-center justify-between">
                       <IconComponent className="h-5 w-5 text-indigo-700" aria-hidden="true" />
-                      <span className="text-[10px] font-black text-slate-400">0{index + 1}</span>
+                      <span className="text-[10px] font-black text-slate-600">0{index + 1}</span>
                     </div>
                     <h3 className="mt-4 text-base font-bold text-slate-950">{String(title)}</h3>
                     <p className="mt-2 text-xs leading-6 text-slate-600">{String(text)}</p>
@@ -900,6 +918,12 @@ export function FlashcardsPdfExperience() {
               title: 'Resumir PDF con IA para estudiar',
               description: 'Ordená el tema y ubicá los conceptos antes de convertirlos en tarjetas.',
               cta: 'Resumir el PDF antes de crear tarjetas',
+            },
+            {
+              href: '/funciones/crear-mapa-mental-desde-pdf',
+              title: 'Crear un mapa mental desde un PDF',
+              description: 'Volvé a la estructura visual del tema cuando una tarjeta quede demasiado aislada.',
+              cta: 'Crear un mapa mental con IA',
             },
             {
               href: '/ia-para-estudiantes',

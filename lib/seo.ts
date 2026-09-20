@@ -4,6 +4,7 @@ export function buildOrganizationJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': toAbsoluteUrl('/#organization'),
     name: SITE_NAME,
     url: toAbsoluteUrl('/'),
     logo: toAbsoluteUrl('/icon.png'),
@@ -19,8 +20,13 @@ export function buildWebsiteJsonLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': toAbsoluteUrl('/#website'),
     name: SITE_NAME,
+    alternateName: 'Evaluo Argentina',
     url: toAbsoluteUrl('/'),
+    publisher: {
+      '@id': toAbsoluteUrl('/#organization'),
+    },
   };
 }
 

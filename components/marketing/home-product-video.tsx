@@ -1,11 +1,13 @@
 'use client';
 
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2, PlayCircle, UploadCloud } from 'lucide-react';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const milestones = [25, 50, 75] as const;
+const VIDEO_POSTER_URL =
+  'https://d2ol7oe51mr4n9.cloudfront.net/user_3IRt4tXV383V8Ui3tAw27Nrw3e2/ed16bd28-41f8-41cf-bf34-d40adc339efa.jpg';
 
 const videoSteps = [
   'Subí el PDF que tenés que estudiar.',
@@ -15,6 +17,28 @@ const videoSteps = [
 
 export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
   const sentMilestones = useRef(new Set<number>());
+  const mediaShellRef = useRef<HTMLDivElement>(null);
+  const [shouldLoadPoster, setShouldLoadPoster] = useState(false);
+
+  useEffect(() => {
+    const mediaShell = mediaShellRef.current;
+    if (!mediaShell || typeof IntersectionObserver === 'undefined') {
+      setShouldLoadPoster(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setShouldLoadPoster(true);
+        observer.disconnect();
+      },
+      { rootMargin: '400px 0px' }
+    );
+
+    observer.observe(mediaShell);
+    return () => observer.disconnect();
+  }, []);
 
   function trackProgress(video: HTMLVideoElement) {
     if (!video.duration || !Number.isFinite(video.duration)) return;
@@ -83,7 +107,10 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
 
         <div className="relative min-w-0">
           <div className="pointer-events-none absolute -inset-8 rounded-[42px] bg-[radial-gradient(circle_at_55%_35%,rgba(99,102,241,0.16),transparent_60%)] blur-2xl" />
-          <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950 shadow-[0_30px_84px_rgba(15,23,42,0.18)] sm:rounded-[30px]">
+          <div
+            ref={mediaShellRef}
+            className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-slate-950 shadow-[0_30px_84px_rgba(15,23,42,0.18)] sm:rounded-[30px]"
+          >
             <div className="flex items-center gap-2 border-b border-white/10 bg-slate-950 px-4 py-3 sm:px-5">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
               <span className="text-[10px] font-bold tracking-[0.12em] text-white/70 uppercase">
@@ -95,8 +122,8 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
               className="aspect-video w-full bg-slate-950 object-contain"
               controls
               playsInline
-              preload="metadata"
-              poster="https://d2ol7oe51mr4n9.cloudfront.net/user_3IRt4tXV383V8Ui3tAw27Nrw3e2/ed16bd28-41f8-41cf-bf34-d40adc339efa.jpg"
+              preload="none"
+              poster={shouldLoadPoster ? VIDEO_POSTER_URL : undefined}
               aria-label="Recorrido de 30 segundos por el estudio de un PDF en Evaluo"
               onPlay={() =>
                 trackMarketingEvent('home_product_video_play', {

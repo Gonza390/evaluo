@@ -20,12 +20,21 @@ export const metadata: Metadata = {
     description:
       'Método práctico para preparar el Curso de Ingreso UNLaM 2027: organizá el material, practicá y repasá los temas que todavía cuestan.',
     url: toAbsoluteUrl(path),
+    images: [
+      {
+        url: toAbsoluteUrl('/opengraph-image.png'),
+        width: 1200,
+        height: 630,
+        alt: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
     description:
       'Guía práctica para organizar el material del ingreso UNLaM 2027 y preparar los exámenes del Curso de Ingreso.',
+    images: ['/opengraph-image.png'],
   },
 };
 
@@ -39,9 +48,28 @@ export default function ComoEstudiarIngresoUnlamPage() {
     datePublished: publishedAt,
     dateModified: modifiedAt,
     inLanguage: 'es-AR',
-    author: { '@type': 'Organization', name: 'Evaluo' },
-    publisher: { '@type': 'Organization', name: 'Evaluo', url: toAbsoluteUrl('/') },
-    mainEntityOfPage: toAbsoluteUrl(path),
+    isAccessibleForFree: true,
+    image: [toAbsoluteUrl('/opengraph-image.png')],
+    author: {
+      '@type': 'Organization',
+      '@id': toAbsoluteUrl('/#organization'),
+      name: 'Evaluo',
+      url: toAbsoluteUrl('/'),
+    },
+    publisher: {
+      '@type': 'Organization',
+      '@id': toAbsoluteUrl('/#organization'),
+      name: 'Evaluo',
+      url: toAbsoluteUrl('/'),
+      logo: {
+        '@type': 'ImageObject',
+        url: toAbsoluteUrl('/icon.png'),
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': toAbsoluteUrl(path),
+    },
   };
 
   return (

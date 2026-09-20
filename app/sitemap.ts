@@ -15,79 +15,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const routes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
-      changeFrequency: 'weekly',
-      priority: 1,
     },
     {
       url: `${baseUrl}/explorar`,
-      changeFrequency: 'daily',
-      priority: 0.9,
     },
     {
       url: `${baseUrl}/pregunteros`,
-      changeFrequency: 'daily',
-      priority: 0.85,
     },
     {
       url: `${baseUrl}/ia-para-estudiantes`,
-      changeFrequency: 'weekly',
-      priority: 0.82,
     },
     {
       url: `${baseUrl}/como-estudiar-ingreso-unlam`,
       lastModified: new Date('2026-09-17'),
-      changeFrequency: 'weekly',
-      priority: 0.82,
     },
     {
       url: `${baseUrl}/estudiar-pdf-con-ia`,
-      changeFrequency: 'weekly',
-      priority: 0.8,
     },
     {
       url: `${baseUrl}/funciones/resumir-pdf-con-ia`,
-      changeFrequency: 'monthly',
-      priority: 0.78,
     },
     {
       url: `${baseUrl}/funciones/crear-flashcards-desde-pdf`,
-      changeFrequency: 'monthly',
-      priority: 0.78,
     },
     {
       url: `${baseUrl}/funciones/crear-mapa-mental-desde-pdf`,
-      changeFrequency: 'monthly',
-      priority: 0.78,
     },
     {
       url: `${baseUrl}/pricing`,
-      changeFrequency: 'weekly',
-      priority: 0.7,
     },
     {
       url: `${baseUrl}/terminos`,
-      changeFrequency: 'yearly',
-      priority: 0.3,
     },
     {
       url: `${baseUrl}/copyright`,
-      changeFrequency: 'yearly',
-      priority: 0.3,
     },
     {
       url: `${baseUrl}/privacidad`,
-      changeFrequency: 'yearly',
-      priority: 0.3,
     },
     {
       url: `${baseUrl}/landings/parciales`,
-      changeFrequency: 'monthly',
-      priority: 0.7,
     },
     {
       url: `${baseUrl}/landings/resumenes`,
-      changeFrequency: 'monthly',
-      priority: 0.7,
     },
   ];
 
@@ -176,8 +146,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const universidad of universidadesResult.value.data ?? []) {
       routes.push({
         url: `${baseUrl}/universidad/${universidad.id}`,
-        changeFrequency: 'weekly',
-        priority: 0.8,
       });
     }
   }
@@ -201,32 +169,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       routes.push({
         url: `${baseUrl}/explorar/materia/${materiaSlug}`,
         ...(questionLastModified ? { lastModified: questionLastModified } : {}),
-        changeFrequency: 'weekly',
-        priority: 0.7,
       });
 
       if (hasQuestions) {
         routes.push({
           url: `${baseUrl}/pregunteros/${materiaSlug}`,
           ...(questionLastModified ? { lastModified: questionLastModified } : {}),
-          changeFrequency: 'weekly',
-          priority: 0.75,
         });
 
         if (parcialesConPreguntas.has(`${materia.id}:1`)) {
           routes.push({
             url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/1`,
             ...(questionLastModified ? { lastModified: questionLastModified } : {}),
-            changeFrequency: 'weekly',
-            priority: 0.78,
           });
         }
         if (parcialesConPreguntas.has(`${materia.id}:2`)) {
           routes.push({
             url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/2`,
             ...(questionLastModified ? { lastModified: questionLastModified } : {}),
-            changeFrequency: 'weekly',
-            priority: 0.78,
           });
         }
         if (
@@ -236,8 +196,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           routes.push({
             url: `${baseUrl}/pregunteros/${materiaSlug}/parcial/integrador`,
             ...(questionLastModified ? { lastModified: questionLastModified } : {}),
-            changeFrequency: 'weekly',
-            priority: 0.76,
           });
         }
       }
@@ -245,16 +203,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (hasSummaries) {
         routes.push({
           url: `${baseUrl}/resumenes/${materiaSlug}`,
-          changeFrequency: 'weekly',
-          priority: 0.65,
         });
       }
 
       if (hasIndexableStudyLandingContent) {
         routes.push({
           url: `${baseUrl}/landings/estudiar/${materiaSlug}`,
-          changeFrequency: 'monthly',
-          priority: 0.65,
         });
       }
     }
@@ -266,14 +220,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
       routes.push({
         url: `${baseUrl}/estudiar/${buildSeoEntitySlug(carrera.universidadNombre, carrera.universidadId)}/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`,
-        changeFrequency: 'weekly',
-        priority: 0.75,
       });
 
       routes.push({
         url: `${baseUrl}/simulador-parcial/${buildSeoEntitySlug(carrera.nombre, carrera.id)}`,
-        changeFrequency: 'weekly',
-        priority: 0.72,
       });
     }
   }
