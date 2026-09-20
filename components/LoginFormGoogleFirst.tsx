@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, ChevronDown, Eye, EyeOff, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 
 type AuthMode = 'login' | 'signup';
@@ -150,6 +151,7 @@ export default function LoginFormGoogleFirst() {
     try {
       const callback = new URL('/auth/callback', window.location.origin);
       callback.searchParams.set('next', nextPath);
+      callback.searchParams.set('analytics_session', getAnalyticsSessionKey());
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -190,7 +192,14 @@ export default function LoginFormGoogleFirst() {
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) return setMessage(error.message);
-      window.location.href = await resolvePostLoginPath(data.user.id);
+      const redirectPath = await resolvePostLoginPath(data.user.id);
+      trackMarketingEvent('auth_completed', {
+        location,
+        provider: 'email',
+        auth_kind: 'login',
+        destination: redirectPath,
+      });
+      window.location.href = redirectPath;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No pudimos continuar con tu correo.');
     } finally {
