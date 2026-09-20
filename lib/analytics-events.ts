@@ -15,6 +15,7 @@ const ANALYTICS_EVENT_NAMES = [
   'premium_onboarding_started',
   'login_started',
   'login_success',
+  'auth_completed',
   'login_error',
   'signup_started',
   'signup_completed',
