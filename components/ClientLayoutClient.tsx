@@ -9,6 +9,7 @@ import {
   CalendarDays,
   CircleAlert,
   Flame,
+  GraduationCap,
   Home,
   LogIn,
   LogOut,
@@ -103,7 +104,7 @@ function BottomNav() {
     : [
         { label: 'Inicio', href: '/', icon: Home },
         { label: 'Explorar', href: '/explorar', icon: Search },
-        { label: 'Pregunteros', href: '/pregunteros', icon: CircleAlert },
+        { label: 'Pregunteros', href: '/pregunteros', icon: GraduationCap },
         { label: 'Iniciar sesión', href: '/login?mode=login', icon: LogIn, variant: 'cta' as const },
       ];
 
