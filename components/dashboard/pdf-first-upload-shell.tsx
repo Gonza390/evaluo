@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { getStudentMaterialRoute } from '@/lib/routes';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
 
@@ -41,6 +42,8 @@ type Props = {
   initialCarreraId?: string;
   initialMateriaId?: string;
   initialExamDate?: string;
+  initialSource?: string;
+  trackingMateriaId?: string;
   initialOpen?: boolean;
 };
 
@@ -76,6 +79,8 @@ export function PdfFirstUploadShell({
   initialCarreraId = '',
   initialMateriaId: _initialMateriaId = '',
   initialExamDate = '',
+  initialSource = '',
+  trackingMateriaId = '',
   initialOpen = false,
 }: Props) {
   const router = useRouter();
@@ -242,6 +247,15 @@ export function PdfFirstUploadShell({
         if (!examResult.success) {
           toast({ description: examResult.message, variant: 'destructive' });
         }
+      }
+
+      if (initialSource === 'preguntero-exam-intent') {
+        trackMarketingEvent('preguntero_exam_pdf_uploaded', {
+          source: initialSource,
+          materia_id: trackingMateriaId || _initialMateriaId || null,
+          exam_date: examDate || null,
+          material_id: result.materialId,
+        });
       }
 
       const initialState: StudentMaterialProcessingState = {
