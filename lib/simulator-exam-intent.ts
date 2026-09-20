@@ -44,7 +44,7 @@ export function writePendingExamDate(materiaId: string, parcial: number, eventDa
     }
     window.localStorage.setItem(pendingKey(materiaId, parcial), eventDate);
   } catch {
-    // La fecha es opcional y nunca debe bloquear la práctica.
+    // Si el navegador bloquea storage, el simulador sigue funcionando; la fecha se volverá a pedir.
   }
 }
 
