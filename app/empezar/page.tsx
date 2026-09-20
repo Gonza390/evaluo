@@ -3,12 +3,16 @@ import { redirect } from 'next/navigation';
 import {
   ArrowRight,
   BookOpen,
+  Eye,
   FileUp,
   LockKeyhole,
   Sparkles,
   Target,
+  X,
 } from 'lucide-react';
+import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { getDashboardBootstrap } from '@/lib/data/dashboard-bootstrap';
+import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { createClientServer } from '@/lib/supabase-server';
 
 export default async function EmpezarPage() {
@@ -25,17 +29,26 @@ export default async function EmpezarPage() {
   const firstSubject = bootstrap.state.lastSubject ?? bootstrap.state.activeSubjects[0] ?? null;
   const careerId = bootstrap.academicProfile?.carreraId ?? null;
   const universityId = bootstrap.academicProfile?.universidadId ?? null;
+  const supabase = await createClientServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login?next=%2Fempezar&reason=guided-start');
+  }
+
   let hasPendingAcademicContext = false;
 
   if (careerId || firstSubject?.id) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
-    const supabase = (await createClientServer()) as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- approval_status is ahead of generated DB types
+    const approvalClient = supabase as any;
     const [careerResult, subjectResult] = await Promise.all([
       careerId
-        ? supabase.from('carreras').select('approval_status').eq('id', careerId).maybeSingle()
+        ? approvalClient.from('carreras').select('approval_status').eq('id', careerId).maybeSingle()
         : Promise.resolve({ data: null }),
       firstSubject?.id
-        ? supabase.from('materias').select('approval_status').eq('id', firstSubject.id).maybeSingle()
+        ? approvalClient.from('materias').select('approval_status').eq('id', firstSubject.id).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
 
@@ -44,125 +57,163 @@ export default async function EmpezarPage() {
       Boolean(subjectResult.data && subjectResult.data.approval_status !== 'approved');
   }
 
+  const [
+    materials,
+    universidadesResult,
+    carrerasResult,
+    materiasResult,
+    carreraMateriasResult,
+  ] = await Promise.all([
+    fetchStudentMaterialsByUser(supabase, user.id),
+    supabase.from('universidades').select('id, nombre').order('nombre'),
+    supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
+    supabase.from('materias').select('id, nombre, carrera_id').order('nombre'),
+    supabase.from('carrera_materias').select('carrera_id, materia_id'),
+  ]);
+
+  const universidades = universidadesResult.data ?? [];
+  const carreras = carrerasResult.data ?? [];
+  const materias = materiasResult.data ?? [];
+  const carreraMaterias = carreraMateriasResult.data ?? [];
+
   const uploadParams = new URLSearchParams({ openUpload: '1', source: 'onboarding' });
   if (universityId) uploadParams.set('universidadId', universityId);
   if (careerId) uploadParams.set('carreraId', careerId);
   if (firstSubject?.id) uploadParams.set('materiaId', firstSubject.id);
   const uploadHref = `/dashboard?${uploadParams.toString()}`;
 
-  const careerLabel = bootstrap.academicProfile?.carreraNombre ?? null;
-  const universityLabel = bootstrap.academicProfile?.universidadNombre ?? null;
-  const academicContext = [careerLabel, universityLabel].filter(Boolean).join(' · ');
+  const academicContext = [
+    bootstrap.academicProfile?.carreraNombre,
+    bootstrap.academicProfile?.universidadNombre,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <main className="min-h-screen bg-white px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mx-auto max-w-4xl">
-        <header className="max-w-3xl">
-          <p className="text-xs font-bold tracking-[0.16em] text-blue-600 uppercase">
-            Empezá con tu propio material
-          </p>
-          <h1 className="mt-3 text-[2.05rem] leading-[1.03] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.9rem]">
-            Subí los apuntes que entran en tu examen y empezá a estudiar sobre ellos.
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-            Evaluo procesa tu PDF para ayudarte a entenderlo, practicarlo y detectar qué temas
-            necesitás reforzar antes de rendir.
-          </p>
-          {academicContext ? (
-            <p className="mt-3 text-sm font-semibold text-slate-500">{academicContext}</p>
-          ) : null}
-        </header>
+    <div className="relative min-h-[calc(100vh-6rem)] overflow-hidden bg-white">
+      <div
+        className="pointer-events-none select-none opacity-80 blur-[1.5px]"
+        aria-hidden="true"
+      >
+        <LazyMaeveStudySpace
+          materials={materials}
+          universidades={universidades}
+          carreras={carreras}
+          materias={materias}
+          carreraMaterias={carreraMaterias}
+          initialUniversidadId={universityId ?? ''}
+          initialCarreraId={careerId ?? ''}
+          initialMateriaId={firstSubject?.id ?? ''}
+          initialOpen={false}
+        />
+      </div>
 
-        <section className="mt-8 border-y border-slate-200 py-7 sm:mt-10 sm:py-9">
-          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
-            <div>
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <FileUp className="h-5 w-5" />
+      <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-slate-950/22 px-3 py-4 backdrop-blur-[5px] sm:px-5 sm:py-6">
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="onboarding-pdf-title"
+          className="relative my-auto w-full max-w-[540px] overflow-hidden rounded-[26px] border border-white/80 bg-white shadow-[0_32px_100px_rgba(15,23,42,0.28)]"
+        >
+          <Link
+            href="/dashboard"
+            aria-label="Cerrar y entrar a mi espacio"
+            className="absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 sm:right-4 sm:top-4"
+          >
+            <X className="h-5 w-5" />
+          </Link>
+
+          <div className="max-h-[calc(100vh-2rem)] overflow-y-auto px-5 pb-5 pt-7 sm:max-h-[calc(100vh-3rem)] sm:px-8 sm:pb-7 sm:pt-8">
+            <header className="pr-8 text-center">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">
+                Empezá con tus apuntes
+              </p>
+              <h1
+                id="onboarding-pdf-title"
+                className="mx-auto mt-3 max-w-[420px] text-[1.8rem] font-bold leading-[1.06] tracking-[-0.055em] text-slate-950 sm:text-[2.15rem]"
+              >
+                Subí el material que entra en tu examen
+              </h1>
+              <p className="mx-auto mt-3 max-w-[430px] text-sm leading-6 text-slate-600 sm:text-[15px]">
+                Evaluo procesa tu PDF para ayudarte a estudiar, practicar y detectar qué temas necesitás reforzar.
+              </p>
+              {academicContext ? (
+                <p className="mt-2 text-xs font-semibold text-slate-400">{academicContext}</p>
+              ) : null}
+            </header>
+
+            <div className="mx-auto mt-6 max-w-[430px] space-y-4 sm:mt-7">
+              <div className="flex gap-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                  <FileUp className="h-[18px] w-[18px]" />
                 </span>
                 <div>
-                  <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">
-                    Primer paso
+                  <p className="text-sm font-semibold text-slate-950">Procesamos tu PDF</p>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                    Organizamos el contenido para que puedas estudiarlo sin empezar de cero.
                   </p>
-                  <h2 className="mt-1 text-xl font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
-                    Prepará tu primer PDF
-                  </h2>
                 </div>
               </div>
 
-              <div className="mt-6 grid gap-5 sm:grid-cols-3">
+              <div className="flex gap-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                  <BookOpen className="h-[18px] w-[18px]" />
+                </span>
                 <div>
-                  <Sparkles className="h-4 w-4 text-blue-600" />
-                  <p className="mt-2 text-sm font-semibold text-slate-900">Procesamos tus apuntes</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Convertimos el PDF en un espacio de estudio listo para trabajar.
+                  <p className="text-sm font-semibold text-slate-950">Estudiás sobre ese material</p>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                    Resumen, conceptos clave, tarjetas y práctica salen de tus propios apuntes.
                   </p>
                 </div>
+              </div>
+
+              <div className="flex gap-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                  <Target className="h-[18px] w-[18px]" />
+                </span>
                 <div>
-                  <BookOpen className="h-4 w-4 text-blue-600" />
-                  <p className="mt-2 text-sm font-semibold text-slate-900">Estudiás sobre ese material</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Resumen, conceptos clave, tarjetas y ejercicios salen de tus propios apuntes.
-                  </p>
-                </div>
-                <div>
-                  <Target className="h-4 w-4 text-blue-600" />
-                  <p className="mt-2 text-sm font-semibold text-slate-900">Descubrís qué reforzar</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                  <p className="text-sm font-semibold text-slate-950">Descubrís qué reforzar</p>
+                  <p className="mt-0.5 text-xs leading-5 text-slate-500">
                     Evaluo detecta tus errores y te lleva al tema que conviene volver a estudiar.
                   </p>
                 </div>
               </div>
-
-              {hasPendingAcademicContext ? (
-                <div className="mt-6 flex items-start gap-2 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-500">
-                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                  <p>
-                    Tu carrera o materia todavía está en revisión. Podés empezar igual: tu PDF y ese
-                    contexto se mantienen privados mientras lo revisamos.
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-6 flex items-start gap-2 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-500">
-                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                  <p>
-                    Tu PDF puede quedar privado. No necesitás compartir tus apuntes para estudiar con
-                    Evaluo.
-                  </p>
-                </div>
-              )}
             </div>
 
-            <div className="lg:border-l lg:border-slate-200 lg:pl-7">
+            {hasPendingAcademicContext ? (
+              <div className="mx-auto mt-5 flex max-w-[430px] items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] leading-5 text-slate-500">
+                <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                Tu carrera o materia está en revisión, pero podés empezar ahora. Tu material se mantiene privado.
+              </div>
+            ) : null}
+
+            <div className="mx-auto mt-6 max-w-[430px]">
               <Link
                 href={uploadHref}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-center text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.24)] transition hover:bg-indigo-700"
               >
                 Subir mis apuntes y empezar
                 <ArrowRight className="h-4 w-4" />
               </Link>
+
               <Link
                 href="/demo/material-estudio"
-                className="mt-3 inline-flex min-h-11 w-full items-center justify-center text-center text-sm font-semibold text-slate-500 transition hover:text-blue-700"
+                className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-2 text-center text-sm font-semibold text-indigo-600 transition hover:text-indigo-800"
               >
+                <Eye className="h-4 w-4" />
                 Ver cómo queda un PDF procesado
               </Link>
-              <p className="mt-4 text-center text-xs leading-5 text-slate-400 lg:text-left">
-                Elegís el archivo, Evaluo lo procesa y después te guía dentro de ese material.
-              </p>
+
+              <Link
+                href="/dashboard"
+                className="mt-1 inline-flex min-h-9 w-full items-center justify-center text-center text-xs font-semibold text-slate-400 transition hover:text-slate-700"
+              >
+                Ahora no
+              </Link>
             </div>
           </div>
         </section>
-
-        <div className="py-6 text-center">
-          <Link
-            href="/dashboard"
-            className="text-sm font-semibold text-slate-400 transition hover:text-slate-700"
-          >
-            Ir a mi espacio sin subir un PDF ahora
-          </Link>
-        </div>
       </div>
-    </main>
+    </div>
   );
 }
