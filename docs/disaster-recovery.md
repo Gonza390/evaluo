@@ -23,7 +23,7 @@ export RECOVERY_SUPABASE_SERVICE_ROLE_KEY="<service-role>"
 node scripts/recovery-manifest.mjs recovery-source.json
 ```
 
-El archivo resultante contiene sólo conteos y una huella de paths/tamaños de Storage; no contiene emails, tokens ni contenido de PDFs.
+El archivo resultante contiene conteos y fingerprints SHA-256 de IDs/estado crítico, más una huella de paths/tamaños de Storage. No contiene emails, teléfonos, tokens ni contenido de PDFs.
 
 ## 2. Generar backup lógico de la base
 
@@ -85,7 +85,7 @@ node scripts/recovery-manifest.mjs recovery-target.json
 node scripts/compare-recovery-manifests.mjs recovery-source.json recovery-target.json
 ```
 
-La comparación debe terminar en PASS para Auth, tablas críticas y Storage.
+La comparación debe terminar en PASS para Auth, tablas críticas y Storage. Desde la versión 2 del manifest se comparan tanto conteos como fingerprints, para evitar falsos PASS cuando dos conjuntos distintos tienen la misma cantidad de filas.
 
 ## 8. Smoke funcional del destino
 

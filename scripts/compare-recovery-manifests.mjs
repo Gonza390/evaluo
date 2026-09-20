@@ -16,10 +16,16 @@ function compare(label, expected, actual) {
   checks.push({ label, expected, actual, ok });
 }
 
-compare('auth.users', source.auth?.users, target.auth?.users);
+if (source.version !== target.version) {
+  compare('manifest.version', source.version, target.version);
+}
+
+compare('auth.users.count', source.auth?.users?.count, target.auth?.users?.count);
+compare('auth.users.sha256', source.auth?.users?.sha256, target.auth?.users?.sha256);
 
 for (const table of Object.keys(source.tables ?? {}).sort()) {
-  compare(`table:${table}`, source.tables?.[table], target.tables?.[table]);
+  compare(`table:${table}:count`, source.tables?.[table]?.count, target.tables?.[table]?.count);
+  compare(`table:${table}:sha256`, source.tables?.[table]?.sha256, target.tables?.[table]?.sha256);
 }
 
 compare(
