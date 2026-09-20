@@ -196,7 +196,7 @@ export function PdfFirstUploadShell({
       return;
     }
     setFile(selected);
-    setTitle('');
+    setTitle(titleFromFile(selected.name));
     setExamDate(initialExamDate);
   };
 
@@ -428,7 +428,7 @@ export function PdfFirstUploadShell({
                     </button>
 
                     <div className="mt-4">
-                      <label htmlFor="pdf-first-title" className="mb-1.5 block text-xs font-semibold text-slate-700">Nombre</label>
+                      <label htmlFor="pdf-first-title" className="mb-1.5 block text-xs font-semibold text-slate-700">Nombre del material</label>
                       <Input
                         id="pdf-first-title"
                         value={title}
@@ -463,7 +463,7 @@ export function PdfFirstUploadShell({
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>Cancelar</Button>
                   <Button type="button" disabled={!file || !hasValidTitle || uploading} onClick={startProcessing}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    Continuar
+                    Procesar este PDF
                   </Button>
                 </div>
               </>

@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Crown,
+  CalendarDays,
+  CircleAlert,
   Flame,
   GraduationCap,
   Home,
@@ -22,7 +23,6 @@ import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getCareerRoute } from '@/lib/routes';
 import {
   PublicBrandLink,
   PublicGuestActions,
@@ -94,16 +94,12 @@ function getNextStreakMilestone(streakDays: number) {
 function BottomNav() {
   const pathname = usePathname();
   const { user } = useUser();
-  const { profileSummary } = useShellData();
-  const materiasHref = profileSummary.carreraId
-    ? getCareerRoute(profileSummary.carreraId)
-    : '/explorar';
   const bottomNavItems = user
     ? [
         { label: 'Inicio', href: '/dashboard', icon: Home },
-        { label: 'Explorar', href: '/explorar', icon: Search },
-        { label: 'Materias', href: materiasHref, icon: GraduationCap },
-        { label: 'Premium', href: '/pricing', icon: Crown, variant: 'cta' as const },
+        { label: 'Mis errores', href: '/dashboard/explicaciones', icon: CircleAlert },
+        { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+        { label: 'Perfil', href: '/configuracion', icon: Settings },
       ]
     : [
         { label: 'Inicio', href: '/', icon: Home },
