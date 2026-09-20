@@ -1,18 +1,23 @@
 'use client';
 
 import type { RefObject } from 'react';
-import { Upload } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
 
 type Props = {
   materialsCount: number;
+  primaryMaterialHref: string | null;
+  primaryMaterialReady: boolean;
   onUploadClick: () => void;
   heroRef?: RefObject<HTMLElement | null>;
 };
 
 export function MaeveStudyHero({
   materialsCount,
+  primaryMaterialHref,
+  primaryMaterialReady,
   onUploadClick,
   heroRef,
 }: Props) {
@@ -40,16 +45,38 @@ export function MaeveStudyHero({
             ? 'Subí lo que tenés que estudiar y Evaluo te guía para prepararlo.'
             : 'Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.'}
         </p>
-        <div className="mt-5 flex justify-center">
-          <Button
-            type="button"
-            onClick={onUploadClick}
-            className="h-12 w-full max-w-xs rounded-2xl px-6 text-[15px] font-semibold sm:w-auto"
-          >
-            Subí tu PDF
-            <span className="sr-only"> Subir PDF</span>
-            <Upload className="h-4 w-4" />
-          </Button>
+        <div className="mt-5 flex flex-col items-center gap-3">
+          {materialsCount > 0 && primaryMaterialHref ? (
+            <>
+              <Button
+                asChild
+                className="h-12 w-full max-w-xs rounded-2xl px-6 text-[15px] font-semibold sm:w-auto"
+              >
+                <Link href={primaryMaterialHref}>
+                  {primaryMaterialReady ? 'Continuar estudiando' : 'Ver estado del PDF'}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <button
+                type="button"
+                onClick={onUploadClick}
+                className="inline-flex min-h-10 items-center gap-2 px-3 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
+              >
+                <Upload className="h-4 w-4" />
+                Subir otro PDF
+              </button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              onClick={onUploadClick}
+              className="h-12 w-full max-w-xs rounded-2xl px-6 text-[15px] font-semibold sm:w-auto"
+            >
+              Subí tu PDF
+              <span className="sr-only"> Subir PDF</span>
+              <Upload className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
     </section>
