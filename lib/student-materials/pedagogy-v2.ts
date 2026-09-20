@@ -106,6 +106,21 @@ function buildCanonicalFlashcards(
     .map((candidate) => candidate.card);
 }
 
+function buildConfusionFlashcardFront(detail: string, sectionTitle: string | null) {
+  const normalizedDetail = clean(detail).replace(/[.!?]+$/u, '');
+  const contrast = normalizedDetail.match(/^Confundir\s+(.+?)\s+con\s+(.+)$/iu);
+
+  if (contrast?.[1] && contrast[2]) {
+    return `¿Cómo distinguís ${truncate(contrast[1], 90)} de ${truncate(contrast[2], 90)} según el material?`;
+  }
+
+  if (sectionTitle) {
+    return `¿Qué confusión conceptual conviene evitar en “${truncate(sectionTitle, 90)}”?`;
+  }
+
+  return `¿Qué problema conceptual señala el material cuando plantea “${truncate(normalizedDetail, 110)}”?`;
+}
+
 function buildCandidates(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
@@ -276,7 +291,7 @@ function buildCandidates(
       kind: 'confusion',
       page: reference.pageStart,
       card: {
-        front: '¿Qué distinción importante conviene recordar para no confundir estos conceptos?',
+        front: buildConfusionFlashcardFront(detail, reference.sectionTitle),
         back: detail,
         level: 'comprender',
         reference,

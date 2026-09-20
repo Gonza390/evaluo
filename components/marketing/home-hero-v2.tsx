@@ -54,7 +54,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                 <span className="min-w-0">Estudiá con tu propio PDF</span>
               </span>
 
-              <h1 className="text-foreground mt-5 max-w-[680px] text-[2.35rem] leading-[1.02] font-bold tracking-[-0.055em] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
+              <h1 className="text-foreground mt-5 max-w-[680px] break-words text-[2.1rem] leading-[1.03] font-bold tracking-[-0.05em] min-[360px]:text-[2.35rem] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
                 Subí tu PDF y en minutos estudiás.
               </h1>
 
@@ -162,7 +162,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
             ))}
           </div>
 
-          <div className="mt-7 flex flex-col gap-5 rounded-2xl bg-slate-50 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="mt-7 flex min-w-0 flex-col gap-5 overflow-hidden rounded-2xl bg-slate-50 px-3 py-4 min-[360px]:px-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
               {['Resumen', 'Glosario', 'Mapa mental', 'Flashcards', 'Práctica', 'Diagnóstico'].map((label) => (
                 <span key={label} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">

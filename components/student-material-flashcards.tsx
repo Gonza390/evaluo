@@ -36,6 +36,30 @@ function shuffledIndexes(length: number) {
   return indexes;
 }
 
+function resolveFlashcardFront(card: StudyFlashcard) {
+  const front = card.front.trim();
+  if (
+    !/^¿Qué distinción importante conviene recordar para no confundir estos conceptos\??$/iu.test(
+      front
+    )
+  ) {
+    return front;
+  }
+
+  const detail = card.back.trim().replace(/[.!?]+$/u, '');
+  const contrast = detail.match(/^Confundir\s+(.+?)\s+con\s+(.+)$/iu);
+  if (contrast?.[1] && contrast[2]) {
+    return `¿Cómo distinguís ${contrast[1]} de ${contrast[2]} según el material?`;
+  }
+
+  const sectionTitle = card.reference.sectionTitle?.trim();
+  if (sectionTitle) {
+    return `¿Qué confusión conceptual conviene evitar en “${sectionTitle}”?`;
+  }
+
+  return front;
+}
+
 function buildSessionOrder(recall: Record<number, RecallResult>, length: number) {
   const difficult = Object.entries(recall)
     .filter(([, result]) => result === 'unknown')
@@ -260,6 +284,7 @@ export function StudentMaterialFlashcards({
     return currentCard.reference.sectionTitle ?? 'Referencia del documento';
   }, [currentCard]);
 
+  const displayFront = currentCard ? resolveFlashcardFront(currentCard) : '';
   const learningLevelLabel =
     currentCard?.level === 'recordar' ? 'Práctica de memoria' : 'Práctica de comprensión';
 
@@ -424,7 +449,7 @@ export function StudentMaterialFlashcards({
               Pregunta
             </p>
             <h3 className="mt-5 max-w-3xl text-xl leading-8 font-bold tracking-[-0.03em] text-slate-950 sm:text-2xl">
-              {currentCard.front}
+              {displayFront}
             </h3>
             <p className="mt-6 text-xs text-slate-500">
               Tocá la tarjeta o presioná Espacio para ver la respuesta

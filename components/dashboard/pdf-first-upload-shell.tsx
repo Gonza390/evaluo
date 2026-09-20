@@ -56,8 +56,14 @@ function titleFromFile(name: string) {
 }
 
 function isUploadTriggerLabel(label: string) {
-  const normalized = label.toLocaleLowerCase('es-AR').replace(/\s+/g, ' ').trim();
-  return normalized.includes('subir') && (normalized.includes('pdf') || normalized.includes('material'));
+  const normalized = label
+    .toLocaleLowerCase('es-AR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const hasUploadVerb = /\bsubi(?:r)?\b/u.test(normalized);
+  return hasUploadVerb && (normalized.includes('pdf') || normalized.includes('material'));
 }
 
 export function PdfFirstUploadShell({

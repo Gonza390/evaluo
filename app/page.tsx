@@ -60,7 +60,7 @@ const primaryHref =
 
 export default function Home() {
   return (
-    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="w-full min-w-0 overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
       <a
         href="#producto"
         className="fixed top-3 left-3 z-[100] -translate-y-20 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-lg transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
@@ -136,7 +136,7 @@ export default function Home() {
       </section>
 
       <section id="faq" className="border-t border-slate-100 bg-white py-16 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
               Preguntas Frecuentes
@@ -152,7 +152,7 @@ export default function Home() {
 
       <section className="bg-white py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_40%),linear-gradient(180deg,#050B2C_0%,var(--heading)_100%)] p-8 text-center shadow-xl md:p-14">
+          <div className="relative min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_40%),linear-gradient(180deg,#050B2C_0%,var(--heading)_100%)] p-5 text-center shadow-xl sm:p-8 md:p-14">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
             <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center">

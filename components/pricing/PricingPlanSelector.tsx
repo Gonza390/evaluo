@@ -36,7 +36,7 @@ export function PricingPlanSelector({
   return (
     <>
       <div
-        className="mx-auto mb-8 flex w-fit rounded-2xl border border-slate-200 bg-slate-50 p-1 shadow-sm"
+        className="mx-auto mb-8 flex max-w-full rounded-2xl border border-slate-200 bg-slate-50 p-1 shadow-sm"
         role="tablist"
         aria-label="Modalidad de pago Premium"
       >
@@ -80,7 +80,7 @@ export function PricingPlanSelector({
       <ManualReferralCode offerCode={billingMode} />
 
       <div className="mx-auto grid max-w-5xl items-stretch gap-6 lg:auto-rows-fr lg:grid-cols-2">
-        <article className="flex h-full flex-col rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
+        <article className="flex h-full min-w-0 flex-col rounded-3xl border border-slate-200 bg-white p-5 min-[360px]:p-6 sm:p-8">
           <div>
             <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
               Gratis

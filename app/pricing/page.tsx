@@ -75,7 +75,7 @@ export default async function PricingPage({
 
   return (
     <>
-      <main className="min-h-screen bg-white text-slate-950">
+      <main className="min-h-screen w-full min-w-0 overflow-x-clip bg-white text-slate-950">
         <MarketingPageViewTracker
           eventName="pricing_view"
           payload={{ location: source, plan_context: 'premium', recovery: showRecovery }}
@@ -92,7 +92,7 @@ export default async function PricingPage({
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               Evaluo Premium
             </span>
-            <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-bold tracking-[-0.045em] text-slate-950 sm:text-6xl sm:leading-[1.04]">
+            <h1 className="mx-auto mt-6 max-w-4xl break-words text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
               Estudiá mejor. Elegí el plan que te acompañe.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
@@ -160,7 +160,7 @@ export default async function PricingPage({
             </div>
 
             <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white">
-              <div className="grid grid-cols-[1fr_68px_82px] border-b border-slate-200 bg-slate-50 px-4 py-4 text-xs font-bold text-slate-900 sm:grid-cols-[1fr_140px_140px] sm:px-6 sm:text-sm">
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] border-b border-slate-200 bg-slate-50 px-3 py-4 text-[11px] font-bold text-slate-900 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 min-[360px]:text-xs sm:grid-cols-[1fr_140px_140px] sm:px-6 sm:text-sm">
                 <span>Función</span>
                 <span className="text-center">Gratis</span>
                 <span className="text-center text-indigo-700">Premium</span>
@@ -168,9 +168,9 @@ export default async function PricingPage({
               {comparison.map(([feature, free, premium]) => (
                 <div
                   key={feature}
-                  className="grid grid-cols-[1fr_68px_82px] items-center border-b border-slate-200 px-4 py-4 text-sm last:border-0 sm:grid-cols-[1fr_140px_140px] sm:px-6"
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] items-center border-b border-slate-200 px-3 py-4 text-sm last:border-0 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 sm:grid-cols-[1fr_140px_140px] sm:px-6"
                 >
-                  <span className="pr-3 leading-5 text-slate-800">{feature}</span>
+                  <span className="min-w-0 break-words pr-2 text-[13px] leading-5 text-slate-800 min-[360px]:pr-3 min-[360px]:text-sm">{feature}</span>
                   <span className="flex justify-center">
                     {free ? (
                       <Check className="h-5 w-5 text-emerald-700" aria-label="Incluido" />

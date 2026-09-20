@@ -6,12 +6,18 @@ import { Check, Sparkles, X } from 'lucide-react';
 import { getLiveWrongAnswerExplanation } from '@/lib/actions/live-simulator-explanation';
 import { cn } from '@/lib/utils';
 
-const OPTION_LABELS = ['a', 'b', 'c', 'd'];
+function getOptionLabel(optionIndex: number) {
+  if (optionIndex >= 0 && optionIndex < 26) {
+    return String.fromCharCode(97 + optionIndex);
+  }
+
+  return String(optionIndex + 1);
+}
 
 interface QuestionOptionButtonProps {
   /** The option text to display. */
   opcion: string;
-  /** Index of this option (used for the a/b/c/d label). */
+  /** Index of this option (used for the alphabetic option label). */
   optionIndex: number;
   /** Whether this option is currently selected. */
   selected: boolean;
@@ -232,7 +238,7 @@ export function QuestionOptionButton({
                 : 'border-border bg-background text-muted-foreground'
             )}
           >
-            {OPTION_LABELS[optionIndex] ?? optionIndex + 1}
+            {getOptionLabel(optionIndex)}
           </span>
           <span className="flex-1 pt-1 text-[15px] leading-6 text-foreground sm:text-base sm:leading-7">
             {opcion}
