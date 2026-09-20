@@ -39,7 +39,7 @@ export const DEFAULT_CALENDAR_FORM_STATE = {
   selectedMateriaId: null as string | null,
   examInstance: '1' as ExamInstance,
   assignmentTitle: '',
-  reminderDays: [] as number[],
+  reminderDays: [7, 3, 1] as number[],
 };
 
 /**
@@ -177,7 +177,7 @@ export function buildEventPayload({
       carreraId: careerId,
       carreraNombre: careerName,
       examInstance: formState.examInstance,
-      reminderDays: formState.reminderDays,
+      reminderDays: [7, 3, 1],
       sourcePayload: {
         subjectName,
         examInstance: formState.examInstance,

@@ -151,7 +151,7 @@ function buildEventPayload({
       carreraId: careerId,
       carreraNombre: careerName,
       examInstance: formState.examInstance,
-      reminderDays: formState.reminderDays,
+      reminderDays: [7, 3, 1],
       sourcePayload: {
         subjectName,
         examInstance: formState.examInstance,
@@ -557,16 +557,7 @@ export default function CalendarioPage() {
       selectedMateriaId: null,
       examInstance: current.type === 'exam' ? current.examInstance : '1',
       assignmentTitle: '',
-      reminderDays: [],
-    }));
-  };
-
-  const toggleReminderDay = (days: number) => {
-    setFormState((current) => ({
-      ...current,
-      reminderDays: current.reminderDays.includes(days)
-        ? current.reminderDays.filter((value) => value !== days)
-        : [...current.reminderDays, days],
+      reminderDays: current.type === 'exam' ? [7, 3, 1] : [],
     }));
   };
 
@@ -734,10 +725,10 @@ export default function CalendarioPage() {
     ]);
     resetForm();
     setIsComposerOpen(false);
-    if (isPremium && payload.reminderDays.length > 0) {
+    if (payload.type === 'exam') {
       trackMarketingEvent('reminder_created', {
         event_id: data.id,
-        days_before: payload.reminderDays.join(','),
+        days_before: '7,3,1',
         materia_id: payload.materiaId ?? undefined,
       });
     }
@@ -1320,52 +1311,9 @@ export default function CalendarioPage() {
                       <BellRing className="h-4 w-4 text-indigo-500" />
                       <p className="text-[12px] font-bold text-slate-800">Recordatorios</p>
                     </div>
-                    {isPremium ? (
-                      <>
-                        <p className="mt-1.5 text-[12px] text-slate-500">
-                          Recordarme antes del parcial:
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {[7, 3, 1].map((days) => {
-                            const active = formState.reminderDays.includes(days);
-                            return (
-                              <button
-                                key={days}
-                                type="button"
-                                onClick={() => toggleReminderDay(days)}
-                                className={`inline-flex h-8 items-center justify-center rounded-xl border px-3 text-[12px] font-semibold transition ${
-                                  active
-                                    ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                                    : 'border-slate-200 bg-white text-slate-600 hover:bg-white'
-                                }`}
-                              >
-                                {days} día{days === 1 ? '' : 's'}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="mt-2">
-                        <p className="text-[12px] leading-4 text-slate-500">
-                          Recordatorios disponibles en Premium.
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            trackMarketingEvent('premium_cta_clicked', {
-                              source: 'calendario_reminders',
-                            });
-                            window.location.assign(
-                              '/pricing?source=calendario_reminders#elegir-plan'
-                            );
-                          }}
-                          className="mt-1.5 text-[12px] font-semibold text-indigo-600 transition hover:text-indigo-700"
-                        >
-                          Conocer Premium
-                        </button>
-                      </div>
-                    )}
+                    <p className="mt-1.5 text-[12px] leading-5 text-slate-500">
+                      Te vamos a avisar automáticamente por email 7, 3 y 1 día antes del examen.
+                    </p>
                   </div>
                 ) : null}
 
@@ -1459,7 +1407,7 @@ export default function CalendarioPage() {
               source="calendario_exam_limit"
               features={[
                 'Parciales ilimitados',
-                'Recordatorios 7, 3 y 1 día antes',
+                'Organización completa de tus parciales',
                 'Calendario completo para toda la cursada',
               ]}
               ctaLabel="Organizar mis parciales con Premium"

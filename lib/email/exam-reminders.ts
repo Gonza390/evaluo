@@ -28,7 +28,6 @@ type CalendarEventRow = {
   materia_id: string | null;
   materia_nombre: string | null;
   title: string;
-  reminder_days_before: unknown;
   created_at: string;
 };
 
@@ -148,18 +147,6 @@ function buildSubjectKey(materiaId: string | null, materiaName: string) {
   return normalizedName ? `nombre:${normalizedName}` : 'nombre:sin-materia';
 }
 
-function isReminderDay(value: number): value is ReminderDays {
-  return REMINDER_DAYS.some((day) => day === value);
-}
-
-function parseReminderDays(value: unknown) {
-  if (!Array.isArray(value)) return [] as ReminderDays[];
-
-  return value
-    .map((item) => Number(item))
-    .filter((item): item is ReminderDays => Number.isFinite(item) && isReminderDay(item));
-}
-
 function buildCandidateKey(candidate: Pick<ReminderCandidate, 'userId' | 'subjectKey' | 'examDate' | 'days'>) {
   return `${candidate.userId}:${candidate.subjectKey}:${candidate.examDate}:${candidate.days}`;
 }
@@ -190,16 +177,14 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
       .from('student_materials')
       .select('id,user_id,materia_id,title,exam_date,created_at')
       .in('exam_date', [...targetDates.keys()])
-      .eq('processing_status', 'ready')
       .order('created_at', { ascending: false }),
     db
       .from('study_calendar_events')
       .select(
-        'id,user_id,material_id,event_date,materia_id,materia_nombre,title,reminder_days_before,created_at'
+        'id,user_id,material_id,event_date,materia_id,materia_nombre,title,created_at'
       )
       .eq('event_type', 'exam')
       .in('event_date', [...targetDates.keys()])
-      .not('reminder_days_before', 'is', null)
       .order('created_at', { ascending: false }),
   ]);
 
@@ -232,7 +217,7 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
 
   for (const row of (calendarResult.data ?? []) as CalendarEventRow[]) {
     const days = targetDates.get(row.event_date);
-    if (!days || !parseReminderDays(row.reminder_days_before).includes(days)) continue;
+    if (!days) continue;
 
     const materiaFallback = row.materia_nombre?.trim() || row.title.trim() || 'tu materia';
     const candidate: ReminderCandidate = {

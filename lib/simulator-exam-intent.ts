@@ -153,6 +153,7 @@ export async function saveSimulatorExamIntent(input: {
         title,
         materia_nombre: input.materiaNombre || null,
         source_payload: sourcePayload,
+        reminder_days_before: [7, 3, 1],
         updated_at: new Date().toISOString(),
       })
       .eq('id', existing.id)
@@ -176,7 +177,7 @@ export async function saveSimulatorExamIntent(input: {
       materia_nombre: input.materiaNombre || null,
       exam_instance: getSimulatorExamInstance(input.parcial),
       source_payload: sourcePayload,
-      reminder_days_before: null,
+      reminder_days_before: [7, 3, 1],
     })
     .select('id,event_date')
     .single();
