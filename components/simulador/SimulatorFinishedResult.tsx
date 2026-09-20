@@ -12,6 +12,7 @@ import {
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { supabase } from '@/lib/supabase-client';
 import { logError } from '@/lib/observability';
+import { findFutureSimulatorExamIntent } from '@/lib/simulator-exam-intent';
 
 type PreviousAttempt = {
   correct_answers: number;
@@ -34,11 +35,21 @@ type SimulatorFinishedResultProps = {
   onNewExam: () => void;
 };
 
-function buildUploadHref(materiaId: string, carreraId?: string, universidadId?: string) {
-  const params = new URLSearchParams({ openUpload: '1', materiaId });
+function buildUploadHref(
+  materiaId: string,
+  carreraId?: string,
+  universidadId?: string,
+  examDate?: string
+) {
+  const params = new URLSearchParams({
+    openUpload: '1',
+    materiaId,
+    source: 'preguntero-exam-intent',
+  });
   if (carreraId) params.set('carreraId', carreraId);
   if (universidadId) params.set('universidadId', universidadId);
-  return `/dashboard/materiales?${params.toString()}`;
+  if (examDate) params.set('examDate', examDate);
+  return `/dashboard?${params.toString()}`;
 }
 
 function getParcialLabel(parcial: number) {
@@ -63,6 +74,7 @@ export function SimulatorFinishedResult({
   const [previousAttempt, setPreviousAttempt] = useState<PreviousAttempt | null>(null);
   const [comparisonReady, setComparisonReady] = useState(false);
   const [hasReadyOwnMaterial, setHasReadyOwnMaterial] = useState(false);
+  const [examDate, setExamDate] = useState('');
   const [materialContextReady, setMaterialContextReady] = useState(!userId);
 
   const safeTotal = Math.max(1, totalPreguntas);
@@ -70,7 +82,7 @@ export function SimulatorFinishedResult({
   const grade = (aciertos / safeTotal) * 10;
   const wrong = Math.max(0, respondidas - aciertos);
   const misErroresHref = '/dashboard/explicaciones';
-  const uploadHref = buildUploadHref(materiaId, carreraId, universidadId);
+  const uploadHref = buildUploadHref(materiaId, carreraId, universidadId, examDate);
   const ownMaterialHref = userId
     ? uploadHref
     : `/login?mode=signup&next=${encodeURIComponent(uploadHref)}`;
@@ -122,9 +134,15 @@ export function SimulatorFinishedResult({
               .limit(1)
           : Promise.resolve({ data: [] as Array<{ id: string }>, error: null });
 
-        const [attemptsResult, materialResult] = await Promise.all([
+        const examIntentPromise =
+          userId && mode === 'regular'
+            ? findFutureSimulatorExamIntent({ userId, materiaId, parcial })
+            : Promise.resolve(null);
+
+        const [attemptsResult, materialResult, examIntent] = await Promise.all([
           attemptsPromise,
           materialPromise,
+          examIntentPromise,
         ]);
 
         if (!active) return;
@@ -147,6 +165,7 @@ export function SimulatorFinishedResult({
         } else {
           setHasReadyOwnMaterial(Boolean(materialResult.data?.[0]?.id));
         }
+        setExamDate(examIntent?.eventDate ?? '');
         setMaterialContextReady(true);
         setComparisonReady(true);
 
@@ -281,6 +300,8 @@ export function SimulatorFinishedResult({
                           materia_id: materiaId,
                           materia_nombre: materiaNombre || null,
                           parcial,
+                          exam_date: examDate || null,
+                          source: 'preguntero-exam-intent',
                           destination: ownMaterialHref,
                         }}
                         className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-sm font-semibold text-white shadow-[0_12px_26px_rgba(99,102,241,0.24)] transition hover:opacity-95 sm:w-auto"
@@ -357,6 +378,8 @@ export function SimulatorFinishedResult({
                         materia_id: materiaId,
                         materia_nombre: materiaNombre || null,
                         parcial,
+                        exam_date: examDate || null,
+                        source: 'preguntero-exam-intent',
                         destination: ownMaterialHref,
                       }}
                       className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-5 py-2.5 text-center text-sm font-semibold text-white shadow-[0_10px_24px_rgba(37,99,235,0.20)] transition hover:bg-[#1D4ED8] sm:w-auto"

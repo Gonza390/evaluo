@@ -20,6 +20,8 @@ export type MaeveStudySpaceProps = {
   initialCarreraId?: string;
   initialMateriaId?: string;
   initialExamDate?: string;
+  initialSource?: string;
+  trackingMateriaId?: string;
   initialOpen?: boolean;
 };
 
@@ -37,6 +39,8 @@ export function MaeveStudySpace({
   initialCarreraId = '',
   initialMateriaId = '',
   initialExamDate = '',
+  initialSource = '',
+  trackingMateriaId = '',
   initialOpen = false,
 }: MaeveStudySpaceProps) {
   return (
@@ -49,6 +53,8 @@ export function MaeveStudySpace({
       initialCarreraId={initialCarreraId}
       initialMateriaId={initialMateriaId}
       initialExamDate={initialExamDate}
+      initialSource={initialSource}
+      trackingMateriaId={trackingMateriaId}
       initialOpen={initialOpen}
     >
       <MaeveDashboardChrome

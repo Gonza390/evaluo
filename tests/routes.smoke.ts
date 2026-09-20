@@ -125,6 +125,9 @@ const dashboardChromeSource = readFileSync(
 );
 const exploreClientSource = readFileSync(resolve('app/explorar/explorar-client.tsx'), 'utf8');
 const loginSource = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
+const simulatorLegacySource = readFileSync(resolve('components/simulador/SimuladorExamenLegacy.tsx'), 'utf8');
+const profileCompletionSource = readFileSync(resolve('app/completar-perfil/page.tsx'), 'utf8');
+const pdfUploadShellSource = readFileSync(resolve('components/dashboard/pdf-first-upload-shell.tsx'), 'utf8');
 
 assert.match(contentSignalsSource, /\.eq\('tipo', 'resumen-modulo'\)/);
 assert.match(materiaPageSource, /contentSignals\.hasAcademicContent/);
@@ -140,6 +143,14 @@ assert.doesNotMatch(dashboardChromeSource, /section:first-of-type/);
 assert.match(exploreClientSource, /sortedCarreras/);
 assert.match(exploreClientSource, /Ver las \$\{sortedCarreras\.length\} carreras/);
 assert.match(loginSource, /getAuthContextCopy/);
+assert.match(simulatorLegacySource, /¿Cuándo rendís\?/);
+assert.match(simulatorLegacySource, /preguntero_exam_date_captured/);
+assert.match(simulatorLegacySource, /disabled=\{!examDateDraft \|\| examDateSaving\}/);
+assert.doesNotMatch(simulatorLegacySource, /Opcional/);
+assert.doesNotMatch(simulatorLegacySource, /Ver resúmenes y material de la materia/);
+assert.doesNotMatch(profileCompletionSource, /cameFromDemo/);
+assert.match(profileCompletionSource, /router\.replace\(completionDestination\)/);
+assert.match(pdfUploadShellSource, /preguntero_exam_pdf_uploaded/);
 
 for (const href of ['/explorar', '/pregunteros', '/']) {
   assert.ok(notFoundSource.includes(`href="${href}"`));
