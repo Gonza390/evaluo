@@ -51,7 +51,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { useUser } from '@/hooks/useUser';
 import { usePremium } from '@/hooks/usePremium';
 import { buildShareReferralUrl, createShareTrackingId } from '@/lib/attribution';
-import { getMateriaRoute } from '@/lib/routes';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import {
   trackSimulatorAbandonEvent,
@@ -76,6 +75,14 @@ import {
 } from '@/lib/simulator-core';
 import { DEMO_LOGIN_GATE_TOTAL_QUESTIONS, DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
 import { logError } from '@/lib/observability';
+import {
+  clearPendingExamDate,
+  findFutureSimulatorExamIntent,
+  getLocalDateKey,
+  readPendingExamDate,
+  saveSimulatorExamIntent,
+  writePendingExamDate,
+} from '@/lib/simulator-exam-intent';
 import { supabase } from '@/lib/supabase-client';
 import { cn } from '@/lib/utils';
 import {
@@ -86,7 +93,6 @@ import {
   Clock3,
   LogOut,
   RefreshCcw,
-  BookOpen,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -478,6 +484,9 @@ export default function SimuladorExamen({
   const [showResultsFace, setShowResultsFace] = useState(false);
   const [isMobileResults, setIsMobileResults] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [examDateDraft, setExamDateDraft] = useState('');
+  const [examIntentId, setExamIntentId] = useState<string | null>(null);
+  const [examDateSaving, setExamDateSaving] = useState(false);
   const [showSimulatorTour, setShowSimulatorTour] = useState(false);
   const [simulatorTourStepIndex, setSimulatorTourStepIndex] = useState(0);
   const [simulatorTourDirection, setSimulatorTourDirection] =
@@ -1275,6 +1284,67 @@ export default function SimuladorExamen({
     user,
     userLoading,
   ]);
+
+  useEffect(() => {
+    if (mode !== 'regular' || !materiaNombre) return;
+
+    const pending = readPendingExamDate(materiaId, parcial);
+    if (!userId) {
+      if (pending) setExamDateDraft(pending);
+      return;
+    }
+
+    const currentUserId = userId;
+    let active = true;
+
+    async function syncExamIntent() {
+      try {
+        const existing = await findFutureSimulatorExamIntent({
+          userId: currentUserId,
+          materiaId,
+          parcial,
+        });
+        if (!active) return;
+
+        if (pending) {
+          const saved = await saveSimulatorExamIntent({
+            userId: currentUserId,
+            materiaId,
+            materiaNombre,
+            parcial,
+            eventDate: pending,
+            existingEventId: existing?.id,
+          });
+          if (!active) return;
+          setExamIntentId(saved.id);
+          setExamDateDraft(saved.eventDate);
+          clearPendingExamDate(materiaId, parcial);
+          trackMarketingEvent('preguntero_exam_date_attached_after_auth', {
+            materia_id: materiaId,
+            parcial,
+            exam_date: saved.eventDate,
+          });
+          return;
+        }
+
+        if (existing) {
+          setExamIntentId(existing.id);
+          setExamDateDraft(existing.eventDate);
+        }
+      } catch (error) {
+        logError('simulador.examIntent.sync', error, {
+          materiaId,
+          parcial,
+          userId: currentUserId,
+        });
+      }
+    }
+
+    void syncExamIntent();
+    return () => {
+      active = false;
+    };
+  }, [materiaId, materiaNombre, mode, parcial, userId]);
 
   // The countdown interval lives inside <ExamTimer>. This effect only guards
   // the edge-case where timeLeft is already 0 on mount (e.g. after hydration).
@@ -2626,7 +2696,62 @@ export default function SimuladorExamen({
   const isDemoCheckpointQuestion = resolvedDemoMode && currentQuestionIndex === demoCheckpointIndex;
 
   if (estado === 'playing' && !hasStarted) {
-    const returnToMateriaHref = getMateriaRoute(materiaId, carreraId);
+    const startPractice = async () => {
+      if (examDateSaving) return;
+
+      if (examDateDraft) {
+        if (userId) {
+          setExamDateSaving(true);
+          try {
+            const saved = await saveSimulatorExamIntent({
+              userId,
+              materiaId,
+              materiaNombre,
+              parcial,
+              eventDate: examDateDraft,
+              existingEventId: examIntentId,
+            });
+            setExamIntentId(saved.id);
+            setExamDateDraft(saved.eventDate);
+            clearPendingExamDate(materiaId, parcial);
+            trackMarketingEvent('preguntero_exam_date_captured', {
+              materia_id: materiaId,
+              parcial,
+              exam_date: saved.eventDate,
+              auth_state: 'authenticated',
+            });
+          } catch (error) {
+            logError('simulador.examIntent.save', error, {
+              materiaId,
+              parcial,
+              userId,
+            });
+          } finally {
+            setExamDateSaving(false);
+          }
+        } else {
+          writePendingExamDate(materiaId, parcial, examDateDraft);
+          trackMarketingEvent('preguntero_exam_date_captured', {
+            materia_id: materiaId,
+            parcial,
+            exam_date: examDateDraft,
+            auth_state: 'anonymous',
+          });
+        }
+      } else if (!userId) {
+        clearPendingExamDate(materiaId, parcial);
+      }
+
+      simulatorLifecycleRef.current.outcomeTracked = false;
+      setHasStarted(true);
+      persistSimulatorSnapshot({ hasStarted: true });
+      void emitSimulatorEvent('simulator_started', {
+        questionIndex: 1,
+        answered: 0,
+        progress: 0,
+        timeLeft: examDurationSeconds,
+      });
+    };
 
     return (
       <div className="flex min-h-[600px] items-center justify-center bg-white p-6">
@@ -2641,6 +2766,7 @@ export default function SimuladorExamen({
             Cada intento combina preguntas disponibles para ofrecerte una práctica diferente y una
             evaluación más completa de tu preparación.
           </p>
+
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
               <p className="text-xs text-slate-500">Preguntas</p>
@@ -2655,30 +2781,34 @@ export default function SimuladorExamen({
               <p className="font-bold text-slate-900">{getParcialLabel(parcial)}</p>
             </div>
           </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+
+          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <label className="min-w-0 flex-1 text-sm font-semibold text-slate-900">
+                ¿Cuándo rendís?
+                <span className="ml-2 text-xs font-medium text-slate-500">Opcional</span>
+                <input
+                  type="date"
+                  min={getLocalDateKey()}
+                  value={examDateDraft}
+                  onChange={(event) => setExamDateDraft(event.target.value)}
+                  className="mt-2 h-11 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 sm:max-w-[240px]"
+                />
+              </label>
+              <p className="max-w-[300px] text-xs leading-5 text-slate-600">
+                Nos ayuda a acompañarte hasta este examen y a conectarlo después con tus propios apuntes.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6">
             <Button
-              onClick={() => {
-                simulatorLifecycleRef.current.outcomeTracked = false;
-                setHasStarted(true);
-                persistSimulatorSnapshot({ hasStarted: true });
-                void emitSimulatorEvent('simulator_started', {
-                  questionIndex: 1,
-                  answered: 0,
-                  progress: 0,
-                  timeLeft: examDurationSeconds,
-                });
-              }}
+              onClick={() => void startPractice()}
+              disabled={examDateSaving}
               className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
             >
-              Comenzar práctica
+              {examDateSaving ? 'Guardando...' : 'Comenzar práctica'}
             </Button>
-            <Link
-              href={returnToMateriaHref}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
-            >
-              <BookOpen className="h-4 w-4 text-[#4F5DFF]" />
-              Ver resúmenes y material de la materia
-            </Link>
           </div>
         </Card>
       </div>
