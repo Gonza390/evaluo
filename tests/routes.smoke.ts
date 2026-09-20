@@ -145,6 +145,8 @@ assert.match(exploreClientSource, /Ver las \$\{sortedCarreras\.length\} carreras
 assert.match(loginSource, /getAuthContextCopy/);
 assert.match(simulatorLegacySource, /¿Cuándo rendís\?/);
 assert.match(simulatorLegacySource, /preguntero_exam_date_captured/);
+assert.match(simulatorLegacySource, /disabled=\{!examDateDraft \|\| examDateSaving\}/);
+assert.doesNotMatch(simulatorLegacySource, /Opcional/);
 assert.doesNotMatch(simulatorLegacySource, /Ver resúmenes y material de la materia/);
 assert.doesNotMatch(profileCompletionSource, /cameFromDemo/);
 assert.match(profileCompletionSource, /router\.replace\(completionDestination\)/);
