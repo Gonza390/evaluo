@@ -2699,8 +2699,7 @@ export default function SimuladorExamen({
     const startPractice = async () => {
       if (!examDateDraft || examDateSaving) return;
 
-      {
-        if (userId) {
+      if (userId) {
           setExamDateSaving(true);
           try {
             const saved = await saveSimulatorExamIntent({
@@ -2729,15 +2728,14 @@ export default function SimuladorExamen({
           } finally {
             setExamDateSaving(false);
           }
-        } else {
-          writePendingExamDate(materiaId, parcial, examDateDraft);
-          trackMarketingEvent('preguntero_exam_date_captured', {
-            materia_id: materiaId,
-            parcial,
-            exam_date: examDateDraft,
-            auth_state: 'anonymous',
-          });
-        }
+      } else {
+        writePendingExamDate(materiaId, parcial, examDateDraft);
+        trackMarketingEvent('preguntero_exam_date_captured', {
+          materia_id: materiaId,
+          parcial,
+          exam_date: examDateDraft,
+          auth_state: 'anonymous',
+        });
       }
 
       simulatorLifecycleRef.current.outcomeTracked = false;
