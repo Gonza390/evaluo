@@ -283,7 +283,7 @@ function BehaviorPanel({ detail }: { detail: AcquisitionSourceDetail }) {
         <p className="mt-1 text-xs text-slate-500">Cada porcentaje toma como base las {detail.entries.toLocaleString('es-AR')} entradas del canal.</p>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {detail.behavior.map((item) => (
           <div key={item.key} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
             <p className="min-h-8 text-[11px] font-semibold leading-4 text-slate-600">{item.label}</p>
@@ -304,7 +304,7 @@ function BehaviorPanel({ detail }: { detail: AcquisitionSourceDetail }) {
       </div>
 
       <p className="mt-3 text-[10px] leading-4 text-slate-400">
-        El retorno otro día se puede medir cuando la sesión quedó asociada a un usuario identificado.
+        “Se autenticaron” une la entrada anónima con eventos posteriores del mismo session_key; Google OAuth también registra el éxito en el callback.
       </p>
     </div>
   );
@@ -377,11 +377,20 @@ function SourceDetail({ detail, activePeriod }: { detail: AcquisitionSourceDetai
         </Link>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
           <p className="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Entradas</p>
           <p className="mt-2 text-3xl font-bold tracking-[-0.05em]">{detail.entries.toLocaleString('es-AR')}</p>
           <p className="mt-1 text-xs text-slate-400">{formatPct(detail.pct)} del tráfico identificado</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Entraron sin login</p>
+          <p className="mt-2 text-3xl font-bold tracking-[-0.05em] text-slate-950">
+            {detail.anonymousEntries.toLocaleString('es-AR')}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {detail.entries > 0 ? formatPct((detail.anonymousEntries / detail.entries) * 100) : '0,0%'} de las entradas
+          </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">Variación</p>
