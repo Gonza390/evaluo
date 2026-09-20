@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 import {
   Form,
@@ -121,6 +122,7 @@ export default function LoginForm() {
     try {
       const redirectUrl = new URL('/auth/callback', window.location.origin);
       redirectUrl.searchParams.set('next', nextPath);
+      redirectUrl.searchParams.set('analytics_session', getAnalyticsSessionKey());
       const redirectTo = redirectUrl.toString();
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -210,6 +212,12 @@ export default function LoginForm() {
       }
 
       const redirectPath = await resolvePostLoginPath(signInData.user.id);
+      trackMarketingEvent('auth_completed', {
+        location,
+        provider: 'email',
+        auth_kind: 'login',
+        destination: redirectPath,
+      });
       window.location.href = redirectPath;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
