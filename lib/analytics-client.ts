@@ -26,12 +26,19 @@ function randomId() {
 
 export function getAnalyticsSessionKey() {
   const key = 'evaluo_session_key';
-  const existing = window.localStorage.getItem(key);
-  if (existing) return existing;
 
-  const value = randomId();
-  window.localStorage.setItem(key, value);
-  return value;
+  try {
+    const existing = window.sessionStorage.getItem(key);
+    if (existing) return existing;
+
+    const value = randomId();
+    window.sessionStorage.setItem(key, value);
+    return value;
+  } catch {
+    // Fallback defensivo para navegadores donde sessionStorage no está disponible.
+    const value = randomId();
+    return value;
+  }
 }
 
 export function getAnalyticsAnonymousId() {
