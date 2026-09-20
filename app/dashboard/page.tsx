@@ -206,6 +206,8 @@ export default async function DashboardPage({
             initialCarreraId={resolvedCarreraId}
             initialMateriaId={uploadMateriaId}
             initialExamDate={examDate}
+            initialSource={source}
+            trackingMateriaId={requestedMateriaId}
             initialOpen={openUpload === '1'}
           />
         </div>
