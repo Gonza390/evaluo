@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { sendSenderTemplate } from '@/lib/email/sender';
 import { logError, logInfo } from '@/lib/observability';
@@ -9,8 +10,15 @@ export const dynamic = 'force-dynamic';
 
 const TARGET_EMAIL = 'olmosgonza69@gmail.com';
 const TEST_KEY = 'manual_sender_exam_3d_test_20260920_1742z_v1';
+const TEMP_AUTH_KEY = 'manual_sender_exam_3d_route_auth_20260920_v1';
 const TEST_WINDOW_START = Date.parse('2026-09-20T17:42:00Z');
 const TEST_WINDOW_END = Date.parse('2026-09-20T19:00:00Z');
+
+function secureEquals(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+}
 
 function isUniqueViolation(error: unknown) {
   return Boolean(
@@ -21,9 +29,59 @@ function isUniqueViolation(error: unknown) {
   );
 }
 
+async function consumeTemporaryRouteToken(request: Request) {
+  const suppliedToken = new URL(request.url).searchParams.get('token')?.trim() || '';
+  if (!suppliedToken) return false;
+
+  const admin = createAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+
+  const { data: authRow, error: authError } = await db
+    .from('email_campaign_deliveries')
+    .select('id,status,context')
+    .eq('campaign_key', TEMP_AUTH_KEY)
+    .eq('status', 'sending')
+    .limit(1)
+    .maybeSingle();
+
+  if (authError) throw authError;
+
+  const expectedToken =
+    authRow &&
+    typeof authRow.context === 'object' &&
+    authRow.context &&
+    typeof authRow.context.token === 'string'
+      ? authRow.context.token
+      : '';
+
+  if (!authRow || !expectedToken || !secureEquals(suppliedToken, expectedToken)) {
+    return false;
+  }
+
+  const { data: claimed, error: claimError } = await db
+    .from('email_campaign_deliveries')
+    .update({
+      status: 'sent',
+      sent_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', authRow.id)
+    .eq('status', 'sending')
+    .select('id')
+    .maybeSingle();
+
+  if (claimError) throw claimError;
+  return Boolean(claimed);
+}
+
 async function handle(request: Request) {
-  if (!isInternalQueueRequestAuthorized(request)) {
-    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  const internalAuthorized = isInternalQueueRequestAuthorized(request);
+  if (!internalAuthorized) {
+    const temporaryAuthorized = await consumeTemporaryRouteToken(request);
+    if (!temporaryAuthorized) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
   }
 
   const now = Date.now();
@@ -150,7 +208,7 @@ async function handle(request: Request) {
       emailId: senderResult.emailId,
     });
   } catch (error) {
-    // Keep the reservation on failure so a scheduler retry cannot make a second send attempt.
+    // Keep the reservation on failure so a retry cannot make a second send attempt.
     logError('manualExam3dTest.send', error, {
       recipient: TARGET_EMAIL,
       deliveryId: reservation.id,
