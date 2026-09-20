@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 const TARGET_EMAIL = 'olmosgonza69@gmail.com';
 const TEST_KEY = 'manual_sender_exam_3d_test_20260920_1742z_v1';
 const TEST_WINDOW_START = Date.parse('2026-09-20T17:42:00Z');
-const TEST_WINDOW_END = Date.parse('2026-09-20T17:44:00Z');
+const TEST_WINDOW_END = Date.parse('2026-09-20T19:00:00Z');
 
 function isUniqueViolation(error: unknown) {
   return Boolean(
