@@ -44,7 +44,6 @@ export interface AcquisitionSourceStats {
   source: AcquisitionSourceKey;
   entries: number;
   identifiedUsers: number;
-  anonymousEntries: number;
   pct: number;
   topLanding: string | null;
   lastEntryAt: string | null;
@@ -56,6 +55,7 @@ export interface AcquisitionSourceDetail {
   source: AcquisitionSourceKey;
   entries: number;
   identifiedUsers: number;
+  anonymousEntries: number;
   pct: number;
   trend: AcquisitionTrend;
   timeline: AcquisitionTimelinePoint[];
