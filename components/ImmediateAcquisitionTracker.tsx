@@ -53,7 +53,13 @@ export function ImmediateAcquisitionTracker() {
         },
       }),
       keepalive: true,
-    }).catch(() => undefined);
+    }).catch(() => {
+      try {
+        window.sessionStorage.removeItem(acquisitionKey);
+      } catch {
+        // El tracker diferido puede volver a intentar si storage está disponible.
+      }
+    });
   }, []);
 
   return null;
