@@ -117,42 +117,88 @@ function extractPageReference(value: string) {
 }
 
 const INLINE_MARKUP_PATTERN =
-  /(\*\*[^*]+\*\*|`[^`]+`|\$\$[^$]+\$\$|\$[^$\n]+\$|\\\\\([^)]*\\\\\)|\\\\\[[^\]]*\\\\\])/gu;
+  /(\*\*[^*]+\*\*|\x60[^\x60]+\x60|\$\$[^$]+\$\$|\$[^$\n]+\$|\\\([^)]*\\\)|\\\[[^\]]*\\\])/gu;
 
 function normalizeMathExpression(value: string) {
   let output = value.trim();
 
   for (let pass = 0; pass < 4; pass += 1) {
     const next = output
-      .replace(/\\\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/gu, '($1)/($2)')
-      .replace(/\\\\sqrt\s*\{([^{}]+)\}/gu, '√($1)');
+      .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/gu, '($1)/($2)')
+      .replace(/\\sqrt\s*\{([^{}]+)\}/gu, '√($1)');
     if (next === output) break;
     output = next;
   }
 
   return output
-    .replace(/\\\\text\s*\{([^{}]*)\}/gu, '$1')
-    .replace(/\\\\mathrm\s*\{([^{}]*)\}/gu, '$1')
-    .replace(/\\\\operatorname\s*\{([^{}]*)\}/gu, '$1')
-    .replace(/\\\\times\b/gu, '×')
-    .replace(/\\\\cdot\b/gu, '·')
-    .replace(/\\\\leq?\b/gu, '≤')
-    .replace(/\\\\geq?\b/gu, '≥')
-    .replace(/\\\\neq\b/gu, '≠')
-    .replace(/\\\\Rightarrow\b/gu, '⇒')
-    .replace(/\\\\to\b/gu, '→')
-    .replace(/\\\\pm\b/gu, '±')
-    .replace(/\\\\%/gu, '%')
-    .replace(/\\\\_/gu, '_')
-    .replace(/\\\\([A-Za-z]+)/gu, '$1')
+    .replace(/\\text\s*\{([^{}]*)\}/gu, '$1')
+    .replace(/\\mathrm\s*\{([^{}]*)\}/gu, '$1')
+    .replace(/\\operatorname\s*\{([^{}]*)\}/gu, '$1')
+    .replace(/\\times\b/gu, '×')
+    .replace(/\\cdot\b/gu, '·')
+    .replace(/\\leq?\b/gu, '≤')
+    .replace(/\\geq?\b/gu, '≥')
+    .replace(/\\neq\b/gu, '≠')
+    .replace(/\\Rightarrow\b/gu, '⇒')
+    .replace(/\\to\b/gu, '→')
+    .replace(/\\pm\b/gu, '±')
+    .replace(/\\%/gu, '%')
+    .replace(/\\_/gu, '_')
+    .replace(/\\([A-Za-z]+)/gu, '$1')
     .replace(/[{}]/gu, '')
     .replace(/\s+/gu, ' ')
     .trim();
 }
 
 function unwrapMathToken(token: string) {
-  if (token.startsWith('$') && token.endsWith('$')) return token.slice(2, -2);
-  if (token.startsWith('
+  if (token.startsWith('$$') && token.endsWith('$$')) return token.slice(2, -2);
+  if (token.startsWith('$') && token.endsWith('$')) return token.slice(1, -1);
+  if (token.startsWith('\\(') && token.endsWith('\\)')) return token.slice(2, -2);
+  if (token.startsWith('\\[') && token.endsWith('\\]')) return token.slice(2, -2);
+  return null;
+}
+
+function renderInlineMarkdown(value: string): ReactNode {
+  const tokens = value.split(INLINE_MARKUP_PATTERN);
+
+  return tokens.map((token, index) => {
+    if (/^\*\*[^*]+\*\*$/u.test(token)) {
+      return (
+        <strong key={token + '-' + index} className="font-semibold text-slate-950">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    if (/^\x60[^\x60]+\x60$/u.test(token)) {
+      return (
+        <code
+          key={token + '-' + index}
+          className="rounded bg-slate-100 px-1.5 py-0.5 text-[0.92em] font-medium text-slate-800"
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+
+    const mathExpression = unwrapMathToken(token);
+    if (mathExpression !== null) {
+      const display = normalizeMathExpression(mathExpression);
+      return (
+        <span
+          key={token + '-' + index}
+          role="math"
+          aria-label={display}
+          className="mx-0.5 inline-flex max-w-full items-baseline overflow-x-auto rounded-md border border-indigo-100 bg-indigo-50/70 px-1.5 py-0.5 font-mono text-[0.94em] font-semibold text-slate-900 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {display}
+        </span>
+      );
+    }
+
+    return token;
+  });
+}
 
 function getCallout(line: string): {
   kind: StudyCalloutKind;
