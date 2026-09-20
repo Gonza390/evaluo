@@ -2111,6 +2111,7 @@ export type Database = {
           event_type: string;
           exam_instance: string | null;
           id: string;
+          material_id: string | null;
           materia_id: string | null;
           materia_nombre: string | null;
           notes: string | null;
@@ -2128,6 +2129,7 @@ export type Database = {
           event_type: string;
           exam_instance?: string | null;
           id?: string;
+          material_id?: string | null;
           materia_id?: string | null;
           materia_nombre?: string | null;
           notes?: string | null;
@@ -2145,6 +2147,7 @@ export type Database = {
           event_type?: string;
           exam_instance?: string | null;
           id?: string;
+          material_id?: string | null;
           materia_id?: string | null;
           materia_nombre?: string | null;
           notes?: string | null;
@@ -2160,6 +2163,13 @@ export type Database = {
             columns: ['carrera_id'];
             isOneToOne: false;
             referencedRelation: 'carreras';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'study_calendar_events_material_id_fkey';
+            columns: ['material_id'];
+            isOneToOne: false;
+            referencedRelation: 'student_materials';
             referencedColumns: ['id'];
           },
           {

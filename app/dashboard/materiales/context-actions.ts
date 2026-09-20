@@ -37,6 +37,18 @@ export async function saveStudentMaterialExamContextAction(input: {
     }
 
     const admin = createAdminClient();
+    const { data: ownedMaterial, error: ownedMaterialError } = await admin
+      .from('student_materials')
+      .select('id,materia_id')
+      .eq('id', parsed.data.materialId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (ownedMaterialError) throw ownedMaterialError;
+    if (!ownedMaterial) {
+      return { success: false, message: 'No encontramos el material para guardar el examen.' };
+    }
+
     const { data, error } = await admin
       .from('student_materials')
       .update({
@@ -51,6 +63,27 @@ export async function saveStudentMaterialExamContextAction(input: {
     if (error) throw error;
     if (!data) {
       return { success: false, message: 'No encontramos el material para guardar el examen.' };
+    }
+
+    const updatedAt = new Date().toISOString();
+    const { error: unlinkError } = await admin
+      .from('study_calendar_events')
+      .update({ material_id: null, updated_at: updatedAt })
+      .eq('user_id', user.id)
+      .eq('material_id', parsed.data.materialId);
+
+    if (unlinkError) throw unlinkError;
+
+    if (parsed.data.examDate && ownedMaterial.materia_id) {
+      const { error: linkError } = await admin
+        .from('study_calendar_events')
+        .update({ material_id: parsed.data.materialId, updated_at: updatedAt })
+        .eq('user_id', user.id)
+        .eq('event_type', 'exam')
+        .eq('materia_id', ownedMaterial.materia_id)
+        .eq('event_date', parsed.data.examDate);
+
+      if (linkError) throw linkError;
     }
 
     return { success: true, message: 'Contexto del examen guardado.' };

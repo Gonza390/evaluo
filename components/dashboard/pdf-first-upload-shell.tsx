@@ -77,7 +77,7 @@ export function PdfFirstUploadShell({
   carreraMaterias: _carreraMaterias,
   initialUniversidadId = '',
   initialCarreraId = '',
-  initialMateriaId: _initialMateriaId = '',
+  initialMateriaId = '',
   initialExamDate = '',
   initialSource = '',
   trackingMateriaId = '',
@@ -206,7 +206,7 @@ export function PdfFirstUploadShell({
     let preparedPath: string | null = null;
 
     try {
-      const metadata = { title: title.trim() };
+      const metadata = { title: title.trim(), materiaId: initialMateriaId || null };
       const fileMetadata = {
         name: file.name,
         mimeType: file.type || 'application/pdf',
@@ -252,7 +252,7 @@ export function PdfFirstUploadShell({
       if (initialSource === 'preguntero-exam-intent') {
         trackMarketingEvent('preguntero_exam_pdf_uploaded', {
           source: initialSource,
-          materia_id: trackingMateriaId || _initialMateriaId || null,
+          materia_id: trackingMateriaId || initialMateriaId || null,
           exam_date: examDate || null,
           material_id: result.materialId,
         });

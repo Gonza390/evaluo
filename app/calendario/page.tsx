@@ -145,6 +145,7 @@ function buildEventPayload({
       type: formState.type,
       title: `${subjectName} - ${examInstanceLabel(formState.examInstance)}`,
       notes: '',
+      materialId: null,
       materiaId: selectedMateria?.id ?? null,
       materiaNombre: subjectName,
       carreraId: careerId,
@@ -171,6 +172,7 @@ function buildEventPayload({
     type: formState.type,
     title: assignmentTitle,
     notes: '',
+    materialId: null,
     materiaId: null,
     materiaNombre: null,
     carreraId: careerId,
@@ -256,7 +258,7 @@ export default function CalendarioPage() {
       const { data, error } = await supabase
         .from('study_calendar_events')
         .select(
-          'id, event_type, title, notes, event_date, created_at, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
+          'id, event_type, title, notes, event_date, created_at, material_id, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
         )
         .eq('user_id', user.id)
         .order('event_date', { ascending: true })
@@ -291,6 +293,7 @@ export default function CalendarioPage() {
           date: event.event_date,
           notes: event.notes ?? '',
           createdAt: event.created_at,
+          materialId: event.material_id ?? null,
           materiaId: event.materia_id ?? null,
           materiaNombre: event.materia_nombre ?? null,
           carreraId: event.carrera_id ?? null,
@@ -611,6 +614,7 @@ export default function CalendarioPage() {
         date: selectedDateKey,
         notes: payload.notes,
         createdAt: new Date().toISOString(),
+        materialId: payload.materialId,
         materiaId: payload.materiaId,
         materiaNombre: payload.materiaNombre,
         carreraId: payload.carreraId,
@@ -643,6 +647,7 @@ export default function CalendarioPage() {
         title: payload.title,
         notes: payload.notes || null,
         event_date: selectedDateKey,
+        material_id: payload.materialId,
         materia_id: payload.materiaId,
         materia_nombre: payload.materiaNombre,
         carrera_id: payload.carreraId,
@@ -653,7 +658,7 @@ export default function CalendarioPage() {
           payload.reminderDays && payload.reminderDays.length > 0 ? payload.reminderDays : null,
       })
       .select(
-        'id, event_type, title, notes, event_date, created_at, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
+        'id, event_type, title, notes, event_date, created_at, material_id, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
       )
       .single();
 
@@ -668,6 +673,7 @@ export default function CalendarioPage() {
           date: selectedDateKey,
           notes: payload.notes,
           createdAt: new Date().toISOString(),
+          materialId: payload.materialId,
           materiaId: payload.materiaId,
           materiaNombre: payload.materiaNombre,
           carreraId: payload.carreraId,
@@ -706,6 +712,7 @@ export default function CalendarioPage() {
         date: data.event_date,
         notes: data.notes ?? '',
         createdAt: data.created_at,
+        materialId: data.material_id ?? null,
         materiaId: data.materia_id ?? null,
         materiaNombre: data.materia_nombre ?? null,
         carreraId: data.carrera_id ?? null,

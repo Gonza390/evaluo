@@ -30,6 +30,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const pdfFirstMetadataSchema = z.object({
   title: z.string().trim().min(1).max(180),
+  materiaId: z.string().uuid().nullable().optional(),
 });
 
 type PdfFirstMetadata = z.infer<typeof pdfFirstMetadataSchema>;
@@ -266,7 +267,7 @@ export async function finalizePdfFirstUploadAction(
         user_id: user.id,
         universidad_id: null,
         carrera_id: null,
-        materia_id: null,
+        materia_id: parsed.metadata.materiaId ?? null,
         title: parsed.metadata.title,
         description: 'Material privado subido por el estudiante.',
         file_name: parsed.file.name,

@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
-import { getStudentMaterialRoute } from '@/lib/routes';
+import { getDashboardMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { sendSenderTemplate } from '@/lib/email/sender';
 
 const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires';
@@ -14,23 +14,16 @@ type ReminderSource = 'material' | 'calendar';
 type MaterialRow = {
   id: string;
   user_id: string;
-  materia_id: string;
+  materia_id: string | null;
   title: string;
   exam_date: string;
-  created_at: string;
-};
-
-type LinkedMaterialRow = {
-  id: string;
-  user_id: string;
-  materia_id: string;
-  title: string;
   created_at: string;
 };
 
 type CalendarEventRow = {
   id: string;
   user_id: string;
+  material_id: string | null;
   event_date: string;
   materia_id: string | null;
   materia_nombre: string | null;
@@ -108,12 +101,6 @@ function getReminderSubject(days: ReminderDays, materia: string) {
   return `Mañana rendís ${materia}`;
 }
 
-function getCalendarTimingLabel(days: ReminderDays) {
-  if (days === 7) return 'es en una semana';
-  if (days === 3) return 'es en 3 días';
-  return 'es mañana';
-}
-
 function buildTrackedUrl(path: string, days: ReminderDays, content: string) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
   const url = new URL(path, baseUrl);
@@ -126,6 +113,14 @@ function buildTrackedUrl(path: string, days: ReminderDays, content: string) {
 
 function buildMaterialUrl(materialId: string, days: ReminderDays) {
   return buildTrackedUrl(getStudentMaterialRoute(materialId), days, 'continue_studying');
+}
+
+function buildMateriaWorkspaceUrl(materiaId: string, days: ReminderDays) {
+  return buildTrackedUrl(getDashboardMateriaRoute(materiaId), days, 'subject_space');
+}
+
+function buildMySpaceUrl(days: ReminderDays) {
+  return buildTrackedUrl('/dashboard', days, 'my_space');
 }
 
 function buildCalendarUrl(days: ReminderDays) {
@@ -169,52 +164,6 @@ function buildCandidateKey(candidate: Pick<ReminderCandidate, 'userId' | 'subjec
   return `${candidate.userId}:${candidate.subjectKey}:${candidate.examDate}:${candidate.days}`;
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function buildCalendarOnlyContent(input: {
-  displayFirstName: string;
-  materia: string;
-  formattedExamDate: string;
-  days: ReminderDays;
-  calendarUrl: string;
-}) {
-  const timing = getCalendarTimingLabel(input.days);
-  const text = [
-    `Hola ${input.displayFirstName},`,
-    '',
-    `Tu examen de ${input.materia} ${timing}.`,
-    `Fecha: ${input.formattedExamDate}.`,
-    '',
-    'Marcaste este recordatorio en tu calendario de Evaluo para que te avisemos antes.',
-    `Ver mi calendario: ${input.calendarUrl}`,
-    '',
-    'Evaluo',
-  ].join('\n');
-
-  const html = `<!doctype html>
-<html lang="es">
-  <body style="margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Arial,sans-serif;">
-    <div style="max-width:560px;margin:0 auto;padding:28px 20px;line-height:1.6;font-size:15px;">
-      <p style="margin:0 0 16px;">Hola ${escapeHtml(input.displayFirstName)},</p>
-      <p style="margin:0 0 8px;">Tu examen de <strong>${escapeHtml(input.materia)}</strong> ${escapeHtml(timing)}.</p>
-      <p style="margin:0 0 20px;color:#475569;">Fecha: ${escapeHtml(input.formattedExamDate)}.</p>
-      <p style="margin:0 0 22px;">Marcaste este recordatorio en tu calendario de Evaluo para que te avisemos antes.</p>
-      <p style="margin:0 0 26px;"><a href="${escapeHtml(input.calendarUrl)}" style="color:#2563eb;font-weight:600;">Ver mi calendario</a></p>
-      <p style="margin:0;color:#64748b;font-size:13px;">Evaluo</p>
-    </div>
-  </body>
-</html>`;
-
-  return { text, html };
-}
-
 function isUniqueViolation(error: unknown) {
   return Boolean(
     error &&
@@ -246,7 +195,7 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     db
       .from('study_calendar_events')
       .select(
-        'id,user_id,event_date,materia_id,materia_nombre,title,reminder_days_before,created_at'
+        'id,user_id,material_id,event_date,materia_id,materia_nombre,title,reminder_days_before,created_at'
       )
       .eq('event_type', 'exam')
       .in('event_date', [...targetDates.keys()])
@@ -267,8 +216,8 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
       sourceType: 'material',
       userId: row.user_id,
       materiaId: row.materia_id,
-      materiaFallback: null,
-      subjectKey: buildSubjectKey(row.materia_id, ''),
+      materiaFallback: row.title,
+      subjectKey: buildSubjectKey(row.materia_id, row.title),
       examDate: row.exam_date,
       days,
       materialId: row.id,
@@ -294,7 +243,7 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
       subjectKey: buildSubjectKey(row.materia_id, materiaFallback),
       examDate: row.event_date,
       days,
-      materialId: null,
+      materialId: row.material_id,
       materialTitle: null,
       calendarEventId: row.id,
       calendarTitle: row.title,
@@ -306,48 +255,6 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
   }
 
   const candidates = [...candidatesByKey.values()];
-  const calendarCandidatesWithMateria = candidates.filter(
-    (candidate) => candidate.sourceType === 'calendar' && candidate.materiaId
-  );
-  const calendarPairKeys = new Set(
-    calendarCandidatesWithMateria.map(
-      (candidate) => `${candidate.userId}:${candidate.materiaId as string}`
-    )
-  );
-
-  if (calendarPairKeys.size > 0) {
-    const calendarUserIds = [...new Set(calendarCandidatesWithMateria.map((item) => item.userId))];
-    const calendarMateriaIds = [
-      ...new Set(calendarCandidatesWithMateria.map((item) => item.materiaId as string)),
-    ];
-
-    const { data: linkedMaterialRows, error: linkedMaterialsError } = await db
-      .from('student_materials')
-      .select('id,user_id,materia_id,title,created_at')
-      .in('user_id', calendarUserIds)
-      .in('materia_id', calendarMateriaIds)
-      .eq('processing_status', 'ready')
-      .order('created_at', { ascending: false });
-
-    if (linkedMaterialsError) throw linkedMaterialsError;
-
-    const latestMaterialByPair = new Map<string, LinkedMaterialRow>();
-    for (const row of (linkedMaterialRows ?? []) as LinkedMaterialRow[]) {
-      const pairKey = `${row.user_id}:${row.materia_id}`;
-      if (!calendarPairKeys.has(pairKey) || latestMaterialByPair.has(pairKey)) continue;
-      latestMaterialByPair.set(pairKey, row);
-    }
-
-    for (const candidate of calendarCandidatesWithMateria) {
-      const linkedMaterial = latestMaterialByPair.get(
-        `${candidate.userId}:${candidate.materiaId as string}`
-      );
-      if (!linkedMaterial) continue;
-      candidate.materialId = linkedMaterial.id;
-      candidate.materialTitle = linkedMaterial.title;
-    }
-  }
-
   const materiaIds = [
     ...new Set(candidates.map((candidate) => candidate.materiaId).filter(Boolean) as string[]),
   ];
@@ -456,20 +363,17 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
         'tu materia';
       const formattedExamDate = formatExamDate(candidate.examDate);
       const calendarUrl = buildCalendarUrl(candidate.days);
-      const destinationUrl = candidate.materialId
+      const materialUrl = candidate.materialId
         ? buildMaterialUrl(candidate.materialId, candidate.days)
-        : calendarUrl;
+        : null;
+      const materiaUrl =
+        !materialUrl && candidate.materiaId
+          ? buildMateriaWorkspaceUrl(candidate.materiaId, candidate.days)
+          : null;
+      const mySpaceUrl = buildMySpaceUrl(candidate.days);
+      const destinationUrl = materialUrl ?? materiaUrl ?? mySpaceUrl;
       const displayTitle = candidate.materialTitle || candidate.calendarTitle || materia;
       const subject = getReminderSubject(candidate.days, materia);
-      const calendarOnlyContent = candidate.materialId
-        ? null
-        : buildCalendarOnlyContent({
-            displayFirstName,
-            materia,
-            formattedExamDate,
-            days: candidate.days,
-            calendarUrl,
-          });
 
       const senderResult = await sendSenderTemplate({
         templateId,
@@ -486,15 +390,17 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
           days_left: candidate.days,
           material_title: displayTitle,
           titulo_del_material: displayTitle,
+          // Compatibilidad: las plantillas actuales usan material_url como CTA principal.
+          // destination_url es la variable canónica para nuevos templates.
           material_url: destinationUrl,
+          exact_material_url: materialUrl ?? '',
+          materia_url: materiaUrl ?? '',
+          my_space_url: mySpaceUrl,
           destination_url: destinationUrl,
           calendar_url: calendarUrl,
           reminder_source: candidate.sourceType,
           has_material: Boolean(candidate.materialId),
         },
-        ...(calendarOnlyContent
-          ? { text: calendarOnlyContent.text, html: calendarOnlyContent.html }
-          : {}),
       });
 
       const { error: markSentError } = await db
