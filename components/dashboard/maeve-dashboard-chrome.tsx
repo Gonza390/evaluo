@@ -9,6 +9,8 @@ import { StudyFirstVisitNudge } from '@/components/dashboard/study-first-visit-n
 type Props = {
   children: ReactNode;
   materialsCount: number;
+  primaryMaterialHref: string | null;
+  primaryMaterialReady: boolean;
 };
 
 /**
@@ -18,6 +20,8 @@ type Props = {
 export function MaeveDashboardChrome({
   children,
   materialsCount,
+  primaryMaterialHref,
+  primaryMaterialReady,
 }: Props) {
   const heroRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
@@ -43,6 +47,8 @@ export function MaeveDashboardChrome({
       <MaeveStudyHero
         heroRef={heroRef as RefObject<HTMLElement | null>}
         materialsCount={materialsCount}
+        primaryMaterialHref={primaryMaterialHref}
+        primaryMaterialReady={primaryMaterialReady}
         onUploadClick={openUpload}
       />
       <StudyFirstVisitNudge materialsCount={materialsCount} onUploadClick={openUpload} />
