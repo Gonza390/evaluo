@@ -18,7 +18,7 @@ export type StudyCalendarEvent = {
   date: string;
   notes: string;
   createdAt: string;
-  materialId: string | null;
+  materialId?: string | null;
   materiaId: string | null;
   materiaNombre: string | null;
   carreraId: string | null;
