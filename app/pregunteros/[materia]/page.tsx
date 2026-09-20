@@ -9,6 +9,7 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildPregunteroSearchTitle } from '@/lib/seo-search-copy';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
+import { getPregunteroMateriaStats } from '@/lib/data/preguntero';
 import { buildShareCardPath } from '@/lib/share-card';
 
 export const revalidate = 600;
@@ -49,12 +50,8 @@ const loadPregunteroData = unstable_cache(
     }
 
     try {
-      const [{ count: totalPreguntas }, parcialRows, sampleRows] = await Promise.all([
-        client
-          .from('preguntas_banco_public')
-          .select('id', { count: 'exact', head: true })
-          .eq('materia_id', materiaId),
-        client.from('preguntas_banco_public').select('parcial').eq('materia_id', materiaId),
+      const [stats, sampleRows] = await Promise.all([
+        getPregunteroMateriaStats(materiaId),
         client
           .from('preguntas_banco_public')
           .select('id, enunciado, opciones, parcial')
@@ -63,22 +60,14 @@ const loadPregunteroData = unstable_cache(
           .limit(6),
       ]);
 
-      const parcialCounts = new Map<number, number>();
-      for (const row of (parcialRows.data ?? []) as Array<{ parcial: number | null }>) {
-        const parcial = row.parcial ?? 1;
-        parcialCounts.set(parcial, (parcialCounts.get(parcial) ?? 0) + 1);
-      }
-
       return {
         materiaNombre: bootstrap.materiaNombre,
         materiaId: bootstrap.materiaId,
         carreraNombre: bootstrap.carreraNombre,
         universidadNombre: bootstrap.universidadNombre,
-        totalPreguntas: totalPreguntas ?? 0,
+        totalPreguntas: stats.totalPreguntas,
         resumenesCount: bootstrap.initialResumenes.length,
-        preguntasPorParcial: Array.from(parcialCounts.entries())
-          .sort((a, b) => a[0] - b[0])
-          .map(([parcial, count]) => ({ parcial, count })),
+        preguntasPorParcial: stats.preguntasPorParcial,
         samplePreguntas: (
           (sampleRows.data ?? []) as Array<{
             id: string;
@@ -106,7 +95,7 @@ const loadPregunteroData = unstable_cache(
       };
     }
   },
-  ['preguntero-data'],
+  ['preguntero-data-v2'],
   { revalidate: 600, tags: ['materia-bootstrap'] }
 );
 
