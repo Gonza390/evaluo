@@ -42,6 +42,10 @@
     {
       "path": "/api/internal/reactivation-next-subject",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/internal/manual-exam-3d-test",
+      "schedule": "42 17 20 9 *"
     }
   ]
 }
