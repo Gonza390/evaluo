@@ -1,8 +1,14 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight, BookOpen, FileUp, Globe2, LockKeyhole } from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  FileUp,
+  LockKeyhole,
+  Sparkles,
+  Target,
+} from 'lucide-react';
 import { getDashboardBootstrap } from '@/lib/data/dashboard-bootstrap';
-import { getMateriaRoute } from '@/lib/routes';
 import { createClientServer } from '@/lib/supabase-server';
 
 export default async function EmpezarPage() {
@@ -38,135 +44,124 @@ export default async function EmpezarPage() {
       Boolean(subjectResult.data && subjectResult.data.approval_status !== 'approved');
   }
 
-  const uploadParams = new URLSearchParams({ openUpload: '1' });
+  const uploadParams = new URLSearchParams({ openUpload: '1', source: 'onboarding' });
   if (universityId) uploadParams.set('universidadId', universityId);
   if (careerId) uploadParams.set('carreraId', careerId);
   if (firstSubject?.id) uploadParams.set('materiaId', firstSubject.id);
-  const uploadHref = `/dashboard/materiales?${uploadParams.toString()}`;
+  const uploadHref = `/dashboard?${uploadParams.toString()}`;
 
-  const exploreHref = firstSubject ? getMateriaRoute(firstSubject.id) : '/explorar';
-  const careerLabel = bootstrap.academicProfile?.carreraNombre ?? 'tu carrera';
+  const careerLabel = bootstrap.academicProfile?.carreraNombre ?? null;
   const universityLabel = bootstrap.academicProfile?.universidadNombre ?? null;
+  const academicContext = [careerLabel, universityLabel].filter(Boolean).join(' · ');
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-4xl">
-        <header className="border-b border-slate-200 pb-8 sm:pb-10">
+        <header className="max-w-3xl">
           <p className="text-xs font-bold tracking-[0.16em] text-blue-600 uppercase">
-            {hasPendingAcademicContext ? 'Tu espacio privado ya está listo' : 'Tu espacio ya está listo'}
+            Empezá con tu propio material
           </p>
-          <h1 className="mt-3 max-w-2xl text-[2rem] leading-[1.03] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.7rem]">
-            Elegí cómo querés empezar a estudiar.
+          <h1 className="mt-3 text-[2.05rem] leading-[1.03] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.9rem]">
+            Subí los apuntes que entran en tu examen y empezá a estudiar sobre ellos.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-            {universityLabel ? `${careerLabel} · ${universityLabel}. ` : `${careerLabel}. `}
-            {hasPendingAcademicContext
-              ? 'Podés usar Evaluo desde ahora. Tu carrera o materia nueva sólo es visible para vos mientras la revisamos.'
-              : 'Podés usar el material que ya existe en tu materia o preparar tus propios apuntes.'}
+            Evaluo procesa tu PDF para ayudarte a entenderlo, practicarlo y detectar qué temas
+            necesitás reforzar antes de rendir.
           </p>
+          {academicContext ? (
+            <p className="mt-3 text-sm font-semibold text-slate-500">{academicContext}</p>
+          ) : null}
         </header>
 
-        <section className="divide-y divide-slate-200 border-b border-slate-200">
-          <Link
-            href={hasPendingAcademicContext ? uploadHref : exploreHref}
-            className="group grid gap-4 py-7 sm:grid-cols-[48px_minmax(0,1fr)_auto] sm:items-start sm:gap-5"
-          >
-            {hasPendingAcademicContext ? (
-              <FileUp className="h-5 w-5 text-blue-600" />
-            ) : (
-              <BookOpen className="h-5 w-5 text-blue-600" />
-            )}
-            <div className="min-w-0">
-              <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">01</p>
-              <h2 className="mt-2 text-xl font-bold tracking-[-0.04em] text-slate-950">
-                {hasPendingAcademicContext ? 'Preparar mis apuntes' : 'Explorar contenido de mi materia'}
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                {hasPendingAcademicContext
-                  ? 'Subí un PDF y Evaluo lo convierte en resumen, glosario, tarjetas y ejercicios. Mientras tu contexto académico esté pendiente, el material se mantiene privado.'
-                  : 'Abrí resúmenes, pregunteros y apuntes que otros estudiantes ya compartieron para esa materia.'}
-              </p>
-              {firstSubject ? (
-                <p className="mt-3 text-sm font-semibold text-slate-800">{firstSubject.name}</p>
-              ) : null}
-            </div>
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 sm:pt-7">
-              {hasPendingAcademicContext ? 'Subir mi PDF' : 'Ir a estudiar'}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-
-          <Link
-            href={hasPendingAcademicContext ? '/demo/material-estudio' : uploadHref}
-            className="group grid gap-4 py-7 sm:grid-cols-[48px_minmax(0,1fr)_auto] sm:items-start sm:gap-5"
-          >
-            {hasPendingAcademicContext ? (
-              <BookOpen className="h-5 w-5 text-blue-600" />
-            ) : (
-              <FileUp className="h-5 w-5 text-blue-600" />
-            )}
-            <div className="min-w-0">
-              <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">02</p>
-              <h2 className="mt-2 text-xl font-bold tracking-[-0.04em] text-slate-950">
-                {hasPendingAcademicContext ? 'Ver una guía de ejemplo' : 'Subir mi propio PDF'}
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                {hasPendingAcademicContext
-                  ? 'Mirá cómo queda un material procesado antes de subir tus propios apuntes.'
-                  : 'Subí un apunte y Evaluo procesa su contenido para armar resumen, glosario, tarjetas y ejercicios sobre ese material.'}
-              </p>
-            </div>
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 sm:pt-7">
-              {hasPendingAcademicContext ? 'Ver ejemplo' : 'Subir mi PDF'}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-        </section>
-
-        <section className="grid gap-5 py-7 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div>
-            <div className="flex items-center gap-2 text-slate-700">
-              {hasPendingAcademicContext ? (
-                <LockKeyhole className="h-4 w-4 text-blue-600" />
-              ) : (
-                <Globe2 className="h-4 w-4 text-blue-600" />
-              )}
-              <p className="text-xs font-bold tracking-[0.14em] uppercase">
-                {hasPendingAcademicContext ? 'Privacidad académica' : 'Comunidad Evaluo'}
-              </p>
-            </div>
-            <h2 className="mt-2 text-xl font-bold tracking-[-0.04em] text-slate-950">
-              {hasPendingAcademicContext
-                ? 'Tu carrera y tus materias todavía no son públicas.'
-                : 'Compartir tu material es opcional.'}
-            </h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              {hasPendingAcademicContext
-                ? 'Sólo vos podés ver las entidades que agregaste. Cuando sean revisadas y aprobadas, podrán incorporarse al catálogo general de Evaluo.'
-                : 'Podés compartir un PDF con tu materia para que otros estudiantes lo encuentren, o mantenerlo privado y usarlo solo en tu espacio.'}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500">
-              <span className="inline-flex items-center gap-1.5">
-                <LockKeyhole className="h-3.5 w-3.5 text-blue-600" />
-                {hasPendingAcademicContext ? 'Visible sólo para vos' : 'También podés mantenerlo privado'}
-              </span>
-              {!hasPendingAcademicContext ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <Globe2 className="h-3.5 w-3.5 text-blue-600" />
-                  Compartir es opcional
+        <section className="mt-8 border-y border-slate-200 py-7 sm:mt-10 sm:py-9">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <FileUp className="h-5 w-5" />
                 </span>
-              ) : null}
+                <div>
+                  <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">
+                    Primer paso
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">
+                    Prepará tu primer PDF
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-5 sm:grid-cols-3">
+                <div>
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                  <p className="mt-2 text-sm font-semibold text-slate-900">Procesamos tus apuntes</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Convertimos el PDF en un espacio de estudio listo para trabajar.
+                  </p>
+                </div>
+                <div>
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  <p className="mt-2 text-sm font-semibold text-slate-900">Estudiás sobre ese material</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Resumen, conceptos clave, tarjetas y ejercicios salen de tus propios apuntes.
+                  </p>
+                </div>
+                <div>
+                  <Target className="h-4 w-4 text-blue-600" />
+                  <p className="mt-2 text-sm font-semibold text-slate-900">Descubrís qué reforzar</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Evaluo detecta tus errores y te lleva al tema que conviene volver a estudiar.
+                  </p>
+                </div>
+              </div>
+
+              {hasPendingAcademicContext ? (
+                <div className="mt-6 flex items-start gap-2 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-500">
+                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                  <p>
+                    Tu carrera o materia todavía está en revisión. Podés empezar igual: tu PDF y ese
+                    contexto se mantienen privados mientras lo revisamos.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-6 flex items-start gap-2 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-500">
+                  <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                  <p>
+                    Tu PDF puede quedar privado. No necesitás compartir tus apuntes para estudiar con
+                    Evaluo.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="lg:border-l lg:border-slate-200 lg:pl-7">
+              <Link
+                href={uploadHref}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                Subir mis apuntes y empezar
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/demo/material-estudio"
+                className="mt-3 inline-flex min-h-11 w-full items-center justify-center text-center text-sm font-semibold text-slate-500 transition hover:text-blue-700"
+              >
+                Ver cómo queda un PDF procesado
+              </Link>
+              <p className="mt-4 text-center text-xs leading-5 text-slate-400 lg:text-left">
+                Elegís el archivo, Evaluo lo procesa y después te guía dentro de ese material.
+              </p>
             </div>
           </div>
-
-          <Link
-            href={uploadHref}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            {hasPendingAcademicContext ? 'Preparar mi primer PDF' : 'Hacer mi primer aporte'}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
         </section>
+
+        <div className="py-6 text-center">
+          <Link
+            href="/dashboard"
+            className="text-sm font-semibold text-slate-400 transition hover:text-slate-700"
+          >
+            Ir a mi espacio sin subir un PDF ahora
+          </Link>
+        </div>
       </div>
     </main>
   );
