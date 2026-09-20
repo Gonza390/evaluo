@@ -26,7 +26,15 @@ export interface AcquisitionLandingStats {
 }
 
 export interface AcquisitionBehaviorStats {
-  key: 'useful_action' | 'simulator_started' | 'signup_started' | 'signup_completed' | 'returned';
+  key:
+    | 'authenticated'
+    | 'useful_action'
+    | 'simulator_started'
+    | 'meaningful_study'
+    | 'pdf_uploaded'
+    | 'signup_started'
+    | 'signup_completed'
+    | 'returned';
   label: string;
   count: number;
   pct: number;
@@ -36,6 +44,7 @@ export interface AcquisitionSourceStats {
   source: AcquisitionSourceKey;
   entries: number;
   identifiedUsers: number;
+  anonymousEntries: number;
   pct: number;
   topLanding: string | null;
   lastEntryAt: string | null;
@@ -83,6 +92,9 @@ const USEFUL_ACTION_EVENTS = new Set([
 
 const DETAIL_EVENT_NAMES = [
   ...USEFUL_ACTION_EVENTS,
+  'page_view',
+  'login_success',
+  'auth_completed',
   'signup_started',
   'signup_completed',
 ] as const;
@@ -378,6 +390,7 @@ async function buildSourceDetail({
 }): Promise<AcquisitionSourceDetail> {
   const sourceRows = currentRows.filter((row) => resolveSource(row.metadata) === source);
   const sourceEntries = sourceRows.length;
+  const anonymousEntries = sourceRows.filter((row) => !row.user_id).length;
   const landingCounts = new Map<string, number>();
 
   for (const row of sourceRows) {
@@ -430,8 +443,11 @@ async function buildSourceDetail({
     pageViewsByUser.set(row.user_id, timestamps);
   }
 
+  let authenticatedCount = 0;
   let usefulActionCount = 0;
   let simulatorStartedCount = 0;
+  let meaningfulStudyCount = 0;
+  let pdfUploadedCount = 0;
   let signupStartedCount = 0;
   let signupCompletedCount = 0;
   let returnedCount = 0;
@@ -440,12 +456,15 @@ async function buildSourceDetail({
     const sessionKey = acquisition.session_key;
     const events = sessionKey ? behaviorBySession.get(sessionKey) ?? new Set<string>() : new Set<string>();
 
+    const userId = sessionKey ? sessionUserIds.get(sessionKey) : acquisition.user_id ?? undefined;
+    if (userId) authenticatedCount += 1;
     if ([...events].some((eventName) => USEFUL_ACTION_EVENTS.has(eventName))) usefulActionCount += 1;
     if (events.has('simulator_started')) simulatorStartedCount += 1;
+    if (events.has('meaningful_study_completed')) meaningfulStudyCount += 1;
+    if (events.has('pdf_upload_completed')) pdfUploadedCount += 1;
     if (events.has('signup_started')) signupStartedCount += 1;
     if (events.has('signup_completed')) signupCompletedCount += 1;
 
-    const userId = sessionKey ? sessionUserIds.get(sessionKey) : acquisition.user_id ?? undefined;
     if (!userId) continue;
 
     const acquisitionTime = new Date(acquisition.created_at).getTime();
@@ -463,11 +482,18 @@ async function buildSourceDetail({
     source,
     entries: sourceEntries,
     identifiedUsers: identifiedUsers.size,
+    anonymousEntries,
     pct: recognizedEntries > 0 ? (sourceEntries / recognizedEntries) * 100 : 0,
     trend,
     timeline: buildTimeline(sourceRows, rangeDays, now),
     landings,
     behavior: [
+      {
+        key: 'authenticated',
+        label: 'Se autenticaron',
+        count: authenticatedCount,
+        pct: pctOfEntries(authenticatedCount),
+      },
       {
         key: 'useful_action',
         label: 'Hicieron una acción útil',
@@ -479,6 +505,18 @@ async function buildSourceDetail({
         label: 'Iniciaron simulador',
         count: simulatorStartedCount,
         pct: pctOfEntries(simulatorStartedCount),
+      },
+      {
+        key: 'meaningful_study',
+        label: 'Estudio significativo',
+        count: meaningfulStudyCount,
+        pct: pctOfEntries(meaningfulStudyCount),
+      },
+      {
+        key: 'pdf_uploaded',
+        label: 'Subieron un PDF',
+        count: pdfUploadedCount,
+        pct: pctOfEntries(pdfUploadedCount),
       },
       {
         key: 'signup_started',
