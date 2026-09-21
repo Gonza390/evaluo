@@ -4,8 +4,9 @@ import type {
   StudyGlossaryItem,
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
+import { isAdministrativeAcademicContent } from '@/lib/student-materials/academic-content';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 2;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 3;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -413,6 +414,18 @@ function buildFlashcardFront(concept: StudyGlossaryItem, level: StudyFlashcard['
     : `¿Cómo explicarías “${term}” con tus palabras según el material?`;
 }
 
+function isAdministrativeModelItem(
+  model: CanonicalPedagogicalModel,
+  label: string,
+  detail = ''
+) {
+  return isAdministrativeAcademicContent({
+    label,
+    detail,
+    documentTitle: model.title,
+  });
+}
+
 function isCleanAcademicLabel(value: string) {
   const text = cleanLine(value);
   if (text.length < 3 || text.length > 120) return false;
@@ -446,7 +459,8 @@ function buildCanonicalFlashcards(
     model.concepts.filter(
       (concept) =>
         isCleanAcademicLabel(concept.term) &&
-        cleanLine(concept.detail).length >= 20
+        cleanLine(concept.detail).length >= 20 &&
+        !isAdministrativeModelItem(model, concept.term, concept.detail)
     ),
     6,
     (concept) => concept.pageReferences
@@ -476,7 +490,8 @@ function buildCanonicalFlashcards(
       (item) =>
         isCleanAcademicLabel(item.title) &&
         item.items.length >= 2 &&
-        item.items.length <= 10
+        item.items.length <= 10 &&
+        !isAdministrativeModelItem(model, item.title, item.items.join(' '))
     ),
     2,
     (item) => item.pageReferences
@@ -496,7 +511,10 @@ function buildCanonicalFlashcards(
 
   selectDistributedByPages(
     model.processes.filter(
-      (item) => isCleanAcademicLabel(item.title) && item.steps.length >= 2
+      (item) =>
+        isCleanAcademicLabel(item.title) &&
+        item.steps.length >= 2 &&
+        !isAdministrativeModelItem(model, item.title, item.steps.join(' '))
     ),
     2,
     (item) => item.pageReferences
@@ -518,7 +536,8 @@ function buildCanonicalFlashcards(
     .filter(
       (formula) =>
         isCleanAcademicLabel(formula.expression) &&
-        cleanLine(formula.description).length >= 12
+        cleanLine(formula.description).length >= 12 &&
+        !isAdministrativeModelItem(model, formula.expression, formula.description)
     )
     .slice(0, 1)
     .forEach((formula) => {
@@ -540,7 +559,9 @@ function buildCanonicalFlashcards(
       (item) =>
         isCleanAcademicLabel(item.source) &&
         isCleanAcademicLabel(item.target) &&
-        cleanLine(item.description).length >= 20
+        cleanLine(item.description).length >= 20 &&
+        !isAdministrativeModelItem(model, item.source, item.description) &&
+        !isAdministrativeModelItem(model, item.target, item.description)
     ),
     2,
     (item) => item.pageReferences
@@ -637,7 +658,10 @@ function buildCanonicalConceptQuestions(
   chunks: PedagogicalChunk[]
 ) {
   const concepts = model.concepts.filter(
-    (concept) => cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
+    (concept) =>
+      isCleanAcademicLabel(concept.term) &&
+      cleanLine(concept.detail).length >= 12 &&
+      !isAdministrativeModelItem(model, concept.term, concept.detail)
   );
   const selected = selectDistributedByPages(concepts, 10, (concept) => concept.pageReferences);
 
@@ -685,7 +709,10 @@ function buildCanonicalRelationshipQuestions(
   chunks: PedagogicalChunk[]
 ) {
   const relationships = model.relationships.filter(
-    (item) => cleanLine(item.description).length >= 16
+    (item) =>
+      cleanLine(item.description).length >= 16 &&
+      !isAdministrativeModelItem(model, item.source, item.description) &&
+      !isAdministrativeModelItem(model, item.target, item.description)
   );
   const selected = selectDistributedByPages(relationships, 9, (item) => item.pageReferences);
 
@@ -769,7 +796,15 @@ function buildCanonicalClassificationQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  const eligible = model.classifications.filter((classification) => classification.items.length >= 3);
+  const eligible = model.classifications.filter(
+    (classification) =>
+      classification.items.length >= 3 &&
+      !isAdministrativeModelItem(
+        model,
+        classification.title,
+        classification.items.join(' ')
+      )
+  );
   const selected = selectDistributedByPages(eligible, 10, (classification) => classification.pageReferences);
 
   return selected
@@ -830,7 +865,11 @@ function buildCanonicalProcessQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  const eligible = model.processes.filter((process) => process.steps.length >= 2);
+  const eligible = model.processes.filter(
+    (process) =>
+      process.steps.length >= 2 &&
+      !isAdministrativeModelItem(model, process.title, process.steps.join(' '))
+  );
   const selected = selectDistributedByPages(eligible, 8, (process) => process.pageReferences);
 
   return selected
@@ -883,6 +922,10 @@ function buildCanonicalFormulaQuestions(
   chunks: PedagogicalChunk[]
 ) {
   return model.formulas
+    .filter(
+      (formula) =>
+        !isAdministrativeModelItem(model, formula.expression, formula.description)
+    )
     .slice(0, 5)
     .map((formula, index): StudyQuestion | null => {
       if (isPhFormula(formula.expression)) {
