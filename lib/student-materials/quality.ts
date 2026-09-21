@@ -83,7 +83,7 @@ function countAcademicUnits(model: CanonicalPedagogicalModel | null) {
 
 export function buildStudentMaterialPedagogicalQualityReport(input: {
   pageCount: number | null;
-  pages: string[];
+  pages: string[] | null;
   documentAnalysis: StudyDocumentAnalysis;
   model: CanonicalPedagogicalModel | null;
   summary: StudentMaterialSummary;
@@ -91,7 +91,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   artifacts: PedagogicalArtifacts;
   visionUsed: boolean;
 }): StudentMaterialPedagogicalQualityReport {
-  const contentPages = input.pages
+  const contentPages = (input.pages ?? [])
     .map((text, index) => ({ page: index + 1, chars: cleanLine(text).length }))
     .filter((item) => item.chars >= MIN_CONTENT_CHARS_PER_PAGE)
     .map((item) => item.page);
