@@ -55,10 +55,13 @@ export type StudentMaterialProcessingResult = {
   materialId?: string;
 };
 
-// Los PDFs dentro del límite Free (30 páginas) conservan siempre el modelo
-// pedagógico canónico. El fast path queda reservado para documentos mayores,
-// donde el ahorro de latencia/costo compensa perder parte de los artefactos ricos.
-const LARGE_NATIVE_PDF_FAST_PATH_PAGES = 31;
+// El fast path no depende sólo de la cantidad de páginas. Un apunte de 32 páginas
+// puede ser académicamente denso y necesitar el modelo canónico completo. Sólo
+// degradamos documentos nativos cuando, además de ser extensos, superan un umbral
+// real de complejidad por texto o cantidad de chunks.
+const LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES = 31;
+const LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS = 150;
+const LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS = 180_000;
 
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
@@ -166,7 +169,9 @@ export async function processStudentMaterial(input: {
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
   const useLargeNativePdfFastPath =
     typeof pageCount === 'number' &&
-    pageCount >= LARGE_NATIVE_PDF_FAST_PATH_PAGES &&
+    pageCount >= LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES &&
+    (traceableChunks.length >= LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS ||
+      text.length >= LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS) &&
     !documentAnalysis.requiresOcr &&
     !visionUsed &&
     pagesWithText > 0;
@@ -214,7 +219,7 @@ export async function processStudentMaterial(input: {
     processingStage: 'extracting',
     processingProgress: 45,
     processingMessage: useLargeNativePdfFastPath
-      ? 'PDF extenso detectado. Activamos el modo rápido y preparamos resumen y glosario en paralelo.'
+      ? 'PDF de complejidad muy alta detectado. Activamos el modo rápido y preparamos resumen y glosario en paralelo.'
       : visionUsed
         ? 'Construyendo el modelo pedagógico canónico desde texto y contenido visual recuperado.'
         : 'Construyendo el modelo pedagógico canónico del material.',
@@ -249,7 +254,7 @@ export async function processStudentMaterial(input: {
       pageCount,
       pagesWithText,
       chunkCount: traceableChunks.length,
-      strategy: 'large_native_pdf',
+      strategy: 'very_large_native_pdf',
     });
   }
 
