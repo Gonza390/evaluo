@@ -7,7 +7,7 @@ import type {
 } from '@/lib/student-materials/types';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 
-const QUALITY_REPORT_VERSION = 1;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 1;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -172,7 +172,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   );
 
   return {
-    version: QUALITY_REPORT_VERSION,
+    version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     status,
     score,
     pageCount: input.pageCount,
