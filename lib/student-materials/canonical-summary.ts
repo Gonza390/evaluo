@@ -23,7 +23,27 @@ import type {
 } from '@/lib/student-materials/types';
 import { logError } from '@/lib/observability';
 
-const CANONICAL_SUMMARY_MAX_OUTPUT_TOKENS = 6_000;
+const CANONICAL_SUMMARY_BASE_MAX_OUTPUT_TOKENS = 6_000;
+const CANONICAL_SUMMARY_HARD_MAX_OUTPUT_TOKENS = 9_000;
+const MAX_TOPICS_PER_SECTION = 4;
+
+function resolveMinimumSectionCount(topicCount: number) {
+  return Math.max(1, Math.ceil(topicCount / MAX_TOPICS_PER_SECTION));
+}
+
+function resolveCanonicalSummaryMaxOutputTokens(model: CanonicalPedagogicalModel) {
+  const estimated =
+    4_800 +
+    model.topics.length * 140 +
+    model.classifications.length * 70 +
+    model.processes.length * 70 +
+    model.formulas.length * 45;
+
+  return Math.min(
+    CANONICAL_SUMMARY_HARD_MAX_OUTPUT_TOKENS,
+    Math.max(CANONICAL_SUMMARY_BASE_MAX_OUTPUT_TOKENS, estimated)
+  );
+}
 
 const CANONICAL_SUMMARY_RESPONSE_SCHEMA = {
   type: 'OBJECT',
@@ -82,6 +102,7 @@ export function buildCanonicalSummaryPrompt(
   model: CanonicalPedagogicalModel
 ) {
   const source = buildIndexedCanonicalSummarySource(model);
+  const minimumSectionCount = resolveMinimumSectionCount(source.topics.length);
   const context = [
     input.universidadName ? `Universidad: ${input.universidadName}` : null,
     input.carreraName ? `Carrera: ${input.carreraName}` : null,
@@ -124,8 +145,12 @@ export function buildCanonicalSummaryPrompt(
     '- key_points: exactamente 5 ideas académicas concretas, no títulos.',
     '- sections: secciones conceptualmente coherentes en el orden general de la fuente.',
     '- Cada title debe ser corto y venir numerado: "1. ...", "2. ...".',
-    '- Cada body debe usar subtítulos, viñetas y tablas Markdown cuando una clasificación o comparación lo justifique.',
-    '- No fuerces un número fijo de secciones: usa las necesarias para representar todos los topics sin fragmentar artificialmente.',
+    '- Cada body debe usar subtítulos, viñetas y tablas Markdown cuando una clasificación, comparación o conjunto de valores de referencia lo justifique.',
+    '- Una tabla Markdown debe reconstruir relaciones reales de la fuente (por ejemplo Tipo | Característica | Diferencia o Parámetro | Valor). No inventes celdas ni atributos ausentes.',
+    '- No copies fragmentos rotos del parser dentro de una tabla: cada fila debe representar una entidad académica coherente.',
+    '- Separá los casos clínicos o aplicaciones extensas de la teoría cuando tengan entidad propia en la fuente.',
+    '- No fuerces un número fijo de secciones, pero tampoco comprimas en exceso: usa las necesarias para representar todos los topics.',
+    `- Esta fuente contiene ${source.topics.length} topics. Generá al menos ${minimumSectionCount} secciones y no agrupes más de ${MAX_TOPICS_PER_SECTION} topics distintos dentro de una misma sección.`,
     '- Cada sección debe declarar source_topic_numbers con los números de topic que realmente integra.',
     '- source_topic_numbers sólo puede contener números existentes en la fuente.',
     '- No escribas números de página dentro del body: la aplicación los añadirá a partir de source_topic_numbers validados.',
@@ -158,7 +183,7 @@ export async function generateCanonicalStudentMaterialSummary(
     const result = await requestGeminiJson({
       prompt,
       temperature: 0.12,
-      maxOutputTokens: CANONICAL_SUMMARY_MAX_OUTPUT_TOKENS,
+      maxOutputTokens: resolveCanonicalSummaryMaxOutputTokens(model),
       responseSchema: CANONICAL_SUMMARY_RESPONSE_SCHEMA,
     });
 
@@ -279,13 +304,29 @@ function sanitizeCanonicalSummaryPayload(
     return null;
   }
 
+  const rawSections = Array.isArray(payload.sections) ? payload.sections : [];
+  const minimumSectionCount = resolveMinimumSectionCount(source.topics.length);
+  if (rawSections.length < minimumSectionCount) {
+    return null;
+  }
+
+  const sectionTopicNumbers = rawSections.map((section) =>
+    normalizeTopicNumbers(section.source_topic_numbers, source.topics.length)
+  );
+
+  if (
+    source.topics.length > MAX_TOPICS_PER_SECTION &&
+    sectionTopicNumbers.some(
+      (topicNumbers) => topicNumbers.length > MAX_TOPICS_PER_SECTION
+    )
+  ) {
+    return null;
+  }
+
   const coveredTopics = new Set<number>();
-  const sections = (Array.isArray(payload.sections) ? payload.sections : [])
+  const sections = rawSections
     .map((section, index) => {
-      const topicNumbers = normalizeTopicNumbers(
-        section.source_topic_numbers,
-        source.topics.length
-      );
+      const topicNumbers = sectionTopicNumbers[index] ?? [];
 
       topicNumbers.forEach((number) => coveredTopics.add(number));
 
