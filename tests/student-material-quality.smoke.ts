@@ -968,7 +968,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  2,
+  3,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
@@ -1014,6 +1014,14 @@ assert.equal(
   canonicalQuality.artifactReferenceRatio,
   1,
   'Flashcards y preguntas deben conservar referencia a la fuente.'
+);
+assert.ok(
+  canonicalQuality.artifactPageCoverageRatio > 0,
+  'El quality gate debe medir si los artefactos se distribuyen por las páginas del material.'
+);
+assert.ok(
+  canonicalQuality.cognitiveLevelCoverage > 0,
+  'El quality gate debe medir diversidad cognitiva del banco de preguntas.'
 );
 
 console.log('Student material quality smoke tests passed.');
