@@ -13,7 +13,11 @@ import {
   cleanRepeatedPageChrome,
   extractTextFromPdfBuffer,
 } from '../lib/student-materials/pdf-extract.ts';
-import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
+import {
+  buildPedagogicalArtifacts,
+  PEDAGOGICAL_ARTIFACTS_VERSION,
+} from '../lib/student-materials/pedagogy.ts';
+import { buildStudentMaterialPedagogicalQualityReport } from '../lib/student-materials/quality.ts';
 import {
   buildPedagogicalMapGroupFromIndexes,
   expandCompactPedagogicalNode,
@@ -947,6 +951,74 @@ assert.ok(pedagogy.questions.every((question) => question.answer && question.exp
 assert.ok(
   pedagogy.miniExamQuestionIds.length >= 3,
   'El mini parcial debe tener dificultad progresiva.'
+);
+
+const canonicalPedagogy = buildPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  canonicalModel: canonicalGlossaryFixture,
+  chunks: traceableChunks.map((chunk) => ({
+    text: chunk.text,
+    pageStart: chunk.pageStart,
+    pageEnd: chunk.pageEnd,
+    sectionTitle: chunk.sectionTitle,
+    excerpt: '',
+  })),
+});
+
+assert.equal(
+  PEDAGOGICAL_ARTIFACTS_VERSION,
+  2,
+  'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
+);
+assert.ok(
+  canonicalPedagogy.flashcards.some((card) => /clasifica|pasos|relación/i.test(card.front)),
+  'Las flashcards canónicas deben cubrir estructura y relaciones, no sólo definiciones de glosario.'
+);
+assert.ok(
+  canonicalPedagogy.flashcards.every(
+    (card) => !card.back.includes('|') && card.reference.excerpt.length > 0
+  ),
+  'Las flashcards canónicas deben ser limpias y trazables a la fuente.'
+);
+assert.ok(
+  canonicalPedagogy.questions.some((question) => question.level === 'aplicar'),
+  'El banco canónico debe incluir recuperación aplicada cuando el modelo lo permite.'
+);
+
+const canonicalQuality = buildStudentMaterialPedagogicalQualityReport({
+  pageCount: 7,
+  pages: Array.from(
+    { length: 7 },
+    (_, index) =>
+      `Página ${index + 1} con contenido académico suficiente para verificar cobertura canónica y trazabilidad de los artefactos de estudio.`
+  ),
+  documentAnalysis: {
+    ...analysis,
+    pageCount: 7,
+    requiresOcr: false,
+  },
+  model: canonicalGlossaryFixture,
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  artifacts: canonicalPedagogy,
+  visionUsed: false,
+});
+
+assert.notEqual(
+  canonicalQuality.status,
+  'fail',
+  'Un material canónico con contenido, trazabilidad y artefactos útiles debe superar el quality gate.'
+);
+assert.equal(
+  canonicalQuality.representedPageRatio,
+  1,
+  'El quality gate debe medir cobertura de páginas académicas representadas por el modelo.'
+);
+assert.equal(
+  canonicalQuality.artifactReferenceRatio,
+  1,
+  'Flashcards y preguntas deben conservar referencia a la fuente.'
 );
 
 console.log('Student material quality smoke tests passed.');
