@@ -547,7 +547,17 @@ function cleanInline(value: string) {
 function isUsefulTerm(value: string) {
   const clean = cleanInline(value);
   if (clean.length < 2 || clean.length > 120) return false;
-  return /[\p{L}\p{N}]/u.test(clean);
+  if (!/[\p{L}\p{N}]/u.test(clean)) return false;
+
+  // Evita que filas o celdas rotas del parser terminen convertidas en términos
+  // de glosario. Las fórmulas viven en su categoría propia y las relaciones
+  // canónicas pueden seguir usando símbolos como ↔.
+  if (clean.includes('|')) return false;
+  if (/^[•*#]/u.test(clean)) return false;
+  if (/^¿/u.test(clean) || /\?$/u.test(clean)) return false;
+  if (clean.split(/\s+/u).length > 14) return false;
+
+  return true;
 }
 
 function normalizeKey(value: string) {
