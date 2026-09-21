@@ -898,11 +898,18 @@ const canonicalGuideFallback =
   buildCanonicalStudentMaterialSummaryFallback(canonicalSummaryFixture);
 assert.equal(canonicalGuideFallback.provider, 'canonical-local-fallback');
 assert.equal(canonicalGuideFallback.sourceChunksCount, canonicalSummaryFixture.chunkCount);
-assert.equal(
-  canonicalGuideFallback.sections.length,
-  canonicalSummarySource.topics.length,
-  'El fallback canónico debe representar todos los topics de la fuente canónica completa sin truncarlos.'
+assert.ok(
+  canonicalGuideFallback.sections.length >= 3 &&
+    canonicalGuideFallback.sections.length < canonicalSummarySource.topics.length,
+  'El fallback canónico debe agrupar topics en capítulos moderados en lugar de crear una sección por topic.'
 );
+const canonicalGuideFallbackText = JSON.stringify(canonicalGuideFallback);
+for (const topic of canonicalSummarySource.topics) {
+  assert.ok(
+    canonicalGuideFallbackText.includes(topic.description),
+    `El fallback jerárquico debe conservar el contenido del topic: ${topic.title}`
+  );
+}
 assert.match(
   canonicalGuideFallback.sections[0]?.body ?? '',
   /Ver en PDF · páginas 1, 2/,
