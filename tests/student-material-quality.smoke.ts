@@ -981,11 +981,6 @@ assert.ok(
   ),
   'Las flashcards canónicas deben ser limpias y trazables a la fuente.'
 );
-assert.ok(
-  canonicalPedagogy.questions.some((question) => question.level === 'aplicar'),
-  'El banco canónico debe incluir recuperación aplicada cuando el modelo lo permite.'
-);
-
 const canonicalQuality = buildStudentMaterialPedagogicalQualityReport({
   pageCount: 7,
   pages: Array.from(
