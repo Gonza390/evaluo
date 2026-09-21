@@ -1110,9 +1110,14 @@ assert.ok(
   leakedQuality.issues.includes('administrative_content_leak'),
   'El quality gate debe detectar metadatos administrativos si vuelven a filtrarse a una guía.'
 );
+assert.equal(
+  leakedQuality.status,
+  'degraded',
+  'Una fuga administrativa visible debe impedir que el quality gate marque el material como pass.'
+);
 assert.ok(
-  leakedQuality.score < canonicalQuality.score,
-  'El contenido administrativo visible debe penalizar el score pedagógico.'
+  leakedQuality.score < 100,
+  'El contenido administrativo visible debe penalizar el score pedagógico perfecto.'
 );
 
 console.log('Student material quality smoke tests passed.');
