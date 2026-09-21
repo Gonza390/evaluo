@@ -781,56 +781,6 @@ function buildCanonicalFallbackKeyPoints(source: CanonicalSummarySource) {
     .slice(0, 5);
 }
 
-function buildRelatedStudyLines(
-  source: CanonicalSummarySource,
-  topicPages: number[]
-) {
-  if (topicPages.length === 0) return [];
-
-  const lines: string[] = [];
-
-  for (const concept of source.concepts) {
-    if (!sharesPage(topicPages, concept.pageReferences)) continue;
-    lines.push(`- ${concept.term}: ${concept.detail}`);
-  }
-
-  for (const relationship of source.relationships) {
-    if (!sharesPage(topicPages, relationship.pageReferences)) continue;
-    lines.push(
-      `- ${relationship.source} ↔ ${relationship.target}: ${relationship.description}`
-    );
-  }
-
-  for (const classification of source.classifications) {
-    if (!sharesPage(topicPages, classification.pageReferences)) continue;
-    lines.push(
-      `- ${classification.title}: ${classification.items.join('; ')}.`
-    );
-  }
-
-  for (const process of source.processes) {
-    if (!sharesPage(topicPages, process.pageReferences)) continue;
-    lines.push(`- ${process.title}: ${process.steps.join(' → ')}.`);
-  }
-
-  for (const formula of source.formulas) {
-    if (!sharesPage(topicPages, formula.pageReferences)) continue;
-    lines.push(`- ${formula.expression}: ${formula.description}`);
-  }
-
-  for (const example of source.examples) {
-    if (!sharesPage(topicPages, example.pageReferences)) continue;
-    lines.push(`Ejemplo aplicado: ${example.value}`);
-  }
-
-  for (const confusion of source.confusions) {
-    if (!sharesPage(topicPages, confusion.pageReferences)) continue;
-    lines.push(`Importante: ${confusion.value}`);
-  }
-
-  return dedupeStrings(lines);
-}
-
 function normalizeTopicNumbers(value: unknown, topicCount: number) {
   if (!Array.isArray(value)) return [];
 
