@@ -1,7 +1,8 @@
 import { buildPedagogicalArtifacts } from '@/lib/student-material-summary';
+import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
 import { logError } from '@/lib/observability';
 
-export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = 1;
+export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = PEDAGOGICAL_ARTIFACTS_VERSION;
 
 type BuildInput = Parameters<typeof buildPedagogicalArtifacts>[0];
 type Artifacts = ReturnType<typeof buildPedagogicalArtifacts>;
