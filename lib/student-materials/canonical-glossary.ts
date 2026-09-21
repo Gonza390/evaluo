@@ -3,6 +3,7 @@ import type {
   CanonicalPedagogicalSourceKind,
   StudyGlossaryItem,
 } from '@/lib/student-materials/types';
+import { isAdministrativeAcademicContent } from '@/lib/student-materials/academic-content';
 
 type GlossaryKind =
   | 'concept'
@@ -63,7 +64,17 @@ function buildCandidates(model: CanonicalPedagogicalModel) {
   for (const concept of model.concepts) {
     const term = cleanInline(concept.term);
     const definition = cleanInline(concept.detail);
-    if (!isUsefulTerm(term) || definition.length < 12) continue;
+    if (
+      !isUsefulTerm(term) ||
+      definition.length < 12 ||
+      isAdministrativeAcademicContent({
+        label: term,
+        detail: definition,
+        documentTitle: model.title,
+      })
+    ) {
+      continue;
+    }
 
     const pageReferences = resolveEntityPages(
       model,
