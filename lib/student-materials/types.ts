@@ -183,6 +183,8 @@ export type StudentMaterialPedagogicalQualityReport = {
   questionCount: number;
   miniExamQuestionCount: number;
   artifactReferenceRatio: number;
+  artifactPageCoverageRatio: number;
+  cognitiveLevelCoverage: number;
   issues: string[];
 };
 

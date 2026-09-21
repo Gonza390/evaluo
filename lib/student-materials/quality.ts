@@ -7,7 +7,7 @@ import type {
 } from '@/lib/student-materials/types';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 
-const QUALITY_REPORT_VERSION = 1;
+const QUALITY_REPORT_VERSION = 2;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -130,18 +130,41 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     input.artifacts.flashcards.length + input.artifacts.questions.length;
   const artifactReferenceRatio =
     artifactCount > 0 ? referencedArtifactCount / artifactCount : 0;
+  const artifactPages = new Set<number>();
+  for (const item of [
+    ...input.artifacts.flashcards,
+    ...input.artifacts.questions,
+  ]) {
+    if (item.reference.pageStart) artifactPages.add(item.reference.pageStart);
+    if (item.reference.pageEnd) artifactPages.add(item.reference.pageEnd);
+  }
+  const artifactContentPages = contentPages.filter((page) =>
+    artifactPages.has(page)
+  );
+  const artifactPageCoverageRatio =
+    contentPages.length > 0
+      ? artifactContentPages.length / contentPages.length
+      : artifactCount > 0
+        ? 1
+        : 0;
+  const cognitiveLevels = new Set(
+    input.artifacts.questions.map((question) => question.level)
+  );
+  const cognitiveLevelCoverage = cognitiveLevels.size / 3;
 
   let score = 0;
-  score += representedPageRatio * 35;
-  score += clamp(academicUnitCount / Math.max(12, contentPages.length * 2), 0, 1) * 20;
-  score += artifactReferenceRatio * 15;
+  score += representedPageRatio * 25;
+  score += clamp(academicUnitCount / Math.max(12, contentPages.length * 2), 0, 1) * 15;
+  score += artifactReferenceRatio * 10;
+  score += artifactPageCoverageRatio * 15;
   score +=
     input.summary.sections.length >= 2 && input.summary.sections.length <= 10
-      ? 15
+      ? 10
       : input.summary.sections.length > 0
-        ? 7
+        ? 5
         : 0;
   score += glossaryCleanRatio * 10;
+  score += cognitiveLevelCoverage * 10;
   score += input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5;
   score = Math.round(clamp(score, 0, 100));
 
@@ -151,6 +174,18 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   if (malformedRatio > 0.08) issues.push('malformed_academic_units');
   if (glossaryCleanRatio < 0.95) issues.push('glossary_noise');
   if (artifactReferenceRatio < 0.9) issues.push('artifact_traceability_low');
+  if (
+    contentPages.length >= 8 &&
+    artifactPageCoverageRatio < 0.5
+  ) {
+    issues.push('artifact_page_coverage_low');
+  }
+  if (
+    input.artifacts.questions.length >= 6 &&
+    cognitiveLevelCoverage < 2 / 3
+  ) {
+    issues.push('cognitive_level_diversity_low');
+  }
   if (input.summary.sections.length < 2 || input.summary.sections.length > 10) {
     issues.push('summary_hierarchy_out_of_range');
   }
@@ -188,6 +223,10 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     questionCount: input.artifacts.questions.length,
     miniExamQuestionCount: input.artifacts.miniExamQuestionIds.length,
     artifactReferenceRatio: Math.round(artifactReferenceRatio * 1000) / 1000,
+    artifactPageCoverageRatio:
+      Math.round(artifactPageCoverageRatio * 1000) / 1000,
+    cognitiveLevelCoverage:
+      Math.round(cognitiveLevelCoverage * 1000) / 1000,
     issues,
   };
 }

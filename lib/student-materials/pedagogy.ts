@@ -5,7 +5,7 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 2;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 3;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -323,24 +323,58 @@ function selectDistributedByPages<T>(
   limit: number,
   getPages: (item: T) => number[] | undefined
 ) {
-  const selected: T[] = [];
-  const deferred: T[] = [];
-  const pagesSeen = new Set<number>();
+  if (limit <= 0 || items.length === 0) return [];
 
-  for (const item of items) {
-    const page = (getPages(item) ?? []).filter((value) => value > 0).sort((a, b) => a - b)[0];
-    if (page && !pagesSeen.has(page)) {
-      selected.push(item);
-      pagesSeen.add(page);
-    } else {
-      deferred.push(item);
-    }
-    if (selected.length >= limit) return selected.slice(0, limit);
+  const annotated = items.map((item, index) => ({
+    item,
+    index,
+    page: (getPages(item) ?? [])
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .sort((a, b) => a - b)[0] ?? null,
+  }));
+  const pageRepresentatives = Array.from(
+    annotated.reduce((map, entry) => {
+      if (entry.page !== null && !map.has(entry.page)) {
+        map.set(entry.page, entry);
+      }
+      return map;
+    }, new Map<number, (typeof annotated)[number]>()).values()
+  ).sort((left, right) => (left.page ?? 0) - (right.page ?? 0));
+
+  const selectedIndexes = new Set<number>();
+  const selected: T[] = [];
+  const targetRepresentatives = Math.min(limit, pageRepresentatives.length);
+
+  for (let slot = 0; slot < targetRepresentatives; slot += 1) {
+    const position =
+      targetRepresentatives === 1
+        ? 0
+        : Math.round(
+            (slot * (pageRepresentatives.length - 1)) /
+              (targetRepresentatives - 1)
+          );
+    const candidate = pageRepresentatives[position];
+    if (!candidate || selectedIndexes.has(candidate.index)) continue;
+    selected.push(candidate.item);
+    selectedIndexes.add(candidate.index);
   }
 
-  for (const item of deferred) {
-    if (selected.length >= limit) break;
-    selected.push(item);
+  if (selected.length < limit) {
+    const remaining = annotated.filter(
+      (entry) => !selectedIndexes.has(entry.index)
+    );
+    const needed = Math.min(limit - selected.length, remaining.length);
+
+    for (let slot = 0; slot < needed; slot += 1) {
+      const position =
+        needed === 1
+          ? 0
+          : Math.round((slot * (remaining.length - 1)) / (needed - 1));
+      const candidate = remaining[position];
+      if (!candidate || selectedIndexes.has(candidate.index)) continue;
+      selected.push(candidate.item);
+      selectedIndexes.add(candidate.index);
+    }
   }
 
   return selected.slice(0, limit);
