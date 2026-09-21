@@ -5,6 +5,8 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 2;
+
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
 }
@@ -409,6 +411,154 @@ function buildFlashcardFront(concept: StudyGlossaryItem, level: StudyFlashcard['
   return level === 'recordar'
     ? `¿Qué significa “${term}” según el material?`
     : `¿Cómo explicarías “${term}” con tus palabras según el material?`;
+}
+
+function isCleanAcademicLabel(value: string) {
+  const text = cleanLine(value);
+  if (text.length < 3 || text.length > 120) return false;
+  if (/\|/.test(text)) return false;
+  if (/^[#*•|]/u.test(text)) return false;
+  if (/^¿|\?$/.test(text)) return false;
+  if (text.split(/\s+/).length > 16) return false;
+  return true;
+}
+
+function buildCanonicalFlashcards(
+  model: CanonicalPedagogicalModel,
+  chunks: PedagogicalChunk[],
+  limit = 12
+) {
+  const cards: StudyFlashcard[] = [];
+  const push = (card: StudyFlashcard) => {
+    if (!cleanLine(card.front) || !cleanLine(card.back)) return;
+    if (
+      cards.some(
+        (existing) =>
+          normalizeForDedupe(existing.front) === normalizeForDedupe(card.front)
+      )
+    ) {
+      return;
+    }
+    cards.push(card);
+  };
+
+  const concepts = selectDistributedByPages(
+    model.concepts.filter(
+      (concept) =>
+        isCleanAcademicLabel(concept.term) &&
+        cleanLine(concept.detail).length >= 20
+    ),
+    6,
+    (concept) => concept.pageReferences
+  );
+
+  concepts.forEach((concept, index) => {
+    const level: StudyFlashcard['level'] =
+      index < 2 ? 'recordar' : 'comprender';
+    push({
+      front:
+        level === 'recordar'
+          ? `¿Qué describe “${concept.term}” según el PDF?`
+          : `¿Cómo explicarías “${concept.term}” con tus palabras?`,
+      back: truncateAtWord(concept.detail, 420),
+      level,
+      reference: referenceFromPages(
+        concept.pageReferences,
+        concept.term,
+        concept.detail,
+        chunks
+      ),
+    });
+  });
+
+  selectDistributedByPages(
+    model.classifications.filter(
+      (item) =>
+        isCleanAcademicLabel(item.title) &&
+        item.items.length >= 2 &&
+        item.items.length <= 10
+    ),
+    2,
+    (item) => item.pageReferences
+  ).forEach((classification) => {
+    push({
+      front: `¿Cómo se clasifica “${classification.title}” según el PDF?`,
+      back: classification.items.map((item) => `• ${cleanLine(item)}`).join('\n'),
+      level: 'comprender',
+      reference: referenceFromPages(
+        classification.pageReferences,
+        classification.title,
+        classification.items.join(', '),
+        chunks
+      ),
+    });
+  });
+
+  selectDistributedByPages(
+    model.processes.filter(
+      (item) => isCleanAcademicLabel(item.title) && item.steps.length >= 2
+    ),
+    2,
+    (item) => item.pageReferences
+  ).forEach((process) => {
+    push({
+      front: `¿Cuáles son los pasos de “${process.title}”?`,
+      back: process.steps.map((step, index) => `${index + 1}. ${cleanLine(step)}`).join('\n'),
+      level: 'comprender',
+      reference: referenceFromPages(
+        process.pageReferences,
+        process.title,
+        process.steps.join(' → '),
+        chunks
+      ),
+    });
+  });
+
+  model.formulas
+    .filter(
+      (formula) =>
+        isCleanAcademicLabel(formula.expression) &&
+        cleanLine(formula.description).length >= 12
+    )
+    .slice(0, 1)
+    .forEach((formula) => {
+      push({
+        front: `¿Qué representa o para qué se usa “${formula.expression}”?`,
+        back: truncateAtWord(formula.description, 420),
+        level: 'comprender',
+        reference: referenceFromPages(
+          formula.pageReferences,
+          formula.expression,
+          formula.description,
+          chunks
+        ),
+      });
+    });
+
+  selectDistributedByPages(
+    model.relationships.filter(
+      (item) =>
+        isCleanAcademicLabel(item.source) &&
+        isCleanAcademicLabel(item.target) &&
+        cleanLine(item.description).length >= 20
+    ),
+    2,
+    (item) => item.pageReferences
+  ).forEach((relationship) => {
+    push({
+      front: `¿Qué relación establece el PDF entre “${relationship.source}” y “${relationship.target}”?`,
+      back: truncateAtWord(relationship.description, 420),
+      level: 'comprender',
+      reference: referenceFromPages(
+        relationship.pageReferences,
+        `${relationship.source} → ${relationship.target}`,
+        relationship.description,
+        chunks
+      ),
+    });
+  });
+
+  return cards.slice(0, limit);
 }
 
 function cleanStudyUnit(value: string) {
@@ -957,7 +1107,7 @@ export function buildPedagogicalArtifacts(input: {
   const chunks = input.chunks ?? [];
   const concepts = selectPedagogicalConcepts(input.glossary, 12);
   const sectionTitles = dedupeStrings(input.summary.sections.map((section) => section.title));
-  const flashcards = concepts.slice(0, 12).map(
+  const fallbackFlashcards = concepts.slice(0, 12).map(
     (concept, index): StudyFlashcard => {
       const level = resolveFlashcardLevel(concept);
       return {
@@ -976,12 +1126,21 @@ export function buildPedagogicalArtifacts(input: {
     }
   );
 
-  const fallbackQuestions = [
-    ...buildFallbackMultipleChoice(concepts, chunks, sectionTitles),
-    ...buildOpenSectionQuestions(input.summary, chunks),
-  ];
-
   const model = input.canonicalModel;
+  const canonicalFlashcards = model
+    ? buildCanonicalFlashcards(model, chunks, 12)
+    : [];
+  const flashcards = [
+    ...canonicalFlashcards,
+    ...fallbackFlashcards.filter(
+      (candidate) =>
+        !canonicalFlashcards.some(
+          (card) =>
+            normalizeForDedupe(card.front) === normalizeForDedupe(candidate.front)
+        )
+    ),
+  ].slice(0, 12);
+
   const modelQuestions = model
     ? [
         ...buildCanonicalConceptQuestions(model, chunks),
@@ -993,6 +1152,13 @@ export function buildPedagogicalArtifacts(input: {
         ...buildCanonicalConfusionQuestions(model, chunks),
       ]
     : [];
+
+  const fallbackQuestions = [
+    ...(modelQuestions.length < 12
+      ? buildFallbackMultipleChoice(concepts, chunks, sectionTitles)
+      : []),
+    ...buildOpenSectionQuestions(input.summary, chunks),
+  ];
 
   const questions = dedupeQuestions([...modelQuestions, ...fallbackQuestions]);
   const miniExam = selectMiniExamQuestions(questions, 8);

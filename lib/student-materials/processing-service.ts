@@ -40,6 +40,11 @@ import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
 import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
+import {
+  buildPedagogicalArtifacts,
+  PEDAGOGICAL_ARTIFACTS_VERSION,
+} from '@/lib/student-materials/pedagogy';
+import { buildStudentMaterialPedagogicalQualityReport } from '@/lib/student-materials/quality';
 
 export type StudentMaterialProcessingStage =
   | 'uploaded'
@@ -62,6 +67,7 @@ export type StudentMaterialProcessingResult = {
 const LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES = 31;
 const LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS = 150;
 const LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS = 180_000;
+const CANONICAL_PEDAGOGICAL_MODEL_VERSION = 2;
 
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
@@ -90,6 +96,23 @@ export async function processStudentMaterial(input: {
   );
 
   if (!material) throw new Error('No encontramos el material que queres procesar.');
+
+  // Todo reprocesamiento invalida la representación y los artefactos derivados.
+  // Así nunca mostramos flashcards o exámenes construidos sobre una versión anterior.
+  const { error: resetDerivedArtifactsError } = await admin
+    .from('student_materials')
+    .update({
+      pedagogical_model: null,
+      pedagogical_model_version: null,
+      pedagogical_quality_report: null,
+      pedagogical_artifacts: null,
+      pedagogical_artifacts_version: null,
+    } as never)
+    .eq('id', material.id);
+
+  if (resetDerivedArtifactsError) {
+    throw resetDerivedArtifactsError;
+  }
 
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'processing',
@@ -266,7 +289,10 @@ export async function processStudentMaterial(input: {
     try {
       const { error: pedagogicalModelPersistError } = await admin
         .from('student_materials')
-        .update({ pedagogical_model: pedagogicalModel as unknown as Json } as never)
+        .update({
+          pedagogical_model: pedagogicalModel as unknown as Json,
+          pedagogical_model_version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+        } as never)
         .eq('id', material.id);
 
       if (pedagogicalModelPersistError) {
@@ -387,11 +413,59 @@ export async function processStudentMaterial(input: {
     dedupPromise,
   ]);
 
+  const pedagogicalArtifacts = buildPedagogicalArtifacts({
+    summary,
+    glossary,
+    canonicalModel: pedagogicalModel,
+    chunks: traceableChunks.map((chunk) => ({
+      text: chunk.text,
+      pageStart: chunk.pageStart,
+      pageEnd: chunk.pageEnd,
+      sectionTitle: chunk.sectionTitle,
+      excerpt: '',
+    })),
+  });
+
+  const pedagogicalQualityReport =
+    buildStudentMaterialPedagogicalQualityReport({
+      pageCount,
+      pages,
+      documentAnalysis,
+      model: pedagogicalModel,
+      summary,
+      glossary,
+      artifacts: pedagogicalArtifacts,
+      visionUsed,
+    });
+
+  const { error: derivedArtifactsPersistError } = await admin
+    .from('student_materials')
+    .update({
+      pedagogical_artifacts: pedagogicalArtifacts as unknown as Json,
+      pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
+      pedagogical_quality_report:
+        pedagogicalQualityReport as unknown as Json,
+    } as never)
+    .eq('id', material.id);
+
+  if (derivedArtifactsPersistError) {
+    throw derivedArtifactsPersistError;
+  }
+
+  if (pedagogicalQualityReport.status === 'fail') {
+    throw new Error(
+      `El procesamiento no superó el control pedagógico (score ${pedagogicalQualityReport.score}).`
+    );
+  }
+
   await updateStudentMaterialProcessing(admin, material.id, {
     processingStatus: 'ready',
     processingStage: 'ready',
     processingProgress: 100,
-    processingMessage: 'Material listo para estudiar.',
+    processingMessage:
+      pedagogicalQualityReport.status === 'pass'
+        ? 'Material listo para estudiar.'
+        : 'Material listo para estudiar con cobertura pedagógica reducida.',
     processingError: null,
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
@@ -414,6 +488,12 @@ export async function processStudentMaterial(input: {
       visual_candidate_count: selectedVisionPageNumbers.length,
       vision_used: visionUsed,
       vision_page_count: visionPageNumbers.length,
+      pedagogical_quality_status: pedagogicalQualityReport.status,
+      pedagogical_quality_score: pedagogicalQualityReport.score,
+      pedagogical_model_version: pedagogicalModel
+        ? CANONICAL_PEDAGOGICAL_MODEL_VERSION
+        : null,
+      pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
     },
   });
 
@@ -437,6 +517,13 @@ export async function processStudentMaterial(input: {
     visionUsed,
     visionPageCount: visionPageNumbers.length,
     visionModel: visionExtraction.visionModel,
+    pedagogicalQualityStatus: pedagogicalQualityReport.status,
+    pedagogicalQualityScore: pedagogicalQualityReport.score,
+    pedagogicalRepresentedPageRatio:
+      pedagogicalQualityReport.representedPageRatio,
+    pedagogicalArtifactCount:
+      pedagogicalQualityReport.flashcardCount +
+      pedagogicalQualityReport.questionCount,
     totalAiTokens: aiUsage.totalAiTokens,
     promptTokens: aiUsage.promptTokens,
     completionTokens: aiUsage.completionTokens,

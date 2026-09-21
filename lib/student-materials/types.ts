@@ -166,6 +166,26 @@ export type StudyGlossaryItem = {
   englishTerm?: string | null;
 };
 
+export type StudentMaterialPedagogicalQualityReport = {
+  version: number;
+  status: 'pass' | 'degraded' | 'fail';
+  score: number;
+  pageCount: number | null;
+  sourcePagesWithContent: number;
+  representedPages: number;
+  representedPageRatio: number;
+  uncoveredContentPages: number[];
+  academicUnitCount: number;
+  malformedAcademicUnits: number;
+  summarySectionCount: number;
+  glossaryItemCount: number;
+  flashcardCount: number;
+  questionCount: number;
+  miniExamQuestionCount: number;
+  artifactReferenceRatio: number;
+  issues: string[];
+};
+
 export type StudentMaterialSummary = {
   shortSummary: string;
   keyPoints: string[];
