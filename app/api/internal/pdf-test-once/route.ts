@@ -13,7 +13,6 @@ import { createAdminClient } from '@/lib/supabase-admin';
 export const maxDuration = 300;
 
 const TEST_MATERIAL_ID = '6f0f836e-8186-49b3-bd0a-0e2a75e91c56';
-const TEST_JOB_ID = '335a7841-9ce8-409f-bde2-f6cb2a909392';
 
 function secureEquals(left: string, right: string) {
   const leftBuffer = Buffer.from(left);
@@ -34,8 +33,11 @@ async function runOneShotTest(request: Request) {
   const { data: job, error } = await admin
     .from('student_material_jobs')
     .select('id, student_material_id, status, last_error')
-    .eq('id', TEST_JOB_ID)
     .eq('student_material_id', TEST_MATERIAL_ID)
+    .eq('status', 'queued')
+    .eq('last_error', token)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {
@@ -55,14 +57,14 @@ async function runOneShotTest(request: Request) {
   }
 
   const claimed = await claimStudentMaterialJob(admin, TEST_MATERIAL_ID);
-  if (!claimed || claimed.id !== TEST_JOB_ID) {
+  if (!claimed || claimed.id !== job.id) {
     return NextResponse.json({ success: false }, { status: 409 });
   }
 
   try {
     const result = await processStudentMaterial({
       materialId: TEST_MATERIAL_ID,
-      jobId: TEST_JOB_ID,
+      jobId: job.id,
     });
     return NextResponse.json(result, { status: result.success ? 200 : 500 });
   } catch (processingError) {
@@ -72,7 +74,7 @@ async function runOneShotTest(request: Request) {
         : 'Error desconocido en la prueba de PDF.';
 
     await Promise.allSettled([
-      failStudentMaterialJob(admin, TEST_JOB_ID, message),
+      failStudentMaterialJob(admin, job.id, message),
       markStudentMaterialProcessingFailed(TEST_MATERIAL_ID, processingError),
     ]);
 
