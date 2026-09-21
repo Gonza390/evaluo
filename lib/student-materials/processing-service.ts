@@ -443,7 +443,6 @@ export async function processStudentMaterial(input: {
     .update({
       pedagogical_artifacts: pedagogicalArtifacts as unknown as Json,
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
-      pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
       pedagogical_quality_report:
         pedagogicalQualityReport as unknown as Json,
       pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
@@ -496,6 +495,7 @@ export async function processStudentMaterial(input: {
         ? CANONICAL_PEDAGOGICAL_MODEL_VERSION
         : null,
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
+      pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     },
   });
 
