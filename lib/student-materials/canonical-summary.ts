@@ -25,19 +25,115 @@ import { logError } from '@/lib/observability';
 
 const CANONICAL_SUMMARY_BASE_MAX_OUTPUT_TOKENS = 6_000;
 const CANONICAL_SUMMARY_HARD_MAX_OUTPUT_TOKENS = 9_000;
-const MAX_TOPICS_PER_SECTION = 4;
+const MIN_GUIDE_CHAPTERS = 3;
+const MAX_GUIDE_CHAPTERS = 8;
+const TARGET_SOURCE_PAGES_PER_CHAPTER = 5;
+const MIN_GUIDE_WORDS = 900;
+const MAX_GUIDE_WORDS = 6_500;
+const TARGET_WORDS_PER_SOURCE_PAGE = 160;
+const TARGET_WORDS_PER_TOPIC = 90;
+const MAX_FALLBACK_TABLES_PER_CHAPTER = 2;
 
-function resolveMinimumSectionCount(topicCount: number) {
-  return Math.max(1, Math.ceil(topicCount / MAX_TOPICS_PER_SECTION));
+type CanonicalGuidePlan = {
+  estimatedPageCount: number;
+  preferredChapterCount: number;
+  minChapterCount: number;
+  maxChapterCount: number;
+  targetWordCount: number;
+  maxTopicsPerChapter: number;
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function isAdministrativeTopic(topic: CanonicalSummarySource['topics'][number]) {
+  const title = cleanLine(topic.title).toLocaleLowerCase('es');
+  return (
+    /^presentaci[oó]n (?:de la asignatura|del documento)$/u.test(title) ||
+    /^informaci[oó]n (?:de )?autor[ií]a(?: y derechos)?$/u.test(title) ||
+    /^autor[ií]a y derechos$/u.test(title) ||
+    /^datos? de autor[ií]a$/u.test(title)
+  );
+}
+
+function buildStudyCanonicalSummarySource(
+  model: CanonicalPedagogicalModel
+): CanonicalSummarySource {
+  const source = buildCanonicalSummarySource(model);
+  return {
+    ...source,
+    topics: source.topics.filter((topic) => !isAdministrativeTopic(topic)),
+  };
+}
+
+function getEstimatedSourcePageCount(source: CanonicalSummarySource) {
+  const pages = [
+    ...source.topics.flatMap((item) => item.pageReferences),
+    ...source.concepts.flatMap((item) => item.pageReferences),
+    ...source.relationships.flatMap((item) => item.pageReferences),
+    ...source.classifications.flatMap((item) => item.pageReferences),
+    ...source.processes.flatMap((item) => item.pageReferences),
+    ...source.formulas.flatMap((item) => item.pageReferences),
+    ...source.examples.flatMap((item) => item.pageReferences),
+    ...source.confusions.flatMap((item) => item.pageReferences),
+  ];
+
+  return pages.length > 0 ? Math.max(...pages) : 1;
+}
+
+function resolveCanonicalGuidePlan(
+  source: CanonicalSummarySource
+): CanonicalGuidePlan {
+  const topicCount = Math.max(1, source.topics.length);
+  const estimatedPageCount = getEstimatedSourcePageCount(source);
+  const preferredChapterCount = Math.min(
+    topicCount,
+    clamp(
+      Math.ceil(estimatedPageCount / TARGET_SOURCE_PAGES_PER_CHAPTER),
+      MIN_GUIDE_CHAPTERS,
+      MAX_GUIDE_CHAPTERS
+    )
+  );
+  const minChapterCount = Math.min(
+    preferredChapterCount,
+    Math.max(2, preferredChapterCount - 1)
+  );
+  const maxChapterCount = Math.min(
+    topicCount,
+    Math.max(preferredChapterCount, Math.min(MAX_GUIDE_CHAPTERS, preferredChapterCount + 1))
+  );
+  const pageDrivenWords = estimatedPageCount * TARGET_WORDS_PER_SOURCE_PAGE;
+  const topicDrivenWords = topicCount * TARGET_WORDS_PER_TOPIC;
+  const targetWordCount = clamp(
+    Math.round(
+      Math.min(
+        pageDrivenWords,
+        Math.max(estimatedPageCount * 100, topicDrivenWords)
+      )
+    ),
+    MIN_GUIDE_WORDS,
+    MAX_GUIDE_WORDS
+  );
+  const maxTopicsPerChapter = Math.max(
+    6,
+    Math.ceil((topicCount / Math.max(1, minChapterCount)) * 1.75)
+  );
+
+  return {
+    estimatedPageCount,
+    preferredChapterCount,
+    minChapterCount,
+    maxChapterCount,
+    targetWordCount,
+    maxTopicsPerChapter,
+  };
 }
 
 function resolveCanonicalSummaryMaxOutputTokens(model: CanonicalPedagogicalModel) {
-  const estimated =
-    4_800 +
-    model.topics.length * 140 +
-    model.classifications.length * 70 +
-    model.processes.length * 70 +
-    model.formulas.length * 45;
+  const source = buildStudyCanonicalSummarySource(model);
+  const plan = resolveCanonicalGuidePlan(source);
+  const estimated = Math.ceil(plan.targetWordCount * 1.55);
 
   return Math.min(
     CANONICAL_SUMMARY_HARD_MAX_OUTPUT_TOKENS,
@@ -102,7 +198,7 @@ export function buildCanonicalSummaryPrompt(
   model: CanonicalPedagogicalModel
 ) {
   const source = buildIndexedCanonicalSummarySource(model);
-  const minimumSectionCount = resolveMinimumSectionCount(source.topics.length);
+  const plan = resolveCanonicalGuidePlan(source);
   const context = [
     input.universidadName ? `Universidad: ${input.universidadName}` : null,
     input.carreraName ? `Carrera: ${input.carreraName}` : null,
@@ -143,14 +239,18 @@ export function buildCanonicalSummaryPrompt(
     'Estructura de salida:',
     '- summary_short: síntesis global de 4 a 6 líneas.',
     '- key_points: exactamente 5 ideas académicas concretas, no títulos.',
-    '- sections: secciones conceptualmente coherentes en el orden general de la fuente.',
-    '- Cada title debe ser corto y venir numerado: "1. ...", "2. ...".',
+    '- sections representa CAPÍTULOS, no topics atómicos. Agrupá los topics relacionados dentro de una jerarquía de estudio.',
+    '- Cada title debe ser corto, amplio y venir numerado: "1. ...", "2. ...".',
+    `- Para este material, generá entre ${plan.minChapterCount} y ${plan.maxChapterCount} capítulos; el objetivo preferido es ${plan.preferredChapterCount}.`,
+    '- Dentro de cada capítulo usá entre 3 y 7 subtítulos internos (por ejemplo "### 2.1 ...") cuando el volumen lo justifique. Esos subtítulos deben consolidar topics relacionados, no copiar un topic por subtítulo de forma mecánica.',
+    `- La guía debe ser moderada y estudiar, no reconstruir el PDF. Apuntá aproximadamente a ${plan.targetWordCount} palabras totales: conservá el núcleo académico, condensá soporte repetitivo y usá ejemplos/casos para aplicar, no para duplicar teoría.`,
     '- Cada body debe usar subtítulos, viñetas y tablas Markdown cuando una clasificación, comparación o conjunto de valores de referencia lo justifique.',
     '- Una tabla Markdown debe reconstruir relaciones reales de la fuente (por ejemplo Tipo | Característica | Diferencia o Parámetro | Valor). No inventes celdas ni atributos ausentes.',
     '- No copies fragmentos rotos del parser dentro de una tabla: cada fila debe representar una entidad académica coherente.',
-    '- Separá los casos clínicos o aplicaciones extensas de la teoría cuando tengan entidad propia en la fuente.',
-    '- No fuerces un número fijo de secciones, pero tampoco comprimas en exceso: usa las necesarias para representar todos los topics.',
-    `- Esta fuente contiene ${source.topics.length} topics. Generá al menos ${minimumSectionCount} secciones y no agrupes más de ${MAX_TOPICS_PER_SECTION} topics distintos dentro de una misma sección.`,
+    '- Cuando haya varias clasificaciones comparables, preferí un cuadro antes que repetir párrafos equivalentes.',
+    '- Agrupá los casos clínicos o aplicaciones extensas en un capítulo de aplicación cuando sea coherente, usando un subtítulo por caso o problema; no conviertas cada pregunta interna del caso en una sección independiente.',
+    '- Excluí créditos, copyright, presentación administrativa y metadatos del documento del contenido de estudio.',
+    `- Esta fuente contiene ${source.topics.length} topics académicos. Un capítulo puede integrar varios; no agrupes más de ${plan.maxTopicsPerChapter} topics distintos dentro de un mismo capítulo.`,
     '- Cada sección debe declarar source_topic_numbers con los números de topic que realmente integra.',
     '- source_topic_numbers sólo puede contener números existentes en la fuente.',
     '- No escribas números de página dentro del body: la aplicación los añadirá a partir de source_topic_numbers validados.',
@@ -221,27 +321,58 @@ export async function generateCanonicalStudentMaterialSummary(
 export function buildCanonicalStudentMaterialSummaryFallback(
   model: CanonicalPedagogicalModel
 ): StudentMaterialSummary {
-  const source = buildCanonicalSummarySource(model);
+  const source = buildStudyCanonicalSummarySource(model);
   const shortSummary =
     truncateAtWord(cleanLine(source.overview), 1_400) ||
     `Guía de estudio de ${cleanLine(source.title) || 'este material'}.`;
 
   const keyPoints = buildCanonicalFallbackKeyPoints(source);
-  const sections = source.topics.map((topic, index) => {
-    const relatedLines = buildRelatedStudyLines(source, topic.pageReferences);
-    const body = cleanMultilineBlock(
-      [
-        topic.description,
-        ...relatedLines,
-        formatPdfReference(topic.pageReferences),
-      ]
-        .filter(Boolean)
-        .join('\n')
+  const plan = resolveCanonicalGuidePlan(source);
+  const chapterGroups = partitionEvenly(
+    source.topics,
+    plan.preferredChapterCount
+  );
+  const sections = chapterGroups.map((topics, chapterIndex) => {
+    const chapterPages = normalizePages(
+      topics.flatMap((topic) => topic.pageReferences)
+    );
+    const desiredSubtopicCount = clamp(
+      Math.ceil(topics.length / 2),
+      Math.min(2, topics.length),
+      Math.min(6, topics.length)
+    );
+    const subtopicGroups = partitionEvenly(topics, desiredSubtopicCount);
+    const subtopicBlocks = subtopicGroups.map((subtopics, subtopicIndex) => {
+      const firstTopic = subtopics[0];
+      if (!firstTopic) return '';
+
+      const lines = subtopics.map((topic) =>
+        subtopics.length === 1
+          ? topic.description
+          : `- **${stripLeadingNumber(topic.title)}:** ${topic.description}`
+      );
+
+      return [
+        `### ${chapterIndex + 1}.${subtopicIndex + 1} ${stripLeadingNumber(firstTopic.title)}`,
+        ...lines,
+      ].join('\n');
+    });
+    const structuredBlocks = buildFallbackStructuredBlocks(
+      source,
+      chapterPages
     );
 
     return {
-      title: `${index + 1}. ${stripLeadingNumber(topic.title)}`,
-      body,
+      title: `${chapterIndex + 1}. ${buildFallbackChapterTitle(topics)}`,
+      body: cleanMultilineBlock(
+        [
+          ...subtopicBlocks,
+          ...structuredBlocks,
+          formatPdfReference(chapterPages),
+        ]
+          .filter(Boolean)
+          .join('\n\n')
+      ),
     };
   });
 
@@ -260,7 +391,7 @@ export function buildCanonicalStudentMaterialSummaryFallback(
 function buildIndexedCanonicalSummarySource(
   model: CanonicalPedagogicalModel
 ): IndexedCanonicalSummarySource {
-  const source = buildCanonicalSummarySource(model);
+  const source = buildStudyCanonicalSummarySource(model);
 
   return {
     ...source,
@@ -284,8 +415,9 @@ function sanitizeCanonicalSummaryPayload(
   model: CanonicalPedagogicalModel,
   providerModel: string
 ): StudentMaterialSummary | null {
-  const source = buildCanonicalSummarySource(model);
+  const source = buildStudyCanonicalSummarySource(model);
   if (source.topics.length === 0) return null;
+  const plan = resolveCanonicalGuidePlan(source);
 
   const shortSummary = truncateAtWord(
     cleanLine(payload.summary_short ?? ''),
@@ -305,8 +437,10 @@ function sanitizeCanonicalSummaryPayload(
   }
 
   const rawSections = Array.isArray(payload.sections) ? payload.sections : [];
-  const minimumSectionCount = resolveMinimumSectionCount(source.topics.length);
-  if (rawSections.length < minimumSectionCount) {
+  if (
+    rawSections.length < plan.minChapterCount ||
+    rawSections.length > plan.maxChapterCount
+  ) {
     return null;
   }
 
@@ -315,9 +449,10 @@ function sanitizeCanonicalSummaryPayload(
   );
 
   if (
-    source.topics.length > MAX_TOPICS_PER_SECTION &&
     sectionTopicNumbers.some(
-      (topicNumbers) => topicNumbers.length > MAX_TOPICS_PER_SECTION
+      (topicNumbers) =>
+        topicNumbers.length === 0 ||
+        topicNumbers.length > plan.maxTopicsPerChapter
     )
   ) {
     return null;
@@ -382,24 +517,245 @@ function sanitizeCanonicalSummaryPayload(
     source.processes.length +
     source.formulas.length;
   const minimumBodyChars = Math.min(
-    5_000,
-    Math.max(1_600, canonicalDetailCount * 55)
+    28_000,
+    Math.max(
+      4_500,
+      plan.targetWordCount * 3,
+      canonicalDetailCount * 28
+    )
   );
 
   if (totalBodyChars < minimumBodyChars) {
     return null;
   }
 
+  const enrichedSections = injectCanonicalTables(
+    sections,
+    sectionTopicNumbers,
+    source
+  );
+
   return {
     shortSummary,
     keyPoints,
-    sections,
+    sections: enrichedSections,
     hasContent: true,
     status: 'ready',
     provider: `${providerModel}-canonical`,
     errorMessage: null,
     sourceChunksCount: model.chunkCount,
   };
+}
+
+function partitionEvenly<T>(items: T[], desiredGroups: number): T[][] {
+  if (items.length === 0) return [];
+
+  const groupCount = clamp(desiredGroups, 1, items.length);
+  const groups: T[][] = [];
+  let cursor = 0;
+
+  for (let groupIndex = 0; groupIndex < groupCount; groupIndex += 1) {
+    const remainingItems = items.length - cursor;
+    const remainingGroups = groupCount - groupIndex;
+    const size = Math.ceil(remainingItems / remainingGroups);
+    groups.push(items.slice(cursor, cursor + size));
+    cursor += size;
+  }
+
+  return groups.filter((group) => group.length > 0);
+}
+
+function buildFallbackChapterTitle(
+  topics: CanonicalSummarySource['topics']
+) {
+  const first = topics[0];
+  if (!first) return 'Contenido central';
+
+  const firstTitle = stripLeadingNumber(first.title);
+  if (topics.length <= 3) return firstTitle;
+
+  const last = topics[topics.length - 1];
+  const lastTitle = last ? stripLeadingNumber(last.title) : '';
+  if (!lastTitle || lastTitle === firstTitle) return firstTitle;
+
+  return truncateAtWord(`${firstTitle} y temas relacionados`, 90);
+}
+
+function buildFallbackStructuredBlocks(
+  source: CanonicalSummarySource,
+  pages: number[]
+) {
+  const blocks: string[] = [];
+  const matchingClassifications = source.classifications.filter((item) =>
+    sharesPage(pages, item.pageReferences)
+  );
+  let tableCount = 0;
+
+  for (const classification of matchingClassifications) {
+    if (tableCount >= MAX_FALLBACK_TABLES_PER_CHAPTER) break;
+    const table = buildClassificationMarkdownTable(source, classification);
+    if (!table) continue;
+    blocks.push(table);
+    tableCount += 1;
+  }
+
+  if (tableCount === 0) {
+    for (const classification of matchingClassifications.slice(0, 2)) {
+      blocks.push(
+        `Clasificación: **${classification.title}** — ${classification.items.join('; ')}.`
+      );
+    }
+  }
+
+  for (const process of source.processes
+    .filter((item) => sharesPage(pages, item.pageReferences))
+    .slice(0, 2)) {
+    blocks.push(`Proceso: **${process.title}** — ${process.steps.join(' → ')}.`);
+  }
+
+  for (const formula of source.formulas
+    .filter((item) => sharesPage(pages, item.pageReferences))
+    .slice(0, 2)) {
+    blocks.push(`Fórmula: **${formula.expression}** — ${formula.description}`);
+  }
+
+  for (const confusion of source.confusions
+    .filter((item) => sharesPage(pages, item.pageReferences))
+    .slice(0, 2)) {
+    blocks.push(`Confusión frecuente: ${confusion.value}`);
+  }
+
+  return blocks;
+}
+
+function injectCanonicalTables(
+  sections: Array<{ title: string; body: string }>,
+  sectionTopicNumbers: number[][],
+  source: CanonicalSummarySource
+) {
+  const usedClassifications = new Set<string>();
+
+  return sections.map((section, index) => {
+    if (hasMarkdownTable(section.body)) return section;
+
+    const topicNumbers = sectionTopicNumbers[index] ?? [];
+    const pages = normalizePages(
+      topicNumbers.flatMap(
+        (topicNumber) => source.topics[topicNumber - 1]?.pageReferences ?? []
+      )
+    );
+
+    const candidate = source.classifications.find((classification) => {
+      const key = cleanLine(classification.title).toLocaleLowerCase('es');
+      return (
+        !usedClassifications.has(key) &&
+        sharesPage(pages, classification.pageReferences) &&
+        Boolean(buildClassificationMarkdownTable(source, classification))
+      );
+    });
+
+    if (!candidate) return section;
+
+    const table = buildClassificationMarkdownTable(source, candidate);
+    if (!table) return section;
+
+    usedClassifications.add(
+      cleanLine(candidate.title).toLocaleLowerCase('es')
+    );
+
+    return {
+      ...section,
+      body: cleanMultilineBlock([section.body, table].join('\n\n')),
+    };
+  });
+}
+
+function hasMarkdownTable(body: string) {
+  return /\|[^\n]+\|\s*\n\s*\|\s*:?-{3,}/u.test(body);
+}
+
+function buildClassificationMarkdownTable(
+  source: CanonicalSummarySource,
+  classification: CanonicalSummarySource['classifications'][number]
+) {
+  if (classification.items.length < 2 || classification.items.length > 10) {
+    return '';
+  }
+
+  const rows = classification.items
+    .map((item) => resolveClassificationRow(source, item))
+    .filter(
+      (row): row is { label: string; detail: string } =>
+        Boolean(row?.label && row.detail)
+    );
+
+  if (
+    rows.length < 2 ||
+    rows.length < Math.ceil(classification.items.length * 0.6)
+  ) {
+    return '';
+  }
+
+  const tableRows = rows.map(
+    (row) =>
+      `| ${escapeMarkdownTableCell(row.label)} | ${escapeMarkdownTableCell(
+        truncateAtWord(row.detail, 240)
+      )} |`
+  );
+
+  return [
+    `### ${classification.title}`,
+    '| Tipo / categoría | Característica clave |',
+    '| --- | --- |',
+    ...tableRows,
+  ].join('\n');
+}
+
+function resolveClassificationRow(
+  source: CanonicalSummarySource,
+  rawItem: string
+) {
+  const item = cleanLine(rawItem);
+  if (!item) return null;
+
+  const explicit = item.match(/^(.{2,90}?)(?::|\s+[—–-]\s+)(.+)$/u);
+  if (explicit?.[1] && explicit[2]) {
+    return {
+      label: cleanLine(explicit[1]),
+      detail: cleanLine(explicit[2]),
+    };
+  }
+
+  const itemKey = normalizeComparisonKey(item);
+  const matchingConcept = source.concepts.find((concept) => {
+    const conceptKey = normalizeComparisonKey(concept.term);
+    return (
+      conceptKey === itemKey ||
+      (conceptKey.length >= 5 &&
+        itemKey.length >= 5 &&
+        (conceptKey.includes(itemKey) || itemKey.includes(conceptKey)))
+    );
+  });
+
+  if (!matchingConcept) return null;
+
+  return {
+    label: item,
+    detail: matchingConcept.detail,
+  };
+}
+
+function normalizeComparisonKey(value: string) {
+  return cleanLine(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/gu, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .toLocaleLowerCase('es');
+}
+
+function escapeMarkdownTableCell(value: string) {
+  return cleanLine(value).replace(/\|/gu, '/');
 }
 
 function buildCanonicalFallbackKeyPoints(source: CanonicalSummarySource) {
