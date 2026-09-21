@@ -1943,6 +1943,12 @@ export type Database = {
           page_count: number | null;
           pages_processed: number | null;
           coverage_ratio: number | null;
+          pedagogical_artifacts: Json | null;
+          pedagogical_artifacts_version: number | null;
+          pedagogical_model: Json | null;
+          pedagogical_model_version: number | null;
+          pedagogical_quality_report: Json | null;
+          pedagogical_quality_version: number | null;
           processing_error: string | null;
           processing_message: string | null;
           processing_progress: number;
@@ -1968,6 +1974,12 @@ export type Database = {
           page_count?: number | null;
           pages_processed?: number | null;
           coverage_ratio?: number | null;
+          pedagogical_artifacts?: Json | null;
+          pedagogical_artifacts_version?: number | null;
+          pedagogical_model?: Json | null;
+          pedagogical_model_version?: number | null;
+          pedagogical_quality_report?: Json | null;
+          pedagogical_quality_version?: number | null;
           processing_error?: string | null;
           processing_message?: string | null;
           processing_progress?: number;
@@ -1993,6 +2005,12 @@ export type Database = {
           page_count?: number | null;
           pages_processed?: number | null;
           coverage_ratio?: number | null;
+          pedagogical_artifacts?: Json | null;
+          pedagogical_artifacts_version?: number | null;
+          pedagogical_model?: Json | null;
+          pedagogical_model_version?: number | null;
+          pedagogical_quality_report?: Json | null;
+          pedagogical_quality_version?: number | null;
           processing_error?: string | null;
           processing_message?: string | null;
           processing_progress?: number;
