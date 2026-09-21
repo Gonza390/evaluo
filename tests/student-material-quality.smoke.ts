@@ -1016,4 +1016,103 @@ assert.equal(
   'Flashcards y preguntas deben conservar referencia a la fuente.'
 );
 
+const administrativeFixture: CanonicalPedagogicalModel = {
+  ...canonicalGlossaryFixture,
+  title: 'Bioquímica Clínica I',
+  topics: [
+    {
+      title: 'Presentación de Bioquímica Clínica I',
+      description:
+        'Datos generales de la asignatura, autor y procedencia del material de estudio.',
+      relevance: 'media',
+      pageReferences: [1],
+    },
+    ...canonicalGlossaryFixture.topics,
+  ],
+  concepts: [
+    {
+      term: 'Bioquímica Clínica I',
+      detail: 'Asignatura de la cual se presenta el material de estudio.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+    {
+      term: 'Blas Ahumada',
+      detail:
+        'Autor del documento realizado a partir de información de la cátedra e ilustraciones propias.',
+      kind: 'autor',
+      pageReferences: [1],
+    },
+    ...canonicalGlossaryFixture.concepts,
+  ],
+  authorsOrTheories: [
+    'Blas Ahumada',
+    ...canonicalGlossaryFixture.authorsOrTheories,
+  ],
+};
+
+const administrativeFilteredSummary =
+  buildCanonicalStudentMaterialSummaryFallback(administrativeFixture);
+const administrativeFilteredGlossary =
+  buildCanonicalStudentMaterialGlossary(administrativeFixture);
+const administrativeFilteredPedagogy = buildPedagogicalArtifacts({
+  summary: administrativeFilteredSummary,
+  glossary: administrativeFilteredGlossary,
+  canonicalModel: administrativeFixture,
+  chunks: traceableChunks.map((chunk) => ({
+    text: chunk.text,
+    pageStart: chunk.pageStart,
+    pageEnd: chunk.pageEnd,
+    sectionTitle: chunk.sectionTitle,
+    excerpt: '',
+  })),
+});
+
+const administrativeDerivedText = JSON.stringify({
+  summary: administrativeFilteredSummary,
+  glossary: administrativeFilteredGlossary,
+  artifacts: administrativeFilteredPedagogy,
+});
+assert.doesNotMatch(
+  administrativeDerivedText,
+  /Asignatura de la cual se presenta|Presentación de Bioquímica Clínica I|Blas Ahumada/i,
+  'Los metadatos administrativos del PDF no deben llegar a resumen, glosario, flashcards ni examen.'
+);
+
+const leakedQuality = buildStudentMaterialPedagogicalQualityReport({
+  pageCount: 7,
+  pages: Array.from(
+    { length: 7 },
+    (_, index) =>
+      `Página ${index + 1} con contenido académico suficiente para verificar calidad pedagógica.`
+  ),
+  documentAnalysis: {
+    ...analysis,
+    pageCount: 7,
+    requiresOcr: false,
+  },
+  model: administrativeFixture,
+  summary: {
+    ...administrativeFilteredSummary,
+    sections: [
+      {
+        title: 'Presentación de Bioquímica Clínica I',
+        body: 'Datos generales de la asignatura, autor y procedencia del material de estudio.',
+      },
+      ...administrativeFilteredSummary.sections,
+    ],
+  },
+  glossary: administrativeFilteredGlossary,
+  artifacts: administrativeFilteredPedagogy,
+  visionUsed: false,
+});
+assert.ok(
+  leakedQuality.issues.includes('administrative_content_leak'),
+  'El quality gate debe detectar metadatos administrativos si vuelven a filtrarse a una guía.'
+);
+assert.ok(
+  leakedQuality.score < canonicalQuality.score,
+  'El contenido administrativo visible debe penalizar el score pedagógico.'
+);
+
 console.log('Student material quality smoke tests passed.');
