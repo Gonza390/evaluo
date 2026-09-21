@@ -64,13 +64,11 @@ export type StudentMaterialProcessingResult = {
   materialId?: string;
 };
 
-// El fast path no depende sólo de la cantidad de páginas. Un apunte de 32 páginas
-// puede ser académicamente denso y necesitar el modelo canónico completo. Sólo
-// degradamos documentos nativos cuando, además de ser extensos, superan un umbral
-// real de complejidad por texto o cantidad de chunks.
-const LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES = 31;
-const LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS = 150;
-const LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS = 180_000;
+// Señal diagnóstica de complejidad: incluso estos documentos recorren
+// el mismo contrato canónico; sólo cambia cómo los observamos y medimos.
+const LARGE_NATIVE_PDF_MIN_PAGES = 31;
+const LARGE_NATIVE_PDF_MIN_CHUNKS = 150;
+const LARGE_NATIVE_PDF_MIN_TEXT_CHARS = 180_000;
 
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
@@ -196,9 +194,9 @@ export async function processStudentMaterial(input: {
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
   const isVeryLargeNativePdf =
     typeof pageCount === 'number' &&
-    pageCount >= LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES &&
-    (traceableChunks.length >= LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS ||
-      text.length >= LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS) &&
+    pageCount >= LARGE_NATIVE_PDF_MIN_PAGES &&
+    (traceableChunks.length >= LARGE_NATIVE_PDF_MIN_CHUNKS ||
+      text.length >= LARGE_NATIVE_PDF_MIN_TEXT_CHARS) &&
     !documentAnalysis.requiresOcr &&
     !visionUsed &&
     pagesWithText > 0;
@@ -445,7 +443,6 @@ export async function processStudentMaterial(input: {
     .update({
       pedagogical_artifacts: pedagogicalArtifacts as unknown as Json,
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
-      pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
       pedagogical_quality_report:
         pedagogicalQualityReport as unknown as Json,
       pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
