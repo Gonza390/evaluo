@@ -44,7 +44,11 @@ import {
   buildPedagogicalArtifacts,
   PEDAGOGICAL_ARTIFACTS_VERSION,
 } from '@/lib/student-materials/pedagogy';
-import { buildStudentMaterialPedagogicalQualityReport } from '@/lib/student-materials/quality';
+import {
+  buildStudentMaterialPedagogicalQualityReport,
+  PEDAGOGICAL_QUALITY_REPORT_VERSION,
+} from '@/lib/student-materials/quality';
+import { CANONICAL_PEDAGOGICAL_MODEL_VERSION } from '@/lib/student-materials/processing-contract';
 
 export type StudentMaterialProcessingStage =
   | 'uploaded'
@@ -60,14 +64,11 @@ export type StudentMaterialProcessingResult = {
   materialId?: string;
 };
 
-// El fast path no depende sólo de la cantidad de páginas. Un apunte de 32 páginas
-// puede ser académicamente denso y necesitar el modelo canónico completo. Sólo
-// degradamos documentos nativos cuando, además de ser extensos, superan un umbral
-// real de complejidad por texto o cantidad de chunks.
-const LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES = 31;
-const LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS = 150;
-const LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS = 180_000;
-const CANONICAL_PEDAGOGICAL_MODEL_VERSION = 2;
+// Señal diagnóstica de complejidad. Incluso los documentos grandes deben
+// terminar en el mismo contrato canónico; cambia el costo, no la representación.
+const LARGE_NATIVE_PDF_MIN_PAGES = 31;
+const LARGE_NATIVE_PDF_MIN_CHUNKS = 150;
+const LARGE_NATIVE_PDF_MIN_TEXT_CHARS = 180_000;
 
 function buildAnalysisMessage(analysis: StudyDocumentAnalysis) {
   if (analysis.requiresOcr) {
@@ -105,6 +106,7 @@ export async function processStudentMaterial(input: {
       pedagogical_model: null,
       pedagogical_model_version: null,
       pedagogical_quality_report: null,
+      pedagogical_quality_version: null,
       pedagogical_artifacts: null,
       pedagogical_artifacts_version: null,
     } as never)
@@ -190,11 +192,11 @@ export async function processStudentMaterial(input: {
 
   const extractionMs = Date.now() - extractionStartedAt;
   const traceableChunks = buildTraceableSummaryChunks(pages, text);
-  const useLargeNativePdfFastPath =
+  const isVeryLargeNativePdf =
     typeof pageCount === 'number' &&
-    pageCount >= LARGE_NATIVE_PDF_FAST_PATH_MIN_PAGES &&
-    (traceableChunks.length >= LARGE_NATIVE_PDF_FAST_PATH_MIN_CHUNKS ||
-      text.length >= LARGE_NATIVE_PDF_FAST_PATH_MIN_TEXT_CHARS) &&
+    pageCount >= LARGE_NATIVE_PDF_MIN_PAGES &&
+    (traceableChunks.length >= LARGE_NATIVE_PDF_MIN_CHUNKS ||
+      text.length >= LARGE_NATIVE_PDF_MIN_TEXT_CHARS) &&
     !documentAnalysis.requiresOcr &&
     !visionUsed &&
     pagesWithText > 0;
@@ -241,8 +243,8 @@ export async function processStudentMaterial(input: {
     processingStatus: 'processing',
     processingStage: 'extracting',
     processingProgress: 45,
-    processingMessage: useLargeNativePdfFastPath
-      ? 'PDF de complejidad muy alta detectado. Activamos el modo rápido y preparamos resumen y glosario en paralelo.'
+    processingMessage: isVeryLargeNativePdf
+      ? 'PDF de complejidad muy alta detectado. Construimos igualmente el modelo pedagógico canónico completo.'
       : visionUsed
         ? 'Construyendo el modelo pedagógico canónico desde texto y contenido visual recuperado.'
         : 'Construyendo el modelo pedagógico canónico del material.',
@@ -271,19 +273,17 @@ export async function processStudentMaterial(input: {
     userId: material.user_id,
   };
 
-  if (useLargeNativePdfFastPath) {
-    logInfo('processStudentMaterial.fastPath', {
+  if (isVeryLargeNativePdf) {
+    logInfo('processStudentMaterial.largeDocument', {
       materialId: material.id,
       pageCount,
       pagesWithText,
       chunkCount: traceableChunks.length,
-      strategy: 'very_large_native_pdf',
+      strategy: 'canonical_large_document',
     });
   }
 
-  const pedagogicalModel = useLargeNativePdfFastPath
-    ? null
-    : await generatePedagogicalModel(generationInput);
+  const pedagogicalModel = await generatePedagogicalModel(generationInput);
 
   if (pedagogicalModel) {
     try {
@@ -445,6 +445,7 @@ export async function processStudentMaterial(input: {
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
       pedagogical_quality_report:
         pedagogicalQualityReport as unknown as Json,
+      pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     } as never)
     .eq('id', material.id);
 
@@ -483,7 +484,7 @@ export async function processStudentMaterial(input: {
       material_id: material.id,
       page_count: pageCount,
       processing_strategy: documentAnalysis.processingStrategy,
-      fast_path: useLargeNativePdfFastPath,
+      large_document: isVeryLargeNativePdf,
       visual_analysis_enabled: visualAnalysisEnabled,
       visual_candidate_count: selectedVisionPageNumbers.length,
       vision_used: visionUsed,
@@ -494,6 +495,7 @@ export async function processStudentMaterial(input: {
         ? CANONICAL_PEDAGOGICAL_MODEL_VERSION
         : null,
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
+      pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     },
   });
 
@@ -511,7 +513,7 @@ export async function processStudentMaterial(input: {
     glossaryProvider,
     glossaryItemCount: glossary.length,
     processingStrategy: documentAnalysis.processingStrategy,
-    fastPath: useLargeNativePdfFastPath,
+    largeDocument: isVeryLargeNativePdf,
     visualAnalysisEnabled,
     visualCandidateCount: selectedVisionPageNumbers.length,
     visionUsed,
@@ -519,6 +521,11 @@ export async function processStudentMaterial(input: {
     visionModel: visionExtraction.visionModel,
     pedagogicalQualityStatus: pedagogicalQualityReport.status,
     pedagogicalQualityScore: pedagogicalQualityReport.score,
+    pedagogicalQualityVersion: PEDAGOGICAL_QUALITY_REPORT_VERSION,
+    pedagogicalModelVersion: pedagogicalModel
+      ? CANONICAL_PEDAGOGICAL_MODEL_VERSION
+      : null,
+    pedagogicalArtifactsVersion: PEDAGOGICAL_ARTIFACTS_VERSION,
     pedagogicalRepresentedPageRatio:
       pedagogicalQualityReport.representedPageRatio,
     pedagogicalArtifactCount:
