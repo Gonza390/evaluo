@@ -968,7 +968,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  2,
+  3,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
