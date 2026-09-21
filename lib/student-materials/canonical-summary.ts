@@ -328,53 +328,15 @@ export function buildCanonicalStudentMaterialSummaryFallback(
 
   const keyPoints = buildCanonicalFallbackKeyPoints(source);
   const plan = resolveCanonicalGuidePlan(source);
-  const chapterGroups = partitionEvenly(
+  const chapterGroups = partitionTopicsByPageRange(
     source.topics,
-    plan.preferredChapterCount
+    plan.preferredChapterCount,
+    plan.estimatedPageCount
   );
-  const sections = chapterGroups.map((topics, chapterIndex) => {
-    const chapterPages = normalizePages(
-      topics.flatMap((topic) => topic.pageReferences)
-    );
-    const desiredSubtopicCount = clamp(
-      Math.ceil(topics.length / 2),
-      Math.min(2, topics.length),
-      Math.min(6, topics.length)
-    );
-    const subtopicGroups = partitionEvenly(topics, desiredSubtopicCount);
-    const subtopicBlocks = subtopicGroups.map((subtopics, subtopicIndex) => {
-      const firstTopic = subtopics[0];
-      if (!firstTopic) return '';
-
-      const lines = subtopics.map((topic) =>
-        subtopics.length === 1
-          ? topic.description
-          : `- **${stripLeadingNumber(topic.title)}:** ${topic.description}`
-      );
-
-      return [
-        `### ${chapterIndex + 1}.${subtopicIndex + 1} ${stripLeadingNumber(firstTopic.title)}`,
-        ...lines,
-      ].join('\n');
-    });
-    const structuredBlocks = buildFallbackStructuredBlocks(
-      source,
-      chapterPages
-    );
-
-    return {
-      title: `${chapterIndex + 1}. ${buildFallbackChapterTitle(topics)}`,
-      body: cleanMultilineBlock(
-        [
-          ...subtopicBlocks,
-          ...structuredBlocks,
-          formatPdfReference(chapterPages),
-        ]
-          .filter(Boolean)
-          .join('\n\n')
-      ),
-    };
-  });
+  const sections = chapterGroups.map((topics, chapterIndex) => ({
+    title: `${chapterIndex + 1}. ${buildFallbackChapterTitle(topics)}`,
+    body: buildStructuredChapterBody(source, topics, chapterIndex),
+  }));
 
   return {
     shortSummary,
@@ -525,12 +487,27 @@ function sanitizeCanonicalSummaryPayload(
     )
   );
 
-  if (totalBodyChars < minimumBodyChars) {
-    return null;
-  }
+  const needsCanonicalExpansion = totalBodyChars < minimumBodyChars;
+  const completeSections = needsCanonicalExpansion
+    ? sections.map((section, index) => {
+        const topics = (sectionTopicNumbers[index] ?? [])
+          .map((topicNumber) => source.topics[topicNumber - 1])
+          .filter(
+            (
+              topic
+            ): topic is CanonicalSummarySource['topics'][number] =>
+              Boolean(topic)
+          );
+
+        return {
+          title: section.title,
+          body: buildStructuredChapterBody(source, topics, index),
+        };
+      })
+    : sections;
 
   const enrichedSections = injectCanonicalTables(
-    sections,
+    completeSections,
     sectionTopicNumbers,
     source
   );
@@ -541,7 +518,9 @@ function sanitizeCanonicalSummaryPayload(
     sections: enrichedSections,
     hasContent: true,
     status: 'ready',
-    provider: `${providerModel}-canonical`,
+    provider: needsCanonicalExpansion
+      ? `${providerModel}-canonical-expanded`
+      : `${providerModel}-canonical`,
     errorMessage: null,
     sourceChunksCount: model.chunkCount,
   };
@@ -565,20 +544,84 @@ function partitionEvenly<T>(items: T[], desiredGroups: number): T[][] {
   return groups.filter((group) => group.length > 0);
 }
 
+function partitionTopicsByPageRange(
+  topics: CanonicalSummarySource['topics'],
+  desiredGroups: number,
+  estimatedPageCount: number
+) {
+  if (topics.length === 0) return [];
+
+  const groupCount = clamp(desiredGroups, 1, topics.length);
+  const pageCount = Math.max(1, estimatedPageCount);
+  const groups = Array.from(
+    { length: groupCount },
+    () => [] as CanonicalSummarySource['topics']
+  );
+
+  topics.forEach((topic, index) => {
+    const firstPage = topic.pageReferences[0];
+    const proportionalIndex =
+      typeof firstPage === 'number'
+        ? Math.floor(((firstPage - 1) / pageCount) * groupCount)
+        : Math.floor((index / topics.length) * groupCount);
+    const groupIndex = clamp(proportionalIndex, 0, groupCount - 1);
+    groups[groupIndex]?.push(topic);
+  });
+
+  return groups.filter((group) => group.length > 0);
+}
+
+function buildStructuredChapterBody(
+  source: CanonicalSummarySource,
+  topics: CanonicalSummarySource['topics'],
+  chapterIndex: number
+) {
+  const chapterPages = normalizePages(
+    topics.flatMap((topic) => topic.pageReferences)
+  );
+  const desiredSubtopicCount = clamp(
+    Math.ceil(topics.length / 2),
+    Math.min(2, topics.length),
+    Math.min(6, topics.length)
+  );
+  const subtopicGroups = partitionEvenly(topics, desiredSubtopicCount);
+  const subtopicBlocks = subtopicGroups.map((subtopics, subtopicIndex) => {
+    const firstTopic = subtopics[0];
+    if (!firstTopic) return '';
+
+    const lines = subtopics.map((topic) =>
+      subtopics.length === 1
+        ? topic.description
+        : `- **${stripLeadingNumber(topic.title)}:** ${topic.description}`
+    );
+
+    return [
+      `### ${chapterIndex + 1}.${subtopicIndex + 1} ${stripLeadingNumber(firstTopic.title)}`,
+      ...lines,
+    ].join('\n');
+  });
+  const structuredBlocks = buildFallbackStructuredBlocks(
+    source,
+    chapterPages
+  );
+
+  return cleanMultilineBlock(
+    [
+      ...subtopicBlocks,
+      ...structuredBlocks,
+      formatPdfReference(chapterPages),
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+  );
+}
+
 function buildFallbackChapterTitle(
   topics: CanonicalSummarySource['topics']
 ) {
   const first = topics[0];
   if (!first) return 'Contenido central';
-
-  const firstTitle = stripLeadingNumber(first.title);
-  if (topics.length <= 3) return firstTitle;
-
-  const last = topics[topics.length - 1];
-  const lastTitle = last ? stripLeadingNumber(last.title) : '';
-  if (!lastTitle || lastTitle === firstTitle) return firstTitle;
-
-  return truncateAtWord(`${firstTitle} y temas relacionados`, 90);
+  return truncateAtWord(stripLeadingNumber(first.title), 90);
 }
 
 function buildFallbackStructuredBlocks(
