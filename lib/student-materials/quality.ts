@@ -6,8 +6,9 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { isAdministrativeAcademicContent } from '@/lib/student-materials/academic-content';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 1;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 2;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -131,6 +132,41 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   const artifactReferenceRatio =
     artifactCount > 0 ? referencedArtifactCount / artifactCount : 0;
 
+  const documentTitle = input.model?.title ?? '';
+  const administrativeSummarySections = input.summary.sections.filter((section) =>
+    isAdministrativeAcademicContent({
+      label: section.title,
+      detail: section.body,
+      documentTitle,
+    })
+  ).length;
+  const administrativeGlossaryItems = input.glossary.filter((item) =>
+    isAdministrativeAcademicContent({
+      label: item.term,
+      detail: item.definition,
+      documentTitle,
+    })
+  ).length;
+  const administrativeArtifacts = [
+    ...input.artifacts.flashcards.map((card) => ({
+      label: card.front,
+      detail: card.back,
+    })),
+    ...input.artifacts.questions.map((question) => ({
+      label: question.topic ?? question.prompt,
+      detail: `${question.answer} ${question.explanation}`,
+    })),
+  ].filter((item) =>
+    isAdministrativeAcademicContent({
+      ...item,
+      documentTitle,
+    })
+  ).length;
+  const administrativeLeakCount =
+    administrativeSummarySections +
+    administrativeGlossaryItems +
+    administrativeArtifacts;
+
   let score = 0;
   score += representedPageRatio * 35;
   score += clamp(academicUnitCount / Math.max(12, contentPages.length * 2), 0, 1) * 20;
@@ -143,6 +179,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
         : 0;
   score += glossaryCleanRatio * 10;
   score += input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5;
+  score -= Math.min(20, administrativeLeakCount * 5);
   score = Math.round(clamp(score, 0, 100));
 
   const issues: string[] = [];
@@ -151,6 +188,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   if (malformedRatio > 0.08) issues.push('malformed_academic_units');
   if (glossaryCleanRatio < 0.95) issues.push('glossary_noise');
   if (artifactReferenceRatio < 0.9) issues.push('artifact_traceability_low');
+  if (administrativeLeakCount > 0) issues.push('administrative_content_leak');
   if (input.summary.sections.length < 2 || input.summary.sections.length > 10) {
     issues.push('summary_hierarchy_out_of_range');
   }

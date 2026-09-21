@@ -22,6 +22,7 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 import { logError } from '@/lib/observability';
+import { isAdministrativeAcademicContent } from '@/lib/student-materials/academic-content';
 
 const CANONICAL_SUMMARY_BASE_MAX_OUTPUT_TOKENS = 6_000;
 const CANONICAL_SUMMARY_HARD_MAX_OUTPUT_TOKENS = 9_000;
@@ -47,23 +48,61 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function isAdministrativeTopic(topic: CanonicalSummarySource['topics'][number]) {
-  const title = cleanLine(topic.title).toLocaleLowerCase('es');
-  return (
-    /^presentaci[oó]n (?:de la asignatura|del documento)$/u.test(title) ||
-    /^informaci[oó]n (?:de )?autor[ií]a(?: y derechos)?$/u.test(title) ||
-    /^autor[ií]a y derechos$/u.test(title) ||
-    /^datos? de autor[ií]a$/u.test(title)
-  );
+function normalizeAdministrativeKey(value: string) {
+  return cleanLine(value)
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isAdministrativeTopic(
+  topic: CanonicalSummarySource['topics'][number],
+  documentTitle: string
+) {
+  return isAdministrativeAcademicContent({
+    label: topic.title,
+    detail: topic.description,
+    documentTitle,
+  });
+}
+
+function isAdministrativeConcept(
+  concept: CanonicalSummarySource['concepts'][number],
+  documentTitle: string
+) {
+  return isAdministrativeAcademicContent({
+    label: concept.term,
+    detail: concept.detail,
+    documentTitle,
+  });
 }
 
 function buildStudyCanonicalSummarySource(
   model: CanonicalPedagogicalModel
 ): CanonicalSummarySource {
   const source = buildCanonicalSummarySource(model);
+  const administrativeConceptKeys = new Set(
+    source.concepts
+      .filter((concept) => isAdministrativeConcept(concept, source.title))
+      .map((concept) => normalizeAdministrativeKey(concept.term))
+  );
+
   return {
     ...source,
-    topics: source.topics.filter((topic) => !isAdministrativeTopic(topic)),
+    topics: source.topics.filter(
+      (topic) => !isAdministrativeTopic(topic, source.title)
+    ),
+    concepts: source.concepts.filter(
+      (concept) => !administrativeConceptKeys.has(normalizeAdministrativeKey(concept.term))
+    ),
+    relationships: source.relationships.filter(
+      (relationship) =>
+        !administrativeConceptKeys.has(normalizeAdministrativeKey(relationship.source)) &&
+        !administrativeConceptKeys.has(normalizeAdministrativeKey(relationship.target))
+    ),
+    authorsOrTheories: source.authorsOrTheories.filter(
+      (item) => !administrativeConceptKeys.has(normalizeAdministrativeKey(item.value))
+    ),
   };
 }
 
