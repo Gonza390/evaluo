@@ -91,7 +91,8 @@ export default function LoginFormGoogleFirst() {
   const [notice, setNotice] = useState('');
   const [intent, setIntent] = useState('');
   const [reason, setReason] = useState('');
-  const [nextPath, setNextPath] = useState('/dashboard');\n  const [signupSourcePath, setSignupSourcePath] = useState('');
+  const [nextPath, setNextPath] = useState('/dashboard');
+  const [signupSourcePath, setSignupSourcePath] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
