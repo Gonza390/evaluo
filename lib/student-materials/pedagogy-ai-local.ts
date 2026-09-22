@@ -1,6 +1,6 @@
 import {
   requestGeminiJson,
-  requestGithubModelsJson,
+  requestGitHubModelsJson,
   requestGroqJson,
   requestNvidiaJson,
   type ProviderResult,
@@ -398,7 +398,7 @@ async function requestPedagogicalMapJson(
     {
       provider: 'github',
       run: () =>
-        requestGithubModelsJson({
+        requestGitHubModelsJson({
           system:
             'Extraé exclusivamente conocimiento del material y respondé sólo con JSON válido.',
           prompt,
