@@ -170,6 +170,7 @@ export type StudentMaterialPedagogicalQualityReport = {
   version: number;
   status: 'pass' | 'degraded' | 'fail';
   score: number;
+  pedagogicalDepthScore: number;
   pageCount: number | null;
   sourcePagesWithContent: number;
   representedPages: number;
@@ -180,7 +181,15 @@ export type StudentMaterialPedagogicalQualityReport = {
   summarySectionCount: number;
   glossaryItemCount: number;
   flashcardCount: number;
+  flashcardKindCount: number;
   questionCount: number;
+  questionKindCount: number;
+  questionLevelCounts: {
+    recordar: number;
+    comprender: number;
+    aplicar: number;
+  };
+  applicationQuestionRatio: number;
   miniExamQuestionCount: number;
   artifactReferenceRatio: number;
   issues: string[];
