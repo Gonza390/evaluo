@@ -35,56 +35,56 @@ const CALLOUT_CONFIG: Record<StudyCalloutKind, StudyCalloutConfig> = {
   important: {
     label: 'Importante',
     icon: Sparkles,
-    containerClassName: 'border-blue-200 bg-blue-50/70',
+    containerClassName: 'border-blue-400 bg-blue-50/35',
     iconClassName: 'bg-blue-100 text-blue-700',
     labelClassName: 'text-blue-800',
   },
   'study-tip': {
     label: 'Clave de estudio',
     icon: Lightbulb,
-    containerClassName: 'border-amber-200 bg-amber-50/75',
+    containerClassName: 'border-amber-400 bg-amber-50/35',
     iconClassName: 'bg-amber-100 text-amber-700',
     labelClassName: 'text-amber-800',
   },
   example: {
     label: 'Ejemplo aplicado',
     icon: BookOpenCheck,
-    containerClassName: 'border-emerald-200 bg-emerald-50/70',
+    containerClassName: 'border-emerald-400 bg-emerald-50/35',
     iconClassName: 'bg-emerald-100 text-emerald-700',
     labelClassName: 'text-emerald-800',
   },
   definition: {
     label: 'Definición',
     icon: BookOpenCheck,
-    containerClassName: 'border-sky-200 bg-sky-50/65',
+    containerClassName: 'border-sky-400 bg-sky-50/35',
     iconClassName: 'bg-sky-100 text-sky-700',
     labelClassName: 'text-sky-800',
   },
   classification: {
     label: 'Clasificación',
     icon: ListTree,
-    containerClassName: 'border-violet-200 bg-violet-50/60',
+    containerClassName: 'border-violet-400 bg-violet-50/30',
     iconClassName: 'bg-violet-100 text-violet-700',
     labelClassName: 'text-violet-800',
   },
   process: {
     label: 'Proceso',
     icon: Workflow,
-    containerClassName: 'border-cyan-200 bg-cyan-50/60',
+    containerClassName: 'border-cyan-400 bg-cyan-50/30',
     iconClassName: 'bg-cyan-100 text-cyan-700',
     labelClassName: 'text-cyan-800',
   },
   formula: {
     label: 'Fórmula',
     icon: Sigma,
-    containerClassName: 'border-indigo-200 bg-indigo-50/60',
+    containerClassName: 'border-indigo-400 bg-indigo-50/30',
     iconClassName: 'bg-indigo-100 text-indigo-700',
     labelClassName: 'text-indigo-800',
   },
   confusion: {
     label: 'Confusión frecuente',
     icon: CircleAlert,
-    containerClassName: 'border-rose-200 bg-rose-50/60',
+    containerClassName: 'border-rose-400 bg-rose-50/30',
     iconClassName: 'bg-rose-100 text-rose-700',
     labelClassName: 'text-rose-800',
   },
@@ -237,9 +237,9 @@ function renderPageReference(pageReference: string | null, key: string) {
   if (!pageReference) return null;
 
   return (
-    <div key={`${key}-reference`} className="pt-1">
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-        <FileText className="h-3 w-3 text-[#2563EB]" />
+    <div key={`${key}-reference`} className="pt-1.5">
+      <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-400">
+        <FileText className="h-3 w-3 text-[#2563EB]/70" />
         {pageReference}
       </span>
     </div>
@@ -263,31 +263,31 @@ function StudyCallout({
   return (
     <div
       className={cn(
-        'rounded-[17px] border px-3.5 py-3.5 sm:px-4',
+        'rounded-r-[12px] border-y-0 border-r-0 border-l-[3px] px-3.5 py-3 sm:px-4',
         config.containerClassName
       )}
     >
       <div className="flex items-start gap-3">
         <span
           className={cn(
-            'mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px]',
+            'mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px]',
             config.iconClassName
           )}
         >
-          <Icon className="h-3.5 w-3.5" />
+          <Icon className="h-3 w-3" />
         </span>
 
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              'text-[11px] font-bold tracking-[0.11em] uppercase',
+              'text-[10.5px] font-extrabold tracking-[0.13em] uppercase',
               config.labelClassName
             )}
           >
             {config.label}
           </p>
 
-          <p className="mt-1.5 text-[13.5px] leading-6 text-slate-700">
+          <p className="mt-1.5 text-[13.5px] leading-6 text-slate-700 sm:text-[14px]">
             {renderInlineMarkdown(content)}
           </p>
 
@@ -336,15 +336,15 @@ export function StudyRichText({ body }: { body: string }) {
     content.push(
       <div
         key={key}
-        className="overflow-x-auto rounded-[17px] border border-slate-200 bg-white"
+        className="my-1 overflow-x-auto rounded-[12px] border border-slate-200 bg-white"
       >
-        <table className="min-w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50/90 text-slate-700">
+        <table className="w-full min-w-[520px] border-collapse text-left text-[12.5px] sm:min-w-full sm:text-[13px]">
+          <thead className="bg-[#F4F7FF] text-slate-700">
             <tr>
               {header.map((column, index) => (
                 <th
                   key={`${column}-${index}`}
-                  className="border-b border-slate-200 px-3.5 py-2.5 font-semibold text-slate-900"
+                  className="border-b border-[#DCE6FF] px-3.5 py-2.5 text-[11px] font-bold tracking-[0.02em] text-slate-800 sm:px-4"
                 >
                   {renderInlineMarkdown(column)}
                 </th>
@@ -355,12 +355,15 @@ export function StudyRichText({ body }: { body: string }) {
             {bodyRows.map((row, rowIndex) => (
               <tr
                 key={`${row.columns.join('|')}-${rowIndex}`}
-                className="odd:bg-white even:bg-slate-50/45"
+                className="odd:bg-white even:bg-slate-50/35"
               >
                 {row.columns.map((column, columnIndex) => (
                   <td
                     key={`${column}-${columnIndex}`}
-                    className="border-t border-slate-100 px-3.5 py-2.5 align-top leading-5 text-slate-600"
+                    className={cn(
+                      'border-t border-slate-100 px-3.5 py-2.5 align-top leading-5 text-slate-600 sm:px-4',
+                      columnIndex === 0 && 'font-semibold text-slate-800'
+                    )}
                   >
                     {renderInlineMarkdown(column)}
                   </td>
@@ -408,11 +411,11 @@ export function StudyRichText({ body }: { body: string }) {
       content.push(
         <div key={itemKey} className={level <= 2 ? 'pt-2' : 'pt-1'}>
           {level <= 2 ? (
-            <h4 className="text-[1rem] font-bold tracking-[-0.025em] text-slate-950 sm:text-[1.04rem]">
+            <h4 className="text-[1.03rem] font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.08rem]">
               {renderInlineMarkdown(headingText)}
             </h4>
           ) : (
-            <h5 className="text-[0.93rem] font-semibold tracking-[-0.015em] text-slate-900">
+            <h5 className="text-[0.94rem] font-semibold tracking-[-0.02em] text-slate-900">
               {renderInlineMarkdown(headingText)}
             </h5>
           )}
@@ -500,5 +503,5 @@ export function StudyRichText({ body }: { body: string }) {
     flushTable('table-final');
   }
 
-  return <div className="space-y-3.5">{content}</div>;
+  return <div className="space-y-4 text-pretty">{content}</div>;
 }
