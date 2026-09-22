@@ -91,21 +91,49 @@ export default function LoginFormGoogleFirst() {
   const [notice, setNotice] = useState('');
   const [intent, setIntent] = useState('');
   const [reason, setReason] = useState('');
-  const [nextPath, setNextPath] = useState('/dashboard');
+  const [nextPath, setNextPath] = useState('/dashboard');\n  const [signupSourcePath, setSignupSourcePath] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedMode = params.get('mode');
     const requestedNext = params.get('next') ?? params.get('redirectTo');
+    const requestedIntent = params.get('intent') ?? '';
+    const requestedReason = params.get('reason') ?? '';
+    const safeNextPath = getSafeInternalPath(requestedNext);
+
+    let internalReferrer = '';
+    try {
+      if (document.referrer) {
+        const referrerUrl = new URL(document.referrer);
+        if (referrerUrl.origin === window.location.origin) {
+          internalReferrer = `${referrerUrl.pathname}${referrerUrl.search}`;
+        }
+      }
+    } catch {
+      internalReferrer = '';
+    }
+
+    const sourcePath = internalReferrer || safeNextPath;
+    setSignupSourcePath(sourcePath);
 
     if (requestedMode === 'signup' || requestedMode === 'login') setMode(requestedMode);
-    setNextPath(getSafeInternalPath(requestedNext));
+    setNextPath(safeNextPath);
+
+    if (requestedMode === 'signup') {
+      trackMarketingEvent('signup_page_viewed', {
+        location: requestedIntent === 'premium' ? 'login_premium_intent' : 'login',
+        source_path: sourcePath,
+        next_path: safeNextPath,
+        reason: requestedReason || null,
+        intent: requestedIntent || null,
+      });
+    }
     if (params.get('reason') === 'inactive') {
       setNotice('Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
     }
 
-    setIntent(params.get('intent') ?? '');
-    setReason(params.get('reason') ?? '');
+    setIntent(requestedIntent);
+    setReason(requestedReason);
 
     const storedEmail = consumeStoredPricingEmail();
     if (storedEmail) {
@@ -146,6 +174,10 @@ export default function LoginFormGoogleFirst() {
     trackMarketingEvent(isSignUp ? 'signup_started' : 'login_started', {
       location,
       provider: 'google',
+      source_path: signupSourcePath || null,
+      next_path: nextPath,
+      reason: reason || null,
+      intent: intent || null,
     });
 
     try {
@@ -179,13 +211,28 @@ export default function LoginFormGoogleFirst() {
     trackMarketingEvent(isSignUp ? 'signup_started' : 'login_started', {
       location,
       provider: 'email',
+      source_path: signupSourcePath || null,
+      next_path: nextPath,
+      reason: reason || null,
+      intent: intent || null,
     });
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { data, error } = await supabase.auth.signUp({ email, password });
         if (error) return setMessage(error.message);
-        trackMarketingEvent('signup_completed', { location, provider: 'email' });
+        trackMarketingEvent(
+          'signup_completed',
+          {
+            location,
+            provider: 'email',
+            source_path: signupSourcePath || null,
+            next_path: nextPath,
+            reason: reason || null,
+            intent: intent || null,
+          },
+          data.user?.id ?? null
+        );
         setMessage('Registro exitoso. Revisá tu correo para confirmar tu cuenta.');
         return;
       }
@@ -209,6 +256,18 @@ export default function LoginFormGoogleFirst() {
 
   const switchMode = () => {
     const nextMode = isSignUp ? 'login' : 'signup';
+
+    if (nextMode === 'signup') {
+      trackMarketingEvent('signup_cta_clicked', {
+        location,
+        cta: 'create_account',
+        source_path: signupSourcePath || window.location.pathname,
+        next_path: nextPath,
+        reason: reason || null,
+        intent: intent || null,
+      });
+    }
+
     trackMarketingEvent('auth_mode_switch', {
       location,
       current_mode: mode,
