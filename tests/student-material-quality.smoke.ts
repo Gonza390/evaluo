@@ -22,6 +22,7 @@ import {
   buildPedagogicalMapGroupFromIndexes,
   expandCompactPedagogicalNode,
   findMissingCompactChunkNumbers,
+  selectPedagogicalRecoveryChunkNumbers,
   mergeCompactPedagogicalNodes,
   normalizeCompactPedagogicalNode,
 } from '../lib/student-materials/pedagogy-ai.ts';
@@ -112,6 +113,33 @@ assert.ok(
 assert.ok(
   !glossary.some((item) => /^(importante|ejemplo|definicion|clave de estudio)$/i.test(item.term)),
   'El glosario no deberia incluir etiquetas de formato como terminos.'
+);
+
+const smartRecoverySelection = selectPedagogicalRecoveryChunkNumbers({
+  expectedChunkNumbers: [1, 2, 3],
+  missingChunkNumbers: [2, 3],
+  chunks: [
+    {
+      text: 'La fotosíntesis transforma energía luminosa en energía química mediante reacciones organizadas.',
+      pageStart: 1,
+      pageEnd: 1,
+    },
+    {
+      text: 'Material de estudio · Unidad 1 · Página 1',
+      pageStart: 1,
+      pageEnd: 1,
+    },
+    {
+      text: 'Definición y clasificación: los pigmentos fotosintéticos se clasifican según el espectro que absorben. El proceso incluye captación de luz, transferencia de electrones y síntesis de ATP, con diferencias funcionales entre pigmentos.',
+      pageStart: 1,
+      pageEnd: 1,
+    },
+  ],
+});
+assert.deepEqual(
+  smartRecoverySelection,
+  [3],
+  'La recuperación inteligente debe omitir chrome/continuaciones de una página ya cubierta y recuperar el bloque académico sustantivo.'
 );
 
 const cleanedPages = cleanRepeatedPageChrome([
