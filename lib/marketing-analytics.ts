@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-export function trackMarketingEvent(event: string, payload: MarketingPayload = {}) {
+export function trackMarketingEvent(\n  event: string,\n  payload: MarketingPayload = {},\n  userId?: string | null\n) {
   if (typeof window === 'undefined') return;
 
   const attribution = getAttributionSnapshot();
