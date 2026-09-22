@@ -112,6 +112,48 @@ export default function AnalyticsTracker() {
   }, [loading, pathname, queryString, user?.id]);
 
   useEffect(() => {
+    const handleSignupClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest('a[href]');
+      if (!(anchor instanceof HTMLAnchorElement)) return;
+
+      try {
+        const destination = new URL(anchor.href, window.location.origin);
+        if (destination.origin !== window.location.origin) return;
+        if (destination.pathname !== '/login') return;
+        if (destination.searchParams.get('mode') !== 'signup') return;
+
+        const sessionKey = getAnalyticsSessionKey();
+        const deviceType = getAnalyticsDeviceType();
+        const attribution = getAttributionSnapshot();
+        const sourcePath = `${window.location.pathname}${window.location.search}`;
+
+        void track('signup_cta_clicked', {
+          session_key: sessionKey,
+          user_id: user?.id ?? null,
+          path: pathname,
+          device_type: deviceType,
+          metadata: {
+            source_path: sourcePath,
+            destination: `${destination.pathname}${destination.search}`,
+            cta_text: anchor.textContent?.trim().slice(0, 80) || null,
+            attribution,
+            anonymous_id: getAnalyticsAnonymousId(),
+            page_type: getAnalyticsPageType(pathname),
+          },
+        });
+      } catch {
+        // Un enlace malformado no debe afectar la navegación.
+      }
+    };
+
+    document.addEventListener('click', handleSignupClick, true);
+    return () => document.removeEventListener('click', handleSignupClick, true);
+  }, [pathname, user?.id]);
+
+  useEffect(() => {
     const materiaId = getMateriaIdFromPath(pathname);
     if (!materiaId) return;
 
