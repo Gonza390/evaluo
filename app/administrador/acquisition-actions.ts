@@ -25,6 +25,20 @@ export interface AcquisitionLandingStats {
   pct: number;
 }
 
+export interface SeoFunnelDailyPoint {
+  date: string;
+  sessions: number;
+  anonymous: number;
+  authenticated: number;
+  signupStarted: number;
+  signupCompleted: number;
+  usefulAction: number;
+  simulatorStarted: number;
+  meaningfulStudy: number;
+  pdfUploaded: number;
+  returned: number;
+}
+
 export interface AcquisitionBehaviorStats {
   key:
     | 'authenticated'
@@ -61,6 +75,7 @@ export interface AcquisitionSourceDetail {
   timeline: AcquisitionTimelinePoint[];
   landings: AcquisitionLandingStats[];
   behavior: AcquisitionBehaviorStats[];
+  seoHistory: SeoFunnelDailyPoint[];
 }
 
 export interface AcquisitionOverviewStats {
@@ -478,6 +493,29 @@ async function buildSourceDetail({
 
   const pctOfEntries = (count: number) => (sourceEntries > 0 ? (count / sourceEntries) * 100 : 0);
 
+  let seoHistory: SeoFunnelDailyPoint[] = [];
+  if (source === 'google') {
+    const admin = createAdminClient();
+    const { data: historyData, error: historyError } = await admin.rpc('admin_seo_funnel_history', {
+      p_days: Math.max(30, rangeDays),
+    });
+    if (historyError) throw historyError;
+
+    seoHistory = (historyData ?? []).map((row) => ({
+      date: row.snapshot_date,
+      sessions: Number(row.sessions ?? 0),
+      anonymous: Number(row.anonymous_sessions ?? 0),
+      authenticated: Number(row.authenticated_sessions ?? 0),
+      signupStarted: Number(row.signup_started_sessions ?? 0),
+      signupCompleted: Number(row.signup_completed_sessions ?? 0),
+      usefulAction: Number(row.useful_action_sessions ?? 0),
+      simulatorStarted: Number(row.simulator_started_sessions ?? 0),
+      meaningfulStudy: Number(row.meaningful_study_sessions ?? 0),
+      pdfUploaded: Number(row.pdf_uploaded_sessions ?? 0),
+      returned: Number(row.returned_sessions ?? 0),
+    }));
+  }
+
   return {
     source,
     entries: sourceEntries,
@@ -487,6 +525,7 @@ async function buildSourceDetail({
     trend,
     timeline: buildTimeline(sourceRows, rangeDays, now),
     landings,
+    seoHistory,
     behavior: [
       {
         key: 'authenticated',
