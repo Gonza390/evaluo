@@ -162,7 +162,7 @@ function MaterialMetadata({
   if (!carreraName && !universidadName && !materiaName) return null;
 
   return (
-    <div className="grid min-w-0 gap-x-5 gap-y-2 sm:grid-cols-2 lg:min-w-[480px]">
+    <div className="grid min-w-0 gap-x-4 gap-y-2 sm:grid-cols-2 lg:min-w-[620px] lg:grid-cols-3">
       {carreraName ? (
         <div className="min-w-0">
           <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
@@ -173,7 +173,7 @@ function MaterialMetadata({
       ) : null}
 
       {universidadName ? (
-        <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-5">
+        <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-4">
           <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">
             Universidad
           </p>
@@ -184,7 +184,7 @@ function MaterialMetadata({
       ) : null}
 
       {materiaName ? (
-        <div className="min-w-0 border-t border-slate-100 pt-2 sm:col-span-2">
+        <div className="min-w-0 border-t border-slate-100 pt-2 sm:col-span-2 lg:col-span-1 lg:border-t-0 lg:border-l lg:border-slate-200 lg:pt-0 lg:pl-4">
           <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
           <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
             {materiaName}
@@ -797,7 +797,7 @@ export function MaterialStudyWorkspace({
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <section className="border-b border-[#E8EDF5] bg-white">
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-5">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8 lg:py-3">
           <Link
             href={backHref}
             className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
@@ -806,9 +806,9 @@ export function MaterialStudyWorkspace({
             Volver
           </Link>
 
-          <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(480px,1.05fr)] lg:items-end lg:gap-8">
+          <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(620px,1.1fr)] lg:items-center lg:gap-7">
             <div className="min-w-0">
-              <h1 className="max-w-[660px] text-[1.65rem] font-bold leading-[1.08] tracking-[-0.05em] text-slate-950 sm:text-[1.9rem] lg:text-[2.05rem]">
+              <h1 className="max-w-[640px] text-[1.55rem] font-bold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-[1.75rem] lg:text-[1.9rem]">
                 {title}
               </h1>
             </div>
@@ -822,7 +822,7 @@ export function MaterialStudyWorkspace({
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 lg:px-8">
         <div className="hidden xl:block">
           <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
