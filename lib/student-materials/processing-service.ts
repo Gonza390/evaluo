@@ -37,7 +37,10 @@ import {
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
-import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
+import type {
+  CanonicalPedagogicalModel,
+  StudyDocumentAnalysis,
+} from '@/lib/student-materials/types';
 import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
 import {
@@ -98,13 +101,31 @@ export async function processStudentMaterial(input: {
 
   if (!material) throw new Error('No encontramos el material que queres procesar.');
 
-  // Todo reprocesamiento invalida la representación y los artefactos derivados.
-  // Así nunca mostramos flashcards o exámenes construidos sobre una versión anterior.
+  // Conservamos la última representación canónica válida durante un reprocesamiento.
+  // Si un proveedor externo falla transitoriamente, podemos reutilizar ese modelo
+  // para el mismo archivo sin volver a mostrar artefactos derivados obsoletos.
+  const { data: previousCanonicalRow, error: previousCanonicalError } = await admin
+    .from('student_materials')
+    .select('pedagogical_model, pedagogical_model_version')
+    .eq('id', material.id)
+    .maybeSingle();
+
+  if (previousCanonicalError) {
+    throw previousCanonicalError;
+  }
+
+  const previousPedagogicalModel =
+    previousCanonicalRow?.pedagogical_model &&
+    previousCanonicalRow.pedagogical_model_version ===
+      CANONICAL_PEDAGOGICAL_MODEL_VERSION
+      ? (previousCanonicalRow.pedagogical_model as unknown as CanonicalPedagogicalModel)
+      : null;
+
+  // Todo reprocesamiento invalida sólo las proyecciones derivadas. El modelo
+  // anterior se reemplaza atómicamente cuando el nuevo modelo canónico termina.
   const { error: resetDerivedArtifactsError } = await admin
     .from('student_materials')
     .update({
-      pedagogical_model: null,
-      pedagogical_model_version: null,
       pedagogical_quality_report: null,
       pedagogical_quality_version: null,
       pedagogical_artifacts: null,
@@ -283,14 +304,36 @@ export async function processStudentMaterial(input: {
     });
   }
 
-  const pedagogicalModel = await generatePedagogicalModel(generationInput);
+  let generatedPedagogicalModel: CanonicalPedagogicalModel | null = null;
+  let pedagogicalModelGenerationError: unknown = null;
 
-  if (pedagogicalModel) {
+  try {
+    generatedPedagogicalModel = await generatePedagogicalModel(generationInput);
+  } catch (modelGenerationError) {
+    pedagogicalModelGenerationError = modelGenerationError;
+    logError('processStudentMaterial.pedagogicalModelGeneration', modelGenerationError, {
+      materialId: material.id,
+    });
+  }
+
+  const pedagogicalModel =
+    generatedPedagogicalModel ?? previousPedagogicalModel;
+
+  if (!pedagogicalModel) {
+    if (pedagogicalModelGenerationError) {
+      throw pedagogicalModelGenerationError;
+    }
+    throw new Error(
+      'No pudimos construir una representación académica completa del PDF. Reintentá el procesamiento.'
+    );
+  }
+
+  if (generatedPedagogicalModel) {
     try {
       const { error: pedagogicalModelPersistError } = await admin
         .from('student_materials')
         .update({
-          pedagogical_model: pedagogicalModel as unknown as Json,
+          pedagogical_model: generatedPedagogicalModel as unknown as Json,
           pedagogical_model_version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
         } as never)
         .eq('id', material.id);
@@ -304,6 +347,11 @@ export async function processStudentMaterial(input: {
       });
       throw modelErr;
     }
+  } else {
+    logInfo('processStudentMaterial.pedagogicalModelReused', {
+      materialId: material.id,
+      version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+    });
   }
 
   await updateStudentMaterialProcessing(admin, material.id, {
@@ -491,9 +539,8 @@ export async function processStudentMaterial(input: {
       vision_page_count: visionPageNumbers.length,
       pedagogical_quality_status: pedagogicalQualityReport.status,
       pedagogical_quality_score: pedagogicalQualityReport.score,
-      pedagogical_model_version: pedagogicalModel
-        ? CANONICAL_PEDAGOGICAL_MODEL_VERSION
-        : null,
+      pedagogical_model_version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+      pedagogical_model_reused: !generatedPedagogicalModel,
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
       pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     },
@@ -522,9 +569,8 @@ export async function processStudentMaterial(input: {
     pedagogicalQualityStatus: pedagogicalQualityReport.status,
     pedagogicalQualityScore: pedagogicalQualityReport.score,
     pedagogicalQualityVersion: PEDAGOGICAL_QUALITY_REPORT_VERSION,
-    pedagogicalModelVersion: pedagogicalModel
-      ? CANONICAL_PEDAGOGICAL_MODEL_VERSION
-      : null,
+    pedagogicalModelVersion: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+    pedagogicalModelReused: !generatedPedagogicalModel,
     pedagogicalArtifactsVersion: PEDAGOGICAL_ARTIFACTS_VERSION,
     pedagogicalRepresentedPageRatio:
       pedagogicalQualityReport.representedPageRatio,
