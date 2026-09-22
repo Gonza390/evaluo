@@ -16,6 +16,7 @@ import {
 import {
   buildPedagogicalArtifacts,
   PEDAGOGICAL_ARTIFACTS_VERSION,
+  resolveFlashcardLimit,
 } from '../lib/student-materials/pedagogy.ts';
 import { buildStudentMaterialPedagogicalQualityReport } from '../lib/student-materials/quality.ts';
 import {
@@ -963,6 +964,33 @@ assert.doesNotMatch(
   'El fallback de guía tampoco debe mezclar consignas de práctica.'
 );
 
+assert.equal(
+  resolveFlashcardLimit({
+    canonicalModel: denseGlossaryFixture,
+    glossary: denseCanonicalGlossary,
+  }),
+  30,
+  'Un PDF académicamente denso debe escalar el objetivo de flashcards hasta 30 en lugar de quedar fijo en 12.'
+);
+
+const denseFlashcardPedagogy = buildPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: denseCanonicalGlossary,
+  canonicalModel: denseGlossaryFixture,
+  chunks: traceableChunks.map((chunk) => ({
+    text: chunk.text,
+    pageStart: chunk.pageStart,
+    pageEnd: chunk.pageEnd,
+    sectionTitle: chunk.sectionTitle,
+    excerpt: '',
+  })),
+});
+assert.equal(
+  denseFlashcardPedagogy.flashcards.length,
+  30,
+  'Un material denso con suficiente evidencia debe producir 30 flashcards distintas y trazables.'
+);
+
 const pedagogy = buildPedagogicalArtifacts({
   summary: {
     ...summary,
@@ -1006,7 +1034,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  3,
+  4,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
