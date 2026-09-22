@@ -5,6 +5,7 @@ import type {
 } from '@/lib/student-materials/types';
 import {
   buildPedagogicalArtifacts as buildLegacyPedagogicalArtifacts,
+  resolveFlashcardLimit,
   type PedagogicalArtifacts,
   type PedagogicalChunk,
   type PedagogicalReference,
@@ -33,7 +34,6 @@ type BuildPedagogicalArtifactsInput = {
   canonicalModel?: CanonicalPedagogicalModel | null;
 };
 
-const FLASHCARD_LIMIT = 12;
 
 export function buildPedagogicalArtifacts(
   input: BuildPedagogicalArtifactsInput
@@ -46,7 +46,10 @@ export function buildPedagogicalArtifacts(
   const canonicalFlashcards = buildCanonicalFlashcards(
     model,
     input.chunks ?? [],
-    FLASHCARD_LIMIT
+    resolveFlashcardLimit({
+      canonicalModel: model,
+      glossary: input.glossary,
+    })
   );
 
   if (canonicalFlashcards.length < 6) return base;
