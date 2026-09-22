@@ -92,7 +92,7 @@ export async function GET(request: Request) {
               path: nextPath,
               device_type: deviceType,
               metadata: isNewUser
-                ? { provider, location: 'auth_callback' }
+                ? { provider, location: 'auth_callback', destination: nextPath }
                 : { source_path: nextPath },
             },
           ]);
