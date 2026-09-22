@@ -58,6 +58,36 @@ type AdminPerformanceFunctions = {
       excluded_admin_sessions: number;
     }>;
   };
+  refresh_seo_funnel_daily: {
+    Args: {
+      p_days_back?: number;
+    };
+    Returns: Array<{
+      refreshed_days: number;
+      first_day: string;
+      last_day: string;
+    }>;
+  };
+  admin_seo_funnel_history: {
+    Args: {
+      p_days?: number;
+    };
+    Returns: Array<{
+      snapshot_date: string;
+      source: string;
+      sessions: number;
+      anonymous_sessions: number;
+      authenticated_sessions: number;
+      signup_started_sessions: number;
+      signup_completed_sessions: number;
+      useful_action_sessions: number;
+      simulator_started_sessions: number;
+      meaningful_study_sessions: number;
+      pdf_uploaded_sessions: number;
+      returned_sessions: number;
+      generated_at: string;
+    }>;
+  };
 };
 
 export type ServerDatabase = Omit<Database, 'public'> & {
