@@ -310,6 +310,75 @@ function BehaviorPanel({ detail }: { detail: AcquisitionSourceDetail }) {
   );
 }
 
+function SeoHistoryPanel({ detail }: { detail: AcquisitionSourceDetail }) {
+  if (detail.source !== 'google') return null;
+
+  const rows = detail.seoHistory.slice(-14).reverse();
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+      <div>
+        <p className="text-sm font-bold text-slate-950">Histórico diario SEO → producto</p>
+        <p className="mt-1 text-xs text-slate-500">
+          Cohortes por día de entrada desde Google. Los días recientes se recalculan para incorporar conversiones y retornos posteriores.
+        </p>
+      </div>
+
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full min-w-[760px] text-left text-xs">
+          <thead>
+            <tr className="border-b border-slate-200 text-[10px] font-bold tracking-[0.08em] text-slate-400 uppercase">
+              <th className="pb-2 pr-3">Fecha</th>
+              <th className="pb-2 pr-3 text-right">Sesiones</th>
+              <th className="pb-2 pr-3 text-right">Auth</th>
+              <th className="pb-2 pr-3 text-right">Acción útil</th>
+              <th className="pb-2 pr-3 text-right">Estudio</th>
+              <th className="pb-2 pr-3 text-right">PDF</th>
+              <th className="pb-2 text-right">Volvió</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const authPct = row.sessions > 0 ? (row.authenticated / row.sessions) * 100 : 0;
+              const usefulPct = row.sessions > 0 ? (row.usefulAction / row.sessions) * 100 : 0;
+              return (
+                <tr key={row.date} className="border-b border-slate-100 last:border-0">
+                  <td className="py-3 pr-3 font-semibold text-slate-700">
+                    {new Date(`${row.date}T12:00:00-03:00`).toLocaleDateString('es-AR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                    })}
+                  </td>
+                  <td className="py-3 pr-3 text-right font-bold text-slate-900">{row.sessions}</td>
+                  <td className="py-3 pr-3 text-right text-slate-600">
+                    {row.authenticated} · {formatPct(authPct)}
+                  </td>
+                  <td className="py-3 pr-3 text-right text-slate-600">
+                    {row.usefulAction} · {formatPct(usefulPct)}
+                  </td>
+                  <td className="py-3 pr-3 text-right text-slate-600">{row.meaningfulStudy}</td>
+                  <td className="py-3 pr-3 text-right text-slate-600">{row.pdfUploaded}</td>
+                  <td className="py-3 text-right text-slate-600">{row.returned}</td>
+                </tr>
+              );
+            })}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="py-8 text-center text-slate-500">
+                  El histórico comienza el 20/09/2026. Todavía no hay días cerrados para mostrar.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-3 text-[10px] leading-4 text-slate-400">
+        Este histórico usa sesiones orgánicas detectadas por Evaluo. Los clics e impresiones oficiales siguen midiéndose en Search Console.
+      </p>
+    </div>
+  );
+}
+
 function LandingPanel({ detail }: { detail: AcquisitionSourceDetail }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
@@ -424,6 +493,10 @@ function SourceDetail({ detail, activePeriod }: { detail: AcquisitionSourceDetai
 
       <div className="mt-3">
         <BehaviorPanel detail={detail} />
+      </div>
+
+      <div className="mt-3">
+        <SeoHistoryPanel detail={detail} />
       </div>
     </section>
   );
