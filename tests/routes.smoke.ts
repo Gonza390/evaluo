@@ -203,7 +203,7 @@ for (const route of [
   '/api/internal/student-material-jobs',
   '/api/pdf-thumbnail',
 ]) {
-  assert.ok(nextConfigSource.includes(\`'\${route}'\`), \`Missing PDF trace for \${route}\`);
+  assert.ok(nextConfigSource.includes(`'${route}'`), `Missing PDF trace for ${route}`);
 }
 assert.match(nextConfigSource, /pdfjs-dist\/legacy\/build\/pdf\.worker\.mjs/);
 assert.match(nextConfigSource, /pdfjs-dist\/node_modules\/@napi-rs\/\*\*\/\*/);
