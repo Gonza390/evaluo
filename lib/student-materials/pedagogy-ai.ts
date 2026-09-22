@@ -795,6 +795,122 @@ export function findMissingCompactChunkNumbers(
   ].sort((a, b) => a - b);
 }
 
+export function selectPedagogicalRecoveryChunkNumbers(input: {
+  missingChunkNumbers: number[];
+  expectedChunkNumbers: number[];
+  chunks: CompleteDocumentChunk[];
+}) {
+  const missingSet = new Set(input.missingChunkNumbers);
+  const representedPages = new Set<number>();
+
+  for (const chunkNumber of input.expectedChunkNumbers) {
+    if (missingSet.has(chunkNumber)) continue;
+    const chunk = input.chunks[chunkNumber - 1];
+    if (chunk?.pageStart) representedPages.add(chunk.pageStart);
+  }
+
+  const candidates = input.missingChunkNumbers
+    .map((chunkNumber) => {
+      const chunk = input.chunks[chunkNumber - 1];
+      if (!chunk) return null;
+
+      const page = chunk.pageStart;
+      const pageAlreadyRepresented =
+        page !== null && representedPages.has(page);
+      const score = scorePedagogicalRecoveryChunk(chunk.text);
+
+      return {
+        chunkNumber,
+        page,
+        pageAlreadyRepresented,
+        score,
+        length: chunk.text.trim().length,
+      };
+    })
+    .filter(
+      (
+        item
+      ): item is {
+        chunkNumber: number;
+        page: number | null;
+        pageAlreadyRepresented: boolean;
+        score: number;
+        length: number;
+      } => Boolean(item)
+    );
+
+  const selected = new Set<number>();
+  const representedPageCandidates = new Map<
+    number,
+    Array<(typeof candidates)[number]>
+  >();
+
+  for (const candidate of candidates) {
+    if (!candidate.pageAlreadyRepresented) {
+      if (candidate.length >= 80 || candidate.score >= 1) {
+        selected.add(candidate.chunkNumber);
+      }
+      continue;
+    }
+
+    if (candidate.page === null || candidate.score < 2) continue;
+
+    const current = representedPageCandidates.get(candidate.page) ?? [];
+    current.push(candidate);
+    representedPageCandidates.set(candidate.page, current);
+  }
+
+  // Si una página ya está representada, recuperamos como máximo el bloque
+  // faltante más sustantivo. Evita volver a pagar por continuaciones,
+  // encabezados o solapamientos sin perder un segundo concepto fuerte.
+  for (const pageCandidates of representedPageCandidates.values()) {
+    pageCandidates.sort(
+      (left, right) =>
+        right.score - left.score ||
+        right.length - left.length ||
+        left.chunkNumber - right.chunkNumber
+    );
+    const strongest = pageCandidates[0];
+    if (strongest) selected.add(strongest.chunkNumber);
+  }
+
+  return [...selected].sort((a, b) => a - b);
+}
+
+function scorePedagogicalRecoveryChunk(value: string) {
+  const text = value.replace(/\s+/g, ' ').trim();
+  if (text.length < 120) return 0;
+
+  let score = 0;
+  if (text.length >= 500) score += 1;
+  if (text.length >= 900) score += 1;
+
+  const rawLines = value
+    .split(/\n+/g)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const structuredLines = rawLines.filter((line) =>
+    /^(?:[-*•]|\d+[.)]|[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{5,}:?)/u.test(line)
+  ).length;
+  if (structuredLines >= 2) score += 1;
+
+  const academicSignals = text.match(
+    /\b(?:defin(?:e|ici[oó]n|ido|ida)|clasific(?:a|aci[oó]n)|tipos?\s+de|proceso|etapas?|pasos?|causas?|consecuencias?|relaci[oó]n|diferencias?|comparaci[oó]n|f[oó]rmula|ecuaci[oó]n|caso\s+cl[ií]nico|diagn[oó]stico|tratamiento|requisitos?|elementos?|principios?|art[ií]culo|ley|teor[ií]a|autor|hip[oó]tesis|ejemplo)\b/giu
+  );
+  if ((academicSignals?.length ?? 0) >= 1) score += 1;
+  if ((academicSignals?.length ?? 0) >= 2) score += 1;
+
+  if (
+    /(?:[=<>±→↔]|\b\d+(?:[.,]\d+)?\s*(?:%|mg|g|ml|mmhg|mmol|mol|kg|cm|mEq|UI)\b)/iu.test(
+      text
+    )
+  ) {
+    score += 1;
+  }
+
+  return score;
+}
+
 async function reducePedagogicalTree(
   partials: CompactPedagogicalNode[],
   input: GenerateSummaryInput

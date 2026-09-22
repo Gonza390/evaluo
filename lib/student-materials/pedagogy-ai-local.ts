@@ -14,6 +14,7 @@ import {
   buildPedagogicalMapGroupFromIndexes,
   buildPedagogicalMapGroups,
   findMissingCompactChunkNumbers,
+  selectPedagogicalRecoveryChunkNumbers,
   mergeCompactPedagogicalNodes,
   normalizeCompactPedagogicalNode,
   resolvePedagogicalSourceReferences,
@@ -30,7 +31,7 @@ import { logError, logInfo } from '@/lib/observability';
 
 const MAP_CONCURRENCY = 3;
 const MAP_MAX_OUTPUT_TOKENS = 1_900;
-const MAP_RECOVERY_MAX_DEPTH = 4;
+const MAP_RECOVERY_MAX_DEPTH = 3;
 const TITLE_MAX_CHARS = 140;
 const OVERVIEW_MAX_CHARS = 600;
 const DESCRIPTION_MAX_CHARS = 190;
@@ -185,9 +186,9 @@ Objetivo:
   claros de tema. Cada unidad académica real debe quedar representada por un topic
   suficientemente específico; evitá títulos genéricos como "Tema 1", separadores,
   nombres de columnas o fragmentos sin significado por sí solos.
-- Para CADA CHUNK, extraé todas las definiciones explícitas, contrastes, reglas,
-  clasificaciones, procesos y fórmulas académicamente distintas; no alcanza con
-  citar un chunk en una sola entidad para considerarlo cubierto.
+- Extraé todas las unidades académicas distintas del bloque. No inventes una entidad
+  sólo para citar un CHUNK: continuaciones, encabezados repetidos y solapamientos
+  pueden quedar representados por la misma unidad académica cuando corresponda.
 - Si aparece una tabla o cuadro, reconstruí su significado antes de extraer entidades:
   no copies pipes, columnas concatenadas ni filas parciales dentro del nombre de un
   concepto. Usá cl para clasificaciones/comparaciones, p para secuencias y c para
@@ -318,10 +319,34 @@ async function mapGroupWithRecovery(
       return attempt;
     }
 
+    const recoveryChunkNumbers = selectPedagogicalRecoveryChunkNumbers({
+      missingChunkNumbers: missing,
+      expectedChunkNumbers: group.chunkIndexes.map((index) => index + 1),
+      chunks,
+    });
+
+    if (recoveryChunkNumbers.length === 0) {
+      logInfo('pedagogy.localReduce.smartRecoverySkipped', {
+        materialId: input.materialId,
+        depth,
+        missingChunkCount: missing.length,
+        reason: 'page_already_represented_or_low_signal',
+      });
+      return attempt;
+    }
+
+    logInfo('pedagogy.localReduce.smartRecovery', {
+      materialId: input.materialId,
+      depth,
+      missingChunkCount: missing.length,
+      recoveryChunkCount: recoveryChunkNumbers.length,
+      skippedChunkCount: missing.length - recoveryChunkNumbers.length,
+    });
+
     const recovered = await mapGroupWithRecovery(
       buildPedagogicalMapGroupFromIndexes(
         chunks,
-        missing.map((chunkNumber) => chunkNumber - 1)
+        recoveryChunkNumbers.map((chunkNumber) => chunkNumber - 1)
       ),
       chunks,
       totalChunks,
