@@ -689,6 +689,12 @@ const canonicalGlossaryFixture: CanonicalPedagogicalModel = {
       detail: 'Aprendizaje a partir de ejemplos con una etiqueta conocida.',
       kind: 'definicion',
     },
+    {
+      term: 'Material canónico de prueba',
+      detail: 'Asignatura o materia correspondiente al material de estudio.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
   ],
   sourceBindings: [
     ...(canonicalSummaryFixture.sourceBindings ?? []),
@@ -733,6 +739,10 @@ assert.match(
 assert.ok(
   canonicalGlossary.some((item) => item.term === 'Tipos de aprendizaje'),
   'Las clasificaciones canónicas útiles deben poder convertirse en entradas del glosario.'
+);
+assert.ok(
+  !canonicalGlossary.some((item) => item.term === 'Material canónico de prueba'),
+  'El glosario canónico debe excluir títulos de materia o metadatos administrativos.'
 );
 assert.doesNotMatch(
   JSON.stringify(canonicalGlossary),
@@ -968,7 +978,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  2,
+  3,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
@@ -980,6 +990,12 @@ assert.ok(
     (card) => !card.back.includes('|') && card.reference.excerpt.length > 0
   ),
   'Las flashcards canónicas deben ser limpias y trazables a la fuente.'
+);
+assert.ok(
+  canonicalPedagogy.flashcards.every(
+    (card) => !/material canónico de prueba/i.test(card.front)
+  ),
+  'Las flashcards no deben convertir el título administrativo del material en contenido de estudio.'
 );
 const canonicalQuality = buildStudentMaterialPedagogicalQualityReport({
   pageCount: 7,
@@ -1014,6 +1030,18 @@ assert.equal(
   canonicalQuality.artifactReferenceRatio,
   1,
   'Flashcards y preguntas deben conservar referencia a la fuente.'
+);
+assert.ok(
+  canonicalQuality.pedagogicalDepthScore >= 55,
+  'El quality report debe medir una profundidad pedagógica mínima además de cobertura.'
+);
+assert.ok(
+  canonicalQuality.questionKindCount >= 2,
+  'La medición pedagógica debe premiar variedad de tipos de preguntas.'
+);
+assert.ok(
+  canonicalQuality.flashcardKindCount >= 2,
+  'La medición pedagógica debe verificar variedad estructural de flashcards.'
 );
 
 console.log('Student material quality smoke tests passed.');
