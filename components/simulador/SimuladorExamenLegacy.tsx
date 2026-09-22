@@ -1849,7 +1849,17 @@ export default function SimuladorExamen({
         loginHref={loginHref}
         signupHref={signupHref}
         onLoginClick={() => void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'login')}
-        onSignupClick={() => void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'signup')}
+        onSignupClick={() => {
+          void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'signup');
+          trackMarketingEvent('signup_cta_clicked', {
+            location: 'simulator_gate',
+            source_path: pathname,
+            next_path: signupHref,
+            materia_id: materiaId,
+            parcial,
+            mode,
+          });
+        }}
         onNeedsFeedback={(reason) => emitNeedsFeedback(reason, 'gate')}
       />
     );
