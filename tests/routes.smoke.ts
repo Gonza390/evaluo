@@ -196,6 +196,15 @@ assert.match(
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);
+assert.doesNotMatch(nextConfigSource, /['"]\/\*['"]\s*:/);
+for (const route of [
+  '/dashboard',
+  '/materiales/*',
+  '/api/internal/student-material-jobs',
+  '/api/pdf-thumbnail',
+]) {
+  assert.ok(nextConfigSource.includes(\`'\${route}'\`), \`Missing PDF trace for \${route}\`);
+}
 assert.match(nextConfigSource, /pdfjs-dist\/legacy\/build\/pdf\.worker\.mjs/);
 assert.match(nextConfigSource, /pdfjs-dist\/node_modules\/@napi-rs\/\*\*\/\*/);
 assert.match(pdfRenderSource, /documentHandle[\s\S]*canvasFactory/);
