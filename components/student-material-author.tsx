@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { BadgeCheck, Check, Copy, Share2, UserRound } from 'lucide-react';
+import { Check, Copy, Share2 } from 'lucide-react';
 import { MaterialFeedbackPrompt } from '@/components/material-feedback-prompt';
 
 type StudentMaterialAuthorProps = {
@@ -11,7 +11,6 @@ type StudentMaterialAuthorProps = {
 
 export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps) {
   const [name, setName] = useState<string | null>(null);
-  const [featured, setFeatured] = useState(false);
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [hasOwnerShareControl, setHasOwnerShareControl] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -22,18 +21,16 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     void fetch(`/api/student-materials/${materialId}/author`)
       .then(async (response) => {
         if (!response.ok) return null;
-        return (await response.json()) as { name?: string | null; featured?: boolean };
+        return (await response.json()) as { name?: string | null };
       })
       .then((payload) => {
         if (!active) return;
         const nextName = payload?.name?.trim();
         setName(nextName || null);
-        setFeatured(Boolean(payload?.featured));
       })
       .catch(() => {
         if (active) {
           setName(null);
-          setFeatured(false);
         }
       });
 
@@ -96,27 +93,6 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     window.setTimeout(() => setCopied(false), 1800);
   };
 
-  const authorBadge = name && target
-    ? createPortal(
-        <div
-          role="presentation"
-          className="ml-auto inline-flex h-8 flex-none shrink-0 items-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-2.5 text-[11px] text-slate-500 shadow-none sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-xs"
-        >
-          <UserRound className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
-          <span className="whitespace-nowrap">
-            Subido por <span className="font-semibold text-slate-700">{name}</span>
-          </span>
-          {featured ? (
-            <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 sm:text-[11px]">
-              <BadgeCheck className="h-3 w-3" aria-hidden="true" />
-              Colaborador destacado
-            </span>
-          ) : null}
-        </div>,
-        target
-      )
-    : null;
-
   const publicShareButton = name && target && !hasOwnerShareControl
     ? createPortal(
         <button
@@ -140,7 +116,6 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
   return (
     <>
       <MaterialFeedbackPrompt materialId={materialId} />
-      {authorBadge}
       {publicShareButton}
     </>
   );
