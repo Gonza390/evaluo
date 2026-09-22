@@ -5,7 +5,7 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 2;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 3;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -133,6 +133,7 @@ export type StudyFlashcard = {
   front: string;
   back: string;
   level: 'recordar' | 'comprender';
+  kind?: 'concept' | 'classification' | 'process' | 'formula' | 'relationship';
   reference: PedagogicalReference;
 };
 export type StudyQuestion = {
@@ -423,6 +424,22 @@ function isCleanAcademicLabel(value: string) {
   return true;
 }
 
+function isAdministrativeCanonicalConcept(
+  model: CanonicalPedagogicalModel,
+  concept: CanonicalPedagogicalModel['concepts'][number]
+) {
+  const term = normalizeForDedupe(concept.term);
+  const modelTitle = normalizeForDedupe(model.title);
+  const detail = normalizeForDedupe(concept.detail);
+
+  if (term && modelTitle && (term === modelTitle || modelTitle.includes(term))) {
+    return true;
+  }
+
+  return /^(?:asignatura|materia|titulo|autor|documento)\b/u.test(detail) ||
+    /(?:asignatura|materia) correspondiente al material de estudio/u.test(detail);
+}
+
 function buildCanonicalFlashcards(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[],
@@ -445,6 +462,7 @@ function buildCanonicalFlashcards(
   const concepts = selectDistributedByPages(
     model.concepts.filter(
       (concept) =>
+        !isAdministrativeCanonicalConcept(model, concept) &&
         isCleanAcademicLabel(concept.term) &&
         cleanLine(concept.detail).length >= 20
     ),
@@ -462,6 +480,7 @@ function buildCanonicalFlashcards(
           : `¿Cómo explicarías “${concept.term}” con tus palabras?`,
       back: truncateAtWord(concept.detail, 420),
       level,
+      kind: 'concept',
       reference: referenceFromPages(
         concept.pageReferences,
         concept.term,
@@ -485,6 +504,7 @@ function buildCanonicalFlashcards(
       front: `¿Cómo se clasifica “${classification.title}” según el PDF?`,
       back: classification.items.map((item) => `• ${cleanLine(item)}`).join('\n'),
       level: 'comprender',
+      kind: 'classification',
       reference: referenceFromPages(
         classification.pageReferences,
         classification.title,
@@ -505,6 +525,7 @@ function buildCanonicalFlashcards(
       front: `¿Cuáles son los pasos de “${process.title}”?`,
       back: process.steps.map((step, index) => `${index + 1}. ${cleanLine(step)}`).join('\n'),
       level: 'comprender',
+      kind: 'process',
       reference: referenceFromPages(
         process.pageReferences,
         process.title,
@@ -526,6 +547,7 @@ function buildCanonicalFlashcards(
         front: `¿Qué representa o para qué se usa “${formula.expression}”?`,
         back: truncateAtWord(formula.description, 420),
         level: 'comprender',
+        kind: 'formula',
         reference: referenceFromPages(
           formula.pageReferences,
           formula.expression,
@@ -549,6 +571,7 @@ function buildCanonicalFlashcards(
       front: `¿Qué relación establece el PDF entre “${relationship.source}” y “${relationship.target}”?`,
       back: truncateAtWord(relationship.description, 420),
       level: 'comprender',
+      kind: 'relationship',
       reference: referenceFromPages(
         relationship.pageReferences,
         `${relationship.source} → ${relationship.target}`,
@@ -1114,6 +1137,7 @@ export function buildPedagogicalArtifacts(input: {
         front: buildFlashcardFront(concept, level),
         back: concept.definition,
         level,
+        kind: 'concept',
         reference: findReference(
           concept.term,
           chunks,
