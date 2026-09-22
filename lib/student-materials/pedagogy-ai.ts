@@ -894,13 +894,11 @@ function scorePedagogicalRecoveryChunk(value: string) {
   ).length;
   if (structuredLines >= 2) score += 1;
 
-  if (
-    /\b(?:defin|clasific|tipos?\s+de|proceso|etapas?|pasos?|causas?|consecuencias?|relaci[oó]n|diferencias?|comparaci[oó]n|f[oó]rmula|ecuaci[oó]n|caso\s+cl[ií]nico|diagn[oó]stico|tratamiento|requisitos?|elementos?|principios?|art[ií]culo|ley|teor[ií]a|autor|hip[oó]tesis|ejemplo)\b/iu.test(
-      text
-    )
-  ) {
-    score += 1;
-  }
+  const academicSignals = text.match(
+    /\b(?:defin(?:e|ici[oó]n|ido|ida)|clasific(?:a|aci[oó]n)|tipos?\s+de|proceso|etapas?|pasos?|causas?|consecuencias?|relaci[oó]n|diferencias?|comparaci[oó]n|f[oó]rmula|ecuaci[oó]n|caso\s+cl[ií]nico|diagn[oó]stico|tratamiento|requisitos?|elementos?|principios?|art[ií]culo|ley|teor[ií]a|autor|hip[oó]tesis|ejemplo)\b/giu
+  );
+  if ((academicSignals?.length ?? 0) >= 1) score += 1;
+  if ((academicSignals?.length ?? 0) >= 2) score += 1;
 
   if (
     /(?:[=<>±→↔]|\b\d+(?:[.,]\d+)?\s*(?:%|mg|g|ml|mmhg|mmol|mol|kg|cm|mEq|UI)\b)/iu.test(
