@@ -372,7 +372,7 @@ export function PdfFirstUploadShell({
                     ? ready
                       ? 'Terminamos de preparar tu material.'
                       : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
-                    : 'Elegí el archivo y poné un nombre. La fecha de examen es opcional.'}
+                    : 'Elegí el archivo y poné un nombre.'}
                 </p>
               </div>
               <button
@@ -446,7 +446,6 @@ export function PdfFirstUploadShell({
                         <label htmlFor="pdf-first-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
                           <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
                           Fecha de examen
-                          <span className="font-medium text-slate-400">(opcional)</span>
                         </label>
                         <Input
                           id="pdf-first-exam-date"
