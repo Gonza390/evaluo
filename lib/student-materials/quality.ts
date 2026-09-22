@@ -7,7 +7,7 @@ import type {
 } from '@/lib/student-materials/types';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 1;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 2;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -131,6 +131,35 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   const artifactReferenceRatio =
     artifactCount > 0 ? referencedArtifactCount / artifactCount : 0;
 
+  const questionLevelCounts = {
+    recordar: input.artifacts.questions.filter((item) => item.level === 'recordar').length,
+    comprender: input.artifacts.questions.filter((item) => item.level === 'comprender').length,
+    aplicar: input.artifacts.questions.filter((item) => item.level === 'aplicar').length,
+  };
+  const questionKinds = new Set(
+    input.artifacts.questions
+      .map((item) => item.kind)
+      .filter((kind): kind is NonNullable<typeof kind> => Boolean(kind))
+  );
+  const flashcardKinds = new Set(
+    input.artifacts.flashcards
+      .map((item) => item.kind)
+      .filter((kind): kind is NonNullable<typeof kind> => Boolean(kind))
+  );
+  const applicationQuestionRatio =
+    input.artifacts.questions.length > 0
+      ? questionLevelCounts.aplicar / input.artifacts.questions.length
+      : 0;
+
+  let pedagogicalDepthScore = 0;
+  pedagogicalDepthScore += questionLevelCounts.recordar > 0 ? 10 : 0;
+  pedagogicalDepthScore += questionLevelCounts.comprender > 0 ? 20 : 0;
+  pedagogicalDepthScore += questionLevelCounts.aplicar > 0 ? 25 : 0;
+  pedagogicalDepthScore += clamp(questionKinds.size / 5, 0, 1) * 20;
+  pedagogicalDepthScore += clamp(flashcardKinds.size / 4, 0, 1) * 15;
+  pedagogicalDepthScore += clamp(applicationQuestionRatio / 0.2, 0, 1) * 10;
+  pedagogicalDepthScore = Math.round(clamp(pedagogicalDepthScore, 0, 100));
+
   let score = 0;
   score += representedPageRatio * 35;
   score += clamp(academicUnitCount / Math.max(12, contentPages.length * 2), 0, 1) * 20;
@@ -145,6 +174,13 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   score += input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5;
   score = Math.round(clamp(score, 0, 100));
 
+  // El score principal mide confiabilidad del procesamiento. La profundidad
+  // pedagógica se informa por separado para no ocultar problemas de cobertura
+  // detrás de un buen mix de preguntas.
+  if (pedagogicalDepthScore < 55) {
+    score = Math.min(score, 79);
+  }
+
   const issues: string[] = [];
   if (!input.model) issues.push('canonical_model_missing');
   if (representedPageRatio < 0.75) issues.push('canonical_page_coverage_low');
@@ -156,6 +192,9 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   }
   if (input.documentAnalysis.requiresOcr && !input.visionUsed) {
     issues.push('visual_recovery_pending');
+  }
+  if (pedagogicalDepthScore < 55) {
+    issues.push('pedagogical_depth_low');
   }
 
   const status: StudentMaterialPedagogicalQualityReport['status'] =
@@ -175,6 +214,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     status,
     score,
+    pedagogicalDepthScore,
     pageCount: input.pageCount,
     sourcePagesWithContent: contentPageSet.size,
     representedPages: representedContentPages.length,
@@ -185,7 +225,12 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     summarySectionCount: input.summary.sections.length,
     glossaryItemCount: input.glossary.length,
     flashcardCount: input.artifacts.flashcards.length,
+    flashcardKindCount: flashcardKinds.size,
     questionCount: input.artifacts.questions.length,
+    questionKindCount: questionKinds.size,
+    questionLevelCounts,
+    applicationQuestionRatio:
+      Math.round(applicationQuestionRatio * 1000) / 1000,
     miniExamQuestionCount: input.artifacts.miniExamQuestionIds.length,
     artifactReferenceRatio: Math.round(artifactReferenceRatio * 1000) / 1000,
     issues,
