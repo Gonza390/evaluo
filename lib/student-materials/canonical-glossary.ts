@@ -63,7 +63,13 @@ function buildCandidates(model: CanonicalPedagogicalModel) {
   for (const concept of model.concepts) {
     const term = cleanInline(concept.term);
     const definition = cleanInline(concept.detail);
-    if (!isUsefulTerm(term) || definition.length < 12) continue;
+    if (
+      !isUsefulTerm(term) ||
+      definition.length < 12 ||
+      isAdministrativeConcept(model, term, definition)
+    ) {
+      continue;
+    }
 
     const pageReferences = resolveEntityPages(
       model,
@@ -542,6 +548,23 @@ function expandPageRange(pageStart: number | null, pageEnd: number | null) {
 
 function cleanInline(value: string) {
   return value.replace(/\s+/g, ' ').trim();
+}
+
+function isAdministrativeConcept(
+  model: CanonicalPedagogicalModel,
+  term: string,
+  definition: string
+) {
+  const termKey = normalizeKey(term);
+  const titleKey = normalizeKey(model.title);
+  const definitionKey = normalizeKey(definition);
+
+  if (termKey && titleKey && (termKey === titleKey || titleKey.includes(termKey))) {
+    return true;
+  }
+
+  return /^(?:asignatura|materia|titulo|autor|documento)\b/u.test(definitionKey) ||
+    /(?:asignatura|materia) correspondiente al material de estudio/u.test(definitionKey);
 }
 
 function isUsefulTerm(value: string) {
