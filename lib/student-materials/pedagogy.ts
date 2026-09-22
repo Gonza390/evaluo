@@ -519,7 +519,9 @@ function selectBalancedFlashcards(cards: StudyFlashcard[], limit: number) {
   const byKind = new Map(
     kinds.map((kind) => [kind, cards.filter((card) => card.kind === kind)] as const)
   );
-  const cursors = new Map(kinds.map((kind) => [kind, 0] as const));
+  const cursors = new Map<NonNullable<StudyFlashcard['kind']>, number>(
+    kinds.map((kind) => [kind, 0])
+  );
   const selected: StudyFlashcard[] = [];
   const cadence: Array<NonNullable<StudyFlashcard['kind']>> = [
     'concept',
