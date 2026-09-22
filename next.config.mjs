@@ -2,8 +2,21 @@
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR?.trim() || '.next',
   outputFileTracingIncludes: {
-    '/*': [
+    // PDF.js resolves its fake worker at runtime in Node, so Next.js tracing
+    // must ship it with every route that can execute the PDF processing pipeline.
+    // Keep this list explicit: a global '/*' duplicates the worker across unrelated
+    // server functions and dramatically increases Vercel Functions Storage.
+    '/dashboard': [
       './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
+    ],
+    '/materiales/*': [
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
+    ],
+    '/api/internal/student-material-jobs': [
+      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      './node_modules/pdfjs-dist/node_modules/@napi-rs/**/*',
     ],
     '/api/pdf-thumbnail': [
       './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
