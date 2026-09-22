@@ -5,7 +5,7 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 3;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 4;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -440,10 +440,121 @@ function isAdministrativeCanonicalConcept(
     /(?:asignatura|materia) correspondiente al material de estudio/u.test(detail);
 }
 
+const MIN_FLASHCARD_TARGET = 12;
+const MAX_FLASHCARD_TARGET = 30;
+
+export function resolveFlashcardLimit(input: {
+  canonicalModel?: CanonicalPedagogicalModel | null;
+  glossary: StudyGlossaryItem[];
+}) {
+  const model = input.canonicalModel;
+
+  if (!model) {
+    const glossaryItems = input.glossary.filter(isPedagogicalGlossaryItem).length;
+    if (glossaryItems <= 12) return MIN_FLASHCARD_TARGET;
+    if (glossaryItems <= 24) return 16;
+    if (glossaryItems <= 40) return 20;
+    if (glossaryItems <= 60) return 24;
+    return MAX_FLASHCARD_TARGET;
+  }
+
+  const concepts = model.concepts.filter(
+    (concept) =>
+      !isAdministrativeCanonicalConcept(model, concept) &&
+      isCleanAcademicLabel(concept.term) &&
+      cleanLine(concept.detail).length >= 20
+  ).length;
+  const classifications = model.classifications.filter(
+    (item) =>
+      isCleanAcademicLabel(item.title) &&
+      item.items.length >= 2 &&
+      item.items.length <= 10
+  ).length;
+  const processes = model.processes.filter(
+    (item) => isCleanAcademicLabel(item.title) && item.steps.length >= 2
+  ).length;
+  const formulas = model.formulas.filter(
+    (item) =>
+      isCleanAcademicLabel(item.expression) &&
+      cleanLine(item.description).length >= 12
+  ).length;
+  const relationships = model.relationships.filter(
+    (item) =>
+      isCleanAcademicLabel(item.source) &&
+      isCleanAcademicLabel(item.target) &&
+      cleanLine(item.description).length >= 20
+  ).length;
+
+  // No usamos páginas como proxy directo: la cantidad depende de unidades
+  // académicas utilizables. Estructuras y procesos pesan más porque suelen
+  // necesitar recuperación activa propia; relaciones se amortiguan para no
+  // inflar PDFs con muchos vínculos redundantes.
+  const academicDensity =
+    concepts +
+    classifications * 2 +
+    processes * 2 +
+    formulas +
+    Math.min(relationships, Math.max(concepts, 12)) * 0.5;
+
+  if (academicDensity <= 30) return MIN_FLASHCARD_TARGET;
+  if (academicDensity <= 60) return 16;
+  if (academicDensity <= 100) return 20;
+  if (academicDensity <= 160) return 24;
+  return MAX_FLASHCARD_TARGET;
+}
+
+function flashcardSubjectKey(card: StudyFlashcard) {
+  const quoted = card.front.match(/[“"]([^”"]+)[”"]/u)?.[1];
+  return normalizeForDedupe(quoted || card.front);
+}
+
+function selectBalancedFlashcards(cards: StudyFlashcard[], limit: number) {
+  const kinds: Array<NonNullable<StudyFlashcard['kind']>> = [
+    'concept',
+    'classification',
+    'process',
+    'formula',
+    'relationship',
+  ];
+  const byKind = new Map(
+    kinds.map((kind) => [kind, cards.filter((card) => card.kind === kind)] as const)
+  );
+  const cursors = new Map(kinds.map((kind) => [kind, 0] as const));
+  const selected: StudyFlashcard[] = [];
+  const cadence: Array<NonNullable<StudyFlashcard['kind']>> = [
+    'concept',
+    'concept',
+    'classification',
+    'process',
+    'relationship',
+    'formula',
+  ];
+
+  while (selected.length < limit) {
+    let added = false;
+
+    for (const kind of cadence) {
+      if (selected.length >= limit) break;
+      const group = byKind.get(kind) ?? [];
+      const cursor = cursors.get(kind) ?? 0;
+      const card = group[cursor];
+      if (!card) continue;
+
+      selected.push(card);
+      cursors.set(kind, cursor + 1);
+      added = true;
+    }
+
+    if (!added) break;
+  }
+
+  return selected;
+}
+
 function buildCanonicalFlashcards(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[],
-  limit = 12
+  limit = MIN_FLASHCARD_TARGET
 ) {
   const cards: StudyFlashcard[] = [];
   const push = (card: StudyFlashcard) => {
@@ -466,7 +577,7 @@ function buildCanonicalFlashcards(
         isCleanAcademicLabel(concept.term) &&
         cleanLine(concept.detail).length >= 20
     ),
-    6,
+    limit,
     (concept) => concept.pageReferences
   );
 
@@ -497,7 +608,7 @@ function buildCanonicalFlashcards(
         item.items.length >= 2 &&
         item.items.length <= 10
     ),
-    2,
+    limit,
     (item) => item.pageReferences
   ).forEach((classification) => {
     push({
@@ -518,7 +629,7 @@ function buildCanonicalFlashcards(
     model.processes.filter(
       (item) => isCleanAcademicLabel(item.title) && item.steps.length >= 2
     ),
-    2,
+    limit,
     (item) => item.pageReferences
   ).forEach((process) => {
     push({
@@ -535,14 +646,15 @@ function buildCanonicalFlashcards(
     });
   });
 
-  model.formulas
-    .filter(
+  selectDistributedByPages(
+    model.formulas.filter(
       (formula) =>
         isCleanAcademicLabel(formula.expression) &&
         cleanLine(formula.description).length >= 12
-    )
-    .slice(0, 1)
-    .forEach((formula) => {
+    ),
+    limit,
+    (formula) => formula.pageReferences
+  ).forEach((formula) => {
       push({
         front: `¿Qué representa o para qué se usa “${formula.expression}”?`,
         back: truncateAtWord(formula.description, 420),
@@ -564,7 +676,7 @@ function buildCanonicalFlashcards(
         isCleanAcademicLabel(item.target) &&
         cleanLine(item.description).length >= 20
     ),
-    2,
+    limit,
     (item) => item.pageReferences
   ).forEach((relationship) => {
     push({
@@ -581,7 +693,7 @@ function buildCanonicalFlashcards(
     });
   });
 
-  return cards.slice(0, limit);
+  return selectBalancedFlashcards(cards, limit);
 }
 
 function cleanStudyUnit(value: string) {
@@ -1128,9 +1240,14 @@ export function buildPedagogicalArtifacts(input: {
   canonicalModel?: CanonicalPedagogicalModel | null;
 }): PedagogicalArtifacts {
   const chunks = input.chunks ?? [];
-  const concepts = selectPedagogicalConcepts(input.glossary, 12);
+  const model = input.canonicalModel;
+  const flashcardLimit = resolveFlashcardLimit({
+    canonicalModel: model,
+    glossary: input.glossary,
+  });
+  const concepts = selectPedagogicalConcepts(input.glossary, flashcardLimit);
   const sectionTitles = dedupeStrings(input.summary.sections.map((section) => section.title));
-  const fallbackFlashcards = concepts.slice(0, 12).map(
+  const fallbackFlashcards = concepts.map(
     (concept, index): StudyFlashcard => {
       const level = resolveFlashcardLevel(concept);
       return {
@@ -1150,20 +1267,18 @@ export function buildPedagogicalArtifacts(input: {
     }
   );
 
-  const model = input.canonicalModel;
   const canonicalFlashcards = model
-    ? buildCanonicalFlashcards(model, chunks, 12)
+    ? buildCanonicalFlashcards(model, chunks, flashcardLimit)
     : [];
+  const canonicalSubjects = new Set(
+    canonicalFlashcards.map((card) => flashcardSubjectKey(card)).filter(Boolean)
+  );
   const flashcards = [
     ...canonicalFlashcards,
     ...fallbackFlashcards.filter(
-      (candidate) =>
-        !canonicalFlashcards.some(
-          (card) =>
-            normalizeForDedupe(card.front) === normalizeForDedupe(candidate.front)
-        )
+      (candidate) => !canonicalSubjects.has(flashcardSubjectKey(candidate))
     ),
-  ].slice(0, 12);
+  ].slice(0, flashcardLimit);
 
   const modelQuestions = model
     ? [
