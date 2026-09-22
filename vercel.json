@@ -36,6 +36,10 @@
       "schedule": "45 8 * * *"
     },
     {
+      "path": "/api/internal/seo-funnel-snapshot",
+      "schedule": "15 9 * * *"
+    },
+    {
       "path": "/api/internal/exam-reminders",
       "schedule": "0 12 * * *"
     },
