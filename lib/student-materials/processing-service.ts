@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   analyzePdfDocument,
   extractPdfTextAndPageCount,
@@ -51,7 +52,10 @@ import {
   buildStudentMaterialPedagogicalQualityReport,
   PEDAGOGICAL_QUALITY_REPORT_VERSION,
 } from '@/lib/student-materials/quality';
-import { CANONICAL_PEDAGOGICAL_MODEL_VERSION } from '@/lib/student-materials/processing-contract';
+import {
+  buildCanonicalSourcePipelineVersion,
+  CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+} from '@/lib/student-materials/processing-contract';
 
 export type StudentMaterialProcessingStage =
   | 'uploaded'
@@ -106,7 +110,7 @@ export async function processStudentMaterial(input: {
   // para el mismo archivo sin volver a mostrar artefactos derivados obsoletos.
   const { data: previousCanonicalRow, error: previousCanonicalError } = await admin
     .from('student_materials')
-    .select('pedagogical_model, pedagogical_model_version')
+    .select('pedagogical_model, pedagogical_model_version, content_fingerprint, pipeline_version')
     .eq('id', material.id)
     .maybeSingle();
 
@@ -122,7 +126,8 @@ export async function processStudentMaterial(input: {
       : null;
 
   // Todo reprocesamiento invalida sólo las proyecciones derivadas. El modelo
-  // anterior se reemplaza atómicamente cuando el nuevo modelo canónico termina.
+  // canónico sólo se reutiliza más abajo si el hash del archivo y la versión
+  // completa del pipeline coinciden exactamente.
   const { error: resetDerivedArtifactsError } = await admin
     .from('student_materials')
     .update({
@@ -147,13 +152,17 @@ export async function processStudentMaterial(input: {
   const extractionStartedAt = Date.now();
   const context = await loadStudentMaterialProcessingContext(admin, material);
   const buffer = Buffer.from(await context.file.arrayBuffer());
+  const contentFingerprint = createHash('sha256').update(buffer).digest('hex');
+  const canonicalPipelineVersion = buildCanonicalSourcePipelineVersion({
+    visualAnalysisEnabled: await isStudentMaterialVisualAnalysisEnabled(material.id),
+  });
   const {
     text: nativeText,
     pageCount,
     pages: nativePages,
   } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, nativeText, pageCount);
-  const visualAnalysisEnabled = await isStudentMaterialVisualAnalysisEnabled(material.id);
+  const visualAnalysisEnabled = canonicalPipelineVersion.endsWith('visual-on');
 
   const selectedVisionPageNumbers = visualAnalysisEnabled
     ? selectVisionPageNumbers({
@@ -304,20 +313,59 @@ export async function processStudentMaterial(input: {
     });
   }
 
+  let cachedPedagogicalModel: CanonicalPedagogicalModel | null = null;
+  let reusedFromMaterialId: string | null = null;
+
+  const previousCacheMatches =
+    previousPedagogicalModel !== null &&
+    previousCanonicalRow?.content_fingerprint === contentFingerprint &&
+    previousCanonicalRow?.pipeline_version === canonicalPipelineVersion;
+
+  if (previousCacheMatches) {
+    cachedPedagogicalModel = previousPedagogicalModel;
+    reusedFromMaterialId = material.id;
+  } else {
+    const { data: reusableCanonicalRow, error: reusableCanonicalError } = await admin
+      .from('student_materials')
+      .select('id, pedagogical_model')
+      .eq('user_id', material.user_id)
+      .eq('content_fingerprint', contentFingerprint)
+      .eq('pipeline_version', canonicalPipelineVersion)
+      .eq('pedagogical_model_version', CANONICAL_PEDAGOGICAL_MODEL_VERSION)
+      .eq('processing_status', 'ready')
+      .neq('id', material.id)
+      .not('pedagogical_model', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (reusableCanonicalError) {
+      logError('processStudentMaterial.pedagogicalModelCacheLookup', reusableCanonicalError, {
+        materialId: material.id,
+      });
+    } else if (reusableCanonicalRow?.pedagogical_model) {
+      cachedPedagogicalModel =
+        reusableCanonicalRow.pedagogical_model as unknown as CanonicalPedagogicalModel;
+      reusedFromMaterialId = reusableCanonicalRow.id;
+    }
+  }
+
   let generatedPedagogicalModel: CanonicalPedagogicalModel | null = null;
   let pedagogicalModelGenerationError: unknown = null;
 
-  try {
-    generatedPedagogicalModel = await generatePedagogicalModel(generationInput);
-  } catch (modelGenerationError) {
-    pedagogicalModelGenerationError = modelGenerationError;
-    logError('processStudentMaterial.pedagogicalModelGeneration', modelGenerationError, {
-      materialId: material.id,
-    });
+  if (!cachedPedagogicalModel) {
+    try {
+      generatedPedagogicalModel = await generatePedagogicalModel(generationInput);
+    } catch (modelGenerationError) {
+      pedagogicalModelGenerationError = modelGenerationError;
+      logError('processStudentMaterial.pedagogicalModelGeneration', modelGenerationError, {
+        materialId: material.id,
+      });
+    }
   }
 
   const pedagogicalModel =
-    generatedPedagogicalModel ?? previousPedagogicalModel;
+    cachedPedagogicalModel ?? generatedPedagogicalModel;
 
   if (!pedagogicalModel) {
     if (pedagogicalModelGenerationError) {
@@ -328,29 +376,37 @@ export async function processStudentMaterial(input: {
     );
   }
 
-  if (generatedPedagogicalModel) {
-    try {
-      const { error: pedagogicalModelPersistError } = await admin
-        .from('student_materials')
-        .update({
-          pedagogical_model: generatedPedagogicalModel as unknown as Json,
-          pedagogical_model_version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
-        } as never)
-        .eq('id', material.id);
+  try {
+    const { error: pedagogicalModelPersistError } = await admin
+      .from('student_materials')
+      .update({
+        pedagogical_model: pedagogicalModel as unknown as Json,
+        pedagogical_model_version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+        content_fingerprint: contentFingerprint,
+        pipeline_version: canonicalPipelineVersion,
+        reused_from_material_id:
+          reusedFromMaterialId && reusedFromMaterialId !== material.id
+            ? reusedFromMaterialId
+            : null,
+      } as never)
+      .eq('id', material.id);
 
-      if (pedagogicalModelPersistError) {
-        throw pedagogicalModelPersistError;
-      }
-    } catch (modelErr) {
-      logError('processStudentMaterial.pedagogicalModelPersist', modelErr, {
-        materialId: material.id,
-      });
-      throw modelErr;
+    if (pedagogicalModelPersistError) {
+      throw pedagogicalModelPersistError;
     }
-  } else {
-    logInfo('processStudentMaterial.pedagogicalModelReused', {
+  } catch (modelErr) {
+    logError('processStudentMaterial.pedagogicalModelPersist', modelErr, {
       materialId: material.id,
+    });
+    throw modelErr;
+  }
+
+  if (cachedPedagogicalModel) {
+    logInfo('processStudentMaterial.pedagogicalModelCacheHit', {
+      materialId: material.id,
+      reusedFromMaterialId,
       version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+      pipelineVersion: canonicalPipelineVersion,
     });
   }
 
@@ -540,7 +596,7 @@ export async function processStudentMaterial(input: {
       pedagogical_quality_status: pedagogicalQualityReport.status,
       pedagogical_quality_score: pedagogicalQualityReport.score,
       pedagogical_model_version: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
-      pedagogical_model_reused: !generatedPedagogicalModel,
+      pedagogical_model_reused: Boolean(cachedPedagogicalModel),
       pedagogical_artifacts_version: PEDAGOGICAL_ARTIFACTS_VERSION,
       pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     },
@@ -568,6 +624,8 @@ export async function processStudentMaterial(input: {
     visionModel: visionExtraction.visionModel,
     pedagogicalQualityStatus: pedagogicalQualityReport.status,
     pedagogicalQualityScore: pedagogicalQualityReport.score,
+    pedagogicalModelCacheHit: Boolean(cachedPedagogicalModel),
+    canonicalPipelineVersion,
     pedagogicalQualityVersion: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     pedagogicalModelVersion: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
     pedagogicalModelReused: !generatedPedagogicalModel,
