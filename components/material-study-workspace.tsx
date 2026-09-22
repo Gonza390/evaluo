@@ -204,7 +204,7 @@ export function MaterialStudyWorkspace({
   materialId,
   isOwner: _isOwner,
   materiaName,
-  pageCount,
+  pageCount: _pageCount,
   title,
   universidadName,
   viewerUrl,
@@ -524,20 +524,6 @@ export function MaterialStudyWorkspace({
               {studySummary.shortSummary}
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center gap-2 text-[11.5px] font-semibold text-slate-500">
-              <span className="rounded-full border border-slate-200 px-2.5 py-1">
-                {summaryChapters.length} {summaryChapters.length === 1 ? 'capítulo' : 'capítulos'}
-              </span>
-              {pageCount ? (
-                <span className="rounded-full border border-slate-200 px-2.5 py-1">
-                  {pageCount} páginas analizadas
-                </span>
-              ) : null}
-              <span className="rounded-full border border-slate-200 px-2.5 py-1">
-                Basado en tu PDF
-              </span>
-            </div>
-
             {diagnosticReviewTopics.length > 0 ? (
               <div className="mt-6 border-l-2 border-[#2563EB] pl-3.5">
                 <p className="text-[10.5px] font-bold tracking-[0.14em] text-[#2563EB] uppercase">
@@ -581,7 +567,7 @@ export function MaterialStudyWorkspace({
             </details>
           ) : null}
 
-          <div className="mt-7 xl:grid xl:grid-cols-[185px_minmax(0,1fr)] xl:items-start xl:gap-10 2xl:grid-cols-[210px_minmax(0,1fr)] 2xl:gap-14">
+          <div className="mt-7 xl:grid xl:grid-cols-[260px_minmax(0,1fr)] xl:items-start xl:gap-10 2xl:grid-cols-[300px_minmax(0,1fr)] 2xl:gap-12">
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden self-start xl:block">
                 <div className="border-l border-slate-200 pl-4">
@@ -594,7 +580,7 @@ export function MaterialStudyWorkspace({
                         <li key={chapter.anchor}>
                           <a
                             href={`#${chapter.anchor}`}
-                            className="group flex items-start gap-2 text-[11.5px] leading-4.5 text-slate-500 transition hover:text-[#2563EB]"
+                            className="group flex items-start gap-2.5 text-[12.5px] leading-5 text-slate-500 transition hover:text-[#2563EB]"
                           >
                             <span className="min-w-5 font-bold tabular-nums text-slate-300 transition group-hover:text-[#2563EB]">
                               {String(index + 1).padStart(2, '0')}
