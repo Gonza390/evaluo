@@ -16,6 +16,7 @@ import {
 import {
   buildPedagogicalArtifacts,
   PEDAGOGICAL_ARTIFACTS_VERSION,
+  resolveFlashcardLimit,
 } from '../lib/student-materials/pedagogy.ts';
 import { buildStudentMaterialPedagogicalQualityReport } from '../lib/student-materials/quality.ts';
 import {
@@ -963,6 +964,51 @@ assert.doesNotMatch(
   'El fallback de guía tampoco debe mezclar consignas de práctica.'
 );
 
+assert.equal(
+  resolveFlashcardLimit({
+    canonicalModel: denseGlossaryFixture,
+    glossary: denseCanonicalGlossary,
+  }),
+  20,
+  'Un PDF académicamente denso debe escalar el objetivo de flashcards por encima de 12.'
+);
+
+const denseFlashcardPedagogy = buildPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: denseCanonicalGlossary,
+  canonicalModel: denseGlossaryFixture,
+  chunks: traceableChunks.map((chunk) => ({
+    text: chunk.text,
+    pageStart: chunk.pageStart,
+    pageEnd: chunk.pageEnd,
+    sectionTitle: chunk.sectionTitle,
+    excerpt: '',
+  })),
+});
+assert.equal(
+  denseFlashcardPedagogy.flashcards.length,
+  20,
+  'Un material denso con suficiente evidencia debe producir más de 12 flashcards distintas y trazables.'
+);
+
+const veryDenseFlashcardFixture: CanonicalPedagogicalModel = {
+  ...denseGlossaryFixture,
+  concepts: Array.from({ length: 180 }, (_, index) => ({
+    term: `Concepto intensivo ${index + 1}`,
+    detail: `Definición académica suficientemente desarrollada del concepto intensivo ${index + 1}.`,
+    kind: 'definicion' as const,
+    pageReferences: [(index % 30) + 1],
+  })),
+};
+assert.equal(
+  resolveFlashcardLimit({
+    canonicalModel: veryDenseFlashcardFixture,
+    glossary: denseCanonicalGlossary,
+  }),
+  30,
+  'Un material de muy alta densidad académica debe poder llegar al techo de 30 flashcards.'
+);
+
 const pedagogy = buildPedagogicalArtifacts({
   summary: {
     ...summary,
@@ -1006,7 +1052,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  3,
+  4,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
