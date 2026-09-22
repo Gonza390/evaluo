@@ -5,7 +5,7 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 4;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 5;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
