@@ -11,7 +11,11 @@ declare global {
   }
 }
 
-export function trackMarketingEvent(\n  event: string,\n  payload: MarketingPayload = {},\n  userId?: string | null\n) {
+export function trackMarketingEvent(
+  event: string,
+  payload: MarketingPayload = {},
+  userId?: string | null
+) {
   if (typeof window === 'undefined') return;
 
   const attribution = getAttributionSnapshot();
@@ -29,6 +33,7 @@ export function trackMarketingEvent(\n  event: string,\n  payload: MarketingPayl
   void trackClientAnalyticsEvent({
     eventName: event,
     path: pathname,
+    userId: userId ?? null,
     metadata: {
       page_type: pageType,
       ...payload,
