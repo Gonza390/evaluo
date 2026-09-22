@@ -162,31 +162,31 @@ function MaterialMetadata({
   if (!carreraName && !universidadName && !materiaName) return null;
 
   return (
-    <div className="grid min-w-0 gap-x-7 gap-y-3 sm:grid-cols-2 lg:min-w-[560px]">
+    <div className="grid min-w-0 gap-x-5 gap-y-2 sm:grid-cols-2 lg:min-w-[480px]">
       {carreraName ? (
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
-          <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
+          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
+          <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
             {carreraName}
           </p>
         </div>
       ) : null}
 
       {universidadName ? (
-        <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-7">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-5">
+          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">
             Universidad
           </p>
-          <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
+          <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
             {universidadName}
           </p>
         </div>
       ) : null}
 
       {materiaName ? (
-        <div className="min-w-0 border-t border-slate-100 pt-3 sm:col-span-2">
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
-          <p className="mt-1 text-[13.5px] font-semibold leading-5 text-slate-800 sm:text-sm">
+        <div className="min-w-0 border-t border-slate-100 pt-2 sm:col-span-2">
+          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
+          <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
             {materiaName}
           </p>
         </div>
@@ -214,7 +214,7 @@ export function MaterialStudyWorkspace({
   pedagogicalArtifacts,
   initialDiagnostic = false,
   initialPdfPage = null,
-  initialViewerVisible = false,
+  initialViewerVisible: _initialViewerVisible = false,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
@@ -222,17 +222,10 @@ export function MaterialStudyWorkspace({
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [isViewerVisible, setIsViewerVisible] = useState(initialViewerVisible);
+  const [isViewerVisible, setIsViewerVisible] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerationStageIndex, setRegenerationStageIndex] = useState(0);
   const [regenerationProgress, setRegenerationProgress] = useState(8);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || window.innerWidth < 1280) return;
-
-    const timeoutId = window.setTimeout(() => setIsViewerVisible(true), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
 
   const studyArtifacts = useMemo(
     () =>
@@ -804,18 +797,18 @@ export function MaterialStudyWorkspace({
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
       <section className="border-b border-[#E8EDF5] bg-white">
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+        <div className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 sm:py-4 lg:px-8 lg:py-5">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
+            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
             Volver
           </Link>
 
-          <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(560px,1.1fr)] lg:items-end lg:gap-12">
+          <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(480px,1.05fr)] lg:items-end lg:gap-8">
             <div className="min-w-0">
-              <h1 className="max-w-[720px] text-[1.9rem] font-bold leading-[1.08] tracking-[-0.055em] text-slate-950 sm:text-[2.2rem] lg:text-[2.35rem]">
+              <h1 className="max-w-[660px] text-[1.65rem] font-bold leading-[1.08] tracking-[-0.05em] text-slate-950 sm:text-[1.9rem] lg:text-[2.05rem]">
                 {title}
               </h1>
             </div>
@@ -829,7 +822,7 @@ export function MaterialStudyWorkspace({
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
+      <section className="mx-auto w-full max-w-[1600px] px-4 py-3 sm:px-6 lg:px-8">
         <div className="hidden xl:block">
           <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
