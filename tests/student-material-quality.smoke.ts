@@ -969,8 +969,8 @@ assert.equal(
     canonicalModel: denseGlossaryFixture,
     glossary: denseCanonicalGlossary,
   }),
-  30,
-  'Un PDF académicamente denso debe escalar el objetivo de flashcards hasta 30 en lugar de quedar fijo en 12.'
+  20,
+  'Un PDF académicamente denso debe escalar el objetivo de flashcards por encima de 12.'
 );
 
 const denseFlashcardPedagogy = buildPedagogicalArtifacts({
@@ -987,8 +987,26 @@ const denseFlashcardPedagogy = buildPedagogicalArtifacts({
 });
 assert.equal(
   denseFlashcardPedagogy.flashcards.length,
+  20,
+  'Un material denso con suficiente evidencia debe producir más de 12 flashcards distintas y trazables.'
+);
+
+const veryDenseFlashcardFixture: CanonicalPedagogicalModel = {
+  ...denseGlossaryFixture,
+  concepts: Array.from({ length: 180 }, (_, index) => ({
+    term: `Concepto intensivo ${index + 1}`,
+    detail: `Definición académica suficientemente desarrollada del concepto intensivo ${index + 1}.`,
+    kind: 'definicion' as const,
+    pageReferences: [(index % 30) + 1],
+  })),
+};
+assert.equal(
+  resolveFlashcardLimit({
+    canonicalModel: veryDenseFlashcardFixture,
+    glossary: denseCanonicalGlossary,
+  }),
   30,
-  'Un material denso con suficiente evidencia debe producir 30 flashcards distintas y trazables.'
+  'Un material de muy alta densidad académica debe poder llegar al techo de 30 flashcards.'
 );
 
 const pedagogy = buildPedagogicalArtifacts({
