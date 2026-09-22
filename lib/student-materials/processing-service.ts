@@ -153,8 +153,10 @@ export async function processStudentMaterial(input: {
   const context = await loadStudentMaterialProcessingContext(admin, material);
   const buffer = Buffer.from(await context.file.arrayBuffer());
   const contentFingerprint = createHash('sha256').update(buffer).digest('hex');
+  const visualAnalysisEnabled =
+    await isStudentMaterialVisualAnalysisEnabled(material.id);
   const canonicalPipelineVersion = buildCanonicalSourcePipelineVersion({
-    visualAnalysisEnabled: await isStudentMaterialVisualAnalysisEnabled(material.id),
+    visualAnalysisEnabled,
   });
   const {
     text: nativeText,
@@ -162,7 +164,6 @@ export async function processStudentMaterial(input: {
     pages: nativePages,
   } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, nativeText, pageCount);
-  const visualAnalysisEnabled = canonicalPipelineVersion.endsWith('visual-on');
 
   const selectedVisionPageNumbers = visualAnalysisEnabled
     ? selectVisionPageNumbers({
