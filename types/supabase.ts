@@ -1943,6 +1943,9 @@ export type Database = {
           page_count: number | null;
           pages_processed: number | null;
           coverage_ratio: number | null;
+          content_fingerprint: string | null;
+          pipeline_version: string | null;
+          reused_from_material_id: string | null;
           pedagogical_artifacts: Json | null;
           pedagogical_artifacts_version: number | null;
           pedagogical_model: Json | null;
@@ -1974,6 +1977,9 @@ export type Database = {
           page_count?: number | null;
           pages_processed?: number | null;
           coverage_ratio?: number | null;
+          content_fingerprint?: string | null;
+          pipeline_version?: string | null;
+          reused_from_material_id?: string | null;
           pedagogical_artifacts?: Json | null;
           pedagogical_artifacts_version?: number | null;
           pedagogical_model?: Json | null;
@@ -2005,6 +2011,9 @@ export type Database = {
           page_count?: number | null;
           pages_processed?: number | null;
           coverage_ratio?: number | null;
+          content_fingerprint?: string | null;
+          pipeline_version?: string | null;
+          reused_from_material_id?: string | null;
           pedagogical_artifacts?: Json | null;
           pedagogical_artifacts_version?: number | null;
           pedagogical_model?: Json | null;
