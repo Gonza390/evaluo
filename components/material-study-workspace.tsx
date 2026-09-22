@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Crown,
   FileText,
+  ListTree,
   Loader2,
   Map,
   MessageSquare,
@@ -130,6 +131,25 @@ function StudyDocumentSection({ title, children }: { title: string; children: Re
   );
 }
 
+function cleanSummaryChapterTitle(value: string) {
+  return value
+    .replace(/^\s*\d+(?:\.\d+)*[.)]?\s*/u, '')
+    .replace(/^presentaci[oó]n\s+de\s+(?:la\s+)?asignatura\s+/iu, '')
+    .trim();
+}
+
+function buildSummaryChapterAnchor(index: number, value: string) {
+  const slug = cleanSummaryChapterTitle(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, '-')
+    .replace(/^-+|-+$/gu, '')
+    .slice(0, 60);
+
+  return `capitulo-${index + 1}${slug ? `-${slug}` : ''}`;
+}
+
 function MaterialMetadata({
   carreraName,
   universidadName,
@@ -184,7 +204,7 @@ export function MaterialStudyWorkspace({
   materialId,
   isOwner: _isOwner,
   materiaName,
-  pageCount: _pageCount,
+  pageCount,
   title,
   universidadName,
   viewerUrl,
@@ -236,6 +256,16 @@ export function MaterialStudyWorkspace({
       body: point,
     }));
   }, [studySummary.keyPoints, studySummary.sections]);
+
+  const summaryChapters = useMemo(
+    () =>
+      fullSummarySections.map((section, index) => ({
+        ...section,
+        displayTitle: cleanSummaryChapterTitle(section.title) || `Capítulo ${index + 1}`,
+        anchor: buildSummaryChapterAnchor(index, section.title),
+      })),
+    [fullSummarySections]
+  );
 
   const handleComments = () => {
     setCommentsOpen((current) => !current);
@@ -476,57 +506,158 @@ export function MaterialStudyWorkspace({
       ) : null}
 
       <TabsContent value="resumen" className="animate-tab-panel">
-        <StudyDocumentShell title={fileName}>
-          {diagnosticReviewTopics.length > 0 ? (
-            <section className="space-y-1 border-b border-slate-200 pb-5">
-              <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
-                Según tu diagnóstico
-              </p>
-              <p className="text-[1.02rem] font-bold tracking-[-0.03em] text-slate-950">
-                Empezá por {diagnosticReviewTopics[0]}
-              </p>
-              <p className="text-[13px] leading-5 text-slate-500">
-                Fue uno de los temas donde más dificultad tuviste.
-              </p>
-            </section>
+        <div className="mx-auto w-full max-w-[1180px] py-1 sm:py-2">
+          <header className="border-b border-slate-200 pb-7 sm:pb-8">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span className="text-[10.5px] font-extrabold tracking-[0.18em] text-[#2563EB] uppercase">
+                Guía de estudio
+              </span>
+              <span className="h-1 w-1 rounded-full bg-slate-300" />
+              <span className="text-[11.5px] font-medium text-slate-400">{fileName}</span>
+            </div>
+
+            <h2 className="mt-3 max-w-[820px] text-[1.75rem] font-bold leading-[1.08] tracking-[-0.05em] text-slate-950 sm:text-[2.15rem]">
+              {title}
+            </h2>
+
+            <p className="mt-4 max-w-[780px] text-[14px] leading-6 text-slate-600 sm:text-[15px] sm:leading-7">
+              {studySummary.shortSummary}
+            </p>
+
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-[11.5px] font-semibold text-slate-500">
+              <span className="rounded-full border border-slate-200 px-2.5 py-1">
+                {summaryChapters.length} {summaryChapters.length === 1 ? 'capítulo' : 'capítulos'}
+              </span>
+              {pageCount ? (
+                <span className="rounded-full border border-slate-200 px-2.5 py-1">
+                  {pageCount} páginas analizadas
+                </span>
+              ) : null}
+              <span className="rounded-full border border-slate-200 px-2.5 py-1">
+                Basado en tu PDF
+              </span>
+            </div>
+
+            {diagnosticReviewTopics.length > 0 ? (
+              <div className="mt-6 border-l-2 border-[#2563EB] pl-3.5">
+                <p className="text-[10.5px] font-bold tracking-[0.14em] text-[#2563EB] uppercase">
+                  Según tu diagnóstico
+                </p>
+                <p className="mt-1 text-[13.5px] font-semibold text-slate-900">
+                  Empezá por {diagnosticReviewTopics[0]}
+                </p>
+              </div>
+            ) : null}
+          </header>
+
+          {summaryChapters.length > 0 ? (
+            <details className="group mt-5 rounded-[16px] border border-slate-200 bg-slate-50/55 px-4 py-3 xl:hidden">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold text-slate-800">
+                <span className="inline-flex items-center gap-2">
+                  <ListTree className="h-4 w-4 text-[#2563EB]" />
+                  Contenido
+                </span>
+                <span className="text-[11px] font-medium text-slate-400">
+                  {summaryChapters.length} capítulos
+                </span>
+              </summary>
+              <nav className="mt-3 border-t border-slate-200 pt-3" aria-label="Índice del resumen">
+                <ol className="space-y-1">
+                  {summaryChapters.map((chapter, index) => (
+                    <li key={chapter.anchor}>
+                      <a
+                        href={`#${chapter.anchor}`}
+                        className="flex items-start gap-2.5 rounded-lg px-1 py-1.5 text-[12.5px] leading-5 text-slate-600 transition hover:text-[#2563EB]"
+                      >
+                        <span className="mt-0.5 min-w-5 font-bold tabular-nums text-slate-400">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span>{chapter.displayTitle}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            </details>
           ) : null}
 
-          <StudyDocumentSection title="Resumen breve">
-            <p className="text-[14px] leading-6 text-slate-700">{studySummary.shortSummary}</p>
-          </StudyDocumentSection>
-
-          <div className="h-px bg-white" />
-
-          <StudyDocumentSection title="Puntos clave">
-            <ul className="space-y-2.5 pl-5 text-[14px] leading-6 text-slate-700">
-              {studySummary.keyPoints.slice(0, 5).map((point) => (
-                <li key={point} className="list-disc marker:text-[#2563EB]">
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </StudyDocumentSection>
-
-          <div className="h-px bg-white" />
-
-          <section className="space-y-4">
-            {fullSummarySections.length > 0 ? (
-              fullSummarySections.map((section, index) => (
-                <div key={`${section.title}:${section.body}`} className="space-y-3">
-                  <h3 className="text-[1.05rem] font-bold tracking-[-0.03em] text-slate-950">
-                    {section.title}
-                  </h3>
-                  <StudyRichText body={section.body} />
-                  {index < fullSummarySections.length - 1 ? <div className="h-px bg-white" /> : null}
+          <div className="mt-7 xl:grid xl:grid-cols-[185px_minmax(0,1fr)] xl:items-start xl:gap-10 2xl:grid-cols-[210px_minmax(0,1fr)] 2xl:gap-14">
+            {summaryChapters.length > 0 ? (
+              <aside className="sticky top-4 hidden self-start xl:block">
+                <div className="border-l border-slate-200 pl-4">
+                  <p className="mb-3 text-[10.5px] font-extrabold tracking-[0.16em] text-slate-400 uppercase">
+                    Contenido
+                  </p>
+                  <nav aria-label="Índice del resumen">
+                    <ol className="space-y-1.5">
+                      {summaryChapters.map((chapter, index) => (
+                        <li key={chapter.anchor}>
+                          <a
+                            href={`#${chapter.anchor}`}
+                            className="group flex items-start gap-2 text-[11.5px] leading-4.5 text-slate-500 transition hover:text-[#2563EB]"
+                          >
+                            <span className="min-w-5 font-bold tabular-nums text-slate-300 transition group-hover:text-[#2563EB]">
+                              {String(index + 1).padStart(2, '0')}
+                            </span>
+                            <span>{chapter.displayTitle}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ol>
+                  </nav>
                 </div>
-              ))
-            ) : (
-              <p className="text-[14px] leading-6 text-slate-500">
-                Todavía no pudimos organizar el contenido por temas claros dentro del texto extraído del PDF.
-              </p>
-            )}
-          </section>
-        </StudyDocumentShell>
+              </aside>
+            ) : null}
+
+            <main className="min-w-0 max-w-[800px]">
+              {summaryChapters.length > 0 ? (
+                <div>
+                  {summaryChapters.map((section, index) => (
+                    <section
+                      id={section.anchor}
+                      key={`${section.title}:${section.body}`}
+                      className="scroll-mt-6 border-b border-slate-200 py-9 first:pt-0 last:border-b-0 last:pb-2 sm:py-11"
+                    >
+                      <header className="mb-5 sm:mb-6">
+                        <p className="text-[10px] font-extrabold tracking-[0.18em] text-[#2563EB] uppercase">
+                          Capítulo {String(index + 1).padStart(2, '0')}
+                        </p>
+                        <h3 className="mt-1.5 text-[1.35rem] font-bold leading-tight tracking-[-0.04em] text-slate-950 sm:text-[1.55rem]">
+                          {section.displayTitle}
+                        </h3>
+                      </header>
+
+                      <StudyRichText body={section.body} />
+
+                      <div className="mt-7 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                        <span className="text-[11px] font-medium text-slate-400">
+                          Capítulo {index + 1} de {summaryChapters.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveTab('ejercicios');
+                            setIsViewerVisible(false);
+                            setCommentsOpen(false);
+                          }}
+                          className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] transition hover:text-[#1D4ED8]"
+                        >
+                          <BrainCircuit className="h-3.5 w-3.5" />
+                          Ir a práctica
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[14px] leading-6 text-slate-500">
+                  Todavía no pudimos organizar el contenido por temas claros dentro del texto extraído del PDF.
+                </p>
+              )}
+            </main>
+          </div>
+        </div>
       </TabsContent>
 
       <TabsContent value="glosario" className="animate-tab-panel">
