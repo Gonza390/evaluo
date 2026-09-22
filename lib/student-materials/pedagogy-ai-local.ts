@@ -1,4 +1,10 @@
-import { requestGeminiJson } from '@/lib/ai/providers';
+import {
+  requestGeminiJson,
+  requestGitHubModelsJson,
+  requestGroqJson,
+  requestNvidiaJson,
+  type ProviderResult,
+} from '@/lib/ai/providers';
 import { recordAiUsage } from '@/lib/student-materials/ai-usage';
 import {
   buildCompleteTraceableDocumentChunks,
@@ -359,25 +365,109 @@ async function mapGroupWithRecovery(
     : null;
 }
 
+async function requestPedagogicalMapJson(
+  group: PedagogicalMapGroup,
+  totalChunks: number
+): Promise<ProviderResult | null> {
+  const prompt = PEDAGOGICAL_MAP_PROMPT(group, totalChunks);
+  const attempts: Array<{
+    provider: string;
+    run: () => Promise<ProviderResult | null>;
+  }> = [
+    {
+      provider: 'gemini',
+      run: () =>
+        requestGeminiJson({
+          prompt,
+          temperature: 0.08,
+          maxOutputTokens: MAP_MAX_OUTPUT_TOKENS,
+          responseSchema: COMPACT_RESPONSE_SCHEMA,
+        }),
+    },
+    {
+      provider: 'groq',
+      run: () =>
+        requestGroqJson({
+          system:
+            'Extraé exclusivamente conocimiento del material y respondé sólo con JSON válido.',
+          prompt,
+          temperature: 0.08,
+          maxTokens: MAP_MAX_OUTPUT_TOKENS,
+        }),
+    },
+    {
+      provider: 'github',
+      run: () =>
+        requestGitHubModelsJson({
+          system:
+            'Extraé exclusivamente conocimiento del material y respondé sólo con JSON válido.',
+          prompt,
+          temperature: 0.08,
+          maxTokens: MAP_MAX_OUTPUT_TOKENS,
+        }),
+    },
+    {
+      provider: 'nvidia',
+      run: () =>
+        requestNvidiaJson({
+          system:
+            'Extraé exclusivamente conocimiento del material y respondé sólo con JSON válido.',
+          prompt,
+          temperature: 0.08,
+          maxTokens: MAP_MAX_OUTPUT_TOKENS,
+        }),
+    },
+  ];
+
+  let lastError: unknown = null;
+
+  for (const attempt of attempts) {
+    try {
+      const result = await attempt.run();
+      if (result) {
+        if (attempt.provider !== 'gemini') {
+          logInfo('pedagogy.localReduce.providerFallback', {
+            provider: attempt.provider,
+            chunkIndexes: group.chunkIndexes,
+          });
+        }
+        return result;
+      }
+    } catch (error) {
+      lastError = error;
+      logError('pedagogy.localReduce.providerAttempt', error, {
+        provider: attempt.provider,
+        chunkIndexes: group.chunkIndexes,
+      });
+    }
+  }
+
+  if (lastError) throw lastError;
+  return null;
+}
+
+function isProviderAvailabilityError(error: unknown) {
+  const message =
+    error instanceof Error ? error.message : String(error ?? '');
+  return /\b(?:401|403|429|500|503)\b|quota|rate limit|timeout|fetch failed|ECONN/i.test(
+    message
+  );
+}
+
 async function mapGroupAttempt(
   group: PedagogicalMapGroup,
   totalChunks: number,
   input: GenerateSummaryInput
 ): Promise<CompactPedagogicalNode | null> {
   try {
-    const result = await requestGeminiJson({
-      prompt: PEDAGOGICAL_MAP_PROMPT(group, totalChunks),
-      temperature: 0.08,
-      maxOutputTokens: MAP_MAX_OUTPUT_TOKENS,
-      responseSchema: COMPACT_RESPONSE_SCHEMA,
-    });
+    const result = await requestPedagogicalMapJson(group, totalChunks);
 
     if (!result) return null;
 
     await recordAiUsage({
       materialId: input.materialId,
       userId: input.userId,
-      provider: 'gemini',
+      provider: result.provider,
       model: result.model,
       operation: 'summary_map',
       usage: result.usage,
@@ -395,6 +485,11 @@ async function mapGroupAttempt(
       materialId: input.materialId,
       chunkIndexes: group.chunkIndexes,
     });
+
+    if (isProviderAvailabilityError(error)) {
+      throw error;
+    }
+
     return null;
   }
 }

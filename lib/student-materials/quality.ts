@@ -200,9 +200,10 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   const status: StudentMaterialPedagogicalQualityReport['status'] =
     !input.summary.hasContent ||
     artifactCount === 0 ||
-    (Boolean(input.model) && representedPageRatio < 0.5)
+    !input.model ||
+    representedPageRatio < 0.5
       ? 'fail'
-      : !input.model || issues.length > 0 || score < 80
+      : issues.length > 0 || score < 80
         ? 'degraded'
         : 'pass';
 

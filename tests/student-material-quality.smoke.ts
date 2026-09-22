@@ -1044,4 +1044,34 @@ assert.ok(
   'La medición pedagógica debe verificar variedad estructural de flashcards.'
 );
 
+const missingCanonicalQuality = buildStudentMaterialPedagogicalQualityReport({
+  pageCount: 2,
+  pages: [
+    'Página con contenido académico suficiente para requerir una representación canónica.',
+    'Segunda página con más contenido académico relevante.',
+  ],
+  documentAnalysis: {
+    ...analysis,
+    pageCount: 2,
+    requiresOcr: false,
+  },
+  model: null,
+  summary: {
+    ...summary,
+    status: 'ready',
+    provider: 'fallback-test',
+    errorMessage: null,
+    sourceChunksCount: 2,
+  },
+  glossary,
+  artifacts: pedagogy,
+  visionUsed: false,
+});
+
+assert.equal(
+  missingCanonicalQuality.status,
+  'fail',
+  'Un PDF con contenido no puede quedar listo si falta el modelo pedagógico canónico.'
+);
+
 console.log('Student material quality smoke tests passed.');
