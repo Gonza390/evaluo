@@ -30,6 +30,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date('2026-09-17'),
     },
     {
+      url: `${baseUrl}/blog/tecnicas-de-estudio-efectivas`,
+      lastModified: new Date('2026-09-23'),
+    },
+    {
       url: `${baseUrl}/estudiar-pdf-con-ia`,
     },
     {
