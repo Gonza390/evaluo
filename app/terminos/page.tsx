@@ -10,7 +10,7 @@ export const metadata = {
     canonical: '/terminos',
   },
   robots: {
-    index: true,
+    index: false,
     follow: true,
   },
 };
