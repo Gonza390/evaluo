@@ -45,25 +45,80 @@ export const metadata: Metadata = {
 const sources = [
   {
     title: 'Improving Students’ Learning With Effective Learning Techniques',
-    detail: 'Dunlosky et al. (2013) · Association for Psychological Science',
-    href: 'https://www.psychologicalscience.org/publications/journals/pspi/learning-techniques.html',
+    detail: 'Dunlosky et al. (2013) · Psychological Science in the Public Interest',
+    href: 'https://www.psychologicalscience.org/journals/pspi/1529100612453266/',
   },
   {
-    title: 'Test-enhanced learning: taking memory tests improves long-term retention',
-    detail: 'Roediger & Karpicke (2006) · Psychological Science / PubMed',
-    href: 'https://pubmed.ncbi.nlm.nih.gov/16507066/',
+    title: 'Retrieval Practice Consistently Benefits Student Learning',
+    detail: 'Agarwal, Nunes & Blunt (2021) · Educational Psychology Review · revisión sistemática de estudios en aulas',
+    href: 'https://doi.org/10.1007/s10648-021-09595-9',
+  },
+  {
+    title: 'Practicing Retrieval Facilitates Learning',
+    detail: 'McDermott (2021) · Annual Review of Psychology',
+    href: 'https://doi.org/10.1146/annurev-psych-010419-051019',
   },
   {
     title: 'Distributed practice in verbal recall tasks: a review and quantitative synthesis',
-    detail: 'Cepeda et al. (2006) · Psychological Bulletin / PubMed',
+    detail: 'Cepeda et al. (2006) · Psychological Bulletin · meta-análisis',
     href: 'https://pubmed.ncbi.nlm.nih.gov/16719566/',
   },
   {
-    title: 'Six Strategies for Effective Learning',
-    detail: 'The Learning Scientists',
-    href: 'https://www.learningscientists.org/blog/2016/8/18-1',
+    title: 'Similarity matters: A meta-analysis of interleaved learning and its moderators',
+    detail: 'Brunmair & Richter (2019) · Psychological Bulletin · meta-análisis',
+    href: 'https://pubmed.ncbi.nlm.nih.gov/31556629/',
+  },
+  {
+    title: 'Inducing Self-Explanation: a Meta-Analysis',
+    detail: 'Bisra et al. (2018) · Educational Psychology Review · meta-análisis',
+    href: 'https://doi.org/10.1007/s10648-018-9434-x',
+  },
+  {
+    title: 'Example-Based Learning: Integrating Cognitive and Social-Cognitive Research Perspectives',
+    detail: 'Van Gog & Rummel (2010) · Educational Psychology Review',
+    href: 'https://doi.org/10.1007/s10648-010-9134-7',
+  },
+  {
+    title: 'The Past, Present, and Future of the Cognitive Theory of Multimedia Learning',
+    detail: 'Mayer (2024) · Educational Psychology Review',
+    href: 'https://doi.org/10.1007/s10648-023-09842-1',
+  },
+  {
+    title: 'Mapping and Drawing to Improve Monitoring and Regulation of Learning from Text',
+    detail: 'Van de Pol et al. (2020) · Educational Psychology Review',
+    href: 'https://doi.org/10.1007/s10648-020-09560-y',
+  },
+  {
+    title: 'The Power of Feedback Revisited: A Meta-Analysis of Educational Feedback Research',
+    detail: 'Wisniewski, Zierer & Hattie (2020) · Frontiers in Psychology · meta-análisis',
+    href: 'https://pubmed.ncbi.nlm.nih.gov/32038429/',
+  },
+  {
+    title: 'Retrieval Practice Versus Elaborative Encoding: A Systematic and Meta-analytic Review',
+    detail: 'Gonçalves, Muniz & Jaeger (2025) · Educational Psychology Review',
+    href: 'https://doi.org/10.1007/s10648-025-10076-6',
+  },
+  {
+    title: 'Test-enhanced learning: taking memory tests improves long-term retention',
+    detail: 'Roediger & Karpicke (2006) · Psychological Science',
+    href: 'https://pubmed.ncbi.nlm.nih.gov/16507066/',
   },
 ];
+
+function EvidenceRefs({ refs }: { refs: number[] }) {
+  return (
+    <sup className="ml-1 whitespace-nowrap text-[10px] font-bold text-indigo-700">
+      {refs.map((ref, index) => (
+        <span key={ref}>
+          {index > 0 ? ', ' : ''}
+          <a href={`#fuente-${ref}`} className="underline decoration-indigo-200 underline-offset-2 hover:decoration-indigo-500">
+            {ref}
+          </a>
+        </span>
+      ))}
+    </sup>
+  );
+}
 
 function Technique({
   number,
@@ -160,7 +215,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
               Estudiar más horas no siempre significa aprender más. La diferencia suele estar en qué hacés con el material: recuperar información sin mirar, distribuir el estudio y practicar de una forma parecida a la que vas a necesitar en el examen.
             </p>
             <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-xs text-slate-500">
-              <span>14 min de lectura</span>
+              <span>16 min de lectura</span>
               <span>Publicado el 23 de septiembre de 2026</span>
               <span>Equipo Evaluo</span>
             </div>
@@ -179,11 +234,12 @@ export default function TecnicasDeEstudioEfectivasPage() {
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">En esta guía</p>
             <div className="mt-4 grid gap-x-6 gap-y-2 border-l border-slate-200 pl-4 text-sm sm:grid-cols-2">
               {[
+                ['#evidencia', 'Qué dice la evidencia'],
                 ['#tecnica-01', 'Recuperación activa'],
                 ['#tecnica-02', 'Repetición espaciada'],
                 ['#tecnica-03', 'Intercalado'],
                 ['#tecnica-04', 'Elaboración'],
-                ['#tecnica-05', 'Ejemplos concretos'],
+                ['#tecnica-05', 'Ejemplos resueltos'],
                 ['#tecnica-06', 'Codificación dual'],
                 ['#elegir', 'Qué técnica elegir'],
                 ['#sesion-60', 'Sesión de 60 minutos'],
@@ -200,6 +256,36 @@ export default function TecnicasDeEstudioEfectivasPage() {
             </div>
           </nav>
 
+          <section id="evidencia" className="scroll-mt-8 mb-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+              Qué dice la evidencia
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
+              No todas las técnicas tienen el mismo respaldo ni sirven para lo mismo
+            </h2>
+            <p className="mt-5 text-[15px] leading-7 text-slate-600">
+              Las revisiones de psicología cognitiva suelen ubicar a la <strong className="text-slate-800">práctica de recuperación</strong> y al <strong className="text-slate-800">estudio distribuido</strong> entre las estrategias con evidencia más generalizable. Otras técnicas, como intercalar problemas, autoexplicarse o construir representaciones visuales, también pueden ayudar, pero sus resultados dependen más del contenido, del conocimiento previo y de cómo se implementan.
+              <EvidenceRefs refs={[1, 2, 4, 5, 6, 8]} />
+            </p>
+            <div className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
+              {[
+                ['Respaldo amplio', 'Recuperación activa y práctica espaciada', 'Funcionan en muchos materiales y contextos, aunque ningún método garantiza resultados por sí solo.'],
+                ['Útiles con condiciones', 'Intercalado y autoexplicación', 'Pueden ser muy efectivos cuando la tarea exige discriminar, razonar o explicar relaciones.'],
+                ['Dependen mucho del diseño', 'Mapas, diagramas y recursos visuales', 'Ayudan cuando representan relaciones relevantes y obligan a organizar la información; decorar apuntes no equivale a aprender.'],
+              ].map(([level, methods, note]) => (
+                <div key={level} className="grid gap-2 py-5 sm:grid-cols-[120px_185px_1fr] sm:gap-5">
+                  <span className="text-xs font-bold uppercase tracking-[0.1em] text-slate-400">{level}</span>
+                  <strong className="text-sm leading-6 text-slate-950">{methods}</strong>
+                  <span className="text-sm leading-6 text-slate-600">{note}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-6 text-slate-500">
+              También hay límites de generalización: por ejemplo, una revisión de retrieval practice en aulas encontró resultados positivos en distintos niveles y materias, pero señaló que sólo una pequeña parte de los experimentos provenía de países no occidentales.
+              <EvidenceRefs refs={[2]} />
+            </p>
+          </section>
+
           <div className="space-y-12">
             <Technique
               number="01"
@@ -212,7 +298,12 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 La recuperación activa —también conocida como <em>retrieval practice</em> o active recall— consiste en traer la información a la memoria en lugar de volver a verla pasivamente.
               </p>
               <p>
-                En una revisión amplia de técnicas de aprendizaje, la práctica de recuperación fue una de las estrategias con mayor utilidad general. En estudios experimentales, practicar el recuerdo también produjo mejor retención a largo plazo que releer repetidamente el mismo material.
+                El respaldo es especialmente sólido frente a estrategias pasivas como releer. Una revisión sistemática de 50 experimentos realizados en contextos educativos encontró beneficios de retrieval practice en distintos niveles, materias, formatos de prueba y demoras hasta el examen; otra revisión de la literatura describe el efecto como robusto a través de materiales y edades.
+                <EvidenceRefs refs={[2, 3]} />
+              </p>
+              <p>
+                Un estudio clásico también mostró una distinción importante: releer podía rendir mejor en una prueba casi inmediata, mientras que practicar la recuperación produjo mayor retención cuando la evaluación llegó días después. Eso ayuda a explicar por qué “sentir que el texto está fresco” no necesariamente equivale a haberlo aprendido para la semana siguiente.
+                <EvidenceRefs refs={[12]} />
               </p>
             </Technique>
 
@@ -229,7 +320,8 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 La repetición espaciada distribuye las oportunidades de estudio en el tiempo. No significa repetir exactamente lo mismo: cada sesión puede empezar recuperando lo anterior y después avanzar sobre lo que todavía cuesta.
               </p>
               <p>
-                La evidencia sobre práctica distribuida es extensa. Una revisión cuantitativa que reunió cientos de experimentos encontró una ventaja consistente de espaciar las oportunidades de aprendizaje frente a concentrarlas.
+                La evidencia sobre práctica distribuida es extensa. El meta-análisis de Cepeda y colaboradores reunió 839 comparaciones procedentes de 317 experimentos y mostró que la separación entre sesiones y el tiempo hasta la evaluación interactúan: no existe un intervalo perfecto para todo, pero concentrar todas las repeticiones juntas suele desperdiciar parte del beneficio que aparece al volver al contenido más adelante.
+                <EvidenceRefs refs={[4]} />
               </p>
             </Technique>
 
@@ -246,7 +338,8 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 Intercalar significa alternar tipos de problemas o conceptos relacionados durante una misma etapa de práctica. Es diferente de estudiar un tema completo, terminarlo y recién después pasar al siguiente.
               </p>
               <p>
-                No funciona igual en todos los contenidos, pero puede ser especialmente útil cuando necesitás aprender a distinguir qué estrategia corresponde aplicar en cada caso.
+                Acá conviene ser preciso: un meta-análisis de 59 estudios encontró un efecto positivo global del intercalado, pero con diferencias importantes. Funcionó mejor cuando había que distinguir categorías o procedimientos similares; en tareas matemáticas el efecto fue menor pero positivo, mientras que para textos expositivos los resultados fueron ambiguos. No hace falta intercalar todo.
+                <EvidenceRefs refs={[5]} />
               </p>
             </Technique>
 
@@ -254,7 +347,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
 
             <Technique
               number="04"
-              title="Elaboración: preguntate cómo y por qué"
+              title="Autoexplicación y elaboración: preguntate cómo y por qué"
               practice={
                 <>después de estudiar una definición, hacete preguntas como “¿por qué ocurre?”, “¿cómo se relaciona con este otro concepto?” o “¿qué cambiaría si esta condición fuera distinta?”.</>
               }
@@ -263,7 +356,8 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 Elaborar es conectar la información nueva con ideas que ya conocés y explicar relaciones entre conceptos. Una forma concreta es la interrogación elaborativa: generar preguntas de “cómo” y “por qué” y buscar respuestas verificables en el material.
               </p>
               <p>
-                Sirve para ir más allá de reconocer una frase y comprobar si realmente entendés su estructura y sus relaciones.
+                La autoexplicación tiene una base empírica más concreta que el consejo genérico de “pensar más profundo”. Un meta-análisis de 64 trabajos encontró un efecto positivo medio de inducir autoexplicaciones en tareas que incluían resolución de problemas, ejemplos resueltos y estudio de textos. La clave es generar relaciones e inferencias, no repetir la definición con otras palabras.
+                <EvidenceRefs refs={[6]} />
               </p>
             </Technique>
 
@@ -271,16 +365,18 @@ export default function TecnicasDeEstudioEfectivasPage() {
 
             <Technique
               number="05"
-              title="Ejemplos concretos: bajá las ideas abstractas a casos"
+              title="Ejemplos resueltos: mirá el procedimiento y después hacelo vos"
               practice={
-                <>por cada concepto abstracto, buscá al menos un ejemplo real y explicá qué característica del caso representa la idea que estás estudiando.</>
+                <>si todavía sos principiante en un tipo de problema, estudiá un ejemplo bien resuelto paso a paso, explicá por qué funciona cada paso y después resolvé un problema parecido sin mirar.</>
               }
             >
               <p>
-                Cuando un concepto es abstracto, un ejemplo específico ayuda a darle forma. La parte importante no es memorizar el ejemplo aislado, sino entender por qué ese caso representa el concepto.
+                Para aprender procedimientos nuevos, empezar directamente con resolución sin guía puede cargar demasiado la memoria de trabajo. La investigación sobre <em>worked examples</em> muestra que estudiar soluciones paso a paso suele ser especialmente útil para principiantes, y que conviene pasar progresivamente de mirar ejemplos a resolver por cuenta propia.
+                <EvidenceRefs refs={[7]} />
               </p>
               <p>
-                Comparar varios ejemplos también puede ayudarte a separar los detalles superficiales de la estructura que realmente importa.
+                El efecto no significa copiar mecánicamente una solución. Funciona mejor cuando intentás explicar los pasos y después transferís el procedimiento a un ejercicio nuevo. A medida que ganás dominio, la práctica independiente debería ocupar cada vez más espacio.
+                <EvidenceRefs refs={[6, 7]} />
               </p>
             </Technique>
 
@@ -288,16 +384,18 @@ export default function TecnicasDeEstudioEfectivasPage() {
 
             <Technique
               number="06"
-              title="Codificación dual: combiná palabras con representaciones visuales"
+              title="Representaciones visuales: usalas para mostrar relaciones, no para decorar"
               practice={
                 <>si un tema tiene relaciones, procesos o jerarquías, intentá reconstruir un esquema o mapa simple y después explicalo con palabras sin mirar el original.</>
               }
             >
               <p>
-                La codificación dual combina información verbal con representaciones visuales relevantes. Puede ser un diagrama, una línea de tiempo, una relación entre conceptos o un esquema que ayude a representar cómo se organiza una idea.
+                Texto e imágenes pueden complementarse, pero “agregar un dibujo” no mejora automáticamente el aprendizaje. La investigación sobre aprendizaje multimedia destaca que las representaciones visuales ayudan cuando permiten seleccionar información relevante, organizarla e integrarla con lo que ya sabés.
+                <EvidenceRefs refs={[8]} />
               </p>
               <p>
-                No se trata de decorar apuntes. El valor está en representar el contenido de otra manera y poder explicar la relación entre el texto y lo visual.
+                Dibujar o construir un mapa puede además obligarte a hacer explícitas relaciones causales, jerarquías o secuencias. Revisiones sobre mapping y drawing remarcan justamente ese valor generativo y de monitoreo de la comprensión. Si el gráfico es decorativo o demasiado complejo, ese beneficio puede desaparecer.
+                <EvidenceRefs refs={[9]} />
               </p>
             </Technique>
           </div>
@@ -430,7 +528,8 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 ['01', 'Entendé', 'Leé una parte acotada del material y detectá conceptos, relaciones y ejemplos.'],
                 ['02', 'Cerrá la fuente', 'Intentá recuperar las ideas centrales sin mirar.'],
                 ['03', 'Practicá', 'Respondé preguntas o resolvé ejercicios mezclando contenidos relacionados.'],
-                ['04', 'Corregí y volvé después', 'Revisá los errores y programá otro contacto con esos temas en otro momento.'],
+                ['04', 'Corregí con información útil', 'No te quedes en “bien/mal”: identificá qué respuesta era correcta, por qué y qué concepto explica el error.'],
+                ['05', 'Volvé después', 'Programá otro contacto con los temas débiles para recuperar de nuevo sin mirar.'],
               ].map(([number, title, text]) => (
                 <li key={number} className="grid gap-2 py-5 sm:grid-cols-[42px_130px_1fr] sm:gap-4">
                   <span className="font-mono text-xs font-bold text-indigo-700">{number}</span>
@@ -439,6 +538,10 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 </li>
               ))}
             </ol>
+            <p className="mt-5 text-xs leading-6 text-slate-500">
+              El feedback no es una intervención única: su impacto depende de la información que aporta. Un meta-análisis de 435 estudios encontró un efecto medio positivo, con mucha variación según el tipo de feedback. Una revisión meta-analítica más reciente también encontró que la ventaja de retrieval practice frente a otras estrategias activas era mayor cuando había feedback correctivo.
+              <EvidenceRefs refs={[10, 11]} />
+            </p>
           </section>
 
           <section className="mt-14 border border-slate-200 bg-slate-50 p-6 sm:p-8">
@@ -519,11 +622,14 @@ export default function TecnicasDeEstudioEfectivasPage() {
               Investigación y recursos utilizados
             </h2>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Esta guía resume principios generales de investigación sobre aprendizaje. La efectividad concreta puede variar según el contenido, la tarea y la persona.
+              Esta guía prioriza revisiones sistemáticas, meta-análisis y artículos de síntesis, y usa estudios individuales sólo para ilustrar hallazgos concretos. La efectividad de una estrategia puede variar según el contenido, el conocimiento previo, el tipo de evaluación y la forma de implementación.
             </p>
             <ul className="mt-6 space-y-4">
-              {sources.map((source) => (
-                <li key={source.href} className="text-sm">
+              {sources.map((source, index) => (
+                <li id={`fuente-${index + 1}`} key={source.href} className="scroll-mt-8 text-sm">
+                  <div className="flex gap-3">
+                    <span className="mt-0.5 font-mono text-[11px] font-bold text-slate-400">{index + 1}</span>
+                    <div>
                   <a
                     href={source.href}
                     target="_blank"
@@ -533,6 +639,8 @@ export default function TecnicasDeEstudioEfectivasPage() {
                     {source.title}
                   </a>
                   <p className="mt-1 text-xs leading-5 text-slate-500">{source.detail}</p>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
