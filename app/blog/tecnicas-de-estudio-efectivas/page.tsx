@@ -160,7 +160,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
               Estudiar más horas no siempre significa aprender más. La diferencia suele estar en qué hacés con el material: recuperar información sin mirar, distribuir el estudio y practicar de una forma parecida a la que vas a necesitar en el examen.
             </p>
             <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-xs text-slate-500">
-              <span>10 min de lectura</span>
+              <span>14 min de lectura</span>
               <span>Publicado el 23 de septiembre de 2026</span>
               <span>Equipo Evaluo</span>
             </div>
@@ -185,7 +185,12 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 ['#tecnica-04', 'Elaboración'],
                 ['#tecnica-05', 'Ejemplos concretos'],
                 ['#tecnica-06', 'Codificación dual'],
+                ['#elegir', 'Qué técnica elegir'],
+                ['#sesion-60', 'Sesión de 60 minutos'],
+                ['#dias', 'Según cuánto falta'],
+                ['#errores', 'Errores frecuentes'],
                 ['#combinar', 'Cómo combinarlas'],
+                ['#preguntas', 'Preguntas frecuentes'],
                 ['#fuentes', 'Fuentes'],
               ].map(([href, label]) => (
                 <a key={href} href={href} className="text-slate-600 transition hover:text-indigo-700">
@@ -309,6 +314,110 @@ export default function TecnicasDeEstudioEfectivasPage() {
             </p>
           </section>
 
+          <section id="elegir" className="scroll-mt-8 mt-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+              Elegir según la tarea
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
+              Qué técnica usar según lo que tenés que estudiar
+            </h2>
+            <p className="mt-4 text-[15px] leading-7 text-slate-600">
+              No todas las materias exigen lo mismo. La técnica conviene elegirla según la tarea que después vas a tener que resolver en el examen.
+            </p>
+            <div className="mt-7 overflow-hidden border-y border-slate-200">
+              {[
+                ['Memorizar conceptos o definiciones', 'Recuperación activa + repetición espaciada'],
+                ['Resolver ejercicios', 'Práctica + intercalado'],
+                ['Entender teoría', 'Elaboración + explicación con tus palabras'],
+                ['Relacionar conceptos', 'Esquemas simples + recuperación sin mirar'],
+                ['Preparar multiple choice', 'Preguntas + simulacros + revisión de errores'],
+                ['Preparar un oral', 'Recuperación + explicación en voz alta'],
+              ].map(([goal, method]) => (
+                <div key={goal} className="grid gap-2 border-b border-slate-200 py-4 last:border-b-0 sm:grid-cols-[1fr_1.15fr] sm:gap-6">
+                  <strong className="text-sm leading-6 text-slate-950">{goal}</strong>
+                  <span className="text-sm leading-6 text-slate-600">{method}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-xs leading-6 text-slate-500">
+              Una misma materia puede necesitar más de una estrategia. Por ejemplo, Derecho puede combinar recuperación de conceptos con comparación de casos; Matemática exige mucha más resolución sin mirar el procedimiento.
+            </p>
+          </section>
+
+          <section id="sesion-60" className="scroll-mt-8 mt-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+              Ejemplo práctico
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
+              Cómo puede verse una sesión de estudio de 60 minutos
+            </h2>
+            <p className="mt-4 text-[15px] leading-7 text-slate-600">
+              No es una fórmula rígida. Es un ejemplo para que la sesión termine comprobando qué podés recuperar y aplicar, no sólo cuánto material llegaste a leer.
+            </p>
+            <ol className="mt-7 border-y border-slate-200">
+              {[
+                ['0–15 min', 'Entender', 'Trabajá una porción acotada del material. Identificá ideas centrales, relaciones y ejemplos.'],
+                ['15–30 min', 'Recordar sin mirar', 'Cerrá la fuente y reconstruí conceptos, respondé preguntas o explicá el tema con tus palabras.'],
+                ['30–50 min', 'Practicar', 'Resolvé preguntas o ejercicios sin ayuda. Mezclá contenidos si ya tenés varios temas estudiados.'],
+                ['50–60 min', 'Corregir', 'Compará con la fuente, anotá errores y decidí qué tema necesita otro repaso más adelante.'],
+              ].map(([time, title, text]) => (
+                <li key={time} className="grid gap-2 border-b border-slate-200 py-5 last:border-b-0 sm:grid-cols-[90px_110px_1fr] sm:gap-4">
+                  <span className="font-mono text-xs font-bold text-indigo-700">{time}</span>
+                  <strong className="text-sm text-slate-950">{title}</strong>
+                  <span className="text-sm leading-6 text-slate-600">{text}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section id="dias" className="scroll-mt-8 mt-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+              Antes del examen
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
+              Cómo estudiar según cuántos días faltan
+            </h2>
+            <p className="mt-4 text-[15px] leading-7 text-slate-600">
+              Cuanto menos tiempo queda, menos sentido tiene intentar rehacer todo el material desde cero. La prioridad debería desplazarse hacia detectar lagunas, practicar y corregir.
+            </p>
+            <div className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
+              {[
+                ['14 días o más', 'Construí comprensión y empezá a espaciar repasos. Alterná lectura acotada, recuperación y práctica.'],
+                ['7 días', 'Aumentá la proporción de preguntas, ejercicios y repasos de temas débiles. Evitá dedicar sesiones enteras a releer.'],
+                ['3 días', 'Priorizá simulacros, errores y los contenidos que todavía no podés recuperar sin ayuda.'],
+                ['1 día', 'Hacé un repaso breve de puntos débiles y conceptos centrales. Evitá intentar aprender una unidad completa desde cero.'],
+              ].map(([when, action]) => (
+                <div key={when} className="grid gap-2 py-5 sm:grid-cols-[130px_1fr] sm:gap-6">
+                  <strong className="text-sm text-slate-950">{when}</strong>
+                  <p className="text-sm leading-7 text-slate-600">{action}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="errores" className="scroll-mt-8 mt-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+              Errores frecuentes
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
+              Cinco formas de estudiar que pueden dar una falsa sensación de avance
+            </h2>
+            <div className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
+              {[
+                ['Releer muchas veces', 'Reconocer una página no es lo mismo que poder recuperar la idea sin verla.'],
+                ['Hacer resúmenes demasiado largos', 'Si el resumen reproduce casi todo el material, te obliga poco a decidir qué es central.'],
+                ['Practicar mirando la respuesta', 'La ayuda constante impide comprobar cuánto podés resolver o recordar por tu cuenta.'],
+                ['Repasar sólo lo que ya sale bien', 'La sensación de fluidez puede llevarte a evitar justamente los temas que más necesitan trabajo.'],
+                ['Hacer simulacros sin revisar errores', 'El valor del simulacro aumenta cuando identificás por qué fallaste y qué concepto necesitás volver a estudiar.'],
+              ].map(([title, text]) => (
+                <div key={title} className="grid gap-2 py-5 sm:grid-cols-[220px_1fr] sm:gap-8">
+                  <strong className="text-sm leading-6 text-slate-950">{title}</strong>
+                  <p className="text-sm leading-7 text-slate-600">{text}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section id="combinar" className="scroll-mt-8 mt-14">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
               Cómo llevarlo a la práctica
@@ -377,6 +486,31 @@ export default function TecnicasDeEstudioEfectivasPage() {
             <p className="mt-4 text-[15px] leading-7 text-slate-600">
               El contenido también importa. Una materia práctica exige resolver problemas; una materia conceptual puede exigir explicar relaciones, comparar casos y recuperar definiciones. La técnica tiene que acercarse a lo que después vas a necesitar hacer en el examen.
             </p>
+          </section>
+
+          <section id="preguntas" className="scroll-mt-8 mt-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+              Preguntas frecuentes
+            </p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
+              Dudas comunes al elegir una técnica de estudio
+            </h2>
+            <div className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
+              {[
+                ['¿Cuál es la técnica de estudio más efectiva?', 'No existe una única técnica para todo. Si necesitás una base general, recuperación activa y práctica distribuida tienen respaldo amplio y se adaptan a muchos tipos de contenido.'],
+                ['¿Sirve hacer resúmenes?', 'Sí, si el resumen te ayuda a seleccionar y organizar ideas. Conviene complementarlo intentando recuperar lo estudiado sin mirar y usando preguntas o ejercicios.'],
+                ['¿Cómo estudiar si tengo poco tiempo?', 'Recortá el contenido a lo evaluable, priorizá temas débiles y dedicá más tiempo a recuperar y practicar que a releer todo desde el principio.'],
+                ['¿Cómo estudiar para un examen multiple choice?', 'Practicá preguntas sin mirar la respuesta, justificá por qué elegís una opción y revisá también por qué las alternativas incorrectas no corresponden.'],
+                ['¿Cuántas horas conviene estudiar por día?', 'No hay un número universal. Importa más sostener sesiones en las que recuperás, practicás y corregís que acumular muchas horas de lectura pasiva.'],
+              ].map(([question, answer]) => (
+                <details key={question} className="group py-5">
+                  <summary className="cursor-pointer list-none pr-8 text-sm font-bold text-slate-950 marker:hidden">
+                    {question}
+                  </summary>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{answer}</p>
+                </details>
+              ))}
+            </div>
           </section>
 
           <section id="fuentes" className="scroll-mt-8 mt-14 border-t border-slate-200 pt-8">
