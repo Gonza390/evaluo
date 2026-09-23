@@ -49,15 +49,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/pricing`,
     },
     {
-      url: `${baseUrl}/terminos`,
-    },
-    {
-      url: `${baseUrl}/copyright`,
-    },
-    {
-      url: `${baseUrl}/privacidad`,
-    },
-    {
       url: `${baseUrl}/landings/parciales`,
     },
     {
