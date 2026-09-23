@@ -13,9 +13,9 @@ import { loadPregunteroHubData, summarizePregunteroHubData } from './data';
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: 'Pregunteros Siglo 21: materias y parciales',
+  title: 'Pregunteros Siglo 21: parciales y simuladores',
   description:
-    'Encontrá pregunteros Siglo 21 por materia y parcial. Practicá primer parcial, segundo parcial e integrador con preguntas disponibles en Evaluo.',
+    'Encontrá pregunteros de Universidad Siglo 21 por materia y parcial. Practicá preguntas, simulá el examen y revisá tus errores en Evaluo.',
   keywords: [
     'pregunteros Siglo 21',
     'preguntero Siglo 21',
