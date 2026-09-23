@@ -18,6 +18,7 @@ const videoSteps = [
 export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
   const sentMilestones = useRef(new Set<number>());
   const mediaShellRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [shouldLoadPoster, setShouldLoadPoster] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,33 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
         observer.disconnect();
       },
       { rootMargin: '400px 0px' }
+    );
+
+    observer.observe(mediaShell);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const mediaShell = mediaShellRef.current;
+    const video = videoRef.current;
+
+    if (!mediaShell || !video || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          video.muted = true;
+          void video.play().catch(() => {
+            // Some browsers can still block autoplay. Controls remain available as fallback.
+          });
+          return;
+        }
+
+        video.pause();
+      },
+      { threshold: [0, 0.5, 1] }
     );
 
     observer.observe(mediaShell);
@@ -119,10 +147,12 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
             </div>
 
             <video
+              ref={videoRef}
               className="aspect-video w-full bg-slate-950 object-contain"
               controls
+              muted
               playsInline
-              preload="none"
+              preload="metadata"
               poster={shouldLoadPoster ? VIDEO_POSTER_URL : undefined}
               aria-label="Recorrido de 30 segundos por el estudio de un PDF en Evaluo"
               onPlay={() =>
