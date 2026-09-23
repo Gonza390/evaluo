@@ -25,25 +25,16 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'Evaluo',
     locale: 'es_AR',
-    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+    title: 'Subí tu PDF y prepará tu examen | Evaluo',
     description:
-      'Subí tu PDF y transformalo en resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
+      'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
     url: '/',
-    images: [
-      {
-        url: '/opengraph-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen',
+    title: 'Subí tu PDF y prepará tu examen | Evaluo',
     description:
-      'Subí tu PDF y estudiá con resúmenes, mapas mentales, flashcards y práctica sobre el mismo material.',
-    images: ['/opengraph-image.png'],
+      'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
   },
 };
 
