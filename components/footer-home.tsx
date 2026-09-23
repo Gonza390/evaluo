@@ -115,6 +115,9 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               <Link href="/como-estudiar-ingreso-unlam" className="text-xs text-white/80 transition hover:text-white">
                 Cómo estudiar para el Ingreso UNLaM 2027
               </Link>
+              <Link href="/blog/tecnicas-de-estudio-efectivas" className="text-xs text-white/80 transition hover:text-white">
+                Técnicas de estudio efectivas
+              </Link>
               <Link href="/#como-funciona" className="text-xs text-white/80 transition hover:text-white">
                 Cómo funciona
               </Link>
