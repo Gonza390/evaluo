@@ -46,7 +46,7 @@
     },
     {
       "path": "/api/internal/exam-reminders?dry_run=1&verification=cron_secret_live_20260924",
-      "schedule": "14 16 24 9 *"
+      "schedule": "24 16 24 9 *"
     }
   ]
 }
