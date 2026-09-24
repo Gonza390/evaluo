@@ -4,11 +4,9 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BookOpen,
-  CheckCircle2,
   FileText,
   HelpCircle,
   Library,
-  PlayCircle,
 } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildCollectionPageJsonLd, buildFaqJsonLd } from '@/lib/seo';
