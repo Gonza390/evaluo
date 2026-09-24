@@ -4,7 +4,7 @@
     "gru1"
   ],
   "git": {
-    "deploymentEnabled": true
+    "deploymentEnabled": false
   },
   "redirects": [
     {
@@ -43,10 +43,6 @@
     {
       "path": "/api/internal/reactivation-next-subject",
       "schedule": "0 14 * * *"
-    },
-    {
-      "path": "/api/internal/exam-reminders?dry_run=1&verification=20260924",
-      "schedule": "38 15 24 9 *"
     }
   ]
 }
