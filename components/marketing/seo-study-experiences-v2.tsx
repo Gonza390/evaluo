@@ -18,7 +18,7 @@ import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { buildBreadcrumbJsonLd, buildFaqJsonLd } from '@/lib/seo';
+import { buildBreadcrumbJsonLd } from '@/lib/seo';
 
 const uploadHref = '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1';
 const demoHref = '/demo/material-estudio';
@@ -273,7 +273,6 @@ export function IaParaEstudiantesExperience() {
   return (
     <Shell currentPath="/ia-para-estudiantes" breadcrumbLabel="IA para estudiantes" trackingPrefix="seo_ia_estudiantes_v2">
       <main>
-        <JsonLd data={buildFaqJsonLd(IA_STUDENTS_FAQ_ITEMS)} />
         <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.13),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto w-full max-w-[1120px] px-4 pb-16 pt-14 text-center sm:px-8 sm:pb-24 sm:pt-20">
             <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
