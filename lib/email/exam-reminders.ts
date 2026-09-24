@@ -429,6 +429,21 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     }
   }
 
+  const { error: heartbeatError } = await db.from('analytics_events').insert({
+    event_name: 'exam_reminder_dispatch',
+    session_key: 'server:exam-reminders',
+    path: '/api/internal/exam-reminders',
+    metadata: summary,
+  });
+
+  if (heartbeatError) {
+    logError('examReminders.heartbeat', heartbeatError, {
+      dryRun,
+      candidates: summary.candidates,
+      sent: summary.sent,
+    });
+  }
+
   logInfo('examReminders.dispatch', summary);
   return summary;
 }
