@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { isInternalQueueRequestAuthorized } from '../lib/student-materials/job-auth.ts';
 
 const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8')) as {
   dependencies?: Record<string, string>;
@@ -39,5 +40,37 @@ for (const requiredStep of [
 ]) {
   assert.ok(ciSource.includes(requiredStep), `CI debe ejecutar: ${requiredStep}`);
 }
+
+const previousInternalQueueSecret = process.env.INTERNAL_QUEUE_SECRET;
+const previousCronSecret = process.env.CRON_SECRET;
+
+process.env.INTERNAL_QUEUE_SECRET = 'internal-queue-test-secret';
+process.env.CRON_SECRET = 'cron-test-secret';
+
+const authRequest = (secret: string) =>
+  new Request('https://evaluo.com.ar/api/internal/test', {
+    headers: { authorization: `Bearer ${secret}` },
+  });
+
+assert.equal(
+  isInternalQueueRequestAuthorized(authRequest('internal-queue-test-secret')),
+  true,
+  'Los requests internos deben aceptar INTERNAL_QUEUE_SECRET.'
+);
+assert.equal(
+  isInternalQueueRequestAuthorized(authRequest('cron-test-secret')),
+  true,
+  'Los cron de Vercel deben aceptar CRON_SECRET aunque INTERNAL_QUEUE_SECRET también exista.'
+);
+assert.equal(
+  isInternalQueueRequestAuthorized(authRequest('secret-incorrecto')),
+  false,
+  'No se deben aceptar secretos desconocidos.'
+);
+
+if (previousInternalQueueSecret === undefined) delete process.env.INTERNAL_QUEUE_SECRET;
+else process.env.INTERNAL_QUEUE_SECRET = previousInternalQueueSecret;
+if (previousCronSecret === undefined) delete process.env.CRON_SECRET;
+else process.env.CRON_SECRET = previousCronSecret;
 
 console.log('Security baseline smoke tests passed.');
