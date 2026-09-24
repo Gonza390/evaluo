@@ -76,13 +76,28 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
     failed: 0,
   };
 
+  async function persistHeartbeat() {
+    const { error: heartbeatError } = await db.from('analytics_events').insert({
+      event_name: 'reactivation_next_subject_dispatch',
+      session_key: 'server:reactivation-next-subject',
+      path: '/api/internal/reactivation-next-subject',
+      metadata: summary,
+    });
+
+    if (heartbeatError) {
+      logError('reactivationNextSubject.heartbeat', heartbeatError);
+    }
+  }
+
   if (dryRun) {
+    await persistHeartbeat();
     logInfo('reactivationNextSubject.dispatch', summary);
     return summary;
   }
 
   if (!enabled) {
     summary.skippedDisabled = candidates.length;
+    await persistHeartbeat();
     logInfo('reactivationNextSubject.dispatch', summary);
     return summary;
   }
@@ -177,6 +192,7 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
     }
   }
 
+  await persistHeartbeat();
   logInfo('reactivationNextSubject.dispatch', summary);
   return summary;
 }
