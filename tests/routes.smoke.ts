@@ -184,7 +184,7 @@ assert.match(adminLoadingSource, /aria-busy="true"/);
 assert.match(rootLayoutSource, /@vercel\/speed-insights\/next/);
 assert.match(rootLayoutSource, /<SpeedInsights\s*\/>/);
 assert.match(seoLandingSource, /generateStaticParams\(\)[\s\S]*return \[\]/);
-assert.match(seoLandingSource, /getLandingMateria/);
+assert.match(seoLandingSource, /loadStudyLandingData/);
 assert.match(clientLayoutUiSource, /\{ label: 'Inicio', href: '\/', icon: Home \}/);
 assert.match(
   clientLayoutUiSource,
