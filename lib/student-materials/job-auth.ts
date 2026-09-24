@@ -7,9 +7,13 @@ function secureEquals(left: string, right: string) {
 }
 
 export function isInternalQueueRequestAuthorized(request: Request) {
-  const configuredSecret = process.env.INTERNAL_QUEUE_SECRET?.trim() || process.env.CRON_SECRET?.trim();
-  if (!configuredSecret) return false;
+  const configuredSecrets = [
+    process.env.INTERNAL_QUEUE_SECRET?.trim(),
+    process.env.CRON_SECRET?.trim(),
+  ].filter((secret): secret is string => Boolean(secret));
+
+  if (configuredSecrets.length === 0) return false;
 
   const authorization = request.headers.get('authorization') ?? '';
-  return secureEquals(authorization, `Bearer ${configuredSecret}`);
+  return configuredSecrets.some((secret) => secureEquals(authorization, `Bearer ${secret}`));
 }
