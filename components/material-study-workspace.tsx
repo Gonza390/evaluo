@@ -67,11 +67,12 @@ const STUDY_TABS: Array<{
   label: string;
   icon: typeof BookOpenText;
   premium?: boolean;
+  featured?: boolean;
 }> = [
   { id: 'resumen', label: 'Resumen', icon: BookOpenText },
-  { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
+  { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit, featured: true },
   { id: 'tarjetas', label: 'Tarjetas', icon: Sparkles },
-  { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit },
+  { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'mapa', label: 'Mapa mental', icon: Map, premium: true },
 ];
 
@@ -338,7 +339,12 @@ export function MaterialStudyWorkspace({
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              className="h-8 flex-none shrink-0 rounded-[13px] border border-slate-200 bg-white px-2.5 text-[12px] text-slate-500 shadow-none data-[state=active]:border-[#BFDBFE] data-[state=active]:bg-[#EEF4FF] data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+              className={cn(
+                'h-8 flex-none shrink-0 rounded-[13px] border bg-white px-2.5 text-[12px] shadow-none data-[state=active]:border-[#BFDBFE] data-[state=active]:bg-[#EEF4FF] data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]',
+                tab.featured
+                  ? 'border-indigo-200 bg-indigo-50/55 font-semibold text-indigo-700'
+                  : 'border-slate-200 text-slate-500'
+              )}
             >
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {tab.label}
@@ -534,7 +540,7 @@ export function MaterialStudyWorkspace({
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold text-slate-800">
                 <span className="inline-flex items-center gap-2">
                   <ListTree className="h-4 w-4 text-[#2563EB]" />
-                  Contenido
+                  Índice del resumen
                 </span>
                 <span className="text-[11px] font-medium text-slate-400">
                   {summaryChapters.length} capítulos

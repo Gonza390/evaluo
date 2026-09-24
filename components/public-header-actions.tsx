@@ -32,15 +32,17 @@ export async function PublicHeaderActions() {
     <nav className="flex items-center gap-2 sm:gap-3">
       <Link
         href="/login?mode=login"
-        className="hidden min-h-11 items-center rounded-xl px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 sm:inline-flex sm:px-4 sm:text-sm"
+        className="inline-flex min-h-11 items-center rounded-xl px-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 min-[380px]:px-2 sm:px-4 sm:text-sm"
       >
-        Iniciar sesión
+        <span className="sm:hidden">Entrar</span>
+        <span className="hidden sm:inline">Iniciar sesión</span>
       </Link>
       <Link
         href="/login?mode=signup"
-        className="inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-700 sm:px-4 sm:text-sm"
+        className="inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-2 text-[10px] font-semibold text-white transition hover:bg-indigo-700 min-[380px]:px-2.5 sm:px-4 sm:text-sm"
       >
-        Crear cuenta gratis
+        <span className="sm:hidden">Crear cuenta</span>
+        <span className="hidden sm:inline">Crear cuenta gratis</span>
       </Link>
     </nav>
   );
