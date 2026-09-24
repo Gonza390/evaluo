@@ -59,17 +59,32 @@ const loadSummaryCatalog = nextCache(
     const materiaIds = Array.from(grouped.keys());
     if (!materiaIds.length) return [];
 
-    const [{ data: materias }, { data: questions }] = await Promise.all([
+    const fetchQuestionRows = async () => {
+      const pageSize = 1000;
+      const rows: Array<{ materia_id: string | null; parcial: number | null }> = [];
+
+      for (let from = 0; ; from += pageSize) {
+        const { data, error: questionsError } = await client
+          .from('preguntas_banco_public')
+          .select('materia_id, parcial')
+          .in('materia_id', materiaIds)
+          .range(from, from + pageSize - 1);
+
+        if (questionsError) throw questionsError;
+        rows.push(...((data ?? []) as Array<{ materia_id: string | null; parcial: number | null }>));
+        if (!data || data.length < pageSize) break;
+      }
+
+      return rows;
+    };
+
+    const [{ data: materias }, questions] = await Promise.all([
       client.from('materias').select('id, nombre').in('id', materiaIds),
-      client
-        .from('preguntas_banco_public')
-        .select('materia_id, parcial')
-        .in('materia_id', materiaIds)
-        .limit(10000),
+      fetchQuestionRows(),
     ]);
 
     const questionStats = new Map<string, { total: number; partial1: number; partial2: number }>();
-    for (const row of questions ?? []) {
+    for (const row of questions) {
       const materiaId = String(row.materia_id ?? '');
       if (!materiaId) continue;
       const current = questionStats.get(materiaId) ?? { total: 0, partial1: 0, partial2: 0 };
