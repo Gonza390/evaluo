@@ -94,6 +94,14 @@ assert.ok(
   'simulator career SEO page must link to canonical materia slugs'
 );
 
+assertIncludesAll('app/landings/resumenes/page.tsx', [
+  'loadSummaryCatalog',
+  'fetchQuestionRows',
+  '.range(from, from + pageSize - 1)',
+  'ItemList',
+  'Materias con resúmenes disponibles',
+]);
+
 const studyLandingPath = 'app/landings/estudiar/[materia]/page.tsx';
 assertIncludesAll(studyLandingPath, [
   'buildSeoEntitySlug',
