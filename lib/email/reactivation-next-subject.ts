@@ -7,6 +7,7 @@ import { sendSenderCustomEvent } from '@/lib/email/sender';
 const CAMPAIGN_KEY = 'reactivation_next_subject_30d_v1';
 const SENDER_EVENT_TYPE = 'reactivation_next_subject_30d';
 const INACTIVE_DAYS = 30;
+const MAX_INACTIVE_DAYS = 45;
 const DAILY_BATCH_SIZE = 20;
 
 type ReactivationCandidate = {
@@ -41,6 +42,7 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
   const dryRun = Boolean(options?.dryRun);
   const enabled = process.env.REACTIVATION_NEXT_SUBJECT_ENABLED?.trim() === '1';
   const cutoff = new Date(Date.now() - INACTIVE_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  const minCutoff = new Date(Date.now() - MAX_INACTIVE_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const admin = createAdminClient();
   // RPC y tabla agregadas por migración; todavía no forman parte del tipo generado.
@@ -49,6 +51,7 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
 
   const { data, error } = await db.rpc('get_reactivation_next_subject_candidates', {
     p_cutoff: cutoff,
+    p_min_cutoff: minCutoff,
     p_limit: DAILY_BATCH_SIZE,
   });
 
@@ -62,8 +65,10 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
     campaignKey: CAMPAIGN_KEY,
     senderEventType: SENDER_EVENT_TYPE,
     inactiveDays: INACTIVE_DAYS,
+    maxInactiveDays: MAX_INACTIVE_DAYS,
     batchSize: DAILY_BATCH_SIZE,
     cutoff,
+    minCutoff,
     candidates: candidates.length,
     triggered: 0,
     duplicates: 0,
