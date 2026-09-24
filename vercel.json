@@ -43,10 +43,6 @@
     {
       "path": "/api/internal/reactivation-next-subject",
       "schedule": "0 14 * * *"
-    },
-    {
-      "path": "/api/internal/exam-reminders?dry_run=1&verification=cron_secret_live_20260924",
-      "schedule": "24 16 24 9 *"
     }
   ]
 }
