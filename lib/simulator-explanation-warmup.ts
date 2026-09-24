@@ -549,7 +549,7 @@ export async function runSimulatorExplanationWarmup(options: WarmupRunOptions = 
     }
   }
 
-  return {
+  const result: WarmupRunResult = {
     success: true,
     dryRun,
     selectedCount: selected.length,
@@ -580,4 +580,23 @@ export async function runSimulatorExplanationWarmup(options: WarmupRunOptions = 
         .sort((a, b) => b.questions - a.questions),
     },
   };
+
+  const { error: heartbeatError } = await admin.from('analytics_events').insert({
+    event_name: 'explanation_warmup_dispatch',
+    session_key: 'server:explanation-warmup',
+    path: '/api/internal/explanations/warm',
+    metadata: {
+      dry_run: dryRun,
+      selected: result.selectedCount,
+      generated: result.generatedCount,
+      skipped: result.skippedCount,
+      estimated_tokens: result.totalEstimatedTokens,
+    },
+  });
+
+  if (heartbeatError) {
+    logError('simulatorWarmup.heartbeat', heartbeatError);
+  }
+
+  return result;
 }

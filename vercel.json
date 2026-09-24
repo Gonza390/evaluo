@@ -44,5 +44,8 @@
       "path": "/api/internal/reactivation-next-subject",
       "schedule": "0 14 * * *"
     }
-  ]
+  ],
+  "env": {
+    "REACTIVATION_NEXT_SUBJECT_ENABLED": "1"
+  }
 }

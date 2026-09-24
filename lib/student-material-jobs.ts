@@ -218,7 +218,12 @@ export async function claimNextQueuedStudentMaterialJob(
   admin: AdminClient
 ): Promise<StudentMaterialJobRow | null> {
   try {
-    await recoverStaleStudentMaterialJobs(admin);
+    const recoveredMaterialIds = await recoverStaleStudentMaterialJobs(admin);
+
+    for (const recoveredMaterialId of recoveredMaterialIds) {
+      const recoveredJob = await claimStudentMaterialJob(admin, recoveredMaterialId);
+      if (recoveredJob) return recoveredJob;
+    }
 
     const { data: jobs, error } = await admin
       .from(jobsTable())
