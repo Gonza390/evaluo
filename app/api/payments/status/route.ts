@@ -11,14 +11,23 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const paymentsDb = supabase as unknown as SupabaseClient;
-  const { data } = await paymentsDb
-    .from('user_subscriptions')
-    .select(
-      'id, status, amount_ars, next_payment_date, promotion_code, payment_provider, provider_subscription_id, canceled_at, expires_at, created_at, subscription_plans(code, name)'
-    )
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
+  const [{ data }, { data: latestCheckoutAttempt }] = await Promise.all([
+    paymentsDb
+      .from('user_subscriptions')
+      .select(
+        'id, status, amount_ars, next_payment_date, promotion_code, payment_provider, provider_subscription_id, canceled_at, expires_at, created_at, subscription_plans(code, name)'
+      )
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    paymentsDb
+      .from('payment_checkout_attempts')
+      .select('status, offer_code, amount_ars, created_at, updated_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const subscriptions = (data ?? []) as unknown as Array<{
     id: string;
@@ -77,6 +86,11 @@ export async function GET() {
     canCancel: billingMode === 'recurring' && premiumIsActive,
     canceledAt: premium?.canceled_at ?? null,
     accessUntil: premium?.expires_at ?? null,
+    checkoutStatus: latestCheckoutAttempt?.status ?? null,
+    checkoutOfferCode: latestCheckoutAttempt?.offer_code ?? null,
+    checkoutAmountArs: latestCheckoutAttempt?.amount_ars ?? null,
+    checkoutUpdatedAt:
+      latestCheckoutAttempt?.updated_at ?? latestCheckoutAttempt?.created_at ?? null,
     lastPayment: transaction
       ? {
           status: transaction.status,
