@@ -8,7 +8,6 @@ import {
   CalendarClock,
   Check,
   CheckCircle2,
-  Clock3,
   FileUp,
   Loader2,
   RefreshCw,
@@ -145,6 +144,7 @@ export function PaymentResult() {
     trackMarketingEvent('premium_checkout_returned', {
       status: details.status,
       checkout_status: details.checkoutStatus,
+      offer_code: details.checkoutOfferCode,
       result_state: resultState,
       billing_mode: details.billingMode,
       amount_ars: details.amountArs,
@@ -153,6 +153,7 @@ export function PaymentResult() {
   }, [
     details.amountArs,
     details.billingMode,
+    details.checkoutOfferCode,
     details.checkoutStatus,
     details.status,
     resultState,
