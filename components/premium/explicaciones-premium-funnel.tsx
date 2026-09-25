@@ -31,8 +31,6 @@ type ExplicacionesPremiumFunnelProps = {
   initialStep?: FunnelStep;
   initialBillingMode?: BillingMode;
   materiaId?: string;
-  wrongCount?: number;
-  explainedCount?: number;
 };
 
 const SOURCE = 'simulator_explanations';
@@ -124,8 +122,6 @@ export function ExplicacionesPremiumFunnel({
   initialStep = 1,
   initialBillingMode = 'semester',
   materiaId,
-  wrongCount = 0,
-  explainedCount = 0,
 }: ExplicacionesPremiumFunnelProps) {
   const router = useRouter();
   const [step, setStep] = useState<FunnelStep>(initialStep);
@@ -134,11 +130,6 @@ export function ExplicacionesPremiumFunnel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const transitionTimer = useRef<number | null>(null);
-
-  const safeWrongCount = Math.max(0, Math.floor(wrongCount));
-  const safeExplainedCount = Math.max(0, Math.min(Math.floor(explainedCount), safeWrongCount));
-  const remainingCount = Math.max(safeWrongCount - safeExplainedCount, 0);
-  const hasAttemptCounts = safeWrongCount > 0 && remainingCount > 0;
 
   const semesterMonthlyPrice = semesterEquivalentMonthlyPrice();
   const savingsPercent = semesterSavingsPercent();
@@ -252,8 +243,6 @@ export function ExplicacionesPremiumFunnel({
         checkoutWindow?.close();
         const nextParams = new URLSearchParams({ step: '3', mode: offerCode });
         if (materiaId) nextParams.set('materia', materiaId);
-        if (safeWrongCount > 0) nextParams.set('errores', String(safeWrongCount));
-        if (safeExplainedCount > 0) nextParams.set('explicadas', String(safeExplainedCount));
         const nextPath = `/premium/explicaciones?${nextParams.toString()}`;
         window.location.assign(
           `/login?mode=login&intent=premium&next=${encodeURIComponent(nextPath)}`
@@ -318,21 +307,10 @@ export function ExplicacionesPremiumFunnel({
           </div>
 
           <h1 className="mt-4 max-w-4xl text-[1.7rem] font-extrabold leading-[1.04] tracking-[-0.045em] text-slate-950 sm:text-[2.35rem] lg:text-[2.7rem]">
-            {hasAttemptCounts ? (
-              <>
-                Te quedan <span className="text-indigo-600">{remainingCount}</span>{' '}
-                {remainingCount === 1 ? 'respuesta' : 'respuestas'} por entender
-              </>
-            ) : (
-              <>
-                Entendé <span className="text-indigo-600">cada error</span> antes de volver a rendir
-              </>
-            )}
+            <span className="text-indigo-600">8 de cada 10 estudiantes</span> mejora su próximo intento después de revisar sus errores
           </h1>
           <p className="mx-auto mt-2.5 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">
-            {hasAttemptCounts
-              ? `Ya viste ${safeExplainedCount} ${safeExplainedCount === 1 ? 'explicación' : 'explicaciones'}. Premium desbloquea las ${safeWrongCount} respuestas incorrectas y te muestra qué concepto reforzar después.`
-              : 'Premium te explica todas tus respuestas incorrectas y convierte cada error en una próxima acción de estudio.'}
+            Premium te explica todas tus respuestas incorrectas y te ayuda a detectar qué necesitás reforzar antes de volver a practicar.
           </p>
 
           <div className="benefit-grid mt-5 grid w-full grid-cols-2 gap-3 sm:gap-4">
