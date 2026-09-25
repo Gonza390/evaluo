@@ -259,6 +259,21 @@ export default async function AdministradorPage({
     );
   }
 
+  if (needsMarketing && (!marketingResult?.success || !marketingResult.stats)) {
+    return (
+      <main className="min-h-screen bg-[#f6f8fc] px-5 py-8">
+        <div className="mx-auto max-w-4xl rounded-[22px] border border-[#e8ebf3] bg-white p-8">
+          <h1 className="text-[1.5rem] font-semibold tracking-[-0.04em] text-[#1d2a44]">
+            No pudimos cargar marketing
+          </h1>
+          <p className="mt-3 text-[14px] leading-6 text-[#7f8aa3]">
+            {marketingResult?.message ?? 'Probá nuevamente en unos segundos.'}
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   if (
     needsIA &&
     (!iaPromptResult?.success ||
