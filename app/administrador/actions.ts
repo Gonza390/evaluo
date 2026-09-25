@@ -774,6 +774,8 @@ export async function obtenerMarketingAdministrador(rangeDays = 30): Promise<{
         registrations: Set<string>;
       }
     >();
+    const attributedVisitSessions = new Set<string>();
+    const attributedLoginUsers = new Set<string>();
 
     const readAttribution = (metadata: unknown) => {
       if (!metadata || typeof metadata !== 'object') return null;
@@ -820,11 +822,20 @@ export async function obtenerMarketingAdministrador(rangeDays = 30): Promise<{
 
       if (event.event_name === 'page_view') {
         const visitKey = event.session_key ?? (event.user_id ? `user:${event.user_id}` : '');
-        if (visitKey) bucket.visits.add(visitKey);
+        if (visitKey && !attributedVisitSessions.has(visitKey)) {
+          bucket.visits.add(visitKey);
+          attributedVisitSessions.add(visitKey);
+        }
       }
 
-      if (event.event_name === 'login_success' && event.user_id) {
+      if (
+        event.event_name === 'login_success' &&
+        event.user_id &&
+        !attributedLoginUsers.has(event.user_id)
+      ) {
         bucket.logins.add(event.user_id);
+        attributedLoginUsers.add(event.user_id);
+
         if (newlyRegisteredIds.has(event.user_id)) {
           bucket.registrations.add(event.user_id);
         }
