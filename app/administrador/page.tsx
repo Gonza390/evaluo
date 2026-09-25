@@ -20,6 +20,7 @@ import {
   obtenerBibliotecaResumenAdministrador,
   obtenerDetalleMateriaAnaliticaAdministrador,
   obtenerLogsAdministrador,
+  obtenerMarketingAdministrador,
   obtenerResumenAdministrador,
   obtenerUsuariosAdministrador,
 } from './actions';
@@ -28,6 +29,7 @@ import { BibliotecaPanel } from './biblioteca-panel';
 import { DashboardInsights } from './dashboard-insights';
 import { IAPanel } from './ia-panel';
 import { LogsPanel } from './logs-panel';
+import { MarketingPanel } from './marketing-panel';
 import { UsersPanel } from './users-panel';
 import { requireAdminAccess } from '@/lib/auth';
 
@@ -155,6 +157,7 @@ export default async function AdministradorPage({
   const needsStats = activePanel === 'dashboard' || activePanel === 'analiticas';
   const needsUsers = activePanel === 'usuarios';
   const needsLogs = activePanel === 'logs';
+  const needsMarketing = activePanel === 'marketing';
   const needsIA = activePanel === 'ia';
   const [
     statsResult,
@@ -162,6 +165,7 @@ export default async function AdministradorPage({
     bibliotecaResult,
     bibliotecaStatsResult,
     logsResult,
+    marketingResult,
     analyticsMateriaResult,
     iaPromptResult,
     iaRankingResult,
@@ -174,6 +178,7 @@ export default async function AdministradorPage({
       needsBiblioteca ? obtenerBibliotecaFormularioAdministrador() : Promise.resolve(null),
       needsBiblioteca ? obtenerBibliotecaResumenAdministrador() : Promise.resolve(null),
       needsLogs ? obtenerLogsAdministrador() : Promise.resolve(null),
+      needsMarketing ? obtenerMarketingAdministrador(activePeriod) : Promise.resolve(null),
       activePanel === 'analiticas' && selectedAnalyticsMateriaId
         ? obtenerDetalleMateriaAnaliticaAdministrador(selectedAnalyticsMateriaId, activePeriod)
         : Promise.resolve(null),
@@ -442,6 +447,11 @@ export default async function AdministradorPage({
                   materiaDetail={analyticsMateriaResult?.success ? analyticsMateriaResult.detail ?? null : null}
                 />
               </section>
+            ) : activePanel === 'marketing' && marketingResult?.success && marketingResult.stats ? (
+              <MarketingPanel
+                activePeriodLabel={activePeriodLabel}
+                stats={marketingResult.stats}
+              />
             ) : activePanel === 'biblioteca' &&
               bibliotecaResult?.universidades &&
               bibliotecaResult.carreras &&
