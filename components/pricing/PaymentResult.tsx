@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
+  AlertTriangle,
   ArrowRight,
   CalendarClock,
   Check,
@@ -10,7 +11,9 @@ import {
   Clock3,
   FileUp,
   Loader2,
+  RefreshCw,
   ShieldCheck,
+  XCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -22,11 +25,34 @@ const unlockedFeatures = [
 ] as const;
 
 type PaymentDetails = {
+  plan: 'free' | 'premium';
+  status: string;
   amountArs: number | null;
   nextPaymentDate: string | null;
   accessUntil: string | null;
   promotion: string | null;
   billingMode: 'recurring' | 'fixed_term' | null;
+  checkoutStatus: string | null;
+  checkoutOfferCode: string | null;
+};
+
+type PaymentResultState = 'processing' | 'approved' | 'failed' | 'attention';
+
+const ACTIVE_STATUSES = new Set(['active', 'approved', 'authorized', 'trialing']);
+const ATTENTION_STATUSES = new Set(['past_due', 'paused']);
+const FAILED_STATUSES = new Set(['failed', 'rejected', 'cancelled', 'canceled', 'expired']);
+const FAILED_CHECKOUT_STATUSES = new Set(['failed', 'expired']);
+
+const INITIAL_DETAILS: PaymentDetails = {
+  plan: 'free',
+  status: 'pending',
+  amountArs: null,
+  nextPaymentDate: null,
+  accessUntil: null,
+  promotion: null,
+  billingMode: null,
+  checkoutStatus: null,
+  checkoutOfferCode: null,
 };
 
 function formatDate(value: string | null) {
@@ -40,54 +66,97 @@ function formatDate(value: string | null) {
   }).format(parsed);
 }
 
+function resolvePaymentResultState(details: PaymentDetails): PaymentResultState {
+  const status = details.status.toLowerCase();
+  const checkoutStatus = details.checkoutStatus?.toLowerCase() ?? '';
+
+  if (details.plan === 'premium' || ACTIVE_STATUSES.has(status)) return 'approved';
+  if (ATTENTION_STATUSES.has(status)) return 'attention';
+  if (FAILED_STATUSES.has(status) || FAILED_CHECKOUT_STATUSES.has(checkoutStatus)) return 'failed';
+
+  return 'processing';
+}
+
 export function PaymentResult() {
-  const [status, setStatus] = useState('pending');
-  const [details, setDetails] = useState<PaymentDetails>({
-    amountArs: null,
-    nextPaymentDate: null,
-    accessUntil: null,
-    promotion: null,
-    billingMode: null,
-  });
+  const [details, setDetails] = useState<PaymentDetails>(INITIAL_DETAILS);
+  const [checking, setChecking] = useState(false);
   const trackedReturnStatus = useRef<string | null>(null);
 
-  useEffect(() => {
-    let attempts = 0;
-    const check = async () => {
-      attempts += 1;
+  const checkPaymentStatus = useCallback(async () => {
+    setChecking(true);
+    try {
       const response = await fetch('/api/payments/status', { cache: 'no-store' });
       if (response.status === 401) {
         window.location.assign('/login?next=/pricing/resultado');
-        return;
+        return null;
       }
-      if (response.ok) {
-        const payload = (await response.json()) as Partial<PaymentDetails> & { status?: string };
-        setStatus(payload.status ?? 'pending');
-        setDetails({
-          amountArs: payload.amountArs ?? null,
-          nextPaymentDate: payload.nextPaymentDate ?? null,
-          accessUntil: payload.accessUntil ?? null,
-          promotion: payload.promotion ?? null,
-          billingMode: payload.billingMode ?? null,
-        });
-        if (['active', 'approved', 'authorized'].includes(payload.status ?? '')) return;
-      }
-      if (attempts < 10) window.setTimeout(check, 2500);
-    };
-    void check();
+      if (!response.ok) return null;
+
+      const payload = (await response.json()) as Partial<PaymentDetails>;
+      const nextDetails: PaymentDetails = {
+        plan: payload.plan === 'premium' ? 'premium' : 'free',
+        status: payload.status ?? 'pending',
+        amountArs: payload.amountArs ?? null,
+        nextPaymentDate: payload.nextPaymentDate ?? null,
+        accessUntil: payload.accessUntil ?? null,
+        promotion: payload.promotion ?? null,
+        billingMode: payload.billingMode ?? null,
+        checkoutStatus: payload.checkoutStatus ?? null,
+        checkoutOfferCode: payload.checkoutOfferCode ?? null,
+      };
+      setDetails(nextDetails);
+      return nextDetails;
+    } finally {
+      setChecking(false);
+    }
   }, []);
 
-  const active = ['active', 'approved', 'authorized'].includes(status);
+  useEffect(() => {
+    let cancelled = false;
+    let timeoutId: number | undefined;
+    let attempts = 0;
+
+    const check = async () => {
+      attempts += 1;
+      const nextDetails = await checkPaymentStatus();
+      if (cancelled || !nextDetails) return;
+
+      if (resolvePaymentResultState(nextDetails) === 'processing' && attempts < 10) {
+        timeoutId = window.setTimeout(check, 2500);
+      }
+    };
+
+    void check();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [checkPaymentStatus]);
+
+  const resultState = resolvePaymentResultState(details);
 
   useEffect(() => {
-    if (status === 'pending' || trackedReturnStatus.current === status) return;
+    if (resultState === 'processing') return;
+
+    const trackingKey = `${resultState}:${details.status}:${details.checkoutStatus ?? ''}`;
+    if (trackedReturnStatus.current === trackingKey) return;
+
     trackMarketingEvent('premium_checkout_returned', {
-      status,
+      status: details.status,
+      checkout_status: details.checkoutStatus,
+      result_state: resultState,
       billing_mode: details.billingMode,
       amount_ars: details.amountArs,
     });
-    trackedReturnStatus.current = status;
-  }, [details.amountArs, details.billingMode, status]);
+    trackedReturnStatus.current = trackingKey;
+  }, [
+    details.amountArs,
+    details.billingMode,
+    details.checkoutStatus,
+    details.status,
+    resultState,
+  ]);
 
   const amount = details.amountArs
     ? new Intl.NumberFormat('es-AR', {
@@ -108,27 +177,96 @@ export function PaymentResult() {
           ? 'Promoción aplicada'
           : null;
 
-  if (!active) {
+  if (resultState === 'processing') {
     return (
       <section className="mx-auto w-full max-w-xl border-y border-slate-200 py-10 text-center sm:py-12">
-        {status === 'pending' ? (
-          <Loader2 className="mx-auto h-9 w-9 animate-spin text-blue-600" />
-        ) : (
-          <Clock3 className="mx-auto h-9 w-9 text-slate-400" />
-        )}
-        <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
-          Estado del pago
+        <Loader2 className="mx-auto h-9 w-9 animate-spin text-blue-600" aria-hidden="true" />
+        <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-blue-600">
+          Procesando pago
         </p>
         <h1 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950">
           Estamos confirmando tu pago
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
-          Mercado Pago puede tardar unos instantes en notificarnos. No vuelvas a pagar ni cierres
-          esta pantalla.
+          Mercado Pago puede tardar unos instantes en notificarnos. No vuelvas a pagar mientras
+          verificamos el estado de este intento.
         </p>
-        <Button asChild variant="outline" className="mt-6 h-11 rounded-lg px-6 shadow-none">
-          <Link href="/pricing">Volver a Planes</Link>
-        </Button>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button
+            type="button"
+            onClick={() => void checkPaymentStatus()}
+            disabled={checking}
+            className="h-11 rounded-lg px-6 shadow-none"
+          >
+            {checking ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+            )}
+            Actualizar estado
+          </Button>
+          <Button asChild variant="outline" className="h-11 rounded-lg px-6 shadow-none">
+            <Link href="/pricing">Volver a Planes</Link>
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  if (resultState === 'failed') {
+    return (
+      <section className="mx-auto w-full max-w-xl border-y border-slate-200 py-10 text-center sm:py-12">
+        <XCircle className="mx-auto h-10 w-10 text-red-600" aria-hidden="true" />
+        <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-red-600">
+          Pago no completado
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950">
+          No pudimos activar Premium con este intento
+        </h1>
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
+          El pago fue rechazado, cancelado o venció antes de completarse. Podés volver a intentarlo
+          desde Planes; Premium se activa únicamente cuando Mercado Pago confirma el cobro.
+        </p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button asChild className="h-11 rounded-lg px-6 shadow-none">
+            <Link href="/pricing?source=payment_failed#elegir-plan">
+              Intentar nuevamente
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-11 rounded-lg px-6 shadow-none">
+            <Link href="/dashboard">Volver al dashboard</Link>
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
+  if (resultState === 'attention') {
+    return (
+      <section className="mx-auto w-full max-w-xl border-y border-amber-200 py-10 text-center sm:py-12">
+        <AlertTriangle className="mx-auto h-10 w-10 text-amber-600" aria-hidden="true" />
+        <p className="mt-5 text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
+          Requiere acción
+        </p>
+        <h1 className="mt-3 text-3xl font-bold tracking-[-0.045em] text-slate-950">
+          Necesitamos que revises tu suscripción
+        </h1>
+        <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
+          Mercado Pago informó un problema con el cobro o dejó la suscripción pausada. Revisá tu
+          plan para ver el estado actual antes de volver a intentar un pago.
+        </p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button asChild className="h-11 rounded-lg px-6 shadow-none">
+            <Link href="/configuracion">
+              Revisar mi suscripción
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-11 rounded-lg px-6 shadow-none">
+            <Link href="/dashboard">Volver al dashboard</Link>
+          </Button>
+        </div>
       </section>
     );
   }
