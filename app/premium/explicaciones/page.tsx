@@ -13,12 +13,6 @@ function parseBillingMode(value: string | undefined): BillingMode {
   return value === 'monthly' ? 'monthly' : 'semester';
 }
 
-function parseCount(value: string | undefined) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return 0;
-  return Math.max(0, Math.min(99, Math.floor(parsed)));
-}
-
 export default async function ExplicacionesPremiumPage({
   searchParams,
 }: {
@@ -26,8 +20,6 @@ export default async function ExplicacionesPremiumPage({
     step?: string;
     mode?: string;
     materia?: string;
-    errores?: string;
-    explicadas?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -38,8 +30,6 @@ export default async function ExplicacionesPremiumPage({
       initialStep={parseStep(params.step)}
       initialBillingMode={parseBillingMode(params.mode)}
       materiaId={materiaId}
-      wrongCount={parseCount(params.errores)}
-      explainedCount={parseCount(params.explicadas)}
     />
   );
 }
