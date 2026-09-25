@@ -32,6 +32,24 @@ export interface AdministradorResumenStats {
   }>;
 }
 
+export interface AdministradorMarketingVariantRow {
+  source: string;
+  medium: string;
+  campaign: string;
+  content: string;
+  visits: number;
+  logins: number;
+  registrations: number;
+  conversionPct: number;
+}
+
+export interface AdministradorMarketingStats {
+  totalVisits: number;
+  totalLogins: number;
+  totalRegistrations: number;
+  rows: AdministradorMarketingVariantRow[];
+}
+
 export interface AdministradorUsuarioRow {
   id: string;
   email: string;
@@ -685,6 +703,177 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos cargar el resumen del administrador.',
+    };
+  }
+}
+
+
+export async function obtenerMarketingAdministrador(rangeDays = 30): Promise<{
+  success: boolean;
+  stats?: AdministradorMarketingStats;
+  message?: string;
+}> {
+  try {
+    const admin = createAdminClient();
+    const adminUserIds = await listAdminUserIds();
+    const adminUserIdSet = new Set(adminUserIds);
+    const normalizedRangeDays = rangeDays === 7 || rangeDays === 60 ? rangeDays : 30;
+    const currentStart = startOfDay(
+      new Date(Date.now() - normalizedRangeDays * 24 * 60 * 60 * 1000)
+    );
+
+    const [events, profiles] = await Promise.all([
+      fetchAllAdminRows<{
+        user_id: string | null;
+        session_key: string | null;
+        event_name: string | null;
+        metadata: unknown;
+      }>(async (from, to) => {
+        const { data, error } = await admin
+          .from('analytics_events')
+          .select('user_id, session_key, event_name, metadata')
+          .gte('created_at', currentStart.toISOString())
+          .in('event_name', ['page_view', 'login_success'])
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        return {
+          data: (data ?? []) as Array<{
+            user_id: string | null;
+            session_key: string | null;
+            event_name: string | null;
+            metadata: unknown;
+          }>,
+          error: error ? { message: error.message } : null,
+        };
+      }),
+      fetchAllAdminRows<{ id: string }>(async (from, to) => {
+        const { data, error } = await admin
+          .from('profiles')
+          .select('id')
+          .gte('creado_at', currentStart.toISOString())
+          .range(from, to);
+
+        return {
+          data: (data ?? []) as Array<{ id: string }>,
+          error: error ? { message: error.message } : null,
+        };
+      }),
+    ]);
+
+    const newlyRegisteredIds = new Set(profiles.map((profile) => profile.id));
+    const grouped = new Map<
+      string,
+      {
+        source: string;
+        medium: string;
+        campaign: string;
+        content: string;
+        visits: Set<string>;
+        logins: Set<string>;
+        registrations: Set<string>;
+      }
+    >();
+
+    const readAttribution = (metadata: unknown) => {
+      if (!metadata || typeof metadata !== 'object') return null;
+      const rawAttribution = (metadata as Record<string, unknown>).attribution;
+      if (!rawAttribution || typeof rawAttribution !== 'object') return null;
+
+      const attribution = rawAttribution as Record<string, unknown>;
+      const read = (latestKey: string, firstKey: string) => {
+        const latest = String(attribution[latestKey] ?? '').trim();
+        if (latest) return latest;
+        return String(attribution[firstKey] ?? '').trim();
+      };
+
+      const source = read('latest_utm_source', 'utm_source');
+      if (!source) return null;
+
+      return {
+        source,
+        medium: read('latest_utm_medium', 'utm_medium') || '(sin medium)',
+        campaign: read('latest_utm_campaign', 'utm_campaign') || '(sin campaign)',
+        content: read('latest_utm_content', 'utm_content') || '(sin content)',
+      };
+    };
+
+    for (const event of events) {
+      if (event.user_id && adminUserIdSet.has(event.user_id)) continue;
+
+      const attribution = readAttribution(event.metadata);
+      if (!attribution) continue;
+
+      const key = [
+        attribution.source,
+        attribution.medium,
+        attribution.campaign,
+        attribution.content,
+      ].join('||');
+
+      const bucket = grouped.get(key) ?? {
+        ...attribution,
+        visits: new Set<string>(),
+        logins: new Set<string>(),
+        registrations: new Set<string>(),
+      };
+
+      if (event.event_name === 'page_view') {
+        const visitKey = event.session_key ?? (event.user_id ? `user:${event.user_id}` : '');
+        if (visitKey) bucket.visits.add(visitKey);
+      }
+
+      if (event.event_name === 'login_success' && event.user_id) {
+        bucket.logins.add(event.user_id);
+        if (newlyRegisteredIds.has(event.user_id)) {
+          bucket.registrations.add(event.user_id);
+        }
+      }
+
+      grouped.set(key, bucket);
+    }
+
+    const rows = Array.from(grouped.values())
+      .map((bucket) => {
+        const visits = bucket.visits.size;
+        const logins = bucket.logins.size;
+        const registrations = bucket.registrations.size;
+
+        return {
+          source: bucket.source,
+          medium: bucket.medium,
+          campaign: bucket.campaign,
+          content: bucket.content,
+          visits,
+          logins,
+          registrations,
+          conversionPct: visits > 0 ? Number(((registrations / visits) * 100).toFixed(1)) : 0,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.registrations - a.registrations ||
+          b.logins - a.logins ||
+          b.visits - a.visits
+      );
+
+    return {
+      success: true,
+      stats: {
+        totalVisits: rows.reduce((sum, row) => sum + row.visits, 0),
+        totalLogins: rows.reduce((sum, row) => sum + row.logins, 0),
+        totalRegistrations: rows.reduce((sum, row) => sum + row.registrations, 0),
+        rows,
+      },
+    };
+  } catch (error) {
+    console.error('Error en obtenerMarketingAdministrador:', formatAdminError(error));
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'No pudimos cargar las métricas de marketing.',
     };
   }
 }
