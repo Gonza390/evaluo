@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { StudyStatePanel } from '@/components/study-state-panel';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 interface PremiumUpsellProps {
@@ -93,12 +93,15 @@ export function PremiumUpsell({
 
   if (flow && !flowDismissed) {
     return (
-      <section className="flex min-h-[440px] w-full items-center justify-center px-4 py-10 text-center sm:min-h-[500px] sm:px-6">
-        <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" aria-hidden="true" />
-          Abriendo Evaluo Premium…
-        </div>
-      </section>
+      <StudyStatePanel
+        icon={Loader2}
+        iconSpin
+        tone="loading"
+        eyebrow="Evaluo Premium"
+        title="Abriendo Evaluo Premium…"
+        description="Estamos preparando la experiencia Premium para esta función."
+        className="min-h-[440px] w-full sm:min-h-[500px]"
+      />
     );
   }
 
@@ -112,51 +115,33 @@ export function PremiumUpsell({
       : { title, description };
 
   return (
-    <section className="flex min-h-[440px] w-full items-center justify-center px-4 py-10 text-center sm:min-h-[500px] sm:px-6">
-      <div className="w-full max-w-xl">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50 text-blue-600 shadow-sm">
-          <Sparkles className="h-6 w-6" />
+    <StudyStatePanel
+      icon={Sparkles}
+      tone="premium"
+      eyebrow="Función Premium"
+      title={contextualCopy.title}
+      description={contextualCopy.description}
+      primaryActionLabel={ctaLabel}
+      onPrimaryAction={handleUpgrade}
+      secondaryText="Mirá los beneficios y elegí el plan que mejor te quede."
+      className="min-h-[440px] w-full sm:min-h-[500px]"
+    >
+      {features && features.length > 0 ? (
+        <div className="rounded-2xl border border-indigo-100 bg-white/80 p-4 text-left">
+          <p className="flex items-center gap-1.5 text-xs font-bold tracking-[0.1em] text-indigo-700 uppercase">
+            <Crown className="h-3.5 w-3.5" />
+            Con Premium desbloqueás
+          </p>
+          <ul className="mt-3 space-y-2.5">
+            {features.map((feature) => (
+              <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-
-        <div className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[11px] font-bold tracking-[0.12em] text-blue-700 uppercase">
-          <Crown className="h-3.5 w-3.5" />
-          Función Premium
-        </div>
-
-        <h2 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-[1.8rem]">
-          {contextualCopy.title}
-        </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-[15px]">
-          {contextualCopy.description}
-        </p>
-
-        {features && features.length > 0 ? (
-          <div className="mx-auto mt-6 max-w-md rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left">
-            <p className="text-xs font-bold tracking-[0.1em] text-slate-500 uppercase">
-              Con Premium desbloqueás
-            </p>
-            <ul className="mt-3 space-y-2.5">
-              {features.map((feature) => (
-                <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-
-        <Button
-          onClick={handleUpgrade}
-          className="mt-6 h-11 w-full max-w-sm rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-none transition hover:bg-blue-700"
-        >
-          {ctaLabel}
-        </Button>
-
-        <p className="mt-3 text-xs leading-5 text-slate-400">
-          Mirá los beneficios y elegí el plan que mejor te quede.
-        </p>
-      </div>
-    </section>
+      ) : null}
+    </StudyStatePanel>
   );
 }
