@@ -68,11 +68,11 @@ const benefitCards = [
 ] as const;
 
 const comparisonRows = [
-  'Mapas mentales',
   'Simuladores completos',
   'Explicaciones sin límite',
   'Práctica según tus errores',
   'Seguimiento por tema',
+  'Mapas mentales',
   'Nuevas funciones exclusivas',
 ] as const;
 
