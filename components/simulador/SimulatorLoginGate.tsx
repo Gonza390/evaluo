@@ -13,6 +13,7 @@ interface SimulatorLoginGateProps {
   onLoginClick?: () => void;
   onSignupClick?: () => void;
   onNeedsFeedback?: (reason: SimulatorNeedsReason) => void;
+  acquisitionVariant?: 'preguntero_google_v1';
 }
 
 export function SimulatorLoginGate({
@@ -24,8 +25,10 @@ export function SimulatorLoginGate({
   onLoginClick,
   onSignupClick,
   onNeedsFeedback,
+  acquisitionVariant,
 }: SimulatorLoginGateProps) {
   const preliminaryScore = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+  const isPregunteroAcquisition = acquisitionVariant === 'preguntero_google_v1';
 
   return (
     <div className="flex min-h-[680px] items-center justify-center bg-white p-4 sm:p-6">
@@ -34,32 +37,56 @@ export function SimulatorLoginGate({
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600">
               <Trophy className="h-4 w-4" />
-              Continúa el simulador
+              {isPregunteroAcquisition ? 'Tu diagnóstico inicial' : 'Continúa el simulador'}
             </div>
             <h2 className="mt-4 text-[2rem] leading-[1.02] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.7rem]">
-              Tu primer diagnóstico ya está listo
+              {isPregunteroAcquisition
+                ? 'Ya viste cómo venís. Guardá el resultado y seguí.'
+                : 'Tu primer diagnóstico ya está listo'}
             </h2>
             <p className="mt-4 max-w-[500px] text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-              Acertaste {correctCount} de {answeredCount} preguntas ({preliminaryScore}%). Iniciá
-              sesión o creá tu cuenta para guardar este resultado, continuar y ver la devolución
-              completa.
+              Acertaste {correctCount} de {answeredCount} preguntas ({preliminaryScore}%).
+              {isPregunteroAcquisition
+                ? ' Creá tu cuenta gratis para conservar estas respuestas, ver tus errores y continuar desde donde quedaste.'
+                : ' Iniciá sesión o creá tu cuenta para guardar este resultado, continuar y ver la devolución completa.'}
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href={loginHref}
-                onClick={onLoginClick}
-                className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-600 px-6 text-base font-semibold text-white transition hover:bg-blue-700"
-              >
-                Iniciar sesión
-              </Link>
-              <Link
-                href={signupHref}
-                onClick={onSignupClick}
-                className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-base font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"
-              >
-                Crear cuenta
-              </Link>
+              {isPregunteroAcquisition ? (
+                <>
+                  <Link
+                    href={signupHref}
+                    onClick={onSignupClick}
+                    className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-600 px-6 text-base font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    Ver mis errores y seguir practicando
+                  </Link>
+                  <Link
+                    href={loginHref}
+                    onClick={onLoginClick}
+                    className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-base font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    Ya tengo cuenta
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href={loginHref}
+                    onClick={onLoginClick}
+                    className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-600 px-6 text-base font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    Iniciar sesión
+                  </Link>
+                  <Link
+                    href={signupHref}
+                    onClick={onSignupClick}
+                    className="inline-flex h-12 items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-base font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    Crear cuenta
+                  </Link>
+                </>
+              )}
             </div>
 
             {onNeedsFeedback ? <SimulatorNeedsSurvey compact onSelect={onNeedsFeedback} /> : null}
@@ -82,8 +109,9 @@ export function SimulatorLoginGate({
                   Qué desbloqueás al continuar
                 </dt>
                 <dd className="mt-2 text-sm leading-6 text-slate-600">
-                  Acceso al simulador completo de {questionLimit} preguntas, guardado del intento,
-                  resultados finales y correcciones inteligentes de tus errores.
+                  {isPregunteroAcquisition
+                    ? `Tus ${answeredCount} respuestas quedan guardadas. Seguís con el simulador completo de ${questionLimit} preguntas y después podés llevar tus errores a tus propios apuntes.`
+                    : `Acceso al simulador completo de ${questionLimit} preguntas, guardado del intento, resultados finales y correcciones inteligentes de tus errores.`}
                 </dd>
               </div>
             </dl>

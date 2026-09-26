@@ -84,6 +84,9 @@ async function SimuladorContent({
   const demoMode = !user;
   const universidadId = sParams.universidad_id as string;
   const carreraId = sParams.carrera_id as string;
+  const acquisitionParam = Array.isArray(sParams.acq) ? sParams.acq[0] : sParams.acq;
+  const acquisitionVariant =
+    acquisitionParam === 'preguntero_google_v1' ? 'preguntero_google_v1' : undefined;
 
   return (
     <SimuladorExamen
@@ -92,6 +95,7 @@ async function SimuladorContent({
       universidadId={universidadId || undefined}
       carreraId={carreraId || undefined}
       demoMode={demoMode}
+      acquisitionVariant={acquisitionVariant}
     />
   );
 }

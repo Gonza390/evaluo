@@ -5,6 +5,7 @@ const ATTRIBUTION_QUERY_KEYS = [
   'utm_content',
   'utm_term',
   'ref_user',
+  'acq',
 ] as const;
 
 type SearchParams = Record<string, string | string[] | undefined>;
