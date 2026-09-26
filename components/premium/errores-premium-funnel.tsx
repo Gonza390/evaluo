@@ -330,7 +330,7 @@ export function ErroresPremiumFunnel({
               return (
                 <article
                   key={benefit.title}
-                  className="benefit-card flex min-h-[72px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3.5 text-left sm:min-h-[80px] sm:p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[90px] sm:gap-4 sm:p-5"
+                  className="benefit-card flex min-h-[72px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3.5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[90px] sm:gap-4 sm:p-5"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 sm:h-12 sm:w-12">
                     <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden="true" />
