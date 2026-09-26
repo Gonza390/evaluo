@@ -2658,9 +2658,12 @@ export default function SimuladorExamen({
                               source: 'simulator_explanations',
                               materia_id: materiaId,
                             });
-                            window.location.assign(
-                              `/pricing?source=simulator_explanations&materia=${encodeURIComponent(materiaId)}#elegir-plan`
-                            );
+                            const params = new URLSearchParams({
+                              materia: materiaId,
+                              parcial: String(parcial),
+                              returnTo: '/dashboard/explicaciones',
+                            });
+                            window.location.assign(`/premium/explicaciones?${params.toString()}`);
                           }}
                         />
                       ) : null
