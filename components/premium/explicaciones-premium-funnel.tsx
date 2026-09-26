@@ -301,7 +301,7 @@ export function ExplicacionesPremiumFunnel({
   function renderStep(targetStep: FunnelStep) {
     if (targetStep === 1) {
       return (
-        <section className="funnel-step funnel-step-one mx-auto flex h-full w-full max-w-5xl flex-col items-center justify-center px-1 py-2 text-center sm:py-3">
+        <section className="funnel-step funnel-step-one mx-auto flex h-full w-full max-w-5xl flex-col items-center justify-start overflow-y-auto px-1 py-4 text-center sm:justify-center sm:py-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-100 bg-white text-indigo-600 shadow-[0_12px_32px_rgba(79,70,229,0.12)] sm:h-14 sm:w-14">
             <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
           </div>
@@ -313,13 +313,13 @@ export function ExplicacionesPremiumFunnel({
             Premium te explica todas tus respuestas incorrectas y te ayuda a detectar qué necesitás reforzar antes de volver a practicar.
           </p>
 
-          <div className="benefit-grid mt-5 grid w-full grid-cols-2 gap-3 sm:gap-4">
+          <div className="benefit-grid mt-5 grid w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             {benefitCards.map((benefit) => {
               const Icon = benefit.icon;
               return (
                 <article
                   key={benefit.title}
-                  className="benefit-card flex min-h-[80px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 text-left shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[90px] sm:gap-4 sm:p-5"
+                  className="benefit-card flex min-h-[72px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3.5 text-left sm:min-h-[80px] sm:p-4 shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[90px] sm:gap-4 sm:p-5"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 sm:h-12 sm:w-12">
                     <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden="true" />
@@ -348,7 +348,7 @@ export function ExplicacionesPremiumFunnel({
 
     if (targetStep === 2) {
       return (
-        <section className="funnel-step funnel-step-two mx-auto flex h-full w-full max-w-4xl flex-col items-center justify-start px-1 pt-3 text-center sm:pt-5">
+        <section className="funnel-step funnel-step-two mx-auto flex h-full w-full max-w-4xl flex-col items-center justify-start overflow-y-auto px-1 pb-4 pt-3 text-center sm:pt-5">
           <div className="shrink-0">
             <h1 className="mx-auto max-w-3xl text-[1.55rem] font-extrabold leading-[1.06] tracking-[-0.045em] text-slate-950 sm:text-[2rem] lg:text-[2.15rem]">
               Todo lo que necesitás para preparar mejor tu parcial
@@ -404,7 +404,7 @@ export function ExplicacionesPremiumFunnel({
     }
 
     return (
-      <section className="funnel-step mx-auto flex h-full w-full max-w-4xl flex-col justify-center px-1 py-2 sm:py-3">
+      <section className="funnel-step mx-auto flex h-full w-full max-w-4xl flex-col justify-start overflow-y-auto px-1 py-4 sm:justify-center sm:py-3">
         <div className="text-center">
           <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
             <Crown className="h-5 w-5" aria-hidden="true" />
@@ -417,7 +417,7 @@ export function ExplicacionesPremiumFunnel({
           </p>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => selectBillingMode('semester')}
@@ -597,7 +597,7 @@ export function ExplicacionesPremiumFunnel({
           <StepBadge step={visibleStep} />
         </div>
 
-        <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div className="relative min-h-0 flex-1 overflow-hidden overscroll-contain">
           <div className={`absolute inset-0 ${incomingStep !== null ? 'premium-slide-out' : ''}`}>
             {renderStep(step)}
           </div>
