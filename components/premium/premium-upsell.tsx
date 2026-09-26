@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -38,15 +38,15 @@ export function PremiumUpsell({
   const flow = PREMIUM_FLOWS[source] ?? null;
   const [flowDismissed, setFlowDismissed] = useState(false);
 
-  function currentReturnTo() {
+  const currentReturnTo = useCallback(() => {
     const url = new URL(window.location.href);
     if (source === 'material_mapa_mental') {
       url.searchParams.set('tab', 'mapa');
     }
     return `${url.pathname}${url.search}${url.hash}`;
-  }
+  }, [source]);
 
-  function openContextualFlow() {
+  const openContextualFlow = useCallback(() => {
     if (!flow) return false;
     const params = new URLSearchParams();
     if (materiaId) params.set('materia', materiaId);
@@ -54,7 +54,7 @@ export function PremiumUpsell({
     params.set('returnTo', currentReturnTo());
     window.location.assign(`${flow.route}?${params.toString()}`);
     return true;
-  }
+  }, [currentReturnTo, flow, materiaId, parcial]);
 
   useEffect(() => {
     trackMarketingEvent('premium_gate_viewed', {
@@ -76,7 +76,7 @@ export function PremiumUpsell({
     }
 
     openContextualFlow();
-  }, [flow?.dismissKey, flow?.route, materiaId, parcial, source]);
+  }, [flow, materiaId, openContextualFlow, source]);
 
   const handleUpgrade = () => {
     trackMarketingEvent('premium_cta_clicked', {
