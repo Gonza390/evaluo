@@ -145,7 +145,12 @@ assert.match(exploreClientSource, /Ver las \$\{sortedCarreras\.length\} carreras
 assert.match(loginSource, /getAuthContextCopy/);
 assert.match(simulatorLegacySource, /¿Cuándo rendís\?/);
 assert.match(simulatorLegacySource, /preguntero_exam_date_captured/);
-assert.match(simulatorLegacySource, /disabled=\{!examDateDraft \|\| examDateSaving\}/);
+assert.match(
+  simulatorLegacySource,
+  /disabled=\{\(!isPregunteroAcquisitionDemo && !examDateDraft\) \|\| examDateSaving\}/
+);
+assert.match(simulatorLegacySource, /Empezar con 5 preguntas/);
+assert.match(simulatorLegacySource, /acquisitionVariant === 'preguntero_google_v1'/);
 assert.doesNotMatch(simulatorLegacySource, /Opcional/);
 assert.doesNotMatch(simulatorLegacySource, /Ver resúmenes y material de la materia/);
 assert.doesNotMatch(profileCompletionSource, /cameFromDemo/);
