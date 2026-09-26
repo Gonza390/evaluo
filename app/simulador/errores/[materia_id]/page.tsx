@@ -48,7 +48,7 @@ async function SimuladorErroresContent({
           limit: FREE_ERRORS_REVIEWS_PER_WEEK,
         },
       });
-      return <ErrorsReviewLimit materiaId={materia_id} />;
+      return <ErrorsReviewLimit materiaId={materia_id} parcial={parcial} />;
     }
   }
 
