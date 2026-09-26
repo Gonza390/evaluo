@@ -89,7 +89,7 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
   const materiaHref = `/explorar/materia/${MATERIA_SLUG}`;
   const simuladorHref = appendPregunteroAttribution(
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
-    resolvedSearchParams
+    { ...resolvedSearchParams, acq: 'preguntero_google_v1' }
   );
   const title = `Preguntero parcial 2 de ${data.materiaNombre}`;
   const breadcrumbData = buildBreadcrumbJsonLd([
@@ -146,20 +146,20 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
                   Encontraste preguntas del Parcial 2. Usalas para medir cómo venís y, si querés preparar el examen completo, armá un recorrido con tus propios apuntes.
                 </p>
                 <div className="mt-7 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                  <a
-                    href="#plan-estudio"
-                    className="from-brand to-brand-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-center text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] sm:w-auto"
-                  >
-                    Armar mi plan de estudio
-                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  </a>
                   <Link
                     href={simuladorHref}
-                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-center text-sm font-bold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700 sm:w-auto"
+                    className="from-brand to-brand-2 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-center text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] sm:w-auto"
                   >
                     <Target className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    Practicar ahora
+                    Probar 5 preguntas
+                    <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
                   </Link>
+                  <a
+                    href="#plan-estudio"
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-center text-sm font-bold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700 sm:w-auto"
+                  >
+                    Armar mi plan de estudio
+                  </a>
                 </div>
               </div>
 

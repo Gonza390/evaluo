@@ -29,6 +29,7 @@ type SimulatorEventContext = {
   universidadId?: string;
   mode: 'regular' | 'errores' | 'ultimo_intento';
   premiumOnly: boolean;
+  acquisitionVariant?: 'preguntero_google_v1';
   path: string;
 };
 
@@ -81,6 +82,7 @@ function buildSimulatorMetadata(
     universidad_id: context.universidadId,
     mode: context.mode,
     premium_only: context.premiumOnly,
+    acquisition_variant: context.acquisitionVariant,
     question_index: progress.questionIndex,
     answered_count: progress.answeredCount,
     progress_pct: progress.progressPercent,
