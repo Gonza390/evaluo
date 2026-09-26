@@ -31,6 +31,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { AppPageHeader } from '@/components/ui/app-page-header';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 import {
   buildPedagogicalArtifacts,
@@ -820,11 +821,13 @@ export function MaterialStudyWorkspace({
           </Link>
 
           <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(620px,1.1fr)] lg:items-center lg:gap-7">
-            <div className="min-w-0">
-              <h1 className="max-w-[640px] text-[1.55rem] font-bold leading-[1.08] tracking-[-0.045em] text-slate-950 sm:text-[1.75rem] lg:text-[1.9rem]">
-                {title}
-              </h1>
-            </div>
+            <AppPageHeader
+              eyebrow="Material de estudio"
+              title={title}
+              description={fileName}
+              size="compact"
+              className="border-0 pb-0"
+            />
 
             <MaterialMetadata
               carreraName={carreraName}
