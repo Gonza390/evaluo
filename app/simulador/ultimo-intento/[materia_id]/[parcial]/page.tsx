@@ -9,7 +9,13 @@ async function UltimoIntentoSimuladorContent({ params }: { params: Params }) {
   const { materia_id, parcial } = await params;
   const premium = await requirePremiumUser();
   if (!premium.ok) {
-    redirect('/pricing');
+    const returnTo = `/simulador/ultimo-intento/${materia_id}/${Number(parcial) || 1}`;
+    const query = new URLSearchParams({
+      materia: materia_id,
+      parcial: String(Number(parcial) || 1),
+      returnTo,
+    });
+    redirect(`/premium/simulador?${query.toString()}`);
   }
 
   return (
