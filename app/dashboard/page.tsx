@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react';
+import { StudyStatePanel } from '@/components/study-state-panel';
 import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
@@ -220,15 +221,14 @@ export default async function DashboardPage({
 
     return (
       <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
-        <div className="w-full rounded-2xl border border-amber-200 bg-amber-50/70 px-6 py-8 text-center">
-          <h3 className="text-lg font-semibold tracking-[-0.03em] text-slate-950">
-            Falta activar el espacio de materiales
-          </h3>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            La tabla `student_materials` todavía no está disponible, así que este espacio no puede
-            cargar ni guardar PDFs todavía.
-          </p>
-        </div>
+        <StudyStatePanel
+          iconName="alert-triangle"
+          tone="warning"
+          eyebrow="Mi espacio"
+          title="Falta activar el espacio de materiales"
+          description="El almacenamiento de materiales todavía no está disponible, así que este espacio no puede cargar ni guardar PDFs por el momento."
+          className="w-full"
+        />
       </div>
     );
   }
