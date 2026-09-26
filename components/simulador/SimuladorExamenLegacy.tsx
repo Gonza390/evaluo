@@ -108,6 +108,7 @@ export interface SimuladorExamenProps {
   mode?: 'regular' | 'errores' | 'ultimo_intento';
   premiumOnly?: boolean;
   demoMode?: boolean;
+  acquisitionVariant?: 'preguntero_google_v1';
 }
 
 type EstadoExamen =
@@ -429,6 +430,7 @@ export default function SimuladorExamen({
   mode = 'regular',
   premiumOnly = false,
   demoMode = false,
+  acquisitionVariant,
 }: SimuladorExamenProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -436,6 +438,8 @@ export default function SimuladorExamen({
   const { isPremium } = usePremium();
   const { toast } = useToast();
   const resolvedDemoMode = demoMode && !user;
+  const isPregunteroAcquisitionDemo =
+    resolvedDemoMode && acquisitionVariant === 'preguntero_google_v1';
 
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const [estado, setEstado] = useState<EstadoExamen>('loading');
@@ -544,8 +548,11 @@ export default function SimuladorExamen({
   const [showAbandonFeedback, setShowAbandonFeedback] = useState(false);
   const [showNewExamConfirm, setShowNewExamConfirm] = useState(false);
   const [timerGeneration, setTimerGeneration] = useState(0);
+  const demoGateQuestionLimit = isPregunteroAcquisitionDemo
+    ? 5
+    : DEMO_LOGIN_GATE_TOTAL_QUESTIONS;
   const demoCheckpointIndex = resolvedDemoMode
-    ? Math.min(DEMO_LOGIN_GATE_TOTAL_QUESTIONS, Math.max(1, preguntasDisponibles)) - 1
+    ? Math.min(demoGateQuestionLimit, Math.max(1, preguntasDisponibles)) - 1
     : DEMO_TOTAL_QUESTIONS - 1;
   const progressPercent = preguntasDisponibles
     ? Math.round((answeredCount / preguntasDisponibles) * 100)
@@ -559,9 +566,19 @@ export default function SimuladorExamen({
       universidadId,
       mode,
       premiumOnly,
+      acquisitionVariant,
       path: typeof window === 'undefined' ? '' : window.location.pathname,
     }),
-    [carreraId, materiaId, mode, parcial, premiumOnly, universidadId, userId]
+    [
+      acquisitionVariant,
+      carreraId,
+      materiaId,
+      mode,
+      parcial,
+      premiumOnly,
+      universidadId,
+      userId,
+    ]
   );
   const tourForcedByParam = searchParams.get(SIMULATOR_TOUR_PARAM) === '1';
   const simulatorTourStorageKey = useMemo(
@@ -803,7 +820,7 @@ export default function SimuladorExamen({
         >
       >
     ) => {
-      if (!userId) return;
+      if (!resolvedDemoMode && !userId) return;
 
       const snapshot = latestSimulatorSnapshotRef.current;
       const preguntasToPersist = overrides?.preguntas ?? snapshot.preguntas;
@@ -812,7 +829,7 @@ export default function SimuladorExamen({
 
       writePersistedSimulatorState(storageKey, {
         version: 2,
-        userId,
+        userId: resolvedDemoMode ? null : userId,
         materiaId,
         parcial,
         mode,
@@ -826,7 +843,7 @@ export default function SimuladorExamen({
         savedAt: new Date().toISOString(),
       });
     },
-    [materiaId, mode, parcial, storageKey, userId]
+    [materiaId, mode, parcial, resolvedDemoMode, storageKey, userId]
   );
 
   useEffect(() => {
@@ -1719,6 +1736,10 @@ export default function SimuladorExamen({
         } catch {
           // ignore
         }
+        persistSimulatorSnapshot({
+          currentQuestionIndex: demoCheckpointIndex,
+          hasStarted: true,
+        });
         setEstado('demo_gate');
       }
       return;
@@ -1758,6 +1779,10 @@ export default function SimuladorExamen({
     } catch {
       // ignore
     }
+    persistSimulatorSnapshot({
+      currentQuestionIndex: demoCheckpointIndex,
+      hasStarted: true,
+    });
     setEstado('demo_gate');
   }, [
     currentQuestionIndex,
@@ -1765,6 +1790,7 @@ export default function SimuladorExamen({
     estado,
     hasStarted,
     isQuestionAnswered,
+    persistSimulatorSnapshot,
     resolvedDemoMode,
   ]);
 
@@ -1777,7 +1803,12 @@ export default function SimuladorExamen({
 
     loginGateTrackedRef.current = true;
     void emitLoginGateEvent('simulator_login_gate_viewed');
-    void trackMarketingEvent('demo_checkpoint_reached', { materia_id: materiaId, parcial });
+    void trackMarketingEvent('demo_checkpoint_reached', {
+      materia_id: materiaId,
+      parcial,
+      acquisition_variant: acquisitionVariant,
+      gate_question_limit: demoGateQuestionLimit,
+    });
   }, [emitLoginGateEvent, estado]);
 
   if (estado === 'profile_incomplete') {
@@ -1851,6 +1882,7 @@ export default function SimuladorExamen({
         onLoginClick={() => void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'login')}
         onSignupClick={() => void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'signup')}
         onNeedsFeedback={(reason) => emitNeedsFeedback(reason, 'gate')}
+        acquisitionVariant={acquisitionVariant}
       />
     );
   }
@@ -2690,7 +2722,7 @@ export default function SimuladorExamen({
   }
 
   const accessibleQuestionCount = resolvedDemoMode
-    ? Math.min(DEMO_LOGIN_GATE_TOTAL_QUESTIONS, preguntasDisponibles)
+    ? Math.min(demoGateQuestionLimit, preguntasDisponibles)
     : Math.min(questionLimit, preguntasDisponibles);
   const maxIndex = Math.max(0, accessibleQuestionCount - 1);
   const isCurrentFlagged = flaggedQuestions.includes(currentQuestionIndex);
@@ -2700,7 +2732,7 @@ export default function SimuladorExamen({
 
   if (estado === 'playing' && !hasStarted) {
     const startPractice = async () => {
-      if (!examDateDraft || examDateSaving) return;
+      if ((!isPregunteroAcquisitionDemo && !examDateDraft) || examDateSaving) return;
 
       if (userId) {
           setExamDateSaving(true);
@@ -2731,7 +2763,7 @@ export default function SimuladorExamen({
           } finally {
             setExamDateSaving(false);
           }
-      } else {
+      } else if (examDateDraft) {
         writePendingExamDate(materiaId, parcial, examDateDraft);
         trackMarketingEvent('preguntero_exam_date_captured', {
           materia_id: materiaId,
@@ -2768,29 +2800,45 @@ export default function SimuladorExamen({
             <span>{formatTime(examDurationSeconds)}</span>
           </div>
 
-          <div className="mt-7 border-t border-slate-200 pt-6">
-            <label htmlFor="preguntero-exam-date" className="text-base font-bold text-slate-950">
-              ¿Cuándo rendís?
-            </label>
-            <p className="mt-1 text-sm leading-6 text-slate-600">
-              Usamos esta fecha para acompañarte hasta el examen y conectar después la práctica con tus apuntes.
-            </p>
-            <input
-              id="preguntero-exam-date"
-              type="date"
-              min={getLocalDateKey()}
-              value={examDateDraft}
-              onChange={(event) => setExamDateDraft(event.target.value)}
-              className="mt-3 h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-semibold text-slate-950 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-            />
-          </div>
+          {isPregunteroAcquisitionDemo ? (
+            <div className="mt-7 border-t border-slate-200 pt-6">
+              <p className="text-base font-bold text-slate-950">
+                Probá primero, sin crear cuenta
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Respondé 5 preguntas. Después te mostramos cómo venís y podés guardar el progreso
+                para continuar con el simulador completo.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-7 border-t border-slate-200 pt-6">
+              <label htmlFor="preguntero-exam-date" className="text-base font-bold text-slate-950">
+                ¿Cuándo rendís?
+              </label>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Usamos esta fecha para acompañarte hasta el examen y conectar después la práctica con tus apuntes.
+              </p>
+              <input
+                id="preguntero-exam-date"
+                type="date"
+                min={getLocalDateKey()}
+                value={examDateDraft}
+                onChange={(event) => setExamDateDraft(event.target.value)}
+                className="mt-3 h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-semibold text-slate-950 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          )}
 
           <Button
             onClick={() => void startPractice()}
-            disabled={!examDateDraft || examDateSaving}
+            disabled={(!isPregunteroAcquisitionDemo && !examDateDraft) || examDateSaving}
             className="mt-6 h-12 w-full rounded-xl bg-indigo-600 text-base font-bold hover:bg-indigo-700"
           >
-            {examDateSaving ? 'Guardando...' : 'Comenzar práctica'}
+            {examDateSaving
+              ? 'Guardando...'
+              : isPregunteroAcquisitionDemo
+                ? 'Empezar con 5 preguntas'
+                : 'Comenzar práctica'}
           </Button>
         </Card>
       </div>
