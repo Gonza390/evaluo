@@ -13,10 +13,15 @@ function parseBillingMode(value: string | undefined): BillingMode {
   return value === 'monthly' ? 'monthly' : 'semester';
 }
 
+function parseReturnTo(value: string | undefined) {
+  const candidate = String(value ?? '').slice(0, 600);
+  return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : undefined;
+}
+
 export default async function MapaMentalPremiumPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ step?: string; mode?: string; materia?: string }>;
+  searchParams?: Promise<{ step?: string; mode?: string; materia?: string; returnTo?: string }>;
 }) {
   const params = (await searchParams) ?? {};
   const materiaId = String(params.materia ?? '').slice(0, 80) || undefined;
@@ -26,6 +31,7 @@ export default async function MapaMentalPremiumPage({
       initialStep={parseStep(params.step)}
       initialBillingMode={parseBillingMode(params.mode)}
       materiaId={materiaId}
+      returnTo={parseReturnTo(params.returnTo)}
     />
   );
 }
