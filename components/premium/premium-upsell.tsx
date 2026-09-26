@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Check, Crown, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -12,20 +12,49 @@ interface PremiumUpsellProps {
   features?: string[];
   ctaLabel?: string;
   materiaId?: string | null;
+  parcial?: number;
 }
 
-const MAPA_MENTAL_SOURCE = 'material_mapa_mental';
-const MAPA_MENTAL_DISMISS_KEY = 'evaluo:mapa-mental-premium-dismissed-once';
+const PREMIUM_FLOWS: Record<string, { route: string; dismissKey: string }> = {
+  material_mapa_mental: {
+    route: '/premium/mapa-mental',
+    dismissKey: 'evaluo:mapa-mental-premium-dismissed-once',
+  },
+  errores_review: {
+    route: '/premium/errores',
+    dismissKey: 'evaluo:errores-premium-dismissed-once',
+  },
+};
 
 export function PremiumUpsell({
   title,
   description,
   source,
   features,
+  ctaLabel = 'Ver Premium',
   materiaId,
+  parcial,
 }: PremiumUpsellProps) {
-  const isMapaMentalFlow = source === MAPA_MENTAL_SOURCE;
-  const [mapaMentalFlowDismissed, setMapaMentalFlowDismissed] = useState(false);
+  const flow = PREMIUM_FLOWS[source] ?? null;
+  const [flowDismissed, setFlowDismissed] = useState(false);
+
+  const currentReturnTo = useCallback(() => {
+    const url = new URL(window.location.href);
+    if (source === 'material_mapa_mental') {
+      url.searchParams.set('tab', 'mapa');
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
+  }, [source]);
+
+  const openContextualFlow = useCallback(() => {
+    if (!flow) return false;
+    const params = new URLSearchParams();
+    if (materiaId) params.set('materia', materiaId);
+    if (parcial) params.set('parcial', String(parcial));
+    params.set('returnTo', currentReturnTo());
+    window.location.assign(`${flow.route}?${params.toString()}`);
+    return true;
+  }, [currentReturnTo, flow, materiaId, parcial]);
 
   useEffect(() => {
     trackMarketingEvent('premium_gate_viewed', {
@@ -33,24 +62,21 @@ export function PremiumUpsell({
       materia_id: materiaId ?? undefined,
     });
 
-    if (!isMapaMentalFlow) return;
+    if (!flow) return;
 
     try {
-      const dismissedOnce = window.sessionStorage.getItem(MAPA_MENTAL_DISMISS_KEY) === '1';
+      const dismissedOnce = window.sessionStorage.getItem(flow.dismissKey) === '1';
       if (dismissedOnce) {
-        window.sessionStorage.removeItem(MAPA_MENTAL_DISMISS_KEY);
-        setMapaMentalFlowDismissed(true);
+        window.sessionStorage.removeItem(flow.dismissKey);
+        setFlowDismissed(true);
         return;
       }
     } catch {
-      // Si sessionStorage no está disponible, abrimos el flujo normalmente.
+      // El flujo puede abrirse aunque sessionStorage no esté disponible.
     }
 
-    const params = new URLSearchParams();
-    if (materiaId) params.set('materia', materiaId);
-    const query = params.toString();
-    window.location.assign(`/premium/mapa-mental${query ? `?${query}` : ''}`);
-  }, [isMapaMentalFlow, materiaId, source]);
+    openContextualFlow();
+  }, [flow, materiaId, openContextualFlow, source]);
 
   const handleUpgrade = () => {
     trackMarketingEvent('premium_cta_clicked', {
@@ -58,20 +84,14 @@ export function PremiumUpsell({
       materia_id: materiaId ?? undefined,
     });
 
-    if (isMapaMentalFlow) {
-      const params = new URLSearchParams();
-      if (materiaId) params.set('materia', materiaId);
-      const query = params.toString();
-      window.location.assign(`/premium/mapa-mental${query ? `?${query}` : ''}`);
-      return;
-    }
+    if (openContextualFlow()) return;
 
     const params = new URLSearchParams({ source });
     if (materiaId) params.set('materia', materiaId);
     window.location.assign(`/pricing?${params.toString()}#elegir-plan`);
   };
 
-  if (isMapaMentalFlow && !mapaMentalFlowDismissed) {
+  if (flow && !flowDismissed) {
     return (
       <section className="flex min-h-[440px] w-full items-center justify-center px-4 py-10 text-center sm:min-h-[500px] sm:px-6">
         <div className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500">
@@ -83,7 +103,7 @@ export function PremiumUpsell({
   }
 
   const contextualCopy =
-    isMapaMentalFlow
+    source === 'material_mapa_mental'
       ? {
           title: 'Mapa mental',
           description:
@@ -130,7 +150,7 @@ export function PremiumUpsell({
           onClick={handleUpgrade}
           className="mt-6 h-11 w-full max-w-sm rounded-xl bg-blue-600 px-6 text-sm font-semibold text-white shadow-none transition hover:bg-blue-700"
         >
-          Ver Premium
+          {ctaLabel}
         </Button>
 
         <p className="mt-3 text-xs leading-5 text-slate-400">

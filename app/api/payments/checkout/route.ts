@@ -33,6 +33,14 @@ function checkoutContext(value: unknown, fallback: string) {
   return /^[a-zA-Z0-9_:-]+$/.test(normalized) ? normalized : fallback;
 }
 
+function checkoutReturnPath(value: unknown) {
+  if (typeof value !== 'string') return '';
+  const normalized = value.trim().slice(0, 600);
+  if (!normalized.startsWith('/') || normalized.startsWith('//')) return '';
+  if (/[\u0000-\u001F\u007F]/u.test(normalized)) return '';
+  return normalized;
+}
+
 async function semesterHasCapacity(admin: SupabaseClient) {
   const pendingCutoff = new Date(Date.now() - 30 * 60_000).toISOString();
   const [soldResult, reservedResult] = await Promise.all([
@@ -100,6 +108,8 @@ export async function POST(request: Request) {
     planContext?: unknown;
     offerCode?: unknown;
     referralCode?: unknown;
+    parcial?: unknown;
+    returnTo?: unknown;
   } = {};
   try {
     requestBody = (await request.json()) as typeof requestBody;
@@ -109,6 +119,12 @@ export async function POST(request: Request) {
   const source = checkoutContext(requestBody.source, 'pricing_direct');
   const materiaId = checkoutContext(requestBody.materiaId, '');
   const planContext = checkoutContext(requestBody.planContext, 'premium');
+  const parsedParcial = Number(requestBody.parcial);
+  const parcial =
+    Number.isFinite(parsedParcial) && parsedParcial > 0
+      ? Math.min(99, Math.floor(parsedParcial))
+      : null;
+  const returnTo = checkoutReturnPath(requestBody.returnTo);
   const offerCode: PremiumOfferCode = isPremiumOfferCode(requestBody.offerCode)
     ? requestBody.offerCode
     : 'monthly';
@@ -243,12 +259,20 @@ export async function POST(request: Request) {
     let checkoutUrl: string | null | undefined;
     let providerSubscriptionId: string | null = null;
 
+    const resultUrl = new URL('/pricing/resultado', resolvedSiteUrl);
+    resultUrl.searchParams.set('attemptId', attemptId);
+    resultUrl.searchParams.set('source', source);
+    if (materiaId) resultUrl.searchParams.set('materia', materiaId);
+    if (parcial) resultUrl.searchParams.set('parcial', String(parcial));
+    if (returnTo) resultUrl.searchParams.set('returnTo', returnTo);
+    const backUrl = resultUrl.toString();
+
     if (offerCode === 'semester') {
       const preference = await createMercadoPagoOneTimePreference({
         attemptId,
         email: mercadoPagoPayerEmail(user.email),
         amount,
-        backUrl: `${resolvedSiteUrl}/pricing/resultado`,
+        backUrl,
         notificationUrl: `${resolvedSiteUrl}/api/webhooks/mercadopago`,
       });
       checkoutUrl = preference.init_point || preference.sandbox_init_point;
@@ -257,7 +281,7 @@ export async function POST(request: Request) {
         attemptId,
         email: mercadoPagoPayerEmail(user.email),
         amount,
-        backUrl: `${resolvedSiteUrl}/pricing/resultado`,
+        backUrl,
       });
       providerSubscriptionId = subscription.id || null;
       checkoutUrl = subscription.init_point;
@@ -281,6 +305,8 @@ export async function POST(request: Request) {
       metadata: {
         source,
         materia_id: materiaId || undefined,
+        parcial: parcial ?? undefined,
+        return_to: returnTo || undefined,
         plan_context: planContext,
         offer_code: offerCode,
         billing_mode: billingMode,
@@ -294,6 +320,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       checkoutUrl,
+      attemptId,
       offerCode,
       baseAmountArs: baseAmount,
       amountArs: amount,

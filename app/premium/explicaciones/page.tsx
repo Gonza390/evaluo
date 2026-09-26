@@ -1,4 +1,4 @@
-import { MapaMentalPremiumFunnel } from '@/components/premium/mapa-mental-premium-funnel';
+import { ExplicacionesPremiumFunnel } from '@/components/premium/explicaciones-premium-funnel';
 
 type FunnelStep = 1 | 2 | 3;
 type BillingMode = 'monthly' | 'semester';
@@ -13,24 +13,37 @@ function parseBillingMode(value: string | undefined): BillingMode {
   return value === 'monthly' ? 'monthly' : 'semester';
 }
 
+function parseParcial(value: string | undefined) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.max(1, Math.min(99, Math.floor(parsed)));
+}
+
 function parseReturnTo(value: string | undefined) {
   const candidate = String(value ?? '').slice(0, 600);
   return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : undefined;
 }
 
-export default async function MapaMentalPremiumPage({
+export default async function ExplicacionesPremiumPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ step?: string; mode?: string; materia?: string; returnTo?: string }>;
+  searchParams?: Promise<{
+    step?: string;
+    mode?: string;
+    materia?: string;
+    parcial?: string;
+    returnTo?: string;
+  }>;
 }) {
   const params = (await searchParams) ?? {};
   const materiaId = String(params.materia ?? '').slice(0, 80) || undefined;
 
   return (
-    <MapaMentalPremiumFunnel
+    <ExplicacionesPremiumFunnel
       initialStep={parseStep(params.step)}
       initialBillingMode={parseBillingMode(params.mode)}
       materiaId={materiaId}
+      parcial={parseParcial(params.parcial)}
       returnTo={parseReturnTo(params.returnTo)}
     />
   );

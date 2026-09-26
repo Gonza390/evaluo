@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClientServer } from '@/lib/supabase-server';
 import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -11,14 +11,30 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const paymentsDb = supabase as unknown as SupabaseClient;
-  const { data } = await paymentsDb
-    .from('user_subscriptions')
-    .select(
-      'id, status, amount_ars, next_payment_date, promotion_code, payment_provider, provider_subscription_id, canceled_at, expires_at, created_at, subscription_plans(code, name)'
-    )
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
+  const requestUrl = new URL(request.url);
+  const rawAttemptId = requestUrl.searchParams.get('attemptId')?.trim() ?? '';
+  const attemptId = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawAttemptId)
+    ? rawAttemptId
+    : null;
+
+  const checkoutAttemptQuery = paymentsDb
+    .from('payment_checkout_attempts')
+    .select('id, status, offer_code, amount_ars, created_at, updated_at')
+    .eq('user_id', user.id);
+
+  const [{ data }, { data: latestCheckoutAttempt }] = await Promise.all([
+    paymentsDb
+      .from('user_subscriptions')
+      .select(
+        'id, status, amount_ars, next_payment_date, promotion_code, payment_provider, provider_subscription_id, canceled_at, expires_at, created_at, subscription_plans(code, name)'
+      )
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    attemptId
+      ? checkoutAttemptQuery.eq('id', attemptId).maybeSingle()
+      : checkoutAttemptQuery.order('created_at', { ascending: false }).limit(1).maybeSingle(),
+  ]);
 
   const subscriptions = (data ?? []) as unknown as Array<{
     id: string;
@@ -77,6 +93,12 @@ export async function GET() {
     canCancel: billingMode === 'recurring' && premiumIsActive,
     canceledAt: premium?.canceled_at ?? null,
     accessUntil: premium?.expires_at ?? null,
+    checkoutAttemptId: latestCheckoutAttempt?.id ?? null,
+    checkoutStatus: latestCheckoutAttempt?.status ?? null,
+    checkoutOfferCode: latestCheckoutAttempt?.offer_code ?? null,
+    checkoutAmountArs: latestCheckoutAttempt?.amount_ars ?? null,
+    checkoutUpdatedAt:
+      latestCheckoutAttempt?.updated_at ?? latestCheckoutAttempt?.created_at ?? null,
     lastPayment: transaction
       ? {
           status: transaction.status,

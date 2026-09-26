@@ -10,7 +10,6 @@ import {
   Crown,
   Lightbulb,
   Loader2,
-  Map,
   ShieldCheck,
   Sparkles,
   Target,
@@ -28,15 +27,16 @@ import {
 type BillingMode = 'monthly' | 'semester';
 type FunnelStep = 1 | 2 | 3;
 
-type MapaMentalPremiumFunnelProps = {
+type SimuladorPremiumFunnelProps = {
   initialStep?: FunnelStep;
   initialBillingMode?: BillingMode;
   materiaId?: string;
+  parcial?: number;
   returnTo?: string;
 };
 
-const SOURCE = 'material_mapa_mental';
-const DISMISS_KEY = 'evaluo:mapa-mental-premium-dismissed-once';
+const SOURCE = 'premium_simulator';
+const DISMISS_KEY = 'evaluo:simulador-premium-dismissed-once';
 const SLIDE_MS = 460;
 
 const currency = new Intl.NumberFormat('es-AR', {
@@ -47,33 +47,33 @@ const currency = new Intl.NumberFormat('es-AR', {
 
 const benefitCards = [
   {
-    icon: Map,
-    title: 'Mapas mentales',
-    description: 'Conectá los conceptos del material.',
-  },
-  {
-    icon: Target,
-    title: 'Práctica según tus errores',
-    description: 'Reforzá los temas que más te cuestan.',
-  },
-  {
     icon: BrainCircuit,
-    title: 'Simuladores completos',
-    description: 'Practicá como si estuvieras rindiendo.',
+    title: 'Parcial completo',
+    description: 'Practicá de principio a fin como si estuvieras rindiendo.',
   },
   {
     icon: Lightbulb,
-    title: 'Explicaciones sin límite',
-    description: 'Entendé por qué una respuesta está bien o mal.',
+    title: 'Corrección al terminar',
+    description: 'Revisá tus respuestas y entendé qué necesitás ajustar.',
+  },
+  {
+    icon: Target,
+    title: 'Detectá tus temas débiles',
+    description: 'Encontrá dónde perdés más puntos antes del examen.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Volvé a practicar',
+    description: 'Repetí la práctica para llegar más sólido al próximo intento.',
   },
 ] as const;
 
 const comparisonRows = [
-  'Mapas mentales',
   'Simuladores completos',
   'Explicaciones sin límite',
   'Práctica según tus errores',
   'Seguimiento por tema',
+  'Mapas mentales',
   'Nuevas funciones exclusivas',
 ] as const;
 
@@ -120,12 +120,13 @@ function FeatureStatus({
   );
 }
 
-export function MapaMentalPremiumFunnel({
+export function SimuladorPremiumFunnel({
   initialStep = 1,
   initialBillingMode = 'semester',
   materiaId,
+  parcial = 1,
   returnTo,
-}: MapaMentalPremiumFunnelProps) {
+}: SimuladorPremiumFunnelProps) {
   const router = useRouter();
   const [step, setStep] = useState<FunnelStep>(initialStep);
   const [incomingStep, setIncomingStep] = useState<FunnelStep | null>(null);
@@ -145,9 +146,10 @@ export function MapaMentalPremiumFunnel({
     trackMarketingEvent('premium_preview_viewed', {
       source: flowSource,
       materia_id: materiaId,
+      parcial,
       funnel_step: step,
     });
-  }, [flowSource, materiaId, step]);
+  }, [flowSource, materiaId, parcial, step]);
 
   useEffect(
     () => () => {
@@ -164,6 +166,7 @@ export function MapaMentalPremiumFunnel({
     trackMarketingEvent(step === 1 ? 'premium_cta_clicked' : 'premium_preview_interacted', {
       source: `${SOURCE}:funnel`,
       materia_id: materiaId,
+      parcial,
       funnel_step: step,
       next_step: nextStep,
     });
@@ -199,14 +202,11 @@ export function MapaMentalPremiumFunnel({
     trackMarketingEvent('premium_preview_interacted', {
       source: `${SOURCE}:funnel_close`,
       materia_id: materiaId,
+      parcial,
       funnel_step: visibleStep,
     });
 
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push('/explorar');
+    router.push('/simulador');
   }
 
   async function startCheckout() {
@@ -214,6 +214,7 @@ export function MapaMentalPremiumFunnel({
     trackMarketingEvent('premium_checkout_clicked', {
       source: `${SOURCE}:funnel:${offerCode}`,
       materia_id: materiaId,
+      parcial,
       plan_context: 'premium',
       offer_code: offerCode,
       billing_mode: offerCode === 'semester' ? 'fixed_term' : 'recurring',
@@ -237,6 +238,7 @@ export function MapaMentalPremiumFunnel({
           materiaId,
           planContext: 'premium',
           offerCode,
+          parcial,
           returnTo,
         }),
       });
@@ -247,8 +249,9 @@ export function MapaMentalPremiumFunnel({
         checkoutWindow?.close();
         const nextParams = new URLSearchParams({ step: '3', mode: offerCode });
         if (materiaId) nextParams.set('materia', materiaId);
+        nextParams.set('parcial', String(parcial));
         if (returnTo) nextParams.set('returnTo', returnTo);
-        const nextPath = `/premium/mapa-mental?${nextParams.toString()}`;
+        const nextPath = `/premium/simulador?${nextParams.toString()}`;
         window.location.assign(
           `/login?mode=login&intent=premium&next=${encodeURIComponent(nextPath)}`
         );
@@ -311,11 +314,14 @@ export function MapaMentalPremiumFunnel({
             <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
           </div>
 
-          <h1 className="mt-4 max-w-4xl text-[1.7rem] font-extrabold leading-[1.04] tracking-[-0.045em] text-slate-950 sm:text-[2.35rem] lg:text-[2.7rem]">
-            El <span className="text-indigo-600">83%</span> de los estudiantes llega mejor preparado a sus parciales
+          <p className="mt-4 inline-flex rounded-full border border-indigo-100 bg-indigo-50/80 px-3 py-1 text-[10px] font-bold text-indigo-700 sm:text-xs">
+            Practicá antes de rendir
+          </p>
+          <h1 className="mt-3 max-w-4xl text-[1.7rem] font-extrabold leading-[1.04] tracking-[-0.045em] text-slate-950 sm:text-[2.35rem] lg:text-[2.7rem]">
+            <span className="text-indigo-600">9 de cada 10 estudiantes</span> llega mejor preparado después de practicar un parcial completo
           </h1>
           <p className="mx-auto mt-2.5 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">
-            Premium transforma lo que estudiás en práctica enfocada en lo que más necesitás reforzar.
+            Premium te deja entrenar con simuladores completos, corregir tus respuestas y detectar qué temas reforzar antes del examen.
           </p>
 
           <div className="benefit-grid mt-5 grid w-full grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
@@ -344,7 +350,7 @@ export function MapaMentalPremiumFunnel({
             disabled={incomingStep !== null}
             className="mt-5 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-[0_6px_0_0_#4338CA] transition hover:bg-indigo-700 active:translate-y-0.5 active:shadow-[0_4px_0_0_#4338CA] disabled:pointer-events-none"
           >
-            Continuar
+            Practicar un parcial completo
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </section>
