@@ -9,6 +9,7 @@ import {
   ChevronRight,
   FileText,
   GraduationCap,
+  Loader2,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -47,6 +48,7 @@ import { logError } from '@/lib/observability';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { TourCard } from '@/components/ui/tour-card';
+import { AppPageHeader } from '@/components/ui/app-page-header';
 
 type CalendarStorageMode = 'supabase' | 'local';
 
@@ -777,27 +779,17 @@ export default function CalendarioPage() {
 
   if (loading || isCheckingProfile) {
     return (
-      <div className="mx-auto flex min-h-[60vh] w-full max-w-[1080px] items-center justify-center px-4">
-        <div className="w-full rounded-[32px] border border-slate-200/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_52%,#edf4ff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
-          <div className="h-5 w-36 animate-pulse rounded-full bg-white" />
-          <div className="mt-4 h-10 w-64 animate-pulse rounded-2xl bg-white" />
-          <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-white" />
-          <div className="mt-2 h-4 w-5/6 animate-pulse rounded-full bg-white" />
-          <div className="mt-8 grid grid-cols-7 gap-2">
-            {Array.from({ length: 35 }).map((_, index) => (
-              <div key={index} className="h-16 animate-pulse rounded-2xl bg-white/80 shadow-sm" />
-            ))}
-          </div>
-          <p className="mt-6 text-sm font-semibold text-slate-700">
-            Estamos preparando tu calendario
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar.
-          </p>
-          <p className="mt-3 text-xs text-slate-500">
-            Si tarda demasiado, prueba recargando la página.
-          </p>
-        </div>
+      <div className="mx-auto flex min-h-[60vh] w-full max-w-[720px] items-center justify-center px-4">
+        <StudyStatePanel
+          icon={Loader2}
+          iconSpin
+          tone="loading"
+          eyebrow="Calendario"
+          title="Estamos preparando tu calendario"
+          description="Cargamos tus fechas, materias y recordatorios para mostrarte el mes listo para usar."
+          secondaryText="Si tarda demasiado, probá recargando la página."
+          className="w-full"
+        />
       </div>
     );
   }
@@ -820,27 +812,16 @@ export default function CalendarioPage() {
 
   if (!hasLoadedEvents) {
     return (
-      <div className="rounded-[32px] border border-slate-200/70 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_52%,#edf4ff_100%)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <div className="h-4 w-24 animate-pulse rounded-full bg-white" />
-              <div className="mt-3 h-8 w-48 animate-pulse rounded-2xl bg-white" />
-            </div>
-            <div className="h-11 w-32 animate-pulse rounded-2xl bg-white/90" />
-          </div>
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 35 }).map((_, index) => (
-              <div key={index} className="h-20 animate-pulse rounded-2xl bg-white/85 shadow-sm" />
-            ))}
-          </div>
-        </div>
-        <p className="mt-6 text-sm font-semibold text-slate-700">
-          Estamos trayendo tus fechas del mes
-        </p>
-        <p className="mt-1 text-sm text-slate-500">
-          Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante.
-        </p>
+      <div className="mx-auto w-full max-w-[720px]">
+        <StudyStatePanel
+          icon={Loader2}
+          iconSpin
+          tone="loading"
+          eyebrow="Calendario"
+          title="Estamos trayendo tus fechas del mes"
+          description="Cuando termine esta carga vas a poder agregar parciales y trabajos prácticos al instante."
+          className="w-full"
+        />
       </div>
     );
   }
@@ -848,6 +829,11 @@ export default function CalendarioPage() {
   return (
     <>
       <div className="mx-auto w-full max-w-[1080px] min-w-0 space-y-4 overflow-x-clip sm:space-y-6">
+        <AppPageHeader
+          eyebrow="Planificación"
+          title="Calendario"
+          description="Organizá parciales, trabajos prácticos y recordatorios en un solo lugar."
+        />
         <section className="overflow-hidden rounded-[32px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,#f7faff_50%,#edf4ff_100%)] shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
           <div className="relative px-1.5 py-1.5 min-[380px]:px-2 min-[380px]:py-2 sm:px-4 sm:py-4">
             {showCalendarTour ? (
