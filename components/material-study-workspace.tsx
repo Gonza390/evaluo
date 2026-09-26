@@ -45,6 +45,7 @@ type MaterialStudyWorkspaceProps = {
   canRegenerate: boolean;
   isPremium: boolean;
   materialId: string;
+  materiaId?: string;
   isOwner: boolean;
   materiaName?: string;
   pageCount: number | null;
@@ -56,6 +57,7 @@ type MaterialStudyWorkspaceProps = {
   studySummary: StudentMaterialSummary;
   pedagogicalArtifacts?: PedagogicalArtifacts;
   initialDiagnostic?: boolean;
+  initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
 };
@@ -203,6 +205,7 @@ export function MaterialStudyWorkspace({
   fileName,
   isPremium,
   materialId,
+  materiaId,
   isOwner: _isOwner,
   materiaName,
   pageCount: _pageCount,
@@ -214,12 +217,15 @@ export function MaterialStudyWorkspace({
   studySummary,
   pedagogicalArtifacts,
   initialDiagnostic = false,
+  initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<StudyTabId>(initialDiagnostic ? 'ejercicios' : 'resumen');
+  const [activeTab, setActiveTab] = useState<StudyTabId>(
+    initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen')
+  );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -775,6 +781,7 @@ export function MaterialStudyWorkspace({
               title="El mapa mental es exclusivo Premium"
               description="Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."
               source="material_mapa_mental"
+              materiaId={materiaId}
               features={[
                 'Mapa mental de cada PDF que subas',
                 'Temas y conceptos clave conectados',
