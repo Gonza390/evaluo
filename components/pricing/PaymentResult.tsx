@@ -163,7 +163,8 @@ export function PaymentResult({
     try {
       const statusParams = new URLSearchParams();
       if (attemptId) statusParams.set('attemptId', attemptId);
-      const statusUrl = `/api/payments/status${statusParams.size ? `?${statusParams.toString()}` : ''}`;
+      const statusQuery = statusParams.toString();
+      const statusUrl = `/api/payments/status${statusQuery ? `?${statusQuery}` : ''}`;
       const response = await fetch(statusUrl, { cache: 'no-store' });
       if (response.status === 401) {
         const next = `${window.location.pathname}${window.location.search}`;
@@ -313,8 +314,8 @@ export function PaymentResult({
           No pudimos activar Premium con este intento
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
-          El pago fue rechazado, cancelado o venció antes de completarse. Podés volver a intentarlo
-          desde Planes; Premium se activa únicamente cuando Mercado Pago confirma el cobro.
+          El pago fue rechazado, cancelado o venció antes de completarse. Podés volver a intentarlo;
+          Premium se activa únicamente cuando Mercado Pago confirma el cobro.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild className="h-11 rounded-lg px-6 shadow-none">
@@ -487,11 +488,13 @@ export function PaymentResult({
       )}
 
       <footer className="border-t border-slate-200 pt-5 text-xs leading-5 text-slate-500">
-        <p className="flex items-start gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
-          Al subir un material podés elegir si compartirlo con tu materia o mantenerlo privado.
-        </p>
-        <p className="mt-2 flex items-start gap-2">
+        {!contextualSuccess ? (
+          <p className="flex items-start gap-2">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+            Al subir un material podés elegir si compartirlo con tu materia o mantenerlo privado.
+          </p>
+        ) : null}
+        <p className={`${contextualSuccess ? '' : 'mt-2 '}flex items-start gap-2`}>
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
           Pago procesado de forma segura con Mercado Pago.
         </p>
