@@ -20,6 +20,8 @@ import {
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
+import { AppPageHeader } from '@/components/ui/app-page-header';
+import { StudyStatePanel } from '@/components/study-state-panel';
 import {
   Dialog,
   DialogContent,
@@ -142,36 +144,34 @@ export function StudentMaterialsWorkspace({
   return (
     <>
       <section className="rounded-[1.6rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_46px_rgba(15,23,42,0.05)] sm:p-5">
-        <div className="flex flex-col gap-2 border-b border-slate-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[12px] font-semibold tracking-[0.18em] text-slate-500 uppercase">
-              Tu estudio
-            </p>
-            <h2 className="mt-1.5 text-[1.25rem] font-bold tracking-[-0.05em] text-slate-950">
-              Tus PDFs
-            </h2>
-          </div>
-          <Button type="button" size="sm" variant="outline">
-            <Upload className="h-4 w-4" />
-            Subí tu PDF
-          </Button>
-        </div>
+        <AppPageHeader
+          as="h2"
+          size="compact"
+          eyebrow="Tu estudio"
+          title="Tus PDFs"
+          description={
+            initialMaterials.length === 0
+              ? 'Subí tu primer material y empezá a estudiar desde la misma fuente.'
+              : `${initialMaterials.length} ${initialMaterials.length === 1 ? 'material disponible' : 'materiales disponibles'} para retomar cuando quieras.`
+          }
+          actions={
+            <Button type="button" size="sm" variant="outline">
+              <Upload className="h-4 w-4" />
+              Subí tu PDF
+            </Button>
+          }
+        />
 
         <div className="mt-4 space-y-2.5">
           {initialMaterials.length === 0 ? (
-            <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-white px-5 py-8 text-center">
-              <FileText className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-3 text-sm font-semibold text-slate-900">
-                Todavía no subiste un PDF
-              </p>
-              <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
-                Cuando subas tu primer PDF, vas a poder empezar a estudiar directamente desde acá.
-              </p>
-              <Button type="button" size="sm" className="mt-4">
-                <Upload className="h-4 w-4" />
-                Subí tu PDF
-              </Button>
-            </div>
+            <StudyStatePanel
+              icon={FileText}
+              eyebrow="Primer material"
+              title="Todavía no subiste un PDF"
+              description="Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá."
+              primaryActionLabel="Subí tu PDF"
+              className="border-dashed"
+            />
           ) : (
             initialMaterials.map((material) => {
               const isShared = material.visibility === 'shared';
