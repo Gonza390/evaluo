@@ -23,12 +23,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { FeedbackDialog } from '@/components/FeedbackDialog';
-import { useShellData } from '@/components/ShellDataProvider';
 import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavLink';
 import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
 import { supabase } from '@/lib/supabase-client';
-import { getCareerRoute } from '@/lib/routes';
 
 type NavbarProps = {
   collapsed: boolean;
@@ -108,14 +106,8 @@ function NavItem({
 export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
   const pathname = usePathname();
   const { user, getUserInitials, getUserName } = useUser();
-  const { profileSummary } = useShellData();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
-  const careerShortcut =
-    profileSummary.carreraId && profileSummary.carreraNombre
-      ? { id: profileSummary.carreraId, nombre: profileSummary.carreraNombre }
-      : null;
-
   return (
     <aside
       className={`hidden border-r border-slate-200/80 bg-white transition-[width] duration-200 md:fixed md:top-[81px] md:bottom-0 md:left-0 md:z-20 md:block ${
@@ -166,29 +158,6 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
 
             {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} /> : null}
 
-            {careerShortcut ? (
-              <Link
-                href={getCareerRoute(careerShortcut.id)}
-                title={collapsed ? careerShortcut.nombre : undefined}
-                className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
-                  collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'mt-3 gap-2.5 px-3 py-2.5'
-                }`}
-              >
-                <span className="text-brand inline-flex h-4 w-4 shrink-0 items-center justify-center text-[12px] font-bold">
-                  {careerShortcut.nombre.charAt(0).toUpperCase()}
-                </span>
-                {!collapsed ? (
-                  <div className="min-w-0">
-                    <p className="truncate text-[10px] font-bold tracking-[0.12em] text-slate-400 uppercase">
-                      Tu carrera
-                    </p>
-                    <p className="truncate text-sm font-medium text-slate-800">
-                      {careerShortcut.nombre}
-                    </p>
-                  </div>
-                ) : null}
-              </Link>
-            ) : null}
           </nav>
 
           <div className="mt-auto border-t border-slate-200/80 pt-3">
