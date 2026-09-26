@@ -2,7 +2,7 @@
 
 import type { RefObject } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Upload } from 'lucide-react';
+import { ArrowRight, GraduationCap, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
 
@@ -11,6 +11,8 @@ type Props = {
   primaryMaterialHref: string | null;
   primaryMaterialReady: boolean;
   onUploadClick: () => void;
+  careerName?: string | null;
+  careerHref?: string | null;
   heroRef?: RefObject<HTMLElement | null>;
 };
 
@@ -19,6 +21,8 @@ export function MaeveStudyHero({
   primaryMaterialHref,
   primaryMaterialReady,
   onUploadClick,
+  careerName = null,
+  careerHref = null,
   heroRef,
 }: Props) {
   const { user, getUserName } = useUser();
@@ -45,6 +49,21 @@ export function MaeveStudyHero({
             ? 'Subí lo que tenés que estudiar y Evaluo te guía para prepararlo.'
             : 'Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.'}
         </p>
+        {careerName && careerHref ? (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-slate-500">
+            <span className="inline-flex min-w-0 items-center gap-1.5">
+              <GraduationCap className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+              <span className="max-w-[260px] truncate">{careerName}</span>
+            </span>
+            <span aria-hidden="true" className="text-slate-300">·</span>
+            <Link
+              href={careerHref}
+              className="font-semibold text-indigo-700 transition hover:text-indigo-900 hover:underline hover:underline-offset-4"
+            >
+              Ver plan de materias
+            </Link>
+          </div>
+        ) : null}
         <div className="mt-5 flex flex-col items-center gap-3">
           {materialsCount > 0 && primaryMaterialHref ? (
             <>
