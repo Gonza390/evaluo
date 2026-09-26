@@ -23,6 +23,8 @@ import {
 } from '@/lib/actions/study-errors';
 import type { StudyErrorSource, StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { AppPageHeader } from '@/components/ui/app-page-header';
+import { StudyStatePanel } from '@/components/study-state-panel';
 
 const sourceConfig: Record<
   StudyErrorSource,
@@ -444,38 +446,40 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
   if (data.pending.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
-        <h1 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Mis errores</h1>
-        <div className="mt-8 border-y border-slate-200 py-7 sm:mt-10 sm:py-8">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" />
-            <div>
-              <h2 className="text-lg font-semibold text-slate-950">No tenés temas pendientes</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                Los errores que vuelvas a resolver después de estudiarlos van a quedar guardados como progreso.
-              </p>
-              {data.resolved.length > 0 ? (
-                <p className="mt-3 text-sm font-medium text-emerald-700">
-                  {data.resolved.length} {data.resolved.length === 1 ? 'tema resuelto' : 'temas resueltos'}.
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
+        <AppPageHeader
+          eyebrow="Progreso"
+          title="Mis errores"
+          description="Revisá lo que te costó y cerrá cada tema después de volver a estudiarlo."
+        />
+        <StudyStatePanel
+          icon={CheckCircle2}
+          tone="success"
+          eyebrow="Todo al día"
+          title="No tenés temas pendientes"
+          description="Los errores que vuelvas a resolver después de estudiarlos van a quedar guardados como progreso."
+          secondaryText={
+            data.resolved.length > 0
+              ? `${data.resolved.length} ${data.resolved.length === 1 ? 'tema resuelto' : 'temas resueltos'}.`
+              : 'Cuando aparezca un error nuevo, lo vas a encontrar acá.'
+          }
+          className="mt-6"
+        />
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-9">
-      <header className="border-b border-slate-200 pb-5 sm:pb-6">
-        <h1 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950 sm:text-[2.55rem]">
-          Mis errores
-        </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          {data.pending.length} {data.pending.length === 1 ? 'tema para estudiar' : 'temas para estudiar'}
-          {data.resolved.length > 0 ? ` · ${data.resolved.length} resueltos` : ''}
-        </p>
-      </header>
+      <AppPageHeader
+        eyebrow="Progreso"
+        title="Mis errores"
+        description={
+          <>
+            {data.pending.length} {data.pending.length === 1 ? 'tema para estudiar' : 'temas para estudiar'}
+            {data.resolved.length > 0 ? ` · ${data.resolved.length} resueltos` : ''}
+          </>
+        }
+      />
 
       <div className="lg:hidden">
         <div className="border-b border-slate-200 py-4">
