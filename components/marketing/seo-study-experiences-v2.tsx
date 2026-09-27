@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
+import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
@@ -493,7 +494,7 @@ export function EstudiarPdfExperience() {
     <Shell currentPath="/estudiar-pdf-con-ia" breadcrumbLabel="Estudiar PDF con IA" trackingPrefix="seo_estudiar_pdf_ia_v2">
       <main>
         <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.14),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
-          <div className="mx-auto grid w-full max-w-[1240px] gap-12 px-4 pb-16 pt-12 sm:px-8 sm:pb-24 sm:pt-18 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-10">
+          <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16 lg:grid-cols-[0.84fr_1.16fr] lg:items-center lg:gap-14 lg:px-10">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
                 <FileText className="h-3.5 w-3.5" aria-hidden="true" /> Tu PDF como fuente de toda la sesión
@@ -502,44 +503,24 @@ export function EstudiarPdfExperience() {
                 Estudiá un PDF con IA: <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">resumen, conceptos, flashcards y práctica</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Subí el documento que estás preparando y usá el mismo contenido para entender el tema, organizar conceptos, intentar recordarlos y practicar sin volver a cargar el PDF en cada paso.
+                Elegí el PDF que realmente tenés que estudiar y convertílo en una sesión conectada de resumen, conceptos, flashcards y preguntas de práctica. No te pedimos registro hasta que decidas crear el material.
               </p>
-              <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                <PrimaryCta label="Estudiar mi PDF" trackingPrefix="seo_estudiar_pdf_ia_v2" location="hero" />
+              <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  Elegí el archivo primero
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+                  Registro recién al crear
+                </span>
+              </div>
+              <div className="mt-6">
                 <DemoCta trackingPrefix="seo_estudiar_pdf_ia_v2" label="Ver un PDF ya transformado" />
               </div>
             </div>
 
-            <div className="relative">
-              <div className="absolute -inset-6 rounded-[40px] bg-indigo-100/50 blur-3xl" />
-              <div className="relative rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-7">
-                <p className="text-[10px] font-black tracking-[0.14em] text-slate-500 uppercase">Ejemplo de flujo de estudio</p>
-                <div className="mt-4 rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-6 text-center">
-                  <UploadCloud className="mx-auto h-7 w-7 text-indigo-600" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-bold text-slate-950">Apuntes del parcial.pdf</p>
-                  <p className="mt-1 text-xs text-slate-500">El documento queda como fuente del recorrido</p>
-                </div>
-                <div className="mx-auto my-4 h-7 w-px bg-indigo-200" />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {[
-                    ['Resumen', 'Ideas centrales organizadas', ScanText],
-                    ['Glosario', 'Conceptos y definiciones', BookOpen],
-                    ['Mapa mental', 'Temas y relaciones conectados', Brain],
-                    ['Flashcards', 'Preguntas para intentar recordar', Layers3],
-                    ['Ejercicios', 'Práctica sobre el material', ListChecks],
-                  ].map(([label, text, Icon]) => {
-                    const IconComponent = Icon as typeof ScanText;
-                    return (
-                      <div key={String(label)} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                        <IconComponent className="h-4.5 w-4.5 text-indigo-700" aria-hidden="true" />
-                        <p className="mt-3 text-xs font-bold text-slate-950">{String(label)}</p>
-                        <p className="mt-1 text-[11px] leading-5 text-slate-600">{String(text)}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            <PdfFirstLandingUploader />
           </div>
         </section>
 
