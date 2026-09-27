@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
 
@@ -85,7 +86,10 @@ export function PdfFirstUploadShell({
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
+  const isPdfFirstLandingResume = initialSource.startsWith('pdf-first-landing');
   const pickerRef = useRef<HTMLInputElement | null>(null);
+  const resumeHandledRef = useRef(false);
+  const readyRedirectedRef = useRef(false);
   const [open, setOpen] = useState(initialOpen);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
@@ -103,6 +107,7 @@ export function PdfFirstUploadShell({
   const [contextSaved, setContextSaved] = useState(false);
   const [savedContextLabel, setSavedContextLabel] = useState('');
   const [showReadyContext, setShowReadyContext] = useState(false);
+  const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPdfFirstLandingResume);
 
   const selectedUniversity = universidades.find((item) => item.id === universityId) ?? null;
   const availableCareers = useMemo(
@@ -200,17 +205,27 @@ export function PdfFirstUploadShell({
     setExamDate(initialExamDate);
   };
 
-  const startProcessing = async () => {
-    if (!file || !hasValidTitle || uploading) return;
+  const startProcessing = async (selectedFile?: File | null, selectedTitle?: string) => {
+    const activeFile = selectedFile ?? file;
+    const activeTitle = (selectedTitle ?? title).trim() || (activeFile ? titleFromFile(activeFile.name) : '');
+    if (!activeFile || activeTitle.length < 3 || uploading) return;
+
     setUploading(true);
     let preparedPath: string | null = null;
 
+    if (isPdfFirstLandingResume) {
+      trackMarketingEvent('pdf_upload_started', {
+        source: initialSource,
+        file_size_bytes: activeFile.size,
+      });
+    }
+
     try {
-      const metadata = { title: title.trim(), materiaId: initialMateriaId || null };
+      const metadata = { title: activeTitle, materiaId: initialMateriaId || null };
       const fileMetadata = {
-        name: file.name,
-        mimeType: file.type || 'application/pdf',
-        size: file.size,
+        name: activeFile.name,
+        mimeType: activeFile.type || 'application/pdf',
+        size: activeFile.size,
       };
       const prepared = await preparePdfFirstUploadAction({ metadata, file: fileMetadata });
       if (!prepared.success || !prepared.filePath || !prepared.token) {
@@ -221,7 +236,7 @@ export function PdfFirstUploadShell({
       const supabase = getSupabaseBrowserClient();
       const { error: uploadError } = await supabase.storage
         .from('biblioteca')
-        .uploadToSignedUrl(prepared.filePath, prepared.token, file, {
+        .uploadToSignedUrl(prepared.filePath, prepared.token, activeFile, {
           contentType: fileMetadata.mimeType,
         });
       if (uploadError) throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
@@ -258,10 +273,23 @@ export function PdfFirstUploadShell({
         });
       }
 
+      if (isPdfFirstLandingResume) {
+        await clearPdfFirstDraft().catch(() => undefined);
+        trackMarketingEvent('pdf_uploaded', {
+          source: initialSource,
+          material_id: result.materialId,
+          file_size_bytes: activeFile.size,
+        });
+        trackMarketingEvent('material_processing_started', {
+          source: initialSource,
+          material_id: result.materialId,
+        });
+      }
+
       const initialState: StudentMaterialProcessingState = {
         materialId: result.materialId,
         title: metadata.title,
-        fileName: file.name,
+        fileName: activeFile.name,
         status: 'uploaded',
         stage: 'uploaded',
         progress: 10,
@@ -284,6 +312,52 @@ export function PdfFirstUploadShell({
       setUploading(false);
     }
   };
+
+  useEffect(() => {
+    if (!initialOpen || !isPdfFirstLandingResume || resumeHandledRef.current) return;
+
+    resumeHandledRef.current = true;
+    setOpen(true);
+    setRestoringDraft(true);
+
+    void loadPdfFirstDraft()
+      .then(async (draft) => {
+        if (!draft) return;
+        const restoredTitle = titleFromFile(draft.file.name);
+        setFile(draft.file);
+        setTitle(restoredTitle);
+        setExamDate(initialExamDate);
+        trackMarketingEvent('pdf_draft_restored', {
+          source: initialSource,
+          file_size_bytes: draft.file.size,
+        });
+        await startProcessing(draft.file, restoredTitle);
+      })
+      .catch(() => {
+        toast({ description: 'No pudimos recuperar el PDF seleccionado. Elegilo nuevamente.', variant: 'destructive' });
+      })
+      .finally(() => setRestoringDraft(false));
+  }, [initialExamDate, initialOpen, initialSource, isPdfFirstLandingResume, startProcessing, toast]);
+
+  useEffect(() => {
+    if (
+      !isPdfFirstLandingResume ||
+      !processing ||
+      processing.status !== 'ready' ||
+      readyRedirectedRef.current
+    ) {
+      return;
+    }
+
+    readyRedirectedRef.current = true;
+    trackMarketingEvent('material_ready', {
+      source: initialSource,
+      material_id: processing.materialId,
+    });
+    setOpen(false);
+    router.push(getStudentMaterialRoute(processing.materialId));
+    router.refresh();
+  }, [initialSource, isPdfFirstLandingResume, processing, router]);
 
   const saveContext = async () => {
     if (!processing || !canSaveContext || savingContext) return;
@@ -371,8 +445,12 @@ export function PdfFirstUploadShell({
                   {processing
                     ? ready
                       ? 'Terminamos de preparar tu material.'
-                      : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
-                    : 'Elegí el archivo y poné un nombre.'}
+                      : isPdfFirstLandingResume
+                        ? 'Ya tenemos tu archivo. Lo estamos convirtiendo en material de estudio.'
+                        : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
+                    : restoringDraft
+                      ? 'Recuperando el PDF que elegiste antes del registro.'
+                      : 'Elegí el archivo y poné un nombre.'}
                 </p>
               </div>
               <button
@@ -399,7 +477,13 @@ export function PdfFirstUploadShell({
 
             {!processing ? (
               <>
-                {!file ? (
+                {!file && restoringDraft ? (
+                  <div className="mt-6 flex min-h-44 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-indigo-600" aria-hidden="true" />
+                    <span className="mt-3 text-sm font-semibold text-slate-950">Recuperando tu PDF…</span>
+                    <span className="mt-1 text-xs text-slate-400">No hace falta elegirlo de nuevo.</span>
+                  </div>
+                ) : !file ? (
                   <button
                     type="button"
                     onClick={() => pickerRef.current?.click()}
@@ -460,7 +544,7 @@ export function PdfFirstUploadShell({
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>Cancelar</Button>
-                  <Button type="button" disabled={!file || !hasValidTitle || uploading} onClick={startProcessing}>
+                  <Button type="button" disabled={!file || !hasValidTitle || uploading} onClick={() => void startProcessing()}>
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Procesar este PDF
                   </Button>
@@ -482,7 +566,9 @@ export function PdfFirstUploadShell({
                   <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
                 </div>
 
-                {ready && !showReadyContext ? (
+                {ready && isPdfFirstLandingResume ? (
+                  <p className="mt-5 text-sm font-semibold text-indigo-700">Listo. Abriendo tu material…</p>
+                ) : ready && !showReadyContext ? (
                   <>
                     <p className="mt-5 text-sm leading-6 text-slate-600">
                       Antes de empezar, respondé unas preguntas rápidas para saber qué ya dominás y qué conviene repasar.
@@ -513,7 +599,7 @@ export function PdfFirstUploadShell({
                   </>
                 ) : null}
 
-                {!failed && (!ready || showReadyContext) ? (
+                {!isPdfFirstLandingResume && !failed && (!ready || showReadyContext) ? (
                   <>
                     {!contextSaved ? (
                       <div className="mt-5 space-y-4">
