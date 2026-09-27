@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronDown, Eye, EyeOff, Mail } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Eye, EyeOff, FileText, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { getPdfFirstDraftMeta } from '@/lib/pdf-first-draft';
 import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 
@@ -26,6 +27,11 @@ function getSafeInternalPath(value: string | null | undefined, fallback = '/dash
 }
 
 function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean) {
+  if (reason === 'pdf-first') {
+    return isSignUp
+      ? 'Creá tu cuenta para procesar el PDF que ya elegiste. Cuando vuelvas, Evaluo continúa con ese archivo automáticamente.'
+      : 'Ingresá para procesar el PDF que ya elegiste y continuar con ese mismo archivo.';
+  }
   if (reason === 'save-subject') {
     return isSignUp
       ? 'Creá tu cuenta para guardar esta materia y volver a encontrarla desde tu espacio.'
@@ -93,6 +99,7 @@ export default function LoginFormGoogleFirst() {
   const [reason, setReason] = useState('');
   const [nextPath, setNextPath] = useState('/dashboard');
   const [signupSourcePath, setSignupSourcePath] = useState('');
+  const [pdfDraftMeta, setPdfDraftMeta] = useState<{ name: string; size: number } | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -136,6 +143,14 @@ export default function LoginFormGoogleFirst() {
     setIntent(requestedIntent);
     setReason(requestedReason);
 
+    if (requestedReason === 'pdf-first') {
+      void getPdfFirstDraftMeta()
+        .then((draft) => {
+          if (draft) setPdfDraftMeta({ name: draft.name, size: draft.size });
+        })
+        .catch(() => undefined);
+    }
+
     const storedEmail = consumeStoredPricingEmail();
     if (storedEmail) {
       setEmail(storedEmail);
@@ -144,7 +159,7 @@ export default function LoginFormGoogleFirst() {
   }, []);
 
   const isSignUp = mode === 'signup';
-  const location = intent === 'premium' ? 'login_premium_intent' : 'login';
+  const location = intent === 'premium' ? 'login_premium_intent' : reason === 'pdf-first' ? 'login_pdf_first' : 'login';
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
@@ -324,6 +339,20 @@ export default function LoginFormGoogleFirst() {
             role="status"
           >
             {notice}
+          </div>
+        ) : null}
+
+        {reason === 'pdf-first' && pdfDraftMeta ? (
+          <div className="mt-5 flex items-center gap-3 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-left">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm">
+              <FileText className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-slate-900">{pdfDraftMeta.name}</span>
+              <span className="mt-0.5 block text-xs text-slate-500">
+                {(pdfDraftMeta.size / (1024 * 1024)).toFixed(1).replace('.', ',')} MB · listo para continuar
+              </span>
+            </span>
           </div>
         ) : null}
 
