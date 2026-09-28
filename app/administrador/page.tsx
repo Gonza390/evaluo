@@ -57,6 +57,7 @@ const ACQUISITION_SOURCE_KEYS: AcquisitionSourceKey[] = [
   'whatsapp',
   'instagram',
   'linkedin',
+  'reddit',
 ];
 
 function ErrorPanel({ message }: { message: string }) {
