@@ -47,9 +47,14 @@
     {
       "path": "/api/internal/flashcard-review-reminders",
       "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/internal/study-return-48h",
+      "schedule": "0 * * * *"
     }
   ],
   "env": {
-    "REACTIVATION_NEXT_SUBJECT_ENABLED": "1"
+    "REACTIVATION_NEXT_SUBJECT_ENABLED": "1",
+    "STUDY_RETURN_48H_ENABLED": "0"
   }
 }
