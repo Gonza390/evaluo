@@ -97,6 +97,23 @@ export function StudentMaterialFlashcards({
   const currentRecall = sessionRecall[currentCardIndex];
   const currentVote = voteByCard[currentCardIndex];
   const allReviewed = started && order.length > 0 && reviewedCount >= order.length;
+  const reviewTopics = useMemo(() => {
+    const unknownIndexes = Object.entries(sessionRecall)
+      .filter(([, result]) => result === 'unknown')
+      .map(([index]) => Number(index))
+      .filter((index) => index >= 0 && index < cards.length);
+
+    return Array.from(
+      new Set(
+        unknownIndexes
+          .map((index) => {
+            const card = cards[index];
+            return card?.reference.sectionTitle?.trim() || card?.front.trim() || '';
+          })
+          .filter(Boolean)
+      )
+    ).slice(0, 5);
+  }, [cards, sessionRecall]);
 
   const startSession = useCallback(() => {
     setOrder(buildSessionOrder(recallByCard, cards.length));
@@ -340,6 +357,21 @@ export function StudentMaterialFlashcards({
             Completaste todas las tarjetas sin pendientes para repasar.
           </p>
         )}
+        {unknownCount > 0 && reviewTopics.length > 0 ? (
+          <div className="mx-auto mt-5 w-full max-w-xl border-t border-emerald-100 pt-5 text-left">
+            <h4 className="text-sm font-semibold text-slate-950">Temas para repasar</h4>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Estos son los temas que te costaron en esta práctica.
+            </p>
+            <ul className="mt-3 divide-y divide-slate-200 border-y border-slate-200">
+              {reviewTopics.map((topic) => (
+                <li key={topic} className="py-2.5 text-sm font-semibold text-slate-700">
+                  {topic}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           {unknownCount > 0 ? (
             <Button type="button" onClick={reviewDifficult} className="rounded-2xl px-6">
