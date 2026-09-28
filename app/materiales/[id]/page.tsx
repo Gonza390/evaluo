@@ -337,7 +337,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
-          initialTab={query.tab === 'mapa' ? 'mapa' : undefined}
+          initialTab={
+            query.tab === 'tarjetas' ? 'tarjetas' : query.tab === 'mapa' ? 'mapa' : undefined
+          }
           initialPdfPage={initialPdfPage}
           initialViewerVisible={Boolean(query.studyError)}
         />
