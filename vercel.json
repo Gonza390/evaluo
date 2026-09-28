@@ -50,7 +50,7 @@
     },
     {
       "path": "/api/internal/study-return-48h",
-      "schedule": "0 * * * *"
+      "schedule": "0 15 * * *"
     }
   ],
   "env": {
