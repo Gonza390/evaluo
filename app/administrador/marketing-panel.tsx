@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { Check, Copy } from 'lucide-react';
 import type { AdministradorMarketingStats } from './actions';
 
 function MetricCard({
@@ -34,7 +36,31 @@ export function MarketingPanel({
   activePeriodLabel: string;
   stats: AdministradorMarketingStats;
 }) {
+  const [redditLinkCopied, setRedditLinkCopied] = useState(false);
   const overallConversion = conversion(stats.totalRegistrations, stats.totalVisits);
+
+  const redditRows = stats.rows.filter(
+    (row) => row.source.trim().toLowerCase() === 'reddit'
+  );
+  const redditStats = redditRows.reduce(
+    (acc, row) => ({
+      visits: acc.visits + row.visits,
+      logins: acc.logins + row.logins,
+      registrations: acc.registrations + row.registrations,
+    }),
+    { visits: 0, logins: 0, registrations: 0 }
+  );
+  const redditConversion = conversion(redditStats.registrations, redditStats.visits);
+
+  const copyRedditLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/reddit`);
+      setRedditLinkCopied(true);
+      window.setTimeout(() => setRedditLinkCopied(false), 1800);
+    } catch {
+      setRedditLinkCopied(false);
+    }
+  };
 
   return (
     <section>
@@ -68,6 +94,67 @@ export function MarketingPanel({
             label="Conversión a registro"
             value={overallConversion}
             caption="Registros atribuidos / visitas atribuidas"
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-[22px] border border-[#dce7ff] bg-white px-5 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#eef4ff] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#2563eb]">
+                Reddit
+              </span>
+              <span className="text-[12px] text-[#95a0b8]">Link permanente</span>
+            </div>
+            <h2 className="mt-3 text-[17px] font-semibold tracking-[-0.03em] text-[#1d2a44]">
+              evaluo.com.ar/reddit
+            </h2>
+            <p className="mt-1 max-w-2xl text-[13px] leading-5 text-[#7f8aa3]">
+              Usá este mismo enlace en cualquier publicación de Reddit. El acceso se atribuye
+              automáticamente al canal Reddit y queda consolidado acá.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={copyRedditLink}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-[#dbe4f4] bg-[#f8faff] px-4 text-[12px] font-semibold text-[#31507e] transition hover:border-[#bfd0f0] hover:bg-[#f1f6ff]"
+          >
+            {redditLinkCopied ? (
+              <>
+                <Check className="h-3.5 w-3.5" />
+                Copiado
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" />
+                Copiar link
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <MetricCard
+            label="Visitas desde Reddit"
+            value={redditStats.visits.toLocaleString('es-AR')}
+            caption={activePeriodLabel}
+          />
+          <MetricCard
+            label="Logins desde Reddit"
+            value={redditStats.logins.toLocaleString('es-AR')}
+            caption={activePeriodLabel}
+          />
+          <MetricCard
+            label="Registros desde Reddit"
+            value={redditStats.registrations.toLocaleString('es-AR')}
+            caption={activePeriodLabel}
+          />
+          <MetricCard
+            label="Conversión Reddit"
+            value={redditConversion}
+            caption="Registros / visitas"
           />
         </div>
       </div>
