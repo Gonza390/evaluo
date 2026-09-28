@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ArrowDown,
@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { cn } from '@/lib/utils';
+import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 import {
   getFlashcardProgressAction,
   saveFlashcardProgressAction,
@@ -92,6 +93,9 @@ export function StudentMaterialFlashcards({
   const [isSchedulingReminder, setIsSchedulingReminder] = useState(false);
   const [reminderScheduled, setReminderScheduled] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
+  const activeSessionIdRef = useRef<string | null>(null);
+  const activeSessionModeRef = useRef<'all' | 'difficult'>('all');
+  const completedSessionIdsRef = useRef<Set<string>>(new Set());
   const storageKey = `evaluo:flashcards:${materialId}`;
 
   const currentCardIndex = order[position] ?? 0;
@@ -124,16 +128,39 @@ export function StudentMaterialFlashcards({
   const visibleReviewTopics = showAllReviewTopics ? reviewTopics : reviewTopics.slice(0, 3);
   const hiddenReviewTopicsCount = Math.max(0, reviewTopics.length - 3);
 
+  const beginTrackedSession = useCallback(
+    (nextOrder: number[], mode: 'all' | 'difficult') => {
+      const sessionId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+      activeSessionIdRef.current = sessionId;
+      activeSessionModeRef.current = mode;
+
+      void trackProductAnalyticsEvent('flashcard_session_started', {
+        material_id: materialId,
+        session_id: sessionId,
+        mode,
+        cards_total: nextOrder.length,
+      });
+
+      setOrder(nextOrder);
+      setSessionRecall({});
+      setPosition(0);
+      setFlipped(false);
+      setIsFullscreen(false);
+      setShowAllReviewTopics(false);
+      setReminderScheduled(false);
+      setReminderError(null);
+      setStarted(true);
+    },
+    [materialId]
+  );
+
   const startSession = useCallback(() => {
-    setOrder(buildSessionOrder(recallByCard, cards.length));
-    setSessionRecall({});
-    setPosition(0);
-    setFlipped(false);
-    setShowAllReviewTopics(false);
-    setReminderScheduled(false);
-    setReminderError(null);
-    setStarted(true);
-  }, [cards.length, recallByCard]);
+    beginTrackedSession(buildSessionOrder(recallByCard, cards.length), 'all');
+  }, [beginTrackedSession, cards.length, recallByCard]);
 
   const finishSession = useCallback(() => {
     setStarted(false);
@@ -145,6 +172,7 @@ export function StudentMaterialFlashcards({
     setShowAllReviewTopics(false);
     setReminderScheduled(false);
     setReminderError(null);
+    activeSessionIdRef.current = null;
   }, []);
 
   const reviewDifficult = useCallback(() => {
@@ -155,16 +183,29 @@ export function StudentMaterialFlashcards({
 
     if (unknownIndexes.length === 0) return;
 
-    setOrder(shuffledIndexes(unknownIndexes.length).map((index) => unknownIndexes[index]!));
-    setSessionRecall({});
-    setPosition(0);
-    setFlipped(false);
-    setIsFullscreen(false);
-    setShowAllReviewTopics(false);
-    setReminderScheduled(false);
-    setReminderError(null);
-    setStarted(true);
-  }, [cards.length, sessionRecall]);
+    beginTrackedSession(
+      shuffledIndexes(unknownIndexes.length).map((index) => unknownIndexes[index]!),
+      'difficult'
+    );
+  }, [beginTrackedSession, cards.length, sessionRecall]);
+
+  useEffect(() => {
+    if (!allReviewed) return;
+
+    const sessionId = activeSessionIdRef.current;
+    if (!sessionId || completedSessionIdsRef.current.has(sessionId)) return;
+
+    completedSessionIdsRef.current.add(sessionId);
+    void trackProductAnalyticsEvent('flashcard_session_completed', {
+      material_id: materialId,
+      session_id: sessionId,
+      mode: activeSessionModeRef.current,
+      cards_total: order.length,
+      cards_reviewed: reviewedCount,
+      known_count: knownCount,
+      unknown_count: unknownCount,
+    });
+  }, [allReviewed, knownCount, materialId, order.length, reviewedCount, unknownCount]);
 
   const scheduleTomorrowReminder = useCallback(() => {
     if (unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
