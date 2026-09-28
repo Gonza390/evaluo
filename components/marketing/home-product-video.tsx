@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2, PlayCircle, UploadCloud } from 'lucide-react';
-import { TrackedLink } from '@/components/marketing/tracked-link';
+import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const milestones = [25, 50, 75] as const;
@@ -15,7 +15,7 @@ const videoSteps = [
   'Practicá y detectá qué conviene reforzar.',
 ] as const;
 
-export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
+export function HomeProductVideo() {
   const sentMilestones = useRef(new Set<number>());
   const mediaShellRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -115,20 +115,15 @@ export function HomeProductVideo({ primaryHref }: { primaryHref: string }) {
           </div>
 
           <div className="mt-7 flex flex-col items-start gap-3">
-            <TrackedLink
-              href={primaryHref}
-              eventName="cta_click"
-              payload={{
-                location: 'home_product_video',
-                cta_name: 'probar_con_mi_pdf_video',
-                destination: primaryHref,
-              }}
-              className="from-brand to-brand-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
-            >
+            <HomePdfPickerButton
+                  location="home_product_video"
+                  ctaName="probar_con_mi_pdf_video"
+                  className="from-brand to-brand-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
+                >
               <UploadCloud className="h-4 w-4" aria-hidden="true" />
               Probar con mi PDF
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </TrackedLink>
+            </HomePdfPickerButton>
             <p className="text-[11px] font-semibold text-slate-500">Empezá gratis · Sin tarjeta</p>
           </div>
         </div>
