@@ -1,6 +1,11 @@
+import Link from 'next/link';
 import { createClientServer } from '@/lib/supabase-server';
 import MateriaContent from './materia-content';
 import type { Metadata } from 'next';
+import {
+  buildSeoEntitySlug,
+  getSiglo21PregunteroMateria,
+} from '@/lib/seo-siglo21';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -28,15 +33,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       };
     }
 
+    const siglo21 = await getSiglo21PregunteroMateria(materia.id).catch(() => null);
+    const title = siglo21
+      ? `${materia.nombre} - Universidad Siglo 21`
+      : `${materia.nombre} | Materia`;
+    const description = siglo21 && siglo21.totalPreguntas > 0
+      ? `Estudiá ${materia.nombre} de Universidad Siglo 21 con materiales, simuladores y ${siglo21.totalPreguntas.toLocaleString('es-AR')} preguntas disponibles en Evaluo.`
+      : `Estudia ${materia.nombre} con resúmenes, preguntas y simuladores en Evaluo.`;
+
     return {
-      title: `${materia.nombre} | Materia`,
-      description: `Estudia ${materia.nombre} con resúmenes, preguntas y simuladores en Evaluo.`,
+      title,
+      description,
       alternates: {
         canonical: `/explorar/materia/${materia.id}`,
       },
       openGraph: {
-        title: `${materia.nombre} | Evaluo`,
-        description: `Accede a materiales, preguntas y simuladores para ${materia.nombre}.`,
+        title: `${title} | Evaluo`,
+        description,
         url: `https://evaluo.com.ar/explorar/materia/${materia.id}`,
       },
     };
@@ -127,8 +140,32 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
     console.error('Error loading materia data:', error);
   }
 
+  const siglo21Preguntero = await getSiglo21PregunteroMateria(materiaId).catch(() => null);
+
   return (
-    <MateriaContent
+    <>
+      {siglo21Preguntero && siglo21Preguntero.totalPreguntas > 0 ? (
+        <div className="mx-auto mb-4 w-full max-w-7xl rounded-2xl border border-[#C7D2FE] bg-white px-4 py-4 shadow-sm sm:px-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4F5DFF]">
+                Universidad Siglo 21 · Preguntero disponible
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#0F1B3D]">
+                {siglo21Preguntero.totalPreguntas.toLocaleString('es-AR')} preguntas para practicar {siglo21Preguntero.materiaNombre}
+              </p>
+            </div>
+            <Link
+              href={`/pregunteros/${buildSeoEntitySlug(siglo21Preguntero.materiaNombre, siglo21Preguntero.materiaId)}`}
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(37,99,235,0.18)]"
+            >
+              Ver preguntero
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      <MateriaContent
         materiaId={materiaId}
         materiaNombre={materiaNombre}
         carreraId={carreraId}
@@ -136,5 +173,6 @@ export default async function MateriaPage({ params, searchParams }: PageProps) {
         universidadId={universidadId}
         universidadNombre={universidadNombre}
       />
+    </>
   );
 }

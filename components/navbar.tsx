@@ -10,6 +10,7 @@ import {
   Heart,
   House,
   LayoutDashboard,
+  ListChecks,
   LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ const mainNavItems = [
 
 const exploreNavItems = [
   { label: 'Universidades', href: '/explorar', icon: Building2 },
+  { label: 'Pregunteros Siglo 21', href: '/pregunteros', icon: ListChecks },
 ];
 
 export function Navbar() {
