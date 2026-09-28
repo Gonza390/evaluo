@@ -284,6 +284,8 @@ export function MaterialStudyWorkspace({
   };
 
   useEffect(() => {
+    if (window.location.pathname.startsWith('/demo/')) return;
+
     void trackProductAnalyticsEvent('study_tab_opened', {
       material_id: materialId,
       materia_id: materiaId ?? null,
