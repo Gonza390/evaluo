@@ -138,12 +138,14 @@ export function StudentMaterialFlashcards({
       activeSessionIdRef.current = sessionId;
       activeSessionModeRef.current = mode;
 
-      void trackProductAnalyticsEvent('flashcard_session_started', {
-        material_id: materialId,
-        session_id: sessionId,
-        mode,
-        cards_total: nextOrder.length,
-      });
+      if (!window.location.pathname.startsWith('/demo/')) {
+        void trackProductAnalyticsEvent('flashcard_session_started', {
+          material_id: materialId,
+          session_id: sessionId,
+          mode,
+          cards_total: nextOrder.length,
+        });
+      }
 
       setOrder(nextOrder);
       setSessionRecall({});
@@ -196,15 +198,17 @@ export function StudentMaterialFlashcards({
     if (!sessionId || completedSessionIdsRef.current.has(sessionId)) return;
 
     completedSessionIdsRef.current.add(sessionId);
-    void trackProductAnalyticsEvent('flashcard_session_completed', {
-      material_id: materialId,
-      session_id: sessionId,
-      mode: activeSessionModeRef.current,
-      cards_total: order.length,
-      cards_reviewed: reviewedCount,
-      known_count: knownCount,
-      unknown_count: unknownCount,
-    });
+    if (!window.location.pathname.startsWith('/demo/')) {
+      void trackProductAnalyticsEvent('flashcard_session_completed', {
+        material_id: materialId,
+        session_id: sessionId,
+        mode: activeSessionModeRef.current,
+        cards_total: order.length,
+        cards_reviewed: reviewedCount,
+        known_count: knownCount,
+        unknown_count: unknownCount,
+      });
+    }
   }, [allReviewed, knownCount, materialId, order.length, reviewedCount, unknownCount]);
 
   const scheduleTomorrowReminder = useCallback(() => {
