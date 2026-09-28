@@ -3,7 +3,7 @@
 import { listAdminUserIds } from '@/lib/admin-users';
 import { createAdminClient } from '@/lib/supabase-admin';
 
-export type AcquisitionSourceKey = 'google' | 'whatsapp' | 'instagram' | 'linkedin';
+export type AcquisitionSourceKey = 'google' | 'whatsapp' | 'instagram' | 'linkedin' | 'reddit';
 export type AcquisitionTrendDirection = 'up' | 'down' | 'flat' | 'new';
 
 export interface AcquisitionTimelinePoint {
@@ -86,7 +86,7 @@ export interface AcquisitionOverviewStats {
   detail: AcquisitionSourceDetail | null;
 }
 
-const SOURCE_KEYS: AcquisitionSourceKey[] = ['google', 'whatsapp', 'instagram', 'linkedin'];
+const SOURCE_KEYS: AcquisitionSourceKey[] = ['google', 'whatsapp', 'instagram', 'linkedin', 'reddit'];
 const ALLOWED_RANGE_DAYS = new Set([1, 7, 14, 30]);
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ARGENTINA_OFFSET_MS = 3 * 60 * 60 * 1000;
@@ -146,6 +146,7 @@ function normalizeSource(value: unknown): AcquisitionSourceKey | null {
   if (normalized === 'whatsapp' || normalized === 'wa') return 'whatsapp';
   if (normalized === 'instagram' || normalized === 'ig') return 'instagram';
   if (normalized === 'linkedin' || normalized === 'linked-in') return 'linkedin';
+  if (normalized === 'reddit') return 'reddit';
   return null;
 }
 
@@ -161,6 +162,7 @@ function sourceFromReferrer(value: unknown): AcquisitionSourceKey | null {
     if (host === 'google.com' || /^google\.[a-z.]+$/.test(host)) return 'google';
     if (host === 'instagram.com' || host.endsWith('.instagram.com')) return 'instagram';
     if (host === 'linkedin.com' || host.endsWith('.linkedin.com')) return 'linkedin';
+    if (host === 'reddit.com' || host.endsWith('.reddit.com')) return 'reddit';
     if (host === 'whatsapp.com' || host.endsWith('.whatsapp.com') || host === 'wa.me') {
       return 'whatsapp';
     }
