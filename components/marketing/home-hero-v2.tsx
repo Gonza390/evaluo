@@ -11,6 +11,7 @@ import {
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
+import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
 import { HomeProductVideo } from '@/components/marketing/home-product-video';
 
 const studyCapabilities = [
@@ -63,20 +64,15 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               </p>
 
               <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
-                <TrackedLink
-                  href={primaryHref}
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_hero',
-                    cta_name: 'probar_con_mi_pdf',
-                    destination: primaryHref,
-                  }}
+                <HomePdfPickerButton
+                  location="home_hero"
+                  ctaName="probar_con_mi_pdf"
                   className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto sm:px-8"
                 >
                   <UploadCloud className="h-4.5 w-4.5 shrink-0" />
                   Probar con mi PDF
                   <ArrowRight className="h-4 w-4 shrink-0" />
-                </TrackedLink>
+                </HomePdfPickerButton>
                 <TrackedLink
                   href="/#video"
                   eventName="cta_click"
@@ -113,7 +109,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
         </div>
       </section>
 
-      <HomeProductVideo primaryHref={primaryHref} />
+      <HomeProductVideo />
 
       <section id="producto" className="border-b border-slate-100 bg-white py-14 sm:py-16 lg:py-18">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
@@ -171,19 +167,14 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
               ))}
             </div>
 
-            <TrackedLink
-              href={primaryHref}
-              eventName="cta_click"
-              payload={{
-                location: 'home_product_overview',
-                cta_name: 'probar_con_mi_pdf_producto',
-                destination: primaryHref,
-              }}
-              className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-indigo-700 transition hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-            >
+            <HomePdfPickerButton
+                  location="home_product_overview"
+                  ctaName="probar_con_mi_pdf_producto"
+                  className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-indigo-700 transition hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
               Probar con mi PDF
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </TrackedLink>
+            </HomePdfPickerButton>
           </div>
         </div>
       </section>
