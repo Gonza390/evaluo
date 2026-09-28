@@ -7,6 +7,7 @@ import {
   Instagram,
   Linkedin,
   MessageCircle,
+  MessageSquare,
   Minus,
   Search,
 } from 'lucide-react';
@@ -71,6 +72,16 @@ const SOURCE_META: Record<
     cardClass: 'from-sky-50/80 via-white to-white',
     selectedClass: 'border-sky-300 ring-sky-100',
     sparklineClass: 'text-sky-500',
+  },
+  reddit: {
+    label: 'Reddit',
+    subtitle: 'evaluo.com.ar/reddit',
+    icon: MessageSquare,
+    iconClass: 'text-orange-700',
+    iconBg: 'bg-orange-100',
+    cardClass: 'from-orange-50/80 via-white to-white',
+    selectedClass: 'border-orange-300 ring-orange-100',
+    sparklineClass: 'text-orange-500',
   },
 };
 
@@ -561,7 +572,7 @@ export function AcquisitionPanel({
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {stats.sources.map((item) => (
           <SourceCard
             key={item.source}
