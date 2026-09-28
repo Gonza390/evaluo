@@ -6,6 +6,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Bell,
   Check,
   Expand,
   RotateCcw,
@@ -22,6 +23,7 @@ import {
   saveFlashcardProgressAction,
 } from '@/app/dashboard/materiales/actions';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { scheduleFlashcardReviewReminderAction } from '@/lib/actions/flashcard-review-reminders';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 type RecallResult = 'known' | 'unknown';
@@ -86,6 +88,10 @@ export function StudentMaterialFlashcards({
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
+  const [showAllReviewTopics, setShowAllReviewTopics] = useState(false);
+  const [isSchedulingReminder, setIsSchedulingReminder] = useState(false);
+  const [reminderScheduled, setReminderScheduled] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
   const storageKey = `evaluo:flashcards:${materialId}`;
 
   const currentCardIndex = order[position] ?? 0;
@@ -112,14 +118,20 @@ export function StudentMaterialFlashcards({
           })
           .filter(Boolean)
       )
-    ).slice(0, 5);
+    ).slice(0, 12);
   }, [cards, sessionRecall]);
+
+  const visibleReviewTopics = showAllReviewTopics ? reviewTopics : reviewTopics.slice(0, 3);
+  const hiddenReviewTopicsCount = Math.max(0, reviewTopics.length - 3);
 
   const startSession = useCallback(() => {
     setOrder(buildSessionOrder(recallByCard, cards.length));
     setSessionRecall({});
     setPosition(0);
     setFlipped(false);
+    setShowAllReviewTopics(false);
+    setReminderScheduled(false);
+    setReminderError(null);
     setStarted(true);
   }, [cards.length, recallByCard]);
 
@@ -131,6 +143,9 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
+    setShowAllReviewTopics(false);
+    setReminderScheduled(false);
+    setReminderError(null);
     setStarted(true);
   }, [cards.length]);
 
@@ -141,6 +156,9 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
+    setShowAllReviewTopics(false);
+    setReminderScheduled(false);
+    setReminderError(null);
   }, []);
 
   const reviewDifficult = useCallback(() => {
@@ -156,8 +174,43 @@ export function StudentMaterialFlashcards({
     setPosition(0);
     setFlipped(false);
     setIsFullscreen(false);
+    setShowAllReviewTopics(false);
+    setReminderScheduled(false);
+    setReminderError(null);
     setStarted(true);
   }, [cards.length, sessionRecall]);
+
+  const scheduleTomorrowReminder = useCallback(() => {
+    if (unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
+
+    setIsSchedulingReminder(true);
+    setReminderError(null);
+
+    void scheduleFlashcardReviewReminderAction({
+      materialId,
+      topics: reviewTopics,
+      unknownCount,
+    })
+      .then((result) => {
+        if (result.success) {
+          setReminderScheduled(true);
+          return;
+        }
+        setReminderError(result.message ?? 'No pudimos guardar el recordatorio.');
+      })
+      .catch(() => {
+        setReminderError('No pudimos guardar el recordatorio.');
+      })
+      .finally(() => {
+        setIsSchedulingReminder(false);
+      });
+  }, [
+    isSchedulingReminder,
+    materialId,
+    reminderScheduled,
+    reviewTopics,
+    unknownCount,
+  ]);
 
   useEffect(() => {
     try {
@@ -361,40 +414,71 @@ export function StudentMaterialFlashcards({
           <div className="mx-auto mt-5 w-full max-w-xl border-t border-emerald-100 pt-5 text-left">
             <h4 className="text-sm font-semibold text-slate-950">Temas para repasar</h4>
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              Estos son los temas que te costaron en esta práctica.
+              Estos son los temas que te costaron en esta sesión.
             </p>
             <ul className="mt-3 divide-y divide-slate-200 border-y border-slate-200">
-              {reviewTopics.map((topic) => (
+              {visibleReviewTopics.map((topic) => (
                 <li key={topic} className="py-2.5 text-sm font-semibold text-slate-700">
                   {topic}
                 </li>
               ))}
             </ul>
+            {hiddenReviewTopicsCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setShowAllReviewTopics((current) => !current)}
+                className="mt-2 text-xs font-semibold text-[#2563EB] hover:text-[#1D4ED8]"
+              >
+                {showAllReviewTopics
+                  ? 'Ver menos'
+                  : `Ver ${hiddenReviewTopicsCount} tema${hiddenReviewTopicsCount === 1 ? '' : 's'} más`}
+              </button>
+            ) : null}
           </div>
         ) : null}
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           {unknownCount > 0 ? (
-            <Button type="button" onClick={reviewDifficult} className="rounded-2xl px-6">
-              <RotateCcw className="h-4 w-4" /> Repasar las que no sabía
-            </Button>
+            <>
+              <Button
+                type="button"
+                onClick={scheduleTomorrowReminder}
+                disabled={isSchedulingReminder || reminderScheduled}
+                className="rounded-2xl px-6"
+              >
+                <Bell className="h-4 w-4" />
+                {isSchedulingReminder
+                  ? 'Guardando...'
+                  : reminderScheduled
+                    ? 'Te recordamos mañana'
+                    : 'Recordarme mañana'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={reviewDifficult}
+                className="rounded-2xl px-6"
+              >
+                <RotateCcw className="h-4 w-4" /> Repasar ahora
+              </Button>
+            </>
           ) : null}
           <Button
             type="button"
-            variant={unknownCount > 0 ? 'outline' : 'default'}
+            variant="ghost"
             onClick={finishSession}
             className="rounded-2xl px-6"
           >
-            <Check className="h-4 w-4" /> Finalizar
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={restartFromScratch}
-            className="rounded-2xl px-6"
-          >
-            Empezar de nuevo
+            <Check className="h-4 w-4" /> Finalizar sesión
           </Button>
         </div>
+        {reminderError ? (
+          <p className="mx-auto mt-3 max-w-md text-xs leading-5 text-rose-600">{reminderError}</p>
+        ) : null}
+        {reminderScheduled ? (
+          <p className="mx-auto mt-3 max-w-md text-xs leading-5 text-emerald-700">
+            Listo. Mañana te enviamos un recordatorio para retomar estos temas.
+          </p>
+        ) : null}
       </div>
     );
   }
