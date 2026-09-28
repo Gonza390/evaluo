@@ -9,7 +9,7 @@ import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { HomeHeroV2 } from '@/components/marketing/home-hero-v2';
 import { HomeLiveStudyDemo } from '@/components/marketing/home-live-study-demo';
 import { HomeHowItWorksInteractive } from '@/components/marketing/home-how-it-works-interactive';
-import { TrackedLink } from '@/components/marketing/tracked-link';
+import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
@@ -99,20 +99,15 @@ export default function Home() {
             </div>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-              <TrackedLink
-                href={primaryHref}
-                eventName="cta_click"
-                payload={{
-                  location: 'home_real_material_demo',
-                  cta_name: 'probar_con_mi_pdf_demo',
-                  destination: primaryHref,
-                }}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-xs font-bold text-slate-950 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
+              <HomePdfPickerButton
+                  location="home_real_material_demo"
+                  ctaName="probar_con_mi_pdf_demo"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-xs font-bold text-slate-950 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                >
                 <UploadCloud className="h-4 w-4 shrink-0" />
                 Probar con mi PDF
                 <ArrowRight className="h-4 w-4 shrink-0" />
-              </TrackedLink>
+              </HomePdfPickerButton>
 
             </div>
           </div>
@@ -160,19 +155,14 @@ export default function Home() {
               </p>
 
               <div className="mt-8 flex w-full max-w-md justify-center">
-                <TrackedLink
-                  href={primaryHref}
-                  eventName="cta_click"
-                  payload={{
-                    location: 'home_final_cta',
-                    cta_name: 'probar_con_mi_pdf_final',
-                    destination: primaryHref,
-                  }}
+                <HomePdfPickerButton
+                  location="home_final_cta"
+                  ctaName="probar_con_mi_pdf_final"
                   className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
                 >
                   <UploadCloud className="h-4.5 w-4.5 shrink-0" />
                   Probar con mi PDF
-                </TrackedLink>
+                </HomePdfPickerButton>
               </div>
             </div>
           </div>
