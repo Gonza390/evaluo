@@ -102,6 +102,18 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   profile_completed: ['active_subject_count'],
   student_material_processing_ready: ['material_id', 'page_count', 'processing_strategy'],
   student_material_study_opened: ['material_id', 'is_owner', 'visibility'],
+  study_tab_opened: ['material_id', 'materia_id', 'tab'],
+  study_tab_engagement: ['material_id', 'materia_id', 'tab', 'active_ms', 'reason'],
+  flashcard_session_started: ['material_id', 'session_id', 'mode', 'cards_total'],
+  flashcard_session_completed: [
+    'material_id',
+    'session_id',
+    'mode',
+    'cards_total',
+    'cards_reviewed',
+    'known_count',
+    'unknown_count',
+  ],
   pdf_gate_viewed: [
     'attribution',
     'anonymous_id',
