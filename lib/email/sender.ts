@@ -68,6 +68,60 @@ export async function sendSenderTemplate(input: {
   };
 }
 
+
+export async function sendSenderTransactional(input: {
+  toEmail: string;
+  toName?: string | null;
+  subject: string;
+  text?: string;
+  html?: string;
+}) {
+  const token = getSenderToken();
+  const fromEmail = process.env.SENDER_FROM_EMAIL?.trim() || 'hola@evaluo.com.ar';
+  const fromName = process.env.SENDER_FROM_NAME?.trim() || 'Evaluo';
+
+  const response = await fetch('https://api.sender.net/v2/message/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      from: {
+        email: fromEmail,
+        name: fromName,
+      },
+      to: {
+        email: input.toEmail,
+        ...(input.toName ? { name: input.toName } : {}),
+      },
+      subject: input.subject,
+      ...(input.text ? { text: input.text } : {}),
+      ...(input.html ? { html: input.html } : {}),
+    }),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(12_000),
+  });
+
+  const raw = await response.text();
+  let payload: { success?: boolean; message?: string; emailId?: string } = {};
+
+  try {
+    payload = raw ? JSON.parse(raw) : {};
+  } catch {
+    payload = {};
+  }
+
+  if (!response.ok || payload.success === false) {
+    throw new Error(payload.message || `Sender respondió HTTP ${response.status}.`);
+  }
+
+  return {
+    emailId: payload.emailId ?? null,
+  };
+}
+
 export async function sendSenderCustomEvent(input: {
   type: string;
   subscriberEmail: string;
