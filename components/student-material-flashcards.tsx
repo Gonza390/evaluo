@@ -135,20 +135,6 @@ export function StudentMaterialFlashcards({
     setStarted(true);
   }, [cards.length, recallByCard]);
 
-  const restartFromScratch = useCallback(() => {
-    setRecallByCard({});
-    setSessionRecall({});
-    setVoteByCard({});
-    setOrder(buildSessionOrder({}, cards.length));
-    setPosition(0);
-    setFlipped(false);
-    setIsFullscreen(false);
-    setShowAllReviewTopics(false);
-    setReminderScheduled(false);
-    setReminderError(null);
-    setStarted(true);
-  }, [cards.length]);
-
   const finishSession = useCallback(() => {
     setStarted(false);
     setOrder([]);
