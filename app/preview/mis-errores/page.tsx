@@ -3,12 +3,10 @@ import Link from 'next/link';
 import {
   ArrowRight,
   BookOpenText,
-  CheckCircle2,
   CircleAlert,
   FileText,
   Layers3,
   ListChecks,
-  Sparkles,
   Target,
 } from 'lucide-react';
 
@@ -21,100 +19,125 @@ type PageProps = {
   searchParams?: Promise<{ estado?: string }>;
 };
 
-const errors = [
+type ErrorItem = {
+  topic: string;
+  source: 'Flashcards' | 'Ejercicio' | 'Simulador' | 'Diagnóstico';
+  failures: number;
+  recency: string;
+  description: string;
+  pdfName?: string;
+  pdfSection?: string;
+  alsoIn?: string;
+  exactSource?: boolean;
+};
+
+const errors: ErrorItem[] = [
   {
     topic: 'Finalismo',
     source: 'Flashcards',
-    sourceIcon: Layers3,
     failures: 2,
     recency: 'Hoy',
     description: 'Confundiste cómo cambia la noción de acción en la teoría finalista.',
+    pdfName: 'Módulo 2 · Lectura 1 Derecho Penal',
+    pdfSection: 'Teoría finalista de la acción',
+    exactSource: true,
   },
   {
     topic: 'Normativismo',
     source: 'Ejercicio',
-    sourceIcon: ListChecks,
     failures: 1,
     recency: 'Ayer',
     description: 'Te costó distinguir la función normativa de la culpabilidad.',
+    pdfName: 'Resumen parcial 1',
+    pdfSection: 'Concepciones normativas de la culpabilidad',
+    exactSource: true,
   },
   {
     topic: 'Funcionalismo',
     source: 'Simulador',
-    sourceIcon: Target,
     failures: 1,
     recency: 'Hace 3 días',
     description: 'Marcaste una opción incorrecta sobre funcionalismo moderado y sistémico.',
+    pdfName: 'Módulo 2 · Lectura 1 Derecho Penal',
+    pdfSection: 'Funcionalismo moderado y sistémico',
+    alsoIn: 'Resumen parcial 1',
   },
   {
     topic: 'Dogmática penal',
     source: 'Diagnóstico',
-    sourceIcon: CircleAlert,
     failures: 1,
     recency: 'Hace 5 días',
     description: 'El diagnóstico detectó una duda sobre la función de la dogmática.',
+    pdfName: 'Módulo 1 · Introducción al Derecho Penal',
+    pdfSection: 'Dogmática jurídico-penal',
+    exactSource: true,
   },
-] as const;
+];
 
-function SourceBadge({
-  source,
-  Icon,
-}: {
-  source: string;
-  Icon: typeof Layers3;
-}) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-      <Icon className="h-3.5 w-3.5" />
-      {source}
-    </span>
-  );
-}
+const sourceIcon = {
+  Flashcards: Layers3,
+  Ejercicio: ListChecks,
+  Simulador: Target,
+  Diagnóstico: CircleAlert,
+} as const;
 
-function ErrorRow({
-  topic,
-  source,
-  sourceIcon,
-  failures,
-  recency,
-  description,
-  hasPdf,
-}: (typeof errors)[number] & { hasPdf: boolean }) {
-  const Icon = sourceIcon;
+function ErrorRow({ item, hasPdfs }: { item: ErrorItem; hasPdfs: boolean }) {
+  const Icon = sourceIcon[item.source];
+
   return (
-    <article className="border-b border-slate-100 py-5 last:border-b-0">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-bold tracking-[-0.02em] text-slate-950">{topic}</h3>
-            <SourceBadge source={source} Icon={Icon} />
-            {failures > 1 ? (
-              <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700">
-                Fallaste {failures} veces
-              </span>
+    <article className="grid gap-4 border-b border-slate-200 py-6 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_220px]">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h3 className="text-lg font-bold tracking-[-0.03em] text-slate-950">{item.topic}</h3>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+            <Icon className="h-3.5 w-3.5" />
+            {item.source}
+          </span>
+          <span className="text-xs font-semibold text-rose-600">
+            {item.failures === 1 ? '1 error' : `${item.failures} errores`}
+          </span>
+          <span className="text-xs text-slate-400">· {item.recency}</span>
+        </div>
+
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{item.description}</p>
+
+        {hasPdfs && item.pdfName ? (
+          <div className="mt-4 border-l-2 border-indigo-200 pl-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+              En tus apuntes
+            </p>
+            <p className="mt-1 text-sm font-semibold text-slate-800">
+              {item.pdfName}
+              {item.exactSource ? (
+                <span className="ml-2 text-xs font-medium text-indigo-600">PDF de origen</span>
+              ) : (
+                <span className="ml-2 text-xs font-medium text-indigo-600">Mejor coincidencia</span>
+              )}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">{item.pdfSection}</p>
+            {item.alsoIn ? (
+              <p className="mt-1.5 text-xs text-slate-400">También aparece en {item.alsoIn}</p>
             ) : null}
           </div>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p>
-          <p className="mt-2 text-xs font-medium text-slate-400">Último error · {recency}</p>
-        </div>
+        ) : null}
+      </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
+      <div className="flex flex-wrap items-start gap-3 lg:justify-end">
+        <button
+          type="button"
+          className="text-sm font-semibold text-slate-600 transition hover:text-slate-950"
+        >
+          Ver explicación
+        </button>
+        {hasPdfs && item.pdfName ? (
           <button
             type="button"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-700 shadow-sm"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 transition hover:text-indigo-700"
           >
-            Ver explicación
+            Repasar en mis apuntes
+            <ArrowRight className="h-4 w-4" />
           </button>
-          {hasPdf ? (
-            <button
-              type="button"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-xs font-bold text-white"
-            >
-              Ver en mi PDF
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          ) : null}
-        </div>
+        ) : null}
       </div>
     </article>
   );
@@ -122,200 +145,151 @@ function ErrorRow({
 
 export default async function MisErroresPreviewPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const hasPdf = params.estado === 'con-pdf';
+  const hasPdfs = params.estado !== 'sin-pdf';
 
   return (
-    <main className="min-h-screen bg-[#F7F8FC] px-4 py-7 text-slate-900 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-col gap-5 rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:px-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
-                Preview interno
-              </p>
-              <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-slate-950 sm:text-4xl">
-                Mis errores
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Un solo lugar para lo que todavía necesitás reforzar, sin importar si el error vino de
-                flashcards, ejercicios, diagnóstico o simulador.
-              </p>
-            </div>
-
-            <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
-              <Link
-                href="/preview/mis-errores?estado=sin-pdf"
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-                  !hasPdf ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'
-                }`}
-              >
-                Sin PDF
-              </Link>
-              <Link
-                href="/preview/mis-errores?estado=con-pdf"
-                className={`rounded-xl px-4 py-2 text-xs font-bold transition ${
-                  hasPdf ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'
-                }`}
-              >
-                Con PDF
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-6">
-            {!hasPdf ? (
-              <section className="overflow-hidden rounded-[26px] border border-amber-200 bg-[linear-gradient(135deg,#FFF9E9_0%,#FFFFFF_68%)] p-5 shadow-[0_18px_46px_rgba(180,83,9,0.06)] sm:p-6">
-                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex min-w-0 items-start gap-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                      <FileText className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700">
-                        Conectá tus errores con tus apuntes
-                      </p>
-                      <h2 className="mt-1.5 text-xl font-bold tracking-[-0.035em] text-slate-950">
-                        Reforzá estos temas con el material que entra en tu examen
-                      </h2>
-                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                        Subí tu PDF de Derecho Penal y Evaluo va a buscar dónde aparecen Finalismo,
-                        Normativismo, Funcionalismo y Dogmática para llevarte directo a esas partes.
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white"
-                  >
-                    Subir PDF de Derecho Penal
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </section>
-            ) : (
-              <section className="overflow-hidden rounded-[26px] border border-emerald-200 bg-[linear-gradient(135deg,#ECFDF5_0%,#FFFFFF_68%)] p-5 shadow-[0_18px_46px_rgba(5,150,105,0.06)] sm:p-6">
-                <div className="flex items-start gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-                    <CheckCircle2 className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-700">
-                      PDF conectado
-                    </p>
-                    <h2 className="mt-1.5 text-xl font-bold tracking-[-0.035em] text-slate-950">
-                      Encontramos tus errores en “Módulo 2 · Lectura 1 Derecho Penal”
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Evaluo cruzó tus errores con tu PDF y encontró contenido relacionado para los 4 temas.
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {['Finalismo', 'Normativismo', 'Funcionalismo', 'Dogmática penal'].map((item) => (
-                        <span
-                          key={item}
-                          className="rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
-
-            <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-700">
-                      Derecho Penal
-                    </p>
-                    <h2 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-slate-950">
-                      4 temas para reforzar
-                    </h2>
-                    <p className="mt-1.5 text-sm text-slate-500">
-                      Priorizados por repetición y por qué tan reciente fue el error.
-                    </p>
-                  </div>
-                  <span className="inline-flex w-fit rounded-full bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700">
-                    5 errores registrados
-                  </span>
-                </div>
-              </div>
-
-              <div className="px-5 sm:px-6">
-                {errors.map((error) => (
-                  <ErrorRow key={error.topic} {...error} hasPdf={hasPdf} />
-                ))}
-              </div>
-            </section>
-
-            {hasPdf ? (
-              <section className="rounded-[28px] border border-indigo-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.05)] sm:p-6">
-                <div className="flex items-start gap-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
-                    <BookOpenText className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-700">
-                      Próximo paso
-                    </p>
-                    <h2 className="mt-1.5 text-xl font-bold tracking-[-0.035em] text-slate-950">
-                      Repasá tus errores dentro de tu propio PDF
-                    </h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                      Entrá a cada tema con el fragmento de tus apuntes que lo explica y después volvé a practicarlo.
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white"
-                    >
-                      Repasar mis errores con este PDF
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </section>
-            ) : null}
+    <main className="min-h-screen bg-white text-slate-950">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <div className="mb-8 flex flex-col gap-5 border-b border-slate-200 pb-7 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">
+              Preview interno
+            </p>
+            <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-slate-950 sm:text-4xl">
+              Mis errores
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+              Todo lo que todavía necesitás reforzar, sin separar por herramienta.
+            </p>
           </div>
 
-          <aside className="space-y-5">
-            <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.05)]">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-600" />
-                <h2 className="text-sm font-bold text-slate-950">Tu foco ahora</h2>
-              </div>
-              <p className="mt-3 text-3xl font-bold tracking-[-0.05em] text-slate-950">4 temas</p>
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                Son los conceptos que todavía conviene reforzar antes de volver a medir.
-              </p>
-            </section>
-
-            <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_14px_38px_rgba(15,23,42,0.05)]">
-              <h2 className="text-sm font-bold text-slate-950">Cómo se arma “Mis errores”</h2>
-              <div className="mt-4 space-y-4">
-                {[
-                  ['1', 'Te equivocás', 'Flashcards, ejercicio, diagnóstico o simulador.'],
-                  ['2', 'Evaluo guarda el tema', 'El origen queda como contexto, no como sección separada.'],
-                  ['3', 'Lo conectamos a tu PDF', 'Si existe, buscamos los fragmentos relacionados.'],
-                  ['4', 'Volvés a practicar', 'El objetivo es cerrar el error, no acumular historial.'],
-                ].map(([n, title, body]) => (
-                  <div key={n} className="grid grid-cols-[26px_minmax(0,1fr)] gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-bold text-indigo-700">
-                      {n}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">{title}</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500">{body}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </aside>
+          <div className="flex items-center gap-4 text-sm">
+            <Link
+              href="/preview/mis-errores?estado=varios-pdfs"
+              className={hasPdfs ? 'font-bold text-indigo-600' : 'font-semibold text-slate-400'}
+            >
+              Con varios PDFs
+            </Link>
+            <span className="h-4 w-px bg-slate-200" />
+            <Link
+              href="/preview/mis-errores?estado=sin-pdf"
+              className={!hasPdfs ? 'font-bold text-indigo-600' : 'font-semibold text-slate-400'}
+            >
+              Sin PDF
+            </Link>
+          </div>
         </div>
+
+        {!hasPdfs ? (
+          <section className="mb-9 border-y border-amber-200 bg-amber-50/60 py-5">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-amber-700">
+                  Conectá estos errores con tus apuntes
+                </p>
+                <h2 className="mt-1.5 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                  Subí el material que realmente entra en tu examen
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Evaluo va a buscar estos conceptos dentro de tus PDFs para llevarte directo a la parte
+                  que necesitás repasar.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white"
+              >
+                Subir PDF de Derecho Penal
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </section>
+        ) : (
+          <section className="mb-9 flex flex-col gap-4 border-y border-slate-200 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-950">
+                3 PDFs de Derecho Penal conectados a tus errores
+              </p>
+              <p className="mt-1 text-sm text-slate-500">
+                Evaluo usa el PDF de origen cuando existe y, si el error viene del simulador, elige la mejor coincidencia.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600"
+            >
+              Ver mis PDFs
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </section>
+        )}
+
+        <section>
+          <div className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                Derecho Penal
+              </p>
+              <h2 className="mt-1 text-2xl font-bold tracking-[-0.04em] text-slate-950">
+                4 temas para reforzar
+              </h2>
+              <p className="mt-1.5 text-sm text-slate-500">
+                Priorizados por repetición y por qué tan reciente fue el error.
+              </p>
+            </div>
+            <div className="text-sm text-slate-500">
+              5 errores registrados
+            </div>
+          </div>
+
+          <div>
+            {errors.map((item) => (
+              <ErrorRow key={item.topic} item={item} hasPdfs={hasPdfs} />
+            ))}
+          </div>
+        </section>
+
+        {hasPdfs ? (
+          <section className="mt-10 border-t border-slate-200 pt-7">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-2">
+                  <BookOpenText className="h-4 w-4 text-indigo-600" />
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-600">
+                    Próximo paso
+                  </p>
+                </div>
+                <h2 className="mt-2 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                  Repasá estos 4 temas en tus propios apuntes
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Evaluo ya eligió el mejor PDF para cada error. No tenés que decidir qué archivo abrir.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white"
+              >
+                Empezar repaso
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+          </section>
+        ) : (
+          <section className="mt-10 border-t border-slate-200 pt-7">
+            <div className="flex items-start gap-3">
+              <FileText className="mt-0.5 h-5 w-5 text-slate-400" />
+              <div>
+                <p className="text-sm font-semibold text-slate-800">
+                  Si un tema no aparece en tus PDFs actuales, Evaluo te lo va a marcar.
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Ahí recién te pedimos otro material, en vez de hacerte elegir archivos todo el tiempo.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );
