@@ -46,7 +46,7 @@
     },
     {
       "path": "/api/internal/flashcard-review-reminders",
-      "schedule": "30 14 * * *"
+      "schedule": "34 14 * * *"
     }
   ],
   "env": {
