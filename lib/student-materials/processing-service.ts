@@ -38,6 +38,7 @@ import {
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
+import { sendStudentMaterialReadyEmailIfInactive } from '@/lib/email/student-material-ready';
 import type {
   CanonicalPedagogicalModel,
   StudyDocumentAnalysis,
@@ -602,6 +603,19 @@ export async function processStudentMaterial(input: {
       pedagogical_quality_version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     },
   });
+
+  try {
+    await sendStudentMaterialReadyEmailIfInactive({
+      userId: material.user_id,
+      materialId: material.id,
+      materialTitle: material.title ?? null,
+    });
+  } catch (readyEmailError) {
+    logError('processStudentMaterial.readyEmail', readyEmailError, {
+      materialId: material.id,
+      userId: material.user_id,
+    });
+  }
 
   logInfo('processStudentMaterial.performance', {
     materialId: material.id,
