@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 const TEST_TOKEN = 'evaluo48h-continue-test-20260929';
 const TEST_USER_ID = '7148f1ef-22fd-4f69-8076-bd10e663895e';
-const TEST_MATERIAL_ID = '21372081-7818-439b-9910-21f8eb7ebc2a8';
+const TEST_MATERIAL_ID = '21372081-7818-439b-9910-21f8eb7ebc2a';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
