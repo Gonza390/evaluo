@@ -51,7 +51,7 @@ function buildReturnUrl(materialId: string, hasPending: boolean) {
   return url.toString();
 }
 
-function buildMessage(input: {
+export function buildStudyReturn48hMessage(input: {
   firstname: string;
   materialTitle: string;
   pendingCount: number;
@@ -269,7 +269,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
       const displayName = candidate.display_name;
       const displayFirstName = firstName(displayName);
       const returnUrl = buildReturnUrl(candidate.material_id, pendingCount > 0);
-      const message = buildMessage({
+      const message = buildStudyReturn48hMessage({
         firstname: displayFirstName,
         materialTitle: material.title,
         pendingCount,
