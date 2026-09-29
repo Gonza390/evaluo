@@ -16,24 +16,15 @@ function escapeHtml(value: string) {
     .replaceAll("'", '&#039;');
 }
 
-export function formatMaterialTitle(value: string | null | undefined) {
-  const normalized = (value ?? '')
-    .replace(/\.pdf$/i, '')
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (!normalized || normalized.length < 3) return null;
-  if (/^(ilovepdf|merged|documento?|archivo|scan(?:ned)?|untitled)(\s|$)/i.test(normalized)) {
-    return null;
-  }
-
-  return normalized.length > 84 ? `${normalized.slice(0, 83).trimEnd()}…` : normalized;
+export function formatMaterialFileName(value: string | null | undefined) {
+  const normalized = (value ?? '').replace(/\s+/g, ' ').trim();
+  if (!normalized) return null;
+  return normalized.length > 96 ? `${normalized.slice(0, 95).trimEnd()}…` : normalized;
 }
 
 export function buildStudentMaterialReadyMessage(input: {
   firstname: string;
-  materialTitle: string | null;
+  materialFileName: string | null;
   materialId: string;
 }) {
   const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://evaluo.com.ar').replace(/\/$/, '');
@@ -43,9 +34,9 @@ export function buildStudentMaterialReadyMessage(input: {
   url.searchParams.set('utm_campaign', CAMPAIGN_KEY);
   url.searchParams.set('utm_content', 'start_studying');
 
-  const title = formatMaterialTitle(input.materialTitle);
-  const intro = title
-    ? `Terminamos de preparar “${title}”.`
+  const fileName = formatMaterialFileName(input.materialFileName);
+  const intro = fileName
+    ? `Terminamos de preparar “${fileName}”.`
     : 'Terminamos de preparar tu PDF.';
 
   const safeFirstName = escapeHtml(input.firstname);
@@ -90,7 +81,7 @@ export function buildStudentMaterialReadyMessage(input: {
   const text = `Hola ${input.firstname}. ${intro} Tu PDF ya está listo para estudiar. Empezá acá: ${url.toString()}`;
 
   return {
-    subject: 'Tu PDF ya está listo para estudiar',
+    subject: fileName ? `${fileName} ya está listo para estudiar` : 'Tu PDF ya está listo para estudiar',
     text,
     html,
     url: url.toString(),
@@ -115,7 +106,7 @@ function firstName(value: string | null | undefined) {
 export async function sendStudentMaterialReadyEmailIfInactive(input: {
   userId: string;
   materialId: string;
-  materialTitle: string | null;
+  materialFileName: string | null;
 }) {
   const enabled = process.env.STUDENT_MATERIAL_READY_EMAIL_ENABLED?.trim() === '1';
 
@@ -175,7 +166,7 @@ export async function sendStudentMaterialReadyEmailIfInactive(input: {
       admin.auth.admin.getUserById(input.userId),
       db
         .from('student_materials')
-        .select('id,title,user_id,processing_status')
+        .select('id,title,file_name,user_id,processing_status')
         .eq('id', input.materialId)
         .eq('user_id', input.userId)
         .eq('processing_status', 'ready')
@@ -187,7 +178,7 @@ export async function sendStudentMaterialReadyEmailIfInactive(input: {
     if (materialResult.error) throw materialResult.error;
 
     const user = userResult.data.user;
-    const material = materialResult.data as { id: string; title: string | null } | null;
+    const material = materialResult.data as { id: string; title: string | null; file_name: string | null } | null;
 
     if (!user?.email || !user.email_confirmed_at || !material) {
       await db.from('student_material_ready_emails').delete().eq('id', reservation.id);
@@ -201,7 +192,7 @@ export async function sendStudentMaterialReadyEmailIfInactive(input: {
 
     const message = buildStudentMaterialReadyMessage({
       firstname: firstName(displayName),
-      materialTitle: material.title ?? input.materialTitle,
+      materialFileName: material.file_name ?? input.materialFileName,
       materialId: input.materialId,
     });
 
