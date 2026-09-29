@@ -41,7 +41,10 @@ async function requireOwnedMaterial(materialId: string) {
     return { ok: false as const, reason: 'unauthenticated' as const };
   }
 
-  const { data: material, error } = await supabase
+  // exam_date exists in production but is not present in the legacy generated Database type.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+  const { data: material, error } = await db
     .from('student_materials')
     .select('id,user_id,file_name,exam_date,processing_status')
     .eq('id', materialId)
@@ -221,7 +224,10 @@ export async function saveStudentMaterialExamDateAction(input: {
     }
 
     const supabase = await createClientServer();
-    const { error: updateError } = await supabase
+    // exam_date exists in production but is not present in the legacy generated Database type.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const { error: updateError } = await db
       .from('student_materials')
       .update({ exam_date: input.examDate })
       .eq('id', input.materialId)
