@@ -1,5 +1,6 @@
 const ANALYTICS_EVENT_NAMES = [
   'page_view',
+  'acquisition_touch',
   'session_ping',
   'client_error',
   'cta_click',
@@ -26,10 +27,6 @@ const ANALYTICS_EVENT_NAMES = [
   'profile_completed',
   'student_material_processing_ready',
   'student_material_study_opened',
-  'study_tab_opened',
-  'study_tab_engagement',
-  'flashcard_session_started',
-  'flashcard_session_completed',
   'pdf_gate_viewed',
   'pdf_gate_cta_clicked',
   'materia_tab_viewed',
