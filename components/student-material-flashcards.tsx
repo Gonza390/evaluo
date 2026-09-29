@@ -75,9 +75,11 @@ function buildSessionOrder(recall: Record<number, RecallResult>, length: number)
 export function StudentMaterialFlashcards({
   cards,
   materialId,
+  onComplete,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
+  onComplete?: () => void;
 }) {
   const [started, setStarted] = useState(false);
   const [order, setOrder] = useState<number[]>([]);
@@ -209,7 +211,8 @@ export function StudentMaterialFlashcards({
         unknown_count: unknownCount,
       });
     }
-  }, [allReviewed, knownCount, materialId, order.length, reviewedCount, unknownCount]);
+    onComplete?.();
+  }, [allReviewed, knownCount, materialId, onComplete, order.length, reviewedCount, unknownCount]);
 
   const scheduleTomorrowReminder = useCallback(() => {
     if (unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
