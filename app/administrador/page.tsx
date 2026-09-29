@@ -1,3 +1,4 @@
+import './admin-theme.css';
 import Link from 'next/link';
 import { BadgePercent, BookOpen, Bot, Megaphone, Search, Users } from 'lucide-react';
 import {
@@ -16,6 +17,8 @@ import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
 import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
 import { AcquisitionPanel } from './acquisition-panel';
+import { obtenerProductoDiarioAdministrador } from './product-actions';
+import { ProductPanel } from './product-panel';
 import {
   AICostPanel,
   BibliotecaPanel,
@@ -61,19 +64,16 @@ const ACQUISITION_SOURCE_KEYS: AcquisitionSourceKey[] = [
 
 function ErrorPanel({ message }: { message: string }) {
   return (
-    <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5">
-      <h2 className="font-semibold text-rose-950">No pudimos cargar este panel</h2>
-      <p className="mt-2 text-sm leading-6 text-rose-700">{message}</p>
+    <section className="admin-panel-error">
+      <h2>No pudimos cargar este panel</h2>
+      <p>{message}</p>
     </section>
   );
 }
 
 function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey; activePeriod: number }) {
   return (
-    <nav
-      className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible"
-      aria-label="Secciones del administrador"
-    >
+    <nav className="admin-nav" aria-label="Secciones del administrador">
       {PANELS.map((panel) => {
         const Icon = panel.icon;
         const active = panel.key === activePanel;
@@ -82,11 +82,7 @@ function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey;
             key={panel.key}
             href={`/administrador?panel=${panel.key}&period=${activePeriod}`}
             prefetch={false}
-            className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 text-sm font-semibold transition lg:w-full ${
-              active
-                ? 'bg-indigo-50 text-indigo-700'
-                : 'border border-slate-200 bg-white text-slate-600 hover:border-indigo-200 hover:text-indigo-700 lg:border-transparent'
-            }`}
+            className={`admin-nav-link${active ? ' is-active' : ''}`}
           >
             <Icon className="h-4 w-4" />
             {panel.label}
@@ -110,7 +106,6 @@ export default async function AdministradorPage({
   const params = (await searchParams) ?? {};
   const requestedPanel = params.panel;
   const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'producto';
-  const activePanelMeta = PANELS.find((panel) => panel.key === activePanel) ?? PANELS[0];
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
@@ -121,6 +116,7 @@ export default async function AdministradorPage({
     ? (requestedSource as AcquisitionSourceKey)
     : null;
 
+  const needsProduct = activePanel === 'producto';
   const needsAcquisition = activePanel === 'adquisicion';
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
@@ -128,6 +124,7 @@ export default async function AdministradorPage({
   const needsIA = activePanel === 'ia';
 
   const [
+    productResult,
     acquisitionResult,
     referralResult,
     bibliotecaResult,
@@ -139,6 +136,7 @@ export default async function AdministradorPage({
     iaFeedbackReviewResult,
     iaCostResult,
   ] = await Promise.all([
+    needsProduct ? obtenerProductoDiarioAdministrador() : Promise.resolve(null),
     needsAcquisition
       ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
       : Promise.resolve(null),
@@ -156,7 +154,12 @@ export default async function AdministradorPage({
   let panelContent: React.ReactNode;
 
   if (activePanel === 'producto') {
-    panelContent = null;
+    panelContent =
+      productResult?.success && productResult.stats ? (
+        <ProductPanel stats={productResult.stats} />
+      ) : (
+        <ErrorPanel message={productResult?.message ?? 'No pudimos cargar Producto.'} />
+      );
   } else if (activePanel === 'adquisicion') {
     panelContent =
       acquisitionResult?.success && acquisitionResult.stats ? (
@@ -262,53 +265,22 @@ export default async function AdministradorPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50/60 px-3 py-4 text-slate-800 sm:px-5 sm:py-6 lg:px-6">
-      <div className="mx-auto max-w-[1500px]">
-        <header className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 lg:mb-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase">
-                Evaluo · Administrador
-              </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
-                {activePanelMeta.label}
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Gestión operativa de producto, contenido, usuarios y calidad.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <Link
-                href="/administrador/feedback"
-                prefetch={false}
-                className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-slate-600 hover:text-indigo-700"
-              >
-                Feedback
-              </Link>
-              <Link
-                href="/administrador/solicitudes"
-                prefetch={false}
-                className="inline-flex min-h-11 items-center rounded-xl bg-slate-950 px-3 text-white hover:bg-slate-800"
-              >
-                Solicitudes
-              </Link>
-            </div>
-          </div>
-          <div className="mt-4 lg:hidden">
+    <main className="admin-shell">
+      <div className="admin-layout">
+        <aside className="admin-sidebar">
+          <div className="admin-sidebar-inner">
+            <div className="admin-brand">Evaluo</div>
             <PanelNavigation activePanel={activePanel} activePeriod={activePeriod} />
-          </div>
-        </header>
-
-        <div className="grid gap-5 lg:grid-cols-[190px_minmax(0,1fr)]">
-          <aside className="hidden lg:block">
-            <div className="sticky top-20 rounded-2xl border border-slate-200 bg-white p-2.5">
-              <PanelNavigation activePanel={activePanel} activePeriod={activePeriod} />
+            <div className="admin-sidebar-links">
+              <Link href="/administrador/feedback" prefetch={false}>Feedback</Link>
+              <Link href="/administrador/solicitudes" prefetch={false}>Solicitudes</Link>
             </div>
-          </aside>
-          <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 lg:p-6">
-            {panelContent}
           </div>
-        </div>
+        </aside>
+
+        <section className="admin-main">
+          <div className="admin-main-inner">{panelContent}</div>
+        </section>
       </div>
     </main>
   );
