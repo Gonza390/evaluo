@@ -12,6 +12,7 @@ type Props = {
   materialId: string;
   onReviewTopics: (topics: string[]) => void;
   onExit: () => void;
+  onComplete?: () => void;
 };
 
 function normalize(value: string) {
@@ -66,7 +67,13 @@ function selectDiagnosticQuestions(artifacts: PedagogicalArtifacts, target = 6) 
   return selected;
 }
 
-export function StudentMaterialDiagnostic({ artifacts, materialId, onReviewTopics, onExit }: Props) {
+export function StudentMaterialDiagnostic({
+  artifacts,
+  materialId,
+  onReviewTopics,
+  onExit,
+  onComplete,
+}: Props) {
   const questions = useMemo(() => selectDiagnosticQuestions(artifacts), [artifacts]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
@@ -183,6 +190,7 @@ export function StudentMaterialDiagnostic({ artifacts, materialId, onReviewTopic
     });
 
     if (currentIndex >= questions.length - 1) {
+      onComplete?.();
       setFinished(true);
       return;
     }
