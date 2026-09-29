@@ -24,6 +24,7 @@ import { StudyRichText } from '@/components/study-rich-text';
 import { StudentMaterialDiagnostic } from '@/components/student-material-diagnostic';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
 import { Button } from '@/components/ui/button';
@@ -208,7 +209,7 @@ export function MaterialStudyWorkspace({
   isPremium,
   materialId,
   materiaId,
-  isOwner: _isOwner,
+  isOwner,
   materiaName,
   pageCount: _pageCount,
   title,
@@ -235,6 +236,11 @@ export function MaterialStudyWorkspace({
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerationStageIndex, setRegenerationStageIndex] = useState(0);
   const [regenerationProgress, setRegenerationProgress] = useState(8);
+  const [examDatePromptTrigger, setExamDatePromptTrigger] = useState(0);
+
+  const requestExamDatePrompt = () => {
+    setExamDatePromptTrigger((value) => value + 1);
+  };
 
   const studyArtifacts = useMemo(
     () =>
@@ -764,7 +770,11 @@ export function MaterialStudyWorkspace({
 
       <TabsContent value="tarjetas" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
-          <StudentMaterialFlashcards cards={studyArtifacts.flashcards} materialId={materialId} />
+          <StudentMaterialFlashcards
+            cards={studyArtifacts.flashcards}
+            materialId={materialId}
+            onComplete={requestExamDatePrompt}
+          />
         </div>
       </TabsContent>
 
@@ -775,6 +785,7 @@ export function MaterialStudyWorkspace({
               artifacts={studyArtifacts}
               materialId={materialId}
               onExit={() => setDiagnosticMode(false)}
+              onComplete={requestExamDatePrompt}
               onReviewTopics={(topics) => {
                 setDiagnosticReviewTopics(topics);
                 setDiagnosticMode(false);
@@ -784,7 +795,11 @@ export function MaterialStudyWorkspace({
               }}
             />
           ) : (
-            <StudentMaterialExam artifacts={studyArtifacts} materialId={materialId} />
+            <StudentMaterialExam
+              artifacts={studyArtifacts}
+              materialId={materialId}
+              onComplete={requestExamDatePrompt}
+            />
           )}
         </div>
       </TabsContent>
@@ -867,6 +882,13 @@ export function MaterialStudyWorkspace({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+      {isOwner ? (
+        <ExamDatePlanPrompt
+          materialId={materialId}
+          fileName={fileName}
+          triggerNonce={examDatePromptTrigger}
+        />
+      ) : null}
       <section className="border-b border-[#E8EDF5] bg-white">
         <div className="mx-auto w-full max-w-[1600px] px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8 lg:py-3">
           <Link
