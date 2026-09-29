@@ -2,9 +2,6 @@
 
 import dynamic from 'next/dynamic';
 
-export const ConversionPanel = dynamic(() =>
-  import('./conversion-panel').then((module) => module.ConversionPanel)
-);
 export const BibliotecaPanel = dynamic(() =>
   import('./biblioteca-panel').then((module) => module.BibliotecaPanel)
 );
