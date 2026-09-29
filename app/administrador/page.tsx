@@ -19,7 +19,6 @@ import { AcquisitionPanel } from './acquisition-panel';
 import {
   AICostPanel,
   BibliotecaPanel,
-  ConversionPanel,
   IAPanel,
   UsersPanelV2,
 } from './lazy-panels';
@@ -114,8 +113,6 @@ export default async function AdministradorPage({
   const activePanelMeta = PANELS.find((panel) => panel.key === activePanel) ?? PANELS[0];
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
-  const activePeriodLabel =
-    PERIOD_OPTIONS.find((option) => option.value === activePeriod)?.label ?? '7 días';
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
   const requestedSource = String(params.source ?? '').trim().toLowerCase();
   const selectedAcquisitionSource = ACQUISITION_SOURCE_KEYS.includes(
@@ -159,35 +156,7 @@ export default async function AdministradorPage({
   let panelContent: React.ReactNode;
 
   if (activePanel === 'marketing') {
-    panelContent = (
-      <section>
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-bold tracking-[-0.04em] text-slate-950">Producto</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Activación, conversión, cobertura y retención de los usuarios.
-            </p>
-          </div>
-          <div className="grid grid-cols-4 gap-1 rounded-xl border border-slate-200 bg-white p-1">
-            {PERIOD_OPTIONS.map((option) => (
-              <Link
-                key={option.value}
-                href={`/administrador?panel=marketing&period=${option.value}`}
-                prefetch={false}
-                className={`inline-flex min-h-10 items-center justify-center rounded-lg px-3 text-xs font-semibold transition ${
-                  option.value === activePeriod
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                {option.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <ConversionPanel stats={null} periodLabel={activePeriodLabel} />
-      </section>
-    );
+    panelContent = null;
   } else if (activePanel === 'adquisicion') {
     panelContent =
       acquisitionResult?.success && acquisitionResult.stats ? (
