@@ -32,7 +32,6 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 import { AppPageHeader } from '@/components/ui/app-page-header';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 import {
@@ -288,62 +287,6 @@ export function MaterialStudyWorkspace({
       setCommentsOpen(false);
     }
   };
-
-  useEffect(() => {
-    if (window.location.pathname.startsWith('/demo/')) return;
-
-    void trackProductAnalyticsEvent('study_tab_opened', {
-      material_id: materialId,
-      materia_id: materiaId ?? null,
-      tab: activeTab,
-    });
-
-    let activeMs = 0;
-    let lastTick = Date.now();
-
-    const accumulateActiveTime = () => {
-      const now = Date.now();
-      if (document.visibilityState === 'visible' && document.hasFocus()) {
-        activeMs += Math.max(0, now - lastTick);
-      }
-      lastTick = now;
-    };
-
-    const flushEngagement = (reason: 'hidden' | 'pagehide' | 'tab_change_or_unmount') => {
-      accumulateActiveTime();
-      const elapsed = Math.round(activeMs);
-      activeMs = 0;
-      if (elapsed < 1_000) return;
-
-      void trackProductAnalyticsEvent('study_tab_engagement', {
-        material_id: materialId,
-        materia_id: materiaId ?? null,
-        tab: activeTab,
-        active_ms: elapsed,
-        reason,
-      });
-    };
-
-    const timer = window.setInterval(accumulateActiveTime, 1_000);
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        flushEngagement('hidden');
-      } else {
-        lastTick = Date.now();
-      }
-    };
-    const handlePageHide = () => flushEngagement('pagehide');
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pagehide', handlePageHide);
-
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pagehide', handlePageHide);
-      flushEngagement('tab_change_or_unmount');
-    };
-  }, [activeTab, materialId, materiaId]);
 
   useEffect(() => {
     if (!isRegenerating) {

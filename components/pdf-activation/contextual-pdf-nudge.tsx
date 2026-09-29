@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { FileUp, Sparkles, X } from 'lucide-react';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 
 const UUID_AT_END = /([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;
 const MATERIA_NUDGE_SESSION_KEY = 'evaluo:pdf-materia-nudge-shown-v1';
@@ -64,10 +63,6 @@ export function ContextualPdfNudge() {
         // Non-critical: the nudge can still be shown.
       }
       setMateriaNudgeVisible(true);
-      void trackProductAnalyticsEvent('pdf_nudge_viewed', {
-        materia_id: materiaId,
-        idle_seconds: 8,
-      });
     };
 
     const restartIdleTimer = () => {
@@ -175,13 +170,6 @@ export function ContextualPdfNudge() {
       materia_id: materiaId ?? undefined,
     });
 
-    if (isMateria) {
-      void trackProductAnalyticsEvent('pdf_nudge_clicked', {
-        materia_id: materiaId,
-        destination: href,
-        idle_seconds: 8,
-      });
-    }
   };
 
   return (

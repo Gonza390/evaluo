@@ -1,9 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
 import { ArrowLeft, ArrowRight, FileUp, Sparkles } from 'lucide-react';
-import { trackProductAnalyticsEvent } from '@/lib/product-analytics-client';
 
 export type PdfUploadQuotaView = {
   isPremium: boolean;
@@ -44,25 +42,13 @@ export function PdfUploadLimitReached({
   quota,
   returnHref,
   materiaId,
-  trackAnalytics = true,
 }: {
   quota: PdfUploadQuotaView;
   returnHref: string;
   materiaId?: string;
-  trackAnalytics?: boolean;
 }) {
   const nextDate = formatNextDate(quota.nextAvailableAt);
   const pricingHref = `/pricing?source=pdf_limit${materiaId ? `&materiaId=${encodeURIComponent(materiaId)}` : ''}`;
-
-  useEffect(() => {
-    if (!trackAnalytics) return;
-    void trackProductAnalyticsEvent('pdf_limit_reached', {
-      free_limit: quota.limit ?? 2,
-      used: quota.used,
-      next_available_at: quota.nextAvailableAt,
-      materia_id: materiaId,
-    });
-  }, [materiaId, quota.limit, quota.nextAvailableAt, quota.used, trackAnalytics]);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -101,15 +87,6 @@ export function PdfUploadLimitReached({
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <Link
             href={pricingHref}
-            onClick={() => {
-              if (!trackAnalytics) return;
-              void trackProductAnalyticsEvent('pdf_limit_upgrade_clicked', {
-                free_limit: quota.limit ?? 2,
-                used: quota.used,
-                materia_id: materiaId,
-                destination: pricingHref,
-              });
-            }}
             className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
           >
             Continuar con Premium

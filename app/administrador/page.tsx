@@ -24,7 +24,7 @@ import {
 } from './lazy-panels';
 
 type PanelKey =
-  | 'marketing'
+  | 'producto'
   | 'adquisicion'
   | 'referidos'
   | 'biblioteca'
@@ -36,7 +36,7 @@ const PANELS: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { key: 'marketing', label: 'Producto', icon: Megaphone },
+  { key: 'producto', label: 'Producto', icon: Megaphone },
   { key: 'adquisicion', label: 'Adquisición', icon: Search },
   { key: 'referidos', label: 'Referidos', icon: BadgePercent },
   { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
@@ -109,7 +109,7 @@ export default async function AdministradorPage({
 }) {
   const params = (await searchParams) ?? {};
   const requestedPanel = params.panel;
-  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'marketing';
+  const activePanel = PANELS.find((panel) => panel.key === requestedPanel)?.key ?? 'producto';
   const activePanelMeta = PANELS.find((panel) => panel.key === activePanel) ?? PANELS[0];
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
@@ -155,7 +155,7 @@ export default async function AdministradorPage({
 
   let panelContent: React.ReactNode;
 
-  if (activePanel === 'marketing') {
+  if (activePanel === 'producto') {
     panelContent = null;
   } else if (activePanel === 'adquisicion') {
     panelContent =
