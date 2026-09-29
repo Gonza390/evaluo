@@ -1,6 +1,6 @@
 import './admin-theme.css';
 import Link from 'next/link';
-import { BadgePercent, BookOpen, Bot, Megaphone, Search, Users } from 'lucide-react';
+import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google';
 import {
   obtenerFeedbackExplicacionesAdmin,
   obtenerFeedbackRevisionAdmin,
@@ -34,17 +34,27 @@ type PanelKey =
   | 'usuarios'
   | 'ia';
 
-const PANELS: Array<{
-  key: PanelKey;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-}> = [
-  { key: 'producto', label: 'Producto', icon: Megaphone },
-  { key: 'adquisicion', label: 'Adquisición', icon: Search },
-  { key: 'referidos', label: 'Referidos', icon: BadgePercent },
-  { key: 'biblioteca', label: 'Biblioteca', icon: BookOpen },
-  { key: 'usuarios', label: 'Usuarios', icon: Users },
-  { key: 'ia', label: 'IA', icon: Bot },
+const adminSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--admin-font-sans',
+});
+
+const adminSerif = Source_Serif_4({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  display: 'swap',
+  variable: '--admin-font-serif',
+});
+
+const PANELS: Array<{ key: PanelKey; label: string }> = [
+  { key: 'producto', label: 'Producto' },
+  { key: 'adquisicion', label: 'Adquisición' },
+  { key: 'referidos', label: 'Referidos' },
+  { key: 'biblioteca', label: 'Biblioteca' },
+  { key: 'usuarios', label: 'Usuarios' },
+  { key: 'ia', label: 'IA' },
 ];
 
 const PERIOD_OPTIONS = [
@@ -75,7 +85,6 @@ function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey;
   return (
     <nav className="admin-nav" aria-label="Secciones del administrador">
       {PANELS.map((panel) => {
-        const Icon = panel.icon;
         const active = panel.key === activePanel;
         return (
           <Link
@@ -84,7 +93,6 @@ function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey;
             prefetch={false}
             className={`admin-nav-link${active ? ' is-active' : ''}`}
           >
-            <Icon className="h-4 w-4" />
             {panel.label}
           </Link>
         );
@@ -265,7 +273,7 @@ export default async function AdministradorPage({
   }
 
   return (
-    <main className="admin-shell">
+    <main className={`admin-shell ${adminSans.variable} ${adminSerif.variable}`}>
       <div className="admin-layout">
         <aside className="admin-sidebar">
           <div className="admin-sidebar-inner">
