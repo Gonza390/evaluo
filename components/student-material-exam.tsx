@@ -10,6 +10,7 @@ import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-erro
 type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
+  onComplete?: () => void;
 };
 
 type OpenAssessment = 'got_it' | 'review';
@@ -219,7 +220,7 @@ function resolveExamQuestions(
   return selected.slice(0, targetCount);
 }
 
-export function StudentMaterialExam({ artifacts, materialId }: StudentMaterialExamProps) {
+export function StudentMaterialExam({ artifacts, materialId, onComplete }: StudentMaterialExamProps) {
   const eligibleQuestions = useMemo(() => {
     const baseEligible = artifacts.questions.filter(isEligibleExamQuestion);
     const canonicalEligible = baseEligible.filter(
@@ -490,6 +491,7 @@ export function StudentMaterialExam({ artifacts, materialId }: StudentMaterialEx
     });
 
     if (currentIndex >= questions.length - 1) {
+      onComplete?.();
       setFinished(true);
       return;
     }
