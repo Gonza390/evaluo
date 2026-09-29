@@ -608,7 +608,7 @@ export async function processStudentMaterial(input: {
     await sendStudentMaterialReadyEmailIfInactive({
       userId: material.user_id,
       materialId: material.id,
-      materialTitle: material.title ?? null,
+      materialFileName: material.file_name ?? null,
     });
   } catch (readyEmailError) {
     logError('processStudentMaterial.readyEmail', readyEmailError, {
