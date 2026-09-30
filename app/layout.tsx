@@ -120,7 +120,13 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/favicon.ico', type: 'image/x-icon' }],
+    icon: [
+      {
+        url: '/favicon.ico',
+        type: 'image/x-icon',
+        sizes: '16x16 32x32 48x48 64x64',
+      },
+    ],
     shortcut: [{ url: '/favicon.ico', type: 'image/x-icon' }],
     apple: [{ url: '/apple-icon.png' }],
   },
