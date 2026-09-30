@@ -172,6 +172,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   premium_checkout_returned: ['attribution', 'anonymous_id', 'page_type', 'status'],
   premium_subscription_activated: ['provider', 'amount_ars', 'promotion'],
   premium_onboarding_started: ['attribution', 'anonymous_id', 'page_type', 'destination'],
+  referral_code_applied: ['referral_code', 'offer_code', 'discount_percent'],
+  premium_feature_return_clicked: ['source', 'destination', 'materia_id', 'parcial'],
   login_started: [
     'attribution',
     'anonymous_id',
