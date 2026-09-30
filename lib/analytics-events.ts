@@ -28,6 +28,8 @@ const ANALYTICS_EVENT_NAMES = [
   'premium_checkout_returned',
   'premium_subscription_activated',
   'premium_onboarding_started',
+  'referral_code_applied',
+  'premium_feature_return_clicked',
   'login_started',
   'login_success',
   'auth_completed',
