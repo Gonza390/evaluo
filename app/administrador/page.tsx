@@ -8,11 +8,7 @@ import {
   obtenerRankingErroresIA,
 } from './shared-actions';
 import { obtenerConsumoPdfIAAdministrador } from './ai-cost-data';
-import { obtenerBibliotecaFormularioAdministradorOptimizado } from './performance-actions';
-import {
-  obtenerBibliotecaResumenAdministradorCacheado,
-  obtenerUsuariosAdministradorPaginadoCacheado,
-} from './cached-performance-actions';
+import { obtenerUsuariosAdministradorPaginadoCacheado } from './cached-performance-actions';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
 import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
@@ -20,10 +16,11 @@ import { AcquisitionPanel } from './acquisition-panel';
 import { obtenerProductoDiarioAdministrador } from './product-actions';
 import { ProductPanel } from './product-panel';
 import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
+import { obtenerUsoAcademicoAdministrador } from './academic-usage-actions';
 import { MailPanel } from './mail-panel';
 import {
   AICostPanel,
-  BibliotecaPanel,
+  AcademicUsagePanel,
   IAPanel,
   UsersPanelV2,
 } from './lazy-panels';
@@ -55,7 +52,7 @@ const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'producto', label: 'Producto' },
   { key: 'adquisicion', label: 'Adquisición' },
   { key: 'referidos', label: 'Referidos' },
-  { key: 'biblioteca', label: 'Biblioteca' },
+  { key: 'biblioteca', label: 'Uso académico' },
   { key: 'usuarios', label: 'Usuarios' },
   { key: 'mails', label: 'Mails' },
   { key: 'ia', label: 'IA' },
@@ -148,8 +145,7 @@ export default async function AdministradorPage({
     productResult,
     acquisitionResult,
     referralResult,
-    bibliotecaResult,
-    bibliotecaStatsResult,
+    academicUsageResult,
     usersResult,
     mailResult,
     iaPromptResult,
@@ -163,8 +159,7 @@ export default async function AdministradorPage({
       ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
       : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
-    needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
-    needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
+    needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
     needsMails
       ? obtenerMailsAdministrador({ type: activeMailType, days: activeMailPeriod })
@@ -204,34 +199,14 @@ export default async function AdministradorPage({
         <ErrorPanel message={referralResult?.message ?? 'No pudimos cargar Referidos.'} />
       );
   } else if (activePanel === 'biblioteca') {
-    if (
-      !bibliotecaResult?.success ||
-      !bibliotecaResult.universidades ||
-      !bibliotecaResult.carreras ||
-      !bibliotecaResult.materias ||
-      !bibliotecaStatsResult?.success ||
-      !bibliotecaStatsResult.stats
-    ) {
-      panelContent = (
+    panelContent =
+      academicUsageResult?.success && academicUsageResult.stats ? (
+        <AcademicUsagePanel stats={academicUsageResult.stats} />
+      ) : (
         <ErrorPanel
-          message={
-            bibliotecaResult?.message ??
-            bibliotecaStatsResult?.message ??
-            'No pudimos cargar Biblioteca.'
-          }
+          message={academicUsageResult?.message ?? 'No pudimos cargar Uso académico.'}
         />
       );
-    } else {
-      panelContent = (
-        <BibliotecaPanel
-          overview={bibliotecaStatsResult.stats}
-          universidades={bibliotecaResult.universidades}
-          carreras={bibliotecaResult.carreras}
-          materias={bibliotecaResult.materias}
-          carrerasSimuladores={bibliotecaResult.carrerasSimuladores ?? []}
-        />
-      );
-    }
   } else if (activePanel === 'usuarios') {
     if (!usersResult?.success || !usersResult.stats || !usersResult.rows) {
       panelContent = <ErrorPanel message={usersResult?.message ?? 'No pudimos cargar Usuarios.'} />;
