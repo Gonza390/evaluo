@@ -69,7 +69,7 @@ export default function Home() {
 
       <section
         id="demo"
-        className="relative overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] py-20 sm:py-24 lg:py-28"
+        className="scroll-mt-20 relative overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] py-20 sm:py-24 lg:py-28"
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent" />
         <div className="mx-auto grid w-full max-w-[1280px] gap-12 px-4 sm:px-8 lg:grid-cols-[0.6fr_1.4fr] lg:items-center lg:gap-16 lg:px-10">
@@ -123,7 +123,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="faq" className="border-t border-slate-100 bg-white py-16 sm:py-24">
+      <section id="faq" className="scroll-mt-20 border-t border-slate-100 bg-white py-16 sm:scroll-mt-24 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
