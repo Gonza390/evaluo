@@ -2,7 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { captureAttributionFromLocation, getAttributionSnapshot } from '@/lib/attribution';
+import {
+  captureAttributionFromLocation,
+  detectAcquisitionSource,
+  getAttributionSnapshot,
+} from '@/lib/attribution';
 import {
   getAnalyticsAnonymousId,
   getAnalyticsDeviceType,
@@ -58,7 +62,13 @@ export default function AnalyticsTracker() {
 
     const sessionKey = getAnalyticsSessionKey();
     const deviceType = getAnalyticsDeviceType();
-    captureAttributionFromLocation(window.location.search, window.location.pathname);
+    const referrer = document.referrer?.trim() || null;
+    const sessionSource = detectAcquisitionSource(window.location.search, referrer);
+    captureAttributionFromLocation(
+      window.location.search,
+      window.location.pathname,
+      referrer
+    );
     const attribution = getAttributionSnapshot();
     const routeContext = getRouteContext();
 
@@ -82,8 +92,10 @@ export default function AnalyticsTracker() {
         device_type: deviceType,
         user_id: user?.id ?? null,
         metadata: {
+          source: sessionSource,
+          session_source: sessionSource,
           attribution,
-          referrer: document.referrer?.trim() || null,
+          referrer,
           landing_path: `${window.location.pathname}${window.location.search}`,
           entry_page_type: getAnalyticsPageType(pathname),
           anonymous_id: getAnalyticsAnonymousId(),
@@ -196,6 +208,27 @@ export default function AnalyticsTracker() {
     const attribution = getAttributionSnapshot();
     const anonymousId = getAnalyticsAnonymousId();
     const pageType = getAnalyticsPageType(pathname);
+    visibleSinceRef.current = Date.now();
+
+    const sendEngagementPing = () => {
+      const now = Date.now();
+      const engagementMs = Math.max(0, now - visibleSinceRef.current);
+      visibleSinceRef.current = now;
+      if (engagementMs <= 0) return;
+
+      void track('session_ping', {
+        session_key: sessionKey,
+        path: pathname,
+        device_type: deviceType,
+        metadata: {
+          engagement_ms: engagementMs,
+          engagement_version: 2,
+          attribution,
+          anonymous_id: anonymousId,
+          page_type: pageType,
+        },
+      });
+    };
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
@@ -203,18 +236,7 @@ export default function AnalyticsTracker() {
         return;
       }
 
-      const engagementMs = Math.max(0, Date.now() - visibleSinceRef.current);
-      void track('session_ping', {
-        session_key: sessionKey,
-        path: pathname,
-        device_type: deviceType,
-        metadata: {
-          engagement_ms: engagementMs,
-          attribution,
-          anonymous_id: anonymousId,
-          page_type: pageType,
-        },
-      });
+      sendEngagementPing();
     };
 
     const handleError = (event: ErrorEvent) => {
@@ -255,18 +277,9 @@ export default function AnalyticsTracker() {
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
     return () => {
-      const engagementMs = Math.max(0, Date.now() - visibleSinceRef.current);
-      void track('session_ping', {
-        session_key: sessionKey,
-        path: pathname,
-        device_type: deviceType,
-        metadata: {
-          engagement_ms: engagementMs,
-          attribution,
-          anonymous_id: anonymousId,
-          page_type: pageType,
-        },
-      });
+      if (document.visibilityState === 'visible') {
+        sendEngagementPing();
+      }
 
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('error', handleError);
