@@ -33,6 +33,8 @@ export interface MateriaBootstrapData {
   initialSimulatorUsage: Record<number, SimulatorUsageSummary>;
 }
 
+type MateriaBootstrapBaseData = Omit<MateriaBootstrapData, 'initialSimulatorRatings'>;
+
 function toRecord<T extends { parcial: number }>(rows: T[]) {
   return rows.reduce<Record<number, T>>((acc, row) => {
     acc[row.parcial] = row;
@@ -125,8 +127,8 @@ async function loadInitialResumenes(materiaId: string) {
   }
 }
 
-const loadMateriaBootstrap = unstable_cache(
-  async (materiaId: string, requestedCarreraId: string): Promise<MateriaBootstrapData> => {
+const loadMateriaBootstrapBase = unstable_cache(
+  async (materiaId: string, requestedCarreraId: string): Promise<MateriaBootstrapBaseData> => {
     const client = createPublicClient();
 
     let materiaFound: boolean | null = null;
@@ -239,9 +241,8 @@ const loadMateriaBootstrap = unstable_cache(
       contextError = getMateriaContextErrorMessage();
     }
 
-    const [{ initialResumenes, initialResumenesError }, ratings, usage] = await Promise.all([
+    const [{ initialResumenes, initialResumenesError }, usage] = await Promise.all([
       loadInitialResumenes(materiaId),
-      getSimulatorRatingsSummaryByMateria(materiaId),
       getSimulatorUsageSummaryByMateria(materiaId),
     ]);
 
@@ -256,11 +257,10 @@ const loadMateriaBootstrap = unstable_cache(
       contextError,
       initialResumenes,
       initialResumenesError,
-      initialSimulatorRatings: toRecord(ratings),
       initialSimulatorUsage: toRecord(usage),
     };
   },
-  ['materia-bootstrap'],
+  ['materia-bootstrap-base-v2'],
   { revalidate: 600, tags: ['materia-bootstrap'] }
 );
 
@@ -268,5 +268,15 @@ export async function getMateriaBootstrap(input: {
   materiaId: string;
   requestedCarreraId?: string;
 }): Promise<MateriaBootstrapData> {
-  return loadMateriaBootstrap(input.materiaId, input.requestedCarreraId?.trim() || '');
+  const requestedCarreraId = input.requestedCarreraId?.trim() || '';
+
+  const [base, ratings] = await Promise.all([
+    loadMateriaBootstrapBase(input.materiaId, requestedCarreraId),
+    getSimulatorRatingsSummaryByMateria(input.materiaId),
+  ]);
+
+  return {
+    ...base,
+    initialSimulatorRatings: toRecord(ratings),
+  };
 }
