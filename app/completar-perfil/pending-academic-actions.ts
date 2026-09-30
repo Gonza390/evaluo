@@ -79,22 +79,19 @@ function visibleToUser(row: { approval_status?: string | null; owner_user_id?: s
   return row.approval_status === 'approved' || row.owner_user_id === userId;
 }
 
-async function recordPendingUniversityRequest(
+async function recordAutomaticUniversityApproval(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pending academic catalog incompleto en ServerDatabase
   admin: any,
   userId: string,
-  universidad: { nombre: string; city?: string | null; approval_status?: string | null },
-  carreraNombre: string
+  universidad: { id: string; nombre: string; city?: string | null }
 ) {
-  if (universidad.approval_status !== 'pending') return;
-
   const { data: existing, error: existingError } = await admin
     .from('university_requests')
     .select('id')
     .eq('user_id', userId)
-    .eq('status', 'pending')
-    .eq('university_name', universidad.nombre)
-    .eq('career_name', carreraNombre)
+    .eq('approved_university_id', universidad.id)
+    .eq('resolution_source', 'automatic')
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
@@ -106,9 +103,80 @@ async function recordPendingUniversityRequest(
     university_name: universidad.nombre,
     country: 'Argentina',
     city: universidad.city ?? null,
-    career_name: carreraNombre,
+    career_name: null,
+    note: 'Universidad aprobada automáticamente desde el onboarding académico.',
+    status: 'added',
+    reviewed_at: new Date().toISOString(),
+    approved_university_id: universidad.id,
+    approved_career_id: null,
+    resolution_source: 'automatic',
+  });
+
+  if (error) throw error;
+}
+
+async function attachCareerToUniversityRequest(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pending academic catalog incompleto en ServerDatabase
+  admin: any,
+  userId: string,
+  universidad: {
+    id: string;
+    nombre: string;
+    city?: string | null;
+    approval_status?: string | null;
+  },
+  carrera: { id: string; nombre: string; approval_status?: string | null }
+) {
+  const { data: automaticRequest, error: automaticRequestError } = await admin
+    .from('university_requests')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('approved_university_id', universidad.id)
+    .eq('resolution_source', 'automatic')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (automaticRequestError) throw automaticRequestError;
+
+  if (automaticRequest) {
+    const { error } = await admin
+      .from('university_requests')
+      .update({
+        career_name: carrera.nombre,
+        approved_career_id: carrera.approval_status === 'approved' ? carrera.id : null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', automaticRequest.id);
+
+    if (error) throw error;
+    return;
+  }
+
+  if (universidad.approval_status !== 'pending') return;
+
+  const { data: existing, error: existingError } = await admin
+    .from('university_requests')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .eq('university_name', universidad.nombre)
+    .eq('career_name', carrera.nombre)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (existing) return;
+
+  const { error } = await admin.from('university_requests').insert({
+    user_id: userId,
+    university_name: universidad.nombre,
+    country: 'Argentina',
+    city: universidad.city ?? null,
+    career_name: carrera.nombre,
     note: 'Solicitud creada desde el onboarding académico.',
     status: 'pending',
+    resolution_source: 'manual',
   });
 
   if (error) throw error;
@@ -144,12 +212,37 @@ export async function createPrivatePendingUniversityAction(
     const existente = exacta ?? coincidenciaFuerte;
 
     if (existente) {
+      if (existente.approval_status === 'approved') {
+        return {
+          success: true,
+          universidad: {
+            id: existente.id,
+            nombre: existente.nombre,
+            approval_status: 'approved',
+          },
+        };
+      }
+
+      const { data: aprobada, error: aprobarError } = await admin
+        .from('universidades')
+        .update({
+          approval_status: 'approved',
+          owner_user_id: null,
+          city: existente.city ?? ciudad || null,
+        })
+        .eq('id', existente.id)
+        .select('id, nombre, city')
+        .single();
+
+      if (aprobarError) throw aprobarError;
+      await recordAutomaticUniversityApproval(admin, user.id, aprobada);
+
       return {
         success: true,
         universidad: {
-          id: existente.id,
-          nombre: existente.nombre,
-          approval_status: existente.approval_status === 'approved' ? 'approved' : 'pending',
+          id: aprobada.id,
+          nombre: aprobada.nombre,
+          approval_status: 'approved',
         },
       };
     }
@@ -159,20 +252,21 @@ export async function createPrivatePendingUniversityAction(
       .insert({
         nombre: universidadNombre,
         city: ciudad || null,
-        approval_status: 'pending',
-        owner_user_id: user.id,
+        approval_status: 'approved',
+        owner_user_id: null,
       })
-      .select('id, nombre, approval_status')
+      .select('id, nombre, city')
       .single();
 
     if (crearError) throw crearError;
+    await recordAutomaticUniversityApproval(admin, user.id, creada);
 
     return {
       success: true,
       universidad: {
         id: creada.id,
         nombre: creada.nombre,
-        approval_status: 'pending',
+        approval_status: 'approved',
       },
     };
   } catch (error) {
@@ -230,7 +324,7 @@ export async function createPrivatePendingCareerAction(
     const carreraExistente = exacta ?? coincidenciaFuerte;
 
     if (carreraExistente) {
-      await recordPendingUniversityRequest(admin, user.id, universidad, carreraExistente.nombre);
+      await attachCareerToUniversityRequest(admin, user.id, universidad, carreraExistente);
       return {
         success: true,
         carrera: {
@@ -295,7 +389,7 @@ export async function createPrivatePendingCareerAction(
       .single();
 
     if (crearCarreraError) throw crearCarreraError;
-    await recordPendingUniversityRequest(admin, user.id, universidad, carreraCreada.nombre);
+    await attachCareerToUniversityRequest(admin, user.id, universidad, carreraCreada);
 
     return {
       success: true,
