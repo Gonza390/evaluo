@@ -119,7 +119,7 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
         <div className="admin-date-chip">Hoy · {stats.dateLabel}</div>
       </header>
 
-      <div className="admin-funnel-mini" aria-label="Embudo diario">
+      <div className="admin-funnel-mini" aria-label="Actividad de hoy">
         <b>{stats.funnel.sessions.toLocaleString('es-AR')}</b> sesiones
         <span>→</span>
         <b>{stats.funnel.registrations.toLocaleString('es-AR')}</b> registros
@@ -143,7 +143,7 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
             }
           />
           <Metric
-            label="Usuarios únicos logueados"
+            label="Usuarios autenticados activos"
             value={stats.entry.loggedUsers.toLocaleString('es-AR')}
             sub={`${stats.entry.newLoggedUsers} nuevos · ${stats.entry.recurrentLoggedUsers} recurrentes`}
           />
