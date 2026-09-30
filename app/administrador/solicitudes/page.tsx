@@ -8,6 +8,7 @@ import {
   GraduationCap,
   LockKeyhole,
   Mail,
+  Sparkles,
   XCircle,
 } from 'lucide-react';
 import { getAdminAccessContext } from '@/lib/access-control';
@@ -74,6 +75,9 @@ export default async function SolicitudesUniversidadAdministradorPage() {
     (row) => row.status !== 'added' && row.status !== 'rejected'
   ).length;
   const pendingCount = universityPendingCount + academicResult.rows.length;
+  const automaticUniversityCount = universityResult.rows.filter(
+    (row) => row.status === 'added' && row.approvalSource === 'automatic'
+  ).length;
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
@@ -95,8 +99,8 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                   Solicitudes académicas
                 </h1>
                 <p className="mt-1 text-sm text-slate-500">
-                  Revisá universidades y las carreras o materias privadas que alumnos agregaron al
-                  onboarding.
+                  Las universidades nuevas se aprueban automáticamente y quedan registradas acá.
+                  Carreras y materias siguen bajo revisión manual.
                 </p>
               </div>
             </div>
@@ -207,14 +211,23 @@ export default async function SolicitudesUniversidadAdministradorPage() {
         </section>
 
         <section className="mt-10 border-t border-slate-200 pt-7">
-          <div>
-            <div className="flex items-center gap-2 text-slate-700">
-              <Building2 className="h-4 w-4 text-indigo-600" />
-              <p className="text-xs font-bold uppercase tracking-[0.12em]">Nuevas universidades</p>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 text-slate-700">
+                <Building2 className="h-4 w-4 text-indigo-600" />
+                <p className="text-xs font-bold uppercase tracking-[0.12em]">Nuevas universidades</p>
+              </div>
+              <h2 className="mt-1 text-xl font-bold tracking-[-0.035em] text-slate-950">
+                Solicitudes de universidad
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Las aprobaciones automáticas quedan visibles como historial y no requieren una decisión.
+              </p>
             </div>
-            <h2 className="mt-1 text-xl font-bold tracking-[-0.035em] text-slate-950">
-              Solicitudes de universidad
-            </h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              {automaticUniversityCount} automáticas
+            </span>
           </div>
 
           {!universityResult.success ? (
@@ -244,7 +257,9 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                           <span
                             className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass(row.status)}`}
                           >
-                            {STATUS_LABELS[row.status]}
+                            {row.status === 'added' && row.approvalSource === 'automatic'
+                              ? 'Aprobada automáticamente'
+                              : STATUS_LABELS[row.status]}
                           </span>
                           <span className="inline-flex items-center gap-1 text-xs text-slate-400">
                             <Clock3 className="h-3.5 w-3.5" /> {formatDate(row.createdAt)}
@@ -268,7 +283,8 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                               Carrera
                             </p>
                             <p className="mt-1 flex items-center gap-2 text-base font-semibold text-slate-950">
-                              <GraduationCap className="h-4 w-4 text-indigo-600" /> {row.careerName}
+                              <GraduationCap className="h-4 w-4 text-indigo-600" />{' '}
+                              {row.careerName ?? 'Todavía no informada'}
                             </p>
                           </div>
                         </div>
@@ -284,7 +300,10 @@ export default async function SolicitudesUniversidadAdministradorPage() {
 
                         {row.reviewedAt ? (
                           <p className="mt-3 text-xs text-slate-400">
-                            Resuelta el {formatDate(row.reviewedAt)}
+                            {row.approvalSource === 'automatic'
+                              ? 'Aprobada automáticamente'
+                              : 'Resuelta'}{' '}
+                            el {formatDate(row.reviewedAt)}
                           </p>
                         ) : null}
                       </div>
@@ -321,7 +340,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
 
         <div className="mt-8 flex items-center gap-2 text-xs text-slate-400">
           <BookOpen className="h-4 w-4" />
-          Las entidades pendientes no se publican hasta una aprobación explícita.
+          Universidades nuevas: aprobación automática con historial. Carreras y materias: revisión manual antes de publicarse.
         </div>
       </div>
     </main>
