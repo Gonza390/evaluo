@@ -16,7 +16,6 @@ export interface AcademicUsageUniversityRow {
   name: string;
   users: number;
   activeUsers7d: number;
-  engagementUsers7d: number;
   avgMinutes7d: number;
   pdfs: number;
   flashcardSessionsStarted: number;
@@ -29,6 +28,7 @@ export interface AcademicUsageStats {
   users: number;
   usersWithoutUniversity: number;
   activeUsers7d: number;
+  engagementUsers7d: number;
   avgMinutes7d: number;
   pdfs: number;
   flashcardSessionsStarted: number;
