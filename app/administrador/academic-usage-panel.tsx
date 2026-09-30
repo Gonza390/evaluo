@@ -58,9 +58,9 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
 
       <div className="admin-kpi-grid">
         <Kpi
-          label="Usuarios con universidad"
+          label="Usuarios"
           value={formatNumber(stats.users)}
-          sub={`${formatNumber(stats.activeUsers7d)} activos en los últimos 7 días`}
+          sub={`${formatNumber(stats.activeUsers7d)} activos 7d · ${formatNumber(stats.usersWithoutUniversity)} sin universidad`}
         />
         <Kpi
           label="PDFs cargados"
@@ -73,9 +73,9 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
           sub="Por usuario activo · últimos 7 días"
         />
         <Kpi
-          label="Material generado"
-          value={formatNumber(stats.flashcards + stats.pdfSimulators)}
-          sub={`${formatNumber(stats.flashcards)} flashcards · ${formatNumber(stats.pdfSimulators)} simuladores PDF`}
+          label="Prácticas iniciadas"
+          value={formatNumber(stats.flashcardSessionsStarted + stats.pdfSimulatorsStarted)}
+          sub={`${formatNumber(stats.flashcardSessionsStarted)} flashcards · ${formatNumber(stats.pdfSimulatorsStarted)} simuladores`}
         />
       </div>
 
@@ -91,8 +91,8 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
                 <th className="px-4 py-3 text-right">Activos 7d</th>
                 <th className="px-4 py-3 text-right">Tiempo prom.</th>
                 <th className="px-4 py-3 text-right">PDFs</th>
-                <th className="px-4 py-3 text-right">Flashcards</th>
-                <th className="px-4 py-3 text-right">Simuladores PDF</th>
+                <th className="px-4 py-3 text-right">Flashcards iniciadas</th>
+                <th className="px-4 py-3 text-right">Simuladores iniciados</th>
                 <th className="px-4 py-3 text-right">Última actividad</th>
               </tr>
             </thead>
@@ -116,10 +116,10 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
                       {formatNumber(row.pdfs)}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {formatNumber(row.flashcards)}
+                      {formatNumber(row.flashcardSessionsStarted)}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      {formatNumber(row.pdfSimulators)}
+                      {formatNumber(row.pdfSimulatorsStarted)}
                     </td>
                     <td className="px-4 py-3 text-right text-[12px] tabular-nums">
                       {formatLastActivity(row.lastActivityAt)}
@@ -140,7 +140,9 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
 
       <p className="admin-footnote">
         El tiempo promedio usa engagement registrado por Analytics durante los últimos 7 días y
-        limita cada tramo individual a 30 minutos para evitar inflar el dato por pestañas abiertas.
+        limita cada tramo individual a 30 minutos. Flashcards y simuladores cuentan inicios reales
+        registrados desde esta actualización. Los usuarios sin universidad aparecen en una fila
+        separada; si su perfil no tiene universidad pero un PDF sí, usamos la universidad del PDF.
       </p>
     </section>
   );
