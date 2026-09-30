@@ -95,6 +95,7 @@ export function PdfFirstUploadShell({
         item.id === initialCarreraId &&
         item.universidad_id === initialUniversidadId
     ) ?? null;
+  const hasInitialUniversityProfile = Boolean(initialProfileUniversity);
   const hasInitialAcademicProfile = Boolean(initialProfileUniversity && initialProfileCareer);
   const initialAcademicProfileLabel = [initialProfileUniversity?.nombre, initialProfileCareer?.nombre]
     .filter(Boolean)
@@ -116,6 +117,12 @@ export function PdfFirstUploadShell({
   const [addingCareer, setAddingCareer] = useState(false);
   const [newCareer, setNewCareer] = useState('');
   const [savingContext, setSavingContext] = useState(false);
+  const [profileUniversitySaved, setProfileUniversitySaved] = useState(
+    hasInitialUniversityProfile
+  );
+  const [profileUniversityName, setProfileUniversityName] = useState(
+    initialProfileUniversity?.nombre ?? ''
+  );
   const [contextSaved, setContextSaved] = useState(hasInitialAcademicProfile);
   const [savedContextLabel, setSavedContextLabel] = useState(initialAcademicProfileLabel);
   const [showReadyContext, setShowReadyContext] = useState(false);
@@ -133,7 +140,11 @@ export function PdfFirstUploadShell({
   const careerName = addingCareer ? newCareer.trim() : selectedCareer?.nombre ?? '';
   const hasUniversity = requestingUniversity ? universityName.length >= 3 : Boolean(universityId);
   const hasCareer = addingCareer ? careerName.length >= 3 : Boolean(careerId);
-  const canSaveContext = Boolean(hasUniversity && hasCareer && !contextSaved);
+  const canSaveContext = Boolean(
+    hasUniversity &&
+      !contextSaved &&
+      (!profileUniversitySaved || hasCareer)
+  );
   const ready = processing?.status === 'ready';
   const failed = processing?.status === 'failed';
   const progress = processing
@@ -180,12 +191,16 @@ export function PdfFirstUploadShell({
     setAddingCareer(false);
     setNewCareer('');
     setSavingContext(false);
+    setProfileUniversitySaved(hasInitialUniversityProfile);
+    setProfileUniversityName(initialProfileUniversity?.nombre ?? '');
     setContextSaved(hasInitialAcademicProfile);
     setSavedContextLabel(initialAcademicProfileLabel);
     setShowReadyContext(false);
   }, [
     hasInitialAcademicProfile,
+    hasInitialUniversityProfile,
     initialAcademicProfileLabel,
+    initialProfileUniversity?.nombre,
     initialCarreraId,
     initialExamDate,
     initialUniversidadId,
@@ -396,12 +411,21 @@ export function PdfFirstUploadShell({
       return;
     }
 
-    setContextSaved(true);
+    const universityWasSaved = Boolean(result.context.universidadId);
+    const careerWasSaved = Boolean(result.context.carreraId);
+
+    if (result.context.universidadId) {
+      setUniversityId(result.context.universidadId);
+    }
+    setRequestingUniversity(false);
+    setProfileUniversitySaved(universityWasSaved);
+    setProfileUniversityName(result.context.universidadNombre ?? universityName);
+    setContextSaved(universityWasSaved && careerWasSaved);
     setSavedContextLabel(
       [result.context.universidadNombre, result.context.carreraNombre].filter(Boolean).join(' · ')
     );
     setSavingContext(false);
-    if (ready) setShowReadyContext(false);
+    if (ready && universityWasSaved && careerWasSaved) setShowReadyContext(false);
     router.refresh();
   };
 
@@ -627,7 +651,11 @@ export function PdfFirstUploadShell({
 
                         <div>
                           <label htmlFor="pdf-first-university" className="mb-1.5 block text-xs font-semibold text-slate-700">Universidad</label>
-                          {!requestingUniversity ? (
+                          {profileUniversitySaved ? (
+                            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-700">
+                              Guardada en tu perfil · {profileUniversityName}
+                            </div>
+                          ) : !requestingUniversity ? (
                             <>
                               <select
                                 id="pdf-first-university"
@@ -769,7 +797,11 @@ export function PdfFirstUploadShell({
                       {!contextSaved ? (
                         <Button type="button" disabled={!canSaveContext || savingContext} onClick={saveContext}>
                           {savingContext ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                          Guardar
+                          {!profileUniversitySaved
+                            ? hasCareer
+                              ? 'Guardar universidad y carrera'
+                              : 'Guardar universidad'
+                            : 'Guardar carrera'}
                         </Button>
                       ) : null}
                       {contextSaved && ready ? <Button type="button" onClick={openMaterial}>Abrir PDF</Button> : null}
