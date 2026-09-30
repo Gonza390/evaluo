@@ -175,11 +175,29 @@ export async function savePdfFirstAcademicContextAction(
       materiaNombre = subject.nombre;
     }
 
-    const { data: updated, error: updateError } = await admin
-      .from('student_materials')
+    if (!universidadId || !carreraId) {
+      return {
+        success: false,
+        message: 'Completá universidad y carrera para guardar tu perfil académico.',
+      };
+    }
+
+    const { error: profileError } = await admin
+      .from('profiles')
       .update({
         universidad_id: universidadId,
         carrera_id: carreraId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (profileError) throw profileError;
+
+    const { data: updated, error: updateError } = await admin
+      .from('student_materials')
+      .update({
+        universidad_id: null,
+        carrera_id: null,
         materia_id: materiaId,
         visibility: 'private',
       })
@@ -189,11 +207,11 @@ export async function savePdfFirstAcademicContextAction(
       .maybeSingle();
 
     if (updateError) throw updateError;
-    if (!updated) return { success: false, message: 'No pudimos asociar los datos a tu PDF.' };
+    if (!updated) return { success: false, message: 'No pudimos actualizar tu PDF.' };
 
     return {
       success: true,
-      message: 'Datos académicos guardados.',
+      message: 'Universidad y carrera guardadas en tu perfil.',
       context: {
         universidadId,
         universidadNombre,
