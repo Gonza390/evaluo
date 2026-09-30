@@ -69,7 +69,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
       }
       if (!isAllowedAnalyticsEventName(eventName)) {
-        return NextResponse.json({ error: 'invalid_event_name' }, { status: 400 });
+        return NextResponse.json(
+          { ok: false, skipped: 'invalid_event_name' },
+          { status: 202 }
+        );
       }
 
       const normalizedMetadata = sanitizeAnalyticsMetadata(
