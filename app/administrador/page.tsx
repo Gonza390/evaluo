@@ -19,6 +19,8 @@ import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './ac
 import { AcquisitionPanel } from './acquisition-panel';
 import { obtenerProductoDiarioAdministrador } from './product-actions';
 import { ProductPanel } from './product-panel';
+import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
+import { MailPanel } from './mail-panel';
 import {
   AICostPanel,
   BibliotecaPanel,
@@ -32,6 +34,7 @@ type PanelKey =
   | 'referidos'
   | 'biblioteca'
   | 'usuarios'
+  | 'mails'
   | 'ia';
 
 const adminSans = IBM_Plex_Sans({
@@ -54,6 +57,7 @@ const PANELS: Array<{ key: PanelKey; label: string }> = [
   { key: 'referidos', label: 'Referidos' },
   { key: 'biblioteca', label: 'Biblioteca' },
   { key: 'usuarios', label: 'Usuarios' },
+  { key: 'mails', label: 'Mails' },
   { key: 'ia', label: 'IA' },
 ];
 
@@ -109,6 +113,8 @@ export default async function AdministradorPage({
     period?: string;
     usersPage?: string;
     source?: string;
+    mailType?: string;
+    mailPeriod?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -118,6 +124,12 @@ export default async function AdministradorPage({
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
   const requestedSource = String(params.source ?? '').trim().toLowerCase();
+  const requestedMailType = String(params.mailType ?? 'all').trim().toLowerCase();
+  const activeMailType: MailFilterType =
+    requestedMailType === 'exam' || requestedMailType === 'ready' || requestedMailType === 'campaign'
+      ? requestedMailType
+      : 'all';
+  const activeMailPeriod: 7 | 30 = Number(params.mailPeriod ?? 7) === 30 ? 30 : 7;
   const selectedAcquisitionSource = ACQUISITION_SOURCE_KEYS.includes(
     requestedSource as AcquisitionSourceKey
   )
@@ -129,6 +141,7 @@ export default async function AdministradorPage({
   const needsReferrals = activePanel === 'referidos';
   const needsBiblioteca = activePanel === 'biblioteca';
   const needsUsers = activePanel === 'usuarios';
+  const needsMails = activePanel === 'mails';
   const needsIA = activePanel === 'ia';
 
   const [
@@ -138,6 +151,7 @@ export default async function AdministradorPage({
     bibliotecaResult,
     bibliotecaStatsResult,
     usersResult,
+    mailResult,
     iaPromptResult,
     iaRankingResult,
     iaFeedbackStatsResult,
@@ -152,6 +166,9 @@ export default async function AdministradorPage({
     needsBiblioteca ? obtenerBibliotecaFormularioAdministradorOptimizado() : Promise.resolve(null),
     needsBiblioteca ? obtenerBibliotecaResumenAdministradorCacheado() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
+    needsMails
+      ? obtenerMailsAdministrador({ type: activeMailType, days: activeMailPeriod })
+      : Promise.resolve(null),
     needsIA ? obtenerPromptSistema() : Promise.resolve(null),
     needsIA ? obtenerRankingErroresIA(30) : Promise.resolve(null),
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
@@ -228,6 +245,17 @@ export default async function AdministradorPage({
         />
       );
     }
+  } else if (activePanel === 'mails') {
+    panelContent =
+      mailResult?.success && mailResult.data ? (
+        <MailPanel
+          data={mailResult.data}
+          activeType={activeMailType}
+          activePeriod={activeMailPeriod}
+        />
+      ) : (
+        <ErrorPanel message={mailResult?.message ?? 'No pudimos cargar Mails.'} />
+      );
   } else if (
     iaPromptResult?.success &&
     iaRankingResult?.success &&
