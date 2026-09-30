@@ -18,8 +18,8 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['education', 'productivity', 'study'],
     icons: [
       {
-        src: '/icon.png',
-        sizes: '32x32',
+        src: '/evaluo-favicon.png',
+        sizes: '64x64',
         type: 'image/png',
         purpose: 'any',
       },
