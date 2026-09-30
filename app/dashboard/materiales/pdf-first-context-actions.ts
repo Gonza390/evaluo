@@ -184,12 +184,15 @@ export async function savePdfFirstAcademicContextAction(
 
     const { error: profileError } = await admin
       .from('profiles')
-      .update({
-        universidad_id: universidadId,
-        carrera_id: carreraId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id);
+      .upsert(
+        {
+          id: user.id,
+          universidad_id: universidadId,
+          carrera_id: carreraId,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' }
+      );
 
     if (profileError) throw profileError;
 
