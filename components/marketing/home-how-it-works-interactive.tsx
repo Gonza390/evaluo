@@ -22,7 +22,7 @@ const steps = [
 
 export function HomeHowItWorksInteractive() {
   return (
-    <section id="como-funciona" className="border-b border-slate-100 bg-slate-50/70 py-12 sm:py-14">
+    <section id="como-funciona" className="scroll-mt-20 border-b border-slate-100 bg-slate-50/70 py-12 sm:scroll-mt-24 sm:py-14">
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-[0.68fr_1.32fr] lg:items-start lg:gap-14">
           <div>
