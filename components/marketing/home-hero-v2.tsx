@@ -115,7 +115,7 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
 
       <HomeProductVideo />
 
-      <section id="producto" className="border-b border-slate-100 bg-white py-14 sm:py-16 lg:py-18">
+      <section id="producto" className="scroll-mt-20 border-b border-slate-100 bg-white py-14 sm:scroll-mt-24 sm:py-16 lg:py-18">
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end lg:gap-16">
             <div>
