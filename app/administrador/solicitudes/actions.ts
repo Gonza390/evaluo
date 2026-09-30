@@ -134,7 +134,7 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
 
     const rawRows = (data ?? []) as RawUniversityRequestRow[];
     const emailByUserId = await resolveAdminUserEmails(rawRows.map((row) => row.user_id));
-    const rows = rawRows.map((row) => ({
+    const rows: AdminUniversityRequestRow[] = rawRows.map((row) => ({
       id: row.id,
       userId: row.user_id,
       userEmail: emailByUserId.get(row.user_id) ?? null,
