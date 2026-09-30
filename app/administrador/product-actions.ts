@@ -203,13 +203,18 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
       return created >= yesterday.start.getTime() && created < yesterday.end.getTime();
     });
 
-    const loggedToday = users.filter((user) => {
-      if (!user.last_sign_in_at) return false;
-      const signedIn = new Date(user.last_sign_in_at).getTime();
-      return signedIn >= today.start.getTime() && signedIn < today.end.getTime();
-    });
     const newUserIds = new Set(newUsersToday.map((user) => user.id));
-    const newLoggedUsers = loggedToday.filter((user) => newUserIds.has(user.id)).length;
+    const activeLoggedUserIds = new Set(
+      events
+        .map((row) => row.user_id)
+        .filter(
+          (userId): userId is string =>
+            Boolean(userId) && !adminUserIds.has(userId as string)
+        )
+    );
+    const newLoggedUsers = Array.from(activeLoggedUserIds).filter((userId) =>
+      newUserIds.has(userId)
+    ).length;
 
     const pageViews = events.filter((row) => row.event_name === 'page_view');
     const sessionMap = new Map<string, { logged: boolean }>();
@@ -388,9 +393,9 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
         entry: {
           registrations: newUsersToday.length,
           registrationsTrendPct: pctChange(newUsersToday.length, newUsersYesterday.length),
-          loggedUsers: loggedToday.length,
+          loggedUsers: activeLoggedUserIds.size,
           newLoggedUsers,
-          recurrentLoggedUsers: Math.max(0, loggedToday.length - newLoggedUsers),
+          recurrentLoggedUsers: Math.max(0, activeLoggedUserIds.size - newLoggedUsers),
           anonymousSessionPct,
           loggedSessionPct,
           failedLogins: events.filter((row) => row.event_name === 'login_error').length,

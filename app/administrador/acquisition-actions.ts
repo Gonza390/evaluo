@@ -189,24 +189,16 @@ function resolveSource(metadataValue: unknown): AcquisitionSourceKey | null {
   const metadata = asRecord(metadataValue);
   if (!metadata) return null;
 
-  const directSource = normalizeSource(metadata.source);
-  if (directSource) return directSource;
+  // La tarjeta de adquisición representa el origen de ESTA sesión.
+  // No usamos first/latest touch persistido porque puede pertenecer a una visita anterior.
+  const sessionSource =
+    normalizeSource(metadata.session_source) ?? normalizeSource(metadata.source);
+  if (sessionSource) return sessionSource;
 
   const landingSource = sourceFromLanding(metadata.landing_path);
   if (landingSource) return landingSource;
 
-  const directReferrerSource = sourceFromReferrer(metadata.referrer);
-  if (directReferrerSource) return directReferrerSource;
-
-  const attribution = asRecord(metadata.attribution);
-  const attributionSource =
-    normalizeSource(attribution?.latest_source) ??
-    normalizeSource(attribution?.source) ??
-    normalizeSource(attribution?.latest_utm_source) ??
-    normalizeSource(attribution?.utm_source);
-  if (attributionSource) return attributionSource;
-
-  return sourceFromReferrer(attribution?.latest_referrer) ?? sourceFromReferrer(attribution?.referrer);
+  return sourceFromReferrer(metadata.referrer);
 }
 
 function normalizeLanding(value: string | null) {

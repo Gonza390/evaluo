@@ -119,6 +119,19 @@ export function AICostPanel({
         />
       </div>
 
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <StatCard
+          label="Consumo estudiantes"
+          value={formatNumber(stats.studentAllTime.calls)}
+          detail={`${formatNumber(stats.studentAllTime.materials)} PDFs · ${formatNumber(stats.studentAllTime.totalTokens)} tokens · ${formatUsd(stats.studentAllTime.paidEquivalentCostUsd)} equiv. pago`}
+        />
+        <StatCard
+          label="Admin / pruebas"
+          value={formatNumber(stats.adminAllTime.calls)}
+          detail={`${formatNumber(stats.adminAllTime.materials)} PDFs · ${formatNumber(stats.adminAllTime.totalTokens)} tokens · ${formatUsd(stats.adminAllTime.paidEquivalentCostUsd)} equiv. pago`}
+        />
+      </div>
+
       <div className="grid gap-4 xl:grid-cols-[1.45fr_0.8fr]">
         <div className="overflow-hidden rounded-2xl border border-border">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">

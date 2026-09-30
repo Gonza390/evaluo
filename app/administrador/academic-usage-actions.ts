@@ -28,6 +28,7 @@ export interface AcademicUsageStats {
   users: number;
   usersWithoutUniversity: number;
   activeUsers7d: number;
+  engagementUsers7d: number;
   avgMinutes7d: number;
   pdfs: number;
   flashcardSessionsStarted: number;
@@ -66,7 +67,10 @@ function metadataRecord(metadata: unknown): JsonRecord {
 }
 
 function engagementMs(metadata: unknown) {
-  const raw = Number(metadataRecord(metadata).engagement_ms ?? 0);
+  const record = metadataRecord(metadata);
+  if (Number(record.engagement_version ?? 0) < 2) return 0;
+
+  const raw = Number(record.engagement_ms ?? 0);
   if (!Number.isFinite(raw) || raw <= 0) return 0;
   return Math.min(raw, MAX_ENGAGEMENT_EVENT_MS);
 }
@@ -181,6 +185,7 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
 
     const rowsByUniversity = new Map<string, AcademicUsageUniversityRow>();
     const activeUsersByUniversity = new Map<string, Set<string>>();
+    const engagementUsersByUniversity = new Map<string, Set<string>>();
     const engagementByUniversity = new Map<string, number>();
 
     for (const university of universities) {
@@ -196,6 +201,7 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
         lastActivityAt: null,
       });
       activeUsersByUniversity.set(university.id, new Set());
+      engagementUsersByUniversity.set(university.id, new Set());
       engagementByUniversity.set(university.id, 0);
     }
 
@@ -211,6 +217,7 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
       lastActivityAt: null,
     });
     activeUsersByUniversity.set(UNKNOWN_UNIVERSITY_ID, new Set());
+    engagementUsersByUniversity.set(UNKNOWN_UNIVERSITY_ID, new Set());
     engagementByUniversity.set(UNKNOWN_UNIVERSITY_ID, 0);
 
     for (const profile of profiles) {
@@ -241,10 +248,14 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
       activeUsersByUniversity.get(universityId)?.add(event.user_id);
 
       if (event.event_name === 'session_ping') {
-        engagementByUniversity.set(
-          universityId,
-          (engagementByUniversity.get(universityId) ?? 0) + engagementMs(event.metadata)
-        );
+        const measuredEngagementMs = engagementMs(event.metadata);
+        if (measuredEngagementMs > 0) {
+          engagementUsersByUniversity.get(universityId)?.add(event.user_id);
+          engagementByUniversity.set(
+            universityId,
+            (engagementByUniversity.get(universityId) ?? 0) + measuredEngagementMs
+          );
+        }
       }
     }
 
@@ -270,14 +281,15 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
     const universityRows = Array.from(rowsByUniversity.values())
       .map((row) => {
         const activeUsers = activeUsersByUniversity.get(row.id)?.size ?? 0;
+        const engagementUsers = engagementUsersByUniversity.get(row.id)?.size ?? 0;
         const totalEngagementMs = engagementByUniversity.get(row.id) ?? 0;
 
         return {
           ...row,
           activeUsers7d: activeUsers,
           avgMinutes7d:
-            activeUsers > 0
-              ? Number((totalEngagementMs / activeUsers / 60_000).toFixed(1))
+            engagementUsers > 0
+              ? Number((totalEngagementMs / engagementUsers / 60_000).toFixed(1))
               : 0,
         };
       })
@@ -296,6 +308,10 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
 
     const users = universityRows.reduce((sum, row) => sum + row.users, 0);
     const activeUsers7d = universityRows.reduce((sum, row) => sum + row.activeUsers7d, 0);
+    const engagementUsers7d = universityRows.reduce(
+      (sum, row) => sum + (engagementUsersByUniversity.get(row.id)?.size ?? 0),
+      0
+    );
     const totalEngagementMs = universityRows.reduce(
       (sum, row) => sum + (engagementByUniversity.get(row.id) ?? 0),
       0
@@ -312,9 +328,10 @@ export async function obtenerUsoAcademicoAdministrador(): Promise<{
         users,
         usersWithoutUniversity,
         activeUsers7d,
+        engagementUsers7d,
         avgMinutes7d:
-          activeUsers7d > 0
-            ? Number((totalEngagementMs / activeUsers7d / 60_000).toFixed(1))
+          engagementUsers7d > 0
+            ? Number((totalEngagementMs / engagementUsers7d / 60_000).toFixed(1))
             : 0,
         pdfs: universityRows.reduce((sum, row) => sum + row.pdfs, 0),
         flashcardSessionsStarted: universityRows.reduce(

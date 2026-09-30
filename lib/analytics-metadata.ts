@@ -25,6 +25,8 @@ const ATTRIBUTION_KEYS = new Set([
 const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   page_view: ['attribution', 'anonymous_id', 'page_type', 'carrera_id', 'universidad_id', 'tab'],
   acquisition_touch: [
+    'source',
+    'session_source',
     'attribution',
     'anonymous_id',
     'page_type',
@@ -32,7 +34,13 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'landing_path',
     'entry_page_type',
   ],
-  session_ping: ['engagement_ms', 'attribution', 'anonymous_id', 'page_type'],
+  session_ping: [
+    'engagement_ms',
+    'engagement_version',
+    'attribution',
+    'anonymous_id',
+    'page_type',
+  ],
   client_error: ['message', 'source', 'line', 'attribution', 'anonymous_id', 'page_type'],
   cta_click: [
     'attribution',

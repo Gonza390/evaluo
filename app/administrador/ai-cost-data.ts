@@ -1,6 +1,7 @@
 'use server';
 
 import { PINNED_GEMINI_SUMMARY_MODEL } from '@/lib/ai/providers';
+import { listAdminUserIds } from '@/lib/admin-users';
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
 
@@ -22,6 +23,7 @@ type UsageRow = {
 
 type MaterialRow = {
   id: string;
+  user_id: string;
   page_count: number | null;
 };
 
@@ -43,6 +45,8 @@ export type AdminPdfAiUsageStats = {
   outputUsdPerMillion: number;
   freeTierTokenCostUsd: number;
   allTime: AdminPdfAiUsageWindow;
+  studentAllTime: AdminPdfAiUsageWindow;
+  adminAllTime: AdminPdfAiUsageWindow;
   last7Days: AdminPdfAiUsageWindow;
   today: AdminPdfAiUsageWindow;
   otherProviderCalls: number;
@@ -127,16 +131,27 @@ export async function obtenerConsumoPdfIAAdministrador(): Promise<{
 
     const rows = (usageData ?? []) as UsageRow[];
     const materialIds = Array.from(new Set(rows.map((row) => row.student_material_id)));
-    const materialsResult =
+    const [materialsResult, adminUserIds] = await Promise.all([
       materialIds.length > 0
-        ? await admin.from('student_materials').select('id, page_count').in('id', materialIds)
-        : { data: [], error: null };
+        ? admin.from('student_materials').select('id, user_id, page_count').in('id', materialIds)
+        : Promise.resolve({ data: [], error: null }),
+      listAdminUserIds(),
+    ]);
 
     if (materialsResult.error) throw materialsResult.error;
 
     const materialById = new Map(
       ((materialsResult.data ?? []) as MaterialRow[]).map((material) => [material.id, material])
     );
+    const adminUserIdSet = new Set(adminUserIds);
+    const adminRows = rows.filter((row) => {
+      const material = materialById.get(row.student_material_id);
+      return material ? adminUserIdSet.has(material.user_id) : false;
+    });
+    const studentRows = rows.filter((row) => {
+      const material = materialById.get(row.student_material_id);
+      return material ? !adminUserIdSet.has(material.user_id) : true;
+    });
     const now = new Date();
     const todayStart = new Date(now);
     todayStart.setUTCHours(0, 0, 0, 0);
@@ -168,6 +183,8 @@ export async function obtenerConsumoPdfIAAdministrador(): Promise<{
         outputUsdPerMillion: GEMINI_OUTPUT_USD_PER_MILLION,
         freeTierTokenCostUsd: 0,
         allTime: buildWindow(rows, materialById),
+        studentAllTime: buildWindow(studentRows, materialById),
+        adminAllTime: buildWindow(adminRows, materialById),
         last7Days: buildWindow(rows, materialById, sevenDaysAgo),
         today: buildWindow(rows, materialById, todayStart),
         otherProviderCalls: rows.filter((row) => row.provider !== 'gemini').length,
