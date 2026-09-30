@@ -246,16 +246,23 @@ export default async function AdministradorPage({
       );
     }
   } else if (activePanel === 'mails') {
-    panelContent =
-      mailResult?.success && mailResult.data ? (
+    if (mailResult?.success) {
+      panelContent = (
         <MailPanel
           data={mailResult.data}
           activeType={activeMailType}
           activePeriod={activeMailPeriod}
         />
-      ) : (
-        <ErrorPanel message={mailResult?.message ?? 'No pudimos cargar Mails.'} />
       );
+    } else {
+      panelContent = (
+        <ErrorPanel
+          message={
+            mailResult && !mailResult.success ? mailResult.message : 'No pudimos cargar Mails.'
+          }
+        />
+      );
+    }
   } else if (
     iaPromptResult?.success &&
     iaRankingResult?.success &&
