@@ -15,9 +15,10 @@ export type AdminUniversityRequestRow = {
   universityName: string;
   country: string;
   city: string | null;
-  careerName: string;
+  careerName: string | null;
   note: string | null;
   status: UniversityRequestStatus;
+  approvalSource: 'manual' | 'automatic';
   createdAt: string;
   reviewedAt: string | null;
   approvedUniversityId: string | null;
@@ -43,9 +44,10 @@ type RawUniversityRequestRow = {
   university_name: string;
   country: string;
   city: string | null;
-  career_name: string;
+  career_name: string | null;
   note: string | null;
   status: UniversityRequestStatus;
+  resolution_source: 'manual' | 'automatic';
   created_at: string;
   reviewed_at: string | null;
   approved_university_id: string | null;
@@ -123,7 +125,7 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
     const { data, error } = await admin
       .from('university_requests')
       .select(
-        'id, user_id, university_name, country, city, career_name, note, status, created_at, reviewed_at, approved_university_id, approved_career_id'
+        'id, user_id, university_name, country, city, career_name, note, status, resolution_source, created_at, reviewed_at, approved_university_id, approved_career_id'
       )
       .order('created_at', { ascending: false })
       .limit(100);
@@ -142,6 +144,7 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
       careerName: row.career_name,
       note: row.note,
       status: row.status,
+      approvalSource: row.resolution_source === 'automatic' ? 'automatic' : 'manual',
       createdAt: row.created_at,
       reviewedAt: row.reviewed_at,
       approvedUniversityId: row.approved_university_id,
