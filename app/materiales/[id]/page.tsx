@@ -40,6 +40,30 @@ function isMissingStudentMaterialsTableError(error: unknown) {
   return code === '42P01' || message.toLowerCase().includes('student_materials');
 }
 
+async function resolveAcademicProfileIds(
+  admin: ReturnType<typeof createAdminClient>,
+  input: {
+    userId: string;
+    universidadId: string | null | undefined;
+    carreraId: string | null | undefined;
+  }
+) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- profiles typing is narrower than runtime schema here
+  const adminClient = admin as any;
+  const { data: profile, error } = await adminClient
+    .from('profiles')
+    .select('universidad_id, carrera_id')
+    .eq('id', input.userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return {
+    universidadId: profile?.universidad_id ?? input.universidadId ?? null,
+    carreraId: profile?.carrera_id ?? input.carreraId ?? null,
+  };
+}
+
 async function loadAcademicLabels(
   admin: ReturnType<typeof createAdminClient>,
   input: {
@@ -93,7 +117,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const supabase = await createClientServer();
     const { data: material } = await supabase
       .from('student_materials')
-      .select('id, title, materia_id, carrera_id, universidad_id, visibility, processing_status, page_count')
+      .select('id, user_id, title, materia_id, carrera_id, universidad_id, visibility, processing_status, page_count')
       .eq('id', materialId)
       .maybeSingle();
 
@@ -102,9 +126,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     const admin = createAdminClient();
-    const { carrera, universidad, materia } = await loadAcademicLabels(admin, {
+    const academicProfile = await resolveAcademicProfileIds(admin, {
+      userId: material.user_id,
       universidadId: material.universidad_id,
       carreraId: material.carrera_id,
+    });
+    const { carrera, universidad, materia } = await loadAcademicLabels(admin, {
+      universidadId: academicProfile.universidadId,
+      carreraId: academicProfile.carreraId,
       materiaId: material.materia_id,
     });
 
@@ -178,10 +207,16 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       redirect(`/materiales/${canonicalSegment}`);
     }
 
+    const academicProfile = await resolveAcademicProfileIds(admin, {
+      userId: material.user_id,
+      universidadId: material.universidad_id,
+      carreraId: material.carrera_id,
+    });
+
     const [{ carrera, universidad, materia }, signedUrlResult] = await Promise.all([
       loadAcademicLabels(admin, {
-        universidadId: material.universidad_id,
-        carreraId: material.carrera_id,
+        universidadId: academicProfile.universidadId,
+        carreraId: academicProfile.carreraId,
         materiaId: material.materia_id,
       }),
       admin.storage.from('biblioteca').createSignedUrl(material.file_path, 60 * 15),
@@ -194,12 +229,12 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
     const hasFullAcademicContext = Boolean(
-      material.universidad_id && material.carrera_id && material.materia_id
+      academicProfile.universidadId && academicProfile.carreraId && material.materia_id
     );
     const backHref = isOwner
       ? '/dashboard/materiales'
       : material.materia_id
-        ? getMateriaRoute(material.materia_id, material.carrera_id)
+        ? getMateriaRoute(material.materia_id, academicProfile.carreraId)
         : '/explorar';
 
     if (material.processing_status !== 'ready') {
