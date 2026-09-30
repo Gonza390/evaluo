@@ -43,6 +43,8 @@ const ANALYTICS_EVENT_NAMES = [
   'profile_completed',
   'student_material_processing_ready',
   'student_material_study_opened',
+  'student_material_exam_started',
+  'student_material_flashcards_started',
   'pdf_gate_viewed',
   'pdf_gate_cta_clicked',
   'materia_tab_viewed',
