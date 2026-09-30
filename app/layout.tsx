@@ -120,7 +120,8 @@ export const metadata: Metadata = {
   },
   manifest: '/manifest.webmanifest',
   icons: {
-    icon: [{ url: '/icon.png', sizes: 'any', type: 'image/png' }],
+    icon: [{ url: '/evaluo-favicon.png', sizes: '64x64', type: 'image/png' }],
+    shortcut: [{ url: '/evaluo-favicon.png', sizes: '64x64', type: 'image/png' }],
     apple: [{ url: '/apple-icon.png' }],
   },
 };
