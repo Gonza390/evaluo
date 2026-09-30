@@ -2,8 +2,8 @@
 
 import dynamic from 'next/dynamic';
 
-export const BibliotecaPanel = dynamic(() =>
-  import('./biblioteca-panel').then((module) => module.BibliotecaPanel)
+export const AcademicUsagePanel = dynamic(() =>
+  import('./academic-usage-panel').then((module) => module.AcademicUsagePanel)
 );
 export const AICostPanel = dynamic(() =>
   import('./ai-cost-panel').then((module) => module.AICostPanel)
