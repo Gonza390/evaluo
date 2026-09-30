@@ -62,7 +62,7 @@ export async function savePdfFirstAcademicContextAction(
     const admin = createAdminClient() as any;
     const { data: ownedMaterial, error: materialError } = await admin
       .from('student_materials')
-      .select('id')
+      .select('id, materia_id')
       .eq('id', parsed.data.materialId)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -72,11 +72,19 @@ export async function savePdfFirstAcademicContextAction(
       return { success: false, message: 'No encontramos tu PDF para guardar estos datos.' };
     }
 
+    const { data: currentProfile, error: profileReadError } = await admin
+      .from('profiles')
+      .select('universidad_id, carrera_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profileReadError) throw profileReadError;
+
     let universidadId = parsed.data.universidadId ?? null;
     let universidadNombre = parsed.data.universidadNombre?.trim() || null;
     let carreraId = parsed.data.carreraId ?? null;
     let carreraNombre = parsed.data.carreraNombre?.trim() || null;
-    let materiaId = parsed.data.materiaId ?? null;
+    let materiaId = parsed.data.materiaId ?? ownedMaterial.materia_id ?? null;
     let materiaNombre = parsed.data.materiaNombre?.trim() || null;
 
     if (!universidadId && universidadNombre) {
@@ -86,8 +94,20 @@ export async function savePdfFirstAcademicContextAction(
       universidadNombre = result.universidad.nombre;
     }
 
+    if (!universidadId) {
+      universidadId = currentProfile?.universidad_id ?? null;
+    }
+
     if ((carreraId || carreraNombre) && !universidadId) {
       return { success: false, message: 'Elegí o escribí primero tu universidad.' };
+    }
+
+    if (
+      !carreraId &&
+      !carreraNombre &&
+      currentProfile?.universidad_id === universidadId
+    ) {
+      carreraId = currentProfile?.carrera_id ?? null;
     }
 
     if (!carreraId && carreraNombre && universidadId) {
@@ -175,12 +195,17 @@ export async function savePdfFirstAcademicContextAction(
       materiaNombre = subject.nombre;
     }
 
-    if (!universidadId || !carreraId) {
+    if (!universidadId) {
       return {
         success: false,
-        message: 'Completá universidad y carrera para guardar tu perfil académico.',
+        message: 'Elegí o escribí tu universidad para guardarla en tu perfil.',
       };
     }
+
+    const nextCareerId =
+      currentProfile?.universidad_id === universidadId && !parsed.data.carreraId && !carreraNombre
+        ? currentProfile?.carrera_id ?? null
+        : carreraId;
 
     const { error: profileError } = await admin
       .from('profiles')
@@ -188,7 +213,7 @@ export async function savePdfFirstAcademicContextAction(
         {
           id: user.id,
           universidad_id: universidadId,
-          carrera_id: carreraId,
+          carrera_id: nextCareerId,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'id' }
@@ -214,12 +239,14 @@ export async function savePdfFirstAcademicContextAction(
 
     return {
       success: true,
-      message: 'Universidad y carrera guardadas en tu perfil.',
+      message: nextCareerId
+        ? 'Universidad y carrera guardadas en tu perfil.'
+        : 'Universidad guardada en tu perfil.',
       context: {
         universidadId,
         universidadNombre,
-        carreraId,
-        carreraNombre,
+        carreraId: nextCareerId,
+        carreraNombre: nextCareerId ? carreraNombre : null,
         materiaId,
         materiaNombre,
       },
