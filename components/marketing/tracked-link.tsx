@@ -3,11 +3,12 @@
 import Link, { type LinkProps } from 'next/link';
 import type { MouseEventHandler, ReactNode } from 'react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import type { AnalyticsEventName } from '@/lib/analytics-events';
 
 type TrackedLinkProps = LinkProps & {
   children: ReactNode;
   className?: string;
-  eventName: string;
+  eventName: AnalyticsEventName;
   payload?: Record<string, string | number | boolean | null | undefined>;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
