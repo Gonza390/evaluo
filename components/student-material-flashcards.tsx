@@ -24,6 +24,7 @@ import {
 } from '@/app/dashboard/materiales/actions';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { scheduleFlashcardReviewReminderAction } from '@/lib/actions/flashcard-review-reminders';
+import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 
 type RecallResult = 'known' | 'unknown';
@@ -142,7 +143,14 @@ export function StudentMaterialFlashcards({
 
   const startSession = useCallback(() => {
     beginSession(buildSessionOrder(recallByCard, cards.length));
-  }, [beginSession, cards.length, recallByCard]);
+    void trackClientAnalyticsEvent({
+      eventName: 'student_material_flashcards_started',
+      metadata: {
+        material_id: materialId,
+        card_count: cards.length,
+      },
+    });
+  }, [beginSession, cards.length, materialId, recallByCard]);
 
   const finishSession = useCallback(() => {
     setStarted(false);
