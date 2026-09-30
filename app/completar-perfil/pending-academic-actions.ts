@@ -228,7 +228,7 @@ export async function createPrivatePendingUniversityAction(
         .update({
           approval_status: 'approved',
           owner_user_id: null,
-          city: existente.city ?? ciudad || null,
+          city: existente.city ?? (ciudad || null),
         })
         .eq('id', existente.id)
         .select('id, nombre, city')
