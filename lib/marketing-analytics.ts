@@ -2,6 +2,7 @@
 
 import { getAnalyticsPageType, trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import { getAttributionSnapshot } from '@/lib/attribution';
+import { isAllowedAnalyticsEventName } from '@/lib/analytics-events';
 
 type MarketingPayload = Record<string, string | number | boolean | null | undefined>;
 
@@ -29,6 +30,10 @@ export function trackMarketingEvent(
     ...attribution,
     ...payload,
   });
+
+  if (!isAllowedAnalyticsEventName(event)) {
+    return;
+  }
 
   void trackClientAnalyticsEvent({
     eventName: event,
