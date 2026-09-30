@@ -40,14 +40,18 @@ const studyCapabilities = [
 export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
   return (
     <>
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+          <div className="animate-surface-reveal">
+            <PublicSiteHeader primaryHref={primaryHref} trackingLocation="home_header" />
+          </div>
+        </div>
+      </div>
+
       <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_78%_18%,rgba(99,102,241,0.16),transparent_28%),radial-gradient(circle_at_12%_35%,rgba(37,99,235,0.08),transparent_24%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/70 to-transparent" />
 
         <div className="mx-auto w-full max-w-[1240px] px-4 pb-14 sm:px-8 lg:px-10 lg:pb-24">
-          <div className="animate-surface-reveal">
-            <PublicSiteHeader primaryHref={primaryHref} trackingLocation="home_header" />
-          </div>
-
           <div className="grid items-center gap-10 pt-10 sm:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:pt-18">
             <div className="flex min-w-0 flex-col items-start text-left">
               <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
