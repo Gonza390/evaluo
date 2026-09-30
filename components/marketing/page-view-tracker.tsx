@@ -2,9 +2,10 @@
 
 import { useEffect } from 'react';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import type { AnalyticsEventName } from '@/lib/analytics-events';
 
 type PageViewTrackerProps = {
-  eventName: string;
+  eventName: AnalyticsEventName;
   payload?: Record<string, string | number | boolean | null | undefined>;
 };
 
