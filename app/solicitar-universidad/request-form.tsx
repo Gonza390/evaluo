@@ -55,8 +55,8 @@ export function UniversityRequestForm() {
           Solicitud recibida
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-          Vamos a revisar la universidad y la carrera que nos compartiste. La solicitud no agrega
-          contenido automáticamente: primero la revisamos nosotros.
+          La universidad quedó habilitada automáticamente y registrada para que podamos auditarla.
+          La carrera queda como referencia y se gestiona por separado.
         </p>
       </div>
     );
@@ -151,8 +151,8 @@ export function UniversityRequestForm() {
         <div className="flex items-start gap-2">
           <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
           <span>
-            Esto es una solicitud para ampliar el catálogo de Evaluo. No implica representación,
-            aprobación ni afiliación con la universidad mencionada.
+            Si la universidad todavía no existe, Evaluo la habilita automáticamente y conserva el
+            registro de quién la solicitó. Esto no implica representación ni afiliación con la institución.
           </span>
         </div>
       </div>
