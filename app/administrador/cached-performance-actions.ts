@@ -53,8 +53,9 @@ const loadUsuariosOverviewCached = nextCache(
       if (authResult.error) throw authResult.error;
 
       const users = authResult.data?.users ?? [];
-      totalUsers += users.length;
-      newRegistrationsToday += users.filter((user) => {
+      const studentUsers = users.filter((user) => !adminUserIds.includes(user.id));
+      totalUsers += studentUsers.length;
+      newRegistrationsToday += studentUsers.filter((user) => {
         const createdAt = user.created_at ? new Date(user.created_at).getTime() : Number.NaN;
         return Number.isFinite(createdAt) && createdAt >= todayStart.getTime();
       }).length;
@@ -104,7 +105,8 @@ async function loadUsuariosPageRows(
   const authResult = await admin.auth.admin.listUsers({ page, perPage: pageSize });
   if (authResult.error) throw authResult.error;
 
-  const authUsers = authResult.data?.users ?? [];
+  const adminUserIds = new Set(await listAdminUserIds());
+  const authUsers = (authResult.data?.users ?? []).filter((user) => !adminUserIds.has(user.id));
   const userIds = authUsers.map((user) => user.id);
   if (!userIds.length) return [];
 
