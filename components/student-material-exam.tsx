@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 
 type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
@@ -306,6 +307,13 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
   const startExam = () => {
     clearAttempt();
     setStarted(true);
+    void trackClientAnalyticsEvent({
+      eventName: 'student_material_exam_started',
+      metadata: {
+        material_id: materialId,
+        question_count: questions.length,
+      },
+    });
   };
 
   const resetExam = () => {
