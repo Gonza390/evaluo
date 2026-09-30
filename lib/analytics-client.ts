@@ -1,5 +1,4 @@
 import type { Json } from '@/types/supabase';
-import type { AnalyticsEventName } from '@/lib/analytics-events';
 import { getAttributionSnapshot } from '@/lib/attribution';
 
 const ANALYTICS_BATCH_SIZE = 10;
@@ -151,7 +150,7 @@ function installAnalyticsLifecycleListeners() {
 }
 
 export async function trackClientAnalyticsEvent(input: {
-  eventName: AnalyticsEventName;
+  eventName: string;
   path?: string;
   userId?: string | null;
   metadata?: Record<string, Json | undefined>;
