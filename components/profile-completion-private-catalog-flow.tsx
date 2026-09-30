@@ -554,7 +554,7 @@ export function ProfileCompletionPrivateCatalog({
               <div className="mt-5 space-y-4 border-y border-slate-200 py-5">
                 <div><Label htmlFor="missing-university">Nombre de tu universidad</Label><Input id="missing-university" className="mt-2 h-11" value={missingUniversityName} onChange={(e) => setMissingUniversityName(e.target.value)} placeholder="Ej. Universidad Nacional del Delta" /></div>
                 <div><Label htmlFor="missing-university-city">Ciudad <span className="font-normal text-slate-400">(opcional)</span></Label><Input id="missing-university-city" className="mt-2 h-11" value={missingUniversityCity} onChange={(e) => setMissingUniversityCity(e.target.value)} placeholder="Ej. Buenos Aires" /></div>
-                <div className="flex items-start gap-2 text-xs leading-5 text-slate-500"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" /><p>La universidad queda visible sólo para vos hasta que Evaluo la revise. Podés seguir con tu carrera ahora.</p></div>
+                <div className="flex items-start gap-2 text-xs leading-5 text-slate-500"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><p>La universidad se habilita automáticamente y queda registrada en Evaluo para auditoría. Podés seguir con tu carrera ahora.</p></div>
                 <div className="flex gap-2"><Button variant="outline" type="button" onClick={() => setShowMissingUniversity(false)}>Cancelar</Button><Button type="button" disabled={busy || missingUniversityName.trim().length < 3} onClick={() => void addMissingUniversity()} className="bg-indigo-600 hover:bg-indigo-700">{busy ? 'Guardando...' : 'Continuar'}</Button></div>
               </div>
             )}
