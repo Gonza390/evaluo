@@ -7,6 +7,7 @@ import {
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { HomeHeroV2 } from '@/components/marketing/home-hero-v2';
+import { HomeFunnelTracker } from '@/components/marketing/home-funnel-tracker';
 import { HomeLiveStudyDemo } from '@/components/marketing/home-live-study-demo';
 import { HomeHowItWorksInteractive } from '@/components/marketing/home-how-it-works-interactive';
 import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
@@ -59,6 +60,7 @@ export default function Home() {
         Saltar al contenido
       </a>
       <MarketingAnalyticsSlot />
+      <HomeFunnelTracker />
       <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(FAQ_ITEMS)]} />
 
       <HomeHeroV2 primaryHref={primaryHref} />
