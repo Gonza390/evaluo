@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 const InteractiveHomeLiveStudyDemo = dynamic(
   () =>
@@ -49,6 +50,7 @@ function DemoPlaceholder() {
 export function HomeLiveStudyDemo() {
   const rootRef = useRef<HTMLDivElement>(null);
   const [enabled, setEnabled] = useState(false);
+  const trackedVisibleRef = useRef(false);
 
   useEffect(() => {
     if (enabled) return;
@@ -72,6 +74,32 @@ export function HomeLiveStudyDemo() {
     observer.observe(node);
     return () => observer.disconnect();
   }, [enabled]);
+
+
+  useEffect(() => {
+    const node = rootRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (trackedVisibleRef.current) return;
+        const visible = entries.some(
+          (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.25
+        );
+        if (!visible) return;
+
+        trackedVisibleRef.current = true;
+        trackMarketingEvent('home_demo_viewed', {
+          location: 'home_live_study_demo',
+        });
+        observer.disconnect();
+      },
+      { threshold: [0.25] }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div ref={rootRef}>
