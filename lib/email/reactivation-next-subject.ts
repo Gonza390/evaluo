@@ -2,10 +2,9 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
-import { sendSenderCustomEvent } from '@/lib/email/sender';
+import { sendSenderTransactional } from '@/lib/email/sender';
 
 const CAMPAIGN_KEY = 'reactivation_next_subject_30d_v1';
-const SENDER_EVENT_TYPE = 'reactivation_next_subject_30d';
 const INACTIVE_DAYS = 30;
 const MAX_INACTIVE_DAYS = 45;
 const DAILY_BATCH_SIZE = 20;
@@ -38,6 +37,60 @@ function buildUploadUrl() {
   return url.toString();
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function buildReactivationMessage(input: {
+  firstname: string;
+  materia: string;
+  uploadUrl: string;
+}) {
+  const subject = `¿Qué materia sigue después de ${input.materia}?`;
+  const safeFirstName = escapeHtml(input.firstname);
+  const safeMateria = escapeHtml(input.materia);
+  const safeUploadUrl = escapeHtml(input.uploadUrl);
+
+  const html = `<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:0;background:#F5F7FB;font-family:Inter,Arial,sans-serif;color:#0F1B3D;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F5F7FB;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
+            <tr>
+              <td style="padding:32px;">
+                <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px;">
+                  <span style="color:#032269;">evalu</span><span style="color:#0546f3;">o</span>
+                </div>
+                <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
+                <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">¿Qué materia sigue después de ${safeMateria}?</h1>
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">Hace un tiempo practicaste ${safeMateria} en Evaluo. Si ya estás con la próxima materia, subí tu PDF y prepará resumen, glosario, flashcards y práctica desde el mismo material.</p>
+                <a href="${safeUploadUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">Subir mi PDF</a>
+                <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque usaste el simulador de Evaluo y hace un tiempo que no volvés.</p>
+                <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
+                  <img src="https://evaluo.com.ar/icon.png" width="52" height="52" alt="Evaluo" style="display:block;width:52px;height:52px;margin:0 auto 10px;object-fit:contain;border:0;" />
+                  <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const text = `Hola ${input.firstname}. Hace un tiempo practicaste ${input.materia} en Evaluo. Si ya estás con la próxima materia, subí tu PDF acá: ${input.uploadUrl}`;
+
+  return { subject, html, text };
+}
+
 export async function runReactivationNextSubjectDispatch(options?: { dryRun?: boolean }) {
   const dryRun = Boolean(options?.dryRun);
   const enabled = process.env.REACTIVATION_NEXT_SUBJECT_ENABLED?.trim() === '1';
@@ -63,7 +116,6 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
     dryRun,
     enabled,
     campaignKey: CAMPAIGN_KEY,
-    senderEventType: SENDER_EVENT_TYPE,
     inactiveDays: INACTIVE_DAYS,
     maxInactiveDays: MAX_INACTIVE_DAYS,
     batchSize: DAILY_BATCH_SIZE,
@@ -113,7 +165,7 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
         materia_id: candidate.materia_id,
         status: 'sending',
         context: {
-          sender_event_type: SENDER_EVENT_TYPE,
+          delivery_mode: 'transactional',
           materia: candidate.materia_nombre,
           last_parcial: candidate.last_parcial,
           last_simulator_at: candidate.last_simulator_at,
@@ -133,37 +185,34 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
 
     try {
       const displayFirstName = firstName(candidate.display_name);
-      const subject = `¿Qué materia sigue después de ${candidate.materia_nombre}?`;
+      const message = buildReactivationMessage({
+        firstname: displayFirstName,
+        materia: candidate.materia_nombre,
+        uploadUrl,
+      });
 
-      await sendSenderCustomEvent({
-        type: SENDER_EVENT_TYPE,
-        subscriberEmail: candidate.email,
-        properties: {
-          campaign_key: CAMPAIGN_KEY,
-          subject,
-          firstname: displayFirstName,
-          nombre: displayFirstName,
-          materia: candidate.materia_nombre,
-          materia_anterior: candidate.materia_nombre,
-          last_parcial: candidate.last_parcial,
-          ultimo_parcial: candidate.last_parcial,
-          upload_url: uploadUrl,
-          cta_url: uploadUrl,
-        },
+      const senderResult = await sendSenderTransactional({
+        toEmail: candidate.email,
+        toName: candidate.display_name,
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
       });
 
       const now = new Date().toISOString();
       const { error: markTriggeredError } = await db
         .from('email_campaign_deliveries')
         .update({
-          status: 'triggered',
+          status: 'sent',
+          sender_email_id: senderResult.emailId,
+          sent_at: now,
           triggered_at: now,
           updated_at: now,
         })
         .eq('id', reservation.id);
 
       if (markTriggeredError) {
-        logError('reactivationNextSubject.markTriggered', markTriggeredError, {
+        logError('reactivationNextSubject.markSent', markTriggeredError, {
           deliveryId: reservation.id,
           campaignKey: CAMPAIGN_KEY,
         });
@@ -172,13 +221,13 @@ export async function runReactivationNextSubjectDispatch(options?: { dryRun?: bo
       summary.triggered += 1;
     } catch (error) {
       summary.failed += 1;
-      logError('reactivationNextSubject.trigger', error, {
+      logError('reactivationNextSubject.send', error, {
         userId: candidate.user_id,
         materiaId: candidate.materia_id,
         campaignKey: CAMPAIGN_KEY,
       });
 
-      // Si Sender rechaza el evento, liberamos la reserva para que el cron pueda reintentar.
+      // Si Sender rechaza el envío, liberamos la reserva para que el cron pueda reintentar.
       const { error: cleanupError } = await db
         .from('email_campaign_deliveries')
         .delete()
