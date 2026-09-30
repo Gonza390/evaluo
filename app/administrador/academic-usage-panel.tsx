@@ -70,7 +70,11 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
         <Kpi
           label="Tiempo promedio"
           value={formatMinutes(stats.avgMinutes7d)}
-          sub="Por usuario activo · últimos 7 días"
+          sub={
+            stats.engagementUsers7d > 0
+              ? `${formatNumber(stats.engagementUsers7d)} usuarios medidos · últimos 7 días`
+              : 'Medición nueva · todavía sin muestra'
+          }
         />
         <Kpi
           label="Prácticas iniciadas"
@@ -139,9 +143,9 @@ export function AcademicUsagePanel({ stats }: { stats: AcademicUsageStats }) {
       </div>
 
       <p className="admin-footnote">
-        El tiempo promedio usa engagement registrado por Analytics durante los últimos 7 días y
-        limita cada tramo individual a 30 minutos. Flashcards y simuladores cuentan inicios reales
-        registrados desde esta actualización. Los usuarios sin universidad aparecen en una fila
+        El tiempo promedio usa únicamente la medición de engagement corregida y limita cada tramo
+        individual a 30 minutos; los datos anteriores no se mezclan con esta métrica. Flashcards y
+        simuladores cuentan inicios reales. Los usuarios sin universidad aparecen en una fila
         separada; si su perfil no tiene universidad pero un PDF sí, usamos la universidad del PDF.
       </p>
     </section>
