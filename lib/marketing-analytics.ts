@@ -1,7 +1,6 @@
 'use client';
 
 import { getAnalyticsPageType, trackClientAnalyticsEvent } from '@/lib/analytics-client';
-import type { AnalyticsEventName } from '@/lib/analytics-events';
 import { getAttributionSnapshot } from '@/lib/attribution';
 
 type MarketingPayload = Record<string, string | number | boolean | null | undefined>;
@@ -13,7 +12,7 @@ declare global {
 }
 
 export function trackMarketingEvent(
-  event: AnalyticsEventName,
+  event: string,
   payload: MarketingPayload = {},
   userId?: string | null
 ) {
