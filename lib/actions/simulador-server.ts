@@ -976,10 +976,9 @@ export async function submitSimulatorRatingAction(data: {
       throw error;
     }
 
-    // El voto es una acción explícita del usuario: invalida la caché de
-    // ratings y del bootstrap de la materia para reflejarlo al instante.
+    // El voto es una acción explícita del usuario: invalida únicamente la
+    // caché de ratings. El bootstrap principal ya no incluye esta métrica.
     revalidateTag('simulator-ratings', 'max');
-    revalidateTag('materia-bootstrap', 'max');
 
     return { success: true };
   } catch (error) {
@@ -992,28 +991,74 @@ export async function submitSimulatorRatingAction(data: {
   }
 }
 
-const loadSimulatorRatingsByMateria = unstable_cache(
-  async (materiaId: string): Promise<SimulatorRatingSummary[]> => {
-    const emptySummary = () =>
-      [1, 2, 3].map((parcial) => ({
-        parcial,
-        likes: 0,
-        dislikes: 0,
-        total: 0,
-        approvalPercent: 0,
-        averageScore: 0,
-      }));
+const SIMULATOR_RATINGS_ATTEMPT_TIMEOUT_MS = 850;
+const SIMULATOR_RATINGS_RETRY_DELAY_MS = 150;
 
+function emptySimulatorRatingsSummary(): SimulatorRatingSummary[] {
+  return [1, 2, 3].map((parcial) => ({
+    parcial,
+    likes: 0,
+    dislikes: 0,
+    total: 0,
+    approvalPercent: 0,
+    averageScore: 0,
+  }));
+}
+
+function simulatorRatingsErrorText(error: unknown) {
+  if (error instanceof Error) {
+    return `${error.name}: ${error.message}`;
+  }
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error ?? '');
+  }
+}
+
+function isTransientSimulatorRatingsError(error: unknown) {
+  return /fetch failed|etimedout|econnreset|econnrefused|eai_again|und_err_socket|socket|timeout|timed out|aborted/i.test(
+    simulatorRatingsErrorText(error)
+  );
+}
+
+async function withSimulatorRatingsTimeout<T>(promise: PromiseLike<T>): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error('Simulator ratings timeout'));
+        }, SIMULATOR_RATINGS_ATTEMPT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+async function fetchSimulatorRatingsByMateria(
+  materiaId: string
+): Promise<SimulatorRatingSummary[]> {
+  let lastError: unknown = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const admin = createAdminClient();
       // La función agregada no está en los tipos generados de Database.
       const rpc = admin.rpc as unknown as (
         fn: string,
         args?: Record<string, unknown>
-      ) => Promise<{ data: unknown; error: unknown }>;
-      const { data, error } = await rpc('get_simulator_ratings_summary', {
-        p_materia_id: materiaId,
-      });
+      ) => PromiseLike<{ data: unknown; error: unknown }>;
+
+      const { data, error } = await withSimulatorRatingsTimeout(
+        rpc('get_simulator_ratings_summary', {
+          p_materia_id: materiaId,
+        })
+      );
 
       if (error) {
         throw error;
@@ -1037,18 +1082,36 @@ const loadSimulatorRatingsByMateria = unstable_cache(
         };
       });
     } catch (error) {
-      logError('actions.getSimulatorRatingsSummaryByMateria', error, { materiaId });
-      return emptySummary();
+      lastError = error;
+
+      if (!isTransientSimulatorRatingsError(error) || attempt === 1) {
+        throw error;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, SIMULATOR_RATINGS_RETRY_DELAY_MS));
     }
-  },
-  ['simulator-ratings'],
-  { revalidate: 600, tags: ['simulator-ratings', 'materia-bootstrap'] }
+  }
+
+  throw lastError ?? new Error('No se pudieron cargar los ratings del simulador.');
+}
+
+const loadSimulatorRatingsByMateria = unstable_cache(
+  fetchSimulatorRatingsByMateria,
+  ['simulator-ratings-v2'],
+  { revalidate: 600, tags: ['simulator-ratings'] }
 );
 
 export async function getSimulatorRatingsSummaryByMateria(
   materiaId: string
 ): Promise<SimulatorRatingSummary[]> {
-  return loadSimulatorRatingsByMateria(materiaId);
+  try {
+    return await loadSimulatorRatingsByMateria(materiaId);
+  } catch (error) {
+    // El fallback ocurre fuera del caché: un corte transitorio nunca guarda
+    // ceros falsos durante los siguientes 10 minutos.
+    logError('actions.getSimulatorRatingsSummaryByMateria', error, { materiaId });
+    return emptySimulatorRatingsSummary();
+  }
 }
 
 const loadSimulatorUsageByMateria = unstable_cache(
