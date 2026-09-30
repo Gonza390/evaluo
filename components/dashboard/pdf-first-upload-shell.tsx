@@ -87,6 +87,18 @@ export function PdfFirstUploadShell({
   const router = useRouter();
   const { toast } = useToast();
   const isPdfFirstLandingResume = initialSource.startsWith('pdf-first-landing');
+  const initialProfileUniversity =
+    universidades.find((item) => item.id === initialUniversidadId) ?? null;
+  const initialProfileCareer =
+    carreras.find(
+      (item) =>
+        item.id === initialCarreraId &&
+        item.universidad_id === initialUniversidadId
+    ) ?? null;
+  const hasInitialAcademicProfile = Boolean(initialProfileUniversity && initialProfileCareer);
+  const initialAcademicProfileLabel = [initialProfileUniversity?.nombre, initialProfileCareer?.nombre]
+    .filter(Boolean)
+    .join(' · ');
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const resumeHandledRef = useRef(false);
   const readyRedirectedRef = useRef(false);
@@ -104,8 +116,8 @@ export function PdfFirstUploadShell({
   const [addingCareer, setAddingCareer] = useState(false);
   const [newCareer, setNewCareer] = useState('');
   const [savingContext, setSavingContext] = useState(false);
-  const [contextSaved, setContextSaved] = useState(false);
-  const [savedContextLabel, setSavedContextLabel] = useState('');
+  const [contextSaved, setContextSaved] = useState(hasInitialAcademicProfile);
+  const [savedContextLabel, setSavedContextLabel] = useState(initialAcademicProfileLabel);
   const [showReadyContext, setShowReadyContext] = useState(false);
   const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPdfFirstLandingResume);
 
@@ -168,10 +180,16 @@ export function PdfFirstUploadShell({
     setAddingCareer(false);
     setNewCareer('');
     setSavingContext(false);
-    setContextSaved(false);
-    setSavedContextLabel('');
+    setContextSaved(hasInitialAcademicProfile);
+    setSavedContextLabel(initialAcademicProfileLabel);
     setShowReadyContext(false);
-  }, [initialCarreraId, initialExamDate, initialUniversidadId]);
+  }, [
+    hasInitialAcademicProfile,
+    initialAcademicProfileLabel,
+    initialCarreraId,
+    initialExamDate,
+    initialUniversidadId,
+  ]);
 
   const close = useCallback(() => {
     if (uploading) return;
@@ -604,7 +622,7 @@ export function PdfFirstUploadShell({
                     {!contextSaved ? (
                       <div className="mt-5 space-y-4">
                         <p className="text-xs leading-5 text-slate-500">
-                          Opcional · universidad y carrera ayudan a ordenar tu espacio. La materia no es necesaria acá.
+                          Universidad y carrera se guardan en tu perfil una sola vez. No te las volvemos a pedir en cada PDF.
                         </p>
 
                         <div>
@@ -662,7 +680,7 @@ export function PdfFirstUploadShell({
                                 autoFocus
                               />
                               <p className="text-[11px] leading-4 text-slate-400">
-                                La pedimos para vos; queda privada hasta que la revisemos.
+                                La universidad se habilita automáticamente y queda guardada en tu perfil.
                               </p>
                               <Button
                                 type="button"
