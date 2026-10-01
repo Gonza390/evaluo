@@ -55,7 +55,7 @@ const UNDERSTANDING_SIGNAL_PATTERN =
   /clasificaci[oó]n|tipos?\b|incluye|se compone|relaci[oó]n|diferenc|compar|proceso|etapas?|fases?|pasos?|ventajas?|limitaciones?|criterios?|riesgos?/i;
 const CAUSAL_SIGNAL_PATTERN =
   /aument|dismin|reduce|libera|consume|provoca|produce|favorece|impide|evita|acelera|retarda|rompe|activa|inhibe|requiere|determina|permite|consecuencia|resultado/i;
-const COMPARISON_SIGNAL_PATTERN = /diferenc|compar|frente\s+a|versus|contrasta?/i;
+const COMPARISON_SIGNAL_PATTERN = /\b(?:diferencias?|compar(?:a|á|ar|ación|acion)|frente\s+a|versus|vs\.?|contrastar?)\b/i;
 const CONTEXT_STOP_WORDS = new Set([
   'para',
   'como',
@@ -714,6 +714,14 @@ function buildExpectedSectionAnswer(body: string) {
     .split(/\n+/)
     .map(cleanStudyUnit)
     .filter(Boolean)
+    .map((unit) =>
+      unit
+        .replace(/^\d+(?:\.\d+)+\s+/u, '')
+        .replace(/^ideas clave del material:\s*/iu, '')
+        .replace(/^contenido complementario(?:\s*·\s*p[aá]gina\s*\d+)?:?\s*/iu, '')
+        .trim()
+    )
+    .filter(Boolean)
     .filter((unit) => !/^ver en pdf\b/i.test(unit))
     .filter((unit) => !/^[-:|\s]+$/.test(unit));
 
@@ -725,7 +733,345 @@ function buildExpectedSectionAnswer(body: string) {
       .filter(Boolean);
   });
 
-  return truncateAtWord(dedupeStrings(units).slice(0, 4).join(' ') || cleanStudyUnit(body), 480);
+  return truncateAtWord(
+    dedupeStrings(units).slice(0, 4).join(' ') || cleanStudyUnit(body),
+    480
+  );
+}
+
+type CanonicalEvidence = {
+  label: string;
+  detail: string;
+  score: number;
+};
+
+function significantTerms(value: string) {
+  return normalizeForDedupe(value)
+    .split(/\s+/)
+    .filter(
+      (term) =>
+        term.length >= 3 &&
+        !CONTEXT_STOP_WORDS.has(term)
+    );
+}
+
+function canonicalEvidenceCandidates(model: CanonicalPedagogicalModel) {
+  return [
+    ...model.topics.map((topic) => ({
+      label: topic.title,
+      detail: topic.description,
+    })),
+    ...model.concepts.map((concept) => ({
+      label: concept.term,
+      detail: concept.detail,
+    })),
+    ...model.relationships.flatMap((relationship) => [
+      {
+        label: relationship.source,
+        detail: relationship.description,
+      },
+      {
+        label: relationship.target,
+        detail: relationship.description,
+      },
+    ]),
+    ...model.classifications.map((classification) => ({
+      label: classification.title,
+      detail: `Incluye ${classification.items.join(', ')}.`,
+    })),
+    ...model.processes.map((process) => ({
+      label: process.title,
+      detail: `Se desarrolla en esta secuencia: ${process.steps.join(' → ')}.`,
+    })),
+    ...model.formulas.map((formula) => ({
+      label: formula.expression,
+      detail: formula.description,
+    })),
+  ].filter(
+    (candidate) =>
+      cleanLine(candidate.label).length >= 2 &&
+      cleanLine(candidate.detail).length >= 8
+  );
+}
+
+function findCanonicalEvidence(
+  model: CanonicalPedagogicalModel,
+  query: string
+): CanonicalEvidence | null {
+  const normalizedQuery = normalizeForDedupe(query);
+  const queryTerms = significantTerms(query);
+  if (!normalizedQuery || queryTerms.length === 0) return null;
+
+  const ranked = canonicalEvidenceCandidates(model)
+    .map((candidate) => {
+      const normalizedLabel = normalizeForDedupe(candidate.label);
+      const normalizedText = normalizeForDedupe(
+        `${candidate.label} ${candidate.detail}`
+      );
+      const overlap = queryTerms.filter((term) =>
+        normalizedText.includes(term)
+      ).length;
+      let score = overlap * 2;
+
+      if (
+        normalizedLabel &&
+        (normalizedQuery.includes(normalizedLabel) ||
+          normalizedLabel.includes(normalizedQuery))
+      ) {
+        score += 8;
+      }
+
+      if (overlap === queryTerms.length) score += 3;
+
+      return { ...candidate, score };
+    })
+    .sort((left, right) => right.score - left.score);
+
+  return ranked[0] && ranked[0].score >= 3 ? ranked[0] : null;
+}
+
+function cleanComparisonEntity(value: string) {
+  return cleanLine(value)
+    .replace(/[.;,:]+$/u, '')
+    .replace(
+      /\s+(?:respecto\s+a|seg[uú]n|en\s+relaci[oó]n\s+con)\s+.+$/iu,
+      ''
+    )
+    .trim();
+}
+
+type ComparisonPair = {
+  left: string;
+  right: string;
+};
+
+function isUsableComparisonEntity(value: string) {
+  const cleaned = cleanComparisonEntity(value);
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  return cleaned.length >= 3 && cleaned.length <= 120 && words.length <= 16;
+}
+
+function extractComparisonPair(claim: string): ComparisonPair | null {
+  const cleaned = cleanLine(claim)
+    .replace(/^pregunta\s+t[ií]pica\s+de\s+examen:\s*/iu, '')
+    .replace(/[.]$/u, '');
+
+  const patterns = [
+    /^diferencias?\s+(?:[^,]{0,60}\s+)?entre\s+(.+?)\s+(?:y|e|versus|vs\.?|frente\s+a)\s+(.+)$/iu,
+    /^diferencias?\s+(.+?)\s+(?:y|e|versus|vs\.?|frente\s+a)\s+(.+)$/iu,
+    /^compar(?:a|á|ar|ación|acion)(?:\s+de|\s+entre)?\s+(.+?)\s+(?:y|e|versus|vs\.?|frente\s+a)\s+(.+)$/iu,
+    /^(.+?)\s+(?:versus|vs\.?|frente\s+a)\s+(.+)$/iu,
+  ];
+
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern);
+    const left = cleanComparisonEntity(match?.[1] ?? '');
+    const right = cleanComparisonEntity(match?.[2] ?? '');
+    if (
+      left &&
+      right &&
+      normalizeForDedupe(left) !== normalizeForDedupe(right) &&
+      isUsableComparisonEntity(left) &&
+      isUsableComparisonEntity(right)
+    ) {
+      return { left, right };
+    }
+  }
+
+  return null;
+}
+
+function entitySupportedByReference(
+  entity: string,
+  reference: PedagogicalReference
+) {
+  const terms = significantTerms(entity);
+  if (terms.length === 0) return false;
+  const evidence = normalizeForDedupe(reference.excerpt);
+  const matched = terms.filter((term) => evidence.includes(term)).length;
+  return matched >= Math.max(1, Math.ceil(terms.length / 2));
+}
+
+function comparisonEntitySupported(
+  model: CanonicalPedagogicalModel,
+  entity: string,
+  reference: PedagogicalReference
+) {
+  return Boolean(
+    findCanonicalEvidence(model, entity) ||
+      entitySupportedByReference(entity, reference)
+  );
+}
+
+function buildExpectedComparisonAnswer(
+  model: CanonicalPedagogicalModel,
+  pair: ComparisonPair,
+  reference: PedagogicalReference
+) {
+  const left = findCanonicalEvidence(model, pair.left);
+  const right = findCanonicalEvidence(model, pair.right);
+
+  if (left && right) {
+    return truncateAtWord(
+      `“${pair.left}” se caracteriza en el material por: ${left.detail} En cambio, “${pair.right}” se caracteriza por: ${right.detail}`,
+      480
+    );
+  }
+
+  const sourceAnswer = buildExpectedSectionAnswer(reference.excerpt);
+  if (
+    sourceAnswer.length >= 40 &&
+    normalizeForDedupe(sourceAnswer) !==
+      normalizeForDedupe(`${pair.left} ${pair.right}`)
+  ) {
+    return truncateAtWord(
+      `La comparación debe distinguir “${pair.left}” de “${pair.right}”. ${sourceAnswer}`,
+      480
+    );
+  }
+
+  return truncateAtWord(
+    `La comparación correcta debe explicar qué caracteriza a “${pair.left}”, qué caracteriza a “${pair.right}” y cuál es la diferencia respaldada por el material.`,
+    480
+  );
+}
+
+function extractConfusionPair(confusion: string): ComparisonPair | null {
+  const match = cleanLine(confusion).match(
+    /^(?:no\s+)?confundir\s+(.+?)\s+con\s+(.+?)(?:[.;,]|$)/iu
+  );
+  if (!match?.[1] || !match[2]) return null;
+
+  const left = cleanComparisonEntity(match[1]);
+  const right = cleanComparisonEntity(match[2]);
+  if (
+    !isUsableComparisonEntity(left) ||
+    !isUsableComparisonEntity(right) ||
+    normalizeForDedupe(left) === normalizeForDedupe(right)
+  ) {
+    return null;
+  }
+
+  return { left, right };
+}
+
+function buildExpectedConfusionAnswer(
+  model: CanonicalPedagogicalModel,
+  confusion: string,
+  reference: PedagogicalReference
+) {
+  const pair = extractConfusionPair(confusion);
+  if (pair) {
+    const left = findCanonicalEvidence(model, pair.left);
+    const right = findCanonicalEvidence(model, pair.right);
+
+    if (left && right) {
+      return truncateAtWord(
+        `La distinción clave es esta: “${pair.left}” ${left.detail} En cambio, “${pair.right}” ${right.detail}`,
+        480
+      );
+    }
+  }
+
+  const misconception = cleanLine(confusion).match(
+    /^creer\s+que\s+(.+?)(?:,?\s+(?:cuando|pero|aunque|porque|ya\s+que)\s+)(.+)$/iu
+  );
+  if (misconception?.[1] && misconception[2]) {
+    return truncateAtWord(
+      `La confusión está en asumir que ${misconception[1]}. El material aclara que ${misconception[2]}.`,
+      480
+    );
+  }
+
+  const evidence = findCanonicalEvidence(model, confusion);
+  if (evidence) {
+    return truncateAtWord(
+      `Para evitar la confusión, hay que retener el criterio del material: ${evidence.detail}`,
+      480
+    );
+  }
+
+  const sourceAnswer = buildExpectedSectionAnswer(reference.excerpt);
+  if (
+    sourceAnswer.length >= 40 &&
+    normalizeForDedupe(sourceAnswer) !== normalizeForDedupe(confusion)
+  ) {
+    return truncateAtWord(
+      `La evidencia del PDF permite corregir la confusión así: ${sourceAnswer}`,
+      480
+    );
+  }
+
+  return truncateAtWord(
+    `La confusión consiste en “${confusion}”. Para corregirla, la respuesta debe explicitar qué interpretación descarta el material y cuál sostiene en su lugar.`,
+    480
+  );
+}
+
+function pageRangesOverlap(
+  references: number[] | undefined,
+  reference: PedagogicalReference
+) {
+  if (
+    reference.pageStart === null ||
+    reference.pageEnd === null ||
+    !references?.length
+  ) {
+    return false;
+  }
+
+  return references.some(
+    (page) => page >= reference.pageStart! && page <= reference.pageEnd!
+  );
+}
+
+function buildExpectedSectionAnswerFromModel(
+  sectionTitle: string,
+  sectionBody: string,
+  model: CanonicalPedagogicalModel,
+  reference: PedagogicalReference
+) {
+  const titleTerms = significantTerms(sectionTitle);
+  const topic = model.topics
+    .map((candidate) => {
+      const normalized = normalizeForDedupe(
+        `${candidate.title} ${candidate.description}`
+      );
+      const overlap = titleTerms.filter((term) => normalized.includes(term)).length;
+      const pageBonus = pageRangesOverlap(candidate.pageReferences, reference) ? 3 : 0;
+      return { candidate, score: overlap * 2 + pageBonus };
+    })
+    .sort((left, right) => right.score - left.score)[0];
+
+  const relatedConcepts = model.concepts
+    .filter(
+      (concept) =>
+        pageRangesOverlap(concept.pageReferences, reference) ||
+        significantTerms(concept.term).some((term) =>
+          normalizeForDedupe(sectionBody).includes(term)
+        )
+    )
+    .slice(0, 2);
+
+  const relatedRelationship = model.relationships.find((relationship) =>
+    pageRangesOverlap(relationship.pageReferences, reference)
+  );
+
+  const sentences: string[] = [];
+  if (topic && topic.score > 0) {
+    sentences.push(`La idea central del apartado es: ${topic.candidate.description}`);
+  }
+  for (const concept of relatedConcepts) {
+    sentences.push(`Un concepto clave es “${concept.term}”: ${concept.detail}`);
+  }
+  if (relatedRelationship) {
+    sentences.push(`Además, ${relatedRelationship.description}`);
+  }
+
+  const answer = cleanLine(sentences.join(' '));
+  return answer.length >= 60
+    ? truncateAtWord(answer, 480)
+    : buildExpectedSectionAnswer(sectionBody);
 }
 
 function buildFallbackMultipleChoice(
@@ -1078,89 +1424,114 @@ function buildCanonicalFormulaQuestions(
     .filter((question): question is StudyQuestion => Boolean(question));
 }
 
-function comparisonSubject(claim: string) {
-  return cleanLine(claim)
-    .replace(/^diferencias?\s+(?:funcionales?\s+y\s+estructurales?\s+)?entre\s+/i, '')
-    .replace(/^diferencias?\s+entre\s+/i, '')
-    .replace(/[.]$/, '');
-}
-
 function buildCanonicalComparisonQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  const claims = model.examRelevantClaims.filter((claim) => COMPARISON_SIGNAL_PATTERN.test(claim));
+  const questions = model.examRelevantClaims
+    .filter((claim) => COMPARISON_SIGNAL_PATTERN.test(claim))
+    .map((claim, index): StudyQuestion | null => {
+      const pair = extractComparisonPair(claim);
+      if (!pair) return null;
 
-  return claims.slice(0, 4).map((claim, index): StudyQuestion => {
-    const reference = referenceFromBinding(
-      model,
-      'exam_relevant_claim',
-      claim,
-      'Comparación',
-      chunks,
-      claim
-    );
-    const subject = comparisonSubject(claim);
+      const reference = referenceFromBinding(
+        model,
+        'exam_relevant_claim',
+        claim,
+        'Comparación',
+        chunks,
+        claim
+      );
 
-    return {
-      id: `model-comparison-${index + 1}`,
-      type: 'open',
-      level: 'comprender',
-      kind: 'relationship',
-      topic: truncateAtWord(subject || claim, 100),
-      prompt: `Compará ${subject || 'los elementos señalados'} según el PDF. Explicá qué los distingue usando los criterios que presenta el material.`,
-      options: [],
-      answer: truncateAtWord(reference.excerpt || claim, 480),
-      explanation:
-        'Una respuesta sólida debe establecer diferencias concretas respaldadas por el PDF, no limitarse a nombrar las alternativas.',
-      reference,
-    };
-  });
+      if (
+        !comparisonEntitySupported(model, pair.left, reference) ||
+        !comparisonEntitySupported(model, pair.right, reference)
+      ) {
+        return null;
+      }
+
+      return {
+        id: `model-comparison-${index + 1}`,
+        type: 'open',
+        level: 'comprender',
+        kind: 'relationship',
+        topic: truncateAtWord(`${pair.left} ↔ ${pair.right}`, 100),
+        prompt: `Compará “${pair.left}” con “${pair.right}” según el PDF. Explicá al menos una diferencia concreta usando los criterios del material.`,
+        options: [],
+        answer: buildExpectedComparisonAnswer(model, pair, reference),
+        explanation:
+          'Una respuesta sólida debe definir ambos elementos, marcar una diferencia concreta y respaldarla con el criterio presentado en el PDF.',
+        reference,
+      };
+    })
+    .filter((question): question is StudyQuestion => Boolean(question));
+
+  return questions.slice(0, 4);
 }
 
 function buildCanonicalConfusionQuestions(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ) {
-  return model.confusions.slice(0, 3).map((confusion, index): StudyQuestion => ({
-    id: `model-confusion-${index + 1}`,
-    type: 'open',
-    level: 'comprender',
-    kind: 'confusion',
-    topic: 'Confusión frecuente',
-    prompt: `Aclará con tus palabras esta confusión que el material considera importante: “${truncateAtWord(confusion, 180)}”`,
-    options: [],
-    answer: truncateAtWord(confusion, 420),
-    explanation:
-      'Una respuesta sólida debe distinguir con precisión los conceptos que el PDF señala como fáciles de confundir.',
-    reference: referenceFromBinding(
+  return model.confusions.slice(0, 3).map((confusion, index): StudyQuestion => {
+    const reference = referenceFromBinding(
       model,
       'confusion',
       confusion,
       'Confusión frecuente',
       chunks,
       confusion
-    ),
-  }));
+    );
+
+    return {
+      id: `model-confusion-${index + 1}`,
+      type: 'open',
+      level: 'comprender',
+      kind: 'confusion',
+      topic: 'Confusión frecuente',
+      prompt: `Aclará con tus palabras esta confusión que el material considera importante: “${truncateAtWord(confusion, 180)}”`,
+      options: [],
+      answer: buildExpectedConfusionAnswer(model, confusion, reference),
+      explanation:
+        'Una respuesta sólida debe identificar qué interpretación es incorrecta y explicar la distinción correcta con apoyo en el PDF.',
+      reference,
+    };
+  });
 }
 
 function buildOpenSectionQuestions(
   summary: StudentMaterialSummary,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  model?: CanonicalPedagogicalModel | null
 ) {
-  return summary.sections.slice(0, 4).map((section, index): StudyQuestion => ({
-    id: `section-open-${index + 1}`,
-    type: 'open',
-    level: 'comprender',
-    kind: 'section',
-    topic: section.title,
-    prompt: `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos del material.`,
-    options: [],
-    answer: buildExpectedSectionAnswer(section.body),
-    explanation:
-      'Una respuesta sólida debe explicar la idea central y conectar conceptos del material, no limitarse a copiar frases aisladas.',
-    reference: findReference(section.title, chunks, emptyReference(section.title, section.body)),
-  }));
+  return summary.sections.slice(0, 4).map((section, index): StudyQuestion => {
+    const reference = findReference(
+      section.title,
+      chunks,
+      emptyReference(section.title, section.body)
+    );
+
+    return {
+      id: `section-open-${index + 1}`,
+      type: 'open',
+      level: 'comprender',
+      kind: 'section',
+      topic: section.title,
+      prompt: `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos del material.`,
+      options: [],
+      answer: model
+        ? buildExpectedSectionAnswerFromModel(
+            section.title,
+            section.body,
+            model,
+            reference
+          )
+        : buildExpectedSectionAnswer(section.body),
+      explanation:
+        'Una respuesta sólida debe formular una idea central completa y relacionar conceptos del material, no copiar fragmentos aislados.',
+      reference,
+    };
+  });
 }
 
 function selectMiniExamQuestions(questions: StudyQuestion[], limit = 8) {
@@ -1298,7 +1669,7 @@ export function buildPedagogicalArtifacts(input: {
     ...(modelQuestions.length < 12
       ? buildFallbackMultipleChoice(concepts, chunks, sectionTitles)
       : []),
-    ...buildOpenSectionQuestions(input.summary, chunks),
+    ...buildOpenSectionQuestions(input.summary, chunks, model),
   ];
 
   const questions = dedupeQuestions([...modelQuestions, ...fallbackQuestions]);

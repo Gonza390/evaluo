@@ -42,6 +42,16 @@ import {
 } from '../lib/student-materials/canonical-glossary.ts';
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
 
+function normalizeForTest(value: string) {
+  return value
+    .toLocaleLowerCase('es')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 const sampleText = `
 UNIDAD 1. APRENDIZAJE AUTORREGULADO
 
@@ -1063,7 +1073,129 @@ assert.ok(
   canonicalPedagogy.flashcards.every(
     (card) => !card.back.includes('|') && card.reference.excerpt.length > 0
   ),
-  'Las flashcards canónicas deben ser limpias y trazables a la fuente.'
+  'Las flashcards canónicas deben ser limpias y trazables a la fuent
+const openQuestionValidationFixture: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  title: 'Validación de preguntas abiertas',
+  topics: [
+    {
+      title: 'Conjuntos y comparación normativa',
+      description:
+        'Distingue conceptos que suelen confundirse y compara marcos normativos con criterios explícitos.',
+      relevance: 'alta',
+      pageReferences: [1],
+    },
+  ],
+  concepts: [
+    {
+      term: 'Conjunto vacío',
+      detail: 'No contiene ningún elemento.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+    {
+      term: 'Conjunto que contiene cero',
+      detail: 'Contiene un único elemento: el número cero.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+    {
+      term: 'Ley 1420',
+      detail: 'Buscó alfabetizar y homogeneizar la formación ciudadana.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+    {
+      term: 'Ley 26.206',
+      detail: 'Reconoce la diversidad cultural dentro de los objetivos educativos.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+  ],
+  relationships: [],
+  classifications: [],
+  processes: [],
+  formulas: [],
+  authorsOrTheories: [],
+  examples: [],
+  examRelevantClaims: [
+    'Comparación entre Ley 1420 y Ley 26.206 respecto a la diversidad cultural.',
+    'Mediciones de gravedad con Galileo muestran que Europa es un cuerpo rocoso diferenciado.',
+  ],
+  confusions: ['Confundir conjunto vacío con conjunto que contiene cero.'],
+  chunkCount: 1,
+  sourceBindings: [],
+};
+
+const validatedOpenQuestions = buildPedagogicalArtifacts({
+  summary: {
+    ...canonicalGuideFallback,
+    sections: [
+      {
+        title: 'Conjuntos y comparación normativa',
+        body:
+          'El apartado distingue el conjunto vacío del conjunto que contiene cero y presenta diferencias entre dos marcos normativos.',
+      },
+    ],
+  },
+  glossary: canonicalGlossary,
+  canonicalModel: openQuestionValidationFixture,
+  chunks: [
+    {
+      text:
+        'El conjunto vacío no contiene elementos. El conjunto que contiene cero tiene un único elemento. La Ley 1420 y la Ley 26.206 presentan objetivos educativos diferentes.',
+      pageStart: 1,
+      pageEnd: 1,
+      sectionTitle: 'Conjuntos y comparación normativa',
+      excerpt: '',
+    },
+  ],
+});
+
+const validComparisonQuestion = validatedOpenQuestions.questions.find(
+  (question) =>
+    question.kind === 'relationship' &&
+    question.type === 'open' &&
+    /Ley 1420/.test(question.prompt)
+);
+assert.ok(
+  validComparisonQuestion &&
+    /Ley 26\.206/.test(validComparisonQuestion.prompt) &&
+    /alfabetizar|homogeneizar/i.test(validComparisonQuestion.answer) &&
+    /diversidad cultural/i.test(validComparisonQuestion.answer),
+  'Una comparación abierta debe identificar dos entidades reales y ofrecer una respuesta modelo que contraste ambas.'
+);
+assert.ok(
+  !validatedOpenQuestions.questions.some(
+    (question) =>
+      question.type === 'open' &&
+      /Galileo|cuerpo rocoso diferenciado/i.test(question.prompt)
+  ),
+  'Una frase que sólo contiene la palabra “diferenciado” no debe convertirse en una comparación rota.'
+);
+
+const confusionQuestion = validatedOpenQuestions.questions.find(
+  (question) => question.kind === 'confusion'
+);
+assert.ok(
+  confusionQuestion &&
+    normalizeForTest(confusionQuestion.answer) !==
+      normalizeForTest(openQuestionValidationFixture.confusions[0] ?? '') &&
+    /no contiene ningún elemento/i.test(confusionQuestion.answer) &&
+    /único elemento/i.test(confusionQuestion.answer),
+  'La respuesta modelo de una confusión debe explicar la diferencia y no repetir literalmente la confusión.'
+);
+
+const sectionQuestion = validatedOpenQuestions.questions.find(
+  (question) => question.kind === 'section'
+);
+assert.ok(
+  sectionQuestion &&
+    /idea central/i.test(sectionQuestion.answer) &&
+    /Conjunto vacío|Ley 1420/i.test(sectionQuestion.answer),
+  'Las preguntas abiertas de sección deben construir una respuesta modelo coherente desde el modelo canónico.'
+);
+e.'
 );
 assert.ok(
   canonicalPedagogy.flashcards.every(
