@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowRight, FileText, UploadCloud } from 'lucide-react';
-import { MaterialStudyWorkspace } from '@/components/material-study-workspace';
+import { LazyMaterialStudyWorkspace } from '@/components/lazy-material-study-workspace';
 import { MaterialStudyStatusWorkspace } from '@/components/material-study-status-workspace';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
@@ -353,7 +353,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
             initialVisibility={visibility}
           />
         ) : null}
-        <MaterialStudyWorkspace
+        <LazyMaterialStudyWorkspace
           backHref={backHref}
           canRegenerate={canRegenerate}
           carreraName={carrera?.nombre ?? 'Sin carrera'}
