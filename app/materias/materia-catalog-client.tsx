@@ -21,7 +21,7 @@ type CarreraData = {
   director?: string | null;
 };
 
-type CatalogState = {
+export type CatalogState = {
   materias: Materia[];
   sharedStudentMaterials: StudentMaterial[];
   contentMateriaIds: string[];
@@ -66,14 +66,16 @@ export function MateriaCatalogClient({
   carreraData,
   universidadNombre,
   universidadId,
+  initialCatalog,
 }: {
   carreraId: string;
   carreraNombre?: string;
   carreraData?: CarreraData;
   universidadNombre?: string;
   universidadId?: string;
+  initialCatalog?: CatalogState;
 }) {
-  const [catalog, setCatalog] = useState<CatalogState | null>(null);
+  const [catalog, setCatalog] = useState<CatalogState | null>(initialCatalog ?? null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const clientCarreraData = carreraData
@@ -90,6 +92,12 @@ export function MateriaCatalogClient({
     : undefined;
 
   useEffect(() => {
+    if (initialCatalog) {
+      setCatalog(initialCatalog);
+      setFailed(false);
+      return;
+    }
+
     let active = true;
     setCatalog(null);
     setFailed(false);
@@ -115,7 +123,7 @@ export function MateriaCatalogClient({
     return () => {
       active = false;
     };
-  }, [attempt, carreraId]);
+  }, [attempt, carreraId, initialCatalog]);
 
   if (failed) {
     return (
