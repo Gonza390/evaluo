@@ -46,7 +46,9 @@ type AiUsageRow = {
 };
 
 export type ProductDailyStats = {
+  dateKey: string;
   dateLabel: string;
+  isToday: boolean;
   generatedAt: string;
   funnel: {
     sessions: number;
@@ -99,11 +101,20 @@ function argentinaDateKey(value: Date) {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
-function dayBounds(date: Date) {
-  const key = argentinaDateKey(date);
+function dayBoundsFromKey(key: string) {
   const start = new Date(`${key}T00:00:00${ARGENTINA_OFFSET}`);
   const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
   return { key, start, end };
+}
+
+function normalizeRequestedDateKey(value: string | null | undefined, now: Date) {
+  const todayKey = argentinaDateKey(now);
+  const requested = String(value ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(requested)) return todayKey;
+
+  const parsed = new Date(`${requested}T00:00:00${ARGENTINA_OFFSET}`);
+  if (Number.isNaN(parsed.getTime())) return todayKey;
+  return requested > todayKey ? todayKey : requested;
 }
 
 function pctChange(current: number, previous: number) {
@@ -147,7 +158,9 @@ async function fetchAllEvents(
   return rows;
 }
 
-export async function obtenerProductoDiarioAdministrador(): Promise<{
+export async function obtenerProductoDiarioAdministrador(
+  requestedDateKey?: string | null
+): Promise<{
   success: boolean;
   stats?: ProductDailyStats;
   message?: string;
@@ -157,30 +170,30 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
     const admin = createAdminClient();
     const adminUserIds = new Set(await listAdminUserIds());
     const now = new Date();
-    const today = dayBounds(now);
-    const yesterday = dayBounds(new Date(today.start.getTime() - 24 * 60 * 60 * 1000));
+    const todayKey = argentinaDateKey(now);
+    const selectedDateKey = normalizeRequestedDateKey(requestedDateKey, now);
+    const selectedDay = dayBoundsFromKey(selectedDateKey);
+    const previousDay = dayBoundsFromKey(
+      argentinaDateKey(new Date(selectedDay.start.getTime() - 24 * 60 * 60 * 1000))
+    );
+    const isToday = selectedDateKey === todayKey;
 
     const [events, usersResult, materialsTodayResult, olderProcessingResult, feedbackResult] =
       await Promise.all([
-        fetchAllEvents(admin, today.start.toISOString(), today.end.toISOString()),
+        fetchAllEvents(admin, selectedDay.start.toISOString(), selectedDay.end.toISOString()),
         admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
         admin
           .from('student_materials')
           .select('id, user_id, processing_status, created_at')
-          .gte('created_at', today.start.toISOString())
-          .lt('created_at', today.end.toISOString())
+          .gte('created_at', selectedDay.start.toISOString())
+          .lt('created_at', selectedDay.end.toISOString())
           .order('created_at', { ascending: true }),
-        admin
-          .from('student_materials')
-          .select('id, user_id, processing_status, created_at')
-          .lt('created_at', new Date(now.getTime() - 15 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(2000),
+        Promise.resolve({ data: [], error: null }),
         admin
           .from('student_material_feedback')
           .select('rating, report_reason, created_at')
-          .gte('created_at', today.start.toISOString())
-          .lt('created_at', today.end.toISOString()),
+          .gte('created_at', selectedDay.start.toISOString())
+          .lt('created_at', selectedDay.end.toISOString()),
       ]);
 
     if (usersResult.error) throw usersResult.error;
@@ -196,11 +209,11 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
 
     const newUsersToday = users.filter((user) => {
       const created = new Date(user.created_at).getTime();
-      return created >= today.start.getTime() && created < today.end.getTime();
+      return created >= selectedDay.start.getTime() && created < selectedDay.end.getTime();
     });
     const newUsersYesterday = users.filter((user) => {
       const created = new Date(user.created_at).getTime();
-      return created >= yesterday.start.getTime() && created < yesterday.end.getTime();
+      return created >= previousDay.start.getTime() && created < previousDay.end.getTime();
     });
 
     const newUserIds = new Set(newUsersToday.map((user) => user.id));
@@ -313,7 +326,7 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
       const firstMaterial = firstMaterialByUser.get(userId);
       if (!firstMaterial) continue;
       const firstAt = new Date(firstMaterial.created_at).getTime();
-      if (firstAt >= today.start.getTime() && firstAt < today.end.getTime()) {
+      if (firstAt >= selectedDay.start.getTime() && firstAt < selectedDay.end.getTime()) {
         firstTimeUploaders += 1;
         const user = usersById.get(userId);
         if (user) {
@@ -332,12 +345,34 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
       return completed >= started ? [(completed - started) / 1000] : [];
     });
 
-    const stuckOver15m = ((olderProcessingResult.data ?? []) as MaterialRow[]).filter(
-      (row) =>
-        !adminUserIds.has(row.user_id) &&
-        row.processing_status !== 'ready' &&
-        row.processing_status !== 'failed'
-    ).length;
+    const jobsByMaterialId = new Map<string, JobRow[]>();
+    for (const job of jobs) {
+      const list = jobsByMaterialId.get(job.student_material_id) ?? [];
+      list.push(job);
+      jobsByMaterialId.set(job.student_material_id, list);
+    }
+
+    const selectedDayReferenceMs = isToday ? now.getTime() : selectedDay.end.getTime();
+    const stuckOver15m = materialsToday.filter((material) => {
+      const materialJobs = jobsByMaterialId.get(material.id) ?? [];
+      const exceeded15mHistorically = materialJobs.some((job) => {
+        const startedAt = job.started_at ? new Date(job.started_at).getTime() : null;
+        const completedAt = job.completed_at ? new Date(job.completed_at).getTime() : null;
+        if (startedAt === null) return false;
+        if (completedAt !== null) return completedAt - startedAt > 15 * 60 * 1000;
+        return selectedDayReferenceMs - startedAt > 15 * 60 * 1000;
+      });
+
+      if (exceeded15mHistorically) return true;
+      if (!isToday) return false;
+
+      const createdAt = new Date(material.created_at).getTime();
+      return (
+        material.processing_status !== 'ready' &&
+        material.processing_status !== 'failed' &&
+        now.getTime() - createdAt > 15 * 60 * 1000
+      );
+    }).length;
 
     const openedEvents = events.filter((row) => row.event_name === 'student_material_study_opened');
     const openedMaterialIds = new Set(
@@ -377,12 +412,14 @@ export async function obtenerProductoDiarioAdministrador(): Promise<{
     return {
       success: true,
       stats: {
+        dateKey: selectedDateKey,
         dateLabel: new Intl.DateTimeFormat('es-AR', {
           day: 'numeric',
           month: 'short',
           year: 'numeric',
           timeZone: 'America/Argentina/Buenos_Aires',
-        }).format(now),
+        }).format(selectedDay.start),
+        isToday,
         generatedAt: now.toISOString(),
         funnel: {
           sessions: totalSessions,
