@@ -51,11 +51,6 @@ const ROOT_INLINE_CSS = `
   animation: evaluoSurfaceRevealSafe 0.42s cubic-bezier(0.22, 1, 0.36, 1) both !important;
 }
 
-.materia-list-catalog-only > .animate-page-enter > :nth-child(1),
-.materia-list-catalog-only > .animate-page-enter > :nth-child(2) {
-  display: none !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-surface-reveal {
     animation: none !important;
