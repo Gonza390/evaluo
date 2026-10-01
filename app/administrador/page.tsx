@@ -82,7 +82,15 @@ function ErrorPanel({ message }: { message: string }) {
   );
 }
 
-function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey; activePeriod: number }) {
+function PanelNavigation({
+  activePanel,
+  activePeriod,
+  productDate,
+}: {
+  activePanel: PanelKey;
+  activePeriod: number;
+  productDate: string;
+}) {
   return (
     <nav className="admin-nav" aria-label="Secciones del administrador">
       {PANELS.map((panel) => {
@@ -90,7 +98,7 @@ function PanelNavigation({ activePanel, activePeriod }: { activePanel: PanelKey;
         return (
           <Link
             key={panel.key}
-            href={`/administrador?panel=${panel.key}&period=${activePeriod}`}
+            href={`/administrador?panel=${panel.key}&period=${activePeriod}&productDate=${encodeURIComponent(productDate)}`}
             prefetch={false}
             className={`admin-nav-link${active ? ' is-active' : ''}`}
           >
@@ -112,6 +120,7 @@ export default async function AdministradorPage({
     source?: string;
     mailType?: string;
     mailPeriod?: string;
+    productDate?: string;
   }>;
 }) {
   const params = (await searchParams) ?? {};
@@ -120,6 +129,7 @@ export default async function AdministradorPage({
   const requestedPeriod = Number(params.period ?? 7);
   const activePeriod = PERIOD_OPTIONS.find((option) => option.value === requestedPeriod)?.value ?? 7;
   const usersPage = Math.max(1, Number(params.usersPage ?? 1) || 1);
+  const requestedProductDate = String(params.productDate ?? '').trim();
   const requestedSource = String(params.source ?? '').trim().toLowerCase();
   const requestedMailType = String(params.mailType ?? 'all').trim().toLowerCase();
   const activeMailType: MailFilterType =
@@ -154,7 +164,9 @@ export default async function AdministradorPage({
     iaFeedbackReviewResult,
     iaCostResult,
   ] = await Promise.all([
-    needsProduct ? obtenerProductoDiarioAdministrador() : Promise.resolve(null),
+    needsProduct
+      ? obtenerProductoDiarioAdministrador(requestedProductDate)
+      : Promise.resolve(null),
     needsAcquisition
       ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
       : Promise.resolve(null),
@@ -288,7 +300,13 @@ export default async function AdministradorPage({
         <aside className="admin-sidebar">
           <div className="admin-sidebar-inner">
             <div className="admin-brand">Evaluo</div>
-            <PanelNavigation activePanel={activePanel} activePeriod={activePeriod} />
+            <PanelNavigation
+              activePanel={activePanel}
+              activePeriod={activePeriod}
+              productDate={productResult?.success && productResult.stats
+                ? productResult.stats.dateKey
+                : requestedProductDate}
+            />
             <div className="admin-sidebar-links">
               <Link href="/administrador/feedback" prefetch={false}>Feedback</Link>
               <Link href="/administrador/solicitudes" prefetch={false}>Solicitudes</Link>
