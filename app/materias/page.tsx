@@ -5,7 +5,7 @@ import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { CareerHeroServer } from '@/components/career-hero-server';
-import { MateriaCatalogClient } from './materia-catalog-client';
+import { DeferredMateriaCatalog } from './deferred-materia-catalog';
 
 export const revalidate = 600;
 
@@ -136,7 +136,7 @@ export default async function MateriasPage({
           universidadNombre={universidadData?.nombre ?? undefined}
           universidadId={universidadData?.id ?? undefined}
         />
-        <MateriaCatalogClient
+        <DeferredMateriaCatalog
           carreraId={carreraId}
           carreraNombre={carreraData.nombre}
           carreraData={carreraData}
