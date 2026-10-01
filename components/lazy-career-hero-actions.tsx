@@ -1,15 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useDeferredClientMount } from '@/components/performance/use-deferred-client-mount';
-
-const CareerHeroActionsLazy = dynamic(
-  () =>
-    import('@/components/career-hero-actions').then(
-      (module) => module.CareerHeroActions
-    ),
-  { ssr: false }
-);
 
 function CareerHeroActionsPlaceholder() {
   return (
@@ -23,6 +14,14 @@ function CareerHeroActionsPlaceholder() {
   );
 }
 
+const CareerHeroActionsLazy = dynamic(
+  () =>
+    import('@/components/career-hero-actions').then(
+      (module) => module.CareerHeroActions
+    ),
+  { loading: CareerHeroActionsPlaceholder }
+);
+
 export function LazyCareerHeroActions({
   carreraId,
   carreraNombre,
@@ -30,12 +29,6 @@ export function LazyCareerHeroActions({
   carreraId: string;
   carreraNombre: string;
 }) {
-  const ready = useDeferredClientMount(500, 1000);
-
-  if (!ready) {
-    return <CareerHeroActionsPlaceholder />;
-  }
-
   return (
     <CareerHeroActionsLazy carreraId={carreraId} carreraNombre={carreraNombre} />
   );
