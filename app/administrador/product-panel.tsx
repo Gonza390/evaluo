@@ -158,7 +158,7 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
             value={`${formatPct(stats.entry.anonymousSessionPct)} / ${formatPct(
               stats.entry.loggedSessionPct
             )}`}
-            sub="Sobre sesiones con page_view del día"
+            sub="Sobre sesiones con actividad real del día"
           />
           <Metric
             label="Logins fallidos"
