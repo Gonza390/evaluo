@@ -12,11 +12,14 @@ import {
   XCircle,
 } from 'lucide-react';
 import { getAdminAccessContext } from '@/lib/access-control';
+import { findStrongUniversityMatch } from '@/lib/university-matching';
 import {
   aprobarEntidadAcademicaPendienteAdministrador,
   aprobarSolicitudUniversidadAdministrador,
+  asignarSolicitudUniversidadExistenteAdministrador,
   listarCatalogoAcademicoPendienteAdministrador,
   listarSolicitudesUniversidadAdministrador,
+  listarUniversidadesAsignablesAdministrador,
   rechazarEntidadAcademicaPendienteAdministrador,
   rechazarSolicitudUniversidadAdministrador,
   type UniversityRequestStatus,
@@ -67,9 +70,10 @@ export default async function SolicitudesUniversidadAdministradorPage() {
   const access = await getAdminAccessContext();
   if (!access.ok) redirect('/administrador');
 
-  const [universityResult, academicResult] = await Promise.all([
+  const [universityResult, academicResult, assignableUniversitiesResult] = await Promise.all([
     listarSolicitudesUniversidadAdministrador(),
     listarCatalogoAcademicoPendienteAdministrador(),
+    listarUniversidadesAsignablesAdministrador(),
   ]);
   const universityPendingCount = universityResult.rows.filter(
     (row) => row.status !== 'added' && row.status !== 'rejected'
@@ -246,6 +250,13 @@ export default async function SolicitudesUniversidadAdministradorPage() {
             <div className="mt-4 space-y-4">
               {universityResult.rows.map((row) => {
                 const isOpen = row.status !== 'added' && row.status !== 'rejected';
+                const suggestedUniversity =
+                  isOpen && assignableUniversitiesResult.success
+                    ? findStrongUniversityMatch(
+                        row.universityName,
+                        assignableUniversitiesResult.rows
+                      )?.university ?? null
+                    : null;
                 return (
                   <article
                     key={row.id}
@@ -298,6 +309,17 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                           </div>
                         ) : null}
 
+                        {row.approvedUniversityName ? (
+                          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-4 py-3">
+                            <p className="text-xs font-medium text-emerald-700">
+                              Universidad asignada
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-emerald-950">
+                              {row.approvedUniversityName}
+                            </p>
+                          </div>
+                        ) : null}
+
                         {row.reviewedAt ? (
                           <p className="mt-3 text-xs text-slate-400">
                             {row.approvalSource === 'automatic'
@@ -309,25 +331,68 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                       </div>
 
                       {isOpen ? (
-                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col">
-                          <form action={aprobarSolicitudUniversidadAdministrador}>
-                            <input type="hidden" name="requestId" value={row.id} />
-                            <button
-                              type="submit"
-                              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                        <div className="w-full shrink-0 space-y-3 lg:w-80">
+                          {assignableUniversitiesResult.success &&
+                          assignableUniversitiesResult.rows.length > 0 ? (
+                            <form
+                              action={asignarSolicitudUniversidadExistenteAdministrador}
+                              className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3"
                             >
-                              <CheckCircle2 className="h-4 w-4" /> Aprobar y crear
-                            </button>
-                          </form>
-                          <form action={rechazarSolicitudUniversidadAdministrador}>
-                            <input type="hidden" name="requestId" value={row.id} />
-                            <button
-                              type="submit"
-                              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
-                            >
-                              <XCircle className="h-4 w-4" /> Rechazar
-                            </button>
-                          </form>
+                              <input type="hidden" name="requestId" value={row.id} />
+                              <label
+                                htmlFor={`existing-university-${row.id}`}
+                                className="text-xs font-semibold text-indigo-950"
+                              >
+                                Ya tenemos esta universidad
+                              </label>
+                              <select
+                                id={`existing-university-${row.id}`}
+                                name="universityId"
+                                defaultValue={suggestedUniversity?.id ?? ''}
+                                required
+                                className="mt-2 h-10 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                              >
+                                <option value="">Elegir universidad existente…</option>
+                                {assignableUniversitiesResult.rows.map((university) => (
+                                  <option key={university.id} value={university.id}>
+                                    {university.nombre}
+                                  </option>
+                                ))}
+                              </select>
+                              {suggestedUniversity ? (
+                                <p className="mt-2 text-[11px] leading-4 text-indigo-700">
+                                  Coincidencia sugerida: {suggestedUniversity.nombre}
+                                </p>
+                              ) : null}
+                              <button
+                                type="submit"
+                                className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                              >
+                                <Building2 className="h-4 w-4" /> Asignar existente
+                              </button>
+                            </form>
+                          ) : null}
+
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                            <form action={aprobarSolicitudUniversidadAdministrador}>
+                              <input type="hidden" name="requestId" value={row.id} />
+                              <button
+                                type="submit"
+                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                              >
+                                <CheckCircle2 className="h-4 w-4" /> Crear nueva
+                              </button>
+                            </form>
+                            <form action={rechazarSolicitudUniversidadAdministrador}>
+                              <input type="hidden" name="requestId" value={row.id} />
+                              <button
+                                type="submit"
+                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
+                              >
+                                <XCircle className="h-4 w-4" /> Rechazar
+                              </button>
+                            </form>
+                          </div>
                         </div>
                       ) : null}
                     </div>
