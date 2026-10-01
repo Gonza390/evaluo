@@ -144,12 +144,6 @@ export default async function MateriasPage({
           carreraData={carreraData}
           universidadNombre={universidadData?.nombre ?? undefined}
           universidadId={universidadData?.id ?? undefined}
-          initialCatalog={{
-            materias,
-            sharedStudentMaterials,
-            contentMateriaIds: contentSignals.contentMateriaIds,
-            questionMateriaIds: contentSignals.questionMateriaIds,
-          }}
         />
         <MateriaCatalogClient
           carreraId={carreraId}
@@ -157,6 +151,12 @@ export default async function MateriasPage({
           carreraData={carreraData}
           universidadNombre={universidadData?.nombre ?? undefined}
           universidadId={universidadData?.id ?? undefined}
+          initialCatalog={{
+            materias,
+            sharedStudentMaterials,
+            contentMateriaIds: contentSignals.contentMateriaIds,
+            questionMateriaIds: contentSignals.questionMateriaIds,
+          }}
         />
       </>
     );
