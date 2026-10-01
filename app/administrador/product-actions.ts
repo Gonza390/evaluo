@@ -47,6 +47,7 @@ type AiUsageRow = {
 
 export type ProductDailyStats = {
   dateKey: string;
+  todayKey: string;
   dateLabel: string;
   isToday: boolean;
   generatedAt: string;
@@ -413,6 +414,7 @@ export async function obtenerProductoDiarioAdministrador(
       success: true,
       stats: {
         dateKey: selectedDateKey,
+        todayKey,
         dateLabel: new Intl.DateTimeFormat('es-AR', {
           day: 'numeric',
           month: 'short',
