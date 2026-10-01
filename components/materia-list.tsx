@@ -425,7 +425,7 @@ export default function MateriaList({
   const careerTitle = officialCareerProfile?.title ?? null;
 
   return (
-    <div className="animate-page-enter min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
       {showCareerChrome ? (
         <>
       <div className="w-full border-b border-[#E8EDF5] bg-white">
@@ -574,7 +574,7 @@ export default function MateriaList({
 
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-8 lg:py-8">
         {activeTab === 'plan' && (
-          <div className="animate-tab-panel">
+          <div className="">
             <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h2 className="section-title text-[1.6rem] text-slate-900 sm:text-3xl">
@@ -609,7 +609,7 @@ export default function MateriaList({
                 return (
                   <Card
                     key={materia.id}
-                    className="surface-card animate-saas-lift-in min-h-[184px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)]"
+                    className="surface-card min-h-[184px] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)]"
                   >
                     <CardContent className="flex h-full flex-col p-4 text-left">
                       <div className="mb-3 flex items-start justify-between gap-3">
