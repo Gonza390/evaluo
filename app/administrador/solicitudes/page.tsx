@@ -250,6 +250,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
             <div className="mt-4 space-y-4">
               {universityResult.rows.map((row) => {
                 const isOpen = row.status !== 'added' && row.status !== 'rejected';
+                const canAssignExisting = row.status !== 'rejected';
                 const suggestedUniversity =
                   isOpen && assignableUniversitiesResult.success
                     ? findStrongUniversityMatch(
@@ -330,7 +331,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                         ) : null}
                       </div>
 
-                      {isOpen ? (
+                      {canAssignExisting ? (
                         <div className="w-full shrink-0 space-y-3 lg:w-80">
                           {assignableUniversitiesResult.success &&
                           assignableUniversitiesResult.rows.length > 0 ? (
@@ -343,12 +344,12 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                                 htmlFor={`existing-university-${row.id}`}
                                 className="text-xs font-semibold text-indigo-950"
                               >
-                                Ya tenemos esta universidad
+                                {isOpen ? 'Ya tenemos esta universidad' : 'Cambiar universidad asignada'}
                               </label>
                               <select
                                 id={`existing-university-${row.id}`}
                                 name="universityId"
-                                defaultValue={suggestedUniversity?.id ?? ''}
+                                defaultValue={row.approvedUniversityId ?? suggestedUniversity?.id ?? ''}
                                 required
                                 className="mt-2 h-10 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                               >
@@ -368,31 +369,34 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                                 type="submit"
                                 className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700"
                               >
-                                <Building2 className="h-4 w-4" /> Asignar existente
+                                <Building2 className="h-4 w-4" />{' '}
+                                {isOpen ? 'Asignar existente' : 'Guardar asignación'}
                               </button>
                             </form>
                           ) : null}
 
-                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                            <form action={aprobarSolicitudUniversidadAdministrador}>
-                              <input type="hidden" name="requestId" value={row.id} />
-                              <button
-                                type="submit"
-                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
-                              >
-                                <CheckCircle2 className="h-4 w-4" /> Crear nueva
-                              </button>
-                            </form>
-                            <form action={rechazarSolicitudUniversidadAdministrador}>
-                              <input type="hidden" name="requestId" value={row.id} />
-                              <button
-                                type="submit"
-                                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
-                              >
-                                <XCircle className="h-4 w-4" /> Rechazar
-                              </button>
-                            </form>
-                          </div>
+                          {isOpen ? (
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                              <form action={aprobarSolicitudUniversidadAdministrador}>
+                                <input type="hidden" name="requestId" value={row.id} />
+                                <button
+                                  type="submit"
+                                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                                >
+                                  <CheckCircle2 className="h-4 w-4" /> Crear nueva
+                                </button>
+                              </form>
+                              <form action={rechazarSolicitudUniversidadAdministrador}>
+                                <input type="hidden" name="requestId" value={row.id} />
+                                <button
+                                  type="submit"
+                                  className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-50"
+                                >
+                                  <XCircle className="h-4 w-4" /> Rechazar
+                                </button>
+                              </form>
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
