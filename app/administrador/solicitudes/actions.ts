@@ -22,7 +22,13 @@ export type AdminUniversityRequestRow = {
   createdAt: string;
   reviewedAt: string | null;
   approvedUniversityId: string | null;
+  approvedUniversityName: string | null;
   approvedCareerId: string | null;
+};
+
+export type AdminUniversityOption = {
+  id: string;
+  nombre: string;
 };
 
 export type AdminPendingAcademicRow = {
@@ -133,7 +139,27 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
     if (error) throw error;
 
     const rawRows = (data ?? []) as RawUniversityRequestRow[];
-    const emailByUserId = await resolveAdminUserEmails(rawRows.map((row) => row.user_id));
+    const approvedUniversityIds = Array.from(
+      new Set(
+        rawRows
+          .map((row) => row.approved_university_id)
+          .filter((id): id is string => Boolean(id))
+      )
+    );
+
+    const [emailByUserId, approvedUniversitiesResult] = await Promise.all([
+      resolveAdminUserEmails(rawRows.map((row) => row.user_id)),
+      approvedUniversityIds.length > 0
+        ? admin.from('universidades').select('id, nombre').in('id', approvedUniversityIds)
+        : Promise.resolve({ data: [] as RawNamedRow[], error: null }),
+    ]);
+
+    if (approvedUniversitiesResult.error) throw approvedUniversitiesResult.error;
+
+    const approvedUniversityNameById = new Map(
+      ((approvedUniversitiesResult.data ?? []) as RawNamedRow[]).map((row) => [row.id, row.nombre])
+    );
+
     const rows: AdminUniversityRequestRow[] = rawRows.map((row) => ({
       id: row.id,
       userId: row.user_id,
@@ -148,6 +174,9 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
       createdAt: row.created_at,
       reviewedAt: row.reviewed_at,
       approvedUniversityId: row.approved_university_id,
+      approvedUniversityName: row.approved_university_id
+        ? approvedUniversityNameById.get(row.approved_university_id) ?? null
+        : null,
       approvedCareerId: row.approved_career_id,
     }));
 
@@ -161,6 +190,43 @@ export async function listarSolicitudesUniversidadAdministrador(): Promise<{
         error instanceof Error
           ? error.message
           : 'No pudimos cargar las solicitudes de universidades.',
+    };
+  }
+}
+
+export async function listarUniversidadesAsignablesAdministrador(): Promise<{
+  success: boolean;
+  rows: AdminUniversityOption[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = getUntypedAdminClient();
+    const { data, error } = await admin
+      .from('universidades')
+      .select('id, nombre')
+      .eq('approval_status', 'approved')
+      .order('nombre', { ascending: true })
+      .limit(500);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      rows: ((data ?? []) as RawNamedRow[]).map((row) => ({
+        id: row.id,
+        nombre: row.nombre,
+      })),
+    };
+  } catch (error) {
+    logError('admin.universityRequests.assignableUniversities', error);
+    return {
+      success: false,
+      rows: [],
+      message:
+        error instanceof Error
+          ? error.message
+          : 'No pudimos cargar las universidades existentes.',
     };
   }
 }
@@ -391,6 +457,33 @@ async function resolverEntidadAcademicaPendiente(
       .eq('carrera_id', subject.carrera_id)
       .eq('approval_status', 'pending');
     if (updateRelationError) throw updateRelationError;
+  }
+
+  revalidateAcademicCatalog();
+}
+
+export async function asignarSolicitudUniversidadExistenteAdministrador(formData: FormData) {
+  const requestId = String(formData.get('requestId') ?? '').trim();
+  const universityId = String(formData.get('universityId') ?? '').trim();
+
+  if (!requestId || !universityId) {
+    throw new Error('Seleccioná una universidad existente.');
+  }
+
+  const access = await requireAdminAccess();
+  const admin = getUntypedAdminClient();
+  const { error } = await admin.rpc('assign_existing_university_request', {
+    p_request_id: requestId,
+    p_university_id: universityId,
+    p_reviewer_id: access.user.id,
+  });
+
+  if (error) {
+    logError('admin.universityRequests.assignExisting', error, {
+      requestId,
+      universityId,
+    });
+    throw new Error('No pudimos asignar la universidad existente.');
   }
 
   revalidateAcademicCatalog();
