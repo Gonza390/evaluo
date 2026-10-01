@@ -6,7 +6,11 @@ import {
   getAnalyticsPageType,
   getAnalyticsSessionKey,
 } from '@/lib/analytics-client';
-import { captureAttributionFromLocation, getAttributionSnapshot } from '@/lib/attribution';
+import {
+  captureAttributionFromLocation,
+  detectAcquisitionSource,
+  getAttributionSnapshot,
+} from '@/lib/attribution';
 
 export function ImmediateAcquisitionTracker() {
   useEffect(() => {
@@ -27,17 +31,27 @@ export function ImmediateAcquisitionTracker() {
       // Si sessionStorage no está disponible, igual intentamos registrar la entrada.
     }
 
+    const referrer = document.referrer?.trim() || null;
+    const sessionSource = detectAcquisitionSource(window.location.search, referrer);
+
     captureAttributionFromLocation(
       window.location.search,
       window.location.pathname,
-      document.referrer || null
+      referrer
     );
 
     const attribution = getAttributionSnapshot();
-    const referrer = document.referrer?.trim() || null;
     const landingPath = `${window.location.pathname}${window.location.search}`;
 
-    void fetch('/api/analytics/product-track', {
+    const clearPendingAcquisition = () => {
+      try {
+        window.sessionStorage.removeItem(acquisitionKey);
+      } catch {
+        // Sin storage, el tracker diferido puede volver a intentar igualmente.
+      }
+    };
+
+    void fetch('/api/analytics/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -46,20 +60,28 @@ export function ImmediateAcquisitionTracker() {
         path: window.location.pathname,
         device_type: getAnalyticsDeviceType(),
         metadata: {
+          source: sessionSource,
+          session_source: sessionSource,
           attribution,
           referrer,
           landing_path: landingPath,
           entry_page_type: getAnalyticsPageType(window.location.pathname),
+          anonymous_id: null,
+          page_type: getAnalyticsPageType(window.location.pathname),
         },
       }),
       keepalive: true,
-    }).catch(() => {
-      try {
-        window.sessionStorage.removeItem(acquisitionKey);
-      } catch {
-        // El tracker diferido puede volver a intentar si storage está disponible.
-      }
-    });
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as
+          | { ok?: boolean }
+          | null;
+
+        if (!response.ok || payload?.ok === false) {
+          clearPendingAcquisition();
+        }
+      })
+      .catch(clearPendingAcquisition);
   }, []);
 
   return null;
