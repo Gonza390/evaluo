@@ -22,13 +22,13 @@ import { shiftDayKey } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
+import { DeferredFooter } from '@/components/DeferredFooter';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   PublicBrandLink,
   PublicGuestActions,
 } from '@/components/marketing/public-site-header';
 
-const Footer = dynamic(() => import('./footer').then((module) => module.Footer));
 const Navbar = dynamic(() => import('./navbar').then((module) => module.Navbar));
 const Toaster = dynamic(() => import('@/components/ui/toaster').then((module) => module.Toaster));
 const NotificationBell = dynamic(() =>
@@ -450,7 +450,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
             {children}
           </main>
           {showBottomNav ? <BottomNav /> : null}
-          {!isLegalRoute && !isAdministradorRoute ? <Footer /> : null}
+          {!isLegalRoute && !isAdministradorRoute ? <DeferredFooter /> : null}
         </div>
       </div>
     </div>
