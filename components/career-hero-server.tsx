@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, BookOpen, ChevronRight, Clock, Users, Zap } from 'lucide-react';
 import { getOfficialCareerProfile } from '@/lib/career-profiles';
 import { getUniversityRoute } from '@/lib/routes';
-import { CareerHeroActions } from '@/components/career-hero-actions';
+import { LazyCareerHeroActions } from '@/components/lazy-career-hero-actions';
 
 type CareerHeroProps = {
   carreraId: string;
@@ -105,7 +105,7 @@ export function CareerHeroServer({
                 </div>
               </div>
             </div>
-            <CareerHeroActions carreraId={carreraId} carreraNombre={carreraNombre} />
+            <LazyCareerHeroActions carreraId={carreraId} carreraNombre={carreraNombre} />
           </div>
         </div>
       </section>
