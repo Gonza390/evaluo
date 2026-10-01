@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useDeferredClientMount } from '@/components/performance/use-deferred-client-mount';
 
 type CarreraData = {
   id: string;
@@ -13,12 +12,6 @@ type CarreraData = {
   modalidad?: string | null;
   director?: string | null;
 };
-
-const MateriaCatalogClientLazy = dynamic(
-  () =>
-    import('./materia-catalog-client').then((module) => module.MateriaCatalogClient),
-  { ssr: false }
-);
 
 function MateriaCatalogPlaceholder() {
   return (
@@ -52,6 +45,12 @@ function MateriaCatalogPlaceholder() {
   );
 }
 
+const MateriaCatalogClientLazy = dynamic(
+  () =>
+    import('./materia-catalog-client').then((module) => module.MateriaCatalogClient),
+  { loading: MateriaCatalogPlaceholder }
+);
+
 export function DeferredMateriaCatalog({
   carreraId,
   carreraNombre,
@@ -65,12 +64,6 @@ export function DeferredMateriaCatalog({
   universidadNombre?: string;
   universidadId?: string;
 }) {
-  const ready = useDeferredClientMount(450, 1100);
-
-  if (!ready) {
-    return <MateriaCatalogPlaceholder />;
-  }
-
   return (
     <MateriaCatalogClientLazy
       carreraId={carreraId}
