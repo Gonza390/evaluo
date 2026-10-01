@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 import { buildSeoEntitySlug } from '@/lib/seo-intents';
-import { getCarreraById, getUniversidadById } from '@/services/api-server';
+import { getCarreraById, getMateriasByCarrera, getUniversidadById } from '@/services/api-server';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { StudyStatePanel } from '@/components/study-state-panel';
 import { CareerHeroServer } from '@/components/career-hero-server';
-import { DeferredMateriaCatalog } from './deferred-materia-catalog';
+import { MateriaCatalogClient } from './materia-catalog-client';
+import { fetchCatalogContentSignalsRpc } from '@/lib/data/catalog-performance';
+import { fetchSharedStudentMaterialsByCarrera } from '@/lib/data/student-materials';
+import { createPublicClient } from '@/lib/supabase-public';
 
 export const revalidate = 600;
 
@@ -110,9 +113,15 @@ export default async function MateriasPage({
       );
     }
 
-    const universidadData = carreraData.universidad_id
-      ? await getUniversidadById(carreraData.universidad_id)
-      : null;
+    const publicClient = createPublicClient();
+    const [universidadData, materias, sharedStudentMaterials, contentSignals] = await Promise.all([
+      carreraData.universidad_id
+        ? getUniversidadById(carreraData.universidad_id)
+        : Promise.resolve(null),
+      getMateriasByCarrera(carreraId),
+      fetchSharedStudentMaterialsByCarrera(publicClient, carreraId, 8),
+      fetchCatalogContentSignalsRpc(publicClient),
+    ]);
     const careerCanonicalHref = universidadData
       ? `/estudiar/${buildSeoEntitySlug(universidadData.nombre, universidadData.id)}/${buildSeoEntitySlug(carreraData.nombre, carreraData.id)}`
       : `/materias?carreraId=${encodeURIComponent(carreraId)}`;
@@ -135,8 +144,14 @@ export default async function MateriasPage({
           carreraData={carreraData}
           universidadNombre={universidadData?.nombre ?? undefined}
           universidadId={universidadData?.id ?? undefined}
+          initialCatalog={{
+            materias,
+            sharedStudentMaterials,
+            contentMateriaIds: contentSignals.contentMateriaIds,
+            questionMateriaIds: contentSignals.questionMateriaIds,
+          }}
         />
-        <DeferredMateriaCatalog
+        <MateriaCatalogClient
           carreraId={carreraId}
           carreraNombre={carreraData.nombre}
           carreraData={carreraData}
