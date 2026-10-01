@@ -79,7 +79,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
       </div>
 
       {showUniversidades ? (
-        <section className="mt-7">
+        <section className="mt-7 [content-visibility:auto] [contain-intrinsic-size:720px]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-600 uppercase">Universidades</p>
@@ -102,9 +102,9 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleUniversidades.map((universidad, index) => (
+              {visibleUniversidades.map((universidad) => (
                 <Link key={universidad.id} href={getUniversityRoute(universidad.id)} className="block">
-                  <Card className="surface-card animate-surface-reveal h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]" style={{ animationDelay: `${index * 40}ms` }}>
+                  <Card className="surface-card h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]" style={{ animationDelay: `${index * 40}ms` }}>
                     <CardContent className="flex h-full items-center justify-between gap-4 p-4">
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Building2 className="h-5 w-5" /></div>
@@ -121,7 +121,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
       ) : null}
 
       {showCarreras ? (
-        <section className="mt-7">
+        <section className="mt-7 [content-visibility:auto] [contain-intrinsic-size:1100px]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-600 uppercase">Carreras</p>
@@ -140,9 +140,9 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-              {visibleCarreras.map((carrera, index) => (
+              {visibleCarreras.map((carrera) => (
                 <Link key={carrera.id} href={getCareerRoute(carrera.id)} className="block">
-                  <Card className="surface-card animate-surface-reveal h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]" style={{ animationDelay: `${index * 50}ms` }}>
+                  <Card className="surface-card h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]" style={{ animationDelay: `${index * 50}ms` }}>
                     <CardContent className="flex h-full items-center justify-between gap-4 p-4">
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><GraduationCap className="h-5 w-5" /></div>
