@@ -30,9 +30,9 @@ function scheduleAnalyticsStart(start: () => void) {
       requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
     }).requestIdleCallback;
 
-    idleCallback?.(() => run(), { timeout: 2500 });
+    idleCallback?.(() => run(), { timeout: 5500 });
   } else {
-    timeoutId = globalThis.setTimeout(run, 1800);
+    timeoutId = globalThis.setTimeout(run, 5000);
   }
 
   window.addEventListener('pointerdown', run, { once: true, passive: true });
