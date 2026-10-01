@@ -12,6 +12,7 @@ type AnalyticsRow = {
   event_name: string;
   user_id: string | null;
   session_key: string | null;
+  device_type: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
 };
@@ -133,6 +134,13 @@ function materialIdFromEvent(row: AnalyticsRow) {
   return typeof value === 'string' ? value : null;
 }
 
+function isClientAnalyticsEvent(row: AnalyticsRow) {
+  if (!row.session_key) return false;
+  if (row.device_type === 'server') return false;
+  if (row.session_key.startsWith('server:')) return false;
+  return true;
+}
+
 async function fetchAllEvents(
   admin: ReturnType<typeof createAdminClient>,
   startIso: string,
@@ -144,7 +152,7 @@ async function fetchAllEvents(
   for (let offset = 0; offset < 10_000; offset += pageSize) {
     const { data, error } = await admin
       .from('analytics_events')
-      .select('event_name, user_id, session_key, metadata, created_at')
+      .select('event_name, user_id, session_key, device_type, metadata, created_at')
       .gte('created_at', startIso)
       .lt('created_at', endIso)
       .order('created_at', { ascending: true })
@@ -217,9 +225,10 @@ export async function obtenerProductoDiarioAdministrador(
       return created >= previousDay.start.getTime() && created < previousDay.end.getTime();
     });
 
+    const clientEvents = events.filter(isClientAnalyticsEvent);
     const newUserIds = new Set(newUsersToday.map((user) => user.id));
     const activeLoggedUserIds = new Set(
-      events
+      clientEvents
         .map((row) => row.user_id)
         .filter(
           (userId): userId is string =>
@@ -230,21 +239,18 @@ export async function obtenerProductoDiarioAdministrador(
       newUserIds.has(userId)
     ).length;
 
-    const pageViews = events.filter((row) => row.event_name === 'page_view');
     const sessionMap = new Map<string, { logged: boolean }>();
-    for (const row of events) {
-      if (!row.session_key) continue;
-      const current = sessionMap.get(row.session_key) ?? { logged: false };
-      if (row.user_id) current.logged = true;
-      sessionMap.set(row.session_key, current);
+    for (const row of clientEvents) {
+      const sessionKey = row.session_key as string;
+      const current = sessionMap.get(sessionKey) ?? { logged: false };
+      if (row.user_id && !adminUserIds.has(row.user_id)) current.logged = true;
+      sessionMap.set(sessionKey, current);
     }
-    const pageViewSessionKeys = Array.from(
-      new Set(pageViews.map((row) => row.session_key).filter((value): value is string => Boolean(value)))
-    );
-    const loggedSessions = pageViewSessionKeys.filter(
+    const clientSessionKeys = Array.from(sessionMap.keys());
+    const loggedSessions = clientSessionKeys.filter(
       (sessionKey) => sessionMap.get(sessionKey)?.logged
     ).length;
-    const anonymousSessions = Math.max(0, pageViewSessionKeys.length - loggedSessions);
+    const anonymousSessions = Math.max(0, clientSessionKeys.length - loggedSessions);
 
     const gateViewNames = new Set(['pdf_gate_viewed', 'simulator_login_gate_viewed']);
     const gateClickNames = new Set(['pdf_gate_cta_clicked', 'simulator_login_gate_cta_clicked']);
@@ -404,7 +410,7 @@ export async function obtenerProductoDiarioAdministrador(
 
     const relevantAiMaterials = new Set(aiUsage.map((row) => row.student_material_id)).size;
 
-    const totalSessions = pageViewSessionKeys.length;
+    const totalSessions = clientSessionKeys.length;
     const anonymousSessionPct =
       totalSessions > 0 ? Number(((anonymousSessions / totalSessions) * 100).toFixed(1)) : 0;
     const loggedSessionPct =
