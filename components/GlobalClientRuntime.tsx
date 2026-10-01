@@ -2,7 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import { ImmediateAcquisitionTracker } from '@/components/ImmediateAcquisitionTracker';
+
+const ImmediateAcquisitionTracker = dynamic(
+  () =>
+    import('@/components/ImmediateAcquisitionTracker').then(
+      (module) => module.ImmediateAcquisitionTracker
+    ),
+  { ssr: false }
+);
 
 const SessionIdleGuard = dynamic(() => import('@/components/SessionIdleGuard'), {
   ssr: false,
