@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import {
+  getAnalyticsAnonymousId,
   getAnalyticsDeviceType,
   getAnalyticsPageType,
   getAnalyticsSessionKey,
@@ -66,7 +67,7 @@ export function ImmediateAcquisitionTracker() {
           referrer,
           landing_path: landingPath,
           entry_page_type: getAnalyticsPageType(window.location.pathname),
-          anonymous_id: null,
+          anonymous_id: getAnalyticsAnonymousId(),
           page_type: getAnalyticsPageType(window.location.pathname),
         },
       }),
