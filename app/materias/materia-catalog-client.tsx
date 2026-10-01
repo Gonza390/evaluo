@@ -151,6 +151,7 @@ export function MateriaCatalogClient({
         sharedStudentMaterials={catalog.sharedStudentMaterials}
         contentMateriaIds={catalog.contentMateriaIds}
         questionMateriaIds={catalog.questionMateriaIds}
+        showCareerChrome={false}
       />
     </div>
   );
