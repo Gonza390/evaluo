@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { ExplorarStaticIntro } from './explorar-static-intro';
-import { DeferredExplorarClient } from './deferred-explorar-client';
+import { ExplorarClient } from './explorar-client';
 import { fetchExplorarData } from './data';
 
 export const revalidate = 600;
@@ -19,7 +19,7 @@ type ExplorarPageProps = {
 
 async function ExplorarCatalog({ initialData }: { initialData?: ExplorarData | null }) {
   const data = initialData ?? (await fetchExplorarData());
-  return <DeferredExplorarClient initialData={data} />;
+  return <ExplorarClient initialData={data} />;
 }
 
 function ExplorarCatalogFallback() {
