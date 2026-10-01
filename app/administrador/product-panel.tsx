@@ -1,4 +1,5 @@
 import type { ProductDailyStats } from './product-actions';
+import { ProductDatePicker } from './product-date-picker';
 
 function formatPct(value: number) {
   return `${value.toFixed(1).replace('.', ',')}%`;
@@ -116,10 +117,15 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
             material generado.
           </p>
         </div>
-        <div className="admin-date-chip">Hoy · {stats.dateLabel}</div>
+        <ProductDatePicker
+          value={stats.dateKey}
+          max={stats.todayKey}
+          label={stats.dateLabel}
+          isToday={stats.isToday}
+        />
       </header>
 
-      <div className="admin-funnel-mini" aria-label="Actividad de hoy">
+      <div className="admin-funnel-mini" aria-label={`Actividad del ${stats.dateLabel}`}>
         <b>{stats.funnel.sessions.toLocaleString('es-AR')}</b> sesiones
         <span>→</span>
         <b>{stats.funnel.registrations.toLocaleString('es-AR')}</b> registros
@@ -152,7 +158,7 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
             value={`${formatPct(stats.entry.anonymousSessionPct)} / ${formatPct(
               stats.entry.loggedSessionPct
             )}`}
-            sub="Sobre sesiones con page_view de hoy"
+            sub="Sobre sesiones con page_view del día"
           />
           <Metric
             label="Logins fallidos"
@@ -186,7 +192,7 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
       <div className="admin-stage-label">② Activa — subida y procesamiento de PDF</div>
       <div className="admin-grid-2">
         <div className="admin-card">
-          <h3>PDFs subidos hoy: {stats.activation.uploads}</h3>
+          <h3>PDFs subidos: {stats.activation.uploads}</h3>
           <span className="admin-event">student_materials · student_material_jobs</span>
           <MiniRow
             label="Procesados OK"
