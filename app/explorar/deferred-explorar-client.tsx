@@ -2,12 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import type { ExplorarData } from './data';
-import { useDeferredClientMount } from '@/components/performance/use-deferred-client-mount';
-
-const ExplorarClientLazy = dynamic(
-  () => import('./explorar-client').then((module) => module.ExplorarClient),
-  { ssr: false }
-);
 
 function ExploreCatalogPlaceholder() {
   return (
@@ -23,12 +17,11 @@ function ExploreCatalogPlaceholder() {
   );
 }
 
+const ExplorarClientLazy = dynamic(
+  () => import('./explorar-client').then((module) => module.ExplorarClient),
+  { loading: ExploreCatalogPlaceholder }
+);
+
 export function DeferredExplorarClient({ initialData }: { initialData: ExplorarData }) {
-  const ready = useDeferredClientMount(450, 1100);
-
-  if (!ready) {
-    return <ExploreCatalogPlaceholder />;
-  }
-
   return <ExplorarClientLazy initialData={initialData} />;
 }
