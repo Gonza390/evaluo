@@ -394,4 +394,51 @@ assert.deepEqual(
   { source: FIRST_PDF_DEMO_SOURCE, material_id: 'material-propio', demo_run_id: demoRunId }
 );
 
+const activationUploadSource = readFileSync(
+  resolve('components/dashboard/pdf-first-upload-shell.tsx'),
+  'utf8'
+);
+assert.match(
+  activationUploadSource,
+  /initialSource\.startsWith\('home-pdf-first-'\)/,
+  'El PDF elegido en Home debe retomarse automáticamente después del registro.'
+);
+assert.match(
+  activationUploadSource,
+  /draft\.source !== initialSource/,
+  'No se debe recuperar un borrador de PDF que pertenezca a otro origen.'
+);
+
+for (const eventName of [
+  'mis_errores_viewed',
+  'study_error_viewed',
+  'study_error_created',
+  'study_error_reviewed',
+  'study_error_explanation_reviewed',
+  'study_error_pdf_review_started',
+  'study_error_repractice_started',
+  'study_error_resolved',
+  'study_error_returned',
+] as const) {
+  assert.equal(isAllowedAnalyticsEventName(eventName), true, `${eventName} debe ser aceptado por analytics.`);
+}
+
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('study_error_pdf_review_started', {
+    study_error_id: 'error-1',
+    source_type: 'simulator',
+    materia_id: 'mat-1',
+    material_id: 'material-1',
+    has_page_reference: true,
+    prompt: 'contenido privado que no debe persistirse',
+  }),
+  {
+    study_error_id: 'error-1',
+    source_type: 'simulator',
+    materia_id: 'mat-1',
+    material_id: 'material-1',
+    has_page_reference: true,
+  }
+);
+
 console.log('Flow smoke tests passed.');
