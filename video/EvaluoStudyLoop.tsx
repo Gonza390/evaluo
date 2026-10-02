@@ -524,7 +524,6 @@ export const EvaluoStudyLoop: React.FC = () => {
           />
         </Sequence>
       ))}
-      <Audio src={staticFile('video/study-loop/music.wav')} volume={0.16} />
       <div
         style={{
           position: 'absolute',
