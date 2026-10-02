@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
 import { buildStudentMaterialContextsForQuestions } from '@/lib/student-materials/simulator-context';
+import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 
 export type StudyErrorSource = 'simulator' | 'flashcard' | 'exercise' | 'diagnostic';
 export type StudyErrorStatus = 'pending' | 'resolved';
@@ -172,7 +173,7 @@ export async function recordStudyErrorFailure(input: StudyErrorFailureInput) {
   try {
     const { data: existing, error: existingError } = await db
       .from('study_errors')
-      .select('id, failure_count')
+      .select('id, failure_count, status')
       .eq('user_id', input.userId)
       .eq('source_type', input.sourceType)
       .eq('source_key', input.sourceKey)
@@ -207,6 +208,22 @@ export async function recordStudyErrorFailure(input: StudyErrorFailureInput) {
     if (existing?.id) {
       const { error } = await db.from('study_errors').update(payload).eq('id', existing.id);
       if (error) throw error;
+
+      if (existing.status !== 'pending') {
+        await trackServerAnalyticsEvent({
+          eventName: 'study_error_created',
+          userId: input.userId,
+          metadata: {
+            study_error_id: existing.id,
+            source_type: input.sourceType,
+            materia_id: input.materiaId ?? null,
+            material_id: input.studentMaterialId ?? null,
+            failure_count: payload.failure_count,
+            reopened: true,
+          },
+        });
+      }
+
       return existing.id as string;
     }
 
@@ -217,6 +234,22 @@ export async function recordStudyErrorFailure(input: StudyErrorFailureInput) {
       .single();
 
     if (error) throw error;
+
+    if (data?.id) {
+      await trackServerAnalyticsEvent({
+        eventName: 'study_error_created',
+        userId: input.userId,
+        metadata: {
+          study_error_id: data.id,
+          source_type: input.sourceType,
+          materia_id: input.materiaId ?? null,
+          material_id: input.studentMaterialId ?? null,
+          failure_count: payload.failure_count,
+          reopened: false,
+        },
+      });
+    }
+
     return data?.id as string | undefined;
   } catch (error) {
     logError('studyErrors.recordFailure', error, {
@@ -240,7 +273,7 @@ export async function recordStudyErrorCorrect(input: {
   try {
     const { data: existing, error } = await db
       .from('study_errors')
-      .select('id, status, last_failed_at, last_reviewed_at')
+      .select('id, status, last_failed_at, last_reviewed_at, materia_id, student_material_id, failure_count')
       .eq('user_id', input.userId)
       .eq('source_type', input.sourceType)
       .eq('source_key', input.sourceKey)
@@ -258,13 +291,29 @@ export async function recordStudyErrorCorrect(input: {
     }
 
     const now = new Date().toISOString();
-    const { error: updateError } = await db
+    const { data: updated, error: updateError } = await db
       .from('study_errors')
       .update({ status: 'resolved', resolved_at: now })
       .eq('id', existing.id)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .select('id')
+      .maybeSingle();
 
     if (updateError) throw updateError;
+    if (!updated?.id) return false;
+
+    await trackServerAnalyticsEvent({
+      eventName: 'study_error_resolved',
+      userId: input.userId,
+      metadata: {
+        study_error_id: existing.id,
+        source_type: input.sourceType,
+        materia_id: existing.materia_id ?? null,
+        material_id: existing.student_material_id ?? null,
+        failure_count: existing.failure_count ?? 1,
+      },
+    });
+
     return true;
   } catch (error) {
     logError('studyErrors.recordCorrect', error, {
@@ -288,11 +337,25 @@ export async function markStudyErrorReviewed(userId: string, errorId: string) {
       .eq('id', errorId)
       .eq('user_id', userId)
       .eq('status', 'pending')
-      .select('id')
+      .select('id, source_type, materia_id, student_material_id, failure_count')
       .maybeSingle();
 
     if (error) throw error;
-    return Boolean(data?.id);
+    if (!data?.id) return false;
+
+    await trackServerAnalyticsEvent({
+      eventName: 'study_error_reviewed',
+      userId,
+      metadata: {
+        study_error_id: data.id,
+        source_type: data.source_type,
+        materia_id: data.materia_id ?? null,
+        material_id: data.student_material_id ?? null,
+        failure_count: data.failure_count ?? 1,
+      },
+    });
+
+    return true;
   } catch (error) {
     logError('studyErrors.markReviewed', error, { userId, errorId });
     return false;
