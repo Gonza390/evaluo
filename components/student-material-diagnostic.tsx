@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 
 type Props = {
   artifacts: PedagogicalArtifacts;
@@ -78,6 +79,8 @@ export function StudentMaterialDiagnostic({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [finished, setFinished] = useState(false);
+  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
+  const [isRecordingError, setIsRecordingError] = useState(false);
 
   const result = useMemo(() => {
     const wrong = questions.filter(
@@ -172,23 +175,7 @@ export function StudentMaterialDiagnostic({
   const selectedAnswer = selectedAnswers[current.id] ?? '';
   const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
 
-  const goNext = () => {
-    if (!selectedAnswer) return;
-
-    const wasCorrect = normalize(selectedAnswer) === normalize(current.answer);
-    void recordStudentMaterialStudyResultAction({
-      materialId,
-      sourceType: 'diagnostic',
-      itemKey: `diagnostic:${current.id}`,
-      wasCorrect,
-      topic: current.topic ?? current.reference.sectionTitle,
-      prompt: current.prompt,
-      explanation: current.explanation,
-      correctAnswer: current.answer,
-      selectedAnswer,
-      reference: current.reference,
-    });
-
+  const advanceDiagnostic = () => {
     if (currentIndex >= questions.length - 1) {
       onComplete?.();
       setFinished(true);
@@ -197,8 +184,52 @@ export function StudentMaterialDiagnostic({
     setCurrentIndex((value) => value + 1);
   };
 
+  const goNext = async () => {
+    if (!selectedAnswer || isRecordingError) return;
+
+    const wasCorrect = normalize(selectedAnswer) === normalize(current.answer);
+    const payload = {
+      materialId,
+      sourceType: 'diagnostic' as const,
+      itemKey: `diagnostic:${current.id}`,
+      wasCorrect,
+      topic: current.topic ?? current.reference.sectionTitle,
+      prompt: current.prompt,
+      explanation: current.explanation,
+      correctAnswer: current.answer,
+      selectedAnswer,
+      reference: current.reference,
+    };
+
+    if (wasCorrect) {
+      void recordStudentMaterialStudyResultAction(payload);
+      advanceDiagnostic();
+      return;
+    }
+
+    setIsRecordingError(true);
+    const result = await recordStudentMaterialStudyResultAction(payload);
+    setIsRecordingError(false);
+
+    if (result.onboardingErrorId) {
+      setOnboardingErrorId(result.onboardingErrorId);
+      return;
+    }
+
+    advanceDiagnostic();
+  };
+
   return (
-    <div className="mx-auto max-w-3xl px-1 py-3 sm:px-2 sm:py-5">
+    <>
+      <FirstStudyErrorOnboardingPrompt
+        errorId={onboardingErrorId}
+        location="student_material_diagnostic"
+        onClose={() => {
+          setOnboardingErrorId(null);
+          advanceDiagnostic();
+        }}
+      />
+      <div className="mx-auto max-w-3xl px-1 py-3 sm:px-2 sm:py-5">
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
@@ -252,14 +283,15 @@ export function StudentMaterialDiagnostic({
         <div className="mt-5 flex justify-end border-t border-slate-100 pt-5">
           <Button
             type="button"
-            disabled={!selectedAnswer}
-            onClick={goNext}
+            disabled={!selectedAnswer || isRecordingError}
+            onClick={() => void goNext()}
             className="h-11 rounded-[14px] px-5"
           >
             {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
