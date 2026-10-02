@@ -505,8 +505,14 @@ export function StudentMaterialFlashcards({
   if (!currentCard) return null;
 
   const session = (
-    <div
-      className={cn(
+    <>
+      <FirstStudyErrorOnboardingPrompt
+        errorId={onboardingErrorId}
+        location="student_material_flashcards"
+        onClose={() => setOnboardingErrorId(null)}
+      />
+      <div
+        className={cn(
         demoMode ? 'space-y-3' : 'space-y-4',
         isFullscreen && 'mx-auto flex h-full w-full max-w-5xl flex-col justify-center'
       )}
@@ -722,7 +728,8 @@ export function StudentMaterialFlashcards({
         Presioná <Kbd>Espacio</Kbd> para voltear. Usá <Kbd>↑</Kbd> para “Lo sé” y <Kbd>↓</Kbd> para
         “No lo sé”.
       </div>
-    </div>
+      </div>
+    </>
   );
 
   return isFullscreen
