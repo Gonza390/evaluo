@@ -3,6 +3,8 @@ import type { AnalyticsEventName } from '@/lib/analytics-events';
 
 type JsonRecord = Record<string, Json | undefined>;
 
+const FIRST_PDF_DEMO_KEYS = ['demo_run_id', 'demo_version', 'environment'];
+
 const ATTRIBUTION_KEYS = new Set([
   'utm_source',
   'utm_medium',
@@ -23,6 +25,15 @@ const ATTRIBUTION_KEYS = new Set([
 ]);
 
 const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
+  pdf_uploaded: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'source',
+    'material_id',
+    'file_size_bytes',
+    ...FIRST_PDF_DEMO_KEYS,
+  ],
   page_view: ['attribution', 'anonymous_id', 'page_type', 'carrera_id', 'universidad_id', 'tab'],
   acquisition_touch: [
     'source',
@@ -34,13 +45,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'landing_path',
     'entry_page_type',
   ],
-  session_ping: [
-    'engagement_ms',
-    'engagement_version',
-    'attribution',
-    'anonymous_id',
-    'page_type',
-  ],
+  session_ping: ['engagement_ms', 'engagement_version', 'attribution', 'anonymous_id', 'page_type'],
   client_error: ['message', 'source', 'line', 'attribution', 'anonymous_id', 'page_type'],
   cta_click: [
     'attribution',
@@ -62,13 +67,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'progress_percent',
   ],
   home_product_video_complete: ['attribution', 'anonymous_id', 'page_type', 'location'],
-  pdf_first_landing_viewed: [
-    'attribution',
-    'anonymous_id',
-    'page_type',
-    'location',
-    'source',
-  ],
+  pdf_first_landing_viewed: ['attribution', 'anonymous_id', 'page_type', 'location', 'source'],
   create_material_clicked: [
     'attribution',
     'anonymous_id',
@@ -111,13 +110,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'daily_minutes',
     'exam_date_selected',
   ],
-  pdf_picker_opened: [
-    'attribution',
-    'anonymous_id',
-    'page_type',
-    'location',
-    'source',
-  ],
+  pdf_picker_opened: ['attribution', 'anonymous_id', 'page_type', 'location', 'source'],
   pdf_selected: [
     'attribution',
     'anonymous_id',
@@ -246,8 +239,20 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   profile_completed: ['active_subject_count'],
   student_material_processing_ready: ['material_id', 'page_count', 'processing_strategy'],
   student_material_study_opened: ['material_id', 'is_owner', 'visibility'],
-  student_material_exam_started: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'question_count'],
-  student_material_flashcards_started: ['attribution', 'anonymous_id', 'page_type', 'material_id', 'card_count'],
+  student_material_exam_started: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'material_id',
+    'question_count',
+  ],
+  student_material_flashcards_started: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'material_id',
+    'card_count',
+  ],
   pdf_gate_viewed: [
     'attribution',
     'anonymous_id',
@@ -444,9 +449,32 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'destination',
   ],
   simulator_rating: ['materia_id', 'parcial', 'vote_type', 'rating', 'liked', 'source'],
-  demo_checkpoint_reached: ['attribution', 'anonymous_id', 'page_type', 'materia_id', 'parcial'],
-  demo_material_tour_started: ['attribution', 'anonymous_id', 'page_type', 'source', 'forced'],
+  demo_checkpoint_reached: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'materia_id',
+    'parcial',
+    'source',
+    'stage',
+    'error_kind',
+    'help_kind',
+    'correct',
+    'question_number',
+    'attempt',
+    'entry',
+    ...FIRST_PDF_DEMO_KEYS,
+  ],
+  demo_material_tour_started: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'source',
+    'forced',
+    ...FIRST_PDF_DEMO_KEYS,
+  ],
   demo_material_tour_step_viewed: [
+    ...FIRST_PDF_DEMO_KEYS,
     'attribution',
     'anonymous_id',
     'page_type',
@@ -456,6 +484,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'target',
   ],
   demo_material_tour_skipped: [
+    ...FIRST_PDF_DEMO_KEYS,
+    'destination',
     'attribution',
     'anonymous_id',
     'page_type',
@@ -464,6 +494,9 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'total_steps',
   ],
   demo_material_tour_completed: [
+    ...FIRST_PDF_DEMO_KEYS,
+    'outcome',
+    'error_kind',
     'attribution',
     'anonymous_id',
     'page_type',
@@ -471,6 +504,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'total_steps',
   ],
   demo_material_tour_upload_clicked: [
+    ...FIRST_PDF_DEMO_KEYS,
     'attribution',
     'anonymous_id',
     'page_type',

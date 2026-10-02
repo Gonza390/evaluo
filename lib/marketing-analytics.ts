@@ -43,7 +43,7 @@ export function trackMarketingEvent(
       page_type: pageType,
       ...payload,
     },
-  });
+  }).catch(() => undefined);
 }
 
 export function trackSimulatorMarketingEvent(

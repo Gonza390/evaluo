@@ -3,14 +3,7 @@
 import 'react-pdf/dist/Page/TextLayer.css';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Expand,
-  Minimize,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Expand, Minimize, ZoomIn, ZoomOut } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { logError } from '@/lib/observability';
@@ -48,6 +41,9 @@ interface PdfViewerProps {
   showSidebarThumbnails?: boolean;
   theme?: 'default' | 'study';
   initialPage?: number | null;
+  persistView?: boolean;
+  /** Los ejemplos locales pueden cargar por URL para soportar remontajes del lector. */
+  sourceMode?: 'blob' | 'url';
 }
 
 const ZOOM_LEVELS = [0.75, 0.9, 1, 1.15, 1.3, 1.5, 1.75] as const;
@@ -97,6 +93,8 @@ export default function PdfViewer({
   showSidebarThumbnails = true,
   theme = 'default',
   initialPage = null,
+  persistView = true,
+  sourceMode = 'blob',
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
@@ -183,7 +181,7 @@ export default function PdfViewer({
   }, []);
 
   useEffect(() => {
-    const persistedView = readPersistedPdfView(url);
+    const persistedView = persistView ? readPersistedPdfView(url) : null;
     const requestedPage = initialPage ?? persistedView?.pageNumber ?? 1;
 
     setCurrentPage(requestedPage);
@@ -192,7 +190,7 @@ export default function PdfViewer({
     setShowPreviewGate(false);
     shouldRestoreSavedPageRef.current = requestedPage > 1;
     pageRefs.current = {};
-  }, [initialPage, url]);
+  }, [initialPage, persistView, url]);
 
   useEffect(() => {
     let active = true;
@@ -270,16 +268,20 @@ export default function PdfViewer({
     return PDF_PREVIEW_PAGE_LIMIT;
   }, [numPages]);
 
-  const visiblePageLimit = forcePreviewLock ? numPages : isAuthenticated ? numPages : previewPageLimit;
+  const visiblePageLimit = forcePreviewLock
+    ? numPages
+    : isAuthenticated
+      ? numPages
+      : previewPageLimit;
   const isPreviewLocked =
     forcePreviewLock || (!userLoading && !isAuthenticated && numPages > previewPageLimit);
   const canGoPrev = currentPage > 1;
   const canGoNext = currentPage < visiblePageLimit;
-  const documentFile = documentSourceBlob;
+  const documentFile = sourceMode === 'url' && documentSourceBlob ? url : documentSourceBlob;
 
   const handleDocumentLoad = (documentProxy: unknown) => {
     const doc = documentProxy as LoadedPdfDocument;
-    const persistedView = readPersistedPdfView(url);
+    const persistedView = persistView ? readPersistedPdfView(url) : null;
 
     setNumPages(doc.numPages);
     setCurrentPage(() => {
@@ -321,7 +323,11 @@ export default function PdfViewer({
     const viewport = pageViewportRef.current;
     if (!viewport) return;
 
-    if ((isAuthenticated && !forcePreviewLock) || userLoading || (!forcePreviewLock && numPages <= previewPageLimit)) {
+    if (
+      (isAuthenticated && !forcePreviewLock) ||
+      userLoading ||
+      (!forcePreviewLock && numPages <= previewPageLimit)
+    ) {
       setShowPreviewGate(false);
       return;
     }
@@ -358,7 +364,7 @@ export default function PdfViewer({
   }, [showPreviewGate]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || numPages <= 0) {
+    if (!persistView || typeof window === 'undefined' || numPages <= 0) {
       return;
     }
 
@@ -373,7 +379,7 @@ export default function PdfViewer({
     } catch {
       // Ignore persistence failures in restricted environments.
     }
-  }, [currentPage, numPages, url, zoomIndex]);
+  }, [currentPage, numPages, persistView, url, zoomIndex]);
 
   const toggleFullscreen = async () => {
     if (!containerRef.current) return;
@@ -439,7 +445,7 @@ export default function PdfViewer({
     <div
       ref={containerRef}
       className={cn(
-        'surface-panel flex w-full min-w-0 max-w-full flex-col overflow-hidden',
+        'surface-panel flex w-full max-w-full min-w-0 flex-col overflow-hidden',
         isStudyTheme && 'border-white/8 bg-[#111214] text-slate-100',
         className
       )}
@@ -452,7 +458,12 @@ export default function PdfViewer({
       >
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <div className="min-w-0">
-            <p className={cn('truncate text-sm font-semibold text-slate-900', isStudyTheme && 'text-slate-100')}>
+            <p
+              className={cn(
+                'truncate text-sm font-semibold text-slate-900',
+                isStudyTheme && 'text-slate-100'
+              )}
+            >
               {title}
             </p>
             {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
@@ -543,7 +554,12 @@ export default function PdfViewer({
         </div>
       </div>
 
-      <div className={cn('grid min-h-0 flex-1 gap-0', showSidebarThumbnails ? 'lg:grid-cols-[170px_minmax(0,1fr)]' : 'grid-cols-1')}>
+      <div
+        className={cn(
+          'grid min-h-0 flex-1 gap-0',
+          showSidebarThumbnails ? 'lg:grid-cols-[170px_minmax(0,1fr)]' : 'grid-cols-1'
+        )}
+      >
         {showSidebarThumbnails ? (
           <aside
             className={cn(
@@ -623,7 +639,7 @@ export default function PdfViewer({
           <div
             ref={pageViewportRef}
             className={cn(
-              'min-w-0 max-w-full overflow-auto rounded-[1rem] bg-white p-2 sm:rounded-[1.15rem] sm:p-3',
+              'max-w-full min-w-0 overflow-auto rounded-[1rem] bg-white p-2 sm:rounded-[1.15rem] sm:p-3',
               isStudyTheme && 'bg-[#0F1012]',
               heightClassName
             )}
@@ -694,7 +710,8 @@ export default function PdfViewer({
                         className={cn(
                           'mx-auto w-full max-w-full rounded-[0.95rem] border border-slate-100 bg-white shadow-sm',
                           pageMaxWidthClassName,
-                          isStudyTheme && 'border-white/8 bg-white shadow-[0_10px_34px_rgba(0,0,0,0.28)]'
+                          isStudyTheme &&
+                            'border-white/8 bg-white shadow-[0_10px_34px_rgba(0,0,0,0.28)]'
                         )}
                         style={{ minHeight: `${estimatedPageHeight}px` }}
                       >
@@ -709,7 +726,8 @@ export default function PdfViewer({
                           <div
                             className={cn(
                               'flex h-full min-h-[inherit] items-center justify-center rounded-[0.95rem] bg-[linear-gradient(180deg,#fafcff_0%,#f3f6fb_100%)] text-sm font-medium text-slate-500',
-                              isStudyTheme && 'bg-[linear-gradient(180deg,#1B1C21_0%,#131418_100%)] text-slate-500'
+                              isStudyTheme &&
+                                'bg-[linear-gradient(180deg,#1B1C21_0%,#131418_100%)] text-slate-500'
                             )}
                           >
                             Preparando pagina {pageNumber}...
@@ -723,7 +741,7 @@ export default function PdfViewer({
                     <div className="sticky bottom-3 z-10 mx-auto mt-6 flex w-full max-w-2xl justify-center px-1 sm:bottom-4 sm:px-3">
                       <div className="absolute inset-x-5 -top-10 h-14 rounded-full bg-gradient-to-t from-white via-white/80 to-transparent blur-2xl" />
                       <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-indigo-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
-                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-indigo-700">
+                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">
                           Preview disponible
                           <span className="rounded-full bg-white px-2 py-0.5 text-[12px] text-indigo-600">
                             {previewPageLimit} paginas
@@ -733,7 +751,9 @@ export default function PdfViewer({
                           Accede al material completo
                         </p>
                         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
-                          Ya viste una parte del documento. Iniciá sesión para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
+                          Ya viste una parte del documento. Iniciá sesión para desbloquear la
+                          lectura completa, guardar tu progreso y seguir estudiando dentro de
+                          Evaluo.
                         </p>
                         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
                           <Link

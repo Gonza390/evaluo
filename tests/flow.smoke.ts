@@ -22,6 +22,12 @@ import {
 import { isAllowedAnalyticsEventName } from '../lib/analytics-events.ts';
 import { sanitizeAnalyticsMetadata } from '../lib/analytics-metadata.ts';
 import {
+  createFirstPdfDemoTracker,
+  rememberFirstPdfDemoUpload,
+  consumeFirstPdfDemoUpload,
+  FIRST_PDF_DEMO_SOURCE,
+} from '../lib/first-pdf-demo-analytics.ts';
+import {
   hasPremiumSubscriptionAccess,
   isPremiumSubscriptionStatus,
   subscriptionStatusForPayment,
@@ -267,5 +273,125 @@ assert.match(simulatorBridgeSource, /LegacySimuladorExamen/);
 assert.match(simulatorUiSource, /Pregunta \{currentQuestionIndex \+ 1\}/);
 assert.match(simulatorUiSource, /onClick=\{goPrevious\}/);
 assert.match(simulatorUiSource, /isLastQuestion \? requestFinalizar\(\) : goNext\(\)/);
+
+// La muestra mide comprensión sin guardar respuestas ni inventar errores del alumno.
+const demoEvents: { event: string; metadata: Record<string, unknown> }[] = [];
+const demoRunId = 'f4b6c5d8-7d21-40a2-89b0-60bd2ea16f56';
+const demoTracker = createFirstPdfDemoTracker({
+  runId: demoRunId,
+  environment: 'development',
+  emit: (event, metadata) => demoEvents.push({ event, metadata }),
+});
+demoTracker.track('demo_material_tour_started', {}, 'started');
+demoTracker.track('demo_material_tour_started', {}, 'started');
+assert.equal(demoEvents.length, 1, 'Strict Mode y volver a un paso no duplican impresiones.');
+demoTracker.checkpoint('errors_viewed', { error_kind: 'illustrative' });
+demoTracker.checkpoint('check_answered', { correct: false, attempt: 1 });
+demoTracker.checkpoint('check_answered', { correct: true, attempt: 2 });
+for (const { event, metadata } of demoEvents) {
+  assert.equal(isAllowedAnalyticsEventName(event), true);
+  assert.deepEqual(sanitizeAnalyticsMetadata(event, metadata), metadata);
+}
+assert.equal(demoEvents[1].metadata.error_kind, 'illustrative');
+assert.equal(demoEvents[3].metadata.attempt, 2);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('demo_checkpoint_reached', {
+    stage: 'practice_answered',
+    correct: false,
+    question_text: 'Contenido privado',
+    answer: 'Privada',
+  }),
+  { stage: 'practice_answered', correct: false }
+);
+assert.doesNotThrow(() =>
+  createFirstPdfDemoTracker({
+    runId: demoRunId,
+    environment: 'development',
+    emit: () => {
+      throw new Error('Offline');
+    },
+  }).checkpoint('practice_started')
+);
+
+const demoStorageMap = new Map<string, string>();
+const demoStorage = {
+  getItem: (key: string) => demoStorageMap.get(key) ?? null,
+  setItem: (key: string, value: string) => {
+    demoStorageMap.set(key, value);
+  },
+  removeItem: (key: string) => {
+    demoStorageMap.delete(key);
+  },
+};
+const demoNow = Date.UTC(2026, 9, 2);
+assert.deepEqual(consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow), {});
+rememberFirstPdfDemoUpload(demoRunId, demoStorage, demoNow);
+assert.deepEqual(consumeFirstPdfDemoUpload('dashboard', demoStorage, demoNow), {});
+assert.deepEqual(consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow + 1000), {
+  demo_run_id: demoRunId,
+  demo_version: 'guided-pdf-v1',
+});
+assert.deepEqual(
+  consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow + 1000),
+  {},
+  'No se atribuye una segunda carga a la misma corrida.'
+);
+rememberFirstPdfDemoUpload(demoRunId, demoStorage, demoNow);
+assert.deepEqual(
+  consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow + 8 * 86400000),
+  {},
+  'La atribución vence.'
+);
+rememberFirstPdfDemoUpload(demoRunId, demoStorage, demoNow + 1000);
+assert.deepEqual(consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow), {});
+rememberFirstPdfDemoUpload('contenido-no-valido', demoStorage, demoNow);
+assert.deepEqual(consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow), {});
+const deniedDemoStorage = {
+  getItem: () => {
+    throw new Error('Storage bloqueado');
+  },
+  setItem: () => {
+    throw new Error('Storage bloqueado');
+  },
+  removeItem: () => {
+    throw new Error('Storage bloqueado');
+  },
+};
+assert.deepEqual(
+  consumeFirstPdfDemoUpload(
+    FIRST_PDF_DEMO_SOURCE,
+    {
+      ...demoStorage,
+      getItem: () => '{json incompleto',
+    },
+    demoNow
+  ),
+  {}
+);
+assert.deepEqual(
+  consumeFirstPdfDemoUpload(
+    FIRST_PDF_DEMO_SOURCE,
+    {
+      ...demoStorage,
+      getItem: () =>
+        JSON.stringify({ run_id: demoRunId, created_at: demoNow, version: 'otra-version' }),
+    },
+    demoNow
+  ),
+  {}
+);
+assert.doesNotThrow(() => rememberFirstPdfDemoUpload(demoRunId, deniedDemoStorage, demoNow));
+assert.deepEqual(consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, deniedDemoStorage, demoNow), {});
+assert.equal(isAllowedAnalyticsEventName('pdf_uploaded'), true);
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('pdf_uploaded', {
+    source: FIRST_PDF_DEMO_SOURCE,
+    material_id: 'material-propio',
+    demo_run_id: demoRunId,
+    file_name: 'Apunte privado.pdf',
+    file_content: 'Privado',
+  }),
+  { source: FIRST_PDF_DEMO_SOURCE, material_id: 'material-propio', demo_run_id: demoRunId }
+);
 
 console.log('Flow smoke tests passed.');

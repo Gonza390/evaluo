@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
 import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
@@ -286,6 +287,19 @@ export function PdfFirstUploadShell({
         throw new Error(result.message);
       }
 
+      // El clic no es una conversión: contamos la carga cuando el servidor la confirmó.
+      try {
+        trackMarketingEvent('pdf_uploaded', {
+          source: initialSource || 'dashboard',
+          material_id: result.materialId,
+          file_size_bytes: activeFile.size,
+          environment: process.env.NODE_ENV,
+          ...consumeFirstPdfDemoUpload(initialSource),
+        });
+      } catch {
+        // Analytics nunca debe convertir una carga exitosa en un error de interfaz.
+      }
+
       if (examDate) {
         const examResult = await saveStudentMaterialExamContextAction({
           materialId: result.materialId,
@@ -308,11 +322,6 @@ export function PdfFirstUploadShell({
 
       if (isPdfFirstLandingResume) {
         await clearPdfFirstDraft().catch(() => undefined);
-        trackMarketingEvent('pdf_uploaded', {
-          source: initialSource,
-          material_id: result.materialId,
-          file_size_bytes: activeFile.size,
-        });
         trackMarketingEvent('material_processing_started', {
           source: initialSource,
           material_id: result.materialId,

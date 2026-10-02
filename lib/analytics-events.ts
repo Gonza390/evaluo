@@ -16,6 +16,7 @@ const ANALYTICS_EVENT_NAMES = [
   'preguntero_study_plan_cta_clicked',
   'pdf_picker_opened',
   'pdf_selected',
+  'pdf_uploaded',
   'signup_page_viewed',
   'signup_cta_clicked',
   'pricing_view',

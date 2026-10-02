@@ -76,13 +76,17 @@ export function StudentMaterialFlashcards({
   cards,
   materialId,
   onComplete,
+  demoMode = false,
 }: {
   cards: StudyFlashcard[];
   materialId: string;
   onComplete?: () => void;
+  demoMode?: boolean;
 }) {
-  const [started, setStarted] = useState(false);
-  const [order, setOrder] = useState<number[]>([]);
+  const [started, setStarted] = useState(demoMode);
+  const [order, setOrder] = useState<number[]>(() =>
+    demoMode ? cards.map((_, index) => index) : []
+  );
   const [position, setPosition] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -143,14 +147,15 @@ export function StudentMaterialFlashcards({
 
   const startSession = useCallback(() => {
     beginSession(buildSessionOrder(recallByCard, cards.length));
-    void trackClientAnalyticsEvent({
-      eventName: 'student_material_flashcards_started',
-      metadata: {
-        material_id: materialId,
-        card_count: cards.length,
-      },
-    });
-  }, [beginSession, cards.length, materialId, recallByCard]);
+    if (!demoMode)
+      void trackClientAnalyticsEvent({
+        eventName: 'student_material_flashcards_started',
+        metadata: {
+          material_id: materialId,
+          card_count: cards.length,
+        },
+      });
+  }, [beginSession, cards.length, demoMode, materialId, recallByCard]);
 
   const finishSession = useCallback(() => {
     setStarted(false);
@@ -183,7 +188,7 @@ export function StudentMaterialFlashcards({
   }, [allReviewed, onComplete]);
 
   const scheduleTomorrowReminder = useCallback(() => {
-    if (unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
+    if (demoMode || unknownCount <= 0 || isSchedulingReminder || reminderScheduled) return;
 
     setIsSchedulingReminder(true);
     setReminderError(null);
@@ -206,15 +211,10 @@ export function StudentMaterialFlashcards({
       .finally(() => {
         setIsSchedulingReminder(false);
       });
-  }, [
-    isSchedulingReminder,
-    materialId,
-    reminderScheduled,
-    reviewTopics,
-    unknownCount,
-  ]);
+  }, [demoMode, isSchedulingReminder, materialId, reminderScheduled, reviewTopics, unknownCount]);
 
   useEffect(() => {
+    if (demoMode) return;
     try {
       const stored = window.localStorage.getItem(storageKey);
       if (stored) {
@@ -230,10 +230,10 @@ export function StudentMaterialFlashcards({
     } finally {
       setHasLoadedProgress(true);
     }
-  }, [storageKey]);
+  }, [demoMode, storageKey]);
 
   useEffect(() => {
-    if (!hasLoadedProgress) return;
+    if (demoMode || !hasLoadedProgress) return;
     try {
       window.localStorage.setItem(
         storageKey,
@@ -242,9 +242,10 @@ export function StudentMaterialFlashcards({
     } catch {
       // Persistencia opcional: nunca debe bloquear una sesión.
     }
-  }, [hasLoadedProgress, recallByCard, storageKey, voteByCard]);
+  }, [demoMode, hasLoadedProgress, recallByCard, storageKey, voteByCard]);
 
   useEffect(() => {
+    if (demoMode) return;
     let active = true;
     void getFlashcardProgressAction(materialId)
       .then((result) => {
@@ -259,10 +260,10 @@ export function StudentMaterialFlashcards({
     return () => {
       active = false;
     };
-  }, [materialId]);
+  }, [demoMode, materialId]);
 
   useEffect(() => {
-    if (!hasLoadedProgress || !hasLoadedServer) return;
+    if (demoMode || !hasLoadedProgress || !hasLoadedServer) return;
 
     const indexes = new Set<number>([
       ...Object.keys(recallByCard).map(Number),
@@ -281,13 +282,12 @@ export function StudentMaterialFlashcards({
     }, 800);
 
     return () => window.clearTimeout(timer);
-  }, [hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
+  }, [demoMode, hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
 
   const navigateBack = useCallback(() => {
     setPosition((current) => Math.max(0, current - 1));
     setFlipped(false);
   }, []);
-
 
   const markRecall = useCallback(
     (result: RecallResult) => {
@@ -296,18 +296,19 @@ export function StudentMaterialFlashcards({
       setRecallByCard((current) => ({ ...current, [currentCardIndex]: result }));
       setSessionRecall((current) => ({ ...current, [currentCardIndex]: result }));
 
-      void recordStudentMaterialStudyResultAction({
-        materialId,
-        sourceType: 'flashcard',
-        itemKey: `flashcard:${currentCardIndex}`,
-        wasCorrect: result === 'known',
-        topic: currentCard.reference.sectionTitle ?? currentCard.front,
-        prompt: currentCard.front,
-        explanation: currentCard.back,
-        correctAnswer: currentCard.back,
-        selectedAnswer: result === 'known' ? currentCard.back : 'No lo sabía',
-        reference: currentCard.reference,
-      });
+      if (!demoMode)
+        void recordStudentMaterialStudyResultAction({
+          materialId,
+          sourceType: 'flashcard',
+          itemKey: `flashcard:${currentCardIndex}`,
+          wasCorrect: result === 'known',
+          topic: currentCard.reference.sectionTitle ?? currentCard.front,
+          prompt: currentCard.front,
+          explanation: currentCard.back,
+          correctAnswer: currentCard.back,
+          selectedAnswer: result === 'known' ? currentCard.back : 'No lo sabía',
+          reference: currentCard.reference,
+        });
 
       if (position < order.length - 1) {
         setPosition((current) => Math.min(order.length - 1, current + 1));
@@ -318,7 +319,7 @@ export function StudentMaterialFlashcards({
       setFlipped(false);
       setIsFullscreen(false);
     },
-    [currentCard, currentCardIndex, flipped, materialId, order.length, position]
+    [currentCard, currentCardIndex, demoMode, flipped, materialId, order.length, position]
   );
 
   useEffect(() => {
@@ -441,19 +442,21 @@ export function StudentMaterialFlashcards({
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           {unknownCount > 0 ? (
             <>
-              <Button
-                type="button"
-                onClick={scheduleTomorrowReminder}
-                disabled={isSchedulingReminder || reminderScheduled}
-                className="rounded-2xl px-6"
-              >
-                <Bell className="h-4 w-4" />
-                {isSchedulingReminder
-                  ? 'Guardando...'
-                  : reminderScheduled
-                    ? 'Te recordamos mañana'
-                    : 'Recordarme mañana'}
-              </Button>
+              {!demoMode && (
+                <Button
+                  type="button"
+                  onClick={scheduleTomorrowReminder}
+                  disabled={isSchedulingReminder || reminderScheduled}
+                  className="rounded-2xl px-6"
+                >
+                  <Bell className="h-4 w-4" />
+                  {isSchedulingReminder
+                    ? 'Guardando...'
+                    : reminderScheduled
+                      ? 'Te recordamos mañana'
+                      : 'Recordarme mañana'}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -490,7 +493,7 @@ export function StudentMaterialFlashcards({
   const session = (
     <div
       className={cn(
-        'space-y-4',
+        demoMode ? 'space-y-3' : 'space-y-4',
         isFullscreen && 'mx-auto flex h-full w-full max-w-5xl flex-col justify-center'
       )}
     >
@@ -499,7 +502,7 @@ export function StudentMaterialFlashcards({
           <p className="text-sm font-semibold text-slate-950">
             Tarjeta {position + 1} de {order.length}
           </p>
-          <p className="mt-0.5 flex gap-4 text-sm font-semibold">
+          <p className={cn('mt-0.5 gap-4 text-sm font-semibold', demoMode ? 'hidden' : 'flex')}>
             <span className="text-emerald-700">
               <Check className="mr-1 inline h-4 w-4" />
               {knownCount} lo sabía
@@ -508,16 +511,18 @@ export function StudentMaterialFlashcards({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setIsFullscreen((value) => !value)}
-            aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
-            className="rounded-xl"
-          >
-            {isFullscreen ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
-          </Button>
+          {!demoMode && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsFullscreen((value) => !value)}
+              aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'}
+              className="rounded-xl"
+            >
+              {isFullscreen ? <Shrink className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+            </Button>
+          )}
           {isFullscreen ? (
             <Button
               type="button"
@@ -550,47 +555,83 @@ export function StudentMaterialFlashcards({
       <button
         type="button"
         onClick={() => setFlipped((value) => !value)}
-        className="group block min-h-[300px] w-full [perspective:1200px] sm:min-h-[360px]"
+        className={cn(
+          'group block w-full [perspective:1200px]',
+          !demoMode && 'min-h-[300px] sm:min-h-[360px]'
+        )}
         aria-label={flipped ? 'Mostrar pregunta' : 'Mostrar respuesta'}
       >
         <div
           className={cn(
-            'relative min-h-[300px] w-full transition-transform duration-500 [transform-style:preserve-3d] sm:min-h-[360px]',
-            flipped && '[transform:rotateY(180deg)]'
+            'relative w-full transition-transform duration-500 [transform-style:preserve-3d]',
+            demoMode ? 'grid min-h-[180px]' : 'min-h-[300px] sm:min-h-[360px]',
+            flipped && !demoMode && '[transform:rotateY(180deg)]'
           )}
         >
           <div
             aria-hidden={flipped}
-            className="absolute inset-0 flex flex-col items-center justify-center rounded-[26px] border border-slate-200 bg-white px-6 py-10 text-center shadow-[0_20px_55px_rgba(15,23,42,0.09)] [backface-visibility:hidden] sm:px-12"
+            className={cn(
+              'flex flex-col items-center justify-center rounded-[26px] border border-slate-200 bg-white text-center shadow-[0_20px_55px_rgba(15,23,42,0.09)] [backface-visibility:hidden]',
+              demoMode
+                ? 'col-start-1 row-start-1 px-4 py-5'
+                : 'absolute inset-0 px-6 py-10 sm:px-12',
+              demoMode && flipped && 'hidden'
+            )}
           >
             <p className="text-xs font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
               Pregunta
             </p>
-            <h3 className="mt-5 max-w-3xl text-xl leading-8 font-bold tracking-[-0.03em] text-slate-950 sm:text-2xl">
+            <h3
+              className={cn(
+                'max-w-3xl font-bold tracking-[-0.03em] text-slate-950',
+                demoMode ? 'mt-3 text-lg leading-6' : 'mt-5 text-xl leading-8 sm:text-2xl'
+              )}
+            >
               {displayFront}
             </h3>
-            <p className="mt-6 text-xs text-slate-500">
+            <p className={cn('text-xs text-slate-500', demoMode ? 'mt-3' : 'mt-6')}>
               Tocá la tarjeta o presioná Espacio para ver la respuesta
             </p>
           </div>
           <div
             aria-hidden={!flipped}
-            className="absolute inset-0 flex [transform:rotateY(180deg)] flex-col items-center justify-center rounded-[26px] border border-[#BFDBFE] bg-[#F8FBFF] px-6 py-10 text-center shadow-[0_20px_55px_rgba(37,99,235,0.1)] [backface-visibility:hidden] sm:px-12"
+            className={cn(
+              'flex flex-col items-center justify-center rounded-[26px] border border-[#BFDBFE] bg-[#F8FBFF] text-center shadow-[0_20px_55px_rgba(37,99,235,0.1)] [backface-visibility:hidden]',
+              demoMode
+                ? 'col-start-1 row-start-1 px-4 py-5'
+                : 'absolute inset-0 [transform:rotateY(180deg)] px-6 py-10 sm:px-12',
+              demoMode && !flipped && 'hidden'
+            )}
           >
             <p className="text-xs font-semibold tracking-[0.16em] text-[#2563EB] uppercase">
               Respuesta
             </p>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-800 sm:text-lg">
+            <p
+              className={cn(
+                'max-w-3xl text-slate-800',
+                demoMode ? 'mt-3 text-sm leading-6' : 'mt-5 text-base leading-7 sm:text-lg'
+              )}
+            >
               {currentCard.back}
             </p>
-            <p className="mt-5 text-xs text-slate-500">
+            <p
+              className={cn(
+                'text-xs text-slate-500',
+                demoMode ? 'mt-3 text-xs! leading-4!' : 'mt-5'
+              )}
+            >
               {learningLevelLabel} · Fuente: {referenceLabel}
             </p>
           </div>
         </div>
       </button>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div
+        className={cn(
+          'grid gap-3 sm:grid-cols-2',
+          demoMode && 'sticky bottom-0 grid-cols-2 bg-white py-2'
+        )}
+      >
         <Button
           type="button"
           variant="outline"

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode, type SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BookOpenText,
@@ -62,9 +62,17 @@ type MaterialStudyWorkspaceProps = {
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
+  /** Recorrido de muestra: contenido preparado, sin resultados ni acciones de cuenta. */
+  demo?: {
+    activeTab: StudyTabId;
+    onTabChange: (tab: StudyTabId) => void;
+    viewerVisible: boolean;
+    onViewerChange: (visible: boolean) => void;
+    practice: ReactNode;
+  };
 };
 
-type StudyTabId = 'resumen' | 'glosario' | 'tarjetas' | 'ejercicios' | 'mapa';
+export type StudyTabId = 'resumen' | 'glosario' | 'tarjetas' | 'ejercicios' | 'mapa';
 
 const STUDY_TABS: Array<{
   id: StudyTabId;
@@ -106,21 +114,23 @@ function StudyDocumentShell({
   title,
   description,
   children,
+  compact = false,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  compact?: boolean;
 }) {
   return (
     <div className="surface-card rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
-      <div className="space-y-5 px-4 py-4 sm:px-5 sm:py-5">
+      <div className={compact ? 'space-y-3 px-3 py-3' : 'space-y-5 px-4 py-4 sm:px-5 sm:py-5'}>
         <section className="space-y-1.5">
           <h2 className="text-[1.12rem] font-bold tracking-[-0.04em] text-slate-950">{title}</h2>
           {description ? (
             <p className="text-[13px] leading-6 text-slate-500">{description}</p>
           ) : null}
         </section>
-        <div className="h-px bg-white" />
+        {!compact && <div className="h-px bg-white" />}
         {children}
       </div>
     </div>
@@ -170,8 +180,10 @@ function MaterialMetadata({
     <div className="grid min-w-0 gap-x-4 gap-y-2 sm:grid-cols-2 lg:min-w-[620px] lg:grid-cols-3">
       {carreraName ? (
         <div className="min-w-0">
-          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">Carrera</p>
-          <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
+          <p className="text-[9.5px] font-bold tracking-[0.14em] text-slate-400 uppercase">
+            Carrera
+          </p>
+          <p className="mt-0.5 text-[12.5px] leading-5 font-semibold text-slate-800 sm:text-[13px]">
             {carreraName}
           </p>
         </div>
@@ -179,10 +191,10 @@ function MaterialMetadata({
 
       {universidadName ? (
         <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-4">
-          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">
+          <p className="text-[9.5px] font-bold tracking-[0.14em] text-slate-400 uppercase">
             Universidad
           </p>
-          <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
+          <p className="mt-0.5 text-[12.5px] leading-5 font-semibold text-slate-800 sm:text-[13px]">
             {universidadName}
           </p>
         </div>
@@ -190,8 +202,10 @@ function MaterialMetadata({
 
       {materiaName ? (
         <div className="min-w-0 border-t border-slate-100 pt-2 sm:col-span-2 lg:col-span-1 lg:border-t-0 lg:border-l lg:border-slate-200 lg:pt-0 lg:pl-4">
-          <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-slate-400">Materia</p>
-          <p className="mt-0.5 text-[12.5px] font-semibold leading-5 text-slate-800 sm:text-[13px]">
+          <p className="text-[9.5px] font-bold tracking-[0.14em] text-slate-400 uppercase">
+            Materia
+          </p>
+          <p className="mt-0.5 text-[12.5px] leading-5 font-semibold text-slate-800 sm:text-[13px]">
             {materiaName}
           </p>
         </div>
@@ -222,16 +236,24 @@ export function MaterialStudyWorkspace({
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
+  demo,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<StudyTabId>(
+  const [localActiveTab, setActiveTab] = useState<StudyTabId>(
     initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen')
   );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [isViewerVisible, setIsViewerVisible] = useState(false);
+  const [localViewerVisible, setLocalViewerVisible] = useState(false);
+  const activeTab = demo?.activeTab ?? localActiveTab;
+  const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
+  const setIsViewerVisible = (value: SetStateAction<boolean>) => {
+    const next = typeof value === 'function' ? value(isViewerVisible) : value;
+    setLocalViewerVisible(next);
+    demo?.onViewerChange(next);
+  };
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [regenerationStageIndex, setRegenerationStageIndex] = useState(0);
   const [regenerationProgress, setRegenerationProgress] = useState(8);
@@ -281,6 +303,7 @@ export function MaterialStudyWorkspace({
   const handleStudyTabChange = (value: string) => {
     const nextTab = value as StudyTabId;
     setActiveTab(nextTab);
+    demo?.onTabChange(nextTab);
 
     if (nextTab !== 'resumen') {
       setIsViewerVisible(false);
@@ -401,16 +424,18 @@ export function MaterialStudyWorkspace({
             </a>
           </Button>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleComments}
-            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
-          >
-            <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            Calificar
-          </Button>
+          {!demo && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleComments}
+              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+            >
+              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Calificar
+            </Button>
+          )}
 
           {canRegenerate ? (
             <Button
@@ -478,7 +503,9 @@ export function MaterialStudyWorkspace({
                       {label}
                     </span>
                   </div>
-                  {isActive ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" /> : null}
+                  {isActive ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F59E0B]" />
+                  ) : null}
                 </div>
               );
             })}
@@ -493,10 +520,15 @@ export function MaterialStudyWorkspace({
 
           <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
             <p className="text-[13px] font-semibold text-slate-950">
-              {regenerationStages[Math.min(regenerationStageIndex, regenerationStages.length - 1)]?.[1]}
+              {
+                regenerationStages[
+                  Math.min(regenerationStageIndex, regenerationStages.length - 1)
+                ]?.[1]
+              }
             </p>
             <p className="mt-1.5 text-[12.5px] leading-5 text-slate-500">
-              Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario del PDF.
+              Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario
+              del PDF.
             </p>
           </div>
         </div>
@@ -509,7 +541,10 @@ export function MaterialStudyWorkspace({
       role="region"
       aria-label="Contenido de estudio"
       tabIndex={0}
-      className="px-2.5 pb-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-inset sm:px-4 sm:pb-4 xl:h-full xl:overflow-y-auto"
+      className={cn(
+        'px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4 xl:h-full xl:overflow-y-auto',
+        demo && 'h-full min-h-0 overflow-y-auto'
+      )}
     >
       {commentsOpen && activeTab === 'resumen' ? (
         <WorkspaceCard className="mb-3 border-[#BFDBFE] bg-white">
@@ -517,7 +552,7 @@ export function MaterialStudyWorkspace({
         </WorkspaceCard>
       ) : null}
 
-      <TabsContent value="resumen" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="resumen" className="animate-tab-panel">
         <div className="mx-auto w-full max-w-[1180px] py-1 sm:py-2">
           <header className="border-b border-slate-200 pb-7 sm:pb-8">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -528,7 +563,7 @@ export function MaterialStudyWorkspace({
               <span className="text-[11.5px] font-medium text-slate-400">{fileName}</span>
             </div>
 
-            <h2 className="mt-3 max-w-[820px] text-[1.75rem] font-bold leading-[1.08] tracking-[-0.05em] text-slate-950 sm:text-[2.15rem]">
+            <h2 className="mt-3 max-w-[820px] text-[1.75rem] leading-[1.08] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.15rem]">
               {title}
             </h2>
 
@@ -567,7 +602,7 @@ export function MaterialStudyWorkspace({
                         href={`#${chapter.anchor}`}
                         className="flex items-start gap-2.5 rounded-lg px-1 py-1.5 text-[12.5px] leading-5 text-slate-600 transition hover:text-[#2563EB]"
                       >
-                        <span className="mt-0.5 min-w-5 font-bold tabular-nums text-slate-400">
+                        <span className="mt-0.5 min-w-5 font-bold text-slate-400 tabular-nums">
                           {String(index + 1).padStart(2, '0')}
                         </span>
                         <span>{chapter.displayTitle}</span>
@@ -594,7 +629,7 @@ export function MaterialStudyWorkspace({
                             href={`#${chapter.anchor}`}
                             className="group flex items-start gap-2.5 text-[12.5px] leading-5 text-slate-500 transition hover:text-[#2563EB]"
                           >
-                            <span className="min-w-5 font-bold tabular-nums text-slate-300 transition group-hover:text-[#2563EB]">
+                            <span className="min-w-5 font-bold text-slate-300 tabular-nums transition group-hover:text-[#2563EB]">
                               {String(index + 1).padStart(2, '0')}
                             </span>
                             <span>{chapter.displayTitle}</span>
@@ -607,7 +642,7 @@ export function MaterialStudyWorkspace({
               </aside>
             ) : null}
 
-            <main className="min-w-0 max-w-[800px]">
+            <main className="max-w-[800px] min-w-0">
               {summaryChapters.length > 0 ? (
                 <div>
                   {summaryChapters.map((section, index) => (
@@ -620,7 +655,7 @@ export function MaterialStudyWorkspace({
                         <p className="text-[10px] font-extrabold tracking-[0.18em] text-[#2563EB] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="mt-1.5 text-[1.35rem] font-bold leading-tight tracking-[-0.04em] text-slate-950 sm:text-[1.55rem]">
+                        <h3 className="mt-1.5 text-[1.35rem] leading-tight font-bold tracking-[-0.04em] text-slate-950 sm:text-[1.55rem]">
                           {section.displayTitle}
                         </h3>
                       </header>
@@ -635,6 +670,7 @@ export function MaterialStudyWorkspace({
                           type="button"
                           onClick={() => {
                             setActiveTab('ejercicios');
+                            demo?.onTabChange('ejercicios');
                             setIsViewerVisible(false);
                             setCommentsOpen(false);
                           }}
@@ -650,7 +686,8 @@ export function MaterialStudyWorkspace({
                 </div>
               ) : (
                 <p className="text-[14px] leading-6 text-slate-500">
-                  Todavía no pudimos organizar el contenido por temas claros dentro del texto extraído del PDF.
+                  Todavía no pudimos organizar el contenido por temas claros dentro del texto
+                  extraído del PDF.
                 </p>
               )}
             </main>
@@ -658,13 +695,17 @@ export function MaterialStudyWorkspace({
         </div>
       </TabsContent>
 
-      <TabsContent value="glosario" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="glosario" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
           {usefulGlossary.length > 0 ? (
             <div>
               <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-8 border-b border-slate-200 px-2 py-3 md:grid">
-                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Término</p>
-                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">Definición</p>
+                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">
+                  Término
+                </p>
+                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">
+                  Definición
+                </p>
               </div>
               <div className="divide-y divide-slate-200/80">
                 {usefulGlossary.map((item) => {
@@ -686,7 +727,9 @@ export function MaterialStudyWorkspace({
                           {item.term}
                         </h3>
                         {englishTerm ? (
-                          <p className="text-[12px] font-medium text-slate-400 italic">{englishTerm}</p>
+                          <p className="text-[12px] font-medium text-slate-400 italic">
+                            {englishTerm}
+                          </p>
                         ) : null}
                       </div>
 
@@ -711,19 +754,22 @@ export function MaterialStudyWorkspace({
         </div>
       </TabsContent>
 
-      <TabsContent value="tarjetas" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="tarjetas" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
           <StudentMaterialFlashcards
             cards={studyArtifacts.flashcards}
             materialId={materialId}
-            onComplete={requestExamDatePrompt}
+            onComplete={demo ? undefined : requestExamDatePrompt}
+            demoMode={Boolean(demo)}
           />
         </div>
       </TabsContent>
 
       <TabsContent value="ejercicios" className="animate-tab-panel">
         <div className="px-1 py-1 sm:px-2 sm:py-2">
-          {diagnosticMode ? (
+          {demo ? (
+            demo.practice
+          ) : diagnosticMode ? (
             <StudentMaterialDiagnostic
               artifacts={studyArtifacts}
               materialId={materialId}
@@ -747,20 +793,49 @@ export function MaterialStudyWorkspace({
         </div>
       </TabsContent>
 
-      <TabsContent value="mapa" className="animate-tab-panel">
+      <TabsContent data-demo-focus="study-section" value="mapa" className="animate-tab-panel">
         {isPremium ? (
           <StudyDocumentShell
+            compact={Boolean(demo)}
             title="Mapa mental"
-            description="Vista de los temas y conceptos principales detectados en este PDF."
+            description={
+              demo
+                ? undefined
+                : 'Vista de los temas y conceptos principales detectados en este PDF.'
+            }
           >
-            <div className="grid gap-4 xl:grid-cols-[1fr_220px_1fr] xl:items-center">
-              <div className="space-y-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4">
-                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                  Temas principales
+            <div
+              className={cn(
+                'grid',
+                demo
+                  ? 'grid-cols-2 items-start gap-3'
+                  : 'gap-4 xl:grid-cols-[1fr_220px_1fr] xl:items-center'
+              )}
+            >
+              <div
+                className={cn(
+                  'min-w-0 rounded-[18px] border border-slate-200 bg-white',
+                  demo ? 'space-y-2 p-2' : 'space-y-3 px-4 py-4'
+                )}
+              >
+                <p
+                  className={cn(
+                    'font-semibold text-slate-500 uppercase',
+                    demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
+                  )}
+                >
+                  {demo ? 'Temas' : 'Temas principales'}
                 </p>
                 {fullSummarySections.slice(0, 4).map((section, index) => (
-                  <div key={section.title} className="space-y-3">
-                    <p className="text-[13px] font-medium text-slate-700">{section.title}</p>
+                  <div key={section.title} className={demo ? 'space-y-2' : 'space-y-3'}>
+                    <p
+                      className={cn(
+                        'text-[13px] font-medium break-words text-slate-700',
+                        demo && 'text-[13px]! leading-5!'
+                      )}
+                    >
+                      {section.title}
+                    </p>
                     {index < Math.min(3, fullSummarySections.length - 1) ? (
                       <div className="h-px bg-slate-100" />
                     ) : null}
@@ -768,24 +843,60 @@ export function MaterialStudyWorkspace({
                 ))}
               </div>
 
-              <div className="rounded-[22px] border border-[#BFDBFE] bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.55),transparent_70%),linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-5 text-center shadow-[0_14px_32px_rgba(37,99,235,0.10)]">
-                <p className="text-xs font-semibold tracking-[0.18em] text-[#2563EB]/80 uppercase">
+              <div
+                className={cn(
+                  'rounded-[22px] border border-[#BFDBFE] bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.55),transparent_70%),linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-5 text-center shadow-[0_14px_32px_rgba(37,99,235,0.10)]',
+                  demo && 'order-first col-span-2 py-2'
+                )}
+              >
+                <p
+                  className={cn(
+                    'text-xs font-semibold tracking-[0.18em] text-[#2563EB]/80 uppercase',
+                    demo && 'text-xs! leading-4!'
+                  )}
+                >
                   Nodo central
                 </p>
-                <p className="mt-2.5 text-base font-semibold tracking-[-0.03em] text-slate-950">
+                <p
+                  className={cn(
+                    'mt-2.5 text-base font-semibold tracking-[-0.03em] text-slate-950',
+                    demo && 'mt-2 text-sm! leading-5!'
+                  )}
+                >
                   {title}
                 </p>
-                <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">{materiaName}</p>
+                {materiaName && (
+                  <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">{materiaName}</p>
+                )}
               </div>
 
-              <div className="space-y-3 rounded-[18px] border border-slate-200 bg-white px-4 py-4">
-                <p className="text-xs font-semibold tracking-[0.16em] text-slate-500 uppercase">
-                  Conceptos clave
+              <div
+                className={cn(
+                  'min-w-0 rounded-[18px] border border-slate-200 bg-white',
+                  demo ? 'space-y-2 p-2' : 'space-y-3 px-4 py-4'
+                )}
+              >
+                <p
+                  className={cn(
+                    'font-semibold text-slate-500 uppercase',
+                    demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
+                  )}
+                >
+                  {demo ? 'Conceptos' : 'Conceptos clave'}
                 </p>
                 {usefulGlossary.slice(0, 4).map((item, index) => (
-                  <div key={item.term} className="space-y-3">
-                    <p className="text-[13px] font-medium text-slate-700">{item.term}</p>
-                    {index < Math.min(3, usefulGlossary.length - 1) ? <div className="h-px bg-slate-100" /> : null}
+                  <div key={item.term} className={demo ? 'space-y-2' : 'space-y-3'}>
+                    <p
+                      className={cn(
+                        'text-[13px] font-medium break-words text-slate-700',
+                        demo && 'text-[13px]! leading-5!'
+                      )}
+                    >
+                      {item.term}
+                    </p>
+                    {index < Math.min(3, usefulGlossary.length - 1) ? (
+                      <div className="h-px bg-slate-100" />
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -813,13 +924,14 @@ export function MaterialStudyWorkspace({
 
   const content = (
     <Tabs
+      data-demo-focus="study"
       value={activeTab}
       onValueChange={handleStudyTabChange}
       className="flex min-w-0 flex-col gap-2.5 overflow-x-hidden"
     >
       {tabHeader}
       {regenerationOverlay}
-      <div>{tabPanels}</div>
+      <div className={demo ? 'min-h-0 flex-1 overflow-hidden' : undefined}>{tabPanels}</div>
     </Tabs>
   );
 
@@ -864,6 +976,7 @@ export function MaterialStudyWorkspace({
         <div className="hidden xl:block">
           <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
+              data-demo-focus="study"
               value={activeTab}
               onValueChange={handleStudyTabChange}
               className="flex h-full min-w-0 flex-col overflow-x-hidden"
@@ -885,7 +998,7 @@ export function MaterialStudyWorkspace({
 
                   {isViewerVisible ? (
                     <ResizablePanel id="study-viewer-panel" order={2} defaultSize={40} minSize={26}>
-                      <div className="relative h-full min-w-0 bg-white p-2">
+                      <div data-demo-focus="pdf" className="relative h-full min-w-0 bg-white p-2">
                         <button
                           type="button"
                           onClick={() => setIsViewerVisible(false)}
@@ -896,7 +1009,7 @@ export function MaterialStudyWorkspace({
                         </button>
                         <PdfViewer
                           url={viewerUrl}
-                          title={title}
+                          title={demo ? 'PDF de muestra' : title}
                           subtitle={null}
                           className="h-full rounded-[22px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
                           heightClassName="h-full min-h-0"
@@ -904,6 +1017,8 @@ export function MaterialStudyWorkspace({
                           showSidebarThumbnails={false}
                           theme="default"
                           initialPage={initialPdfPage}
+                          persistView={!demo}
+                          sourceMode={demo ? 'url' : 'blob'}
                         />
                       </div>
                     </ResizablePanel>
@@ -932,7 +1047,10 @@ export function MaterialStudyWorkspace({
 
           {activeTab === 'resumen' ? (
             isViewerVisible ? (
-              <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
+              <div
+                data-demo-focus="pdf"
+                className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_22px_54px_rgba(15,23,42,0.10)]"
+              >
                 <button
                   type="button"
                   onClick={() => setIsViewerVisible(false)}
@@ -943,14 +1061,20 @@ export function MaterialStudyWorkspace({
                 </button>
                 <PdfViewer
                   url={viewerUrl}
-                  title={title}
+                  title={demo ? 'PDF de muestra' : title}
                   subtitle={null}
-                  className="rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
-                  heightClassName="h-[58vh] sm:h-[62vh]"
+                  className={cn(
+                    'rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]',
+                    demo &&
+                      'h-[var(--demo-visible-height,58vh)] sm:h-[var(--demo-visible-height,62vh)] [&>div:first-child]:px-1 [&>div:first-child>div>div:last-child]:gap-1'
+                  )}
+                  heightClassName={demo ? 'h-full min-h-0' : 'h-[58vh] sm:h-[62vh]'}
                   pageMaxWidthClassName="max-w-[760px]"
                   showSidebarThumbnails={false}
                   theme="default"
                   initialPage={initialPdfPage}
+                  persistView={!demo}
+                  sourceMode={demo ? 'url' : 'blob'}
                 />
               </div>
             ) : (
@@ -961,7 +1085,8 @@ export function MaterialStudyWorkspace({
                       PDF oculto
                     </p>
                     <p className="mt-1 text-[13px] leading-5 text-slate-600">
-                      Mostrá el documento cuando quieras contrastar el resumen con el archivo original.
+                      Mostrá el documento cuando quieras contrastar el resumen con el archivo
+                      original.
                     </p>
                   </div>
                   <button

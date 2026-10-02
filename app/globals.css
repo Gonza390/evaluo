@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@source '../components/preview';
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.15 0.01 230);
