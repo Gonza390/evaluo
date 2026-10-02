@@ -170,6 +170,11 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
     }
 
     setExplanation(result.explanation);
+
+    // Leer la explicación cuenta como repaso: lo persistimos para que un acierto posterior
+    // pueda cerrar el error aunque el usuario no haya abierto el PDF.
+    void markStudyErrorReviewedAction(item.id);
+
     trackMarketingEvent('study_error_explanation_reviewed', {
       study_error_id: item.id,
       source_type: item.sourceType,
