@@ -103,6 +103,8 @@ function fallbackTopic(prompt: string) {
 }
 
 async function claimFirstStudyErrorOnboarding(
+  // La tabla interna todavía no forma parte de los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
   userId: string,
   errorId: string
