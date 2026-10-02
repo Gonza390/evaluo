@@ -87,7 +87,8 @@ export function PdfFirstUploadShell({
 }: Props) {
   const router = useRouter();
   const { toast } = useToast();
-  const isPdfFirstLandingResume = initialSource.startsWith('pdf-first-landing');
+  const isPreAuthPdfResume =
+    initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
   const initialProfileUniversity =
     universidades.find((item) => item.id === initialUniversidadId) ?? null;
   const initialProfileCareer =
@@ -127,7 +128,7 @@ export function PdfFirstUploadShell({
   const [contextSaved, setContextSaved] = useState(hasInitialAcademicProfile);
   const [savedContextLabel, setSavedContextLabel] = useState(initialAcademicProfileLabel);
   const [showReadyContext, setShowReadyContext] = useState(false);
-  const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPdfFirstLandingResume);
+  const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPreAuthPdfResume);
 
   const selectedUniversity = universidades.find((item) => item.id === universityId) ?? null;
   const availableCareers = useMemo(
@@ -247,7 +248,7 @@ export function PdfFirstUploadShell({
     setUploading(true);
     let preparedPath: string | null = null;
 
-    if (isPdfFirstLandingResume) {
+    if (isPreAuthPdfResume) {
       trackMarketingEvent('pdf_upload_started', {
         source: initialSource,
         file_size_bytes: activeFile.size,
@@ -320,7 +321,7 @@ export function PdfFirstUploadShell({
         });
       }
 
-      if (isPdfFirstLandingResume) {
+      if (isPreAuthPdfResume) {
         await clearPdfFirstDraft().catch(() => undefined);
         trackMarketingEvent('material_processing_started', {
           source: initialSource,
@@ -356,7 +357,7 @@ export function PdfFirstUploadShell({
   };
 
   useEffect(() => {
-    if (!initialOpen || !isPdfFirstLandingResume || resumeHandledRef.current) return;
+    if (!initialOpen || !isPreAuthPdfResume || resumeHandledRef.current) return;
 
     resumeHandledRef.current = true;
     setOpen(true);
@@ -364,7 +365,7 @@ export function PdfFirstUploadShell({
 
     void loadPdfFirstDraft()
       .then(async (draft) => {
-        if (!draft) return;
+        if (!draft || draft.source !== initialSource) return;
         const restoredTitle = titleFromFile(draft.file.name);
         setFile(draft.file);
         setTitle(restoredTitle);
@@ -379,11 +380,11 @@ export function PdfFirstUploadShell({
         toast({ description: 'No pudimos recuperar el PDF seleccionado. Elegilo nuevamente.', variant: 'destructive' });
       })
       .finally(() => setRestoringDraft(false));
-  }, [initialExamDate, initialOpen, initialSource, isPdfFirstLandingResume, startProcessing, toast]);
+  }, [initialExamDate, initialOpen, initialSource, isPreAuthPdfResume, startProcessing, toast]);
 
   useEffect(() => {
     if (
-      !isPdfFirstLandingResume ||
+      !isPreAuthPdfResume ||
       !processing ||
       processing.status !== 'ready' ||
       readyRedirectedRef.current
@@ -399,7 +400,7 @@ export function PdfFirstUploadShell({
     setOpen(false);
     router.push(getStudentMaterialRoute(processing.materialId));
     router.refresh();
-  }, [initialSource, isPdfFirstLandingResume, processing, router]);
+  }, [initialSource, isPreAuthPdfResume, processing, router]);
 
   const saveContext = async () => {
     if (!processing || !canSaveContext || savingContext) return;
@@ -496,7 +497,7 @@ export function PdfFirstUploadShell({
                   {processing
                     ? ready
                       ? 'Terminamos de preparar tu material.'
-                      : isPdfFirstLandingResume
+                      : isPreAuthPdfResume
                         ? 'Ya tenemos tu archivo. Lo estamos convirtiendo en material de estudio.'
                         : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
                     : restoringDraft
@@ -617,7 +618,7 @@ export function PdfFirstUploadShell({
                   <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
                 </div>
 
-                {ready && isPdfFirstLandingResume ? (
+                {ready && isPreAuthPdfResume ? (
                   <p className="mt-5 text-sm font-semibold text-indigo-700">Listo. Abriendo tu material…</p>
                 ) : ready && !showReadyContext ? (
                   <>
@@ -650,7 +651,7 @@ export function PdfFirstUploadShell({
                   </>
                 ) : null}
 
-                {!isPdfFirstLandingResume && !failed && (!ready || showReadyContext) ? (
+                {!isPreAuthPdfResume && !failed && (!ready || showReadyContext) ? (
                   <>
                     {!contextSaved ? (
                       <div className="mt-5 space-y-4">
