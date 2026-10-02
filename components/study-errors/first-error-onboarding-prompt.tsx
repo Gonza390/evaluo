@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, CircleAlert, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { hasSeenFirstPdfDemoErrors } from '@/lib/first-pdf-demo-analytics';
 import {
   Dialog,
   DialogContent,
@@ -24,16 +25,44 @@ export function FirstStudyErrorOnboardingPrompt({
 }) {
   const router = useRouter();
   const [isClosing, setIsClosing] = useState(false);
+  const [eligibilityChecked, setEligibilityChecked] = useState(false);
+  const onCloseRef = useRef(onClose);
 
   useEffect(() => {
-    if (!errorId) return;
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    let active = true;
+    if (!errorId) {
+      setEligibilityChecked(false);
+      return;
+    }
+
+    if (!hasSeenFirstPdfDemoErrors()) {
+      setEligibilityChecked(true);
+      return;
+    }
+
+    setEligibilityChecked(false);
+    void finishStudyErrorOnboardingAction(errorId, 'legacy').then(() => {
+      if (active) onCloseRef.current();
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [errorId]);
+
+  useEffect(() => {
+    if (!errorId || !eligibilityChecked) return;
     trackMarketingEvent('study_error_onboarding_prompted', {
       study_error_id: errorId,
       location,
     });
-  }, [errorId, location]);
+  }, [eligibilityChecked, errorId, location]);
 
-  if (!errorId) return null;
+  if (!errorId || !eligibilityChecked) return null;
 
   const skip = async () => {
     if (isClosing) return;
