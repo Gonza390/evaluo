@@ -16,7 +16,7 @@ en una pregunta diferente. El cierre propone volver a practicar más adelante.
 - El preview contiene explicaciones, preguntas y fuentes simuladas. El video identifica
   estas escenas como vista previa; no certifica que estén integradas a producción.
 - El repaso posterior se identifica como un próximo paso propuesto.
-- Voz sintética de trabajo: es-AR-ElenaNeural. Música sintetizada original, sin muestras externas.
+- Voz sintética de trabajo: es-AR-ElenaNeural. La composición no publica una pista musical pesada en la app.
 - Subtítulos divididos en grupos breves con sincronización aproximada por duración de voz.
 - Las fuentes son del sistema; no se requiere una descarga al renderizar.
 
@@ -41,7 +41,7 @@ npx remotion render video/index.ts EvaluoStudyLoop output/evaluo-del-error-a-ent
 ```
 
 La herramienta opcional de voz está aislada en `tmp/video-tools` y no cambia
-dependencias de la plataforma. Para regenerar audio, instalar allí `edge-tts`
+dependencias de la plataforma. Para regenerar las voces, instalar allí `edge-tts`
 y ejecutar `video/generate-study-loop-audio.py` con Python 3.
 
 El generador envía únicamente el texto del guion al servicio de voz. Los MP3

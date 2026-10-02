@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -51,6 +51,17 @@ function formatRelativeDate(value: string) {
     day: 'numeric',
     month: 'short',
   }).format(date);
+}
+
+function daysSinceLocalCalendarDate(value: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const reviewDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return Math.max(0, Math.floor((today - reviewDay) / 86_400_000));
 }
 
 function pageLabel(pageStart: number | null, pageEnd: number | null) {
@@ -159,6 +170,11 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
     }
 
     setExplanation(result.explanation);
+
+    // Leer la explicación cuenta como repaso: lo persistimos para que un acierto posterior
+    // pueda cerrar el error aunque el usuario no haya abierto el PDF.
+    await markStudyErrorReviewedAction(item.id);
+
     trackMarketingEvent('study_error_explanation_reviewed', {
       study_error_id: item.id,
       source_type: item.sourceType,
@@ -430,6 +446,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
 export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
   const [selectedId, setSelectedId] = useState<string | null>(data.pending[0]?.id ?? null);
   const [mobileListOpen, setMobileListOpen] = useState(false);
+  const trackedErrorViewsRef = useRef(new Set<string>());
 
   const selected = useMemo(
     () => data.pending.find((item) => item.id === selectedId) ?? data.pending[0] ?? null,
@@ -442,6 +459,34 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
       resolved_count: data.resolved.length,
     });
   }, [data.pending.length, data.resolved.length]);
+
+  useEffect(() => {
+    if (!selected || trackedErrorViewsRef.current.has(selected.id)) return;
+    trackedErrorViewsRef.current.add(selected.id);
+
+    const daysSinceLastReview = daysSinceLocalCalendarDate(selected.lastReviewedAt);
+    const metadata = {
+      study_error_id: selected.id,
+      source_type: selected.sourceType,
+      materia_id: selected.materiaId,
+      material_id: selected.recommendation?.materialId ?? null,
+      failure_count: selected.failureCount,
+      days_since_last_review: daysSinceLastReview,
+      returned_after_day: daysSinceLastReview !== null && daysSinceLastReview >= 1,
+    };
+
+    trackMarketingEvent('study_error_viewed', metadata);
+
+    if (daysSinceLastReview !== null && daysSinceLastReview >= 1) {
+      trackMarketingEvent('study_error_returned', {
+        study_error_id: selected.id,
+        source_type: selected.sourceType,
+        materia_id: selected.materiaId,
+        material_id: selected.recommendation?.materialId ?? null,
+        days_since_last_review: daysSinceLastReview,
+      });
+    }
+  }, [selected]);
 
   if (data.pending.length === 0) {
     return (
