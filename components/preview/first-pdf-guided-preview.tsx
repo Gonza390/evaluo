@@ -10,6 +10,7 @@ import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import {
   createFirstPdfDemoTracker,
   FIRST_PDF_DEMO_SOURCE,
+  rememberFirstPdfDemoErrorsViewed,
   rememberFirstPdfDemoUpload,
 } from '@/lib/first-pdf-demo-analytics';
 import { PdfTourSpotlight } from './pdf-tour-spotlight';
@@ -187,6 +188,7 @@ function GuidedMaterial() {
       );
     }
     if (screen === 'errors') {
+      rememberFirstPdfDemoErrorsViewed();
       tracker.checkpoint(
         'errors_viewed',
         { error_kind: illustrative ? 'illustrative' : 'real' },
