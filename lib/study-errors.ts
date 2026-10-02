@@ -158,7 +158,7 @@ export async function getPendingStudyErrorOnboarding(
 export async function finishStudyErrorOnboarding(input: {
   userId: string;
   errorId: string;
-  outcome: 'completed' | 'skipped';
+  outcome: 'completed' | 'skipped' | 'legacy';
 }) {
   const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -183,15 +183,17 @@ export async function finishStudyErrorOnboarding(input: {
     if (error) throw error;
     if (!data?.user_id) return false;
 
-    await trackServerAnalyticsEvent({
-      eventName:
-        input.outcome === 'completed'
-          ? 'study_error_onboarding_completed'
-          : 'study_error_onboarding_skipped',
-      userId: input.userId,
-      path: '/dashboard/explicaciones',
-      metadata: { study_error_id: input.errorId },
-    });
+    if (input.outcome !== 'legacy') {
+      await trackServerAnalyticsEvent({
+        eventName:
+          input.outcome === 'completed'
+            ? 'study_error_onboarding_completed'
+            : 'study_error_onboarding_skipped',
+        userId: input.userId,
+        path: '/dashboard/explicaciones',
+        metadata: { study_error_id: input.errorId },
+      });
+    }
 
     return true;
   } catch (error) {
