@@ -419,6 +419,10 @@ for (const eventName of [
   'study_error_repractice_started',
   'study_error_resolved',
   'study_error_returned',
+  'study_error_onboarding_prompted',
+  'study_error_onboarding_started',
+  'study_error_onboarding_completed',
+  'study_error_onboarding_skipped',
 ] as const) {
   assert.equal(isAllowedAnalyticsEventName(eventName), true, `${eventName} debe ser aceptado por analytics.`);
 }
@@ -440,5 +444,58 @@ assert.deepEqual(
     has_page_reference: true,
   }
 );
+
+
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('study_error_onboarding_started', {
+    study_error_id: 'error-1',
+    location: 'student_material_practice',
+    prompt: 'contenido privado',
+  }),
+  {
+    study_error_id: 'error-1',
+    location: 'student_material_practice',
+  }
+);
+
+const dashboardMaterialsSource = readFileSync(
+  resolve('components/dashboard/student-materials-workspace.tsx'),
+  'utf8'
+);
+assert.match(
+  dashboardMaterialsSource,
+  /initialMaterials\.length === 0[\s\S]*Ver cómo funciona con un PDF de ejemplo/,
+  'La muestra completa debe ofrecerse sólo en el estado sin PDFs.'
+);
+assert.match(
+  dashboardMaterialsSource,
+  /secondaryActionHref="\/preview\/primer-pdf\?source=dashboard_empty"/
+);
+
+const homeHeroSource = readFileSync(resolve('components/marketing/home-hero-v2.tsx'), 'utf8');
+assert.match(homeHeroSource, /Probar con mi PDF/);
+assert.match(homeHeroSource, /Ver ejemplo con un PDF/);
+assert.match(homeHeroSource, /\/preview\/primer-pdf\?source=home_hero/);
+
+const firstErrorPromptSource = readFileSync(
+  resolve('components/study-errors/first-error-onboarding-prompt.tsx'),
+  'utf8'
+);
+assert.match(firstErrorPromptSource, /Guardamos tu primer error/);
+assert.match(firstErrorPromptSource, /tour=first-error&error=/);
+assert.match(firstErrorPromptSource, /finishStudyErrorOnboardingAction\(errorId, 'skipped'\)/);
+
+const studyErrorsSource = readFileSync(
+  resolve('components/dashboard/study-errors-client.tsx'),
+  'utf8'
+);
+for (const target of ['error', 'understand', 'source', 'practice']) {
+  assert.match(
+    studyErrorsSource,
+    new RegExp(`data-study-error-tour=["']${target}["']`),
+    `El onboarding de Mis errores debe destacar ${target}.`
+  );
+}
+assert.match(studyErrorsSource, /finishStudyErrorOnboardingAction\(onboarding\.errorId, outcome\)/);
 
 console.log('Flow smoke tests passed.');
