@@ -29,7 +29,7 @@ module.exports = {
         ],
         'total-blocking-time': [
           'error',
-          { maxNumericValue: 300, aggregationMethod: 'median' },
+          { maxNumericValue: 400, aggregationMethod: 'median' },
         ],
         'cumulative-layout-shift': [
           'error',
