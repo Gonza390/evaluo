@@ -23,6 +23,8 @@ import { isAllowedAnalyticsEventName } from '../lib/analytics-events.ts';
 import { sanitizeAnalyticsMetadata } from '../lib/analytics-metadata.ts';
 import {
   createFirstPdfDemoTracker,
+  hasSeenFirstPdfDemoErrors,
+  rememberFirstPdfDemoErrorsViewed,
   rememberFirstPdfDemoUpload,
   consumeFirstPdfDemoUpload,
   FIRST_PDF_DEMO_SOURCE,
@@ -323,6 +325,13 @@ const demoStorage = {
     demoStorageMap.delete(key);
   },
 };
+assert.equal(hasSeenFirstPdfDemoErrors(demoStorage), false);
+rememberFirstPdfDemoErrorsViewed(demoStorage);
+assert.equal(
+  hasSeenFirstPdfDemoErrors(demoStorage),
+  true,
+  'Quien ya vio Mis errores en la muestra no debe recibir el onboarding del primer error real.'
+);
 const demoNow = Date.UTC(2026, 9, 2);
 assert.deepEqual(consumeFirstPdfDemoUpload(FIRST_PDF_DEMO_SOURCE, demoStorage, demoNow), {});
 rememberFirstPdfDemoUpload(demoRunId, demoStorage, demoNow);
@@ -484,6 +493,8 @@ const firstErrorPromptSource = readFileSync(
 assert.match(firstErrorPromptSource, /Guardamos tu primer error/);
 assert.match(firstErrorPromptSource, /tour=first-error&error=/);
 assert.match(firstErrorPromptSource, /finishStudyErrorOnboardingAction\(errorId, 'skipped'\)/);
+assert.match(firstErrorPromptSource, /hasSeenFirstPdfDemoErrors/);
+assert.match(firstErrorPromptSource, /finishStudyErrorOnboardingAction\(errorId, 'legacy'\)/);
 
 const studyErrorsSource = readFileSync(
   resolve('components/dashboard/study-errors-client.tsx'),
