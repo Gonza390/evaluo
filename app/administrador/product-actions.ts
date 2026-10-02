@@ -33,6 +33,7 @@ type JobRow = {
 };
 
 type FeedbackRow = {
+  user_id: string | null;
   rating: string | null;
   report_reason: string | null;
   created_at: string;
@@ -200,7 +201,7 @@ export async function obtenerProductoDiarioAdministrador(
         Promise.resolve({ data: [], error: null }),
         admin
           .from('student_material_feedback')
-          .select('rating, report_reason, created_at')
+          .select('user_id, rating, report_reason, created_at')
           .gte('created_at', selectedDay.start.toISOString())
           .lt('created_at', selectedDay.end.toISOString()),
       ]);
@@ -214,7 +215,9 @@ export async function obtenerProductoDiarioAdministrador(
     const materialsToday = ((materialsTodayResult.data ?? []) as MaterialRow[]).filter(
       (row) => !adminUserIds.has(row.user_id)
     );
-    const feedback = (feedbackResult.data ?? []) as FeedbackRow[];
+    const feedback = ((feedbackResult.data ?? []) as FeedbackRow[]).filter(
+      (row) => !row.user_id || !adminUserIds.has(row.user_id)
+    );
 
     const newUsersToday = users.filter((user) => {
       const created = new Date(user.created_at).getTime();
@@ -225,25 +228,36 @@ export async function obtenerProductoDiarioAdministrador(
       return created >= previousDay.start.getTime() && created < previousDay.end.getTime();
     });
 
+    const nonAdminEvents = events.filter(
+      (row) => !row.user_id || !adminUserIds.has(row.user_id)
+    );
     const clientEvents = events.filter(isClientAnalyticsEvent);
+    const adminClientSessionKeys = new Set(
+      clientEvents
+        .filter((row) => Boolean(row.user_id) && adminUserIds.has(row.user_id as string))
+        .map((row) => row.session_key as string)
+    );
+    const productClientEvents = clientEvents.filter(
+      (row) =>
+        (!row.user_id || !adminUserIds.has(row.user_id)) &&
+        !adminClientSessionKeys.has(row.session_key as string)
+    );
+
     const newUserIds = new Set(newUsersToday.map((user) => user.id));
     const activeLoggedUserIds = new Set(
-      clientEvents
+      productClientEvents
         .map((row) => row.user_id)
-        .filter(
-          (userId): userId is string =>
-            Boolean(userId) && !adminUserIds.has(userId as string)
-        )
+        .filter((userId): userId is string => Boolean(userId))
     );
     const newLoggedUsers = Array.from(activeLoggedUserIds).filter((userId) =>
       newUserIds.has(userId)
     ).length;
 
     const sessionMap = new Map<string, { logged: boolean }>();
-    for (const row of clientEvents) {
+    for (const row of productClientEvents) {
       const sessionKey = row.session_key as string;
       const current = sessionMap.get(sessionKey) ?? { logged: false };
-      if (row.user_id && !adminUserIds.has(row.user_id)) current.logged = true;
+      if (row.user_id) current.logged = true;
       sessionMap.set(sessionKey, current);
     }
     const clientSessionKeys = Array.from(sessionMap.keys());
@@ -255,17 +269,17 @@ export async function obtenerProductoDiarioAdministrador(
     const gateViewNames = new Set(['pdf_gate_viewed', 'simulator_login_gate_viewed']);
     const gateClickNames = new Set(['pdf_gate_cta_clicked', 'simulator_login_gate_cta_clicked']);
     const gateViewedSessions = new Set(
-      events
+      productClientEvents
         .filter((row) => gateViewNames.has(row.event_name) && row.session_key)
         .map((row) => row.session_key as string)
     );
     const gateClickedSessions = new Set(
-      events
+      productClientEvents
         .filter((row) => gateClickNames.has(row.event_name) && row.session_key)
         .map((row) => row.session_key as string)
     );
     const signupSessions = new Set(
-      events
+      productClientEvents
         .filter((row) => row.event_name === 'signup_completed' && row.session_key)
         .map((row) => row.session_key as string)
     );
@@ -381,7 +395,9 @@ export async function obtenerProductoDiarioAdministrador(
       );
     }).length;
 
-    const openedEvents = events.filter((row) => row.event_name === 'student_material_study_opened');
+    const openedEvents = nonAdminEvents.filter(
+      (row) => row.event_name === 'student_material_study_opened'
+    );
     const openedMaterialIds = new Set(
       openedEvents.map(materialIdFromEvent).filter((value): value is string => Boolean(value))
     );
@@ -443,7 +459,7 @@ export async function obtenerProductoDiarioAdministrador(
           recurrentLoggedUsers: Math.max(0, activeLoggedUserIds.size - newLoggedUsers),
           anonymousSessionPct,
           loggedSessionPct,
-          failedLogins: events.filter((row) => row.event_name === 'login_error').length,
+          failedLogins: productClientEvents.filter((row) => row.event_name === 'login_error').length,
           gateViewed: gateViewedSessions.size,
           gateClicked: gateClickedSessions.size,
           gateRegistered,
