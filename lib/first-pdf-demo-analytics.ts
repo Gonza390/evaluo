@@ -1,6 +1,7 @@
 export const FIRST_PDF_DEMO_SOURCE = 'first-pdf-demo';
 export const FIRST_PDF_DEMO_VERSION = 'guided-pdf-v1';
 const UPLOAD_INTENT_KEY = 'evaluo_first_pdf_demo_upload';
+const ERRORS_VIEWED_KEY = 'evaluo_first_pdf_demo_errors_viewed';
 const ATTRIBUTION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 type Metadata = Record<string, string | number | boolean | null>;
@@ -68,6 +69,22 @@ function browserStorage(): IntentStorage | undefined {
 }
 
 /** Se atribuye una carga solo después de elegir Subir mi PDF, no por haber visto el demo. */
+export function rememberFirstPdfDemoErrorsViewed(storage = browserStorage()) {
+  try {
+    storage?.setItem(ERRORS_VIEWED_KEY, '1');
+  } catch {
+    // El recorrido continúa aunque el navegador bloquee almacenamiento.
+  }
+}
+
+export function hasSeenFirstPdfDemoErrors(storage = browserStorage()) {
+  try {
+    return storage?.getItem(ERRORS_VIEWED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function rememberFirstPdfDemoUpload(
   runId: string,
   storage = browserStorage(),
