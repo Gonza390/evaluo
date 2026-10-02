@@ -1,8 +1,8 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'npm start',
-      startServerReadyPattern: 'Ready in|Local:',
+      startServerCommand: 'node scripts/start-lighthouse-server.mjs',
+      startServerReadyPattern: 'LHCI_WARM_READY',
       startServerReadyTimeout: 120000,
       numberOfRuns: 3,
       url: [
