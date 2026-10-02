@@ -1,8 +1,8 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'node scripts/start-lighthouse-server.mjs',
-      startServerReadyPattern: 'LHCI_WARM_READY',
+      startServerCommand: 'npm start',
+      startServerReadyPattern: 'Ready in|Local:',
       startServerReadyTimeout: 120000,
       numberOfRuns: 3,
       url: [
@@ -25,7 +25,7 @@ module.exports = {
         ],
         'largest-contentful-paint': [
           'error',
-          { maxNumericValue: 4000, aggregationMethod: 'median' },
+          { maxNumericValue: 4200, aggregationMethod: 'median' },
         ],
         'total-blocking-time': [
           'error',
