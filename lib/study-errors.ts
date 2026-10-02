@@ -109,6 +109,35 @@ async function claimFirstStudyErrorOnboarding(
   userId: string,
   errorId: string
 ) {
+  const { data: demoExposure, error: demoExposureError } = await db
+    .from('analytics_events')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('event_name', 'demo_checkpoint_reached')
+    .contains('metadata', { source: 'first-pdf-demo', stage: 'errors_viewed' })
+    .limit(1)
+    .maybeSingle();
+
+  if (demoExposureError) {
+    logError('studyErrors.onboarding.demoExposure', demoExposureError, { userId, errorId });
+  }
+
+  if (demoExposure?.id) {
+    const now = new Date().toISOString();
+    const { error: legacyError } = await db.from('study_error_onboarding_state').insert({
+      user_id: userId,
+      pending_error_id: null,
+      seen_at: now,
+      outcome: 'legacy',
+      updated_at: now,
+    });
+
+    if (legacyError && String(legacyError.code ?? '') !== '23505') {
+      logError('studyErrors.onboarding.demoLegacy', legacyError, { userId, errorId });
+    }
+    return false;
+  }
+
   const { data, error } = await db
     .from('study_error_onboarding_state')
     .insert({
