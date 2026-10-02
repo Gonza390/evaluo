@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function StudyErrorsPage() {
+export default async function StudyErrorsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tour?: string; error?: string }>;
+}) {
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -23,6 +27,17 @@ export default async function StudyErrorsPage() {
   }
 
   const data = await getStudyErrorsPageData(user.id);
+  const params = (await searchParams) ?? {};
+  const requestedErrorId = String(params.error ?? '').slice(0, 80) || null;
+  const onboardingActive =
+    params.tour === 'first-error' &&
+    Boolean(requestedErrorId) &&
+    data.pending.some((item) => item.id === requestedErrorId);
 
-  return <StudyErrorsClient data={data} />;
+  return (
+    <StudyErrorsClient
+      data={data}
+      onboarding={{ active: onboardingActive, errorId: requestedErrorId }}
+    />
+  );
 }
