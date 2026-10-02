@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 
 type StudentMaterialExamProps = {
@@ -254,6 +255,8 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
     [defaultSize, eligibleQuestions, preferredQuestionIds, selectedSize]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
+  const [isRecordingError, setIsRecordingError] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
@@ -474,17 +477,26 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
     current.type === 'multiple_choice' ? isRevealed : isRevealed && Boolean(openAssessment);
   const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
 
-  const goNext = () => {
-    if (!canAdvance) return;
+  const advanceExam = () => {
+    if (currentIndex >= questions.length - 1) {
+      onComplete?.();
+      setFinished(true);
+      return;
+    }
+    setCurrentIndex((index) => index + 1);
+  };
+
+  const goNext = async () => {
+    if (!canAdvance || isRecordingError) return;
 
     const wasCorrect =
       current.type === 'multiple_choice'
         ? isCorrect
         : openAssessments[current.id] === 'got_it';
 
-    void recordStudentMaterialStudyResultAction({
+    const payload = {
       materialId,
-      sourceType: 'exercise',
+      sourceType: 'exercise' as const,
       itemKey: `exercise:${current.id}`,
       wasCorrect,
       topic: current.topic ?? current.reference.sectionTitle,
@@ -496,18 +508,37 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
           ? selectedAnswer
           : openDrafts[current.id] ?? '',
       reference: current.reference,
-    });
+    };
 
-    if (currentIndex >= questions.length - 1) {
-      onComplete?.();
-      setFinished(true);
+    if (wasCorrect) {
+      void recordStudentMaterialStudyResultAction(payload);
+      advanceExam();
       return;
     }
-    setCurrentIndex((index) => index + 1);
+
+    setIsRecordingError(true);
+    const result = await recordStudentMaterialStudyResultAction(payload);
+    setIsRecordingError(false);
+
+    if (result.onboardingErrorId) {
+      setOnboardingErrorId(result.onboardingErrorId);
+      return;
+    }
+
+    advanceExam();
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
+    <>
+      <FirstStudyErrorOnboardingPrompt
+        errorId={onboardingErrorId}
+        location="student_material_practice"
+        onClose={() => {
+          setOnboardingErrorId(null);
+          advanceExam();
+        }}
+      />
+      <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-slate-500">
@@ -665,7 +696,12 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
             ) : null}
 
             <div className="flex justify-end border-t border-slate-100 pt-4">
-              <Button type="button" disabled={!canAdvance} onClick={goNext} className="h-11 rounded-[14px] px-5">
+              <Button
+                type="button"
+                disabled={!canAdvance || isRecordingError}
+                onClick={() => void goNext()}
+                className="h-11 rounded-[14px] px-5"
+              >
                 {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -673,6 +709,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
           </div>
         )}
       </article>
-    </div>
+      </div>
+    </>
   );
 }
