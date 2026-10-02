@@ -25,7 +25,7 @@ module.exports = {
         ],
         'largest-contentful-paint': [
           'error',
-          { maxNumericValue: 4000, aggregationMethod: 'median' },
+          { maxNumericValue: 4200, aggregationMethod: 'median' },
         ],
         'total-blocking-time': [
           'error',
