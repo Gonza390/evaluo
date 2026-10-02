@@ -146,7 +146,7 @@ export async function getPendingStudyErrorOnboardingAction(): Promise<{
 
 export async function finishStudyErrorOnboardingAction(
   errorId: string,
-  outcome: 'completed' | 'skipped'
+  outcome: 'completed' | 'skipped' | 'legacy'
 ): Promise<{ success: boolean }> {
   const user = await requireUser();
   if (!user || !errorId) return { success: false };
