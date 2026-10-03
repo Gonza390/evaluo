@@ -1,481 +1,24 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  CircleAlert,
-  FileText,
-  Layers3,
-  ListChecks,
-  Loader2,
-  Sparkles,
-  Target,
-} from 'lucide-react';
-import {
-  finishStudyErrorOnboardingAction,
-  generateStudyErrorQuickHelpAction,
-  markStudyErrorReviewedAction,
-} from '@/lib/actions/study-errors';
-import type { StudyErrorSource, StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, FileText, Search } from 'lucide-react';
+import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
+import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { AppPageHeader } from '@/components/ui/app-page-header';
-import { StudyStatePanel } from '@/components/study-state-panel';
 import { PdfTourSpotlight } from '@/components/preview/pdf-tour-spotlight';
+import {
+  StudyErrorDetail,
+  reviewPrimaryButton,
+  reviewSecondaryButton,
+  studyErrorSourceLabels,
+} from './study-error-detail';
 
-const sourceConfig: Record<
-  StudyErrorSource,
-  { label: string; icon: typeof Target }
-> = {
-  simulator: { label: 'Preguntero', icon: Target },
-  flashcard: { label: 'Flashcards', icon: Layers3 },
-  exercise: { label: 'Práctica', icon: ListChecks },
-  diagnostic: { label: 'Diagnóstico', icon: CircleAlert },
-};
-
-function formatRelativeDate(value: string) {
-  const date = new Date(value);
-  const diff = Date.now() - date.getTime();
-  if (!Number.isFinite(diff) || diff < 0) return 'reciente';
-
-  const hours = Math.floor(diff / 3_600_000);
-  if (hours < 24) return 'hoy';
-  const days = Math.floor(hours / 24);
-  if (days === 1) return 'ayer';
-  if (days < 7) return `hace ${days} días`;
-
-  return new Intl.DateTimeFormat('es-AR', {
-    day: 'numeric',
-    month: 'short',
-  }).format(date);
-}
-
-function daysSinceLocalCalendarDate(value: string | null) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-
-  const reviewDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return Math.max(0, Math.floor((today - reviewDay) / 86_400_000));
-}
-
-function pageLabel(pageStart: number | null, pageEnd: number | null) {
-  if (!pageStart) return null;
-  if (pageEnd && pageEnd !== pageStart) return `Págs. ${pageStart}–${pageEnd}`;
-  return `Pág. ${pageStart}`;
-}
-
-function buildMaterialHref(item: StudyErrorView) {
-  const recommendation = item.recommendation;
-  if (!recommendation) return null;
-
-  const params = new URLSearchParams({ studyError: item.id });
-  if (recommendation.pageStart) params.set('page', String(recommendation.pageStart));
-  return `/materiales/${recommendation.materialId}?${params.toString()}`;
-}
-
-function buildUploadHref(item: StudyErrorView) {
-  const params = new URLSearchParams({
-    openUpload: '1',
-    source: 'study_error',
-  });
-  if (item.materiaId) params.set('materiaId', item.materiaId);
-  return `/dashboard/materiales?${params.toString()}`;
-}
-
-function buildPracticeHref(item: StudyErrorView) {
-  if (item.sourceType !== 'simulator' || !item.materiaId) return null;
-  const parcial = item.parcial ?? 1;
-  return `/simulador/errores/${item.materiaId}?parcial=${parcial}`;
-}
-
-function ErrorListItem({
-  item,
-  active,
-  onSelect,
-}: {
-  item: StudyErrorView;
-  active: boolean;
-  onSelect: () => void;
-}) {
-  const config = sourceConfig[item.sourceType];
-  const Icon = config.icon;
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`group flex w-full items-start gap-3 border-l-2 px-3 py-3.5 text-left transition ${
-        active
-          ? 'border-slate-950 bg-white'
-          : 'border-transparent hover:bg-white/70'
-      }`}
-    >
-      <Icon
-        className={`mt-0.5 h-4 w-4 shrink-0 ${active ? 'text-slate-900' : 'text-slate-400'}`}
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <p
-            className={`truncate text-sm font-semibold ${
-              active ? 'text-slate-950' : 'text-slate-700'
-            }`}
-          >
-            {item.topic}
-          </p>
-          <ChevronRight
-            className={`h-3.5 w-3.5 shrink-0 ${active ? 'text-slate-700' : 'text-slate-300'}`}
-          />
-        </div>
-        <p className="mt-1 truncate text-xs text-slate-400">
-          {item.materiaNombre ?? config.label}
-          {item.failureCount > 1 ? ` · ${item.failureCount} errores` : ' · 1 error'}
-        </p>
-      </div>
-    </button>
-  );
-}
-
-type StudyErrorQuickHelpKind = 'why_wrong' | 'simpler' | 'example';
-
-const quickHelpLabels: Record<StudyErrorQuickHelpKind, string> = {
-  why_wrong: 'Por qué estaba mal',
-  simpler: 'Explicado más simple',
-  example: 'Ejemplo',
-};
-
-function StudyErrorDetail({ item }: { item: StudyErrorView }) {
-  const router = useRouter();
-  const [isNavigating, startTransition] = useTransition();
-  const [answersOpen, setAnswersOpen] = useState(false);
-  const [activeHelp, setActiveHelp] = useState<StudyErrorQuickHelpKind | null>(null);
-  const [helpText, setHelpText] = useState<string | null>(null);
-  const [helpLoading, setHelpLoading] = useState<StudyErrorQuickHelpKind | null>(null);
-  const [helpError, setHelpError] = useState<string | null>(null);
-
-  const config = sourceConfig[item.sourceType];
-  const Icon = config.icon;
-  const recommendation = item.recommendation;
-  const materialHref = buildMaterialHref(item);
-  const practiceHref = buildPracticeHref(item);
-
-  const runQuickHelp = async (kind: StudyErrorQuickHelpKind) => {
-    if (helpLoading) return;
-
-    setActiveHelp(kind);
-    setHelpLoading(kind);
-    setHelpError(null);
-    const result = await generateStudyErrorQuickHelpAction(item.id, kind);
-    setHelpLoading(null);
-
-    if (!result.success || !result.text) {
-      setHelpText(null);
-      setHelpError(result.message ?? 'No pudimos generar esta ayuda ahora.');
-      return;
-    }
-
-    setHelpText(result.text);
-
-    // Leer una ayuda cuenta como repaso: así un acierto posterior puede cerrar el error.
-    await markStudyErrorReviewedAction(item.id);
-
-    trackMarketingEvent('study_error_explanation_reviewed', {
-      study_error_id: item.id,
-      source_type: item.sourceType,
-      materia_id: item.materiaId,
-      help_kind: kind,
-    });
-  };
-
-  const startPdfStudy = () => {
-    if (!materialHref) return;
-
-    startTransition(() => {
-      void markStudyErrorReviewedAction(item.id).then((result) => {
-        if (!result.success) return;
-
-        trackMarketingEvent('study_error_pdf_review_started', {
-          study_error_id: item.id,
-          source_type: item.sourceType,
-          materia_id: item.materiaId,
-          material_id: recommendation?.materialId ?? null,
-          has_page_reference: Boolean(recommendation?.pageStart),
-        });
-
-        router.push(materialHref);
-      });
-    });
-  };
-
-  const hasReviewedError = Boolean(item.lastReviewedAt || helpText || answersOpen);
-
-  const startPractice = () => {
-    if (!practiceHref || !hasReviewedError) return;
-
-    startTransition(() => {
-      void markStudyErrorReviewedAction(item.id).then((result) => {
-        if (!result.success) return;
-
-        trackMarketingEvent('study_error_repractice_started', {
-          study_error_id: item.id,
-          source_type: item.sourceType,
-          materia_id: item.materiaId,
-          used_pdf: Boolean(recommendation),
-        });
-
-        router.push(practiceHref);
-      });
-    });
-  };
-
-  return (
-    <div className="max-w-[790px]">
-      <div data-study-error-tour="error">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
-        <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
-          <Icon className="h-3.5 w-3.5" />
-          {config.label}
-        </span>
-        <span>·</span>
-        <span>{item.failureCount === 1 ? '1 error' : `${item.failureCount} errores`}</span>
-        <span>·</span>
-        <span>{formatRelativeDate(item.lastFailedAt)}</span>
-      </div>
-
-      <h2 className="mt-3 text-[1.85rem] font-semibold tracking-[-0.05em] text-slate-950 sm:text-3xl">
-        {item.topic}
-      </h2>
-
-      <div className="mt-5 max-w-2xl">
-        <p className="text-[15px] leading-7 text-slate-600">{item.prompt}</p>
-      </div>
-      </div>
-
-      <section data-study-error-tour="understand" className="mt-7 border-t border-slate-200 pt-6">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-slate-500" />
-          <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
-            Ayudame a entenderlo
-          </p>
-        </div>
-
-        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-          Elegí una forma de revisar este error. Evaluo responde sobre este concepto sin abrir un chat.
-        </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {([
-            ['why_wrong', '¿Por qué estaba mal?'],
-            ['simpler', 'Más simple'],
-            ['example', 'Dame un ejemplo'],
-          ] as const).map(([kind, label]) => (
-            <button
-              key={kind}
-              type="button"
-              disabled={Boolean(helpLoading)}
-              onClick={() => void runQuickHelp(kind)}
-              className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition disabled:opacity-60 ${
-                activeHelp === kind
-                  ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
-                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              {helpLoading === kind ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {label}
-            </button>
-          ))}
-
-          {recommendation ? (
-            <button
-              type="button"
-              disabled={isNavigating}
-              onClick={startPdfStudy}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
-            >
-              <BookOpen className="h-4 w-4" />
-              Ver en mi PDF
-            </button>
-          ) : null}
-        </div>
-
-        {helpError ? (
-          <p className="mt-3 text-xs leading-5 text-amber-700">{helpError}</p>
-        ) : null}
-
-        {helpText && activeHelp ? (
-          <div className="mt-5 max-w-2xl rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
-              {quickHelpLabels[activeHelp]}
-            </p>
-            <p className="mt-2 text-[15px] leading-7 text-slate-700">{helpText}</p>
-          </div>
-        ) : null}
-      </section>
-
-      {recommendation ? (
-        <section data-study-error-tour="source" className="mt-8 border-t-2 border-slate-950 pt-6">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-indigo-600" />
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
-              Estudiá este tema en tu PDF
-            </p>
-          </div>
-
-          <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">
-            {recommendation.materialTitle}
-          </h3>
-
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
-            {recommendation.sectionTitle ? <span>{recommendation.sectionTitle}</span> : null}
-            {recommendation.sectionTitle && pageLabel(recommendation.pageStart, recommendation.pageEnd) ? (
-              <span>·</span>
-            ) : null}
-            {pageLabel(recommendation.pageStart, recommendation.pageEnd) ? (
-              <span>{pageLabel(recommendation.pageStart, recommendation.pageEnd)}</span>
-            ) : null}
-          </div>
-
-          <p className="mt-2 text-xs font-medium text-slate-400">
-            {recommendation.relation === 'origin'
-              ? 'Este error salió de este material'
-              : 'Evaluo eligió este material como la mejor coincidencia'}
-          </p>
-
-          {recommendation.excerpt ? (
-            <blockquote className="mt-5 border-l-2 border-indigo-200 pl-4 text-sm leading-6 text-slate-700 sm:pl-5 sm:text-[15px] sm:leading-7">
-              “{recommendation.excerpt}”
-            </blockquote>
-          ) : null}
-
-          <button
-            type="button"
-            disabled={isNavigating}
-            onClick={startPdfStudy}
-            className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(79,70,229,0.16)] transition hover:bg-indigo-700 disabled:opacity-60 sm:w-auto"
-          >
-            Estudiar este tema en mi PDF
-            <ArrowRight className="h-4 w-4" />
-          </button>
-
-          {item.alternatives.length > 0 ? (
-            <div className="mt-6 border-t border-slate-200 pt-4">
-              <p className="text-xs leading-5 text-slate-400">
-                También aparece en{' '}
-                {item.alternatives.map((alternative) => alternative.materialTitle).join(' · ')}.
-              </p>
-            </div>
-          ) : null}
-        </section>
-      ) : (
-        <section data-study-error-tour="source" className="mt-8 border-t-2 border-slate-950 pt-6">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-indigo-600" />
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
-              Siguiente paso
-            </p>
-          </div>
-          <h3 className="mt-3 text-[1.3rem] font-semibold tracking-[-0.035em] text-slate-950 sm:text-xl">
-            Estudiá {item.topic} en el material que realmente entra en tu examen
-          </h3>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-            Subí tus apuntes. Evaluo los procesa, encuentra dónde aparece este tema y te lleva a la parte que necesitás reforzar.
-          </p>
-          <Link
-            href={buildUploadHref(item)}
-            className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 text-sm font-semibold text-white sm:w-auto"
-          >
-            Subir mis apuntes y encontrar este tema
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <p className="mt-3 text-xs leading-5 text-slate-400">
-            Cuando el PDF esté listo, este error queda conectado con el lugar exacto donde conviene estudiarlo.
-          </p>
-        </section>
-      )}
-
-      {item.selectedAnswer || item.correctAnswer ? (
-        <section className="mt-8 border-t border-slate-200 pt-6">
-          <button
-            type="button"
-            onClick={() => setAnswersOpen((value) => !value)}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800"
-          >
-            Ver qué respondiste
-            <ChevronDown className={`h-4 w-4 transition ${answersOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {answersOpen ? (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {item.selectedAnswer ? (
-                <div className="border-l-2 border-rose-200 pl-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-rose-500">
-                    Tu respuesta
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.selectedAnswer}</p>
-                </div>
-              ) : null}
-              {item.correctAnswer ? (
-                <div className="border-l-2 border-emerald-200 pl-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-600">
-                    Respuesta correcta
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{item.correctAnswer}</p>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      <div data-study-error-tour="practice" className="mt-8 border-t border-slate-200 pt-6">
-        {practiceHref && recommendation ? (
-          <>
-            <p className="text-sm font-semibold text-slate-900">Después de estudiarlo</p>
-            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-              Volvé a responder estas preguntas. Si ahora acertás, el tema pasa automáticamente a Resueltos.
-            </p>
-            {hasReviewedError ? (
-              <button
-                type="button"
-                disabled={isNavigating}
-                onClick={startPractice}
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60 sm:w-auto"
-              >
-                Comprobar si ya lo aprendí
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <p className="mt-3 text-xs font-medium text-slate-400">
-                Primero abrí el PDF recomendado y repasá este tema.
-              </p>
-            )}
-          </>
-        ) : practiceHref ? (
-          <>
-            <p className="text-sm font-semibold text-slate-900">Primero conectalo con tus apuntes</p>
-            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-              La explicación te muestra qué pasó. El siguiente paso es estudiar este tema en el material que realmente entra en tu examen.
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="text-sm font-semibold text-slate-900">Cómo se cierra este error</p>
-            <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500">
-              Después de repasarlo, cuando vuelvas a acertarlo en {config.label.toLowerCase()} va a pasar automáticamente a Resueltos.
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+const unlinkedId = 'unlinked';
+const pendingLabel = (count: number) => `${count} ${count === 1 ? 'pendiente' : 'pendientes'}`;
+const resolvedLabel = (count: number) => `${count} ${count === 1 ? 'resuelto' : 'resueltos'}`;
 
 export function StudyErrorsClient({
   data,
@@ -484,20 +27,58 @@ export function StudyErrorsClient({
   data: StudyErrorsPageData;
   onboarding?: { active: boolean; errorId: string | null };
 }) {
-  const initialSelectedId =
-    onboarding?.errorId && data.pending.some((item) => item.id === onboarding.errorId)
-      ? onboarding.errorId
-      : data.pending[0]?.id ?? null;
-  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
-  const [mobileListOpen, setMobileListOpen] = useState(false);
-  const [tourStep, setTourStep] = useState(onboarding?.active && initialSelectedId ? 0 : -1);
-  const [tourClosing, setTourClosing] = useState(false);
-  const trackedErrorViewsRef = useRef(new Set<string>());
-
-  const selected = useMemo(
-    () => data.pending.find((item) => item.id === selectedId) ?? data.pending[0] ?? null,
-    [data.pending, selectedId]
+  const router = useRouter();
+  const initialError = onboarding?.active
+    ? data.pending.find((item) => item.id === onboarding.errorId)
+    : null;
+  const [materialId, setMaterialId] = useState<string | null>(
+    initialError ? (initialError.recommendation?.materialId ?? unlinkedId) : null
   );
+  const [selectedId, setSelectedId] = useState<string | null>(initialError?.id ?? null);
+  const [tab, setTab] = useState<'pending' | 'resolved'>('pending');
+  const [query, setQuery] = useState('');
+  const [mobileListOpen, setMobileListOpen] = useState(false);
+  const [notice, setNotice] = useState('');
+  const [tourStep, setTourStep] = useState(initialError ? 0 : -1);
+  const [overrides, setOverrides] = useState<
+    Record<string, { baseFailedAt: string; changes: Partial<StudyErrorView> }>
+  >({});
+  const tracked = useRef(new Set<string>());
+  const tourClosing = useRef(false);
+  const views = useMemo(
+    () =>
+      [...data.pending, ...data.resolved].map((item) => {
+        const override = overrides[item.id];
+        return override?.baseFailedAt === item.lastFailedAt
+          ? { ...item, ...override.changes }
+          : item;
+      }),
+    [data.pending, data.resolved, overrides]
+  );
+  const pdfs = useMemo(() => {
+    const materials = new Map(data.materials.map((material) => [material.id, material]));
+    for (const item of views)
+      if (item.recommendation && !materials.has(item.recommendation.materialId))
+        materials.set(item.recommendation.materialId, {
+          id: item.recommendation.materialId,
+          title: item.recommendation.materialTitle,
+          materiaNombre: item.materiaNombre,
+        });
+    return Array.from(materials.values());
+  }, [data.materials, views]);
+  const scoped = views.filter(
+    (item) => (item.recommendation?.materialId ?? unlinkedId) === materialId
+  );
+  const pending = scoped.filter((item) => item.status === 'pending');
+  const resolved = scoped.filter((item) => item.status === 'resolved');
+  const group = tab === 'pending' ? pending : resolved;
+  const visible = group.filter((item) =>
+    `${item.topic} ${item.prompt}`.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es'))
+  );
+  // Mantener el resultado recién confirmado aunque salga de la lista de pendientes.
+  const selected = scoped.find((item) => item.id === selectedId) ?? visible[0] ?? null;
+  const selectedPdf = pdfs.find((material) => material.id === materialId);
+  const totalPending = views.filter((item) => item.status === 'pending').length;
 
   useEffect(() => {
     trackMarketingEvent('mis_errores_viewed', {
@@ -505,216 +86,414 @@ export function StudyErrorsClient({
       resolved_count: data.resolved.length,
     });
   }, [data.pending.length, data.resolved.length]);
-
   useEffect(() => {
-    if (!selected || trackedErrorViewsRef.current.has(selected.id)) return;
-    trackedErrorViewsRef.current.add(selected.id);
-
-    const daysSinceLastReview = daysSinceLocalCalendarDate(selected.lastReviewedAt);
+    if (!selected || tracked.current.has(selected.id)) return;
+    tracked.current.add(selected.id);
+    const days = selected.lastReviewedAt
+      ? Math.floor((Date.now() - new Date(selected.lastReviewedAt).getTime()) / 86_400_000)
+      : null;
     const metadata = {
       study_error_id: selected.id,
       source_type: selected.sourceType,
       materia_id: selected.materiaId,
       material_id: selected.recommendation?.materialId ?? null,
       failure_count: selected.failureCount,
-      days_since_last_review: daysSinceLastReview,
-      returned_after_day: daysSinceLastReview !== null && daysSinceLastReview >= 1,
+      days_since_last_review: days,
+      returned_after_day: days !== null && days >= 1,
     };
-
     trackMarketingEvent('study_error_viewed', metadata);
-
-    if (daysSinceLastReview !== null && daysSinceLastReview >= 1) {
-      trackMarketingEvent('study_error_returned', {
-        study_error_id: selected.id,
-        source_type: selected.sourceType,
-        materia_id: selected.materiaId,
-        material_id: selected.recommendation?.materialId ?? null,
-        days_since_last_review: daysSinceLastReview,
-      });
-    }
+    if (days !== null && days >= 1) trackMarketingEvent('study_error_returned', metadata);
   }, [selected]);
 
-  const tourSteps = selected
+  function chooseMaterial(id: string) {
+    const errors = views.filter((item) => (item.recommendation?.materialId ?? unlinkedId) === id);
+    const first = errors.find((item) => item.status === 'pending') ?? errors[0];
+    setMaterialId(id);
+    setSelectedId(first?.id ?? null);
+    setTab(
+      errors.length && !errors.some((item) => item.status === 'pending') ? 'resolved' : 'pending'
+    );
+    setQuery('');
+    setMobileListOpen(false);
+    setNotice('');
+  }
+  function nextError() {
+    const next = pending.find((item) => item.id !== selectedId);
+    if (next) {
+      setSelectedId(next.id);
+      setTab('pending');
+      setQuery('');
+      setMobileListOpen(false);
+    }
+  }
+  function finish() {
+    setNotice(
+      `Terminaste el repaso por hoy. ${pending.length === 1 ? 'Te queda 1 error pendiente' : pending.length ? `Te quedan ${pending.length} errores pendientes` : 'No te quedan errores pendientes'}${selectedPdf ? ` en ${selectedPdf.title}` : ''}. Tu avance quedó guardado.`
+    );
+    setMaterialId(null);
+    setSelectedId(null);
+    router.refresh();
+  }
+  const steps = selected
     ? [
         {
           selector: '[data-study-error-tour="error"]',
           title: 'Este es tu primer error',
-          description:
-            'Evaluo guarda el tema y lo deja listo para que no quede como una respuesta incorrecta aislada.',
+          description: 'Evaluo guarda el concepto que te costó para que puedas volver a repasarlo.',
         },
         {
           selector: '[data-study-error-tour="understand"]',
-          title: 'Entendé qué pasó',
+          title: 'Ayudame a entenderlo',
           description:
-            'Acá podés revisar la explicación del error y convertir la corrección en un repaso real.',
+            'Pedí una explicación del concepto. Después podés pedir una versión más simple o un ejemplo.',
         },
         {
           selector: '[data-study-error-tour="source"]',
-          title: selected.recommendation ? 'Volvé a tu PDF' : 'Conectalo con tus apuntes',
+          title: selected.recommendation
+            ? 'Tu PDF respalda el repaso'
+            : 'Conectalo con tus apuntes',
           description: selected.recommendation
-            ? 'Evaluo te lleva al material y, cuando es posible, a la parte del PDF relacionada con este concepto.'
-            : 'Si todavía no hay un PDF relacionado, podés subir tus apuntes para conectar este error con tu propia fuente.',
+            ? 'Abrí el fragmento acá mismo, sin perder el error que estás repasando.'
+            : 'Asociá tus apuntes para estudiar y comprobar este concepto con tu material.',
         },
         {
           selector: '[data-study-error-tour="practice"]',
-          title: 'Comprobalo de nuevo',
+          title: 'Comprobá si lo entendiste',
           description:
-            'Después de repasar, volvés a practicar. Cuando acertás nuevamente, el tema pasa a Resueltos.',
+            'Después del repaso respondés una pregunta diferente. Un acierto guarda este error como Resuelto.',
         },
       ]
     : [];
 
-  const finishTour = async (outcome: 'completed' | 'skipped') => {
-    if (!onboarding?.errorId || tourClosing) {
+  async function closeTour(outcome: 'completed' | 'skipped') {
+    if (tourClosing.current) return;
+    tourClosing.current = true;
+    try {
+      if (onboarding?.errorId) await finishStudyErrorOnboardingAction(onboarding.errorId, outcome);
+    } finally {
       setTourStep(-1);
-      return;
+      tourClosing.current = false;
     }
-    setTourClosing(true);
-    await finishStudyErrorOnboardingAction(onboarding.errorId, outcome);
-    setTourStep(-1);
-    setTourClosing(false);
-  };
+  }
 
-  if (data.pending.length === 0) {
+  if (data.loadError)
     return (
-      <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
-        <AppPageHeader
-          eyebrow="Progreso"
-          title="Mis errores"
-          description="Revisá lo que te costó y cerrá cada tema después de volver a estudiarlo."
-        />
-        <StudyStatePanel
-          icon={CheckCircle2}
-          tone="success"
-          eyebrow="Todo al día"
-          title="No tenés temas pendientes"
-          description="Los errores que vuelvas a resolver después de estudiarlos van a quedar guardados como progreso."
-          secondaryText={
-            data.resolved.length > 0
-              ? `${data.resolved.length} ${data.resolved.length === 1 ? 'tema resuelto' : 'temas resueltos'}.`
-              : 'Cuando aparezca un error nuevo, lo vas a encontrar acá.'
-          }
-          className="mt-6"
-        />
+      <div className="mx-auto max-w-3xl px-5 py-10">
+        <AppPageHeader title="Mis errores" />
+        <p role="alert" className="!text-foreground mt-4">
+          No pudimos cargar tus errores. Tu progreso sigue guardado.
+        </p>
+        <button className={reviewPrimaryButton + ' mt-4'} onClick={() => router.refresh()}>
+          Reintentar
+        </button>
       </div>
     );
-  }
 
   return (
     <>
-      {tourStep >= 0 && tourSteps[tourStep] ? (
+      {tourStep >= 0 && steps[tourStep] && (
         <PdfTourSpotlight
-          selector={tourSteps[tourStep].selector}
-          title={tourSteps[tourStep].title}
-          description={tourSteps[tourStep].description}
-          progress={`${tourStep + 1} de ${tourSteps.length}`}
-          nextLabel={tourStep === tourSteps.length - 1 ? 'Entendido' : 'Siguiente'}
+          selector={steps[tourStep].selector}
+          title={steps[tourStep].title}
+          description={steps[tourStep].description}
+          progress={`${tourStep + 1} de ${steps.length}`}
+          nextLabel={tourStep === steps.length - 1 ? 'Entendido' : 'Siguiente'}
           onNext={() => {
-            if (tourStep === tourSteps.length - 1) {
-              void finishTour('completed');
+            if (tourStep < steps.length - 1) {
+              setTourStep((step) => step + 1);
               return;
             }
-            setTourStep((step) => step + 1);
+            void closeTour('completed');
           }}
           onBack={tourStep > 0 ? () => setTourStep((step) => step - 1) : undefined}
-          onExit={() => void finishTour('skipped')}
+          onExit={() => void closeTour('skipped')}
           ariaLabel="Guía de Mis errores"
           footerLabel="Tu primer error"
         />
-      ) : null}
-      <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-9">
-      <AppPageHeader
-        eyebrow="Progreso"
-        title="Mis errores"
-        description={
-          <>
-            {data.pending.length} {data.pending.length === 1 ? 'tema para estudiar' : 'temas para estudiar'}
-            {data.resolved.length > 0 ? ` · ${data.resolved.length} resueltos` : ''}
-          </>
-        }
-      />
-
-      <div className="lg:hidden">
-        <div className="border-b border-slate-200 py-4">
-          <button
-            type="button"
-            onClick={() => setMobileListOpen((value) => !value)}
-            className="flex w-full items-center justify-between gap-4 py-1 text-left"
-            aria-expanded={mobileListOpen}
+      )}
+      <div className="text-foreground mx-auto w-full max-w-[1180px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <AppPageHeader
+          eyebrow="Progreso"
+          title="Mis errores"
+          description="Convertí lo que te costó en algo que entendés. Repasá con tus apuntes y comprobá lo aprendido."
+        />
+        {notice && (
+          <p
+            role="status"
+            className="border-primary !text-foreground mt-4 border-l-2 pl-4 !text-sm"
           >
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                Tema seleccionado
-              </p>
-              <p className="mt-1 truncate text-base font-semibold text-slate-950">
-                {selected?.topic}
-              </p>
-            </div>
-            <ChevronDown
-              className={`h-5 w-5 shrink-0 text-slate-400 transition ${mobileListOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-
-          {mobileListOpen ? (
-            <nav className="mt-3 max-h-[52vh] overflow-y-auto border-t border-slate-100 pt-2">
-              {data.pending.map((item) => (
-                <ErrorListItem
-                  key={item.id}
-                  item={item}
-                  active={item.id === selected?.id}
-                  onSelect={() => {
-                    setSelectedId(item.id);
-                    setMobileListOpen(false);
-                  }}
-                />
-              ))}
-            </nav>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="grid min-h-[680px] lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="hidden py-5 lg:block lg:border-r lg:border-slate-200 lg:pr-5">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-              Para estudiar
+            {notice}
+          </p>
+        )}
+        {!materialId ? (
+          <section aria-labelledby="choose-pdf" className="mt-7">
+            <h2 id="choose-pdf" className="text-xl font-black tracking-tighter">
+              ¿Qué PDF querés reforzar?
+            </h2>
+            <p className="!text-muted-foreground mt-2 !text-sm">
+              {totalPending
+                ? `${totalPending === 1 ? '1 concepto pendiente' : `${totalPending} conceptos pendientes`}. Elegí un material para empezar.`
+                : 'Tus PDFs y tu progreso de repaso están acá. Los errores nuevos aparecerán automáticamente.'}
             </p>
-            <span className="text-xs text-slate-400">{data.pending.length}</span>
-          </div>
-
-          <nav className="-mx-2">
-            {data.pending.map((item) => (
-              <ErrorListItem
-                key={item.id}
-                item={item}
-                active={item.id === selected?.id}
-                onSelect={() => setSelectedId(item.id)}
-              />
-            ))}
-          </nav>
-
-          {data.resolved.length > 0 ? (
-            <div className="mt-7 border-t border-slate-200 pt-5">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700">
-                <CheckCircle2 className="h-4 w-4" />
-                Resueltos · {data.resolved.length}
-              </div>
-              <div className="mt-3 space-y-2">
-                {data.resolved.slice(0, 5).map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 text-xs text-slate-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span className="truncate">{item.topic}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="divide-border border-border mt-5 divide-y border-y">
+              {pdfs.map((pdf) => {
+                const errors = views.filter((item) => item.recommendation?.materialId === pdf.id);
+                const count = errors.filter((item) => item.status === 'pending').length;
+                const topics = errors
+                  .filter((item) => item.status === 'pending')
+                  .slice(0, 3)
+                  .map((item) => item.topic);
+                return (
+                  <button
+                    key={pdf.id}
+                    className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-5 text-left transition focus-visible:outline-2 sm:px-2"
+                    onClick={() => chooseMaterial(pdf.id)}
+                  >
+                    <FileText className="text-primary mt-1 h-5 w-5 shrink-0" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold break-words">{pdf.title}</span>
+                      {pdf.materiaNombre && (
+                        <span className="text-muted-foreground mt-1 block text-xs">
+                          {pdf.materiaNombre}
+                        </span>
+                      )}
+                      <span className="text-muted-foreground mt-2 block text-sm break-words">
+                        {topics.length
+                          ? topics.join(' · ')
+                          : 'No tenés errores pendientes en este PDF.'}
+                      </span>
+                      <span className="text-primary mt-2 block text-xs font-semibold">
+                        {pendingLabel(count)} · {resolvedLabel(errors.length - count)}
+                      </span>
+                    </span>
+                    <ArrowRight className="text-primary mt-1 h-4 w-4 shrink-0" />
+                  </button>
+                );
+              })}
             </div>
-          ) : null}
-        </aside>
-
-        <section className="py-6 lg:pl-10 lg:py-8">
-          {selected ? <StudyErrorDetail key={selected.id} item={selected} /> : null}
-        </section>
-      </div>
+            {views.some((item) => !item.recommendation) && (
+              <button
+                className={reviewSecondaryButton + ' mt-5 w-full justify-between sm:w-auto'}
+                onClick={() => chooseMaterial(unlinkedId)}
+              >
+                Sin PDF asociado ·{' '}
+                {pendingLabel(
+                  views.filter((item) => !item.recommendation && item.status === 'pending').length
+                )}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
+            {!pdfs.length && !views.length && (
+              <p className="!text-foreground mt-5">
+                Todavía no tenés errores guardados. Subí un PDF y practicá: lo que te cueste quedará
+                listo para repasar.
+              </p>
+            )}
+            <Link
+              href="/dashboard/materiales?openUpload=1"
+              className={reviewSecondaryButton + ' mt-5 sm:ml-3'}
+            >
+              Subir mi PDF
+            </Link>
+          </section>
+        ) : (
+          <>
+            <div className="border-border mt-6 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+              <button
+                className={reviewSecondaryButton}
+                onClick={() => {
+                  setMaterialId(null);
+                  setSelectedId(null);
+                  setNotice('');
+                  router.refresh();
+                }}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Mis PDFs
+              </button>
+              <select
+                aria-label="Cambiar PDF"
+                value={materialId}
+                onChange={(event) => chooseMaterial(event.target.value)}
+                className="border-border bg-background min-h-11 w-full max-w-full min-w-0 rounded-xl border px-3 text-sm sm:w-auto sm:max-w-[65%]"
+              >
+                {pdfs.map((pdf) => (
+                  <option key={pdf.id} value={pdf.id}>
+                    {pdf.title} ·{' '}
+                    {pendingLabel(
+                      views.filter(
+                        (item) =>
+                          item.recommendation?.materialId === pdf.id && item.status === 'pending'
+                      ).length
+                    )}
+                  </option>
+                ))}
+                {views.some((item) => !item.recommendation) && (
+                  <option value={unlinkedId}>Sin PDF asociado</option>
+                )}
+              </select>
+            </div>
+            <div className="mt-5">
+              <h2 className="text-lg font-bold break-words">
+                {selectedPdf?.title ?? 'Errores sin PDF asociado'}
+              </h2>
+              <p className="!text-muted-foreground mt-1 !text-xs">
+                {pendingLabel(pending.length)} · {resolvedLabel(resolved.length)}
+              </p>
+            </div>
+            <div className="mt-4 lg:hidden">
+              <button
+                className="border-border flex min-h-12 w-full items-center justify-between gap-3 border-y py-3 text-left"
+                onClick={() => setMobileListOpen((open) => !open)}
+                aria-expanded={mobileListOpen}
+                aria-controls="mobile-errors"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold">
+                    {selected?.topic ?? 'Elegí un error'}
+                    {selected && selected.status === 'pending'
+                      ? ` · Error ${Math.max(1, pending.findIndex((item) => item.id === selected.id) + 1)} de ${pending.length}`
+                      : ''}
+                  </span>
+                  <span className="text-primary block text-xs">Cambiar error</span>
+                </span>
+                <ChevronDown className={`h-4 w-4 shrink-0 ${mobileListOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+            <div className="grid min-w-0 gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-8">
+              <aside
+                id="mobile-errors"
+                aria-label="Errores de este PDF"
+                className={`${mobileListOpen ? 'block' : 'hidden'} lg:border-border min-w-0 pt-4 lg:block lg:border-r lg:pr-5`}
+              >
+                <div className="flex gap-2">
+                  {(['pending', 'resolved'] as const).map((value) => (
+                    <button
+                      key={value}
+                      aria-pressed={tab === value}
+                      className={`min-h-11 flex-1 border-b-2 px-2 text-xs font-semibold ${tab === value ? 'border-primary text-primary' : 'text-muted-foreground border-transparent'}`}
+                      onClick={() => {
+                        setTab(value);
+                        setSelectedId((value === 'pending' ? pending : resolved)[0]?.id ?? null);
+                        setQuery('');
+                      }}
+                    >
+                      {value === 'pending'
+                        ? `Pendientes (${pending.length})`
+                        : `Resueltos (${resolved.length})`}
+                    </button>
+                  ))}
+                </div>
+                <label className="border-border mt-3 flex min-h-11 items-center gap-2 rounded-xl border px-3">
+                  <Search className="text-muted-foreground h-4 w-4 shrink-0" />
+                  <input
+                    type="search"
+                    aria-label="Buscar tema"
+                    placeholder="Buscar tema"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    className="w-full min-w-0 bg-transparent text-sm outline-none"
+                  />
+                </label>
+                <nav className="mt-3 max-h-[52vh] overflow-y-auto lg:max-h-none">
+                  {visible.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`w-full border-l-2 px-3 py-3 text-left transition ${selected?.id === item.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/50 border-transparent'}`}
+                      onClick={() => {
+                        setSelectedId(item.id);
+                        setMobileListOpen(false);
+                      }}
+                    >
+                      <span className="block text-sm font-semibold break-words">{item.topic}</span>
+                      <span className="text-muted-foreground mt-1 block text-xs">
+                        {studyErrorSourceLabels[item.sourceType]} ·{' '}
+                        {item.status === 'resolved'
+                          ? 'Resuelto'
+                          : `${item.failureCount} ${item.failureCount === 1 ? 'error' : 'errores'}`}
+                      </span>
+                    </button>
+                  ))}
+                </nav>
+                {!visible.length && (
+                  <p className="!text-muted-foreground mt-4 !text-xs">
+                    {query
+                      ? 'No encontramos ese tema.'
+                      : tab === 'pending'
+                        ? 'No quedan errores pendientes.'
+                        : 'Todavía no hay errores resueltos.'}
+                  </p>
+                )}
+              </aside>
+              <section className="min-w-0 py-4" aria-label="Repaso del error">
+                {selected ? (
+                  <StudyErrorDetail
+                    key={selected.id}
+                    item={selected}
+                    materials={pdfs}
+                    pendingCount={pending.length}
+                    onProgress={(changes) =>
+                      setOverrides((current) => ({
+                        ...current,
+                        [selected.id]: {
+                          baseFailedAt:
+                            data.pending.find((item) => item.id === selected.id)?.lastFailedAt ??
+                            selected.lastFailedAt,
+                          changes: { ...current[selected.id]?.changes, ...changes },
+                        },
+                      }))
+                    }
+                    onAssociate={(id) => {
+                      setOverrides((current) => ({
+                        ...current,
+                        [selected.id]: {
+                          baseFailedAt: selected.lastFailedAt,
+                          changes: {
+                            recommendation: {
+                              materialId: id,
+                              materialTitle: pdfs.find((pdf) => pdf.id === id)?.title ?? 'Mi PDF',
+                              pageStart: null,
+                              pageEnd: null,
+                              sectionTitle: null,
+                              excerpt: null,
+                              relation: 'best',
+                            },
+                          },
+                        },
+                      }));
+                      setMaterialId(id);
+                      router.refresh();
+                    }}
+                    onNext={nextError}
+                    onFinish={finish}
+                  />
+                ) : (
+                  <div className="py-8">
+                    <CheckCircle2 className="text-primary h-7 w-7" />
+                    <h3 className="mt-3 text-xl font-bold">
+                      {tab === 'resolved'
+                        ? 'Todavía no hay errores resueltos'
+                        : 'Todo al día en este PDF'}
+                    </h3>
+                    <p className="!text-muted-foreground mt-2 !text-sm">
+                      {tab === 'resolved'
+                        ? 'Los errores que compruebes después del repaso van a aparecer acá.'
+                        : 'Podés seguir estudiando tu material o revisar tus conceptos resueltos.'}
+                    </p>
+                    {selectedPdf && (
+                      <Link
+                        href={`/materiales/${selectedPdf.id}`}
+                        className={reviewPrimaryButton + ' mt-4'}
+                      >
+                        Seguir estudiando mi PDF
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

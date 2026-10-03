@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
 import { buildWrongAnswersExplanations } from '@/lib/simulator-wrong-answers';
-import { generateTutorQuickHelp, type TutorQuickHelpKind } from '@/lib/ai-tutor';
+import type { TutorQuickHelpKind } from '@/lib/ai-tutor';
+import { generateReviewHelpAction } from '@/lib/actions/study-error-review';
 import { hasPremiumAccess } from '@/lib/premium';
 import { enforceStrictRateLimit } from '@/lib/rate-limit';
 
@@ -125,16 +126,13 @@ export async function recordStudentMaterialStudyResultAction(
   }
 }
 
-export async function markStudyErrorReviewedAction(
-  errorId: string
-): Promise<{ success: boolean }> {
+export async function markStudyErrorReviewedAction(errorId: string): Promise<{ success: boolean }> {
   const user = await requireUser();
   if (!user || !errorId) return { success: false };
 
   const success = await markStudyErrorReviewed(user.id, errorId);
   return { success };
 }
-
 
 export async function getPendingStudyErrorOnboardingAction(): Promise<{
   errorId: string | null;
@@ -160,7 +158,6 @@ export async function finishStudyErrorOnboardingAction(
 
   return { success };
 }
-
 
 export async function generateStudyErrorExplanationAction(
   errorId: string
@@ -234,93 +231,9 @@ export async function generateStudyErrorExplanationAction(
   }
 }
 
-
 export async function generateStudyErrorQuickHelpAction(
   errorId: string,
   kind: TutorQuickHelpKind
 ): Promise<{ success: boolean; text?: string; message?: string }> {
-  const user = await requireUser();
-  if (!user || !errorId) return { success: false, message: 'Sesión no válida.' };
-  if (!['why_wrong', 'simpler', 'example'].includes(kind)) {
-    return { success: false, message: 'Acción no válida.' };
-  }
-
-  try {
-    const admin = createAdminClient();
-    // study_errors todavía no está en los tipos generados.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = admin as any;
-    const { data: row, error } = await db
-      .from('study_errors')
-      .select(
-        'id, user_id, materia_id, question_id, source_type, status, prompt, explanation, correct_answer, selected_answer, reference_excerpt, metadata'
-      )
-      .eq('id', errorId)
-      .eq('user_id', user.id)
-      .eq('status', 'pending')
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!row) return { success: false, message: 'No encontramos este error.' };
-
-    if (kind === 'why_wrong' && row.explanation) {
-      return { success: true, text: row.explanation };
-    }
-
-    let baseExplanation = row.explanation ?? null;
-
-    if (!baseExplanation && row.source_type === 'simulator' && row.question_id && row.materia_id) {
-      const parcialValue = Number(row.metadata?.parcial);
-      const parcial = Number.isInteger(parcialValue) && parcialValue > 0 ? parcialValue : 1;
-      const generated = await buildWrongAnswersExplanations({
-        materiaId: row.materia_id,
-        parcial,
-        wrongQuestionIds: [row.question_id],
-        userId: user.id,
-      });
-      baseExplanation = generated.explanations[0]?.explicacion ?? null;
-    }
-
-    if (kind === 'why_wrong' && baseExplanation) {
-      return { success: true, text: baseExplanation };
-    }
-
-    const isPremium = await hasPremiumAccess(user.id);
-    if (!isPremium) {
-      const rate = await enforceStrictRateLimit({
-        key: `study-errors:quick-help:${user.id}`,
-        limit: FREE_STUDY_ERROR_EXPLANATIONS_LIMIT,
-        windowMs: STUDY_ERROR_EXPLANATION_WINDOW_MS,
-      });
-
-      if (!rate.allowed) {
-        return {
-          success: false,
-          message:
-            'Ya usaste las ayudas con IA incluidas en Free para este período. Podés revisar tu respuesta o volver a tu PDF.',
-        };
-      }
-    }
-
-    const generated = await generateTutorQuickHelp({
-      kind,
-      question: safeText(row.prompt),
-      selectedAnswer: safeText(row.selected_answer) || null,
-      correctAnswer: safeText(row.correct_answer) || null,
-      explanation: safeText(baseExplanation) || null,
-      context: row.reference_excerpt ? [safeText(row.reference_excerpt, 1600)] : [],
-    });
-
-    if (!generated.text || generated.provider === 'fallback-local') {
-      return {
-        success: false,
-        message: 'No pudimos generar esta ayuda ahora. Intentá nuevamente en unos segundos.',
-      };
-    }
-
-    return { success: true, text: generated.text };
-  } catch (error) {
-    logError('studyErrors.generateQuickHelp', error, { userId: user.id, errorId, kind });
-    return { success: false, message: 'No pudimos generar esta ayuda ahora.' };
-  }
+  return generateReviewHelpAction(errorId, kind);
 }

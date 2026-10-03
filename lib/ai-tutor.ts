@@ -1,5 +1,14 @@
 import { logError } from '@/lib/observability';
-import { requestGeminiText, requestGroqText, requestNvidiaText } from '@/lib/ai/providers';
+import {
+  requestGeminiText,
+  requestGroqText,
+  requestNvidiaText,
+  requestGroqJson,
+  requestNvidiaJson,
+  requestGeminiJson,
+} from '@/lib/ai/providers';
+import { extractJsonObject } from '@/lib/ai/json';
+import { validateReviewQuestion } from '@/lib/study-error-review-contract';
 import {
   isolateUntrustedContent,
   MAX_AI_EXPLANATION_CHARS,
@@ -13,7 +22,6 @@ type ExplainInput = {
   correctAnswer: string;
   context: string[];
 };
-
 
 export type TutorQuickHelpKind = 'why_wrong' | 'simpler' | 'example';
 
@@ -61,14 +69,18 @@ function buildQuickHelpPrompt(input: QuickHelpInput) {
 
   const context = (input.context ?? []).filter(Boolean);
   const contextText = context.length
-    ? context.map((item, index) => `Fuente ${index + 1}:\n${isolateUntrustedContent(item)}`).join('\n\n')
+    ? context
+        .map((item, index) => `Fuente ${index + 1}:\n${isolateUntrustedContent(item)}`)
+        .join('\n\n')
     : 'Sin fragmento de fuente adicional.';
 
   return [
     'Sos un tutor universitario claro y preciso.',
+    'Hablale directamente al estudiante con voseo argentino: "Elegiste", "podés", "pensá". No lo llames "el alumno" ni juzgues su capacidad.',
     instruction,
+    'Ordená la ayuda en párrafos cortos. Primero aclarás la confusión, después mostrás cómo pensar el concepto. No repitas literalmente las dos respuestas sin explicarlas.',
     'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
-    'Si hay una fuente, priorizala. No inventes citas, páginas ni información que no esté respaldada por los datos recibidos.',
+    'Si hay una fuente, explicá sólo lo que se pueda sostener con ella. Si contradice la respuesta de la actividad, señalá esa diferencia sin justificar una respuesta falsa. No inventes citas, páginas ni información.',
     'No hagas preguntas de seguimiento y no abras una conversación. Entregá una sola respuesta útil de 60 a 140 palabras.',
     PROMPT_INJECTION_GUARD,
     '',
@@ -175,7 +187,6 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
   };
 }
 
-
 export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
   text: string;
   provider: string;
@@ -231,4 +242,78 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
     provider: 'fallback-local',
     text: 'No se pudo generar esta ayuda en este momento. Intentá nuevamente en unos segundos.',
   };
+}
+
+export async function generateStudyErrorReviewQuestion(input: {
+  question: string;
+  topic: string;
+  correctAnswer: string;
+  source: string;
+  previousQuestion?: string;
+}) {
+  const prompt = [
+    'Creá una comprobación breve de comprensión universitaria basada EXCLUSIVAMENTE en el fragmento recibido.',
+    'Evaluá el mismo concepto de la actividad original en una situación diferente. No copies el enunciado ni cambies solamente sinónimos.',
+    'Cambiá también el escenario concreto. Por ejemplo, si la actividad trata una cuenta mental, no vuelvas a preguntar por un cálculo o un problema matemático: aplicá el concepto en otra tarea cotidiana. El caso puede ser hipotético, pero su resolución debe derivarse del fragmento.',
+    'Usá español sencillo y voseo argentino. Evitá "según el texto" cuando no aporte al problema.',
+    'Pedí aplicar o distinguir el concepto, no reconocer su nombre. El título del tema no debe revelar la respuesta.',
+    'Ofrecé exactamente tres opciones plausibles y mutuamente excluyentes, de longitud semejante, con una sola correcta.',
+    'No uses todas/ninguna de las anteriores. No inventes datos académicos ni dependas de conocimiento fuera del fragmento.',
+    'Si no hay evidencia suficiente, o si la respuesta original contradice el fragmento, devolvé {"supported":false}.',
+    'Devolvé sólo JSON: {"supported":true,"question":"...","options":["...","...","..."],"correctIndex":0,"feedback":"Por qué la correcta se sostiene en el PDF","evidenceQuote":"Cita literal de 20 a 300 caracteres del fragmento"}.',
+    PROMPT_INJECTION_GUARD,
+    `Tema: ${isolateUntrustedContent(input.topic)}`,
+    `Actividad original: ${isolateUntrustedContent(input.question)}`,
+    `Respuesta original: ${isolateUntrustedContent(input.correctAnswer)}`,
+    `Evitá repetir esta comprobación anterior: ${isolateUntrustedContent(input.previousQuestion ?? '')}`,
+    `Fragmento: ${isolateUntrustedContent(input.source.slice(0, 3000))}`,
+  ].join('\n');
+  const requests: Array<[TutorProvider, () => Promise<ProviderTextResult>]> = [
+    [
+      'groq',
+      () =>
+        requestGroqJson({
+          prompt,
+          system: 'Sos un docente. Respondé sólo JSON verificable con la fuente.',
+          temperature: 0.2,
+          maxTokens: 650,
+        }),
+    ],
+    [
+      'nvidia',
+      () =>
+        requestNvidiaJson({
+          prompt,
+          system: 'Sos un docente. Respondé sólo JSON verificable con la fuente.',
+          temperature: 0.2,
+          maxTokens: 650,
+        }),
+    ],
+    ['gemini', () => requestGeminiJson({ prompt, temperature: 0.2, maxOutputTokens: 650 })],
+  ];
+  for (const [provider, request] of requests) {
+    const result = await tryProvider(provider, request);
+    if (!result) continue;
+    try {
+      const payload = extractJsonObject(result.content);
+      // La abstención es un resultado pedagógico válido, no una falla de proveedor.
+      if (
+        payload &&
+        typeof payload === 'object' &&
+        'supported' in payload &&
+        payload.supported === false
+      )
+        return null;
+      const question = validateReviewQuestion(payload, input.source, input.question);
+      if (
+        question &&
+        (!input.previousQuestion ||
+          validateReviewQuestion(payload, input.source, input.previousQuestion))
+      )
+        return question;
+    } catch {
+      // Salida inválida: un fallback acotado, sin persistir datos no validados.
+    }
+  }
+  return null;
 }

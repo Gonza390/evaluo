@@ -1,5 +1,31 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
+type StudyErrorHelpCacheRow = {
+  error_id: string;
+  user_id: string;
+  context_key: string;
+  kind: string;
+  help_text: string;
+  created_at: string;
+};
+type StudyErrorReviewCheckRow = {
+  id: string;
+  error_id: string;
+  user_id: string;
+  material_id: string;
+  context_key: string;
+  source_failed_at: string;
+  question: string;
+  options: string[];
+  correct_index: number;
+  feedback: string;
+  evidence_quote: string;
+  status: string;
+  selected_index: number | null;
+  created_at: string;
+  answered_at: string | null;
+};
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -33,6 +59,27 @@ export type Database = {
   };
   public: {
     Tables: {
+      study_error_help_cache: {
+        Row: StudyErrorHelpCacheRow;
+        Insert: Omit<StudyErrorHelpCacheRow, 'created_at'> & { created_at?: string };
+        Update: Partial<StudyErrorHelpCacheRow>;
+        Relationships: [];
+      };
+      study_error_review_checks: {
+        Row: StudyErrorReviewCheckRow;
+        Insert: Omit<
+          StudyErrorReviewCheckRow,
+          'id' | 'created_at' | 'status' | 'selected_index' | 'answered_at'
+        > & {
+          id?: string;
+          created_at?: string;
+          status?: string;
+          selected_index?: number | null;
+          answered_at?: string | null;
+        };
+        Update: Partial<StudyErrorReviewCheckRow>;
+        Relationships: [];
+      };
       admin_alert_logs: {
         Row: {
           alert_key: string;
@@ -2481,6 +2528,10 @@ export type Database = {
       };
     };
     Functions: {
+      submit_study_error_review_check: {
+        Args: { p_user_id: string; p_check_id: string; p_selected_index: number };
+        Returns: Json;
+      };
       archive_analytics_events: {
         Args: {
           p_batch_size?: number;

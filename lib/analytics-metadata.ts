@@ -34,20 +34,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'file_size_bytes',
     ...FIRST_PDF_DEMO_KEYS,
   ],
-  pdf_upload_started: [
-    'attribution',
-    'anonymous_id',
-    'page_type',
-    'source',
-    'file_size_bytes',
-  ],
-  pdf_draft_restored: [
-    'attribution',
-    'anonymous_id',
-    'page_type',
-    'source',
-    'file_size_bytes',
-  ],
+  pdf_upload_started: ['attribution', 'anonymous_id', 'page_type', 'source', 'file_size_bytes'],
+  pdf_draft_restored: ['attribution', 'anonymous_id', 'page_type', 'source', 'file_size_bytes'],
   material_processing_started: [
     'attribution',
     'anonymous_id',
@@ -55,13 +43,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'source',
     'material_id',
   ],
-  material_ready: [
-    'attribution',
-    'anonymous_id',
-    'page_type',
-    'source',
-    'material_id',
-  ],
+  material_ready: ['attribution', 'anonymous_id', 'page_type', 'source', 'material_id'],
   page_view: ['attribution', 'anonymous_id', 'page_type', 'carrera_id', 'universidad_id', 'tab'],
   acquisition_touch: [
     'source',
@@ -607,6 +589,8 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'material_id',
     'failure_count',
   ],
+  study_error_check_started: ['study_error_id', 'material_id'],
+  study_error_check_answered: ['study_error_id', 'material_id', 'correct'],
   study_error_returned: [
     'attribution',
     'anonymous_id',

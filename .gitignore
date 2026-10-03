@@ -14,6 +14,7 @@ next.user-config.*
 node_modules
 .next/
 .next-vercel-build/
+.next-review-final/
 .DS_Store
 tsconfig.tsbuildinfo
 supabase/.temp/

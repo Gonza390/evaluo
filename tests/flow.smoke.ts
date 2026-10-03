@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import {
+  validateReviewQuestion,
+  publicReviewQuestion,
+} from '../lib/study-error-review-contract.ts';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -433,7 +437,11 @@ for (const eventName of [
   'study_error_onboarding_completed',
   'study_error_onboarding_skipped',
 ] as const) {
-  assert.equal(isAllowedAnalyticsEventName(eventName), true, `${eventName} debe ser aceptado por analytics.`);
+  assert.equal(
+    isAllowedAnalyticsEventName(eventName),
+    true,
+    `${eventName} debe ser aceptado por analytics.`
+  );
 }
 
 assert.deepEqual(
@@ -453,7 +461,6 @@ assert.deepEqual(
     has_page_reference: true,
   }
 );
-
 
 assert.deepEqual(
   sanitizeAnalyticsMetadata('study_error_onboarding_started', {
@@ -500,13 +507,70 @@ const studyErrorsSource = readFileSync(
   resolve('components/dashboard/study-errors-client.tsx'),
   'utf8'
 );
+const studyErrorDetailSource = readFileSync(
+  resolve('components/dashboard/study-error-detail.tsx'),
+  'utf8'
+);
 for (const target of ['error', 'understand', 'source', 'practice']) {
   assert.match(
-    studyErrorsSource,
+    studyErrorsSource + studyErrorDetailSource,
     new RegExp(`data-study-error-tour=["']${target}["']`),
     `El onboarding de Mis errores debe destacar ${target}.`
   );
 }
 assert.match(studyErrorsSource, /finishStudyErrorOnboardingAction\(onboarding\.errorId, outcome\)/);
+
+const reviewSource =
+  'La memoria de trabajo permite mantener y manipular información durante una tarea.';
+const reviewPayload = {
+  supported: true,
+  question:
+    'Mientras hacés un cálculo mental mantenés varios números disponibles. ¿Qué proceso permite esa tarea?',
+  options: [
+    'Mantener y manipular información temporalmente.',
+    'Almacenar recuerdos autobiográficos.',
+    'Reconocer una cara vista hace años.',
+  ],
+  correctIndex: 0,
+  feedback:
+    'La fuente describe el mantenimiento y la manipulación de información durante una tarea.',
+  evidenceQuote: 'permite mantener y manipular información durante una tarea',
+};
+assert.ok(validateReviewQuestion(reviewPayload, reviewSource, '¿Qué es la memoria de trabajo?'));
+assert.equal(
+  validateReviewQuestion(
+    { ...reviewPayload, evidenceQuote: 'Una afirmación inventada que no aparece en el material.' },
+    reviewSource,
+    'Original'
+  ),
+  null
+);
+assert.equal(
+  validateReviewQuestion({ ...reviewPayload, correctIndex: 3 }, reviewSource, 'Original'),
+  null
+);
+assert.equal(
+  validateReviewQuestion(
+    { ...reviewPayload, options: ['Iguales', ' iguales ', 'Otra'] },
+    reviewSource,
+    'Original'
+  ),
+  null
+);
+assert.equal(
+  validateReviewQuestion(
+    { ...reviewPayload, question: '¿Qué es la memoria de trabajo?' },
+    reviewSource,
+    '¿Qué es la memoria de trabajo?'
+  ),
+  null
+);
+assert.equal(validateReviewQuestion({ supported: false }, reviewSource, 'Original'), null);
+assert.deepEqual(publicReviewQuestion({ id: 'check-1', ...reviewPayload }), {
+  id: 'check-1',
+  question: reviewPayload.question,
+  options: reviewPayload.options,
+});
+assert.ok(!('correctIndex' in publicReviewQuestion({ id: 'check-1', ...reviewPayload })));
 
 console.log('Flow smoke tests passed.');

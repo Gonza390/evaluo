@@ -90,6 +90,8 @@ export type StudyErrorView = {
 export type StudyErrorsPageData = {
   pending: StudyErrorView[];
   resolved: StudyErrorView[];
+  materials: Array<{ id: string; title: string; materiaNombre: string | null }>;
+  loadError?: boolean;
 };
 
 function clean(value: string | null | undefined) {
@@ -295,7 +297,6 @@ export async function getSimulatorQuestionTopicLabels(
   return labels;
 }
 
-
 export async function recordStudyErrorFailure(input: StudyErrorFailureInput) {
   const admin = createAdminClient();
   // study_errors es una migración nueva; el cast mantiene el cambio aislado hasta regenerar tipos.
@@ -408,7 +409,9 @@ export async function recordStudyErrorCorrect(input: {
   try {
     const { data: existing, error } = await db
       .from('study_errors')
-      .select('id, status, last_failed_at, last_reviewed_at, materia_id, student_material_id, failure_count')
+      .select(
+        'id, status, last_failed_at, last_reviewed_at, materia_id, student_material_id, failure_count'
+      )
       .eq('user_id', input.userId)
       .eq('source_type', input.sourceType)
       .eq('source_key', input.sourceKey)
@@ -460,18 +463,24 @@ export async function recordStudyErrorCorrect(input: {
   }
 }
 
-export async function markStudyErrorReviewed(userId: string, errorId: string) {
+export async function markStudyErrorReviewed(
+  userId: string,
+  errorId: string,
+  expectedFailedAt?: string
+) {
   const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = admin as any;
 
   try {
-    const { data, error } = await db
+    let query = db
       .from('study_errors')
       .update({ last_reviewed_at: new Date().toISOString() })
       .eq('id', errorId)
       .eq('user_id', userId)
-      .eq('status', 'pending')
+      .eq('status', 'pending');
+    if (expectedFailedAt) query = query.eq('last_failed_at', expectedFailedAt);
+    const { data, error } = await query
       .select('id, source_type, materia_id, student_material_id, failure_count')
       .maybeSingle();
 
@@ -535,20 +544,36 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
   const db = admin as any;
 
   try {
-    const { data, error } = await db
-      .from('study_errors')
-      .select(
-        'id, user_id, materia_id, student_material_id, source_type, source_key, question_id, topic, prompt, explanation, correct_answer, selected_answer, failure_count, status, reference_page_start, reference_page_end, reference_section_title, reference_excerpt, first_failed_at, last_failed_at, last_reviewed_at, resolved_at, metadata'
-      )
-      .eq('user_id', userId)
-      .order('last_failed_at', { ascending: false })
-      .limit(300);
+    const [{ data, error }, { data: availableMaterials, error: materialsError }] =
+      await Promise.all([
+        db
+          .from('study_errors')
+          .select(
+            'id, user_id, materia_id, student_material_id, source_type, source_key, question_id, topic, prompt, explanation, correct_answer, selected_answer, failure_count, status, reference_page_start, reference_page_end, reference_section_title, reference_excerpt, first_failed_at, last_failed_at, last_reviewed_at, resolved_at, metadata'
+          )
+          .eq('user_id', userId)
+          .order('last_failed_at', { ascending: false })
+          .limit(300),
+        admin
+          .from('student_materials')
+          .select('id, title, materia_id')
+          .eq('user_id', userId)
+          .eq('processing_status', 'ready')
+          .order('updated_at', { ascending: false })
+          .limit(100),
+      ]);
 
     if (error) throw error;
+    if (materialsError) throw materialsError;
+    const materials = (availableMaterials ?? []).map((material) => ({
+      id: material.id,
+      title: material.title,
+      materiaNombre: null as string | null,
+    }));
 
     const rows = (data ?? []) as RawStudyError[];
     if (rows.length === 0) {
-      return { pending: [], resolved: [] };
+      return { pending: [], resolved: [], materials };
     }
 
     const simulatorTopicLabels = await getSimulatorQuestionTopicLabels(
@@ -565,7 +590,13 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
     const materialIds = Array.from(
       new Set(
         rows
-          .map((row) => row.student_material_id)
+          .map(
+            (row) =>
+              row.student_material_id ??
+              (typeof row.metadata?.review_material_id === 'string'
+                ? row.metadata.review_material_id
+                : null)
+          )
           .filter((value): value is string => Boolean(value))
       )
     );
@@ -606,8 +637,13 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
     >();
 
     for (const row of rows) {
-      if (!row.student_material_id) continue;
-      const material = ownMaterials.get(row.student_material_id);
+      const linkedMaterialId =
+        row.student_material_id ??
+        (typeof row.metadata?.review_material_id === 'string'
+          ? row.metadata.review_material_id
+          : null);
+      if (!linkedMaterialId) continue;
+      const material = ownMaterials.get(linkedMaterialId);
       if (!material || material.processing_status !== 'ready') continue;
 
       recommendations.set(row.id, {
@@ -618,7 +654,7 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
           pageEnd: row.reference_page_end,
           sectionTitle: row.reference_section_title,
           excerpt: row.reference_excerpt,
-          relation: 'origin',
+          relation: row.student_material_id ? 'origin' : 'best',
         },
         alternatives: [],
       });
@@ -626,7 +662,13 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
 
     const pendingSimulatorByMateria = new Map<string, RawStudyError[]>();
     for (const row of rows) {
-      if (row.status !== 'pending' || row.source_type !== 'simulator' || !row.materia_id) continue;
+      if (
+        row.status !== 'pending' ||
+        row.source_type !== 'simulator' ||
+        !row.materia_id ||
+        recommendations.has(row.id)
+      )
+        continue;
       const group = pendingSimulatorByMateria.get(row.materia_id) ?? [];
       group.push(row);
       pendingSimulatorByMateria.set(row.materia_id, group);
@@ -640,27 +682,36 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
       const { data: bancoQuestions } = questionIds.length
         ? await db
             .from('preguntas_banco')
-            .select('id, enunciado, opciones, respuesta_correcta, material_id, carrera_id, universidad_id')
+            .select(
+              'id, enunciado, opciones, respuesta_correcta, material_id, carrera_id, universidad_id'
+            )
             .in('id', questionIds)
         : { data: [] };
 
-      const bancoById = new Map<string, {
-        id: string;
-        enunciado: string;
-        opciones: unknown;
-        respuesta_correcta: string;
-        material_id: string | null;
-        carrera_id: string | null;
-        universidad_id: string | null;
-      }>((bancoQuestions ?? []).map((question: {
-        id: string;
-        enunciado: string;
-        opciones: unknown;
-        respuesta_correcta: string;
-        material_id: string | null;
-        carrera_id: string | null;
-        universidad_id: string | null;
-      }) => [question.id, question]));
+      const bancoById = new Map<
+        string,
+        {
+          id: string;
+          enunciado: string;
+          opciones: unknown;
+          respuesta_correcta: string;
+          material_id: string | null;
+          carrera_id: string | null;
+          universidad_id: string | null;
+        }
+      >(
+        (bancoQuestions ?? []).map(
+          (question: {
+            id: string;
+            enunciado: string;
+            opciones: unknown;
+            respuesta_correcta: string;
+            material_id: string | null;
+            carrera_id: string | null;
+            universidad_id: string | null;
+          }) => [question.id, question]
+        )
+      );
 
       const contexts = await buildStudentMaterialContextsForQuestions({
         admin,
@@ -717,7 +768,7 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
         id: row.id,
         materiaId: row.materia_id,
         parcial,
-        materiaNombre: row.materia_id ? materiaNames.get(row.materia_id) ?? null : null,
+        materiaNombre: row.materia_id ? (materiaNames.get(row.materia_id) ?? null) : null,
         sourceType: row.source_type,
         sourceKey: row.source_key,
         questionId: row.question_id,
@@ -751,9 +802,15 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
           new Date(a.resolvedAt ?? a.lastFailedAt).getTime()
       );
 
-    return { pending, resolved };
+    for (const material of materials) {
+      const original = availableMaterials?.find((item) => item.id === material.id);
+      material.materiaNombre = original?.materia_id
+        ? (materiaNames.get(original.materia_id) ?? null)
+        : null;
+    }
+    return { pending, resolved, materials };
   } catch (error) {
     logError('studyErrors.getPageData', error, { userId });
-    return { pending: [], resolved: [] };
+    return { pending: [], resolved: [], materials: [], loadError: true };
   }
 }

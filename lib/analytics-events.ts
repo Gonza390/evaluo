@@ -82,6 +82,8 @@ const ANALYTICS_EVENT_NAMES = [
   'study_error_pdf_review_started',
   'study_error_repractice_started',
   'study_error_resolved',
+  'study_error_check_started',
+  'study_error_check_answered',
   'study_error_returned',
   'study_error_onboarding_prompted',
   'study_error_onboarding_started',
