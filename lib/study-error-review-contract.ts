@@ -12,6 +12,13 @@ export type ReviewAnswerResult = {
   message?: string;
 };
 
+/** Una respuesta cortada no sirve como ayuda, aunque el proveedor devuelva HTTP 200. */
+export function isCompleteReviewHelp(text: string, finishReason?: string) {
+  if (/^(length|max_tokens)$/i.test(finishReason ?? '')) return false;
+  const trimmed = text.trim();
+  return trimmed.length >= 40 && trimmed.length <= 4000 && /[.!?][\s”"')\]*_]*$/.test(trimmed);
+}
+
 const questionSchema = z.object({
   supported: z.literal(true),
   question: z.string().trim().min(20).max(1000),

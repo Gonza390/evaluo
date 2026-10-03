@@ -11,6 +11,7 @@ import { logError } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
 import {
   publicReviewQuestion,
+  isCompleteReviewHelp,
   type ReviewHelpKind,
   type ReviewQuestion,
   type ReviewAnswerResult,
@@ -89,7 +90,12 @@ export async function generateReviewHelpAction(
       .maybeSingle();
     if (cacheError) throw cacheError;
     // Las explicaciones de la actividad se reutilizan cuando no se promete una fuente PDF.
-    let text = cached?.help_text ?? (!source && kind === 'why_wrong' ? row.explanation : null);
+    let text =
+      cached?.help_text && isCompleteReviewHelp(cached.help_text)
+        ? cached.help_text
+        : !source && kind === 'why_wrong'
+          ? row.explanation
+          : null;
     if (!text) {
       const limitMessage = await generationLimit(user.id);
       if (limitMessage) return { success: false, message: limitMessage };
@@ -111,7 +117,7 @@ export async function generateReviewHelpAction(
         .from('study_error_help_cache')
         .upsert(
           { error_id: errorId, user_id: user.id, context_key: contextKey, kind, help_text: text },
-          { onConflict: 'error_id,context_key,kind', ignoreDuplicates: true }
+          { onConflict: 'error_id,context_key,kind' }
         );
       if (error) throw error;
     }

@@ -29,7 +29,8 @@ de comprobar. Premium mantiene el acceso existente. Todas las generaciones tiene
 un límite de ráfaga de 6 por minuto. Las ayudas guardadas y las comprobaciones abiertas
 se reutilizan sin otra generación; leer la fuente y confirmar respuestas no consume IA.
 
-Una ayuda usa hasta 300 tokens de salida; una comprobación hasta 650 por proveedor.
+Una ayuda usa hasta 600 tokens de salida (400 para variantes); una comprobación
+hasta 650 por proveedor. Las respuestas cortadas se rechazan y no se guardan como ayuda.
 Se reutilizan Groq, NVIDIA y Gemini con los fallbacks existentes y contexto acotado.
 Son topes por llamada, no una medición del coste total. La validación comprueba formato,
 opciones distintas y cita presente; la calidad semántica de una pregunta generada

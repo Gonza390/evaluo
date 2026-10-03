@@ -13,6 +13,7 @@ export type ProviderResult = {
   model: string;
   content: string;
   usage?: AiUsage;
+  finishReason?: string;
 };
 
 const AI_REQUEST_TIMEOUT_MS = Math.max(
@@ -38,10 +39,7 @@ const GEMINI_FALLBACK_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
 const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'openai/gpt-oss-20b';
 const GROQ_FALLBACK_SUMMARY_MODEL = process.env.GROQ_FALLBACK_MODEL;
-const RETIRED_GROQ_MODELS = new Set([
-  'llama-3.1-8b-instant',
-  'llama-3.3-70b-versatile',
-]);
+const RETIRED_GROQ_MODELS = new Set(['llama-3.1-8b-instant', 'llama-3.3-70b-versatile']);
 const NVIDIA_PRIMARY_SUMMARY_MODEL =
   process.env.NVIDIA_SUMMARY_MODEL ?? 'meta/llama-3.3-70b-instruct';
 const NVIDIA_FALLBACK_SUMMARY_MODEL =
@@ -52,8 +50,10 @@ export function getGeminiSummaryModels() {
 }
 
 export function getGroqSummaryModels() {
-  const configured = uniqueConfiguredValues([GROQ_PRIMARY_SUMMARY_MODEL, GROQ_FALLBACK_SUMMARY_MODEL])
-    .filter((model) => !RETIRED_GROQ_MODELS.has(model));
+  const configured = uniqueConfiguredValues([
+    GROQ_PRIMARY_SUMMARY_MODEL,
+    GROQ_FALLBACK_SUMMARY_MODEL,
+  ]).filter((model) => !RETIRED_GROQ_MODELS.has(model));
 
   // Si Vercel conserva una variable antigua con un modelo retirado, no dejamos
   // la lista vacía: usamos el default de producción conocido.
@@ -222,6 +222,9 @@ async function requestOpenAiCompatibleJson(
         provider: cfg.provider,
         model,
         content: normalized,
+        finishReason: Array.isArray(choices)
+          ? String((choices[0] as Record<string, unknown>)?.finish_reason ?? '')
+          : undefined,
         usage: parseOpenAiUsage(json),
       };
     }
@@ -295,6 +298,9 @@ async function requestOpenAiCompatibleText(
         model,
         content: normalized,
         usage: parseOpenAiUsage(json),
+        finishReason: Array.isArray(choices)
+          ? String((choices[0] as Record<string, unknown>)?.finish_reason ?? '')
+          : undefined,
       };
     }
   }
@@ -495,6 +501,9 @@ async function requestGeminiCommon(input: GeminiRequest) {
         provider: 'gemini' as const,
         model,
         content: text,
+        finishReason: Array.isArray(candidates)
+          ? String((candidates[0] as Record<string, unknown>)?.finishReason ?? '')
+          : undefined,
         usage: parseGeminiUsage(json),
       };
     }

@@ -2,8 +2,31 @@ import assert from 'node:assert/strict';
 import {
   validateReviewQuestion,
   publicReviewQuestion,
+  isCompleteReviewHelp,
 } from '../lib/study-error-review-contract.ts';
 import { readFileSync } from 'node:fs';
+
+assert.ok(
+  isCompleteReviewHelp(
+    'La práctica consiste en recordar sin mirar y luego comparar con la fuente.',
+    'stop'
+  )
+);
+assert.equal(isCompleteReviewHelp('La práctica consiste en recordar sin mirar y, si'), false);
+assert.equal(
+  isCompleteReviewHelp(
+    'Una respuesta que parece terminada pero quedó limitada por el proveedor.',
+    'length'
+  ),
+  false
+);
+assert.equal(
+  isCompleteReviewHelp(
+    'Una respuesta que parece terminada pero quedó limitada por el proveedor.',
+    'MAX_TOKENS'
+  ),
+  false
+);
 import { resolve } from 'node:path';
 import {
   addMonths,

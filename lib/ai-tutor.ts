@@ -8,7 +8,7 @@ import {
   requestGeminiJson,
 } from '@/lib/ai/providers';
 import { extractJsonObject } from '@/lib/ai/json';
-import { validateReviewQuestion } from '@/lib/study-error-review-contract';
+import { validateReviewQuestion, isCompleteReviewHelp } from '@/lib/study-error-review-contract';
 import {
   isolateUntrustedContent,
   MAX_AI_EXPLANATION_CHARS,
@@ -35,7 +35,7 @@ type QuickHelpInput = {
 };
 
 type TutorProvider = 'groq' | 'nvidia' | 'gemini';
-type ProviderTextResult = { content: string; model: string } | null;
+type ProviderTextResult = { content: string; model: string; finishReason?: string } | null;
 
 const unhealthyProviderUntil = new Map<TutorProvider, number>();
 
@@ -81,6 +81,7 @@ function buildQuickHelpPrompt(input: QuickHelpInput) {
     'Ordená la ayuda en párrafos cortos. Primero aclarás la confusión, después mostrás cómo pensar el concepto. No repitas literalmente las dos respuestas sin explicarlas.',
     'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
     'Si hay una fuente, explicá sólo lo que se pueda sostener con ella. Si contradice la respuesta de la actividad, señalá esa diferencia sin justificar una respuesta falsa. No inventes citas, páginas ni información.',
+    'No atribuyas procesos o consecuencias que el fragmento no describa. Usá texto sin Markdown y cerrá todas las frases.',
     'No hagas preguntas de seguimiento y no abras una conversación. Entregá una sola respuesta útil de 60 a 140 palabras.',
     PROMPT_INJECTION_GUARD,
     '',
@@ -196,15 +197,16 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
     prompt,
     temperature: 0.2,
   };
+  const outputBudget = input.kind === 'why_wrong' ? 600 : 400;
 
   const groqText = await tryProvider('groq', () =>
     requestGroqText({
       ...common,
       system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
-      maxTokens: 300,
+      maxTokens: outputBudget,
     })
   );
-  if (groqText) {
+  if (groqText && isCompleteReviewHelp(groqText.content, groqText.finishReason)) {
     return {
       text: truncateUtf8Text(groqText.content, MAX_AI_EXPLANATION_CHARS),
       provider: groqText.model,
@@ -215,10 +217,10 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
     requestNvidiaText({
       ...common,
       system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
-      maxTokens: 300,
+      maxTokens: outputBudget,
     })
   );
-  if (nvidiaText) {
+  if (nvidiaText && isCompleteReviewHelp(nvidiaText.content, nvidiaText.finishReason)) {
     return {
       text: truncateUtf8Text(nvidiaText.content, MAX_AI_EXPLANATION_CHARS),
       provider: nvidiaText.model,
@@ -228,10 +230,10 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
   const geminiText = await tryProvider('gemini', () =>
     requestGeminiText({
       ...common,
-      maxOutputTokens: 300,
+      maxOutputTokens: outputBudget,
     })
   );
-  if (geminiText) {
+  if (geminiText && isCompleteReviewHelp(geminiText.content, geminiText.finishReason)) {
     return {
       text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
       provider: geminiText.model,
