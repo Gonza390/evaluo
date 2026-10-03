@@ -14,6 +14,18 @@ type ExplainInput = {
   context: string[];
 };
 
+
+export type TutorQuickHelpKind = 'why_wrong' | 'simpler' | 'example';
+
+type QuickHelpInput = {
+  kind: TutorQuickHelpKind;
+  question: string;
+  selectedAnswer?: string | null;
+  correctAnswer?: string | null;
+  explanation?: string | null;
+  context?: string[];
+};
+
 type TutorProvider = 'groq' | 'nvidia' | 'gemini';
 type ProviderTextResult = { content: string; model: string } | null;
 
@@ -36,6 +48,36 @@ function buildPrompt(input: ExplainInput) {
     `Respuesta correcta: ${isolateUntrustedContent(input.correctAnswer)}`,
     '',
     `Fuentes:\n${contextText}`,
+  ].join('\n');
+}
+
+function buildQuickHelpPrompt(input: QuickHelpInput) {
+  const instruction =
+    input.kind === 'why_wrong'
+      ? 'Explicá específicamente por qué la respuesta elegida estaba mal o era incompleta y contrastala con la respuesta correcta.'
+      : input.kind === 'simpler'
+        ? 'Volvé a explicar el concepto con palabras más simples, frases cortas y sin agregar complejidad innecesaria.'
+        : 'Dá un ejemplo concreto y breve que ayude a entender el mismo concepto. No uses exactamente el mismo caso de la pregunta.';
+
+  const context = (input.context ?? []).filter(Boolean);
+  const contextText = context.length
+    ? context.map((item, index) => `Fuente ${index + 1}:\n${isolateUntrustedContent(item)}`).join('\n\n')
+    : 'Sin fragmento de fuente adicional.';
+
+  return [
+    'Sos un tutor universitario claro y preciso.',
+    instruction,
+    'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
+    'Si hay una fuente, priorizala. No inventes citas, páginas ni información que no esté respaldada por los datos recibidos.',
+    'No hagas preguntas de seguimiento y no abras una conversación. Entregá una sola respuesta útil de 60 a 140 palabras.',
+    PROMPT_INJECTION_GUARD,
+    '',
+    `Pregunta: ${isolateUntrustedContent(input.question)}`,
+    `Respuesta del alumno: ${isolateUntrustedContent(input.selectedAnswer ?? 'No disponible')}`,
+    `Respuesta correcta: ${isolateUntrustedContent(input.correctAnswer ?? 'No disponible')}`,
+    `Explicación disponible: ${isolateUntrustedContent(input.explanation ?? 'No disponible')}`,
+    '',
+    `Fuente:\n${contextText}`,
   ].join('\n');
 }
 
@@ -130,5 +172,63 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
   return {
     provider: 'fallback-local',
     text: 'No se pudo generar la explicación automática en este momento. Intenta nuevamente en unos segundos.',
+  };
+}
+
+
+export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
+  text: string;
+  provider: string;
+}> {
+  const prompt = buildQuickHelpPrompt(input);
+  const common = {
+    prompt,
+    temperature: 0.2,
+  };
+
+  const groqText = await tryProvider('groq', () =>
+    requestGroqText({
+      ...common,
+      system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
+      maxTokens: 300,
+    })
+  );
+  if (groqText) {
+    return {
+      text: truncateUtf8Text(groqText.content, MAX_AI_EXPLANATION_CHARS),
+      provider: groqText.model,
+    };
+  }
+
+  const nvidiaText = await tryProvider('nvidia', () =>
+    requestNvidiaText({
+      ...common,
+      system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
+      maxTokens: 300,
+    })
+  );
+  if (nvidiaText) {
+    return {
+      text: truncateUtf8Text(nvidiaText.content, MAX_AI_EXPLANATION_CHARS),
+      provider: nvidiaText.model,
+    };
+  }
+
+  const geminiText = await tryProvider('gemini', () =>
+    requestGeminiText({
+      ...common,
+      maxOutputTokens: 300,
+    })
+  );
+  if (geminiText) {
+    return {
+      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
+      provider: geminiText.model,
+    };
+  }
+
+  return {
+    provider: 'fallback-local',
+    text: 'No se pudo generar esta ayuda en este momento. Intentá nuevamente en unos segundos.',
   };
 }
