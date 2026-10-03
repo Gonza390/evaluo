@@ -281,6 +281,10 @@ export async function generateStudyErrorQuickHelpAction(
       baseExplanation = generated.explanations[0]?.explicacion ?? null;
     }
 
+    if (kind === 'why_wrong' && baseExplanation) {
+      return { success: true, text: baseExplanation };
+    }
+
     const isPremium = await hasPremiumAccess(user.id);
     if (!isPremium) {
       const rate = await enforceStrictRateLimit({
