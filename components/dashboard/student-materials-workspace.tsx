@@ -170,6 +170,8 @@ export function StudentMaterialsWorkspace({
               title="Todavía no subiste un PDF"
               description="Cuando subas tu primer PDF, vas a poder resumirlo, practicar y volver a estudiarlo directamente desde acá."
               primaryActionLabel="Subí tu PDF"
+              secondaryActionLabel="Ver cómo funciona con un PDF de ejemplo"
+              secondaryActionHref="/preview/primer-pdf?source=dashboard_empty"
               className="border-dashed"
             />
           ) : (

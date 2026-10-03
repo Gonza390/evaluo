@@ -23,6 +23,7 @@ import {
   saveFlashcardProgressAction,
 } from '@/app/dashboard/materiales/actions';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { scheduleFlashcardReviewReminderAction } from '@/lib/actions/flashcard-review-reminders';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
@@ -96,6 +97,7 @@ export function StudentMaterialFlashcards({
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
   const [showAllReviewTopics, setShowAllReviewTopics] = useState(false);
+  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
   const [isSchedulingReminder, setIsSchedulingReminder] = useState(false);
   const [reminderScheduled, setReminderScheduled] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
@@ -296,7 +298,7 @@ export function StudentMaterialFlashcards({
       setRecallByCard((current) => ({ ...current, [currentCardIndex]: result }));
       setSessionRecall((current) => ({ ...current, [currentCardIndex]: result }));
 
-      if (!demoMode)
+      if (!demoMode) {
         void recordStudentMaterialStudyResultAction({
           materialId,
           sourceType: 'flashcard',
@@ -308,7 +310,12 @@ export function StudentMaterialFlashcards({
           correctAnswer: currentCard.back,
           selectedAnswer: result === 'known' ? currentCard.back : 'No lo sabía',
           reference: currentCard.reference,
+        }).then((recorded) => {
+          if (recorded.onboardingErrorId) {
+            setOnboardingErrorId(recorded.onboardingErrorId);
+          }
         });
+      }
 
       if (position < order.length - 1) {
         setPosition((current) => Math.min(order.length - 1, current + 1));
@@ -394,6 +401,12 @@ export function StudentMaterialFlashcards({
 
   if (allReviewed) {
     return (
+      <>
+        <FirstStudyErrorOnboardingPrompt
+          errorId={onboardingErrorId}
+          location="student_material_flashcards"
+          onClose={() => setOnboardingErrorId(null)}
+        />
       <div className="rounded-[22px] border border-emerald-200 bg-[linear-gradient(145deg,#FFFFFF_0%,#F0FDF4_100%)] px-5 py-9 text-center sm:px-8">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_12px_30px_rgba(16,185,129,0.22)]">
           <Check className="h-5 w-5" />
@@ -485,14 +498,21 @@ export function StudentMaterialFlashcards({
           </p>
         ) : null}
       </div>
+      </>
     );
   }
 
   if (!currentCard) return null;
 
   const session = (
-    <div
-      className={cn(
+    <>
+      <FirstStudyErrorOnboardingPrompt
+        errorId={onboardingErrorId}
+        location="student_material_flashcards"
+        onClose={() => setOnboardingErrorId(null)}
+      />
+      <div
+        className={cn(
         demoMode ? 'space-y-3' : 'space-y-4',
         isFullscreen && 'mx-auto flex h-full w-full max-w-5xl flex-col justify-center'
       )}
@@ -708,7 +728,8 @@ export function StudentMaterialFlashcards({
         Presioná <Kbd>Espacio</Kbd> para voltear. Usá <Kbd>↑</Kbd> para “Lo sé” y <Kbd>↓</Kbd> para
         “No lo sé”.
       </div>
-    </div>
+      </div>
+    </>
   );
 
   return isFullscreen

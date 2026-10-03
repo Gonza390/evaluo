@@ -18,6 +18,7 @@ import {
   Target,
 } from 'lucide-react';
 import {
+  finishStudyErrorOnboardingAction,
   generateStudyErrorExplanationAction,
   markStudyErrorReviewedAction,
 } from '@/lib/actions/study-errors';
@@ -25,6 +26,7 @@ import type { StudyErrorSource, StudyErrorView, StudyErrorsPageData } from '@/li
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { AppPageHeader } from '@/components/ui/app-page-header';
 import { StudyStatePanel } from '@/components/study-state-panel';
+import { PdfTourSpotlight } from '@/components/preview/pdf-tour-spotlight';
 
 const sourceConfig: Record<
   StudyErrorSource,
@@ -225,7 +227,8 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
 
   return (
     <div className="max-w-[790px]">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
+      <div data-study-error-tour="error">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-400">
         <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
           <Icon className="h-3.5 w-3.5" />
           {config.label}
@@ -243,8 +246,9 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
       <div className="mt-5 max-w-2xl">
         <p className="text-[15px] leading-7 text-slate-600">{item.prompt}</p>
       </div>
+      </div>
 
-      <section className="mt-7 border-t border-slate-200 pt-6">
+      <section data-study-error-tour="understand" className="mt-7 border-t border-slate-200 pt-6">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-slate-500" />
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
@@ -286,7 +290,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
       </section>
 
       {recommendation ? (
-        <section className="mt-8 border-t-2 border-slate-950 pt-6">
+        <section data-study-error-tour="source" className="mt-8 border-t-2 border-slate-950 pt-6">
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-indigo-600" />
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
@@ -340,7 +344,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
           ) : null}
         </section>
       ) : (
-        <section className="mt-8 border-t-2 border-slate-950 pt-6">
+        <section data-study-error-tour="source" className="mt-8 border-t-2 border-slate-950 pt-6">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-indigo-600" />
             <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
@@ -400,7 +404,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
         </section>
       ) : null}
 
-      <div className="mt-8 border-t border-slate-200 pt-6">
+      <div data-study-error-tour="practice" className="mt-8 border-t border-slate-200 pt-6">
         {practiceHref && recommendation ? (
           <>
             <p className="text-sm font-semibold text-slate-900">Después de estudiarlo</p>
@@ -443,9 +447,21 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
   );
 }
 
-export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
-  const [selectedId, setSelectedId] = useState<string | null>(data.pending[0]?.id ?? null);
+export function StudyErrorsClient({
+  data,
+  onboarding,
+}: {
+  data: StudyErrorsPageData;
+  onboarding?: { active: boolean; errorId: string | null };
+}) {
+  const initialSelectedId =
+    onboarding?.errorId && data.pending.some((item) => item.id === onboarding.errorId)
+      ? onboarding.errorId
+      : data.pending[0]?.id ?? null;
+  const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
   const [mobileListOpen, setMobileListOpen] = useState(false);
+  const [tourStep, setTourStep] = useState(onboarding?.active && initialSelectedId ? 0 : -1);
+  const [tourClosing, setTourClosing] = useState(false);
   const trackedErrorViewsRef = useRef(new Set<string>());
 
   const selected = useMemo(
@@ -488,6 +504,47 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
     }
   }, [selected]);
 
+  const tourSteps = selected
+    ? [
+        {
+          selector: '[data-study-error-tour="error"]',
+          title: 'Este es tu primer error',
+          description:
+            'Evaluo guarda el tema y lo deja listo para que no quede como una respuesta incorrecta aislada.',
+        },
+        {
+          selector: '[data-study-error-tour="understand"]',
+          title: 'Entendé qué pasó',
+          description:
+            'Acá podés revisar la explicación del error y convertir la corrección en un repaso real.',
+        },
+        {
+          selector: '[data-study-error-tour="source"]',
+          title: selected.recommendation ? 'Volvé a tu PDF' : 'Conectalo con tus apuntes',
+          description: selected.recommendation
+            ? 'Evaluo te lleva al material y, cuando es posible, a la parte del PDF relacionada con este concepto.'
+            : 'Si todavía no hay un PDF relacionado, podés subir tus apuntes para conectar este error con tu propia fuente.',
+        },
+        {
+          selector: '[data-study-error-tour="practice"]',
+          title: 'Comprobalo de nuevo',
+          description:
+            'Después de repasar, volvés a practicar. Cuando acertás nuevamente, el tema pasa a Resueltos.',
+        },
+      ]
+    : [];
+
+  const finishTour = async (outcome: 'completed' | 'skipped') => {
+    if (!onboarding?.errorId || tourClosing) {
+      setTourStep(-1);
+      return;
+    }
+    setTourClosing(true);
+    await finishStudyErrorOnboardingAction(onboarding.errorId, outcome);
+    setTourStep(-1);
+    setTourClosing(false);
+  };
+
   if (data.pending.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8 sm:py-10">
@@ -514,7 +571,28 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
   }
 
   return (
-    <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-9">
+    <>
+      {tourStep >= 0 && tourSteps[tourStep] ? (
+        <PdfTourSpotlight
+          selector={tourSteps[tourStep].selector}
+          title={tourSteps[tourStep].title}
+          description={tourSteps[tourStep].description}
+          progress={`${tourStep + 1} de ${tourSteps.length}`}
+          nextLabel={tourStep === tourSteps.length - 1 ? 'Entendido' : 'Siguiente'}
+          onNext={() => {
+            if (tourStep === tourSteps.length - 1) {
+              void finishTour('completed');
+              return;
+            }
+            setTourStep((step) => step + 1);
+          }}
+          onBack={tourStep > 0 ? () => setTourStep((step) => step - 1) : undefined}
+          onExit={() => void finishTour('skipped')}
+          ariaLabel="Guía de Mis errores"
+          footerLabel="Tu primer error"
+        />
+      ) : null}
+      <div className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 sm:py-7 lg:px-8 lg:py-9">
       <AppPageHeader
         eyebrow="Progreso"
         title="Mis errores"
@@ -607,6 +685,7 @@ export function StudyErrorsClient({ data }: { data: StudyErrorsPageData }) {
           {selected ? <StudyErrorDetail key={selected.id} item={selected} /> : null}
         </section>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

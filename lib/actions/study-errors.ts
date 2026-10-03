@@ -10,6 +10,8 @@ import { enforceStrictRateLimit } from '@/lib/rate-limit';
 const FREE_STUDY_ERROR_EXPLANATIONS_LIMIT = 5;
 const STUDY_ERROR_EXPLANATION_WINDOW_MS = 3 * 60 * 60 * 1000;
 import {
+  finishStudyErrorOnboarding,
+  getPendingStudyErrorOnboarding,
   markStudyErrorReviewed,
   recordStudyErrorCorrect,
   recordStudyErrorFailure,
@@ -50,7 +52,7 @@ async function requireUser() {
 
 export async function recordStudentMaterialStudyResultAction(
   input: StudentMaterialStudyResultInput
-): Promise<{ success: boolean; resolved?: boolean }> {
+): Promise<{ success: boolean; resolved?: boolean; onboardingErrorId?: string | null }> {
   const user = await requireUser();
   if (!user) return { success: false };
 
@@ -88,7 +90,7 @@ export async function recordStudentMaterialStudyResultAction(
       return { success: true, resolved };
     }
 
-    await recordStudyErrorFailure({
+    const errorId = await recordStudyErrorFailure({
       userId: user.id,
       materiaId: material.materia_id,
       studentMaterialId: material.id,
@@ -107,7 +109,11 @@ export async function recordStudentMaterialStudyResultAction(
       },
     });
 
-    return { success: true, resolved: false };
+    const onboardingErrorId = errorId
+      ? await getPendingStudyErrorOnboarding(user.id, errorId)
+      : null;
+
+    return { success: true, resolved: false, onboardingErrorId };
   } catch (error) {
     logError('studyErrors.materialResult', error, {
       userId: user.id,
@@ -125,6 +131,32 @@ export async function markStudyErrorReviewedAction(
   if (!user || !errorId) return { success: false };
 
   const success = await markStudyErrorReviewed(user.id, errorId);
+  return { success };
+}
+
+
+export async function getPendingStudyErrorOnboardingAction(): Promise<{
+  errorId: string | null;
+}> {
+  const user = await requireUser();
+  if (!user) return { errorId: null };
+
+  return { errorId: await getPendingStudyErrorOnboarding(user.id) };
+}
+
+export async function finishStudyErrorOnboardingAction(
+  errorId: string,
+  outcome: 'completed' | 'skipped' | 'legacy'
+): Promise<{ success: boolean }> {
+  const user = await requireUser();
+  if (!user || !errorId) return { success: false };
+
+  const success = await finishStudyErrorOnboarding({
+    userId: user.id,
+    errorId,
+    outcome,
+  });
+
   return { success };
 }
 

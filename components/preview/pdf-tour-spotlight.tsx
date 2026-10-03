@@ -32,6 +32,8 @@ export function PdfTourSpotlight({
   onExit,
   compactDescription,
   showCompactDescription = false,
+  ariaLabel = 'Guía del material de ejemplo',
+  footerLabel = 'PDF de muestra',
 }: {
   selector: string;
   title: string;
@@ -44,6 +46,8 @@ export function PdfTourSpotlight({
   onExit: () => void;
   compactDescription?: string;
   showCompactDescription?: boolean;
+  ariaLabel?: string;
+  footerLabel?: string;
 }) {
   const card = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -265,7 +269,7 @@ export function PdfTourSpotlight({
       <div
         ref={card}
         role="region"
-        aria-label="Guía del material de ejemplo"
+        aria-label={ariaLabel}
         className={`border-border bg-background text-foreground fixed right-3 bottom-[max(12px,env(safe-area-inset-bottom))] left-3 z-[90] flex max-h-[48dvh] flex-col rounded-2xl border shadow-2xl ${alignLeft ? 'sm:right-auto sm:w-[400px]' : 'sm:left-auto sm:w-[400px]'} [@media(max-height:480px)]:right-3 [@media(max-height:480px)]:left-3 [@media(max-height:480px)]:w-auto`}
       >
         <div
@@ -336,7 +340,7 @@ export function PdfTourSpotlight({
             </Button>
           ) : (
             <span className="text-muted-foreground hidden text-xs min-[360px]:block">
-              PDF de muestra
+              {footerLabel}
             </span>
           )}
           <Button

@@ -78,16 +78,16 @@ export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
                   <ArrowRight className="h-4 w-4 shrink-0" />
                 </HomePdfPickerButton>
                 <TrackedLink
-                  href="/#video"
+                  href="/preview/primer-pdf?source=home_hero"
                   eventName="cta_click"
                   payload={{
                     location: 'home_hero',
-                    cta_name: 'ver_como_funciona',
-                    destination: '/#video',
+                    cta_name: 'ver_pdf_ejemplo',
+                    destination: '/preview/primer-pdf',
                   }}
                   className="inline-flex h-13 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
                 >
-                  Ver cómo funciona
+                  Ver ejemplo con un PDF
                 </TrackedLink>
               </div>
               <p className="mt-3 text-[11px] font-semibold text-slate-500 sm:text-xs">Empezá gratis · Sin tarjeta</p>

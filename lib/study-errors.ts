@@ -102,6 +102,139 @@ function fallbackTopic(prompt: string) {
   return `${normalized.slice(0, 69).trimEnd()}…`;
 }
 
+async function claimFirstStudyErrorOnboarding(
+  // La tabla interna todavía no forma parte de los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  userId: string,
+  errorId: string
+) {
+  const { data: demoExposure, error: demoExposureError } = await db
+    .from('analytics_events')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('event_name', 'demo_checkpoint_reached')
+    .contains('metadata', { source: 'first-pdf-demo', stage: 'errors_viewed' })
+    .limit(1)
+    .maybeSingle();
+
+  if (demoExposureError) {
+    logError('studyErrors.onboarding.demoExposure', demoExposureError, { userId, errorId });
+  }
+
+  if (demoExposure?.id) {
+    const now = new Date().toISOString();
+    const { error: legacyError } = await db.from('study_error_onboarding_state').insert({
+      user_id: userId,
+      pending_error_id: null,
+      seen_at: now,
+      outcome: 'legacy',
+      updated_at: now,
+    });
+
+    if (legacyError && String(legacyError.code ?? '') !== '23505') {
+      logError('studyErrors.onboarding.demoLegacy', legacyError, { userId, errorId });
+    }
+    return false;
+  }
+
+  const { data, error } = await db
+    .from('study_error_onboarding_state')
+    .insert({
+      user_id: userId,
+      pending_error_id: errorId,
+      updated_at: new Date().toISOString(),
+    })
+    .select('pending_error_id')
+    .maybeSingle();
+
+  if (error) {
+    // Una fila existente significa que el usuario ya tuvo errores o ya vio/omitió el onboarding.
+    if (String(error.code ?? '') === '23505') return false;
+    logError('studyErrors.onboarding.claim', error, { userId, errorId });
+    return false;
+  }
+
+  return data?.pending_error_id === errorId;
+}
+
+export async function getPendingStudyErrorOnboarding(
+  userId: string,
+  expectedErrorId?: string | null
+) {
+  const admin = createAdminClient();
+  // Esta tabla es interna: sólo se consulta con service_role.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+
+  try {
+    const { data, error } = await db
+      .from('study_error_onboarding_state')
+      .select('pending_error_id, seen_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data || data.seen_at || !data.pending_error_id) return null;
+    if (expectedErrorId && data.pending_error_id !== expectedErrorId) return null;
+    return data.pending_error_id as string;
+  } catch (error) {
+    logError('studyErrors.onboarding.pending', error, { userId, expectedErrorId });
+    return null;
+  }
+}
+
+export async function finishStudyErrorOnboarding(input: {
+  userId: string;
+  errorId: string;
+  outcome: 'completed' | 'skipped' | 'legacy';
+}) {
+  const admin = createAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+  const now = new Date().toISOString();
+
+  try {
+    const { data, error } = await db
+      .from('study_error_onboarding_state')
+      .update({
+        pending_error_id: null,
+        seen_at: now,
+        outcome: input.outcome,
+        updated_at: now,
+      })
+      .eq('user_id', input.userId)
+      .eq('pending_error_id', input.errorId)
+      .is('seen_at', null)
+      .select('user_id')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data?.user_id) return false;
+
+    if (input.outcome !== 'legacy') {
+      await trackServerAnalyticsEvent({
+        eventName:
+          input.outcome === 'completed'
+            ? 'study_error_onboarding_completed'
+            : 'study_error_onboarding_skipped',
+        userId: input.userId,
+        path: '/dashboard/explicaciones',
+        metadata: { study_error_id: input.errorId },
+      });
+    }
+
+    return true;
+  } catch (error) {
+    logError('studyErrors.onboarding.finish', error, {
+      userId: input.userId,
+      errorId: input.errorId,
+      outcome: input.outcome,
+    });
+    return false;
+  }
+}
+
 export async function getSimulatorQuestionTopicLabels(
   admin: ReturnType<typeof createAdminClient>,
   questionIds: string[]
@@ -248,6 +381,8 @@ export async function recordStudyErrorFailure(input: StudyErrorFailureInput) {
           reopened: false,
         },
       });
+
+      await claimFirstStudyErrorOnboarding(db, input.userId, data.id);
     }
 
     return data?.id as string | undefined;
