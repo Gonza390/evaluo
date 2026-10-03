@@ -1,8 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, CheckCircle2, FileText, Loader2, Upload, X } from 'lucide-react';
+import { CalendarDays, CheckCircle2, FileText, Loader2, Upload } from 'lucide-react';
 import {
   getStudentMaterialProcessingStateAction,
   processStudentMaterialAction,
@@ -24,6 +32,8 @@ import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
 import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { PdfProcessingPanel } from '@/components/pdf-processing/pdf-processing-panel';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 type UniversidadOption = { id: string; nombre: string };
 type CarreraOption = { id: string; nombre: string; universidad_id: string | null };
@@ -93,18 +103,19 @@ export function PdfFirstUploadShell({
     universidades.find((item) => item.id === initialUniversidadId) ?? null;
   const initialProfileCareer =
     carreras.find(
-      (item) =>
-        item.id === initialCarreraId &&
-        item.universidad_id === initialUniversidadId
+      (item) => item.id === initialCarreraId && item.universidad_id === initialUniversidadId
     ) ?? null;
   const hasInitialUniversityProfile = Boolean(initialProfileUniversity);
   const hasInitialAcademicProfile = Boolean(initialProfileUniversity && initialProfileCareer);
-  const initialAcademicProfileLabel = [initialProfileUniversity?.nombre, initialProfileCareer?.nombre]
+  const initialAcademicProfileLabel = [
+    initialProfileUniversity?.nombre,
+    initialProfileCareer?.nombre,
+  ]
     .filter(Boolean)
     .join(' · ');
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const resumeHandledRef = useRef(false);
-  const readyRedirectedRef = useRef(false);
+  const readyTrackedRef = useRef(false);
   const [open, setOpen] = useState(initialOpen);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
@@ -119,9 +130,7 @@ export function PdfFirstUploadShell({
   const [addingCareer, setAddingCareer] = useState(false);
   const [newCareer, setNewCareer] = useState('');
   const [savingContext, setSavingContext] = useState(false);
-  const [profileUniversitySaved, setProfileUniversitySaved] = useState(
-    hasInitialUniversityProfile
-  );
+  const [profileUniversitySaved, setProfileUniversitySaved] = useState(hasInitialUniversityProfile);
   const [profileUniversityName, setProfileUniversityName] = useState(
     initialProfileUniversity?.nombre ?? ''
   );
@@ -138,14 +147,14 @@ export function PdfFirstUploadShell({
   const selectedCareer = availableCareers.find((item) => item.id === careerId) ?? null;
 
   const hasValidTitle = title.trim().length >= 3;
-  const universityName = requestingUniversity ? newUniversity.trim() : selectedUniversity?.nombre ?? '';
-  const careerName = addingCareer ? newCareer.trim() : selectedCareer?.nombre ?? '';
+  const universityName = requestingUniversity
+    ? newUniversity.trim()
+    : (selectedUniversity?.nombre ?? '');
+  const careerName = addingCareer ? newCareer.trim() : (selectedCareer?.nombre ?? '');
   const hasUniversity = requestingUniversity ? universityName.length >= 3 : Boolean(universityId);
   const hasCareer = addingCareer ? careerName.length >= 3 : Boolean(careerId);
   const canSaveContext = Boolean(
-    hasUniversity &&
-      !contextSaved &&
-      (!profileUniversitySaved || hasCareer)
+    hasUniversity && !contextSaved && (!profileUniversitySaved || hasCareer)
   );
   const ready = processing?.status === 'ready';
   const failed = processing?.status === 'failed';
@@ -171,14 +180,6 @@ export function PdfFirstUploadShell({
     return () => window.clearInterval(interval);
   }, [processing?.materialId, processing?.status, router]);
 
-  useEffect(() => {
-    if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
-    const interval = window.setInterval(() => {
-      setDisplayProgress((current) => Math.min(94, Math.max(current, processing.progress) + 1));
-    }, 700);
-    return () => window.clearInterval(interval);
-  }, [processing]);
-
   const reset = useCallback(() => {
     setFile(null);
     setTitle('');
@@ -198,6 +199,7 @@ export function PdfFirstUploadShell({
     setContextSaved(hasInitialAcademicProfile);
     setSavedContextLabel(initialAcademicProfileLabel);
     setShowReadyContext(false);
+    readyTrackedRef.current = false;
   }, [
     hasInitialAcademicProfile,
     hasInitialUniversityProfile,
@@ -227,12 +229,18 @@ export function PdfFirstUploadShell({
 
   const selectFile = (selected: File | null) => {
     if (!selected) return;
-    if (!selected.name.toLowerCase().endsWith('.pdf') || (selected.type && selected.type !== 'application/pdf')) {
+    if (
+      !selected.name.toLowerCase().endsWith('.pdf') ||
+      (selected.type && selected.type !== 'application/pdf')
+    ) {
       toast({ description: 'Por ahora solo aceptamos archivos PDF.', variant: 'destructive' });
       return;
     }
     if (selected.size > MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES) {
-      toast({ description: 'El PDF supera el tamaño máximo permitido de 20 MB.', variant: 'destructive' });
+      toast({
+        description: 'El PDF supera el tamaño máximo permitido de 20 MB.',
+        variant: 'destructive',
+      });
       return;
     }
     setFile(selected);
@@ -242,7 +250,8 @@ export function PdfFirstUploadShell({
 
   const startProcessing = async (selectedFile?: File | null, selectedTitle?: string) => {
     const activeFile = selectedFile ?? file;
-    const activeTitle = (selectedTitle ?? title).trim() || (activeFile ? titleFromFile(activeFile.name) : '');
+    const activeTitle =
+      (selectedTitle ?? title).trim() || (activeFile ? titleFromFile(activeFile.name) : '');
     if (!activeFile || activeTitle.length < 3 || uploading) return;
 
     setUploading(true);
@@ -377,7 +386,10 @@ export function PdfFirstUploadShell({
         await startProcessing(draft.file, restoredTitle);
       })
       .catch(() => {
-        toast({ description: 'No pudimos recuperar el PDF seleccionado. Elegilo nuevamente.', variant: 'destructive' });
+        toast({
+          description: 'No pudimos recuperar el PDF seleccionado. Elegilo nuevamente.',
+          variant: 'destructive',
+        });
       })
       .finally(() => setRestoringDraft(false));
   }, [initialExamDate, initialOpen, initialSource, isPreAuthPdfResume, startProcessing, toast]);
@@ -387,20 +399,17 @@ export function PdfFirstUploadShell({
       !isPreAuthPdfResume ||
       !processing ||
       processing.status !== 'ready' ||
-      readyRedirectedRef.current
+      readyTrackedRef.current
     ) {
       return;
     }
 
-    readyRedirectedRef.current = true;
+    readyTrackedRef.current = true;
     trackMarketingEvent('material_ready', {
       source: initialSource,
       material_id: processing.materialId,
     });
-    setOpen(false);
-    router.push(getStudentMaterialRoute(processing.materialId));
-    router.refresh();
-  }, [initialSource, isPreAuthPdfResume, processing, router]);
+  }, [initialSource, isPreAuthPdfResume, processing]);
 
   const saveContext = async () => {
     if (!processing || !canSaveContext || savingContext) return;
@@ -408,8 +417,10 @@ export function PdfFirstUploadShell({
     const result = await savePdfFirstAcademicContextAction({
       materialId: processing.materialId,
       universidadId: requestingUniversity ? null : universityId || null,
-      universidadNombre: requestingUniversity ? universityName : selectedUniversity?.nombre ?? null,
-      carreraId: addingCareer ? null : selectedCareer?.id ?? null,
+      universidadNombre: requestingUniversity
+        ? universityName
+        : (selectedUniversity?.nombre ?? null),
+      carreraId: addingCareer ? null : (selectedCareer?.id ?? null),
       carreraNombre: careerName,
       materiaId: null,
       materiaNombre: null,
@@ -440,7 +451,7 @@ export function PdfFirstUploadShell({
   };
 
   const openMaterial = () => {
-    if (!processing) return;
+    if (!processing || !ready) return;
     setOpen(false);
     router.push(getStudentMaterialRoute(processing.materialId));
     router.refresh();
@@ -453,18 +464,17 @@ export function PdfFirstUploadShell({
     router.refresh();
   };
 
-  /** Skip never blocks upload or studying: ready → open material; otherwise close + refresh library. */
+  const openSummary = () => {
+    if (!processing || !ready) return;
+    setOpen(false);
+    router.push(`${getStudentMaterialRoute(processing.materialId)}?tab=resumen`);
+    router.refresh();
+  };
+
+  /** El contexto académico es opcional y vuelve al mismo proceso de carga. */
   const skipContext = () => {
     if (!processing) return;
-    if (ready && showReadyContext) {
-      setShowReadyContext(false);
-      return;
-    }
-    if (ready) {
-      openMaterial();
-      return;
-    }
-    close();
+    setShowReadyContext(false);
   };
 
   const universitySelectValue = requestingUniversity ? MISSING_UNIVERSITY_VALUE : universityId;
@@ -473,48 +483,71 @@ export function PdfFirstUploadShell({
     <div className="relative">
       <div
         onClickCapture={handleCapturedClick}
-        className={`transition duration-200 ${open ? 'pointer-events-none select-none blur-[5px]' : ''}`}
+        className={`transition duration-200 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
         aria-hidden={open}
       >
         {children}
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/25 px-4 py-8" onMouseDown={close}>
-          <section
-            className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-3xl border border-white/70 bg-white p-5 shadow-[0_30px_100px_rgba(15,23,42,0.28)] [scrollbar-width:none] sm:p-6 [&::-webkit-scrollbar]:hidden"
-            onMouseDown={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="pdf-first-modal-title"
+        <Dialog
+          open
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) close();
+          }}
+        >
+          <DialogContent
+            className="journey-modal"
+            overlayClassName="journey-modal-overlay"
+            showCloseButton={!uploading}
+            onInteractOutside={(event) => {
+              if (uploading) event.preventDefault();
+            }}
+            onEscapeKeyDown={(event) => {
+              if (uploading) event.preventDefault();
+            }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 id="pdf-first-modal-title" className="text-xl font-bold tracking-[-0.035em] text-slate-950">
-                  {processing ? (failed ? 'No pudimos procesar tu PDF' : ready ? 'Tu PDF está listo' : 'Estamos procesando tu PDF') : 'Subir PDF'}
-                </h2>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  {processing
-                    ? ready
-                      ? 'Terminamos de preparar tu material.'
-                      : isPreAuthPdfResume
-                        ? 'Ya tenemos tu archivo. Lo estamos convirtiendo en material de estudio.'
-                        : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
-                    : restoringDraft
-                      ? 'Recuperando el PDF que elegiste antes del registro.'
-                      : 'Elegí el archivo y poné un nombre.'}
-                </p>
+            <DialogTitle className="sr-only">
+              {processing
+                ? failed
+                  ? 'No pudimos procesar tu PDF'
+                  : ready
+                    ? 'Tu PDF está listo'
+                    : 'Preparación de tu PDF'
+                : 'Subir PDF'}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
+            </DialogDescription>
+            {(!processing || failed || showReadyContext) && (
+              <div className="flex items-start justify-between gap-4 pr-10">
+                <div>
+                  <h2
+                    id="pdf-first-modal-title"
+                    className="text-xl font-bold tracking-[-0.035em] text-slate-950"
+                  >
+                    {processing
+                      ? failed
+                        ? 'No pudimos procesar tu PDF'
+                        : ready
+                          ? 'Tu PDF está listo'
+                          : 'Estamos procesando tu PDF'
+                      : 'Subir PDF'}
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    {processing
+                      ? ready
+                        ? 'Terminamos de preparar tu material.'
+                        : isPreAuthPdfResume
+                          ? 'Ya tenemos tu archivo. Lo estamos convirtiendo en material de estudio.'
+                          : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
+                      : restoringDraft
+                        ? 'Recuperando el PDF que elegiste antes del registro.'
+                        : 'Elegí el archivo y poné un nombre.'}
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={close}
-                disabled={uploading}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
-                aria-label="Cerrar"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            )}
 
             <input
               ref={pickerRef}
@@ -532,8 +565,12 @@ export function PdfFirstUploadShell({
                 {!file && restoringDraft ? (
                   <div className="mt-6 flex min-h-44 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center">
                     <Loader2 className="h-6 w-6 animate-spin text-indigo-600" aria-hidden="true" />
-                    <span className="mt-3 text-sm font-semibold text-slate-950">Recuperando tu PDF…</span>
-                    <span className="mt-1 text-xs text-slate-400">No hace falta elegirlo de nuevo.</span>
+                    <span className="mt-3 text-sm font-semibold text-slate-950">
+                      Recuperando tu PDF…
+                    </span>
+                    <span className="mt-1 text-xs text-slate-400">
+                      No hace falta elegirlo de nuevo.
+                    </span>
                   </div>
                 ) : !file ? (
                   <button
@@ -558,13 +595,22 @@ export function PdfFirstUploadShell({
                         <FileText className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-slate-900">{file.name}</span>
-                        <span className="mt-0.5 block text-xs text-slate-400">Tocá para cambiar archivo</span>
+                        <span className="block truncate text-sm font-semibold text-slate-900">
+                          {file.name}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-slate-400">
+                          Tocá para cambiar archivo
+                        </span>
                       </span>
                     </button>
 
                     <div className="mt-4">
-                      <label htmlFor="pdf-first-title" className="mb-1.5 block text-xs font-semibold text-slate-700">Nombre del material</label>
+                      <label
+                        htmlFor="pdf-first-title"
+                        className="mb-1.5 block text-xs font-semibold text-slate-700"
+                      >
+                        Nombre del material
+                      </label>
                       <Input
                         id="pdf-first-title"
                         value={title}
@@ -578,8 +624,11 @@ export function PdfFirstUploadShell({
                     </div>
 
                     {hasValidTitle ? (
-                      <div className="mt-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <label htmlFor="pdf-first-exam-date" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                      <div className="animate-in fade-in slide-in-from-top-1 mt-4 duration-200">
+                        <label
+                          htmlFor="pdf-first-exam-date"
+                          className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700"
+                        >
                           <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
                           Fecha de examen
                         </label>
@@ -595,72 +644,92 @@ export function PdfFirstUploadShell({
                 )}
 
                 <div className="mt-6 flex items-center justify-end gap-2">
-                  <Button type="button" variant="ghost" onClick={close} disabled={uploading}>Cancelar</Button>
-                  <Button type="button" disabled={!file || !hasValidTitle || uploading} onClick={() => void startProcessing()}>
+                  <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={!file || !hasValidTitle || uploading}
+                    onClick={() => void startProcessing()}
+                  >
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Procesar este PDF
                   </Button>
                 </div>
               </>
+            ) : !failed && !showReadyContext ? (
+              <>
+                <PdfProcessingPanel
+                  file={file}
+                  fileName={processing.fileName}
+                  complete={ready}
+                  progress={progress}
+                  processingMessage={processing.message}
+                  onStartDiagnostic={openDiagnostic}
+                  onStartSummary={openSummary}
+                  onViewTools={openMaterial}
+                />
+                {!ready && !contextSaved && !isPreAuthPdfResume && (
+                  <button
+                    type="button"
+                    className="journey-tools-button"
+                    onClick={() => setShowReadyContext(true)}
+                  >
+                    Agregar universidad y carrera
+                  </button>
+                )}
+              </>
             ) : (
               <div className="mt-6">
                 <div className="flex items-center gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center text-indigo-600">
-                    {ready ? <CheckCircle2 className="h-5 w-5" /> : failed ? <FileText className="h-5 w-5" /> : <Loader2 className="h-5 w-5 animate-spin" />}
+                    {ready ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : failed ? (
+                      <FileText className="h-5 w-5" />
+                    ) : (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">{processing.title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{failed ? processing.error ?? 'El procesamiento se interrumpió.' : ready ? 'Procesamiento completado' : processing.message}</p>
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                      {processing.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {failed
+                        ? (processing.error ?? 'El procesamiento se interrumpió.')
+                        : ready
+                          ? 'Procesamiento completado'
+                          : processing.message}
+                    </p>
                   </div>
-                  <span className="text-xs font-semibold tabular-nums text-slate-500">{progress}%</span>
+                  <span className="text-xs font-semibold text-slate-500 tabular-nums">
+                    {progress}%
+                  </span>
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-indigo-600 transition-all duration-700" style={{ width: `${progress}%` }} />
+                  <div
+                    className="h-full rounded-full bg-indigo-600 transition-all duration-700"
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
 
-                {ready && isPreAuthPdfResume ? (
-                  <p className="mt-5 text-sm font-semibold text-indigo-700">Listo. Abriendo tu material…</p>
-                ) : ready && !showReadyContext ? (
-                  <>
-                    <p className="mt-5 text-sm leading-6 text-slate-600">
-                      Antes de empezar, respondé unas preguntas rápidas para saber qué ya dominás y qué conviene repasar.
-                    </p>
-                    <p className="mt-2 text-xs text-slate-400">6 preguntas · ~4 min</p>
-                    {contextSaved ? (
-                      <p className="mt-4 text-xs font-medium text-emerald-700">Guardado · {savedContextLabel}</p>
-                    ) : null}
-
-                    <div className="mt-6 flex items-center justify-end gap-2">
-                      <Button type="button" variant="ghost" onClick={openMaterial}>
-                        Abrir PDF
-                      </Button>
-                      <Button type="button" onClick={openDiagnostic}>
-                        Ver qué tanto sé
-                      </Button>
-                    </div>
-
-                    {!contextSaved ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowReadyContext(true)}
-                        className="mt-3 w-full text-center text-xs font-semibold text-slate-400 transition hover:text-slate-600"
-                      >
-                        Agregar universidad y carrera
-                      </button>
-                    ) : null}
-                  </>
-                ) : null}
-
-                {!isPreAuthPdfResume && !failed && (!ready || showReadyContext) ? (
+                {!failed && showReadyContext ? (
                   <>
                     {!contextSaved ? (
                       <div className="mt-5 space-y-4">
                         <p className="text-xs leading-5 text-slate-500">
-                          Universidad y carrera se guardan en tu perfil una sola vez. No te las volvemos a pedir en cada PDF.
+                          Universidad y carrera se guardan en tu perfil una sola vez. No te las
+                          volvemos a pedir en cada PDF.
                         </p>
 
                         <div>
-                          <label htmlFor="pdf-first-university" className="mb-1.5 block text-xs font-semibold text-slate-700">Universidad</label>
+                          <label
+                            htmlFor="pdf-first-university"
+                            className="mb-1.5 block text-xs font-semibold text-slate-700"
+                          >
+                            Universidad
+                          </label>
                           {profileUniversitySaved ? (
                             <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-700">
                               Guardada en tu perfil · {profileUniversityName}
@@ -687,13 +756,17 @@ export function PdfFirstUploadShell({
                                   setAddingCareer(false);
                                   setNewCareer('');
                                 }}
-                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                               >
                                 <option value="">Seleccionar universidad</option>
                                 {universidades.map((uni) => (
-                                  <option key={uni.id} value={uni.id}>{uni.nombre}</option>
+                                  <option key={uni.id} value={uni.id}>
+                                    {uni.nombre}
+                                  </option>
                                 ))}
-                                <option value={MISSING_UNIVERSITY_VALUE}>Mi universidad no aparece</option>
+                                <option value={MISSING_UNIVERSITY_VALUE}>
+                                  Mi universidad no aparece
+                                </option>
                               </select>
                               <button
                                 type="button"
@@ -718,7 +791,8 @@ export function PdfFirstUploadShell({
                                 autoFocus
                               />
                               <p className="text-[11px] leading-4 text-slate-400">
-                                La universidad se habilita automáticamente y queda guardada en tu perfil.
+                                La universidad se habilita automáticamente y queda guardada en tu
+                                perfil.
                               </p>
                               <Button
                                 type="button"
@@ -738,19 +812,26 @@ export function PdfFirstUploadShell({
 
                         {hasUniversity ? (
                           <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-                            <label htmlFor="pdf-first-career" className="mb-1.5 block text-xs font-semibold text-slate-700">Carrera</label>
+                            <label
+                              htmlFor="pdf-first-career"
+                              className="mb-1.5 block text-xs font-semibold text-slate-700"
+                            >
+                              Carrera
+                            </label>
                             {!addingCareer ? (
                               <>
                                 <select
                                   id="pdf-first-career"
                                   value={careerId}
                                   onChange={(event) => setCareerId(event.target.value)}
-                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                                   disabled={requestingUniversity}
                                 >
                                   <option value="">Seleccionar carrera</option>
                                   {availableCareers.map((career) => (
-                                    <option key={career.id} value={career.id}>{career.nombre}</option>
+                                    <option key={career.id} value={career.id}>
+                                      {career.nombre}
+                                    </option>
                                   ))}
                                 </select>
                                 <button
@@ -795,7 +876,9 @@ export function PdfFirstUploadShell({
                         ) : null}
                       </div>
                     ) : (
-                      <p className="mt-4 text-sm font-medium text-emerald-700">Guardado · {savedContextLabel}</p>
+                      <p className="mt-4 text-sm font-medium text-emerald-700">
+                        Guardado · {savedContextLabel}
+                      </p>
                     )}
 
                     <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
@@ -805,7 +888,11 @@ export function PdfFirstUploadShell({
                         </Button>
                       ) : null}
                       {!contextSaved ? (
-                        <Button type="button" disabled={!canSaveContext || savingContext} onClick={saveContext}>
+                        <Button
+                          type="button"
+                          disabled={!canSaveContext || savingContext}
+                          onClick={saveContext}
+                        >
                           {savingContext ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                           {!profileUniversitySaved
                             ? hasCareer
@@ -814,23 +901,33 @@ export function PdfFirstUploadShell({
                             : 'Guardar carrera'}
                         </Button>
                       ) : null}
-                      {contextSaved && ready ? <Button type="button" onClick={openMaterial}>Abrir PDF</Button> : null}
+                      {contextSaved && ready ? (
+                        <Button type="button" onClick={() => setShowReadyContext(false)}>
+                          Continuar
+                        </Button>
+                      ) : null}
                       {contextSaved && !ready ? (
-                        <Button type="button" variant="outline" onClick={close}>
-                          Seguir en mi biblioteca
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowReadyContext(false)}
+                        >
+                          Continuar
                         </Button>
                       ) : null}
                     </div>
                   </>
                 ) : failed ? (
                   <div className="mt-6 flex justify-end">
-                    <Button type="button" variant="outline" onClick={close}>Cerrar</Button>
+                    <Button type="button" variant="outline" onClick={close}>
+                      Cerrar
+                    </Button>
                   </div>
                 ) : null}
               </div>
             )}
-          </section>
-        </div>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </div>
   );

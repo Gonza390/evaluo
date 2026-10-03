@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "target": "ES6",
     "skipLibCheck": true,
@@ -23,9 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -37,10 +31,5 @@
     ".next-audit/types/**/*.ts",
     ".next-audit/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "supabase/functions",
-    "tests",
-    "backups"
-  ]
+  "exclude": ["node_modules", "supabase/functions", "tests", "tmp", "output", "backups"]
 }
