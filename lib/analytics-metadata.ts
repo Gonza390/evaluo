@@ -579,6 +579,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'study_error_id',
     'source_type',
     'materia_id',
+    'help_kind',
   ],
   study_error_pdf_review_started: [
     'attribution',
