@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import {
   finishStudyErrorOnboardingAction,
-  generateStudyErrorExplanationAction,
+  generateStudyErrorQuickHelpAction,
   markStudyErrorReviewedAction,
 } from '@/lib/actions/study-errors';
 import type { StudyErrorSource, StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
@@ -143,44 +143,54 @@ function ErrorListItem({
   );
 }
 
+type StudyErrorQuickHelpKind = 'why_wrong' | 'simpler' | 'example';
+
+const quickHelpLabels: Record<StudyErrorQuickHelpKind, string> = {
+  why_wrong: 'Por qué estaba mal',
+  simpler: 'Explicado más simple',
+  example: 'Ejemplo',
+};
+
 function StudyErrorDetail({ item }: { item: StudyErrorView }) {
   const router = useRouter();
   const [isNavigating, startTransition] = useTransition();
   const [answersOpen, setAnswersOpen] = useState(false);
-  const [explanation, setExplanation] = useState(item.explanation);
-  const [explanationLoading, setExplanationLoading] = useState(false);
-  const [explanationError, setExplanationError] = useState<string | null>(null);
+  const [activeHelp, setActiveHelp] = useState<StudyErrorQuickHelpKind | null>(null);
+  const [helpText, setHelpText] = useState<string | null>(null);
+  const [helpLoading, setHelpLoading] = useState<StudyErrorQuickHelpKind | null>(null);
+  const [helpError, setHelpError] = useState<string | null>(null);
 
   const config = sourceConfig[item.sourceType];
   const Icon = config.icon;
   const recommendation = item.recommendation;
   const materialHref = buildMaterialHref(item);
   const practiceHref = buildPracticeHref(item);
-  const canGenerateExplanation = item.sourceType === 'simulator' && Boolean(item.questionId);
 
-  const generateExplanation = async () => {
-    if (!canGenerateExplanation || explanationLoading) return;
+  const runQuickHelp = async (kind: StudyErrorQuickHelpKind) => {
+    if (helpLoading) return;
 
-    setExplanationLoading(true);
-    setExplanationError(null);
-    const result = await generateStudyErrorExplanationAction(item.id);
-    setExplanationLoading(false);
+    setActiveHelp(kind);
+    setHelpLoading(kind);
+    setHelpError(null);
+    const result = await generateStudyErrorQuickHelpAction(item.id, kind);
+    setHelpLoading(null);
 
-    if (!result.success || !result.explanation) {
-      setExplanationError(result.message ?? 'No pudimos generar esta explicación ahora.');
+    if (!result.success || !result.text) {
+      setHelpText(null);
+      setHelpError(result.message ?? 'No pudimos generar esta ayuda ahora.');
       return;
     }
 
-    setExplanation(result.explanation);
+    setHelpText(result.text);
 
-    // Leer la explicación cuenta como repaso: lo persistimos para que un acierto posterior
-    // pueda cerrar el error aunque el usuario no haya abierto el PDF.
+    // Leer una ayuda cuenta como repaso: así un acierto posterior puede cerrar el error.
     await markStudyErrorReviewedAction(item.id);
 
     trackMarketingEvent('study_error_explanation_reviewed', {
       study_error_id: item.id,
       source_type: item.sourceType,
       materia_id: item.materiaId,
+      help_kind: kind,
     });
   };
 
@@ -204,7 +214,7 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
     });
   };
 
-  const hasReviewedError = Boolean(item.lastReviewedAt || explanation || answersOpen);
+  const hasReviewedError = Boolean(item.lastReviewedAt || helpText || answersOpen);
 
   const startPractice = () => {
     if (!practiceHref || !hasReviewedError) return;
@@ -252,41 +262,61 @@ function StudyErrorDetail({ item }: { item: StudyErrorView }) {
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-slate-500" />
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500">
-            Qué pasó
+            Ayudame a entenderlo
           </p>
         </div>
 
-        {explanation ? (
-          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-700">
-            {explanation}
-          </p>
-        ) : canGenerateExplanation ? (
-          <div className="mt-3">
-            <p className="max-w-xl text-sm leading-6 text-slate-500">
-              Entendé por qué esta respuesta no era la correcta. Después, Evaluo puede llevar este error a tus propios apuntes para que estudies lo que realmente entra en tu examen.
-            </p>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
+          Elegí una forma de revisar este error. Evaluo responde sobre este concepto sin abrir un chat.
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {([
+            ['why_wrong', '¿Por qué estaba mal?'],
+            ['simpler', 'Más simple'],
+            ['example', 'Dame un ejemplo'],
+          ] as const).map(([kind, label]) => (
+            <button
+              key={kind}
+              type="button"
+              disabled={Boolean(helpLoading)}
+              onClick={() => void runQuickHelp(kind)}
+              className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition disabled:opacity-60 ${
+                activeHelp === kind
+                  ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
+                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+              }`}
+            >
+              {helpLoading === kind ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {label}
+            </button>
+          ))}
+
+          {recommendation ? (
             <button
               type="button"
-              disabled={explanationLoading}
-              onClick={() => void generateExplanation()}
-              className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:opacity-60 sm:w-auto"
+              disabled={isNavigating}
+              onClick={startPdfStudy}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
             >
-              {explanationLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              {explanationLoading ? 'Analizando el error...' : 'Entender este error'}
+              <BookOpen className="h-4 w-4" />
+              Ver en mi PDF
             </button>
-            {explanationError ? (
-              <p className="mt-2 text-xs leading-5 text-amber-700">{explanationError}</p>
-            ) : null}
+          ) : null}
+        </div>
+
+        {helpError ? (
+          <p className="mt-3 text-xs leading-5 text-amber-700">{helpError}</p>
+        ) : null}
+
+        {helpText && activeHelp ? (
+          <div className="mt-5 max-w-2xl rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+              {quickHelpLabels[activeHelp]}
+            </p>
+            <p className="mt-2 text-[15px] leading-7 text-slate-700">{helpText}</p>
           </div>
-        ) : (
-          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500">
-            Este error ya está conectado con el material donde se originó.
-          </p>
-        )}
+        ) : null}
       </section>
 
       {recommendation ? (
