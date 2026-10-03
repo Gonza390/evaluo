@@ -94,3 +94,23 @@ materias; eso requiere medir el uso y auditar muestras de preguntas reales.
 Los errores previos también aparecen. Para una pregunta del Preguntero sin PDF,
 asociar primero apuntes que contengan el concepto. Si no hay evidencia, la interfaz
 conserva el error y ofrece continuar estudiando el material original.
+
+## Publicación y comprobación final
+
+- Producción: https://evaluo.com.ar/dashboard/explicaciones.
+- Commit publicado: `7fdb5e0ef23fb19b1b1f8102f843ac89dbb8eac4`, rama `master`.
+- Vercel: `dpl_jbtRdb4LX2T7SDcTsNbzbqAn32qt`, estado **READY**, entorno production,
+  región `gru1`, compilación de unos 67 segundos. Alias principal y `www` asignados
+  sin error. Inspector: https://vercel.com/olmosgonza69-9002s-projects/evaluo/jbtRdb4LX2T7SDcTsNbzbqAn32qt.
+- Se verificaron en el dominio público las tres ayudas completas, cita desplegable,
+  fallo con respuesta incorrecta/correcta identificadas, nuevo intento acertado y
+  cierre con 0 pendientes / 3 resueltos. El resultado se conserva al recargar.
+- Después de fallar y recargar, la ayuda se reutiliza con `cached: true`; la cuota
+  Free de ayudas permanece en 5 y la comprobación independiente permite continuar.
+- La revisión de logs de esta publicación durante los últimos 15 minutos no devolvió
+  entradas de nivel error/fatal. No sustituye el seguimiento posterior en producción.
+- Cuenta, PDF privado y eventos de QA eliminados; ninguna cuenta real se utilizó
+  para modificar progreso. Evidencia visual local en `output/qa-mis-errores-real/`.
+- Se restaura `git.deploymentEnabled: false`, la política previa del repositorio,
+  después de publicar. Ese commit de documentación/configuración no cambia la
+  versión activa indicada arriba.
