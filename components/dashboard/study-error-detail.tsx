@@ -201,7 +201,7 @@ export function StudyErrorDetail({
             {question.options.map((option, index) => (
               <label
                 key={index}
-                className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-4 ${answer === index || result?.correctIndex === index ? 'border-primary bg-primary/5' : 'border-border'}`}
+                className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-4 ${result && !result.correct && answer === index ? 'border-destructive bg-destructive/5' : result?.correctIndex === index || (!result && answer === index) ? 'border-primary bg-primary/5' : 'border-border'}`}
               >
                 <input
                   type="radio"
@@ -210,7 +210,18 @@ export function StudyErrorDetail({
                   onChange={() => setAnswer(index)}
                   className="accent-primary mt-1 shrink-0"
                 />
-                <span className="min-w-0 text-sm leading-6 break-words">{option}</span>
+                <span className="min-w-0 text-sm leading-6 break-words">
+                  {option}
+                  {result && (result.correctIndex === index || answer === index) && (
+                    <span
+                      className={`mt-1 block text-xs font-semibold ${result.correctIndex === index ? 'text-primary' : 'text-destructive'}`}
+                    >
+                      {result.correctIndex === index
+                        ? 'Respuesta correcta'
+                        : 'Tu respuesta incorrecta'}
+                    </span>
+                  )}
+                </span>
               </label>
             ))}
           </fieldset>

@@ -113,5 +113,18 @@ export async function loadReviewContext(
       ])
     )
     .digest('hex');
-  return { row, source, contextKey };
+  // Repetir un fallo no cambia la explicación del mismo concepto y fuente.
+  // La comprobación sí conserva la revisión para impedir reutilizar un acierto viejo.
+  const helpContextKey = createHash('sha256')
+    .update(
+      JSON.stringify([
+        row.prompt,
+        row.correct_answer,
+        row.selected_answer,
+        source?.materialId,
+        source?.excerpt,
+      ])
+    )
+    .digest('hex');
+  return { row, source, contextKey, helpContextKey };
 }

@@ -72,7 +72,7 @@ export async function generateReviewHelpAction(
     const context = await loadReviewContext(user.id, errorId, materialId);
     if (!context || context.row.status !== 'pending')
       return { success: false, message: 'Este error ya no está pendiente. Actualizá la pantalla.' };
-    const { row, source, contextKey } = context;
+    const { row, source, contextKey, helpContextKey } = context;
     if (source && !source.excerpt)
       return {
         success: false,
@@ -82,20 +82,22 @@ export async function generateReviewHelpAction(
     const admin = createAdminClient();
     const { data: cached, error: cacheError } = await admin
       .from('study_error_help_cache')
-      .select('help_text')
+      .select('help_text, context_key')
       .eq('error_id', errorId)
       .eq('user_id', user.id)
-      .eq('context_key', contextKey)
+      .in('context_key', [helpContextKey, contextKey])
       .eq('kind', kind)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (cacheError) throw cacheError;
     // Las explicaciones de la actividad se reutilizan cuando no se promete una fuente PDF.
-    let text =
-      cached?.help_text && isCompleteReviewHelp(cached.help_text)
-        ? cached.help_text
-        : !source && kind === 'why_wrong'
-          ? row.explanation
-          : null;
+    const reusableCache = cached?.help_text && isCompleteReviewHelp(cached.help_text);
+    let text = reusableCache
+      ? cached.help_text
+      : !source && kind === 'why_wrong'
+        ? row.explanation
+        : null;
     if (!text) {
       const limitMessage = await generationLimit(user.id);
       if (limitMessage) return { success: false, message: limitMessage };
@@ -116,8 +118,29 @@ export async function generateReviewHelpAction(
       const { error } = await admin
         .from('study_error_help_cache')
         .upsert(
-          { error_id: errorId, user_id: user.id, context_key: contextKey, kind, help_text: text },
+          {
+            error_id: errorId,
+            user_id: user.id,
+            context_key: helpContextKey,
+            kind,
+            help_text: text,
+          },
           { onConflict: 'error_id,context_key,kind' }
+        );
+      if (error) throw error;
+    }
+    if (reusableCache && cached.context_key !== helpContextKey) {
+      const { error } = await admin
+        .from('study_error_help_cache')
+        .upsert(
+          {
+            error_id: errorId,
+            user_id: user.id,
+            context_key: helpContextKey,
+            kind,
+            help_text: text,
+          },
+          { onConflict: 'error_id,context_key,kind', ignoreDuplicates: true }
         );
       if (error) throw error;
     }
@@ -137,7 +160,7 @@ export async function generateReviewHelpAction(
         materia_id: row.materia_id,
         material_id: source?.materialId ?? null,
         help_kind: kind,
-        cached: Boolean(cached),
+        cached: Boolean(reusableCache),
       },
     });
     return { success: true, text, source };

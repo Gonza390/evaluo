@@ -11,7 +11,8 @@ y no modifica el progreso.
 - El detalle identifica Flashcards, Práctica, Diagnóstico o Preguntero. En celular la
   lista se abre con **Cambiar error**.
 - **Ayudame a entenderlo**, **Más simple** y **Dame un ejemplo** usan el fragmento
-  del PDF. Las respuestas se guardan por error, revisión, fuente y tipo de ayuda.
+  del PDF. Las respuestas se guardan por error, contenido, fuente y tipo de ayuda;
+  equivocarse de nuevo en la comprobación no obliga a generar la misma explicación.
 - **Ver fragmento** despliega una única referencia dentro del repaso. Leerlo también
   habilita la comprobación, sin obligar a consumir una explicación de IA.
 - La pregunta nueva tiene tres opciones y una cita verificable en la fuente.
