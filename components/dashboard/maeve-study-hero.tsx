@@ -2,14 +2,16 @@
 
 import type { RefObject } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Upload } from 'lucide-react';
+import { ArrowRight, RotateCcw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 
 type Props = {
   materialsCount: number;
   primaryMaterialHref: string | null;
   primaryMaterialReady: boolean;
+  pendingReinforcementCount: number;
   onUploadClick: () => void;
   heroRef?: RefObject<HTMLElement | null>;
 };
@@ -18,6 +20,7 @@ export function MaeveStudyHero({
   materialsCount,
   primaryMaterialHref,
   primaryMaterialReady,
+  pendingReinforcementCount,
   onUploadClick,
   heroRef,
 }: Props) {
@@ -57,6 +60,24 @@ export function MaeveStudyHero({
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
+              {pendingReinforcementCount > 0 ? (
+                <Link
+                  href="/dashboard/explicaciones"
+                  onClick={() =>
+                    trackMarketingEvent('cta_click', {
+                      location: 'dashboard_pending_errors',
+                      cta_name: 'review_pending_errors',
+                      destination: '/dashboard/explicaciones',
+                    })
+                  }
+                  className="inline-flex min-h-10 items-center gap-2 px-3 text-sm font-semibold text-indigo-700 transition hover:text-indigo-900"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Tenés {pendingReinforcementCount}{' '}
+                  {pendingReinforcementCount === 1 ? 'tema' : 'temas'} para reforzar
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              ) : null}
               <button
                 type="button"
                 onClick={onUploadClick}
