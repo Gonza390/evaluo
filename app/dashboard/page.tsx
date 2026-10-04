@@ -81,7 +81,7 @@ export default async function DashboardPage({
       materiasResult,
       carreraMateriasResult,
       profileResult,
-      pendingErrorsResult,
+      pendingReinforcementCount,
     ] = await Promise.all([
       fetchStudentMaterialsByUser(supabase, user.id),
       supabase.from('universidades').select('id, nombre').order('nombre'),
@@ -93,7 +93,7 @@ export default async function DashboardPage({
         .select('universidad_id, carrera_id')
         .eq('id', user.id)
         .maybeSingle(),
-      supabase.from('study_errors').select('topic').eq('user_id', user.id).eq('status', 'pending'),
+      getPendingStudyErrorTopicCount(user.id),
     ]);
 
     if (universidadesResult.error) throw universidadesResult.error;
@@ -102,20 +102,10 @@ export default async function DashboardPage({
     if (carreraMateriasResult.error) throw carreraMateriasResult.error;
     if (profileResult.error) throw profileResult.error;
 
-    if (pendingErrorsResult.error) throw pendingErrorsResult.error;
-
     const universidades = universidadesResult.data ?? [];
     const carreras = carrerasResult.data ?? [];
     const materias = materiasResult.data ?? [];
     const carreraMaterias = carreraMateriasResult.data ?? [];
-
-    const pendingErrors = pendingErrorsResult.data ?? [];
-    const pendingTopicCount = new Set(
-      pendingErrors
-        .map((item) => String(item.topic ?? '').trim().toLocaleLowerCase('es-AR'))
-        .filter(Boolean)
-    ).size;
-    const pendingReinforcementCount = pendingTopicCount || pendingErrors.length;
 
     const rawProfileUniversidadId = String(profileResult.data?.universidad_id ?? '');
     const profileUniversidadId = universidades.some(
