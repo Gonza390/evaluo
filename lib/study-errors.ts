@@ -104,6 +104,34 @@ function fallbackTopic(prompt: string) {
   return `${normalized.slice(0, 69).trimEnd()}…`;
 }
 
+export async function getPendingStudyErrorTopicCount(userId: string) {
+  const admin = createAdminClient();
+  // study_errors todavía no forma parte de los tipos generados.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+
+  try {
+    const { data, error } = await db
+      .from('study_errors')
+      .select('topic')
+      .eq('user_id', userId)
+      .eq('status', 'pending')
+      .limit(300);
+
+    if (error) throw error;
+
+    const rows = (data ?? []) as Array<{ topic: string | null }>;
+    const topics = new Set(
+      rows.map((row) => clean(row.topic).toLocaleLowerCase('es-AR')).filter(Boolean)
+    );
+
+    return topics.size || rows.length;
+  } catch (error) {
+    logError('studyErrors.pendingTopicCount', error, { userId });
+    return 0;
+  }
+}
+
 async function claimFirstStudyErrorOnboarding(
   // La tabla interna todavía no forma parte de los tipos generados.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
