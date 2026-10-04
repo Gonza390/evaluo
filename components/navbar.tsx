@@ -153,6 +153,9 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 disabled={item.disabled}
                 collapsed={collapsed}
                 active={!item.disabled && isNavItemActive(pathname, item.href)}
+                dataTourAttr={
+                  item.href === '/dashboard/explicaciones' ? 'data-recommended-errors' : undefined
+                }
               />
             ))}
 
