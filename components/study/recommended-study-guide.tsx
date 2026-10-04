@@ -4,18 +4,14 @@ import { PdfTourSpotlight } from './pdf-tour-spotlight';
 
 export type RecommendedStudyStep = 'summary' | 'practice' | 'errors';
 
-/** Ayudas breves sobre el contenido real del PDF, sin un panel adicional de onboarding. */
+/** Guía breve del método de Evaluo sobre el contenido real del primer PDF. */
 export function RecommendedStudyGuide({
   step,
-  questionCount,
-  demo = false,
   onNext,
   onBack,
   onExit,
 }: {
   step: RecommendedStudyStep;
-  questionCount: number;
-  demo?: boolean;
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
@@ -23,29 +19,41 @@ export function RecommendedStudyGuide({
   const steps = {
     summary: {
       selector: '[data-recommended-summary]',
-      title: 'Este es tu resumen',
-      description: 'Acá tenés los temas principales de tu PDF. Podés empezar leyendo este resumen.',
-      nextLabel: 'Entendido',
-      progress: 'Entender',
+      title: 'Entendé tu PDF',
+      description:
+        'Acá tenés el resumen con los temas principales de tu material. Empezá por recorrer lo que necesitás estudiar.',
+      nextLabel: 'Siguiente',
+      progress: '1 de 3 · Entender',
     },
     practice: {
       selector: '[data-recommended-tab="ejercicios"]',
-      title: 'Acá comprobás qué entendiste',
-      description: `${questionCount} preguntas sobre este mismo PDF. Así encontrás qué temas necesitás reforzar.`,
-      nextLabel: 'Probar una práctica',
-      progress: 'Practicar',
+      title: 'Practicá cuando quieras',
+      description:
+        'Cuando ya hayas estudiado, entrá en Práctica para comprobar qué entendiste con preguntas del mismo PDF.',
+      nextLabel: 'Siguiente',
+      progress: '2 de 3 · Practicar',
     },
     errors: {
-      selector: '[data-recommended-result]',
-      title: 'Volvé a los temas que te costaron',
-      description: demo
-        ? 'En tus PDFs, estos conceptos quedan guardados en Mis errores. Ahí podés entenderlos con tu material y comprobarlos de nuevo.'
-        : 'Estos conceptos quedaron guardados en Mis errores. Ahí podés entenderlos con tu PDF y comprobarlos de nuevo.',
-      nextLabel: 'Ver mis errores',
-      progress: 'Reforzar',
+      selector: '[data-recommended-errors]',
+      title: 'Reforzá lo que te cuesta',
+      description:
+        'Si te equivocás, esos conceptos quedan en Mis errores para que puedas entenderlos y volver a practicarlos.',
+      nextLabel: 'Empezar a estudiar',
+      progress: '3 de 3 · Reforzar',
     },
-  };
+  } satisfies Record<
+    RecommendedStudyStep,
+    {
+      selector: string;
+      title: string;
+      description: string;
+      nextLabel: string;
+      progress: string;
+    }
+  >;
+
   const current = steps[step];
+
   return (
     <PdfTourSpotlight
       minimal
@@ -59,7 +67,7 @@ export function RecommendedStudyGuide({
       onNext={onNext}
       onBack={onBack}
       onExit={onExit}
-      ariaLabel="Ayuda para estudiar este PDF"
+      ariaLabel="Guía rápida para estudiar este PDF"
       footerLabel=""
     />
   );
