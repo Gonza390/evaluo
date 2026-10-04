@@ -117,6 +117,7 @@ export function PdfFirstUploadShell({
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const resumeHandledRef = useRef(false);
   const readyTrackedRef = useRef(false);
+  const firstPdfReadyTrackedRef = useRef(false);
   const directSignupOpenTrackedRef = useRef(false);
   const [open, setOpen] = useState(initialOpen);
   const [file, setFile] = useState<File | null>(null);
@@ -211,6 +212,7 @@ export function PdfFirstUploadShell({
     setSavedContextLabel(initialAcademicProfileLabel);
     setShowReadyContext(false);
     readyTrackedRef.current = false;
+    firstPdfReadyTrackedRef.current = false;
   }, [
     hasInitialAcademicProfile,
     hasInitialUniversityProfile,
@@ -422,6 +424,23 @@ export function PdfFirstUploadShell({
     });
   }, [initialSource, isPreAuthPdfResume, processing]);
 
+  useEffect(() => {
+    if (
+      !processing ||
+      processing.status !== 'ready' ||
+      !processing.isFirstReadyMaterial ||
+      firstPdfReadyTrackedRef.current
+    ) {
+      return;
+    }
+
+    firstPdfReadyTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_ready_viewed', {
+      source: initialSource || 'dashboard',
+      material_id: processing.materialId,
+    });
+  }, [initialSource, processing]);
+
   const saveContext = async () => {
     if (!processing || !canSaveContext || savingContext) return;
     setSavingContext(true);
@@ -477,6 +496,12 @@ export function PdfFirstUploadShell({
 
   const openSummary = () => {
     if (!processing || !ready) return;
+    if (processing.isFirstReadyMaterial) {
+      trackMarketingEvent('first_pdf_start_study_clicked', {
+        source: initialSource || 'dashboard',
+        material_id: processing.materialId,
+      });
+    }
     setOpen(false);
     router.push(
       `${getStudentMaterialRoute(processing.materialId)}?${processing.isFirstReadyMaterial ? 'recorrido=1' : 'tab=resumen'}`
