@@ -24,6 +24,7 @@ export type MaeveStudySpaceProps = {
   initialSource?: string;
   trackingMateriaId?: string;
   initialOpen?: boolean;
+  pendingReinforcementCount?: number;
 };
 
 /**
@@ -43,6 +44,7 @@ export function MaeveStudySpace({
   initialSource = '',
   trackingMateriaId = '',
   initialOpen = false,
+  pendingReinforcementCount = 0,
 }: MaeveStudySpaceProps) {
   const primaryMaterial =
     materials.find((material) => material.processing_status === 'ready') ?? materials[0] ?? null;
@@ -66,6 +68,7 @@ export function MaeveStudySpace({
         materialsCount={materials.length}
         primaryMaterialHref={primaryMaterialHref}
         primaryMaterialReady={primaryMaterialReady}
+        pendingReinforcementCount={pendingReinforcementCount}
       >
         <StudentMaterialsWorkspace
           initialMaterials={materials}
