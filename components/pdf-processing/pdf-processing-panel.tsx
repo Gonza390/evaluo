@@ -21,6 +21,7 @@ export function PdfProcessingPanel({
   complete,
   progress,
   processingMessage,
+  firstPdf = false,
   onStartDiagnostic,
   onStartSummary,
   onViewTools,
@@ -30,6 +31,7 @@ export function PdfProcessingPanel({
   complete: boolean;
   progress: number;
   processingMessage: string;
+  firstPdf?: boolean;
   onStartDiagnostic: () => void;
   onStartSummary: () => void;
   onViewTools: () => void;
@@ -39,6 +41,7 @@ export function PdfProcessingPanel({
     <PdfProcessingJourney
       scene={scene}
       complete={complete}
+      firstPdf={firstPdf}
       waitingForProcessing={waitingForProcessing}
       fileName={fileName}
       sample={false}

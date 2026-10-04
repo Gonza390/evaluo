@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { checkProfileStatus } from '@/lib/actions/perfil';
 import { useUser } from '@/hooks/useUser';
-import { usePremium } from '@/hooks/usePremium';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase-client';
 import { Button } from '@/components/ui/button';
@@ -191,7 +190,6 @@ function buildEventPayload({
 
 export default function CalendarioPage() {
   const { user, loading } = useUser();
-  const { isPremium } = usePremium();
   const router = useRouter();
   const { toast } = useToast();
   const [isCheckingProfile, setIsCheckingProfile] = useState(true);

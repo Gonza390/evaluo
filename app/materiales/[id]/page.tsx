@@ -19,10 +19,17 @@ import { buildShareCardPath } from '@/lib/share-card';
 import { ensureStudentMaterialStudyArtifacts } from '@/lib/student-material-summary';
 import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-pedagogical-cache';
 import { createClientServer } from '@/lib/supabase-server';
+import { getFirstReadyStudentMaterialId } from '@/lib/data/student-materials';
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ diagnostico?: string; studyError?: string; page?: string; tab?: string }>;
+  searchParams?: Promise<{
+    diagnostico?: string;
+    studyError?: string;
+    page?: string;
+    tab?: string;
+    recorrido?: string;
+  }>;
 };
 
 function resolveMaterialId(routeValue: string) {
@@ -117,7 +124,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const supabase = await createClientServer();
     const { data: material } = await supabase
       .from('student_materials')
-      .select('id, user_id, title, materia_id, carrera_id, universidad_id, visibility, processing_status, page_count')
+      .select(
+        'id, user_id, title, materia_id, carrera_id, universidad_id, visibility, processing_status, page_count'
+      )
       .eq('id', materialId)
       .maybeSingle();
 
@@ -138,7 +147,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     });
 
     const canonicalHref = `/materiales/${buildSeoEntitySlug(material.title, material.id)}`;
-    const context = [materia?.nombre, carrera?.nombre, universidad?.nombre].filter(Boolean).join(' · ');
+    const context = [materia?.nombre, carrera?.nombre, universidad?.nombre]
+      .filter(Boolean)
+      .join(' · ');
     const pageDetail = material.page_count
       ? `${material.page_count} páginas · PDF, resumen y glosario`
       : 'PDF, resumen y glosario';
@@ -161,7 +172,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title: `${material.title} | Evaluo`,
         description,
         url: canonicalHref,
-        images: [{ url: socialImage, width: 1200, height: 630, alt: `${material.title} en Evaluo` }],
+        images: [
+          { url: socialImage, width: 1200, height: 630, alt: `${material.title} en Evaluo` },
+        ],
       },
       twitter: {
         card: 'summary_large_image',
@@ -252,12 +265,15 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           progress={material.processing_progress}
           message={
             failed
-              ? material.processing_error ?? 'No pudimos generar el espacio de estudio del PDF.'
-              : material.processing_message ?? 'Seguimos generando el resumen y el glosario del documento.'
+              ? (material.processing_error ?? 'No pudimos generar el espacio de estudio del PDF.')
+              : (material.processing_message ??
+                'Seguimos generando el resumen y el glosario del documento.')
           }
           actions={
             <>
-              {failed && isOwner ? <StudentMaterialProcessingRetry materialId={material.id} /> : null}
+              {failed && isOwner ? (
+                <StudentMaterialProcessingRetry materialId={material.id} />
+              ) : null}
               {!failed ? (
                 <Link
                   href={backHref}
@@ -331,6 +347,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       summary: studySummary,
       glossary: studyGlossary,
     });
+    const firstReadyMaterialId =
+      isOwner && user ? await getFirstReadyStudentMaterialId(supabase, user.id) : null;
 
     const visibility = normalizeMaterialVisibility(material.visibility);
     const sharePath = `/materiales/${canonicalSegment}`;
@@ -372,6 +390,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
+          recommendedStudyAvailable={isOwner && firstReadyMaterialId === material.id}
+          initialRecommendedStudy={isOwner && query.recorrido === '1'}
           initialTab={
             query.tab === 'tarjetas' ? 'tarjetas' : query.tab === 'mapa' ? 'mapa' : undefined
           }
@@ -395,7 +415,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                       ¿Tenés tus propios apuntes de {materia?.nombre ?? 'esta materia'}?
                     </h2>
                     <p className="mt-2 max-w-2xl text-[13.5px] leading-6 text-slate-600">
-                      Subí tu PDF y convertí tus apuntes en un espacio de estudio como este: resumen, glosario, tarjetas y práctica sobre tu propio material.
+                      Subí tu PDF y convertí tus apuntes en un espacio de estudio como este:
+                      resumen, glosario, tarjetas y práctica sobre tu propio material.
                     </p>
                   </div>
                 </div>

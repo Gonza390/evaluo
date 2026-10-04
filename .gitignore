@@ -12,9 +12,7 @@ next.user-config.*
 
 # Common ignores
 node_modules
-.next/
-.next-vercel-build/
-.next-review-final/
+.next*/
 .DS_Store
 tsconfig.tsbuildinfo
 supabase/.temp/
@@ -26,6 +24,9 @@ dev-server.log
 test-data/
 tests/probe-results.json
 tmp/
+output/
+out/
+.lighthouseci/
 *.log
 
 .vercel

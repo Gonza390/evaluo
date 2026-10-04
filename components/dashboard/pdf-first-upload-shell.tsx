@@ -467,7 +467,9 @@ export function PdfFirstUploadShell({
   const openSummary = () => {
     if (!processing || !ready) return;
     setOpen(false);
-    router.push(`${getStudentMaterialRoute(processing.materialId)}?tab=resumen`);
+    router.push(
+      `${getStudentMaterialRoute(processing.materialId)}?${processing.isFirstReadyMaterial ? 'recorrido=1' : 'tab=resumen'}`
+    );
     router.refresh();
   };
 
@@ -663,6 +665,7 @@ export function PdfFirstUploadShell({
                   file={file}
                   fileName={processing.fileName}
                   complete={ready}
+                  firstPdf={processing.isFirstReadyMaterial}
                   progress={progress}
                   processingMessage={processing.message}
                   onStartDiagnostic={openDiagnostic}

@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useState, type ReactNode, type SetStateAction } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 import { useRouter } from 'next/navigation';
 import {
   BookOpenText,
@@ -21,7 +28,15 @@ import {
 } from 'lucide-react';
 import { MaterialFeedback } from '@/components/material-feedback';
 import { StudyRichText } from '@/components/study-rich-text';
-import { StudentMaterialDiagnostic } from '@/components/student-material-diagnostic';
+import {
+  StudentMaterialDiagnostic,
+  emptyDiagnosticSession,
+} from '@/components/student-material-diagnostic';
+import {
+  RecommendedStudyGuide,
+  type RecommendedStudyStep,
+} from '@/components/study/recommended-study-guide';
+import { selectDiagnosticQuestions } from '@/lib/student-materials/diagnostic-questions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
@@ -59,6 +74,8 @@ type MaterialStudyWorkspaceProps = {
   studySummary: StudentMaterialSummary;
   pedagogicalArtifacts?: PedagogicalArtifacts;
   initialDiagnostic?: boolean;
+  recommendedStudyAvailable?: boolean;
+  initialRecommendedStudy?: boolean;
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
@@ -69,6 +86,7 @@ type MaterialStudyWorkspaceProps = {
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
     practice: ReactNode;
+    onReinforce?: (topics: string[]) => void;
   };
 };
 
@@ -134,15 +152,6 @@ function StudyDocumentShell({
         {children}
       </div>
     </div>
-  );
-}
-
-function StudyDocumentSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-3">
-      <h3 className="text-[1.02rem] font-bold tracking-[-0.03em] text-slate-950">{title}</h3>
-      {children}
-    </section>
   );
 }
 
@@ -233,6 +242,8 @@ export function MaterialStudyWorkspace({
   studySummary,
   pedagogicalArtifacts,
   initialDiagnostic = false,
+  recommendedStudyAvailable = false,
+  initialRecommendedStudy = false,
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
@@ -245,6 +256,12 @@ export function MaterialStudyWorkspace({
   );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
+  const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
+  // Una sesión compartida por las vistas móvil y escritorio evita perder respuestas al redimensionar.
+  const [recommendedSession, setRecommendedSession] = useState(emptyDiagnosticSession);
+  const [recommendedTourStep, setRecommendedTourStep] = useState<RecommendedStudyStep | null>(
+    initialRecommendedStudy && !initialDiagnostic ? 'summary' : null
+  );
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
@@ -269,6 +286,59 @@ export function MaterialStudyWorkspace({
       buildPedagogicalArtifacts({ summary: studySummary, glossary: studyGlossary }),
     [pedagogicalArtifacts, studyGlossary, studySummary]
   );
+  const guidedQuestionCount = useMemo(
+    () => selectDiagnosticQuestions(studyArtifacts, 5).length,
+    [studyArtifacts]
+  );
+  const changeRecommendedTab = (tab: StudyTabId) => {
+    setActiveTab(tab);
+    demo?.onTabChange(tab);
+    setIsViewerVisible(false);
+    setCommentsOpen(false);
+  };
+  const closeRecommendedTour = useCallback(() => {
+    setRecommendedTourStep(null);
+    window.requestAnimationFrame(() => {
+      const heading = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[data-recommended-result] h2, [data-guided-question], [data-recommended-summary]'
+        )
+      ).find((node) => node.getClientRects().length > 0);
+      heading?.focus({ preventScroll: true });
+    });
+  }, []);
+  const startRecommendedPractice = () => {
+    if (guidedQuestionCount < 3) return;
+    setDiagnosticMode(true);
+    setRecommendedTourStep(null);
+    changeRecommendedTab('ejercicios');
+    window.requestAnimationFrame(() => {
+      const heading = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-guided-question]')
+      ).find((item) => item.getClientRects().length > 0);
+      heading?.focus();
+    });
+  };
+  const startRecommendedStudy = () => {
+    setRecommendedActive(true);
+    setRecommendedTourStep('summary');
+    setRecommendedSession(emptyDiagnosticSession);
+    setDiagnosticMode(false);
+    changeRecommendedTab('resumen');
+  };
+  const openRecommendedErrors = (onboardingErrorId: string | null) => {
+    setRecommendedTourStep(null);
+    if (demo) {
+      demo.onReinforce?.(diagnosticReviewTopics);
+      return;
+    }
+    const params = new URLSearchParams({ material: materialId });
+    if (onboardingErrorId) {
+      params.set('tour', 'first-error');
+      params.set('error', onboardingErrorId);
+    }
+    router.push(`/dashboard/explicaciones?${params}`);
+  };
 
   const usefulGlossary = useMemo(
     () => studyGlossary.filter(isPedagogicalGlossaryItem),
@@ -302,6 +372,10 @@ export function MaterialStudyWorkspace({
 
   const handleStudyTabChange = (value: string) => {
     const nextTab = value as StudyTabId;
+    if (recommendedActive && nextTab === 'ejercicios' && guidedQuestionCount >= 3) {
+      startRecommendedPractice();
+      return;
+    }
     setActiveTab(nextTab);
     demo?.onTabChange(nextTab);
 
@@ -368,6 +442,21 @@ export function MaterialStudyWorkspace({
 
   const tabHeader = (
     <div className="flex flex-col gap-2.5 border-b border-slate-200 px-2.5 py-3 sm:px-4 sm:py-4">
+      {(recommendedActive || recommendedStudyAvailable) && (
+        <button
+          type="button"
+          onClick={() => {
+            if (!recommendedActive) startRecommendedStudy();
+            else {
+              changeRecommendedTab('resumen');
+              setRecommendedTourStep('summary');
+            }
+          }}
+          className="text-primary min-h-11 self-start text-xs font-semibold underline underline-offset-4"
+        >
+          Cómo estudiar este PDF
+        </button>
+      )}
       <TabsList className="h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-[18px] bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {STUDY_TABS.map((tab) => {
           const Icon = tab.icon;
@@ -375,6 +464,7 @@ export function MaterialStudyWorkspace({
             <TabsTrigger
               key={tab.id}
               value={tab.id}
+              data-recommended-tab={tab.id}
               className={cn(
                 'h-8 flex-none shrink-0 rounded-[13px] border bg-white px-2.5 text-[12px] shadow-none data-[state=active]:border-[#BFDBFE] data-[state=active]:bg-[#EEF4FF] data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]',
                 tab.featured
@@ -552,7 +642,12 @@ export function MaterialStudyWorkspace({
         </WorkspaceCard>
       ) : null}
 
-      <TabsContent data-demo-focus="study-section" value="resumen" className="animate-tab-panel">
+      <TabsContent
+        data-demo-focus="study-section"
+        data-recommended-summary
+        value="resumen"
+        className="animate-tab-panel outline-none"
+      >
         <div className="mx-auto w-full max-w-[1180px] py-1 sm:py-2">
           <header className="border-b border-slate-200 pb-7 sm:pb-8">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -669,10 +764,7 @@ export function MaterialStudyWorkspace({
                         <button
                           type="button"
                           onClick={() => {
-                            setActiveTab('ejercicios');
-                            demo?.onTabChange('ejercicios');
-                            setIsViewerVisible(false);
-                            setCommentsOpen(false);
+                            handleStudyTabChange('ejercicios');
                           }}
                           className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] transition hover:text-[#1D4ED8]"
                         >
@@ -765,22 +857,48 @@ export function MaterialStudyWorkspace({
         </div>
       </TabsContent>
 
-      <TabsContent value="ejercicios" className="animate-tab-panel">
+      <TabsContent
+        value="ejercicios"
+        forceMount={recommendedActive && diagnosticMode ? true : undefined}
+        className={
+          recommendedActive && diagnosticMode && activeTab !== 'ejercicios'
+            ? 'hidden'
+            : 'animate-tab-panel'
+        }
+      >
         <div className="px-1 py-1 sm:px-2 sm:py-2">
-          {demo ? (
+          {demo && !recommendedActive ? (
             demo.practice
           ) : diagnosticMode ? (
             <StudentMaterialDiagnostic
               artifacts={studyArtifacts}
               materialId={materialId}
-              onExit={() => setDiagnosticMode(false)}
-              onComplete={requestExamDatePrompt}
+              guided={recommendedActive}
+              demo={Boolean(demo)}
+              session={recommendedActive ? recommendedSession : undefined}
+              onSessionChange={recommendedActive ? setRecommendedSession : undefined}
+              onExit={() => {
+                setDiagnosticMode(false);
+                if (recommendedActive) {
+                  setRecommendedTourStep(null);
+                  changeRecommendedTab('resumen');
+                }
+              }}
+              onResult={(result) => {
+                if (recommendedActive) {
+                  setDiagnosticReviewTopics(result.reviewTopics);
+                  if (result.reviewTopics.length > 0) setRecommendedTourStep('errors');
+                }
+              }}
+              onRestart={() => {
+                setRecommendedTourStep(null);
+              }}
+              onReinforce={openRecommendedErrors}
+              onComplete={demo || recommendedActive ? undefined : requestExamDatePrompt}
               onReviewTopics={(topics) => {
                 setDiagnosticReviewTopics(topics);
-                setDiagnosticMode(false);
-                setActiveTab('resumen');
-                setIsViewerVisible(false);
-                setCommentsOpen(false);
+                if (!recommendedActive) setDiagnosticMode(false);
+                changeRecommendedTab('resumen');
               }}
             />
           ) : (
@@ -937,6 +1055,24 @@ export function MaterialStudyWorkspace({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+      {recommendedActive && recommendedTourStep && (
+        <RecommendedStudyGuide
+          step={recommendedTourStep}
+          questionCount={guidedQuestionCount}
+          demo={Boolean(demo)}
+          onExit={closeRecommendedTour}
+          onBack={
+            recommendedTourStep === 'practice' ? () => setRecommendedTourStep('summary') : undefined
+          }
+          onNext={() => {
+            if (recommendedTourStep === 'summary') {
+              if (guidedQuestionCount >= 3) setRecommendedTourStep('practice');
+              else closeRecommendedTour();
+            } else if (recommendedTourStep === 'practice') startRecommendedPractice();
+            else openRecommendedErrors(recommendedSession.onboardingErrorId);
+          }}
+        />
+      )}
       {isOwner ? (
         <ExamDatePlanPrompt
           materialId={materialId}

@@ -104,6 +104,7 @@ export function PdfProcessingJourney({
   sample = true,
   progress,
   processingMessage,
+  firstPdf = false,
 }: {
   scene: number;
   complete: boolean;
@@ -116,6 +117,7 @@ export function PdfProcessingJourney({
   sample?: boolean;
   progress?: number;
   processingMessage?: string;
+  firstPdf?: boolean;
 }) {
   const active = processingScenes[Math.max(0, Math.min(2, scene))];
   const currentStep = complete ? 0 : scene;
@@ -124,6 +126,7 @@ export function PdfProcessingJourney({
       className="pdf-processing-journey"
       aria-label="Preparación del PDF"
       data-complete={complete}
+      data-first-pdf={firstPdf}
       data-waiting={!complete && waitingForProcessing}
     >
       <div className="journey-processing-status">
@@ -198,14 +201,24 @@ export function PdfProcessingJourney({
         <div className="journey-content-column">
           {complete ? (
             <div className="journey-complete" role="status">
-              <h1>¿Por dónde querés empezar?</h1>
-              <p>Descubrí qué temas ya manejás y cuáles te conviene repasar.</p>
-              <button className="journey-start-button" type="button" onClick={onStartDiagnostic}>
-                Ver qué tanto sé <ArrowRight size={16} />
+              <h1>{firstPdf ? 'Empecemos por lo más importante' : '¿Por dónde querés empezar?'}</h1>
+              <p>
+                {firstPdf
+                  ? 'Primero entendé los temas principales de tu PDF. Después, ponete a prueba.'
+                  : 'Descubrí qué temas ya manejás y cuáles te conviene repasar.'}
+              </p>
+              <button
+                className="journey-start-button"
+                type="button"
+                onClick={firstPdf ? onStartSummary : onStartDiagnostic}
+              >
+                {firstPdf ? 'Empezar a estudiar' : 'Ver qué tanto sé'} <ArrowRight size={16} />
               </button>
-              <button className="journey-summary-button" type="button" onClick={onStartSummary}>
-                Empezar por el resumen
-              </button>
+              {!firstPdf && (
+                <button className="journey-summary-button" type="button" onClick={onStartSummary}>
+                  Empezar por el resumen
+                </button>
+              )}
               <button className="journey-tools-button" type="button" onClick={onViewTools}>
                 Ver todas las herramientas
               </button>

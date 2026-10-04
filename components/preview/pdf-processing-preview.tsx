@@ -2,23 +2,66 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { Check, FileText, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { PdfProcessingJourney, processingScenes } from './pdf-processing-journey';
+import {
+  PdfProcessingJourney,
+  processingScenes,
+} from '@/components/pdf-processing/pdf-processing-journey';
 import {
   PdfProcessingMaterialPreview,
   type ProcessingMaterialEntry,
 } from './pdf-processing-material-preview';
 
 const readingTimeMs = 6500;
-export function PdfProcessingPreview({ processingTimeMs = 22000 }: { processingTimeMs?: number }) {
+const PdfFirstPageThumbnail = dynamic(
+  () => import('@/components/pdf-processing/pdf-first-page-thumbnail'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="journey-real-document journey-thumbnail-fallback">
+        <FileText size={24} />
+        <span>PDF</span>
+      </div>
+    ),
+  }
+);
+export function PdfProcessingPreview({
+  processingTimeMs = 22000,
+  firstPdf = true,
+  initialMaterialEntry = null,
+}: {
+  processingTimeMs?: number;
+  firstPdf?: boolean;
+  initialMaterialEntry?: ProcessingMaterialEntry | null;
+}) {
   const [elapsed, setElapsed] = useState(0);
-  const [modalOpen, setModalOpen] = useState(true);
-  const [materialEntry, setMaterialEntry] = useState<ProcessingMaterialEntry | null>(null);
+  const [sampleFile, setSampleFile] = useState<File | null>(null);
+  const [modalOpen, setModalOpen] = useState(!initialMaterialEntry);
+  const [materialEntry, setMaterialEntry] = useState<ProcessingMaterialEntry | null>(
+    initialMaterialEntry
+  );
   const readyHeading = useRef<HTMLHeadingElement>(null);
   const complete = elapsed >= processingTimeMs;
   const scene = Math.min(processingScenes.length - 1, Math.floor(elapsed / readingTimeMs));
   const waitingForProcessing = !complete && elapsed >= readingTimeMs * processingScenes.length;
+
+  useEffect(() => {
+    let active = true;
+    void fetch('/demo/derecho-penal-unidad-2.pdf')
+      .then((response) => response.blob())
+      .then((blob) => {
+        if (active)
+          setSampleFile(
+            new File([blob], 'Derecho penal · Unidad 2.pdf', { type: 'application/pdf' })
+          );
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (complete) return;
@@ -49,6 +92,7 @@ export function PdfProcessingPreview({ processingTimeMs = 22000 }: { processingT
         <PdfProcessingMaterialPreview
           key={materialEntry}
           entry={materialEntry}
+          firstPdf={firstPdf}
           onBack={() => {
             setMaterialEntry(null);
             setModalOpen(true);
@@ -124,13 +168,13 @@ export function PdfProcessingPreview({ processingTimeMs = 22000 }: { processingT
             if (complete) {
               event.preventDefault();
               if (materialEntry) {
-                document
-                  .querySelector<HTMLElement>(
-                    materialEntry === 'tools'
-                      ? '.journey-material-tabs [aria-selected="true"]'
-                      : '.journey-material-panel h2'
-                  )
-                  ?.focus({ preventScroll: true });
+                const guideHeading = document.querySelector<HTMLElement>(
+                  '[aria-label="Ayuda para estudiar este PDF"] h2'
+                );
+                const destination =
+                  guideHeading ??
+                  document.querySelector<HTMLElement>('[data-recommended-pdf-preview] button');
+                destination?.focus({ preventScroll: true });
               } else {
                 readyHeading.current?.focus({ preventScroll: true });
               }
@@ -147,9 +191,11 @@ export function PdfProcessingPreview({ processingTimeMs = 22000 }: { processingT
           <PdfProcessingJourney
             scene={scene}
             complete={complete}
+            firstPdf={firstPdf}
+            documentPreview={sampleFile ? <PdfFirstPageThumbnail file={sampleFile} /> : undefined}
             waitingForProcessing={waitingForProcessing}
             onStartDiagnostic={() => openMaterial('diagnostic')}
-            onStartSummary={() => openMaterial('summary')}
+            onStartSummary={() => openMaterial(firstPdf ? 'guided' : 'summary')}
             onViewTools={() => openMaterial('tools')}
           />
         </DialogContent>

@@ -8,7 +8,7 @@ import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { AppPageHeader } from '@/components/ui/app-page-header';
-import { PdfTourSpotlight } from '@/components/preview/pdf-tour-spotlight';
+import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
 import {
   StudyErrorDetail,
   reviewPrimaryButton,
@@ -23,23 +23,30 @@ const resolvedLabel = (count: number) => `${count} ${count === 1 ? 'resuelto' : 
 export function StudyErrorsClient({
   data,
   onboarding,
+  initialMaterialId,
 }: {
   data: StudyErrorsPageData;
   onboarding?: { active: boolean; errorId: string | null };
+  initialMaterialId?: string;
 }) {
   const router = useRouter();
   const initialError = onboarding?.active
     ? data.pending.find((item) => item.id === onboarding.errorId)
-    : null;
+    : initialMaterialId
+      ? (data.pending.find((item) => item.recommendation?.materialId === initialMaterialId) ??
+        data.resolved.find((item) => item.recommendation?.materialId === initialMaterialId))
+      : null;
   const [materialId, setMaterialId] = useState<string | null>(
     initialError ? (initialError.recommendation?.materialId ?? unlinkedId) : null
   );
   const [selectedId, setSelectedId] = useState<string | null>(initialError?.id ?? null);
-  const [tab, setTab] = useState<'pending' | 'resolved'>('pending');
+  const [tab, setTab] = useState<'pending' | 'resolved'>(
+    initialError?.status === 'resolved' ? 'resolved' : 'pending'
+  );
   const [query, setQuery] = useState('');
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [notice, setNotice] = useState('');
-  const [tourStep, setTourStep] = useState(initialError ? 0 : -1);
+  const [tourStep, setTourStep] = useState(onboarding?.active && initialError ? 0 : -1);
   const [overrides, setOverrides] = useState<
     Record<string, { baseFailedAt: string; changes: Partial<StudyErrorView> }>
   >({});

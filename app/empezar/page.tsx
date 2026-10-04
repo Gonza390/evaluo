@@ -6,7 +6,6 @@ import {
   Eye,
   FileUp,
   LockKeyhole,
-  Sparkles,
   Target,
   X,
 } from 'lucide-react';

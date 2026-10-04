@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
 import { getPendingStudyErrorOnboarding, getStudyErrorsPageData } from '@/lib/study-errors';
 import { StudyErrorsClient } from '@/components/dashboard/study-errors-client';
+import { isUuid } from '@/lib/uuid';
 
 export const metadata: Metadata = {
   title: 'Mis errores',
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export default async function StudyErrorsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ tour?: string; error?: string }>;
+  searchParams?: Promise<{ tour?: string; error?: string; material?: string }>;
 }) {
   const supabase = await createClientServer();
   const {
@@ -40,6 +41,7 @@ export default async function StudyErrorsPage({
   return (
     <StudyErrorsClient
       data={data}
+      initialMaterialId={params.material && isUuid(params.material) ? params.material : undefined}
       onboarding={{
         active: onboardingActive,
         errorId: onboardingActive ? pendingOnboardingErrorId : null,

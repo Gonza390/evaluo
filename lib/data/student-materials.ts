@@ -2,8 +2,27 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import { selectPedagogicalConcepts } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
+import { logError } from '@/lib/observability';
 
 type QueryClient = Pick<SupabaseClient<Database>, 'from'>;
+
+/** Solo PDFs propios listos; los fallidos, compartidos por otros y demos no cuentan. */
+export async function getFirstReadyStudentMaterialId(client: QueryClient, userId: string) {
+  const { data, error } = await client
+    .from('student_materials')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('processing_status', 'ready')
+    .order('created_at', { ascending: true })
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    logError('studentMaterials.firstReady', error, { userId });
+    return null;
+  }
+  return data?.id ?? null;
+}
 
 export type StudentMaterial = Database['public']['Tables']['student_materials']['Row'];
 
@@ -49,22 +68,27 @@ function countSummarySections(value: unknown) {
 }
 
 function buildStudyArtifacts(
-  summary: {
-    status: string | null;
-    summary_short: string | null;
-    summary_sections: unknown;
-  } | undefined,
-  glossary: {
-    status: string | null;
-    glossary_items: unknown;
-  } | undefined
+  summary:
+    | {
+        status: string | null;
+        summary_short: string | null;
+        summary_sections: unknown;
+      }
+    | undefined,
+  glossary:
+    | {
+        status: string | null;
+        glossary_items: unknown;
+      }
+    | undefined
 ): SharedStudentMaterialStudyArtifacts {
   const summarySectionsCount = countSummarySections(summary?.summary_sections);
   const hasSummary =
     summary?.status === 'ready' &&
     (Boolean(summary.summary_short?.trim()) || summarySectionsCount > 0);
 
-  const glossaryItems = glossary?.status === 'ready' ? parseGlossaryItems(glossary.glossary_items) : [];
+  const glossaryItems =
+    glossary?.status === 'ready' ? parseGlossaryItems(glossary.glossary_items) : [];
   const pedagogicalConcepts = selectPedagogicalConcepts(glossaryItems, 12);
   const hasGlossary = glossaryItems.length > 0;
   const hasFlashcards = pedagogicalConcepts.length > 0;
@@ -200,11 +224,7 @@ export async function fetchSharedStudentMaterialsByCarrera(
   return (data ?? []) as StudentMaterial[];
 }
 
-export async function fetchStudentMaterialsByUser(
-  client: QueryClient,
-  userId: string,
-  limit = 24
-) {
+export async function fetchStudentMaterialsByUser(client: QueryClient, userId: string, limit = 24) {
   const { data, error } = await client
     .from('student_materials')
     .select(

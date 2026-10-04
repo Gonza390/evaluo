@@ -13,7 +13,7 @@ import {
   rememberFirstPdfDemoErrorsViewed,
   rememberFirstPdfDemoUpload,
 } from '@/lib/first-pdf-demo-analytics';
-import { PdfTourSpotlight } from './pdf-tour-spotlight';
+import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
 import { sampleSummary, sampleGlossary, sampleArtifacts } from './first-pdf-sample-study';
 import {
   demoQuestions,

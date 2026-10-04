@@ -30,7 +30,6 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const [catalog, setCatalog] = useState<PregunteroHubCarrera[] | null>(null);
-  const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [expandingCareer, setExpandingCareer] = useState<string | null>(null);
   const catalogPromiseRef = useRef<Promise<PregunteroHubCarrera[]> | null>(null);
@@ -43,7 +42,6 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
   const ensureCatalog = useCallback(async () => {
     if (catalog) return catalog;
     if (!catalogPromiseRef.current) {
-      setCatalogLoading(true);
       setCatalogError(null);
       catalogPromiseRef.current = fetch('/api/pregunteros/catalog', {
         headers: { Accept: 'application/json' },
@@ -61,8 +59,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
           const message = error instanceof Error ? error.message : 'No se pudo cargar el catálogo.';
           setCatalogError(message);
           throw error;
-        })
-        .finally(() => setCatalogLoading(false));
+        });
     }
     return catalogPromiseRef.current;
   }, [catalog]);

@@ -35,10 +35,24 @@ function remainingErrorsCopy(count: number) {
       : `Te quedan ${count} errores`;
 }
 
-export function StudyErrorsPreview() {
-  const [errors, setErrors] = useState<PreviewError[]>(previewErrors);
-  const [materialId, setMaterialId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export function StudyErrorsPreview({
+  initialMaterialId,
+  initialErrors = previewErrors,
+  showControls = true,
+  materials = previewMaterials,
+}: {
+  initialMaterialId?: string;
+  initialErrors?: PreviewError[];
+  showControls?: boolean;
+  materials?: typeof previewMaterials;
+} = {}) {
+  const [errors, setErrors] = useState<PreviewError[]>(initialErrors);
+  const [materialId, setMaterialId] = useState<string | null>(initialMaterialId ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialMaterialId
+      ? (initialErrors.find((item) => item.materialId === initialMaterialId)?.id ?? null)
+      : null
+  );
   const [tab, setTab] = useState<'pending' | 'resolved'>('pending');
   const [query, setQuery] = useState('');
   const [explanations, setExplanations] = useState<Record<string, ExplanationState>>({});
@@ -67,7 +81,7 @@ export function StudyErrorsPreview() {
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const material = previewMaterials.find((item) => item.id === materialId);
+  const material = materials.find((item) => item.id === materialId);
   const scoped = errors.filter((item) =>
     materialId === 'unlinked' ? !item.materialId : item.materialId === materialId
   );
@@ -251,7 +265,14 @@ export function StudyErrorsPreview() {
   return (
     <main className="bg-background text-foreground min-h-screen px-4 py-6 sm:px-8 sm:py-10">
       <div className="mx-auto max-w-6xl">
-        <div className="border-primary/20 bg-primary/5 mb-7 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3">
+        <div
+          hidden={!showControls}
+          className={
+            showControls
+              ? 'border-primary/20 bg-primary/5 mb-7 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3'
+              : 'hidden'
+          }
+        >
           <div>
             <span className="text-primary text-xs font-bold tracking-widest uppercase">
               Preview interactivo
@@ -299,7 +320,7 @@ export function StudyErrorsPreview() {
               {totalPending} errores pendientes
             </span>
             <span className="bg-background rounded-full border px-3 py-1.5">
-              {previewMaterials.length} PDFs
+              {materials.length} PDFs
             </span>
             <span className="bg-background rounded-full border px-3 py-1.5">
               {errors.length - totalPending} resueltos
@@ -344,7 +365,7 @@ export function StudyErrorsPreview() {
               Elegí tus apuntes, entendé cada error y volvé a responder para comprobar lo aprendido.
             </p>
             <div className="divide-y border-y">
-              {previewMaterials.map((pdf) => {
+              {materials.map((pdf) => {
                 const group = errors.filter((item) => item.materialId === pdf.id);
                 const count = group.filter((item) => !item.resolved).length;
                 const remaining = group.filter((item) => !item.resolved);
@@ -442,7 +463,7 @@ export function StudyErrorsPreview() {
                   className="bg-background min-h-11 max-w-64 min-w-0 rounded-xl border px-3 text-sm"
                 >
                   <option value="unlinked">Sin PDF asociado</option>
-                  {previewMaterials.map((pdf) => (
+                  {materials.map((pdf) => (
                     <option key={pdf.id} value={pdf.id}>
                       {pdf.title} ·{' '}
                       {errors.filter((item) => item.materialId === pdf.id && !item.resolved).length}{' '}
@@ -1041,7 +1062,7 @@ export function StudyErrorsPreview() {
           </>
         )}
 
-        <details className="mt-8 border-t py-4">
+        <details className={showControls ? 'mt-8 border-t py-4' : 'hidden'}>
           <summary className="cursor-pointer text-sm font-semibold">
             Cómo probar todos los estados
           </summary>

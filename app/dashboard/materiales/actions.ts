@@ -14,6 +14,7 @@ import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { resolveAdminActor } from '@/lib/access-control';
+import { getFirstReadyStudentMaterialId } from '@/lib/data/student-materials';
 import {
   markStudentMaterialProcessingFailed,
   processStudentMaterial,
@@ -41,6 +42,7 @@ export type StudentMaterialProcessingState = {
   progress: number;
   message: string;
   error: string | null;
+  isFirstReadyMaterial?: boolean;
 };
 
 function isMissingStudentMaterialsTableError(error: unknown) {
@@ -397,6 +399,10 @@ export async function getStudentMaterialProcessingStateAction(
       progress: Number(data.processing_progress ?? 0),
       message: data.processing_message ?? 'Procesando material...',
       error: data.processing_error ?? null,
+      isFirstReadyMaterial:
+        data.processing_status === 'ready'
+          ? (await getFirstReadyStudentMaterialId(supabase, user.id)) === data.id
+          : undefined,
     };
   } catch (error) {
     if (!isMissingStudentMaterialsTableError(error)) {

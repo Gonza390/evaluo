@@ -34,6 +34,7 @@ export function PdfTourSpotlight({
   showCompactDescription = false,
   ariaLabel = 'Guía del material de ejemplo',
   footerLabel = 'PDF de muestra',
+  minimal = false,
 }: {
   selector: string;
   title: string;
@@ -48,6 +49,7 @@ export function PdfTourSpotlight({
   showCompactDescription?: boolean;
   ariaLabel?: string;
   footerLabel?: string;
+  minimal?: boolean;
 }) {
   const card = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -56,10 +58,16 @@ export function PdfTourSpotlight({
   const [alignLeft, setAlignLeft] = useState(false);
   const [compact, setCompact] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [coordinateZoom, setCoordinateZoom] = useState(1);
+  const [cardTop, setCardTop] = useState<number | null>(null);
 
   useEffect(() => {
     setExpanded(false);
     const documentOverflow = document.documentElement.style.overflowY;
+    const bodyMinHeight = document.body.style.minHeight;
+    // Conserva margen de scroll mientras se limita la altura del resumen largo.
+    if (minimal)
+      document.body.style.minHeight = `${document.body.scrollHeight + window.innerHeight}px`;
     // Durante la guía se desplaza la sección, sin perder el destacado por scroll de página.
     document.documentElement.style.overflowY = 'hidden';
     let frame = 0;
@@ -92,6 +100,11 @@ export function PdfTourSpotlight({
     };
     const update = () => {
       const found = visibleTarget(selector);
+      // El shell escala html en escritorio; el recorte usa coordenadas reales de viewport.
+      if (minimal)
+        setCoordinateZoom(
+          1 / (Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1)
+        );
       setCompact(window.innerWidth < 1100 || window.innerHeight < 650);
       if (found !== target) {
         if (target) resize.unobserve(target);
@@ -111,13 +124,53 @@ export function PdfTourSpotlight({
         return;
       }
       const guide = card.current.getBoundingClientRect();
-      const available = Math.max(100, guide.top - 32);
+      const currentTop = target.getBoundingClientRect().top;
+      if (
+        minimal &&
+        (needsAlignment ||
+          currentTop > Math.min(120, window.innerHeight - guide.height - 114) ||
+          currentTop < 8)
+      ) {
+        const before = target.getBoundingClientRect();
+        if (Math.abs(before.top - 16) > 3) {
+          target.scrollIntoView({ block: 'start', behavior: 'instant' });
+          window.scrollBy({ top: -16, behavior: 'instant' });
+        }
+        needsAlignment = false;
+      }
+      const targetZoom = minimal
+        ? Number.parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+        : 1;
+      let available = Math.max(
+        minimal ? 80 : 100,
+        minimal
+          ? (window.innerHeight - guide.height - 34 - target.getBoundingClientRect().top) /
+              targetZoom
+          : guide.top - 32
+      );
+      if (minimal) {
+        // El workspace de escritorio también tiene un panel con overflow propio.
+        // El resumen debe desplazarse dentro del recorte, sin quedar oculto por ese panel.
+        for (let parent = target.parentElement; parent; parent = parent.parentElement) {
+          if (parent === document.body || parent === document.documentElement) break;
+          if (['auto', 'scroll', 'hidden', 'clip'].includes(getComputedStyle(parent).overflowY)) {
+            available = Math.min(
+              available,
+              Math.max(
+                80,
+                (parent.getBoundingClientRect().bottom - target.getBoundingClientRect().top - 8) /
+                  targetZoom
+              )
+            );
+          }
+        }
+      }
       target.style.maxHeight = `${available}px`;
       const focusKind = target.dataset.demoFocus;
       if (focusKind === 'study') target.style.height = `${available}px`;
       target.style.overflowY = focusKind === 'study' || focusKind === 'pdf' ? 'hidden' : 'auto';
       target.style.setProperty('--demo-visible-height', `${Math.max(80, available - 16)}px`);
-      if (needsAlignment || !interacted) {
+      if (needsAlignment || (!minimal && !interacted)) {
         const before = target.getBoundingClientRect();
         if (Math.abs(before.top - 16) > 3) {
           target.scrollIntoView({ block: 'start', behavior: 'instant' });
@@ -130,7 +183,10 @@ export function PdfTourSpotlight({
       const left = Math.max(8, box.left - 5);
       const top = Math.max(8, box.top - 5);
       const right = Math.min(window.innerWidth - 8, box.right + 5);
-      const bottom = Math.min(guide.top - 12, box.bottom + 5);
+      const bottom = Math.min(
+        minimal ? window.innerHeight - guide.height - 24 : guide.top - 12,
+        box.bottom + 5
+      );
       const next = {
         left,
         top,
@@ -151,6 +207,7 @@ export function PdfTourSpotlight({
           ? old
           : next
       );
+      if (minimal) setCardTop(Math.min(bottom + 12, window.innerHeight - guide.height - 12));
     };
     const requestUpdate = () => {
       cancelAnimationFrame(frame);
@@ -224,6 +281,7 @@ export function PdfTourSpotlight({
       resize.disconnect();
       releaseTarget();
       document.documentElement.style.overflowY = documentOverflow;
+      if (minimal) document.body.style.minHeight = bodyMinHeight;
       window.removeEventListener('resize', resized);
       window.removeEventListener('scroll', requestUpdate, true);
       window.removeEventListener('animationend', requestUpdate, true);
@@ -233,7 +291,7 @@ export function PdfTourSpotlight({
       document.removeEventListener('fullscreenchange', fullscreen);
       document.removeEventListener('keydown', keyboard, true);
     };
-  }, [selector, title, onExit]);
+  }, [selector, title, onExit, minimal]);
 
   // Un único recorte evita uniones entre paneles y comparte la curva del borde real.
   // clip-path también deja pasar los clics dentro del área destacada.
@@ -250,7 +308,7 @@ export function PdfTourSpotlight({
   })();
 
   return (
-    <>
+    <div style={minimal ? { zoom: coordinateZoom } : undefined}>
       <div
         data-demo-spotlight-blur
         aria-hidden="true"
@@ -270,7 +328,8 @@ export function PdfTourSpotlight({
         ref={card}
         role="region"
         aria-label={ariaLabel}
-        className={`border-border bg-background text-foreground fixed right-3 bottom-[max(12px,env(safe-area-inset-bottom))] left-3 z-[90] flex max-h-[48dvh] flex-col rounded-2xl border shadow-2xl ${alignLeft ? 'sm:right-auto sm:w-[400px]' : 'sm:left-auto sm:w-[400px]'} [@media(max-height:480px)]:right-3 [@media(max-height:480px)]:left-3 [@media(max-height:480px)]:w-auto`}
+        style={minimal && cardTop !== null ? { top: cardTop, bottom: 'auto' } : undefined}
+        className={`border-border bg-background text-foreground fixed right-3 bottom-[max(12px,env(safe-area-inset-bottom))] left-3 z-[90] flex max-h-[48dvh] flex-col rounded-2xl border shadow-2xl ${alignLeft ? 'sm:right-auto' : 'sm:left-auto'} ${minimal ? 'sm:w-[340px]' : 'sm:w-[400px]'} [@media(max-height:480px)]:right-3 [@media(max-height:480px)]:left-3 [@media(max-height:480px)]:w-auto`}
       >
         <div
           className={`flex shrink-0 items-center justify-between gap-1 px-4 sm:gap-2 ${compact ? 'pt-1' : 'pt-2'}`}
@@ -286,7 +345,7 @@ export function PdfTourSpotlight({
             </button>
           )}
           <span className="text-primary text-xs font-semibold whitespace-nowrap">{progress}</span>
-          {compact && (
+          {compact && !minimal && (
             <button
               type="button"
               onClick={() => setExpanded((value) => !value)}
@@ -304,7 +363,7 @@ export function PdfTourSpotlight({
           <button
             onClick={onExit}
             aria-label="Salir de la guía"
-            className={`hover:bg-muted focus-visible:outline-ring flex shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 ${compact ? 'size-8' : 'size-10'}`}
+            className={`hover:bg-muted focus-visible:outline-ring flex shrink-0 items-center justify-center rounded-lg focus-visible:outline-2 ${minimal ? 'size-11' : compact ? 'size-8' : 'size-10'}`}
           >
             <X size={18} />
           </button>
@@ -353,6 +412,6 @@ export function PdfTourSpotlight({
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
