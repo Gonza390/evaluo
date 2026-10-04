@@ -25,9 +25,10 @@ pública ya no es redirigido automáticamente al terminar el procesamiento.
 Cuando el primer PDF propio queda listo:
 
 1. **Empezar a estudiar**: `/materiales/{id}?recorrido=1`, abre el resumen real
-   con una ayuda visual que destaca el resumen y después señala Práctica.
+   con una guía visual breve de tres pasos: Entender, Practicar y Reforzar. La guía
+   explica dónde está cada parte sin iniciar preguntas automáticamente.
 2. **Ver todas las herramientas**: `/materiales/{id}`, espacio normal del PDF.
-   Conserva una invitación opcional a abrir el recorrido recomendado.
+   Conserva una invitación opcional a volver a abrir la guía.
 
 Desde el segundo PDF:
 
@@ -48,29 +49,18 @@ primero. No equivale a guardar permanentemente un hito histórico de onboarding.
 
 ## Recorrido recomendado dentro del PDF
 
-- Se destaca el resumen real mientras el resto se desenfoca. Una ayuda breve
-  explica «Este es tu resumen». Su contenido puede desplazarse dentro del área
-  visible, sin exigir leerlo completo para continuar.
-- «Entendido» señala la pestaña Práctica. «Probar una práctica» cierra el
-  destacado y empieza las preguntas del mismo PDF. No hay barra inferior.
-- Glosario, tarjetas, mapa y práctica siguen disponibles al cerrar la ayuda
-  con la X o Escape. «Cómo estudiar este PDF» permite volver a abrirla.
-- Selecciona hasta cinco preguntas existentes y elegibles, priorizando variedad
-  de temas. Muestra el número real. Con menos de tres no ofrece este cuestionario.
-  El diagnóstico normal conserva su máximo de seis preguntas.
-- Las respuestas se conservan al cambiar de herramienta y entre las vistas
-  móvil/escritorio. La sesión de preguntas es local a la página; recargar no
-  recupera el cuestionario, pero los errores ya guardados permanecen en la cuenta.
-- Se espera el guardado de cada respuesta. Un fallo muestra un aviso y permite
-  reintentar antes de avanzar. No se anuncia un guardado que no ocurrió.
-- Si hubo errores, una ayuda destaca el resultado y explica cómo reforzarlos.
-  «Ver mis errores» abre
-  `/dashboard/explicaciones?material={id}` con ese PDF seleccionado. Si corresponde,
-  incorpora la guía existente del primer error al entrar en Mis errores.
-- Si acertó todo, informa qué preguntas respondió correctamente sin inventar un
-  error ni declarar dominio de todo el documento.
-- La consulta de propietario limita la guía inicial a PDFs propios. El parámetro
-  de selección en Mis errores solo filtra los datos autorizados existentes.
+- Solo se activa automáticamente al elegir «Empezar a estudiar» en el primer PDF
+  propio listo.
+- La guía usa el contenido real y explica en tres pasos: **Entender**, destacando el
+  resumen; **Practicar**, señalando la pestaña Práctica; y **Reforzar**, señalando
+  Mis errores en la navegación.
+- No inicia un diagnóstico ni exige responder preguntas. Al terminar deja al
+  usuario en el resumen para que empiece a estudiar.
+- La X o Escape cierran la guía. «Cómo estudiar este PDF» permite volver a abrirla.
+- Después de cerrar la guía, las herramientas conservan su comportamiento normal.
+  La práctica y Mis errores siguen disponibles cuando el estudiante decida usarlos.
+- La definición de primer PDF sigue limitada al primer archivo propio con estado
+  `ready`; fallidos, demos y archivos de terceros no cuentan.
 
 ## Preview público
 
@@ -236,9 +226,9 @@ Cobertura en Chromium con backend simulado; no se repitió una carga autenticada
    opcionalmente fecha de examen. Iniciar el procesamiento.
 2. Comprobar las escenas y la referencia al archivo. Si se desea, agregar los
    datos académicos y volver a la espera.
-3. En el primer PDF listo, elegir «Empezar a estudiar», leer el resumen, comprobar
-   lo entendido y reforzar los errores. Abrir herramientas normalmente también
-   permite activar la guía de forma opcional.
+3. En el primer PDF listo, elegir «Empezar a estudiar» y comprobar la guía visual
+   Entender → Practicar → Reforzar. Debe terminar en el resumen sin iniciar
+   preguntas. Abrir herramientas normalmente también permite reabrir la guía.
 4. Con otro PDF, comprobar diagnóstico, resumen y herramientas. Las preguntas y
    el repaso son los existentes del PDF real.
 5. Desde la página pública, elegir un PDF antes del registro y completar el acceso.
