@@ -125,6 +125,9 @@ function BottomNav() {
             <Link
               key={`${item.label}-${item.href}`}
               href={item.href}
+              data-recommended-errors={
+                item.href === '/dashboard/explicaciones' ? 'true' : undefined
+              }
               className={
                 item.variant === 'cta'
                   ? 'from-brand to-brand-2 mx-0.5 flex min-h-[50px] flex-col items-center justify-center rounded-2xl bg-gradient-to-r px-2 py-1.5 text-white shadow-[0_8px_20px_rgba(37,99,235,0.26)]'
