@@ -4,6 +4,7 @@ import { StudyStatePanel } from '@/components/study-state-panel';
 import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { getPendingStudyErrorTopicCount } from '@/lib/study-errors';
 import { createClientServer } from '@/lib/supabase-server';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
