@@ -298,10 +298,11 @@ export function MaterialStudyWorkspace({
   };
   const closeRecommendedTour = useCallback(() => {
     setRecommendedTourStep(null);
+    setRecommendedActive(false);
     window.requestAnimationFrame(() => {
       const heading = Array.from(
         document.querySelectorAll<HTMLElement>(
-          '[data-recommended-result] h2, [data-guided-question], [data-recommended-summary]'
+          '[data-guided-question], [data-recommended-summary]'
         )
       ).find((node) => node.getClientRects().length > 0);
       heading?.focus({ preventScroll: true });
@@ -887,7 +888,6 @@ export function MaterialStudyWorkspace({
               onResult={(result) => {
                 if (recommendedActive) {
                   setDiagnosticReviewTopics(result.reviewTopics);
-                  if (result.reviewTopics.length > 0) setRecommendedTourStep('errors');
                 }
               }}
               onRestart={() => {
@@ -1058,18 +1058,18 @@ export function MaterialStudyWorkspace({
       {recommendedActive && recommendedTourStep && (
         <RecommendedStudyGuide
           step={recommendedTourStep}
-          questionCount={guidedQuestionCount}
-          demo={Boolean(demo)}
           onExit={closeRecommendedTour}
           onBack={
-            recommendedTourStep === 'practice' ? () => setRecommendedTourStep('summary') : undefined
+            recommendedTourStep === 'practice'
+              ? () => setRecommendedTourStep('summary')
+              : recommendedTourStep === 'errors'
+                ? () => setRecommendedTourStep('practice')
+                : undefined
           }
           onNext={() => {
-            if (recommendedTourStep === 'summary') {
-              if (guidedQuestionCount >= 3) setRecommendedTourStep('practice');
-              else closeRecommendedTour();
-            } else if (recommendedTourStep === 'practice') startRecommendedPractice();
-            else openRecommendedErrors(recommendedSession.onboardingErrorId);
+            if (recommendedTourStep === 'summary') setRecommendedTourStep('practice');
+            else if (recommendedTourStep === 'practice') setRecommendedTourStep('errors');
+            else closeRecommendedTour();
           }}
         />
       )}
