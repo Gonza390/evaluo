@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
   type SetStateAction,
@@ -36,7 +37,7 @@ import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
 } from '@/components/study/recommended-study-guide';
-import { selectDiagnosticQuestions } from '@/lib/student-materials/diagnostic-questions';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
@@ -275,10 +276,38 @@ export function MaterialStudyWorkspace({
   const [regenerationStageIndex, setRegenerationStageIndex] = useState(0);
   const [regenerationProgress, setRegenerationProgress] = useState(8);
   const [examDatePromptTrigger, setExamDatePromptTrigger] = useState(0);
+  const trackedGuideStepsRef = useRef(new Set<RecommendedStudyStep>());
+  const practiceOpenedTrackedRef = useRef(false);
 
   const requestExamDatePrompt = () => {
     setExamDatePromptTrigger((value) => value + 1);
   };
+
+  useEffect(() => {
+    if (!isOwner || !recommendedStudyAvailable || demo) return;
+    trackMarketingEvent('first_pdf_study_session_opened', {
+      material_id: materialId,
+      entry: initialRecommendedStudy ? 'guided' : 'direct',
+    });
+  }, [demo, initialRecommendedStudy, isOwner, materialId, recommendedStudyAvailable]);
+
+  useEffect(() => {
+    if (
+      !recommendedActive ||
+      !recommendedTourStep ||
+      !isOwner ||
+      !recommendedStudyAvailable ||
+      demo ||
+      trackedGuideStepsRef.current.has(recommendedTourStep)
+    ) {
+      return;
+    }
+    trackedGuideStepsRef.current.add(recommendedTourStep);
+    trackMarketingEvent('first_pdf_guide_step_viewed', {
+      material_id: materialId,
+      step: recommendedTourStep,
+    });
+  }, [demo, isOwner, materialId, recommendedActive, recommendedStudyAvailable, recommendedTourStep]);
 
   const studyArtifacts = useMemo(
     () =>
@@ -286,40 +315,38 @@ export function MaterialStudyWorkspace({
       buildPedagogicalArtifacts({ summary: studySummary, glossary: studyGlossary }),
     [pedagogicalArtifacts, studyGlossary, studySummary]
   );
-  const guidedQuestionCount = useMemo(
-    () => selectDiagnosticQuestions(studyArtifacts, 5).length,
-    [studyArtifacts]
-  );
   const changeRecommendedTab = (tab: StudyTabId) => {
     setActiveTab(tab);
     demo?.onTabChange(tab);
     setIsViewerVisible(false);
     setCommentsOpen(false);
   };
-  const closeRecommendedTour = useCallback(() => {
-    setRecommendedTourStep(null);
-    setRecommendedActive(false);
-    window.requestAnimationFrame(() => {
-      const heading = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          '[data-guided-question], [data-recommended-summary]'
-        )
-      ).find((node) => node.getClientRects().length > 0);
-      heading?.focus({ preventScroll: true });
-    });
-  }, []);
-  const startRecommendedPractice = () => {
-    if (guidedQuestionCount < 3) return;
-    setDiagnosticMode(true);
-    setRecommendedTourStep(null);
-    changeRecommendedTab('ejercicios');
-    window.requestAnimationFrame(() => {
-      const heading = Array.from(
-        document.querySelectorAll<HTMLElement>('[data-guided-question]')
-      ).find((item) => item.getClientRects().length > 0);
-      heading?.focus();
-    });
-  };
+  const closeRecommendedTour = useCallback(
+    (outcome: 'completed' | 'skipped' = 'skipped') => {
+      if (!demo && isOwner && recommendedStudyAvailable) {
+        trackMarketingEvent(
+          outcome === 'completed' ? 'first_pdf_guide_completed' : 'first_pdf_guide_skipped',
+          {
+            material_id: materialId,
+            ...(outcome === 'skipped' && recommendedTourStep
+              ? { step: recommendedTourStep }
+              : {}),
+          }
+        );
+      }
+      setRecommendedTourStep(null);
+      setRecommendedActive(false);
+      window.requestAnimationFrame(() => {
+        const heading = Array.from(
+          document.querySelectorAll<HTMLElement>(
+            '[data-guided-question], [data-recommended-summary]'
+          )
+        ).find((node) => node.getClientRects().length > 0);
+        heading?.focus({ preventScroll: true });
+      });
+    },
+    [demo, isOwner, materialId, recommendedStudyAvailable, recommendedTourStep]
+  );
   const startRecommendedStudy = () => {
     setRecommendedActive(true);
     setRecommendedTourStep('summary');
@@ -371,11 +398,20 @@ export function MaterialStudyWorkspace({
     setCommentsOpen((current) => !current);
   };
 
-  const handleStudyTabChange = (value: string) => {
+  const handleStudyTabChange = (value: string, entry: 'tab' | 'summary_chapter' = 'tab') => {
     const nextTab = value as StudyTabId;
-    if (recommendedActive && nextTab === 'ejercicios' && guidedQuestionCount >= 3) {
-      startRecommendedPractice();
-      return;
+    if (
+      nextTab === 'ejercicios' &&
+      isOwner &&
+      recommendedStudyAvailable &&
+      !demo &&
+      !practiceOpenedTrackedRef.current
+    ) {
+      practiceOpenedTrackedRef.current = true;
+      trackMarketingEvent('first_pdf_practice_opened', {
+        material_id: materialId,
+        entry,
+      });
     }
     setActiveTab(nextTab);
     demo?.onTabChange(nextTab);
@@ -765,7 +801,7 @@ export function MaterialStudyWorkspace({
                         <button
                           type="button"
                           onClick={() => {
-                            handleStudyTabChange('ejercicios');
+                            handleStudyTabChange('ejercicios', 'summary_chapter');
                           }}
                           className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] transition hover:text-[#1D4ED8]"
                         >
@@ -1069,7 +1105,7 @@ export function MaterialStudyWorkspace({
           onNext={() => {
             if (recommendedTourStep === 'summary') setRecommendedTourStep('practice');
             else if (recommendedTourStep === 'practice') setRecommendedTourStep('errors');
-            else closeRecommendedTour();
+            else closeRecommendedTour('completed');
           }}
         />
       )}
