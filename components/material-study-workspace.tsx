@@ -51,7 +51,6 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { AppPageHeader } from '@/components/ui/app-page-header';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 import {
   buildPedagogicalArtifacts,
@@ -188,42 +187,24 @@ function MaterialMetadata({
   universidadName?: string;
   materiaName?: string;
 }) {
-  if (!carreraName && !universidadName && !materiaName) return null;
+  const items = [carreraName, universidadName, materiaName].filter(
+    (value): value is string => Boolean(value)
+  );
+  if (items.length === 0) return null;
 
   return (
-    <div className="grid min-w-0 gap-x-4 gap-y-2 sm:grid-cols-2 lg:min-w-[620px] lg:grid-cols-3">
-      {carreraName ? (
-        <div className="min-w-0">
-          <p className="text-[9.5px] font-bold tracking-[0.14em] text-slate-400 uppercase">
-            Carrera
-          </p>
-          <p className="mt-0.5 text-[12.5px] leading-5 font-semibold text-slate-800 sm:text-[13px]">
-            {carreraName}
-          </p>
+    <div className="hidden min-w-0 items-center justify-end gap-2 overflow-hidden lg:flex">
+      {items.map((item, index) => (
+        <div key={item} className="flex min-w-0 items-center gap-2">
+          {index > 0 ? <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" /> : null}
+          <span
+            title={item}
+            className="max-w-[220px] truncate text-[11.5px] font-medium text-slate-500 xl:max-w-[260px]"
+          >
+            {item}
+          </span>
         </div>
-      ) : null}
-
-      {universidadName ? (
-        <div className="min-w-0 sm:border-l sm:border-slate-200 sm:pl-4">
-          <p className="text-[9.5px] font-bold tracking-[0.14em] text-slate-400 uppercase">
-            Universidad
-          </p>
-          <p className="mt-0.5 text-[12.5px] leading-5 font-semibold text-slate-800 sm:text-[13px]">
-            {universidadName}
-          </p>
-        </div>
-      ) : null}
-
-      {materiaName ? (
-        <div className="min-w-0 border-t border-slate-100 pt-2 sm:col-span-2 lg:col-span-1 lg:border-t-0 lg:border-l lg:border-slate-200 lg:pt-0 lg:pl-4">
-          <p className="text-[9.5px] font-bold tracking-[0.14em] text-slate-400 uppercase">
-            Materia
-          </p>
-          <p className="mt-0.5 text-[12.5px] leading-5 font-semibold text-slate-800 sm:text-[13px]">
-            {materiaName}
-          </p>
-        </div>
-      ) : null}
+      ))}
     </div>
   );
 }
@@ -832,7 +813,7 @@ export function MaterialStudyWorkspace({
         : '2 minutos';
 
   const tabHeader = (
-    <div className="flex flex-col gap-2.5 border-b border-slate-200 px-2.5 py-3 sm:px-4 sm:py-4">
+    <div className="flex shrink-0 flex-col gap-1.5 border-b border-slate-200 px-2.5 py-2 sm:px-3 sm:py-2.5">
       <TabsList className="h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-[18px] bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {STUDY_TABS.map((tab) => {
           const Icon = tab.icon;
@@ -1433,7 +1414,7 @@ export function MaterialStudyWorkspace({
   );
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-white text-slate-950 xl:h-full xl:min-h-0 xl:overflow-hidden">
       {activeSummaryCheck ? (
         <SummaryTopicCheckPopup
           open
@@ -1488,37 +1469,41 @@ export function MaterialStudyWorkspace({
           triggerNonce={examDatePromptTrigger}
         />
       ) : null}
-      <section className="border-b border-[#E8EDF5] bg-white">
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-2.5 sm:px-6 sm:py-3 lg:px-8 lg:py-3">
-          <Link
-            href={backHref}
-            className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            Volver
-          </Link>
+      <section className="shrink-0 border-b border-[#E8EDF5] bg-white">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 px-4 py-2 sm:px-6 lg:px-4">
+          <div className="min-w-0 flex-1">
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Volver
+            </Link>
 
-          <div className="mt-2 grid gap-3 lg:grid-cols-[minmax(0,0.9fr)_minmax(620px,1.1fr)] lg:items-center lg:gap-7">
-            <AppPageHeader
-              eyebrow="Material de estudio"
-              title={title}
-              description={fileName}
-              size="compact"
-              className="border-0 pb-0"
-            />
-
-            <MaterialMetadata
-              carreraName={carreraName}
-              universidadName={universidadName}
-              materiaName={materiaName}
-            />
+            <div className="mt-0.5 flex min-w-0 items-baseline gap-3">
+              <h1 className="min-w-0 truncate text-[1.05rem] font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.12rem]">
+                {title}
+              </h1>
+              <span
+                title={fileName}
+                className="hidden min-w-0 max-w-[360px] truncate text-[11.5px] font-medium text-slate-400 xl:block"
+              >
+                {fileName}
+              </span>
+            </div>
           </div>
+
+          <MaterialMetadata
+            carreraName={carreraName}
+            universidadName={universidadName}
+            materiaName={materiaName}
+          />
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1600px] px-4 py-2 sm:px-6 lg:px-8">
-        <div className="hidden xl:block">
-          <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+      <section className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col px-2 py-2 sm:px-4 xl:px-4 xl:pb-3">
+        <div className="hidden min-h-0 flex-1 xl:flex">
+          <div className="relative h-full min-h-0 w-full overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
               data-demo-focus="study"
               value={activeTab}
