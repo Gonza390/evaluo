@@ -174,7 +174,7 @@ export function SummaryTopicCheckPopup({
   const failedTopics = Array.from(
     new Set(
       failedQuestions
-        .map((question) => clean(question.topic))
+        .map((question) => question.topic.trim())
         .filter(Boolean)
     )
   );
