@@ -248,15 +248,19 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
             )}
-            <div className="pointer-events-auto absolute left-1/2 hidden -translate-x-1/2 lg:block">
-              <EstimatedStudyActivity />
-            </div>
-
             {!user ? (
-              <PublicGuestActions trackingLocation="discovery_header" />
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+                <div className="hidden lg:block">
+                  <EstimatedStudyActivity />
+                </div>
+                <PublicGuestActions trackingLocation="discovery_header" />
+              </div>
             ) : (
               <>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
+                  <div className="hidden lg:block">
+                    <EstimatedStudyActivity />
+                  </div>
                   <NotificationBell />
                   <button
                     type="button"
