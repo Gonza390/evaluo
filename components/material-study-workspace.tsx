@@ -268,6 +268,10 @@ export function MaterialStudyWorkspace({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
   const promptedSummaryChecksRef = useRef(new Set<number>());
+  const summaryReadTimeRef = useRef(new Map<number, number>());
+  const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
+  const summaryCheckTriggerVisibleRef = useRef(new Set<number>());
+  const summaryCheckTimerRef = useRef(new Map<number, number>());
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
@@ -403,6 +407,15 @@ export function MaterialStudyWorkspace({
     [fullSummarySections, studyArtifacts]
   );
 
+  const summaryReadThresholds = useMemo(
+    () =>
+      fullSummarySections.map((section) => {
+        const wordCount = section.body.trim().split(/\s+/).filter(Boolean).length;
+        return Math.min(15_000, Math.max(6_000, 6_000 + Math.max(0, wordCount - 25) * 120));
+      }),
+    [fullSummarySections]
+  );
+
   const activeSummaryCheck =
     summaryCheckChapterIndex !== null ? summaryCheckPlan[summaryCheckChapterIndex] ?? null : null;
 
@@ -417,31 +430,111 @@ export function MaterialStudyWorkspace({
       return;
     }
 
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-summary-reading-section]')
+    );
     const triggers = Array.from(
       document.querySelectorAll<HTMLElement>('[data-summary-check-trigger]')
     );
-    if (triggers.length === 0) return;
+    if (sections.length === 0 || triggers.length === 0) return;
 
-    const observer = new IntersectionObserver(
+    const getAccumulatedReadTime = (chapterIndex: number) => {
+      const stored = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
+      const visibleSince = summaryReadVisibleSinceRef.current.get(chapterIndex);
+      if (visibleSince === undefined || document.visibilityState !== 'visible') return stored;
+      return stored + Math.max(0, performance.now() - visibleSince);
+    };
+
+    const clearPromptTimer = (chapterIndex: number) => {
+      const timer = summaryCheckTimerRef.current.get(chapterIndex);
+      if (timer !== undefined) {
+        window.clearTimeout(timer);
+        summaryCheckTimerRef.current.delete(chapterIndex);
+      }
+    };
+
+    const maybePrompt = (chapterIndex: number) => {
+      if (
+        promptedSummaryChecksRef.current.has(chapterIndex) ||
+        !summaryCheckPlan[chapterIndex] ||
+        !summaryCheckTriggerVisibleRef.current.has(chapterIndex)
+      ) {
+        return;
+      }
+
+      const threshold = summaryReadThresholds[chapterIndex] ?? 8_000;
+      const readTime = getAccumulatedReadTime(chapterIndex);
+
+      if (readTime >= threshold) {
+        clearPromptTimer(chapterIndex);
+        promptedSummaryChecksRef.current.add(chapterIndex);
+        setSummaryCheckChapterIndex(chapterIndex);
+        return;
+      }
+
+      clearPromptTimer(chapterIndex);
+      const remaining = Math.max(250, threshold - readTime);
+      const timer = window.setTimeout(() => {
+        summaryCheckTimerRef.current.delete(chapterIndex);
+        if (!summaryCheckTriggerVisibleRef.current.has(chapterIndex)) return;
+        maybePrompt(chapterIndex);
+      }, remaining);
+      summaryCheckTimerRef.current.set(chapterIndex, timer);
+    };
+
+    const readingObserver = new IntersectionObserver(
+      (entries) => {
+        const now = performance.now();
+        for (const entry of entries) {
+          const element = entry.target as HTMLElement;
+          const chapterIndex = Number(element.dataset.summaryReadingSection);
+          if (!Number.isInteger(chapterIndex)) continue;
+
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+            if (!summaryReadVisibleSinceRef.current.has(chapterIndex)) {
+              summaryReadVisibleSinceRef.current.set(chapterIndex, now);
+            }
+          } else {
+            const visibleSince = summaryReadVisibleSinceRef.current.get(chapterIndex);
+            if (visibleSince !== undefined) {
+              const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
+              summaryReadTimeRef.current.set(
+                chapterIndex,
+                accumulated + Math.max(0, now - visibleSince)
+              );
+              summaryReadVisibleSinceRef.current.delete(chapterIndex);
+            }
+          }
+        }
+      },
+      { threshold: [0, 0.35, 0.6] }
+    );
+
+    const triggerObserver = new IntersectionObserver(
       (entries) => {
         const visible = entries
           .filter((entry) => entry.isIntersecting)
           .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top);
 
+        for (const entry of entries) {
+          const element = entry.target as HTMLElement;
+          const chapterIndex = Number(element.dataset.summaryCheckTrigger);
+          if (!Number.isInteger(chapterIndex)) continue;
+
+          if (entry.isIntersecting) {
+            summaryCheckTriggerVisibleRef.current.add(chapterIndex);
+          } else {
+            summaryCheckTriggerVisibleRef.current.delete(chapterIndex);
+            clearPromptTimer(chapterIndex);
+          }
+        }
+
         for (const entry of visible) {
           const element = entry.target as HTMLElement;
           const chapterIndex = Number(element.dataset.summaryCheckTrigger);
-          if (
-            !Number.isInteger(chapterIndex) ||
-            promptedSummaryChecksRef.current.has(chapterIndex) ||
-            !summaryCheckPlan[chapterIndex]
-          ) {
-            continue;
-          }
-
-          promptedSummaryChecksRef.current.add(chapterIndex);
-          setSummaryCheckChapterIndex(chapterIndex);
-          break;
+          if (!Number.isInteger(chapterIndex)) continue;
+          maybePrompt(chapterIndex);
+          if (promptedSummaryChecksRef.current.has(chapterIndex)) break;
         }
       },
       {
@@ -450,8 +543,58 @@ export function MaterialStudyWorkspace({
       }
     );
 
-    triggers.forEach((trigger) => observer.observe(trigger));
-    return () => observer.disconnect();
+    const handleVisibilityChange = () => {
+      const now = performance.now();
+
+      if (document.visibilityState === 'hidden') {
+        for (const [chapterIndex, visibleSince] of summaryReadVisibleSinceRef.current.entries()) {
+          const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
+          summaryReadTimeRef.current.set(
+            chapterIndex,
+            accumulated + Math.max(0, now - visibleSince)
+          );
+        }
+        summaryReadVisibleSinceRef.current.clear();
+        summaryCheckTimerRef.current.forEach((timer) => window.clearTimeout(timer));
+        summaryCheckTimerRef.current.clear();
+        return;
+      }
+
+      sections.forEach((section) => {
+        const rect = section.getBoundingClientRect();
+        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+        const ratio = rect.height > 0 ? visibleHeight / rect.height : 0;
+        const chapterIndex = Number(section.dataset.summaryReadingSection);
+        if (Number.isInteger(chapterIndex) && ratio >= 0.35) {
+          summaryReadVisibleSinceRef.current.set(chapterIndex, now);
+        }
+      });
+
+      summaryCheckTriggerVisibleRef.current.forEach((chapterIndex) => maybePrompt(chapterIndex));
+    };
+
+    sections.forEach((section) => readingObserver.observe(section));
+    triggers.forEach((trigger) => triggerObserver.observe(trigger));
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      readingObserver.disconnect();
+      triggerObserver.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      summaryCheckTimerRef.current.forEach((timer) => window.clearTimeout(timer));
+      summaryCheckTimerRef.current.clear();
+
+      const now = performance.now();
+      for (const [chapterIndex, visibleSince] of summaryReadVisibleSinceRef.current.entries()) {
+        const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
+        summaryReadTimeRef.current.set(
+          chapterIndex,
+          accumulated + Math.max(0, now - visibleSince)
+        );
+      }
+      summaryReadVisibleSinceRef.current.clear();
+      summaryCheckTriggerVisibleRef.current.clear();
+    };
   }, [
     activeTab,
     isOwner,
@@ -459,6 +602,7 @@ export function MaterialStudyWorkspace({
     recommendedTourStep,
     summaryCheckChapterIndex,
     summaryCheckPlan,
+    summaryReadThresholds,
   ]);
 
   const handleComments = () => {
@@ -848,6 +992,7 @@ export function MaterialStudyWorkspace({
                     <section
                       id={section.anchor}
                       key={`${section.title}:${section.body}`}
+                      data-summary-reading-section={index}
                       className="scroll-mt-6 border-b border-slate-200 py-9 first:pt-0 last:border-b-0 last:pb-2 sm:py-11"
                     >
                       <header className="mb-5 sm:mb-6">
