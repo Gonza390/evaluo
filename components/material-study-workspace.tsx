@@ -431,13 +431,6 @@ export function MaterialStudyWorkspace({
     },
     [demo, isOwner, materialId, recommendedStudyAvailable, recommendedTourStep]
   );
-  const startRecommendedStudy = () => {
-    setRecommendedActive(true);
-    setRecommendedTourStep('summary');
-    setRecommendedSession(emptyDiagnosticSession);
-    setDiagnosticMode(false);
-    changeRecommendedTab('resumen');
-  };
   const openRecommendedErrors = (onboardingErrorId: string | null) => {
     setRecommendedTourStep(null);
     if (demo) {
@@ -840,21 +833,6 @@ export function MaterialStudyWorkspace({
 
   const tabHeader = (
     <div className="flex flex-col gap-2.5 border-b border-slate-200 px-2.5 py-3 sm:px-4 sm:py-4">
-      {(recommendedActive || recommendedStudyAvailable) && (
-        <button
-          type="button"
-          onClick={() => {
-            if (!recommendedActive) startRecommendedStudy();
-            else {
-              changeRecommendedTab('resumen');
-              setRecommendedTourStep('summary');
-            }
-          }}
-          className="text-primary min-h-11 self-start text-xs font-semibold underline underline-offset-4"
-        >
-          Cómo estudiar este PDF
-        </button>
-      )}
       <TabsList className="h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-[18px] bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {STUDY_TABS.map((tab) => {
           const Icon = tab.icon;
