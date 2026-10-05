@@ -16,9 +16,9 @@ const GUIDED_TOUR_UPLOAD = '/dashboard/materiales/subir?source=demo_material_tou
 export default async function DemoMaterialEstudioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ source?: string; tour?: string }>;
+  searchParams: Promise<{ source?: string; tour?: string; inline?: string }>;
 }) {
-  const { source = '', tour = '' } = await searchParams;
+  const { source = '', tour = '', inline = '' } = await searchParams;
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -321,6 +321,7 @@ export default async function DemoMaterialEstudioPage({
           visibility="shared"
           studyGlossary={GENERAL_STUDY_GLOSSARY}
           studySummary={GENERAL_STUDY_SUMMARY}
+          inlineSummaryCheckPreview={inline === '1'}
         />
         <DemoMaterialGuidedTourV6
           enabled={guidedTourEnabled}
