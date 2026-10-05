@@ -143,6 +143,7 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
 function buildSummaryFallbackCandidates(sections: StudySummarySection[]): Candidate[] {
   const sectionIdeas = sections.map((section) => ({
     title: clean(section.title),
+    body: section.body,
     sentences: sentenceCandidates(section.body),
   }));
 
