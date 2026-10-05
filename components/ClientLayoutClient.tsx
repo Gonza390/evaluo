@@ -23,6 +23,7 @@ import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
+import { EstimatedStudyActivity } from '@/components/estimated-study-activity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   PublicBrandLink,
@@ -217,7 +218,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       {showTopBar ? (
         <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
           <div
-            className={`flex min-h-18 items-center justify-between gap-3 py-3 sm:min-h-20 ${
+            className={`relative flex min-h-18 items-center justify-between gap-3 py-3 sm:min-h-20 ${
               user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
           >
@@ -246,6 +247,10 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 </div>
               </Link>
             )}
+            <div className="pointer-events-auto absolute left-1/2 hidden -translate-x-1/2 lg:block">
+              <EstimatedStudyActivity />
+            </div>
+
             {!user ? (
               <PublicGuestActions trackingLocation="discovery_header" />
             ) : (
