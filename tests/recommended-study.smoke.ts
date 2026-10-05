@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { buildSummaryCheckPlan } from '../lib/student-materials/summary-checks.ts';
+import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts';
+import type { StudentMaterialSummary, StudyGlossaryItem } from '../lib/student-materials/types.ts';
 import { selectDiagnosticQuestions } from '../lib/student-materials/diagnostic-questions.ts';
 import { getFirstReadyStudentMaterialId } from '../lib/data/student-materials.ts';
 import type { PedagogicalArtifacts, StudyQuestion } from '../lib/student-materials/pedagogy.ts';
@@ -91,5 +95,31 @@ assert.deepEqual(calls, [
 ]);
 query.maybeSingle = async () => ({ data: null, error: null });
 assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
+
+// Las comprobaciones del lector deben ser respondibles, distintas y respaldadas por el material.
+const demoMaterial = JSON.parse(readFileSync('public/material-general-prueba.study.json', 'utf8')) as {
+  summary: StudentMaterialSummary;
+  glossary: StudyGlossaryItem[];
+};
+const demoArtifacts = buildPedagogicalArtifacts(demoMaterial);
+const summaryChecks = buildSummaryCheckPlan(demoMaterial.summary.sections, demoArtifacts);
+assert.ok(summaryChecks.some(Boolean), 'El material de muestra debe permitir comprobar lo leído.');
+for (const plan of summaryChecks) {
+  if (!plan) continue;
+  assert.equal(plan.questions.length, 2);
+  assert.notEqual(plan.questions[0].prompt, plan.questions[1].prompt);
+  for (const check of plan.questions) {
+    assert.ok(check.options.includes(check.answer), 'La respuesta debe aparecer entre las opciones.');
+    assert.ok(check.options.length >= 3);
+    assert.equal(new Set(check.options).size, check.options.length);
+    assert.ok(check.reference.excerpt?.trim(), 'La comprobación debe conservar su fuente.');
+  }
+}
+assert.deepEqual(buildSummaryCheckPlan([], demoArtifacts), []);
+assert.deepEqual(
+  buildSummaryCheckPlan([{ title: 'Vacío', body: '' }], artifacts([])),
+  [null],
+  'Un apartado sin evidencia no debe inventar una comprobación.'
+);
 
 console.log('Recommended study smoke tests passed.');

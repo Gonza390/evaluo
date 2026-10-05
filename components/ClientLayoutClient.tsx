@@ -23,14 +23,13 @@ import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
-import { EstimatedStudyActivity } from '@/components/estimated-study-activity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  PublicBrandLink,
-  PublicGuestActions,
-} from '@/components/marketing/public-site-header';
+import { PublicBrandLink, PublicGuestActions } from '@/components/marketing/public-site-header';
 
 const Navbar = dynamic(() => import('./navbar').then((module) => module.Navbar));
+const EstimatedStudyActivity = dynamic(() =>
+  import('@/components/estimated-study-activity').then((module) => module.EstimatedStudyActivity)
+);
 const Toaster = dynamic(() => import('@/components/ui/toaster').then((module) => module.Toaster));
 const NotificationBell = dynamic(() =>
   import('@/components/notifications/notification-bell').then((module) => module.NotificationBell)
@@ -106,7 +105,12 @@ function BottomNav() {
         { label: 'Inicio', href: '/', icon: Home },
         { label: 'Explorar', href: '/explorar', icon: Search },
         { label: 'Pregunteros', href: '/pregunteros', icon: GraduationCap },
-        { label: 'Iniciar sesión', href: '/login?mode=login', icon: LogIn, variant: 'cta' as const },
+        {
+          label: 'Iniciar sesión',
+          href: '/login?mode=login',
+          icon: LogIn,
+          variant: 'cta' as const,
+        },
       ];
 
   return (

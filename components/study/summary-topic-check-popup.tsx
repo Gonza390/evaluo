@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle2, ChevronRight, CircleAlert, Loader2, RotateCcw, X } from 'lucide-react';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import {
@@ -24,13 +24,7 @@ type Props = {
   onContinue: (outcome: 'skipped' | 'completed') => void;
 };
 
-type Phase =
-  | 'choice'
-  | 'questions'
-  | 'result'
-  | 'reinforce'
-  | 'retry'
-  | 'reinforce_done';
+type Phase = 'choice' | 'questions' | 'result' | 'reinforce' | 'retry' | 'reinforce_done';
 
 function normalize(value: string) {
   return value
@@ -73,7 +67,6 @@ export function SummaryTopicCheckPopup({
   recordResults,
   onContinue,
 }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<Phase>('choice');
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -86,8 +79,7 @@ export function SummaryTopicCheckPopup({
   const [retrySelectedIndex, setRetrySelectedIndex] = useState<number | null>(null);
   const [retryResults, setRetryResults] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -103,37 +95,13 @@ export function SummaryTopicCheckPopup({
     setRetrySelectedIndex(null);
     setRetryResults({});
     setIsSubmitting(false);
+    setSaveFailed(false);
     trackMarketingEvent('summary_topic_check_prompted', {
       material_id: materialId,
       chapter_index: chapterIndex,
       topic: topicTitle,
     });
   }, [chapterIndex, materialId, open, topicTitle]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        trackMarketingEvent('summary_topic_check_skipped', {
-          material_id: materialId,
-          chapter_index: chapterIndex,
-          topic: topicTitle,
-          phase,
-        });
-        onContinue('skipped');
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [chapterIndex, materialId, onContinue, open, phase, topicTitle]);
 
   const correctCount = useMemo(
     () =>
@@ -153,13 +121,7 @@ export function SummaryTopicCheckPopup({
 
   const failedTopics = useMemo(
     () =>
-      Array.from(
-        new Set(
-          failedQuestions
-            .map((question) => question.topic.trim())
-            .filter(Boolean)
-        )
-      ),
+      Array.from(new Set(failedQuestions.map((question) => question.topic.trim()).filter(Boolean))),
     [failedQuestions]
   );
 
@@ -170,7 +132,7 @@ export function SummaryTopicCheckPopup({
     [failedQuestions, retryResults]
   );
 
-  if (!mounted || !open) return null;
+  if (!open) return null;
 
   const current = questions[questionIndex];
   const isPrevious = questionIndex === 1 && chapterIndex > 0;
@@ -223,7 +185,9 @@ export function SummaryTopicCheckPopup({
         correctAnswer: current.answer,
         selectedAnswer,
         reference: current.reference,
-      });
+      }).catch(() => ({ success: false, errorId: null }));
+
+      if (!result.success) setSaveFailed(true);
 
       if (!wasCorrect && result.errorId) {
         setErrorIds((previous) => ({
@@ -234,11 +198,9 @@ export function SummaryTopicCheckPopup({
     }
 
     if (questionIndex === questions.length - 1) {
-      const finalCorrect =
-        questions.filter(
-          (question) =>
-            normalize(nextAnswers[question.id] ?? '') === normalize(question.answer)
-        ).length;
+      const finalCorrect = questions.filter(
+        (question) => normalize(nextAnswers[question.id] ?? '') === normalize(question.answer)
+      ).length;
       setPhase('result');
       trackMarketingEvent('summary_topic_check_completed', {
         material_id: materialId,
@@ -272,10 +234,7 @@ export function SummaryTopicCheckPopup({
             detail: 'Te mostramos brevemente qué revisar y te damos otra oportunidad.',
           };
 
-  const prepareReinforcement = async (
-    question: SummaryCheckQuestion,
-    index: number
-  ) => {
+  const prepareReinforcement = async (question: SummaryCheckQuestion, index: number) => {
     setReinforceIndex(index);
     setPhase('reinforce');
     setReviewQuestion(null);
@@ -302,13 +261,18 @@ export function SummaryTopicCheckPopup({
       return;
     }
 
-    const result = await generateInlineSummaryCheckHelpAction(errorId, materialId);
+    const result = await generateInlineSummaryCheckHelpAction(errorId, materialId).catch(() => ({
+      success: false,
+      text: undefined,
+      message: 'No pudimos conectar. Podés seguir leyendo y reintentar la ayuda.',
+    }));
     if (result.success && result.text) {
       setReinforcementText(result.text);
     } else {
       setReinforcementText(fallback);
       setReinforcementMessage(
-        result.message ?? 'No pudimos generar la explicación con IA. Te mostramos la ayuda disponible.'
+        result.message ??
+          'No pudimos generar la explicación con IA. Te mostramos la ayuda disponible.'
       );
     }
 
@@ -356,7 +320,11 @@ export function SummaryTopicCheckPopup({
       return;
     }
 
-    const result = await generateReviewCheckAction(errorId, materialId);
+    const result = await generateReviewCheckAction(errorId, materialId).catch(() => ({
+      success: false,
+      question: undefined,
+      message: 'No pudimos conectar. Intentá nuevamente.',
+    }));
     if (!result.success || !result.question) {
       setReinforcementMessage(
         result.message ?? 'No pudimos preparar una nueva pregunta. Intentá nuevamente.'
@@ -390,12 +358,7 @@ export function SummaryTopicCheckPopup({
   };
 
   const submitRetry = async () => {
-    if (
-      !activeFailedQuestion ||
-      !reviewQuestion ||
-      retrySelectedIndex === null ||
-      isSubmitting
-    ) {
+    if (!activeFailedQuestion || !reviewQuestion || retrySelectedIndex === null || isSubmitting) {
       return;
     }
 
@@ -403,7 +366,13 @@ export function SummaryTopicCheckPopup({
     let wasCorrect = false;
 
     if (recordResults && !reviewQuestion.id.startsWith('demo:')) {
-      const result = await submitReviewCheckAction(reviewQuestion.id, retrySelectedIndex);
+      const result = await submitReviewCheckAction(reviewQuestion.id, retrySelectedIndex).catch(
+        () => ({
+          success: false,
+          correct: undefined,
+          message: 'No pudimos guardar la respuesta. Revisá tu conexión y reintentá.',
+        })
+      );
       if (!result.success || typeof result.correct !== 'boolean') {
         setReinforcementMessage(
           result.message ?? 'No pudimos guardar esta respuesta. Intentá nuevamente.'
@@ -441,50 +410,67 @@ export function SummaryTopicCheckPopup({
     onContinue('completed');
   };
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-950/45 p-3 backdrop-blur-[2px] sm:items-center sm:p-5"
-      role="presentation"
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) skip();
+      }}
     >
-      <section
-        role="dialog"
-        aria-modal="true"
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
         aria-labelledby="summary-topic-check-title"
-        className="w-full max-w-[520px] overflow-hidden rounded-[24px] border border-white/70 bg-white shadow-[0_26px_80px_rgba(15,23,42,0.26)]"
+        overlayClassName="z-[120] bg-foreground/45 backdrop-blur"
+        className="border-border bg-background top-auto bottom-3 z-[120] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[520px] translate-y-0 overflow-y-auto overscroll-contain rounded-[24px] p-0 [overflow-wrap:anywhere] sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-y-1/2"
       >
         <div className="px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[10.5px] font-extrabold tracking-[0.15em] text-[#2563EB] uppercase">
+              <p className="text-primary text-[10.5px] font-extrabold tracking-[0.15em] uppercase">
                 Terminaste este tema
               </p>
-              <h2
-                id="summary-topic-check-title"
-                className="mt-1.5 text-[1.2rem] leading-tight font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.35rem]"
-              >
-                {topicTitle}
-              </h2>
+              <DialogTitle asChild>
+                <h2
+                  id="summary-topic-check-title"
+                  className="mt-1.5 text-[1.2rem] leading-tight font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.35rem]"
+                >
+                  {topicTitle}
+                </h2>
+              </DialogTitle>
             </div>
             <button
               type="button"
               onClick={skip}
               aria-label="Seguir estudiando"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
+          {saveFailed ? (
+            <p
+              role="alert"
+              className="border-destructive text-foreground mt-4 border-l-2 pl-3 text-sm"
+            >
+              No pudimos guardar todas tus respuestas. Podés seguir repasando, pero estos resultados
+              no quedaron registrados.
+            </p>
+          ) : null}
+
           {phase === 'choice' ? (
             <div className="mt-6">
               <h3 className="text-[1.05rem] font-bold text-slate-950">Practicá si entendiste</h3>
-              <p className="mt-1 text-[13px] text-slate-500">2 preguntas rápidas · menos de 1 minuto</p>
+              <p className="mt-1 text-[13px] text-slate-500">
+                2 preguntas rápidas · menos de 1 minuto
+              </p>
 
               <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={start}
-                  className="inline-flex h-11 items-center justify-center rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center rounded-[13px] px-4 text-sm font-semibold text-white transition"
                 >
                   Comprobar
                 </button>
@@ -503,7 +489,7 @@ export function SummaryTopicCheckPopup({
           {phase === 'questions' && current ? (
             <div className="mt-5">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold text-[#2563EB]">
+                <span className="text-primary text-[11px] font-bold">
                   Pregunta {questionIndex + 1} de 2
                 </span>
                 <span className="text-[10.5px] font-semibold text-slate-400">
@@ -526,7 +512,7 @@ export function SummaryTopicCheckPopup({
                       className={cn(
                         'rounded-[12px] border px-3.5 py-3 text-left text-[13px] leading-5 transition',
                         selected
-                          ? 'border-[#2563EB] bg-[#F4F7FF] text-slate-950 ring-1 ring-[#2563EB]/10'
+                          ? 'border-primary bg-primary/5 ring-primary/10 text-slate-950 ring-1'
                           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/70'
                       )}
                     >
@@ -548,7 +534,7 @@ export function SummaryTopicCheckPopup({
                   type="button"
                   disabled={!selectedAnswer || isSubmitting}
                   onClick={submitAnswer}
-                  className="inline-flex h-10 items-center justify-center gap-1 rounded-[12px] bg-[#2563EB] px-4 text-[13px] font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="bg-primary enabled:hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-1 rounded-[12px] px-4 text-[13px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -593,7 +579,7 @@ export function SummaryTopicCheckPopup({
                   </p>
                   <div className="mt-1.5 grid gap-1">
                     {failedTopics.map((topic) => (
-                      <p key={topic} className="text-[13px] font-semibold leading-5 text-slate-800">
+                      <p key={topic} className="text-[13px] leading-5 font-semibold text-slate-800">
                         {topic}
                       </p>
                     ))}
@@ -605,7 +591,7 @@ export function SummaryTopicCheckPopup({
                 <button
                   type="button"
                   onClick={() => onContinue('completed')}
-                  className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] px-4 text-sm font-semibold text-white transition"
                 >
                   Seguir estudiando
                   <ChevronRight className="h-4 w-4" />
@@ -615,7 +601,7 @@ export function SummaryTopicCheckPopup({
                   <button
                     type="button"
                     onClick={startReinforcement}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                    className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-[13px] px-4 text-sm font-semibold text-white transition"
                   >
                     <RotateCcw className="h-4 w-4" />
                     Reforzar ahora
@@ -668,7 +654,7 @@ export function SummaryTopicCheckPopup({
                   type="button"
                   disabled={isSubmitting || !reinforcementText}
                   onClick={startRetry}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="bg-primary enabled:hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-[13px] px-4 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Comprobar de nuevo
@@ -688,7 +674,7 @@ export function SummaryTopicCheckPopup({
           {phase === 'retry' && activeFailedQuestion && reviewQuestion ? (
             <div className="mt-5">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-bold text-[#2563EB]">Comprobalo de nuevo</span>
+                <span className="text-primary text-[11px] font-bold">Comprobalo de nuevo</span>
                 <span className="text-[10.5px] font-semibold text-slate-400">
                   {reinforceIndex + 1} de {failedQuestions.length}
                 </span>
@@ -709,7 +695,7 @@ export function SummaryTopicCheckPopup({
                       className={cn(
                         'rounded-[12px] border px-3.5 py-3 text-left text-[13px] leading-5 transition',
                         selected
-                          ? 'border-[#2563EB] bg-[#F4F7FF] text-slate-950 ring-1 ring-[#2563EB]/10'
+                          ? 'border-primary bg-primary/5 ring-primary/10 text-slate-950 ring-1'
                           : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/70'
                       )}
                     >
@@ -728,7 +714,7 @@ export function SummaryTopicCheckPopup({
                   type="button"
                   disabled={retrySelectedIndex === null || isSubmitting}
                   onClick={submitRetry}
-                  className="inline-flex h-10 items-center justify-center gap-1 rounded-[12px] bg-[#2563EB] px-4 text-[13px] font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="bg-primary enabled:hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-1 rounded-[12px] px-4 text-[13px] font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isSubmitting ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -768,13 +754,17 @@ export function SummaryTopicCheckPopup({
               <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
                 {resolvedRetryCount === failedQuestions.length
                   ? 'Podés seguir estudiando con la idea más clara.'
-                  : 'Lo que todavía cuesta quedó guardado en Mis errores para volver después.'}
+                  : saveFailed
+                    ? 'Podés volver al material para repasar lo que todavía cuesta.'
+                    : recordResults
+                      ? 'Lo que todavía cuesta quedó guardado en Mis errores para volver después.'
+                      : 'En tu propio PDF, lo que todavía cuesta quedaría en Mis errores para volver después.'}
               </p>
 
               <button
                 type="button"
                 onClick={finishReinforcement}
-                className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] px-4 text-sm font-semibold text-white transition"
               >
                 Seguir estudiando
                 <ChevronRight className="h-4 w-4" />
@@ -782,8 +772,7 @@ export function SummaryTopicCheckPopup({
             </div>
           ) : null}
         </div>
-      </section>
-    </div>,
-    document.body
+      </DialogContent>
+    </Dialog>
   );
 }

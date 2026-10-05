@@ -37,8 +37,6 @@ import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
 } from '@/components/study/recommended-study-guide';
-import { SummaryTopicCheckPopup } from '@/components/study/summary-topic-check-popup';
-import { SummaryCompletionPopup } from '@/components/study/summary-completion-popup';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
@@ -58,6 +56,17 @@ import {
 } from '@/lib/student-materials/pedagogy';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
+
+const SummaryTopicCheckPopup = dynamic(() =>
+  import('@/components/study/summary-topic-check-popup').then(
+    (module) => module.SummaryTopicCheckPopup
+  )
+);
+const SummaryCompletionPopup = dynamic(() =>
+  import('@/components/study/summary-completion-popup').then(
+    (module) => module.SummaryCompletionPopup
+  )
+);
 
 type MaterialStudyWorkspaceProps = {
   backHref: string;
@@ -187,8 +196,8 @@ function MaterialMetadata({
   universidadName?: string;
   materiaName?: string;
 }) {
-  const items = [carreraName, universidadName, materiaName].filter(
-    (value): value is string => Boolean(value)
+  const items = [carreraName, universidadName, materiaName].filter((value): value is string =>
+    Boolean(value)
   );
   if (items.length === 0) return null;
 
@@ -260,7 +269,9 @@ export function MaterialStudyWorkspace({
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
   const summaryCheckTriggerVisibleRef = useRef(new Set<number>());
   const summaryCheckTimerRef = useRef(new Map<number, number>());
-  const lastSummaryCheckPromptRef = useRef<{ chapterIndex: number; promptedAt: number } | null>(null);
+  const lastSummaryCheckPromptRef = useRef<{ chapterIndex: number; promptedAt: number } | null>(
+    null
+  );
   const summaryCheckConsecutiveSkipsRef = useRef(0);
   const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
@@ -310,7 +321,9 @@ export function MaterialStudyWorkspace({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        endVisible = entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5);
+        endVisible = entries.some(
+          (entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5
+        );
         if (endVisible) scheduleCompletion();
         else clearCompletionTimer();
       },
@@ -324,14 +337,7 @@ export function MaterialStudyWorkspace({
       clearCompletionTimer();
       observer.disconnect();
     };
-  }, [
-    activeTab,
-    demo,
-    isOwner,
-    materialId,
-    recommendedActive,
-    summaryCheckChapterIndex,
-  ]);
+  }, [activeTab, demo, isOwner, materialId, recommendedActive, summaryCheckChapterIndex]);
   const setIsViewerVisible = (value: SetStateAction<boolean>) => {
     const next = typeof value === 'function' ? value(isViewerVisible) : value;
     setLocalViewerVisible(next);
@@ -372,7 +378,14 @@ export function MaterialStudyWorkspace({
       material_id: materialId,
       step: recommendedTourStep,
     });
-  }, [demo, isOwner, materialId, recommendedActive, recommendedStudyAvailable, recommendedTourStep]);
+  }, [
+    demo,
+    isOwner,
+    materialId,
+    recommendedActive,
+    recommendedStudyAvailable,
+    recommendedTourStep,
+  ]);
 
   const studyArtifacts = useMemo(
     () =>
@@ -393,9 +406,7 @@ export function MaterialStudyWorkspace({
           outcome === 'completed' ? 'first_pdf_guide_completed' : 'first_pdf_guide_skipped',
           {
             material_id: materialId,
-            ...(outcome === 'skipped' && recommendedTourStep
-              ? { step: recommendedTourStep }
-              : {}),
+            ...(outcome === 'skipped' && recommendedTourStep ? { step: recommendedTourStep } : {}),
           }
         );
       }
@@ -496,23 +507,20 @@ export function MaterialStudyWorkspace({
   }, [fullSummarySections]);
 
   const activeSummaryCheck =
-    summaryCheckChapterIndex !== null ? summaryCheckPlan[summaryCheckChapterIndex] ?? null : null;
+    summaryCheckChapterIndex !== null ? (summaryCheckPlan[summaryCheckChapterIndex] ?? null) : null;
 
-  const handleSummaryCheckContinue = useCallback(
-    (outcome: 'skipped' | 'completed') => {
-      if (outcome === 'skipped') {
-        summaryCheckConsecutiveSkipsRef.current += 1;
-        if (summaryCheckConsecutiveSkipsRef.current >= 2) {
-          summaryCheckSuppressedRef.current = true;
-        }
-      } else {
-        summaryCheckConsecutiveSkipsRef.current = 0;
+  const handleSummaryCheckContinue = useCallback((outcome: 'skipped' | 'completed') => {
+    if (outcome === 'skipped') {
+      summaryCheckConsecutiveSkipsRef.current += 1;
+      if (summaryCheckConsecutiveSkipsRef.current >= 2) {
+        summaryCheckSuppressedRef.current = true;
       }
+    } else {
+      summaryCheckConsecutiveSkipsRef.current = 0;
+    }
 
-      setSummaryCheckChapterIndex(null);
-    },
-    []
-  );
+    setSummaryCheckChapterIndex(null);
+  }, []);
 
   useEffect(() => {
     if (
@@ -614,7 +622,10 @@ export function MaterialStudyWorkspace({
           const chapterIndex = Number(element.dataset.summaryReadingSection);
           if (!Number.isInteger(chapterIndex)) continue;
 
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+          // Un capítulo largo puede ocupar varias pantallas y nunca mostrar el 35 % a la vez.
+          // Contamos el tiempo mientras hay contenido visible; el final del tema sigue siendo
+          // obligatorio para ofrecer la comprobación.
+          if (document.visibilityState === 'visible' && entry.isIntersecting) {
             if (!summaryReadVisibleSinceRef.current.has(chapterIndex)) {
               summaryReadVisibleSinceRef.current.set(chapterIndex, now);
             }
@@ -631,7 +642,7 @@ export function MaterialStudyWorkspace({
           }
         }
       },
-      { threshold: [0, 0.35, 0.6] }
+      { threshold: 0 }
     );
 
     const triggerObserver = new IntersectionObserver(
@@ -684,15 +695,9 @@ export function MaterialStudyWorkspace({
         return;
       }
 
-      sections.forEach((section) => {
-        const rect = section.getBoundingClientRect();
-        const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
-        const ratio = rect.height > 0 ? visibleHeight / rect.height : 0;
-        const chapterIndex = Number(section.dataset.summaryReadingSection);
-        if (Number.isInteger(chapterIndex) && ratio >= 0.35) {
-          summaryReadVisibleSinceRef.current.set(chapterIndex, now);
-        }
-      });
+      // Recalcular también el recorte del scroll interno al volver a esta pestaña.
+      readingObserver.disconnect();
+      sections.forEach((section) => readingObserver.observe(section));
 
       summaryCheckTriggerVisibleRef.current.forEach((chapterIndex) => maybePrompt(chapterIndex));
     };
@@ -711,10 +716,7 @@ export function MaterialStudyWorkspace({
       const now = performance.now();
       for (const [chapterIndex, visibleSince] of summaryReadVisibleSinceRef.current.entries()) {
         const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
-        summaryReadTimeRef.current.set(
-          chapterIndex,
-          accumulated + Math.max(0, now - visibleSince)
-        );
+        summaryReadTimeRef.current.set(chapterIndex, accumulated + Math.max(0, now - visibleSince));
       }
       summaryReadVisibleSinceRef.current.clear();
       summaryCheckTriggerVisibleRef.current.clear();
@@ -1123,11 +1125,7 @@ export function MaterialStudyWorkspace({
                     </section>
                   ))}
 
-                  <div
-                    ref={summaryEndRef}
-                    aria-hidden="true"
-                    className="h-8 w-full"
-                  />
+                  <div ref={summaryEndRef} aria-hidden="true" className="h-8 w-full" />
                 </div>
               ) : (
                 <p className="text-[14px] leading-6 text-slate-500">
@@ -1418,24 +1416,26 @@ export function MaterialStudyWorkspace({
           onContinue={handleSummaryCheckContinue}
         />
       ) : null}
-      <SummaryCompletionPopup
-        open={summaryCompletionOpen}
-        pendingCount={summaryEndPendingCount ?? 0}
-        isPremium={isPremium}
-        onClose={() => setSummaryCompletionOpen(false)}
-        onErrors={() => {
-          setSummaryCompletionOpen(false);
-          router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
-        }}
-        onSimulator={() => {
-          setSummaryCompletionOpen(false);
-          handleStudyTabChange('ejercicios', 'summary_chapter');
-        }}
-        onReview={(tab) => {
-          setSummaryCompletionOpen(false);
-          handleStudyTabChange(tab);
-        }}
-      />
+      {summaryCompletionOpen && (
+        <SummaryCompletionPopup
+          open={summaryCompletionOpen}
+          pendingCount={summaryEndPendingCount ?? 0}
+          isPremium={isPremium}
+          onClose={() => setSummaryCompletionOpen(false)}
+          onErrors={() => {
+            setSummaryCompletionOpen(false);
+            router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
+          }}
+          onSimulator={() => {
+            setSummaryCompletionOpen(false);
+            handleStudyTabChange('ejercicios', 'summary_chapter');
+          }}
+          onReview={(tab) => {
+            setSummaryCompletionOpen(false);
+            handleStudyTabChange(tab);
+          }}
+        />
+      )}
       {recommendedActive && recommendedTourStep && (
         <RecommendedStudyGuide
           step={recommendedTourStep}
@@ -1478,7 +1478,7 @@ export function MaterialStudyWorkspace({
               </h1>
               <span
                 title={fileName}
-                className="hidden min-w-0 max-w-[360px] truncate text-[11.5px] font-medium text-slate-400 xl:block"
+                className="hidden max-w-[360px] min-w-0 truncate text-[11.5px] font-medium text-slate-400 xl:block"
               >
                 {fileName}
               </span>

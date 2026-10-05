@@ -197,7 +197,7 @@ assert.match(
 );
 assert.match(
   clientLayoutUiSource,
-  /\{ label: 'Iniciar sesión', href: '\/login\?mode=login', icon: LogIn, variant: 'cta' as const \}/
+  /\{\s*label: 'Iniciar sesión',\s*href: '\/login\?mode=login',\s*icon: LogIn,\s*variant: 'cta' as const,?\s*\}/
 );
 assert.match(universityRequestFormSource, /supabase\.rpc\.bind\(supabase\)/);
 assert.doesNotMatch(universityRequestFormSource, /const rpc = supabase\.rpc as unknown/);
