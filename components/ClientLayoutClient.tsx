@@ -181,6 +181,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/privacidad' ||
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
+  const isMaterialStudyRoute = pathname.startsWith('/materiales/');
   const isExploreExperienceRoute =
     pathname === '/explorar' ||
     pathname.startsWith('/universidad/') ||
@@ -450,15 +451,19 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 ? 'bg-white p-0'
                 : isLegalRoute
                   ? 'bg-background p-0'
-                  : isExploreExperienceRoute
-                    ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
-                    : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
+                  : isMaterialStudyRoute
+                    ? 'bg-white p-0 pb-24 md:pb-0 xl:h-[calc(100vh-5rem)] xl:overflow-hidden'
+                    : isExploreExperienceRoute
+                      ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
+                      : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
             {children}
           </main>
           {showBottomNav ? <BottomNav /> : null}
-          {!isLegalRoute && !isAdministradorRoute ? <DeferredFooter /> : null}
+          {!isLegalRoute && !isAdministradorRoute && !isMaterialStudyRoute ? (
+            <DeferredFooter />
+          ) : null}
         </div>
       </div>
     </div>
