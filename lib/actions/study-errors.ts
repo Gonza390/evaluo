@@ -54,7 +54,12 @@ async function requireUser() {
 
 export async function recordStudentMaterialStudyResultAction(
   input: StudentMaterialStudyResultInput
-): Promise<{ success: boolean; resolved?: boolean; onboardingErrorId?: string | null }> {
+): Promise<{
+  success: boolean;
+  resolved?: boolean;
+  errorId?: string | null;
+  onboardingErrorId?: string | null;
+}> {
   const user = await requireUser();
   if (!user) return { success: false };
 
@@ -115,7 +120,7 @@ export async function recordStudentMaterialStudyResultAction(
       ? await getPendingStudyErrorOnboarding(user.id, errorId)
       : null;
 
-    return { success: true, resolved: false, onboardingErrorId };
+    return { success: true, resolved: false, errorId: errorId ?? null, onboardingErrorId };
   } catch (error) {
     logError('studyErrors.materialResult', error, {
       userId: user.id,
