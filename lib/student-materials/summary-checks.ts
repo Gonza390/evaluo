@@ -220,7 +220,7 @@ function fromStudyQuestion(question: StudyQuestion): Candidate | null {
 
 function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] {
   return artifacts.flashcards
-    .map((card, index) => {
+    .map<Candidate | null>((card, index) => {
       const correct = truncate(card.back, 150);
       const distractors = artifacts.flashcards
         .filter((_, candidateIndex) => candidateIndex !== index)
@@ -256,9 +256,9 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
         kind: card.kind,
         origin: 'flashcard',
         directRecognition: true,
-      } satisfies Candidate;
+      } as Candidate;
     })
-    .filter((candidate): candidate is Candidate => Boolean(candidate));
+    .filter((candidate): candidate is Candidate => candidate !== null);
 }
 
 function buildSummaryFallbackCandidates(sections: StudySummarySection[]): Candidate[] {
