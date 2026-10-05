@@ -22,7 +22,7 @@ import {
   FileText,
   ListTree,
   Loader2,
-  Map,
+  Map as MapIcon,
   MessageSquare,
   Sparkles,
   SquareLibrary,
@@ -106,7 +106,7 @@ const STUDY_TABS: Array<{
   { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit, featured: true },
   { id: 'tarjetas', label: 'Tarjetas', icon: Sparkles },
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
-  { id: 'mapa', label: 'Mapa mental', icon: Map, premium: true },
+  { id: 'mapa', label: 'Mapa mental', icon: MapIcon, premium: true },
 ];
 
 const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
