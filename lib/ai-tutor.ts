@@ -32,6 +32,7 @@ type QuickHelpInput = {
   correctAnswer?: string | null;
   explanation?: string | null;
   context?: string[];
+  compact?: boolean;
 };
 
 type TutorProvider = 'groq' | 'nvidia' | 'gemini';
@@ -82,7 +83,9 @@ function buildQuickHelpPrompt(input: QuickHelpInput) {
     'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
     'Si hay una fuente, explicá sólo lo que se pueda sostener con ella. Si contradice la respuesta de la actividad, señalá esa diferencia sin justificar una respuesta falsa. No inventes citas, páginas ni información.',
     'No atribuyas procesos o consecuencias que el fragmento no describa. Usá texto sin Markdown y cerrá todas las frases.',
-    'No hagas preguntas de seguimiento y no abras una conversación. Entregá una sola respuesta útil de 60 a 140 palabras.',
+    input.compact
+      ? 'No hagas preguntas de seguimiento. Explicá la confusión en 35 a 65 palabras, máximo 3 frases cortas, para que el estudiante pueda volver a intentarlo enseguida.'
+      : 'No hagas preguntas de seguimiento y no abras una conversación. Entregá una sola respuesta útil de 60 a 140 palabras.',
     PROMPT_INJECTION_GUARD,
     '',
     `Pregunta: ${isolateUntrustedContent(input.question)}`,
@@ -197,7 +200,7 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
     prompt,
     temperature: 0.2,
   };
-  const outputBudget = input.kind === 'why_wrong' ? 600 : 400;
+  const outputBudget = input.compact ? 260 : input.kind === 'why_wrong' ? 600 : 400;
 
   const groqText = await tryProvider('groq', () =>
     requestGroqText({
