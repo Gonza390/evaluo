@@ -15,7 +15,7 @@ type Props = {
   topicTitle: string;
   questions: [SummaryCheckQuestion, SummaryCheckQuestion];
   recordResults: boolean;
-  onContinue: () => void;
+  onContinue: (outcome: 'skipped' | 'completed') => void;
 };
 
 function normalize(value: string) {
@@ -71,7 +71,7 @@ export function SummaryTopicCheckPopup({
           topic: topicTitle,
           phase,
         });
-        onContinue();
+        onContinue('skipped');
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -102,7 +102,7 @@ export function SummaryTopicCheckPopup({
       topic: topicTitle,
       phase,
     });
-    onContinue();
+    onContinue('skipped');
   };
 
   const start = () => {
@@ -315,7 +315,7 @@ export function SummaryTopicCheckPopup({
 
               <button
                 type="button"
-                onClick={onContinue}
+                onClick={() => onContinue('completed')}
                 className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
               >
                 Seguir estudiando
