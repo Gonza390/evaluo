@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Brain, CheckCircle2, ChevronRight, Circle, RotateCcw } from 'lucide-react';
 
 type Question = {
@@ -93,15 +93,9 @@ export default function ResumenActivoDemoPage() {
 
   const topic = TOPICS[topicIndex];
   const answered = answers.filter((answer) => answer !== null).length;
-  const correctCount = useMemo(
-    () =>
-      answers.reduce(
-        (total, answer, index) =>
-          answer === topic.questions[index]?.correct ? total + 1 : total,
-        0
-      ),
-    [answers, topic.questions]
-  );
+  const correctCount = answers.filter(
+    (answer, index) => answer !== null && answer === topic.questions[index]?.correct
+  ).length;
   const finished = answered === topic.questions.length;
 
   const resetQuiz = () => setAnswers([null, null]);
