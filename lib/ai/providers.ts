@@ -37,7 +37,7 @@ export const PINNED_GEMINI_SUMMARY_MODEL = 'gemini-3.5-flash-lite';
 const GEMINI_PRIMARY_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
 const GEMINI_FALLBACK_SUMMARY_MODEL = PINNED_GEMINI_SUMMARY_MODEL;
 const GROQ_PRIMARY_SUMMARY_MODEL =
-  process.env.GROQ_PDF_MODEL ?? process.env.GROQ_SUMMARY_MODEL ?? 'openai/gpt-oss-20b';
+  process.env.GROQ_SUMMARY_MODEL ?? 'openai/gpt-oss-20b';
 const GROQ_FALLBACK_SUMMARY_MODEL = process.env.GROQ_FALLBACK_MODEL;
 const RETIRED_GROQ_MODELS = new Set(['llama-3.1-8b-instant', 'llama-3.3-70b-versatile']);
 const NVIDIA_PRIMARY_SUMMARY_MODEL =
@@ -345,7 +345,8 @@ export async function requestGroqJson(input: OpenAiCompatibleRequest) {
     provider: 'groq',
     logScope: 'aiProviders.groq',
     transientStatuses: GROQ_TRANSIENT_STATUSES,
-    apiKeys: () => uniqueConfiguredValues([process.env.GROQ_PDF_API_KEY, process.env.GROQ_API_KEY]),
+    apiKeys: () =>
+      uniqueConfiguredValues([process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_FALLBACK]),
     models: getGroqSummaryModels,
     headers: (token) => ({
       Authorization: `Bearer ${token}`,
@@ -366,7 +367,8 @@ export async function requestGroqText(input: OpenAiCompatibleRequest) {
     provider: 'groq',
     logScope: 'aiProviders.groq.text',
     transientStatuses: GROQ_TRANSIENT_STATUSES,
-    apiKeys: () => uniqueConfiguredValues([process.env.GROQ_API_KEY, process.env.GROQ_PDF_API_KEY]),
+    apiKeys: () =>
+      uniqueConfiguredValues([process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_FALLBACK]),
     models: getGroqSummaryModels,
     headers: (token) => ({
       Authorization: `Bearer ${token}`,
