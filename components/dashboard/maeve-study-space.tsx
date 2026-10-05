@@ -4,7 +4,7 @@ import { MaeveDashboardChrome } from '@/components/dashboard/maeve-dashboard-chr
 import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import type { StudentMaterial } from '@/lib/data/student-materials';
-import { getCareerRoute, getStudentMaterialRoute } from '@/lib/routes';
+import { getStudentMaterialRoute } from '@/lib/routes';
 
 type UniversidadOption = { id: string; nombre: string };
 type CarreraOption = { id: string; nombre: string; universidad_id: string | null };
@@ -24,6 +24,7 @@ export type MaeveStudySpaceProps = {
   initialSource?: string;
   trackingMateriaId?: string;
   initialOpen?: boolean;
+  pendingReinforcementCount?: number;
 };
 
 /**
@@ -43,15 +44,12 @@ export function MaeveStudySpace({
   initialSource = '',
   trackingMateriaId = '',
   initialOpen = false,
+  pendingReinforcementCount = 0,
 }: MaeveStudySpaceProps) {
   const primaryMaterial =
     materials.find((material) => material.processing_status === 'ready') ?? materials[0] ?? null;
   const primaryMaterialHref = primaryMaterial ? getStudentMaterialRoute(primaryMaterial.id) : null;
   const primaryMaterialReady = primaryMaterial?.processing_status === 'ready';
-  const currentCareer =
-    initialCarreraId ? carreras.find((carrera) => carrera.id === initialCarreraId) ?? null : null;
-  const careerHref = currentCareer ? getCareerRoute(currentCareer.id) : null;
-
   return (
     <PdfFirstUploadShell
       universidades={universidades}
@@ -70,8 +68,7 @@ export function MaeveStudySpace({
         materialsCount={materials.length}
         primaryMaterialHref={primaryMaterialHref}
         primaryMaterialReady={primaryMaterialReady}
-        careerName={currentCareer?.nombre ?? null}
-        careerHref={careerHref}
+        pendingReinforcementCount={pendingReinforcementCount}
       >
         <StudentMaterialsWorkspace
           initialMaterials={materials}

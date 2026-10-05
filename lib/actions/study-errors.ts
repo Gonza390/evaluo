@@ -54,7 +54,12 @@ async function requireUser() {
 
 export async function recordStudentMaterialStudyResultAction(
   input: StudentMaterialStudyResultInput
-): Promise<{ success: boolean; resolved?: boolean; onboardingErrorId?: string | null }> {
+): Promise<{
+  success: boolean;
+  resolved?: boolean;
+  errorId?: string | null;
+  onboardingErrorId?: string | null;
+}> {
   const user = await requireUser();
   if (!user) return { success: false };
 
@@ -115,7 +120,7 @@ export async function recordStudentMaterialStudyResultAction(
       ? await getPendingStudyErrorOnboarding(user.id, errorId)
       : null;
 
-    return { success: true, resolved: false, onboardingErrorId };
+    return { success: true, resolved: false, errorId: errorId ?? null, onboardingErrorId };
   } catch (error) {
     logError('studyErrors.materialResult', error, {
       userId: user.id,
@@ -123,6 +128,44 @@ export async function recordStudentMaterialStudyResultAction(
       sourceType: input.sourceType,
     });
     return { success: false };
+  }
+}
+
+export async function getMaterialPendingStudyErrorTopicCountAction(
+  materialId: string
+): Promise<{ count: number }> {
+  const user = await requireUser();
+  if (!user || !materialId) return { count: 0 };
+
+  try {
+    const admin = createAdminClient();
+    // study_errors todavía no forma parte de los tipos generados.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = admin as any;
+    const { data, error } = await db
+      .from('study_errors')
+      .select('topic')
+      .eq('user_id', user.id)
+      .eq('student_material_id', materialId)
+      .eq('status', 'pending')
+      .limit(300);
+
+    if (error) throw error;
+
+    const rows = (data ?? []) as Array<{ topic: string | null }>;
+    const topics = new Set(
+      rows
+        .map((row) => safeText(row.topic, 180).toLocaleLowerCase('es-AR'))
+        .filter(Boolean)
+    );
+
+    return { count: topics.size || rows.length };
+  } catch (error) {
+    logError('studyErrors.materialPendingTopicCount', error, {
+      userId: user.id,
+      materialId,
+    });
+    return { count: 0 };
   }
 }
 

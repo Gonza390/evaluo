@@ -4,6 +4,7 @@ import { StudyStatePanel } from '@/components/study-state-panel';
 import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
+import { getPendingStudyErrorTopicCount } from '@/lib/study-errors';
 import { createClientServer } from '@/lib/supabase-server';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
@@ -81,6 +82,7 @@ export default async function DashboardPage({
       materiasResult,
       carreraMateriasResult,
       profileResult,
+      pendingReinforcementCount,
     ] = await Promise.all([
       fetchStudentMaterialsByUser(supabase, user.id),
       supabase.from('universidades').select('id, nombre').order('nombre'),
@@ -92,6 +94,7 @@ export default async function DashboardPage({
         .select('universidad_id, carrera_id')
         .eq('id', user.id)
         .maybeSingle(),
+      getPendingStudyErrorTopicCount(user.id),
     ]);
 
     if (universidadesResult.error) throw universidadesResult.error;
@@ -210,6 +213,7 @@ export default async function DashboardPage({
             initialSource={source}
             trackingMateriaId={requestedMateriaId}
             initialOpen={openUpload === '1'}
+            pendingReinforcementCount={pendingReinforcementCount}
           />
         </div>
       </div>

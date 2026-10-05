@@ -11,8 +11,7 @@ type Props = {
   materialsCount: number;
   primaryMaterialHref: string | null;
   primaryMaterialReady: boolean;
-  careerName?: string | null;
-  careerHref?: string | null;
+  pendingReinforcementCount: number;
 };
 
 /**
@@ -24,8 +23,7 @@ export function MaeveDashboardChrome({
   materialsCount,
   primaryMaterialHref,
   primaryMaterialReady,
-  careerName = null,
-  careerHref = null,
+  pendingReinforcementCount,
 }: Props) {
   const heroRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
@@ -53,8 +51,7 @@ export function MaeveDashboardChrome({
         materialsCount={materialsCount}
         primaryMaterialHref={primaryMaterialHref}
         primaryMaterialReady={primaryMaterialReady}
-        careerName={careerName}
-        careerHref={careerHref}
+        pendingReinforcementCount={pendingReinforcementCount}
         onUploadClick={openUpload}
       />
       <StudyFirstVisitNudge materialsCount={materialsCount} onUploadClick={openUpload} />

@@ -170,6 +170,86 @@ export async function generateReviewHelpAction(
   }
 }
 
+
+export async function generateInlineSummaryCheckHelpAction(
+  errorId: string,
+  materialId: string
+): Promise<{
+  success: boolean;
+  text?: string;
+  message?: string;
+}> {
+  const user = await currentUser();
+  if (!user || !validInput(errorId, materialId)) {
+    return { success: false, message: 'Sesión o solicitud no válida.' };
+  }
+
+  try {
+    const context = await loadReviewContext(user.id, errorId, materialId);
+    if (!context || context.row.status !== 'pending') {
+      return { success: false, message: 'Este error ya no está pendiente.' };
+    }
+
+    const { row, source } = context;
+    if (!source?.excerpt || source.excerpt.trim().length < 60) {
+      return {
+        success: false,
+        message: 'No encontramos suficiente contenido del PDF para explicar este error.',
+      };
+    }
+
+    const limitMessage = await generationLimit(user.id, 'help');
+    if (limitMessage) return { success: false, message: limitMessage };
+
+    const result = await generateTutorQuickHelp({
+      kind: 'why_wrong',
+      question: row.prompt.slice(0, 2000),
+      selectedAnswer: row.selected_answer?.slice(0, 1000),
+      correctAnswer: row.correct_answer?.slice(0, 1000),
+      explanation: row.explanation?.slice(0, 1600),
+      context: [source.excerpt],
+      compact: true,
+    });
+
+    if (result.provider === 'fallback-local' || !result.text) {
+      return {
+        success: false,
+        message: 'No pudimos generar la explicación ahora. Podés seguir estudiando.',
+      };
+    }
+
+    if (!(await markStudyErrorReviewed(user.id, errorId, row.last_failed_at))) {
+      return {
+        success: false,
+        message: 'El error cambió mientras lo repasabas. Intentá nuevamente.',
+      };
+    }
+
+    await trackServerAnalyticsEvent({
+      eventName: 'summary_topic_check_reinforcement_generated',
+      userId: user.id,
+      path: `/materiales/${materialId}`,
+      metadata: {
+        study_error_id: errorId,
+        material_id: materialId,
+        provider: result.provider,
+      },
+    });
+
+    return { success: true, text: result.text };
+  } catch (error) {
+    logError('studyErrors.inlineSummaryHelp', error, {
+      userId: user.id,
+      errorId,
+      materialId,
+    });
+    return {
+      success: false,
+      message: 'No pudimos generar la explicación ahora. Intentá nuevamente.',
+    };
+  }
+}
+
 export async function generateReviewCheckAction(
   errorId: string,
   materialId: string

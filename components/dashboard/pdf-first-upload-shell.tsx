@@ -99,6 +99,7 @@ export function PdfFirstUploadShell({
   const { toast } = useToast();
   const isPreAuthPdfResume =
     initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
+  const isDirectSignupFirstPdf = initialSource === 'signup-direct';
   const initialProfileUniversity =
     universidades.find((item) => item.id === initialUniversidadId) ?? null;
   const initialProfileCareer =
@@ -116,6 +117,8 @@ export function PdfFirstUploadShell({
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const resumeHandledRef = useRef(false);
   const readyTrackedRef = useRef(false);
+  const firstPdfReadyTrackedRef = useRef(false);
+  const directSignupOpenTrackedRef = useRef(false);
   const [open, setOpen] = useState(initialOpen);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
@@ -169,6 +172,15 @@ export function PdfFirstUploadShell({
   }, [initialOpen]);
 
   useEffect(() => {
+    if (!initialOpen || !isDirectSignupFirstPdf || directSignupOpenTrackedRef.current) return;
+    directSignupOpenTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_upload_opened', {
+      location: 'post_signup',
+      source: initialSource,
+    });
+  }, [initialOpen, initialSource, isDirectSignupFirstPdf]);
+
+  useEffect(() => {
     if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
     const interval = window.setInterval(async () => {
       const state = await getStudentMaterialProcessingStateAction(processing.materialId);
@@ -200,6 +212,7 @@ export function PdfFirstUploadShell({
     setSavedContextLabel(initialAcademicProfileLabel);
     setShowReadyContext(false);
     readyTrackedRef.current = false;
+    firstPdfReadyTrackedRef.current = false;
   }, [
     hasInitialAcademicProfile,
     hasInitialUniversityProfile,
@@ -411,6 +424,23 @@ export function PdfFirstUploadShell({
     });
   }, [initialSource, isPreAuthPdfResume, processing]);
 
+  useEffect(() => {
+    if (
+      !processing ||
+      processing.status !== 'ready' ||
+      !processing.isFirstReadyMaterial ||
+      firstPdfReadyTrackedRef.current
+    ) {
+      return;
+    }
+
+    firstPdfReadyTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_ready_viewed', {
+      source: initialSource || 'dashboard',
+      material_id: processing.materialId,
+    });
+  }, [initialSource, processing]);
+
   const saveContext = async () => {
     if (!processing || !canSaveContext || savingContext) return;
     setSavingContext(true);
@@ -466,6 +496,12 @@ export function PdfFirstUploadShell({
 
   const openSummary = () => {
     if (!processing || !ready) return;
+    if (processing.isFirstReadyMaterial) {
+      trackMarketingEvent('first_pdf_start_study_clicked', {
+        source: initialSource || 'dashboard',
+        material_id: processing.materialId,
+      });
+    }
     setOpen(false);
     router.push(
       `${getStudentMaterialRoute(processing.materialId)}?${processing.isFirstReadyMaterial ? 'recorrido=1' : 'tab=resumen'}`
@@ -516,7 +552,9 @@ export function PdfFirstUploadShell({
                   : ready
                     ? 'Tu PDF está listo'
                     : 'Preparación de tu PDF'
-                : 'Subir PDF'}
+                : isDirectSignupFirstPdf
+                  ? 'Empecemos con tu primer material'
+                  : 'Subir PDF'}
             </DialogTitle>
             <DialogDescription className="sr-only">
               Subí tu material y elegí cómo empezar a estudiarlo cuando esté listo.
@@ -534,7 +572,9 @@ export function PdfFirstUploadShell({
                         : ready
                           ? 'Tu PDF está listo'
                           : 'Estamos procesando tu PDF'
-                      : 'Subir PDF'}
+                      : isDirectSignupFirstPdf
+                        ? 'Empecemos con tu primer material'
+                        : 'Subir PDF'}
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-slate-500">
                     {processing
@@ -545,7 +585,9 @@ export function PdfFirstUploadShell({
                           : 'Mientras lo preparamos, podés indicar universidad y carrera. También podés saltar.'
                       : restoringDraft
                         ? 'Recuperando el PDF que elegiste antes del registro.'
-                        : 'Elegí el archivo y poné un nombre.'}
+                        : isDirectSignupFirstPdf
+                          ? 'Subí un PDF y convertí tus apuntes en material para estudiar y practicar.'
+                          : 'Elegí el archivo y poné un nombre.'}
                   </p>
                 </div>
               </div>
@@ -583,7 +625,9 @@ export function PdfFirstUploadShell({
                     <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white">
                       <Upload className="h-5 w-5" />
                     </span>
-                    <span className="mt-3 text-sm font-semibold text-slate-950">Elegir PDF</span>
+                    <span className="mt-3 text-sm font-semibold text-slate-950">
+                      {isDirectSignupFirstPdf ? 'Subir mi PDF' : 'Elegir PDF'}
+                    </span>
                     <span className="mt-1 text-xs text-slate-400">Máximo 20 MB</span>
                   </button>
                 ) : (
@@ -647,7 +691,7 @@ export function PdfFirstUploadShell({
 
                 <div className="mt-6 flex items-center justify-end gap-2">
                   <Button type="button" variant="ghost" onClick={close} disabled={uploading}>
-                    Cancelar
+                    {isDirectSignupFirstPdf ? 'Ahora no' : 'Cancelar'}
                   </Button>
                   <Button
                     type="button"

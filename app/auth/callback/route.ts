@@ -59,16 +59,17 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.session?.user) {
+      const user = data.session.user;
+      const createdAt = new Date(user.created_at).getTime();
+      const ageMs = Date.now() - createdAt;
+      const isNewUser = Number.isFinite(createdAt) && ageMs >= 0 && ageMs < 10 * 60 * 1000;
+      const provider =
+        String(user.app_metadata?.provider ?? user.user_metadata?.provider ?? '').trim() ||
+        'google';
+      const deviceType = detectDeviceType(request.headers.get('user-agent') ?? '');
+
       if (analyticsSessionKey && isAdminClientConfigured()) {
         try {
-          const user = data.session.user;
-          const createdAt = new Date(user.created_at).getTime();
-          const ageMs = Date.now() - createdAt;
-          const isNewUser = Number.isFinite(createdAt) && ageMs >= 0 && ageMs < 10 * 60 * 1000;
-          const provider =
-            String(user.app_metadata?.provider ?? user.user_metadata?.provider ?? '').trim() ||
-            'google';
-          const deviceType = detectDeviceType(request.headers.get('user-agent') ?? '');
           const admin = createAdminClient();
 
           await admin.from('analytics_events').insert([
@@ -102,9 +103,22 @@ export async function GET(request: Request) {
       }
 
       await supabase.from('profiles').upsert({
-        id: data.session.user.id,
+        id: user.id,
         updated_at: new Date().toISOString(),
       });
+
+      if (isNewUser && nextPath === '/dashboard') {
+        const { count: materialCount, error: materialCountError } = await supabase
+          .from('student_materials')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if (!materialCountError && (materialCount ?? 0) === 0) {
+          return NextResponse.redirect(
+            `${requestUrl.origin}/dashboard?openUpload=1&source=signup-direct`
+          );
+        }
+      }
 
       const { data: profile } = await supabase
         .from('profiles')

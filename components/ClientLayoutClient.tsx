@@ -23,6 +23,7 @@ import { logError } from '@/lib/observability';
 import { ShellDataProvider, useShellData } from '@/components/ShellDataProvider';
 import { DeferredAppAnalytics } from '@/components/DeferredAppAnalytics';
 import { DeferredFooter } from '@/components/DeferredFooter';
+import { EstimatedStudyActivity } from '@/components/estimated-study-activity';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   PublicBrandLink,
@@ -125,6 +126,9 @@ function BottomNav() {
             <Link
               key={`${item.label}-${item.href}`}
               href={item.href}
+              data-recommended-errors={
+                item.href === '/dashboard/explicaciones' ? 'true' : undefined
+              }
               className={
                 item.variant === 'cta'
                   ? 'from-brand to-brand-2 mx-0.5 flex min-h-[50px] flex-col items-center justify-center rounded-2xl bg-gradient-to-r px-2 py-1.5 text-white shadow-[0_8px_20px_rgba(37,99,235,0.26)]'
@@ -177,6 +181,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname === '/privacidad' ||
     pathname === '/facturacion';
   const isAdministradorRoute = pathname.startsWith('/administrador');
+  const isMaterialStudyRoute = pathname.startsWith('/materiales/');
   const isExploreExperienceRoute =
     pathname === '/explorar' ||
     pathname.startsWith('/universidad/') ||
@@ -214,7 +219,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
       {showTopBar ? (
         <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
           <div
-            className={`flex min-h-18 items-center justify-between gap-3 py-3 sm:min-h-20 ${
+            className={`relative flex min-h-18 items-center justify-between gap-3 py-3 sm:min-h-20 ${
               user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
             }`}
           >
@@ -244,10 +249,18 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
               </Link>
             )}
             {!user ? (
-              <PublicGuestActions trackingLocation="discovery_header" />
+              <div className="flex min-w-0 flex-1 items-center justify-end gap-3">
+                <div className="hidden lg:block">
+                  <EstimatedStudyActivity />
+                </div>
+                <PublicGuestActions trackingLocation="discovery_header" />
+              </div>
             ) : (
               <>
                 <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-2.5">
+                  <div className="hidden lg:block">
+                    <EstimatedStudyActivity />
+                  </div>
                   <NotificationBell />
                   <button
                     type="button"
@@ -442,15 +455,19 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 ? 'bg-white p-0'
                 : isLegalRoute
                   ? 'bg-background p-0'
-                  : isExploreExperienceRoute
-                    ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
-                    : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
+                  : isMaterialStudyRoute
+                    ? 'bg-white p-0 pb-24 md:pb-0 xl:h-[calc(100vh-5rem)] xl:overflow-hidden'
+                    : isExploreExperienceRoute
+                      ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
+                      : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'
             }`}
           >
             {children}
           </main>
           {showBottomNav ? <BottomNav /> : null}
-          {!isLegalRoute && !isAdministradorRoute ? <DeferredFooter /> : null}
+          {!isLegalRoute && !isAdministradorRoute && !isMaterialStudyRoute ? (
+            <DeferredFooter />
+          ) : null}
         </div>
       </div>
     </div>
