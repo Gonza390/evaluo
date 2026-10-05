@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, ChevronRight, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { CheckCircle2, ChevronRight, CircleAlert, X } from 'lucide-react';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { SummaryCheckQuestion } from '@/lib/student-materials/summary-checks';
@@ -36,6 +37,7 @@ export function SummaryTopicCheckPopup({
   recordResults,
   onContinue,
 }: Props) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [phase, setPhase] = useState<'choice' | 'questions' | 'result'>('choice');
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -166,25 +168,50 @@ export function SummaryTopicCheckPopup({
     setSelectedAnswer(null);
   };
 
+  const failedQuestions = questions.filter(
+    (question) => normalize(answers[question.id] ?? '') !== normalize(question.answer)
+  );
+  const failedTopics = Array.from(
+    new Set(
+      failedQuestions
+        .map((question) => clean(question.topic))
+        .filter(Boolean)
+    )
+  );
+
   const resultCopy =
     correctCount === 2
       ? {
-          title: 'Bien, podés seguir',
-          detail: 'Entendiste los puntos principales de este tema.',
+          title: 'Bien, seguí con el próximo tema.',
+          detail: 'Entendiste los puntos principales de lo que acabás de leer.',
         }
       : correctCount === 1
         ? {
-            title: 'Hay un concepto para reforzar',
-            detail: recordResults
-              ? 'Lo que fallaste quedó guardado para repasarlo después.'
-              : 'Conviene repasarlo antes del examen.',
+            title: 'Hay una idea que conviene reforzar.',
+            detail: 'Podés seguir o revisar este error antes de avanzar.',
           }
         : {
-            title: 'Conviene repasar este tema',
-            detail: recordResults
-              ? 'Tus respuestas quedaron guardadas para que puedas reforzarlas.'
-              : 'Podés volver a este tema cuando quieras.',
+            title: 'Conviene repasar este tema antes de seguir.',
+            detail: 'Volvé al contenido y después intentá comprobarlo nuevamente más adelante.',
           };
+
+  const reviewCurrentTopic = () => {
+    onContinue('completed');
+    window.requestAnimationFrame(() => {
+      const section = document.querySelector<HTMLElement>(
+        `[data-summary-reading-section="${chapterIndex}"]`
+      );
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const reviewError = () => {
+    if (!recordResults) {
+      reviewCurrentTopic();
+      return;
+    }
+    router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
+  };
 
   return createPortal(
     <div
@@ -304,23 +331,88 @@ export function SummaryTopicCheckPopup({
 
           {phase === 'result' ? (
             <div className="mt-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                <CheckCircle2 className="h-5 w-5" />
+              <div
+                className={cn(
+                  'flex h-10 w-10 items-center justify-center rounded-full',
+                  correctCount === 2
+                    ? 'bg-emerald-50 text-emerald-600'
+                    : 'bg-amber-50 text-amber-600'
+                )}
+              >
+                {correctCount === 2 ? (
+                  <CheckCircle2 className="h-5 w-5" />
+                ) : (
+                  <CircleAlert className="h-5 w-5" />
+                )}
               </div>
+
               <p className="mt-3 text-[11px] font-bold tracking-[0.08em] text-slate-400 uppercase">
                 {correctCount}/2 correctas
               </p>
               <h3 className="mt-1 text-[1.08rem] font-bold text-slate-950">{resultCopy.title}</h3>
               <p className="mt-1.5 text-[13px] leading-5 text-slate-500">{resultCopy.detail}</p>
 
-              <button
-                type="button"
-                onClick={() => onContinue('completed')}
-                className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
-              >
-                Seguir estudiando
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              {failedTopics.length > 0 ? (
+                <div className="mt-4 rounded-[13px] border border-slate-200 bg-slate-50/70 px-3.5 py-3">
+                  <p className="text-[10.5px] font-bold tracking-[0.08em] text-slate-400 uppercase">
+                    {failedTopics.length === 1 ? 'Para reforzar' : 'Para reforzar'}
+                  </p>
+                  <div className="mt-1.5 grid gap-1">
+                    {failedTopics.map((topic) => (
+                      <p key={topic} className="text-[13px] font-semibold leading-5 text-slate-800">
+                        {topic}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {correctCount === 2 ? (
+                <button
+                  type="button"
+                  onClick={() => onContinue('completed')}
+                  className="mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                >
+                  Seguir estudiando
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : correctCount === 1 ? (
+                <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => onContinue('completed')}
+                    className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  >
+                    Seguir estudiando
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={reviewError}
+                    className="inline-flex h-11 items-center justify-center rounded-[13px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Repasar este error
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={reviewCurrentTopic}
+                    className="inline-flex h-11 items-center justify-center rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  >
+                    Repasar este tema
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onContinue('completed')}
+                    className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Seguir estudiando
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           ) : null}
         </div>
