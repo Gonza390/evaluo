@@ -34,14 +34,14 @@ export async function requirePremiumUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, user: null, message: 'Debes iniciar sesión.' };
+  if (!user) return { ok: false as const, user: null, message: 'Entrá con tu cuenta para continuar.' };
 
   const premium = await hasPremiumAccess(user.id);
   if (!premium) {
     return {
       ok: false as const,
       user,
-      message: 'Esta funcion es exclusiva para usuarios premium.',
+      message: 'Esta función está disponible con Evaluo Premium.',
     };
   }
 

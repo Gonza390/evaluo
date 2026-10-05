@@ -97,7 +97,7 @@ export function PdfUploadLimitReached({
             className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:text-slate-950"
           >
             <ArrowLeft className="h-4 w-4" />
-            {materiaId ? 'Volver a mi materia' : 'Volver al dashboard'}
+            {materiaId ? 'Volver a mi materia' : 'Volver a Mi espacio'}
           </Link>
         </div>
       </div>

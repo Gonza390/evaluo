@@ -38,7 +38,7 @@ export function PublicGuestActions({
     <div className="flex shrink-0 items-center gap-2 sm:gap-3">
       <Link
         href="/login?mode=login"
-        className="inline-flex min-h-11 items-center rounded-xl px-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 min-[380px]:px-2 sm:px-3 sm:text-xs"
+        className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex min-h-11 items-center rounded-xl px-1.5 text-[11px] font-bold transition focus-visible:outline-none focus-visible:ring-2 min-[380px]:px-2 sm:px-3 sm:text-xs"
       >
         <span className="sm:hidden">Entrar</span>
         <span className="hidden sm:inline">Iniciar sesión</span>
@@ -51,7 +51,7 @@ export function PublicGuestActions({
           cta_name: 'crear_cuenta_gratis',
           destination: primaryHref,
         }}
-        className="inline-flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-xl bg-indigo-600 px-2 text-[10px] font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 min-[380px]:px-2.5 sm:gap-1.5 sm:px-4 sm:text-xs"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring inline-flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-xl px-2 text-[10px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 min-[380px]:px-2.5 sm:gap-1.5 sm:px-4 sm:text-xs"
       >
         <span className="sm:hidden">Crear cuenta</span>
         <span className="hidden sm:inline">Crear cuenta gratis</span>

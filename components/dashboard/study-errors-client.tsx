@@ -3,17 +3,33 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, FileText, Search } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  FileQuestion,
+  FileText,
+  Search,
+} from 'lucide-react';
 import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { AppPageHeader } from '@/components/ui/app-page-header';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
 import {
   StudyErrorDetail,
   reviewPrimaryButton,
-  reviewSecondaryButton,
   studyErrorSourceLabels,
+  type StudyErrorReviewActions,
+  type StudyErrorConversation,
 } from './study-error-detail';
 
 const unlinkedId = 'unlinked';
@@ -24,10 +40,14 @@ export function StudyErrorsClient({
   data,
   onboarding,
   initialMaterialId,
+  reviewActions,
+  preview = false,
 }: {
   data: StudyErrorsPageData;
   onboarding?: { active: boolean; errorId: string | null };
   initialMaterialId?: string;
+  reviewActions?: StudyErrorReviewActions;
+  preview?: boolean;
 }) {
   const router = useRouter();
   const initialError = onboarding?.active
@@ -51,6 +71,10 @@ export function StudyErrorsClient({
     Record<string, { baseFailedAt: string; changes: Partial<StudyErrorView> }>
   >({});
   const tracked = useRef(new Set<string>());
+  const pageIntro = useRef<HTMLDivElement>(null);
+  // Historial de este repaso: cada error y PDF conserva su conversación en esta pantalla.
+  // Un nuevo fallo o un cambio de PDF abre un contexto nuevo y evita reutilizar otra fuente.
+  const [conversations, setConversations] = useState<Record<string, StudyErrorConversation>>({});
   const tourClosing = useRef(false);
   const views = useMemo(
     () =>
@@ -84,16 +108,53 @@ export function StudyErrorsClient({
   );
   // Mantener el resultado recién confirmado aunque salga de la lista de pendientes.
   const selected = scoped.find((item) => item.id === selectedId) ?? visible[0] ?? null;
+  const conversationKey = selected
+    ? JSON.stringify([
+        selected.id,
+        selected.lastFailedAt,
+        selected.recommendation?.materialId ?? null,
+      ])
+    : '';
+  const initialConversation: StudyErrorConversation = {
+    messages: [],
+    source: selected?.recommendation ?? null,
+    reviewed: Boolean(selected?.lastReviewedAt),
+  };
   const selectedPdf = pdfs.find((material) => material.id === materialId);
   const totalPending = views.filter((item) => item.status === 'pending').length;
+  const unlinked = views.filter((item) => !item.recommendation);
+  const unlinkedPending = unlinked.filter((item) => item.status === 'pending').length;
+  const headerPendingCount = materialId ? pending.length : totalPending;
+  const headerDescription = headerPendingCount ? (
+    <>
+      Tenés{' '}
+      <strong className="text-foreground font-semibold">
+        {headerPendingCount} {headerPendingCount === 1 ? 'concepto' : 'conceptos'}
+      </strong>{' '}
+      para reforzar{selectedPdf ? ' en este PDF' : ''}.
+      {!materialId
+        ? ' Elegí un PDF.'
+        : materialId === unlinkedId
+          ? ' Asociá tus apuntes para repasarlos con tu PDF.'
+          : ''}
+    </>
+  ) : selectedPdf ? (
+    'No te quedan conceptos pendientes en este PDF.'
+  ) : views.length ? (
+    'No tenés conceptos pendientes. Tu progreso de repaso está guardado.'
+  ) : (
+    'Los conceptos que te cuesten al practicar van a quedar acá para repasarlos.'
+  );
 
   useEffect(() => {
+    if (preview) return;
     trackMarketingEvent('mis_errores_viewed', {
       pending_count: data.pending.length,
       resolved_count: data.resolved.length,
     });
-  }, [data.pending.length, data.resolved.length]);
+  }, [data.pending.length, data.resolved.length, preview]);
   useEffect(() => {
+    if (preview) return;
     if (!selected || tracked.current.has(selected.id)) return;
     tracked.current.add(selected.id);
     const days = selected.lastReviewedAt
@@ -110,7 +171,7 @@ export function StudyErrorsClient({
     };
     trackMarketingEvent('study_error_viewed', metadata);
     if (days !== null && days >= 1) trackMarketingEvent('study_error_returned', metadata);
-  }, [selected]);
+  }, [selected, preview]);
 
   function chooseMaterial(id: string) {
     const errors = views.filter((item) => (item.recommendation?.materialId ?? unlinkedId) === id);
@@ -133,13 +194,22 @@ export function StudyErrorsClient({
       setMobileListOpen(false);
     }
   }
+  function returnToMaterials() {
+    setMaterialId(null);
+    setSelectedId(null);
+    setQuery('');
+    setMobileListOpen(false);
+    requestAnimationFrame(() => {
+      pageIntro.current?.focus({ preventScroll: true });
+      pageIntro.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    });
+  }
   function finish() {
     setNotice(
       `Terminaste el repaso por hoy. ${pending.length === 1 ? 'Te queda 1 error pendiente' : pending.length ? `Te quedan ${pending.length} errores pendientes` : 'No te quedan errores pendientes'}${selectedPdf ? ` en ${selectedPdf.title}` : ''}. Tu avance quedó guardado.`
     );
-    setMaterialId(null);
-    setSelectedId(null);
-    router.refresh();
+    returnToMaterials();
+    if (!preview) router.refresh();
   }
   const steps = selected
     ? [
@@ -218,12 +288,17 @@ export function StudyErrorsClient({
           footerLabel="Tu primer error"
         />
       )}
-      <div className="text-foreground mx-auto w-full max-w-[1180px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <AppPageHeader
-          eyebrow="Progreso"
-          title="Mis errores"
-          description="Convertí lo que te costó en algo que entendés. Repasá con tus apuntes y comprobá lo aprendido."
-        />
+      <div
+        className="text-foreground mx-auto w-full max-w-[1180px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+        style={!materialId ? { maxWidth: '960px' } : undefined}
+      >
+        <div ref={pageIntro} tabIndex={-1} className="scroll-mt-24 outline-none">
+          <AppPageHeader
+            eyebrow="Progreso"
+            title="Mis errores"
+            description={<span role="status">{headerDescription}</span>}
+          />
+        </div>
         {notice && (
           <p
             role="status"
@@ -233,16 +308,11 @@ export function StudyErrorsClient({
           </p>
         )}
         {!materialId ? (
-          <section aria-labelledby="choose-pdf" className="mt-7">
-            <h2 id="choose-pdf" className="text-xl font-black tracking-tighter">
-              ¿Qué PDF querés reforzar?
+          <section aria-labelledby="choose-pdf" className="mt-5">
+            <h2 id="choose-pdf" className="sr-only">
+              Elegir material para repasar
             </h2>
-            <p className="!text-muted-foreground mt-2 !text-sm">
-              {totalPending
-                ? `${totalPending === 1 ? '1 concepto pendiente' : `${totalPending} conceptos pendientes`}. Elegí un material para empezar.`
-                : 'Tus PDFs y tu progreso de repaso están acá. Los errores nuevos aparecerán automáticamente.'}
-            </p>
-            <div className="divide-border border-border mt-5 divide-y border-y">
+            <div className="divide-border border-border divide-y border-b">
               {pdfs.map((pdf) => {
                 const errors = views.filter((item) => item.recommendation?.materialId === pdf.id);
                 const count = errors.filter((item) => item.status === 'pending').length;
@@ -256,40 +326,93 @@ export function StudyErrorsClient({
                     className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-5 text-left transition focus-visible:outline-2 sm:px-2"
                     onClick={() => chooseMaterial(pdf.id)}
                   >
-                    <FileText className="text-primary mt-1 h-5 w-5 shrink-0" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-bold break-words">{pdf.title}</span>
-                      {pdf.materiaNombre && (
-                        <span className="text-muted-foreground mt-1 block text-xs">
-                          {pdf.materiaNombre}
+                    <FileText
+                      className={`${count ? 'text-primary' : 'text-muted-foreground'} mt-1 h-5 w-5 shrink-0`}
+                      aria-hidden="true"
+                    />
+                    <span className="grid min-w-0 flex-1 gap-y-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-x-6">
+                      <span className="min-w-0">
+                        <span
+                          className={`block break-words ${count ? 'font-bold' : 'font-medium'}`}
+                        >
+                          {pdf.title}
+                        </span>
+                        {pdf.materiaNombre && (
+                          <span className="text-muted-foreground mt-1 block text-xs">
+                            {pdf.materiaNombre}
+                          </span>
+                        )}
+                      </span>
+                      <span className="sm:text-right">
+                        {count ? (
+                          <>
+                            <span className="text-primary block text-sm font-semibold">
+                              {count} {count === 1 ? 'tema' : 'temas'} para reforzar
+                            </span>
+                            {errors.length > count && (
+                              <span className="text-muted-foreground mt-1 block text-xs">
+                                {resolvedLabel(errors.length - count)}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                            Al día
+                            {errors.length > 0 && (
+                              <span className="text-xs">
+                                · {errors.length}{' '}
+                                {errors.length === 1 ? 'tema resuelto' : 'temas resueltos'}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </span>
+                      {topics.length > 0 && (
+                        <span className="text-muted-foreground block text-sm break-words sm:col-span-2">
+                          {topics.join(' · ')}
                         </span>
                       )}
-                      <span className="text-muted-foreground mt-2 block text-sm break-words">
-                        {topics.length
-                          ? topics.join(' · ')
-                          : 'No tenés errores pendientes en este PDF.'}
-                      </span>
-                      <span className="text-primary mt-2 block text-xs font-semibold">
-                        {pendingLabel(count)} · {resolvedLabel(errors.length - count)}
-                      </span>
                     </span>
-                    <ArrowRight className="text-primary mt-1 h-4 w-4 shrink-0" />
+                    <ArrowRight
+                      className={`${count ? 'text-primary' : 'text-muted-foreground'} mt-1 h-4 w-4 shrink-0`}
+                      aria-hidden="true"
+                    />
                   </button>
                 );
               })}
+              {unlinked.length > 0 && (
+                <button
+                  className="hover:bg-muted/50 focus-visible:outline-ring flex w-full items-start gap-3 py-5 text-left transition focus-visible:outline-2 sm:px-2"
+                  onClick={() => chooseMaterial(unlinkedId)}
+                >
+                  <FileQuestion
+                    className="text-muted-foreground mt-1 h-5 w-5 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold break-words">
+                      {unlinkedPending
+                        ? `${unlinkedPending} ${unlinkedPending === 1 ? 'concepto sin material asociado' : 'conceptos sin material asociado'}`
+                        : 'Conceptos sin material asociado'}
+                    </span>
+                    <span className="text-muted-foreground mt-2 block text-sm">
+                      Asociá tus apuntes para repasar{' '}
+                      {unlinkedPending === 1 ? 'este concepto' : 'estos conceptos'} con tu PDF.
+                    </span>
+                    {unlinked.length > unlinkedPending && (
+                      <span className="text-muted-foreground mt-1 block text-xs">
+                        {resolvedLabel(unlinked.length - unlinkedPending)}
+                      </span>
+                    )}
+                  </span>
+                  <ArrowRight
+                    className="text-muted-foreground mt-1 h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                </button>
+              )}
             </div>
-            {views.some((item) => !item.recommendation) && (
-              <button
-                className={reviewSecondaryButton + ' mt-5 w-full justify-between sm:w-auto'}
-                onClick={() => chooseMaterial(unlinkedId)}
-              >
-                Sin PDF asociado ·{' '}
-                {pendingLabel(
-                  views.filter((item) => !item.recommendation && item.status === 'pending').length
-                )}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
             {!pdfs.length && !views.length && (
               <p className="!text-foreground mt-5">
                 Todavía no tenés errores guardados. Subí un PDF y practicá: lo que te cueste quedará
@@ -298,57 +421,65 @@ export function StudyErrorsClient({
             )}
             <Link
               href="/dashboard/materiales?openUpload=1"
-              className={reviewSecondaryButton + ' mt-5 sm:ml-3'}
+              className="text-muted-foreground hover:text-foreground focus-visible:outline-ring mt-4 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium underline underline-offset-4 transition focus-visible:outline-2"
             >
               Subir mi PDF
             </Link>
           </section>
         ) : (
           <>
-            <div className="border-border mt-6 flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+            <div className="border-border mt-3 flex min-w-0 flex-wrap items-center gap-2 border-b pb-3 sm:flex-nowrap sm:gap-4">
               <button
-                className={reviewSecondaryButton}
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-ring inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2 text-sm font-medium transition focus-visible:outline-2"
                 onClick={() => {
-                  setMaterialId(null);
-                  setSelectedId(null);
+                  returnToMaterials();
                   setNotice('');
-                  router.refresh();
+                  if (!preview) router.refresh();
                 }}
               >
                 <ArrowLeft className="h-4 w-4" />
                 Mis PDFs
               </button>
-              <select
-                aria-label="Cambiar PDF"
-                value={materialId}
-                onChange={(event) => chooseMaterial(event.target.value)}
-                className="border-border bg-background min-h-11 w-full max-w-full min-w-0 rounded-xl border px-3 text-sm sm:w-auto sm:max-w-[65%]"
-              >
-                {pdfs.map((pdf) => (
-                  <option key={pdf.id} value={pdf.id}>
-                    {pdf.title} ·{' '}
-                    {pendingLabel(
-                      views.filter(
-                        (item) =>
-                          item.recommendation?.materialId === pdf.id && item.status === 'pending'
-                      ).length
-                    )}
-                  </option>
-                ))}
-                {views.some((item) => !item.recommendation) && (
-                  <option value={unlinkedId}>Sin PDF asociado</option>
-                )}
-              </select>
+              <Select value={materialId} onValueChange={chooseMaterial}>
+                <SelectTrigger
+                  aria-label="Cambiar PDF"
+                  className="hover:bg-muted/50 h-auto w-full min-w-0 flex-1 basis-full rounded-lg border-transparent px-3 py-2 text-left whitespace-normal shadow-none data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:block *:data-[slot=select-value]:min-w-0 sm:basis-0"
+                >
+                  <SelectValue>
+                    <span className="text-muted-foreground block text-xs font-normal">
+                      Cambiar PDF
+                    </span>
+                    <span className="text-foreground mt-0.5 block text-sm font-semibold [overflow-wrap:anywhere] sm:text-base">
+                      {selectedPdf?.title ?? 'Errores sin PDF asociado'}
+                    </span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-w-[calc(100vw-2rem)]">
+                  {pdfs.map((pdf) => (
+                    <SelectItem key={pdf.id} value={pdf.id} className="min-h-11 whitespace-normal">
+                      <span className="block min-w-0 [overflow-wrap:anywhere]">
+                        <span className="block font-medium">{pdf.title}</span>
+                        <span className="text-muted-foreground mt-0.5 block text-xs">
+                          {pendingLabel(
+                            views.filter(
+                              (item) =>
+                                item.recommendation?.materialId === pdf.id &&
+                                item.status === 'pending'
+                            ).length
+                          )}
+                        </span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                  {views.some((item) => !item.recommendation) && (
+                    <SelectItem value={unlinkedId} className="min-h-11">
+                      Sin PDF asociado
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="mt-5">
-              <h2 className="text-lg font-bold break-words">
-                {selectedPdf?.title ?? 'Errores sin PDF asociado'}
-              </h2>
-              <p className="!text-muted-foreground mt-1 !text-xs">
-                {pendingLabel(pending.length)} · {resolvedLabel(resolved.length)}
-              </p>
-            </div>
-            <div className="mt-4 lg:hidden">
+            <div className="lg:hidden">
               <button
                 className="border-border flex min-h-12 w-full items-center justify-between gap-3 border-y py-3 text-left"
                 onClick={() => setMobileListOpen((open) => !open)}
@@ -391,7 +522,7 @@ export function StudyErrorsClient({
                     </button>
                   ))}
                 </div>
-                <label className="border-border mt-3 flex min-h-11 items-center gap-2 rounded-xl border px-3">
+                <label className="border-border focus-within:ring-ring mt-3 flex min-h-11 items-center gap-2 rounded-xl border px-3 focus-within:ring-2">
                   <Search className="text-muted-foreground h-4 w-4 shrink-0" />
                   <input
                     type="search"
@@ -417,7 +548,7 @@ export function StudyErrorsClient({
                         {studyErrorSourceLabels[item.sourceType]} ·{' '}
                         {item.status === 'resolved'
                           ? 'Resuelto'
-                          : `${item.failureCount} ${item.failureCount === 1 ? 'error' : 'errores'}`}
+                          : `Fallaste ${item.failureCount} ${item.failureCount === 1 ? 'vez' : 'veces'}`}
                       </span>
                     </button>
                   ))}
@@ -435,8 +566,16 @@ export function StudyErrorsClient({
               <section className="min-w-0 py-4" aria-label="Repaso del error">
                 {selected ? (
                   <StudyErrorDetail
-                    key={selected.id}
+                    key={conversationKey}
                     item={selected}
+                    conversation={conversations[conversationKey] ?? initialConversation}
+                    onConversationChange={(update) =>
+                      setConversations((current) => ({
+                        ...current,
+                        [conversationKey]: update(current[conversationKey] ?? initialConversation),
+                      }))
+                    }
+                    reviewActions={reviewActions}
                     materials={pdfs}
                     pendingCount={pending.length}
                     onProgress={(changes) =>

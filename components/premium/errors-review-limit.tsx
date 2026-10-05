@@ -25,7 +25,7 @@ export function ErrorsReviewLimit({ materiaId, parcial }: { materiaId: string; p
             href="/dashboard"
             className="text-sm font-semibold text-slate-500 transition hover:text-slate-700"
           >
-            Volver al dashboard
+            Volver a Mi espacio
           </Link>
         </div>
       </div>

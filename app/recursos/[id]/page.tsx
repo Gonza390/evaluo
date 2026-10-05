@@ -292,7 +292,7 @@ function RecursoContent() {
       toast({
         variant: 'destructive',
         title: 'Necesitás iniciar sesión para votar',
-        description: 'Entrá con tu cuenta para guardar tu feedback.',
+        description: 'Entrá con tu cuenta para guardar tu opinión.',
         duration: 2800,
       });
       router.push('/login');
@@ -325,7 +325,7 @@ function RecursoContent() {
     if (authLoading) {
       toast({
         title: 'Validando sesión',
-        description: 'Espera un segundo e intenta nuevamente.',
+        description: 'Esperá un segundo e intentá nuevamente.',
         duration: 2200,
       });
       return null;
@@ -376,7 +376,7 @@ function RecursoContent() {
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
-        description: 'Intenta nuevamente en unos segundos.',
+        description: 'Intentá nuevamente en unos segundos.',
         duration: 3000,
       });
       return;
@@ -387,7 +387,7 @@ function RecursoContent() {
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
-        description: 'Intenta nuevamente en unos segundos.',
+        description: 'Intentá nuevamente en unos segundos.',
         duration: 3000,
       });
       return;

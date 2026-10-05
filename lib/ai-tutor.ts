@@ -184,7 +184,7 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
 
   return {
     provider: 'fallback-local',
-    text: 'No se pudo generar la explicación automática en este momento. Intenta nuevamente en unos segundos.',
+    text: 'No pudimos generar la explicación en este momento. Intentá nuevamente en unos segundos.',
   };
 }
 

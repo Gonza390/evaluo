@@ -43,7 +43,7 @@ const demoJourney = [
   ['01', 'Tu material', 'Partimos de un fragmento del PDF de Marketing I.'],
   ['02', 'Entendé el tema', 'El resumen organiza el concepto sin cambiar de fuente.'],
   ['03', 'Ponete a prueba', 'Respondé una pregunta basada en el mismo contenido.'],
-  ['04', 'Repasá el error', 'Usá el feedback para saber qué tema conviene volver a trabajar.'],
+  ['04', 'Repasá el error', 'Usá la explicación para saber qué tema conviene volver a trabajar.'],
 ] as const;
 
 /** Signup → materiales with open-upload modal (post-#70 PDF-first activation). */
@@ -127,7 +127,7 @@ export default function Home() {
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <div className="mx-auto mb-10 max-w-3xl text-center">
             <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              Preguntas Frecuentes
+              Preguntas frecuentes
             </h2>
             <p className="mt-3 text-sm text-slate-600 sm:text-base">
               Cómo funciona Evaluo cuando estudiás desde tus propios apuntes y PDFs.

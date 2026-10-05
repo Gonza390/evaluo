@@ -134,7 +134,7 @@ export default function ConfiguracionPage() {
         logError('configuracion.loadProfile', error);
         toast({
           title: 'No pudimos cargar tu perfil',
-          description: 'Intenta de nuevo en unos segundos.',
+          description: 'Intentá de nuevo en unos segundos.',
           variant: 'destructive',
         });
       } finally {
@@ -382,8 +382,8 @@ export default function ConfiguracionPage() {
             </div>
             <div>
               <p className="eyebrow-label text-brand">Perfil</p>
-              <h1 className="text-heading mt-1 text-3xl font-bold tracking-[-0.05em] sm:text-4xl">
-                Configura tu cuenta
+              <h1 className="text-foreground mt-1 text-3xl font-bold tracking-[-0.05em] sm:text-4xl">
+                Configurá tu cuenta
               </h1>
               <p className="section-copy mt-3 max-w-2xl">
                 Actualizá tus datos de contacto y tu recorrido académico para que Evaluo pueda
@@ -414,7 +414,7 @@ export default function ConfiguracionPage() {
 
             <div className="space-y-2">
               <Label htmlFor="email" className="font-medium text-foreground">
-                Email registrado
+                Correo electrónico registrado
               </Label>
               <Input
                 id="email"

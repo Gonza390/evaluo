@@ -329,7 +329,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
       <div className="border-y border-slate-200 py-10 text-center">
         <p className="text-sm font-semibold text-slate-800">Todavía no hay preguntas suficientes</p>
         <p className="mt-1 text-[13px] leading-5 text-slate-500">
-          El PDF necesita más contenido estructurado para armar un examen útil.
+          El PDF necesita más contenido estructurado para armar una práctica útil.
         </p>
       </div>
     );
@@ -340,7 +340,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
         <header className="border-b border-slate-200 pb-5">
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
-            Examen basado en este PDF
+            Práctica basada en este PDF
           </p>
           <h2 className="mt-2 text-[1.65rem] font-bold tracking-[-0.05em] text-slate-950 sm:text-[1.85rem]">
             Elegí cuánto querés practicar
@@ -389,7 +389,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
 
         <div className="flex justify-end border-t border-slate-200 pt-5">
           <Button type="button" onClick={startExam} className="h-11 rounded-[14px] px-5">
-            Comenzar examen
+            Empezar práctica
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -410,7 +410,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
         <header className="border-b border-slate-200 pb-6">
           <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2563EB]">
-            Examen completado
+            Práctica completada
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
             <h2 className="text-4xl font-bold tracking-[-0.07em] text-slate-950">
@@ -458,7 +458,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
         <div className="pt-5">
           <Button onClick={resetExam} className="h-11 w-full rounded-[14px] sm:w-auto">
             <RotateCcw className="h-4 w-4" />
-            Elegir otro examen
+            Elegir otra práctica
           </Button>
         </div>
       </div>

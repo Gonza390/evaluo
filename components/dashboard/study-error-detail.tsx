@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, CheckCircle2, CircleAlert, Loader2, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  ChevronDown,
+  CircleAlert,
+  Loader2,
+} from 'lucide-react';
 import { markStudyErrorReviewedAction } from '@/lib/actions/study-errors';
 import {
   associateReviewPdfAction,
@@ -17,6 +24,11 @@ import type {
   ReviewQuestion,
   ReviewAnswerResult,
 } from '@/lib/study-error-review-contract';
+import {
+  scrollToStudyErrorHelp,
+  StudyErrorHelpChat,
+  type StudyErrorHelpMessage,
+} from './study-error-help-chat';
 
 export const reviewPrimaryButton =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
@@ -28,10 +40,23 @@ export const studyErrorSourceLabels = {
   exercise: 'Práctica',
   diagnostic: 'Diagnóstico',
 };
-const helpLabels = {
-  why_wrong: 'Ayudame a entenderlo',
-  simpler: 'Más simple',
-  example: 'Dame un ejemplo',
+
+const liveReviewActions = {
+  markReviewed: markStudyErrorReviewedAction,
+  generateHelp: generateReviewHelpAction,
+  generateCheck: generateReviewCheckAction,
+  openSource: openReviewSourceAction,
+  submitCheck: submitReviewCheckAction,
+  associatePdf: associateReviewPdfAction,
+};
+
+// La vista local puede suministrar acciones de muestra; la pantalla autenticada usa las reales.
+export type StudyErrorReviewActions = typeof liveReviewActions;
+
+export type StudyErrorConversation = {
+  messages: StudyErrorHelpMessage[];
+  source: StudyErrorView['recommendation'];
+  reviewed: boolean;
 };
 
 function pageLabel(start: number | null, end: number | null) {
@@ -46,6 +71,9 @@ export function StudyErrorDetail({
   onAssociate,
   onNext,
   onFinish,
+  reviewActions = liveReviewActions,
+  conversation,
+  onConversationChange,
 }: {
   item: StudyErrorView;
   materials: StudyErrorsPageData['materials'];
@@ -54,13 +82,26 @@ export function StudyErrorDetail({
   onAssociate: (materialId: string) => void;
   onNext: () => void;
   onFinish: () => void;
+  reviewActions?: StudyErrorReviewActions;
+  conversation: StudyErrorConversation;
+  onConversationChange: (
+    update: (current: StudyErrorConversation) => StudyErrorConversation
+  ) => void;
 }) {
-  const [messages, setMessages] = useState<Array<{ kind: ReviewHelpKind; text: string }>>([]);
+  const { messages, source, reviewed } = conversation;
+  function setMessages(update: (current: StudyErrorHelpMessage[]) => StudyErrorHelpMessage[]) {
+    onConversationChange((current) => ({ ...current, messages: update(current.messages) }));
+  }
+  function setSource(value: StudyErrorView['recommendation']) {
+    onConversationChange((current) => ({ ...current, source: value }));
+  }
+  function setReviewed(value: boolean) {
+    onConversationChange((current) => ({ ...current, reviewed: value }));
+  }
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
-  const [source, setSource] = useState(item.recommendation);
+  const [noticeAction, setNoticeAction] = useState<string | null>(null);
   const [sourceOpen, setSourceOpen] = useState(false);
-  const [reviewed, setReviewed] = useState(Boolean(item.lastReviewedAt));
   const [question, setQuestion] = useState<ReviewQuestion | null>(null);
   const [answer, setAnswer] = useState<number | null>(null);
   const [result, setResult] = useState<ReviewAnswerResult | null>(null);
@@ -70,6 +111,19 @@ export function StudyErrorDetail({
   const response = useRef<HTMLDivElement>(null);
   const materialId = source?.materialId ?? item.recommendation?.materialId ?? null;
   const resolved = item.status === 'resolved';
+  const savedExplanation = resolved && !messages.length ? item.explanation : null;
+  const pendingHelp =
+    busy === 'why_wrong' || busy === 'simpler' || busy === 'example' ? busy : null;
+  const helpNotice = ['why_wrong', 'simpler', 'example', 'review'].includes(noticeAction ?? '');
+  const sourceNotice = noticeAction === 'source' || noticeAction === 'associate';
+  const inlineNotice = notice ? (
+    <p
+      role="alert"
+      className="border-destructive/40 !text-foreground mt-5 border-l-2 pl-3 !text-sm"
+    >
+      {notice}
+    </p>
+  ) : null;
   const activityHref =
     item.sourceType === 'simulator' && item.materiaId
       ? `/simulador/errores/${item.materiaId}?parcial=${item.parcial ?? 1}`
@@ -87,6 +141,7 @@ export function StudyErrorDetail({
     operation.current = true;
     setBusy(name);
     setNotice('');
+    setNoticeAction(name);
     try {
       await task();
     } catch {
@@ -97,8 +152,27 @@ export function StudyErrorDetail({
     }
   }
   function help(kind: ReviewHelpKind) {
+    if (operation.current) return;
+    const cached = messages.find((message) => message.kind === kind);
+    if (cached) {
+      if (reviewed || resolved) {
+        setNotice('');
+        requestAnimationFrame(() => scrollToHelp(kind));
+      } else {
+        void run('review', async () => {
+          const marked = await reviewActions.markReviewed(item.id);
+          if (!marked.success) {
+            setNotice('No pudimos guardar el repaso. Reintentá antes de comprobarlo.');
+            return;
+          }
+          setReviewed(true);
+          requestAnimationFrame(() => scrollToHelp(kind));
+        });
+      }
+      return;
+    }
     void run(kind, async () => {
-      const generated = await generateReviewHelpAction(item.id, kind, materialId);
+      const generated = await reviewActions.generateHelp(item.id, kind, materialId);
       if (!generated.success || !generated.text) {
         setNotice(generated.message ?? 'No pudimos generar la ayuda.');
         return;
@@ -109,10 +183,11 @@ export function StudyErrorDetail({
       ]);
       if (generated.source) setSource(generated.source);
       setReviewed(true);
-      requestAnimationFrame(() =>
-        response.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-      );
     });
+  }
+  function scrollToHelp(kind: ReviewHelpKind) {
+    const container = response.current?.querySelector<HTMLElement>('[data-study-chat-scroll]');
+    if (container) scrollToStudyErrorHelp(container, kind);
   }
   function openSource() {
     if (sourceOpen) {
@@ -121,7 +196,7 @@ export function StudyErrorDetail({
     }
     if (!materialId) return;
     void run('source', async () => {
-      const loaded = await openReviewSourceAction(item.id, materialId);
+      const loaded = await reviewActions.openSource(item.id, materialId);
       if (!loaded.success || !loaded.source) {
         setNotice(loaded.message ?? 'No pudimos abrir el fragmento.');
         return;
@@ -134,7 +209,7 @@ export function StudyErrorDetail({
   function checkUnderstanding() {
     if (!materialId) return;
     void run('check', async () => {
-      const generated = await generateReviewCheckAction(item.id, materialId);
+      const generated = await reviewActions.generateCheck(item.id, materialId);
       if (!generated.success || !generated.question) {
         setNotice(generated.message ?? 'No pudimos preparar la pregunta.');
         return;
@@ -151,7 +226,7 @@ export function StudyErrorDetail({
   function confirmAnswer() {
     if (!question || answer === null) return;
     void run('answer', async () => {
-      const checked = await submitReviewCheckAction(question.id, answer);
+      const checked = await reviewActions.submitCheck(question.id, answer);
       if (!checked.success) {
         setNotice(checked.message ?? 'No pudimos guardar la respuesta.');
         return;
@@ -176,13 +251,13 @@ export function StudyErrorDetail({
     setNotice('');
     if (messages.length && !resolved)
       void run('review', async () => {
-        const marked = await markStudyErrorReviewedAction(item.id);
+        const marked = await reviewActions.markReviewed(item.id);
         if (marked.success) setReviewed(true);
         else setNotice('No pudimos guardar el repaso. Reintentá antes de comprobarlo.');
       });
   }
   return (
-    <div className="max-w-3xl min-w-0">
+    <div className="w-full min-w-0">
       {question ? (
         <>
           <h2
@@ -294,7 +369,7 @@ export function StudyErrorDetail({
               <span className="bg-muted rounded-full px-3 py-1">
                 {studyErrorSourceLabels[item.sourceType]}
               </span>
-              <span className="bg-muted rounded-full px-3 py-1">
+              <span className="text-muted-foreground py-1">
                 {resolved
                   ? 'Resuelto después del repaso'
                   : `Fallaste ${item.failureCount} ${item.failureCount === 1 ? 'vez' : 'veces'}`}
@@ -308,102 +383,82 @@ export function StudyErrorDetail({
               {item.topic}
             </h2>
             <p className="!text-foreground mt-4 break-words">{item.prompt}</p>
+            {(item.selectedAnswer || item.correctAnswer) && (
+              <details className="group mt-3">
+                <summary className="text-muted-foreground hover:text-foreground focus-visible:outline-ring flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
+                  Ver mi respuesta anterior
+                  <ChevronDown
+                    className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                    aria-hidden="true"
+                  />
+                </summary>
+                <div className="mt-2 grid gap-4 pb-2 sm:grid-cols-2">
+                  {item.selectedAnswer && (
+                    <div className="border-destructive/40 border-l-2 pl-4">
+                      <p className="!text-destructive !text-xs font-semibold">
+                        Respuesta incorrecta
+                      </p>
+                      <p className="!text-foreground mt-2 !text-sm break-words">
+                        {item.selectedAnswer}
+                      </p>
+                    </div>
+                  )}
+                  {item.correctAnswer && (
+                    <div className="border-primary/40 border-l-2 pl-4">
+                      <p className="!text-primary !text-xs font-semibold">Respuesta correcta</p>
+                      <p className="!text-foreground mt-2 !text-sm break-words">
+                        {item.correctAnswer}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </details>
+            )}
           </div>
           <section data-study-error-tour="understand" className="border-border mt-7 border-t pt-6">
-            <h3 className="flex items-center gap-2 font-bold">
-              <Sparkles className="text-primary h-5 w-5" />
-              Entendé qué te confundió
-            </h3>
-            <p className="!text-muted-foreground mt-2 !text-sm">
-              {materialId
-                ? 'Evaluo te ayuda a entender este concepto con el contenido de tu PDF.'
-                : 'Revisá la corrección y conectá el error con tus apuntes para repasarlo con tu fuente.'}
-            </p>
-            {!messages.length && !resolved && (
-              <button
-                className="border-border hover:bg-primary/5 focus-visible:outline-ring mt-4 flex min-h-16 w-full items-center gap-3 border-y py-4 text-left transition focus-visible:outline-2 disabled:opacity-50"
-                onClick={() => help('why_wrong')}
-                disabled={Boolean(busy)}
-              >
-                {busy === 'why_wrong' ? (
-                  <Loader2 className="text-primary h-5 w-5 shrink-0 animate-spin" />
-                ) : (
-                  <Sparkles className="text-primary h-5 w-5 shrink-0" />
-                )}
-                <span className="min-w-0 flex-1">
-                  <span className="text-primary block text-sm font-semibold">
-                    Ayudame a entenderlo
-                  </span>
-                  <span className="text-muted-foreground mt-1 block text-xs">
-                    Recibí una explicación clara, paso a paso{materialId ? ', con tu PDF' : ''}.
-                  </span>
-                </span>
-                <ArrowRight className="text-primary h-4 w-4 shrink-0" />
-              </button>
-            )}
-            {resolved && !messages.length && item.explanation && (
-              <p className="!text-foreground mt-4 !text-sm whitespace-pre-line">
-                {item.explanation}
-              </p>
-            )}
             <div
               ref={response}
-              aria-live="polite"
+              className="w-full scroll-mt-24"
               aria-busy={Boolean(busy && ['why_wrong', 'simpler', 'example'].includes(busy))}
             >
-              {messages.map((message) => (
-                <div key={message.kind} className="border-primary/30 mt-5 border-l-2 pl-4">
-                  <p className="!text-primary !text-xs font-semibold">{helpLabels[message.kind]}</p>
-                  <p className="!text-foreground mt-2 !text-sm break-words whitespace-pre-line">
-                    {message.text}
-                  </p>
-                </div>
-              ))}
-              {busy && ['why_wrong', 'simpler', 'example'].includes(busy) && (
-                <p
-                  role="status"
-                  className="!text-muted-foreground mt-4 flex items-center gap-2 !text-sm"
-                >
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {materialId
-                    ? 'Estoy revisando el fragmento de tu PDF…'
-                    : 'Estoy preparando la explicación…'}
-                </p>
-              )}
+              <StudyErrorHelpChat
+                messages={messages}
+                pendingKind={pendingHelp}
+                hasPdf={Boolean(materialId)}
+                savedExplanation={savedExplanation}
+                onRequest={help}
+                busy={Boolean(busy)}
+                resolved={resolved}
+                topic={item.topic}
+                pdfTitle={source?.materialTitle ?? null}
+                notice={helpNotice ? notice : undefined}
+              />
             </div>
-            {messages.length > 0 && !resolved && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {(['simpler', 'example'] as const).map((kind) => (
-                  <button
-                    key={kind}
-                    className={reviewSecondaryButton}
-                    disabled={Boolean(busy) || messages[messages.length - 1]?.kind === kind}
-                    onClick={() => help(kind)}
-                  >
-                    {helpLabels[kind]}
-                  </button>
-                ))}
-              </div>
-            )}
           </section>
           <section data-study-error-tour="source" className="mt-3">
             {source ? (
               <>
                 <button
-                  className="text-primary flex min-h-11 w-full items-start gap-2 py-3 text-left text-xs font-semibold underline underline-offset-4 disabled:opacity-50"
+                  className="text-muted-foreground hover:text-primary focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 py-3 text-left text-xs leading-5 transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:text-sm"
                   disabled={Boolean(busy)}
                   onClick={openSource}
                   aria-expanded={sourceOpen}
                   aria-controls={`source-${item.id}`}
                 >
-                  <BookOpen className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 break-words">
+                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 break-words">
                     Fuente: {source.sectionTitle ?? source.materialTitle}
                     {pageLabel(source.pageStart, source.pageEnd)
                       ? ` · ${pageLabel(source.pageStart, source.pageEnd)}`
                       : ''}{' '}
-                    — {sourceOpen ? 'Cerrar fragmento' : 'Ver fragmento'}
+                    <span className="text-primary font-medium">
+                      — {sourceOpen ? 'Cerrar fragmento' : 'Ver fragmento'}
+                    </span>
                   </span>
+                  <ChevronDown
+                    className={`mt-0.5 h-4 w-4 shrink-0 transition-transform motion-reduce:transition-none ${sourceOpen ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
+                  />
                 </button>
                 {sourceOpen && (
                   <div id={`source-${item.id}`} className="border-primary/30 mt-2 border-l-2 pl-4">
@@ -454,12 +509,15 @@ export function StudyErrorDetail({
                       disabled={!associateId || Boolean(busy)}
                       onClick={() =>
                         void run('associate', async () => {
-                          const associated = await associateReviewPdfAction(item.id, associateId);
+                          const associated = await reviewActions.associatePdf(item.id, associateId);
                           if (!associated.success || !associated.source) {
                             setNotice(associated.message ?? 'No pudimos asociarlo.');
                             return;
                           }
                           setSource(associated.source);
+                          setMessages(() => []);
+                          setReviewed(false);
+                          setSourceOpen(false);
                           onAssociate(associateId);
                         })
                       }
@@ -476,25 +534,8 @@ export function StudyErrorDetail({
                 </Link>
               </div>
             )}
+            {sourceNotice && inlineNotice}
           </section>
-          {(item.selectedAnswer || item.correctAnswer) && (
-            <div className="border-border mt-6 grid gap-4 border-t pt-5 sm:grid-cols-2">
-              {item.selectedAnswer && (
-                <div className="border-destructive/40 border-l-2 pl-4">
-                  <p className="!text-destructive !text-xs font-semibold">Respuesta incorrecta</p>
-                  <p className="!text-foreground mt-2 !text-sm break-words">
-                    {item.selectedAnswer}
-                  </p>
-                </div>
-              )}
-              {item.correctAnswer && (
-                <div className="border-primary/40 border-l-2 pl-4">
-                  <p className="!text-primary !text-xs font-semibold">Respuesta correcta</p>
-                  <p className="!text-foreground mt-2 !text-sm break-words">{item.correctAnswer}</p>
-                </div>
-              )}
-            </div>
-          )}
           <section data-study-error-tour="practice" className="border-border mt-6 border-t pt-5">
             {resolved ? (
               <p className="!text-foreground !text-sm">
@@ -502,16 +543,14 @@ export function StudyErrorDetail({
               </p>
             ) : materialId && reviewed ? (
               <>
-                <p className="!text-foreground font-semibold">
-                  ¿Querés comprobar si lo entendiste?
-                </p>
+                <p className="!text-foreground font-semibold">¿Querés probar con otra situación?</p>
                 <button
                   className={reviewPrimaryButton + ' mt-3'}
                   disabled={Boolean(busy)}
                   onClick={checkUnderstanding}
                 >
-                  {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}Responder una
-                  pregunta
+                  {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}Comprobar qué
+                  entendí
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </>
@@ -525,22 +564,16 @@ export function StudyErrorDetail({
             {activityHref && (
               <Link
                 href={activityHref}
-                className="text-muted-foreground mt-3 block w-fit py-2 text-xs font-semibold underline"
+                className="text-muted-foreground mt-3 inline-flex min-h-11 w-fit items-center py-2 text-xs font-semibold underline"
               >
                 Volver a la actividad original
               </Link>
             )}
+            {noticeAction === 'check' && inlineNotice}
           </section>
         </>
       )}
-      {notice && (
-        <p
-          role="alert"
-          className="border-destructive/40 !text-foreground mt-5 border-l-2 pl-3 !text-sm"
-        >
-          {notice}
-        </p>
-      )}
+      {(question || (!helpNotice && !sourceNotice && noticeAction !== 'check')) && inlineNotice}
       {!question && (
         <div className="border-border mt-7 flex flex-wrap gap-3 border-t pt-5">
           <button

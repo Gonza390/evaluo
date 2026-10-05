@@ -141,7 +141,7 @@ export async function getWrongAnswersExplanations(data: {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return { success: false, message: 'Debes iniciar sesión para ver explicaciones premium.' };
+      return { success: false, message: 'Entrá con tu cuenta para ver las explicaciones de Premium.' };
     }
 
     const materiaId = data.materia_id;

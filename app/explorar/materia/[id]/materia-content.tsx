@@ -268,7 +268,7 @@ export default function MateriaContent({
         logError('materia.sharePreguntero', error, { materiaId, targetParcial });
         toast({
           title: 'No pudimos compartirlo',
-          description: 'Intenta nuevamente en unos segundos.',
+          description: 'Intentá nuevamente en unos segundos.',
           variant: 'destructive',
         });
       }
@@ -1100,7 +1100,7 @@ export default function MateriaContent({
     if (authLoading) {
       toast({
         title: 'Validando sesión',
-        description: 'Espera un segundo e intenta nuevamente.',
+        description: 'Esperá un segundo e intentá nuevamente.',
         duration: 2200,
       });
       return null;
@@ -1109,7 +1109,7 @@ export default function MateriaContent({
     if (!isAuthenticated) {
       toast({
         variant: 'destructive',
-        title: 'Debes iniciar sesión para descargar este material',
+        title: 'Entrá con tu cuenta para descargar este material',
         description: 'Te redirigimos para continuar.',
         duration: 2800,
       });
@@ -1183,7 +1183,7 @@ export default function MateriaContent({
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
-        description: 'Intenta nuevamente en unos segundos.',
+        description: 'Intentá nuevamente en unos segundos.',
         duration: 3000,
       });
       return;
@@ -1194,7 +1194,7 @@ export default function MateriaContent({
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
-        description: 'Intenta nuevamente en unos segundos.',
+        description: 'Intentá nuevamente en unos segundos.',
         duration: 3000,
       });
       return;

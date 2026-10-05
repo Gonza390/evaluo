@@ -96,7 +96,7 @@ function BottomNav() {
   const { user } = useUser();
   const bottomNavItems = user
     ? [
-        { label: 'Inicio', href: '/dashboard', icon: Home },
+        { label: 'Mi espacio', href: '/dashboard', icon: Home },
         { label: 'Mis errores', href: '/dashboard/explicaciones', icon: CircleAlert },
         { label: 'Calendario', href: '/calendario', icon: CalendarDays },
         { label: 'Perfil', href: '/configuracion', icon: Settings },
@@ -134,7 +134,7 @@ function BottomNav() {
               }
             >
               <Icon className="h-4.5 w-4.5" />
-              <span className="text-[12px] font-medium">{item.label}</span>
+              <span className="text-center text-[12px] font-medium">{item.label}</span>
             </Link>
           );
         })}

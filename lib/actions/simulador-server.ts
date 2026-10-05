@@ -949,7 +949,7 @@ export async function submitSimulatorRatingAction(data: {
     } = await supabase.auth.getUser();
 
     if (!user?.id) {
-      return { success: false, message: 'Debes iniciar sesión para valorar el simulador.' };
+      return { success: false, message: 'Entrá con tu cuenta para valorar el simulador.' };
     }
 
     if (await isAdminActor(user)) {

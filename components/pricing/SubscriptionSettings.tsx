@@ -190,7 +190,7 @@ export function SubscriptionSettings() {
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
               <Button asChild className="h-11 rounded-xl px-5">
                 <Link href="/dashboard">
-                  Ir a mi plan de estudio
+                  Ir a Mi espacio
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

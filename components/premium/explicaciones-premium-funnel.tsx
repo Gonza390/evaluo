@@ -315,7 +315,7 @@ export function ExplicacionesPremiumFunnel({
           </div>
 
           <h1 className="mt-4 max-w-4xl text-[1.7rem] font-extrabold leading-[1.04] tracking-[-0.045em] text-slate-950 sm:text-[2.35rem] lg:text-[2.7rem]">
-            <span className="text-indigo-600">8 de cada 10 estudiantes</span> mejora su próximo intento después de revisar sus errores
+            <span className="text-primary">Entendé qué te confundió</span> antes de volver a practicar
           </h1>
           <p className="mx-auto mt-2.5 max-w-2xl text-xs leading-5 text-slate-600 sm:text-sm">
             Premium te explica todas tus respuestas incorrectas y te ayuda a detectar qué necesitás reforzar antes de volver a practicar.
@@ -345,7 +345,7 @@ export function ExplicacionesPremiumFunnel({
             type="button"
             onClick={() => continueTo(2)}
             disabled={incomingStep !== null}
-            className="mt-5 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-[0_6px_0_0_#4338CA] transition hover:bg-indigo-700 active:translate-y-0.5 active:shadow-[0_4px_0_0_#4338CA] disabled:pointer-events-none"
+            className="mt-5 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:pointer-events-none"
           >
             Entender todos mis errores
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -402,7 +402,7 @@ export function ExplicacionesPremiumFunnel({
             type="button"
             onClick={() => continueTo(3)}
             disabled={incomingStep !== null}
-            className="mx-auto mt-4 inline-flex h-11 w-full max-w-md shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-[0_6px_0_0_#4338CA] transition hover:bg-indigo-700 active:translate-y-0.5 active:shadow-[0_4px_0_0_#4338CA] disabled:pointer-events-none"
+            className="mx-auto mt-4 inline-flex h-11 w-full max-w-md shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:pointer-events-none"
           >
             Continuar
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -513,7 +513,7 @@ export function ExplicacionesPremiumFunnel({
             type="button"
             onClick={startCheckout}
             disabled={loading}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white shadow-[0_6px_0_0_#4338CA] transition hover:bg-indigo-700 active:translate-y-0.5 active:shadow-[0_4px_0_0_#4338CA] disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
             {loading ? 'Abriendo Mercado Pago…' : 'Pago seguro'}

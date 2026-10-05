@@ -22,7 +22,7 @@ export async function PublicHeaderActions() {
           className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-700 sm:px-4 sm:text-sm"
         >
           <Home aria-hidden="true" className="h-4 w-4" />
-          Ir al dashboard
+          Ir a Mi espacio
         </Link>
       </nav>
     );

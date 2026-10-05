@@ -954,7 +954,7 @@ export function ProfileCompletionModal({
                   onClick={handleGoToDashboard}
                   className="mt-6 h-12 w-full rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)] hover:opacity-95"
                 >
-                  Ir al dashboard
+                  Ir a Mi espacio
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>

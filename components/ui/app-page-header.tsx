@@ -27,20 +27,22 @@ export function AppPageHeader({
   return (
     <header
       className={cn(
-        'flex min-w-0 flex-col gap-4 border-b border-slate-200 pb-5 sm:pb-6',
-        align === 'center' ? 'items-center text-center' : 'sm:flex-row sm:items-end sm:justify-between',
+        'border-border flex min-w-0 flex-col gap-4 border-b pb-5 sm:pb-6',
+        align === 'center'
+          ? 'items-center text-center'
+          : 'sm:flex-row sm:items-end sm:justify-between',
         className
       )}
     >
       <div className={cn('min-w-0', align === 'center' && 'mx-auto max-w-2xl')}>
         {eyebrow ? (
-          <p className="text-[10.5px] font-bold tracking-[0.18em] text-slate-400 uppercase">
+          <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.18em] uppercase">
             {eyebrow}
           </p>
         ) : null}
         <Heading
           className={cn(
-            'font-bold tracking-[-0.05em] text-slate-950',
+            'text-foreground font-bold tracking-[-0.05em] [overflow-wrap:anywhere]',
             eyebrow && 'mt-1.5',
             size === 'compact'
               ? 'text-[1.35rem] sm:text-[1.55rem]'
@@ -52,7 +54,7 @@ export function AppPageHeader({
         {description ? (
           <p
             className={cn(
-              'mt-2 max-w-2xl text-slate-500',
+              'text-muted-foreground mt-2 max-w-2xl',
               size === 'compact' ? 'text-[13px] leading-5' : 'text-sm leading-6'
             )}
           >

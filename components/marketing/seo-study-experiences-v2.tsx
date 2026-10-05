@@ -503,7 +503,7 @@ export function EstudiarPdfExperience() {
                 Estudiá un PDF con IA: <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">resumen, conceptos, flashcards y práctica</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Elegí el PDF que realmente tenés que estudiar y convertílo en una sesión conectada de resumen, conceptos, flashcards y preguntas de práctica. No te pedimos registro hasta que decidas crear el material.
+                Elegí el PDF que realmente tenés que estudiar y convertilo en una sesión conectada de resumen, conceptos, flashcards y preguntas de práctica. No te pedimos registro hasta que decidas crear el material.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
                 <span className="inline-flex items-center gap-1.5">

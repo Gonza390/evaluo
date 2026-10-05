@@ -101,7 +101,7 @@ const STUDY_TABS: Array<{
 }> = [
   { id: 'resumen', label: 'Resumen', icon: BookOpenText },
   { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit, featured: true },
-  { id: 'tarjetas', label: 'Tarjetas', icon: Sparkles },
+  { id: 'tarjetas', label: 'Flashcards', icon: Sparkles },
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'mapa', label: 'Mapa mental', icon: Map, premium: true },
 ];

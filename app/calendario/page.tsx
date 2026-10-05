@@ -855,9 +855,9 @@ export default function CalendarioPage() {
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <h1 className="min-w-0 truncate text-[1.3rem] font-bold tracking-[-0.04em] text-[#050B2C] min-[380px]:text-[1.45rem] sm:text-[1.8rem]">
+                  <h2 className="text-foreground min-w-0 truncate text-[1.3rem] font-bold tracking-[-0.04em] min-[380px]:text-[1.45rem] sm:text-[1.8rem]">
                     {formatMonthLabel(visibleMonth)}
-                  </h1>
+                  </h2>
                   <button
                     type="button"
                     onClick={() => setVisibleMonth((current) => addMonths(current, 1))}

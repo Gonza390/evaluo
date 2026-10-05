@@ -208,7 +208,7 @@ export function ContextualPdfNudge() {
             </div>
 
             <div className="mt-4 flex items-start gap-3.5 pr-8">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-[0_10px_25px_rgba(79,70,229,0.24)]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-white shadow-[0_10px_25px_rgba(79,70,229,0.24)]">
                 <FileUp className="h-5 w-5" />
               </span>
               <div className="min-w-0">
@@ -235,11 +235,11 @@ export function ContextualPdfNudge() {
             <Link
               href={href}
               onClick={onCtaClick}
-              className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)] transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(79,70,229,0.22)] transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Crear mi guía de estudio
             </Link>
-            <p className="mt-2.5 text-center text-[11px] leading-4 text-slate-400">
+            <p className="mt-2.5 text-center text-[11px] leading-4 text-muted-foreground">
               Usá el PDF que ya tenés para estudiar esta materia.
             </p>
           </>
@@ -262,7 +262,7 @@ export function ContextualPdfNudge() {
             <Link
               href={href}
               onClick={onCtaClick}
-              className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-primary px-4 text-sm font-bold text-white transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Subir mi primer PDF
             </Link>

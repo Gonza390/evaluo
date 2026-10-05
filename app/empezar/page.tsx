@@ -189,7 +189,7 @@ export default async function EmpezarPage() {
             <div className="mx-auto mt-6 max-w-[430px]">
               <Link
                 href={uploadHref}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-center text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.24)] transition hover:bg-indigo-700"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-center text-sm font-semibold shadow-[0_12px_28px_rgba(79,70,229,0.24)] transition"
               >
                 Subir mis apuntes y empezar
                 <ArrowRight className="h-4 w-4" />

@@ -60,7 +60,7 @@ export function PricingPlanSelector({
           onClick={() => chooseBillingMode('semester')}
           className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition sm:px-6 ${
             billingMode === 'semester'
-              ? 'bg-indigo-600 text-white shadow-sm'
+              ? 'bg-primary text-primary-foreground shadow-sm'
               : 'text-slate-600 hover:text-slate-950'
           }`}
         >

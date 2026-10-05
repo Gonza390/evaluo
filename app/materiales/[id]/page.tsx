@@ -465,7 +465,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
             href="/dashboard"
             className="inline-flex h-11 items-center justify-center rounded-2xl bg-amber-600 px-5 text-sm font-semibold text-white transition hover:bg-amber-700"
           >
-            Volver al dashboard
+            Volver a Mi espacio
           </Link>
         </div>
       </div>

@@ -147,7 +147,7 @@ export function SimulatorNeedsSurvey({
         className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
       >
         <Send className="h-4 w-4" />
-        {submitting ? 'Enviando...' : 'Enviar feedback'}
+        {submitting ? 'Enviando...' : 'Enviar opinión'}
       </button>
     </section>
   );

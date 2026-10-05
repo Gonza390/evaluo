@@ -207,7 +207,7 @@ export function ExplanationsHistoryClient({
             href="/dashboard"
             className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
           >
-            Volver al dashboard
+            Volver a Mi espacio
           </Link>
         </div>
       </div>

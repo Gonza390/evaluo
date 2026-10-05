@@ -11,7 +11,7 @@ const VIDEO_POSTER_URL =
 
 const videoSteps = [
   'Subí el PDF que tenés que estudiar.',
-  'Convertílo en distintas formas de repaso.',
+  'Convertilo en distintas formas de repaso.',
   'Practicá y detectá qué conviene reforzar.',
 ] as const;
 

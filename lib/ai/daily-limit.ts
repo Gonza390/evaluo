@@ -7,7 +7,7 @@ export const DAILY_FREE_LIMIT = 10;
 
 /** Mensaje de error que se retorna al usuario cuando alcanza el límite. */
 export const AI_LIMIT_REACHED_MESSAGE =
-  'Límite diario de consultas IA alcanzado. Mañana tendrás nuevas consultas. ¡Upgrade a Premium para consultas ilimitadas!';
+  'Alcanzaste el límite diario de consultas con IA. Mañana vas a tener nuevas consultas. Con Evaluo Premium podés continuar sin este límite diario.';
 
 type DailyLimitResult = {
   allowed: boolean;

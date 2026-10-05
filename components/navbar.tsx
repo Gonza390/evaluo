@@ -50,7 +50,7 @@ function isNavItemActive(pathname: string, href: string) {
 
 const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
-  { label: 'Calendario de exámenes', href: '/calendario', icon: CalendarDays },
+  { label: 'Calendario', href: '/calendario', icon: CalendarDays },
   { label: 'Mis errores', href: '/dashboard/explicaciones', icon: CircleAlert },
 ];
 
@@ -73,8 +73,8 @@ function NavItem({
 }) {
   const baseClass = `group flex items-center rounded-lg text-[13px] font-medium transition-colors duration-150 ${
     active
-      ? 'bg-indigo-50/80 text-indigo-700'
-      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+      ? 'bg-primary/5 text-primary'
+      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
   } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'gap-2.5 px-3 py-2.5'}`;
 
   if (disabled) {

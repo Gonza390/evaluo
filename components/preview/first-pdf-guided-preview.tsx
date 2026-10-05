@@ -61,7 +61,7 @@ const studySteps: {
   {
     tab: 'tarjetas',
     selector: '[data-demo-focus="study-section"][data-state="active"]',
-    title: 'Tarjetas: intentá recordar',
+    title: 'Flashcards: intentá recordar',
     description:
       'Pensá una respuesta y tocá la tarjeta para compararla. Después indicá si lo sabías.',
     nextLabel: 'Ver mapa mental',

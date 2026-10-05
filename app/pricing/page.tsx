@@ -87,16 +87,17 @@ export default async function PricingPage({
 
         <section className="relative overflow-hidden border-b border-slate-200">
           <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-100/70 blur-3xl" />
-          <div className="relative mx-auto max-w-5xl px-4 pb-12 pt-10 text-center sm:px-6 sm:pb-14 sm:pt-14">
+          <div className="relative mx-auto max-w-5xl px-4 pt-10 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-14">
             <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-800">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               Evaluo Premium
             </span>
-            <h1 className="mx-auto mt-6 max-w-4xl break-words text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
+            <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] break-words min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
               Estudiá mejor. Elegí el plan que te acompañe.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Empezá gratis. Cuando quieras más práctica, explicaciones y seguimiento, pasate a Premium.
+              Empezá gratis. Cuando quieras más práctica, explicaciones y seguimiento, pasate a
+              Premium.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-indigo-700" aria-hidden="true" />
@@ -109,15 +110,14 @@ export default async function PricingPage({
           <section className="border-b border-indigo-100 bg-indigo-50/40 px-4 py-12 sm:px-6">
             <div className="mx-auto max-w-xl">
               <div className="mb-6 text-center">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">
-                  Oferta para retomar tu checkout
+                <p className="text-xs font-bold tracking-[0.18em] text-indigo-700 uppercase">
+                  Retomá tu compra
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
                   Premium mensual a $9.990
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Esta opción no aparece en el pricing público y sólo se valida para cuentas con un
-                  checkout anterior sin completar.
+                  Esta oferta está disponible si empezaste una compra y todavía no la completaste.
                 </p>
               </div>
               <PaymentCheckoutCard
@@ -134,12 +134,15 @@ export default async function PricingPage({
         <section id="elegir-plan" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl">
             <div className="mb-7 text-center">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">Planes</p>
+              <p className="text-xs font-bold tracking-[0.18em] text-indigo-700 uppercase">
+                Planes
+              </p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
                 Gratis o Premium. Sin vueltas.
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                Premium es siempre el mismo. Elegí si preferís pagarlo mes a mes o resolver todo el cuatrimestre con 6 meses.
+                Premium es siempre el mismo. Elegí si preferís pagarlo mes a mes o cubrir un
+                semestre con 6 meses.
               </p>
             </div>
 
@@ -155,7 +158,8 @@ export default async function PricingPage({
                 Premium te ayuda a saber qué estudiar después.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                No se trata sólo de tener más herramientas: practicá, entendé tus errores y enfocá tu tiempo en los temas que más necesitás reforzar antes del parcial.
+                No se trata sólo de tener más herramientas: practicá, entendé tus errores y enfocá
+                tu tiempo en los temas que más necesitás reforzar antes del parcial.
               </p>
             </div>
 
@@ -170,7 +174,9 @@ export default async function PricingPage({
                   key={feature}
                   className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] items-center border-b border-slate-200 px-3 py-4 text-sm last:border-0 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 sm:grid-cols-[1fr_140px_140px] sm:px-6"
                 >
-                  <span className="min-w-0 break-words pr-2 text-[13px] leading-5 text-slate-800 min-[360px]:pr-3 min-[360px]:text-sm">{feature}</span>
+                  <span className="min-w-0 pr-2 text-[13px] leading-5 break-words text-slate-800 min-[360px]:pr-3 min-[360px]:text-sm">
+                    {feature}
+                  </span>
                   <span className="flex justify-center">
                     {free ? (
                       <Check className="h-5 w-5 text-emerald-700" aria-label="Incluido" />
@@ -179,7 +185,9 @@ export default async function PricingPage({
                     )}
                   </span>
                   <span className="flex justify-center">
-                    {premium ? <Check className="h-5 w-5 text-indigo-700" aria-label="Incluido" /> : null}
+                    {premium ? (
+                      <Check className="h-5 w-5 text-indigo-700" aria-label="Incluido" />
+                    ) : null}
                   </span>
                 </div>
               ))}

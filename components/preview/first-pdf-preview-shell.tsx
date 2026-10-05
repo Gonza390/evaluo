@@ -58,7 +58,7 @@ export function FirstPdfPreviewShell({
               title="Fuera de este recorrido de muestra"
               className="text-muted-foreground flex min-h-11 w-full items-center gap-3 px-3 text-left text-sm opacity-50"
             >
-              <CalendarDays className="size-4 shrink-0" /> Calendario de exámenes
+              <CalendarDays className="size-4 shrink-0" /> Calendario
             </button>
             <button
               onClick={onErrors}

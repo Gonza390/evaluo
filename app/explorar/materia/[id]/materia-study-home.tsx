@@ -498,14 +498,14 @@ export default function MateriaStudyHome({
                     <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                       <Link
                         href={uploadHref}
-                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition"
                       >
                         <UploadCloud className="h-4 w-4" />
                         Crear ejercicios con mi PDF
                       </Link>
                       <Link
                         href="/demo/material-estudio"
-                        className="inline-flex h-10 items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                        className="border-border bg-background text-foreground hover:bg-muted inline-flex h-10 items-center justify-center rounded-xl border px-4 text-sm font-semibold transition"
                       >
                         Ver guía de ejemplo
                       </Link>

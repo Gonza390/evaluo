@@ -3,7 +3,7 @@ import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 
 export const metadata: Metadata = {
   title: 'Iniciar sesión',
-  description: 'Accede a tu cuenta de Evaluo para retomar materias, materiales y simuladores.',
+  description: 'Accedé a tu cuenta de Evaluo para retomar materias, materiales y simuladores.',
   robots: {
     index: false,
     follow: false,

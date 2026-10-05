@@ -126,8 +126,8 @@ export default async function DemoMaterialEstudioPage({
         div[aria-live='polite']:has(> section[role='dialog'][aria-label='Recorrido de Evaluo, paso 6 de 6'])
           > div[class*='bg-slate-950/60'] {
           background: rgba(15, 23, 42, 0.44) !important;
-          -webkit-backdrop-filter: blur(7px);
-          backdrop-filter: blur(7px);
+          -webkit-backdrop-filter: blur(var(--ui-backdrop-blur, 1.5px));
+          backdrop-filter: blur(var(--ui-backdrop-blur, 1.5px));
         }
 
         @keyframes evaluo-tour-card-enter-a {

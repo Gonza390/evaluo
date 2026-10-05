@@ -18,8 +18,8 @@ export function AdminAccessState({
     reason === 'unauthenticated'
       ? 'El panel de administración solo está disponible para cuentas con permisos internos.'
       : reason === 'forbidden'
-        ? 'Tu cuenta funciona bien, pero no tiene permisos de administrador. Volvé al dashboard para seguir usando la plataforma.'
-        : 'Intenta nuevamente en unos minutos. Si el problema sigue, revisa tu sesión o el estado del servidor.';
+        ? 'Tu cuenta funciona bien, pero no tiene permisos de administrador. Volvé a Mi espacio para seguir usando la plataforma.'
+        : 'Intentá nuevamente en unos minutos. Si el problema sigue, revisá tu sesión o el estado del servidor.';
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
@@ -40,7 +40,7 @@ export function AdminAccessState({
             href={reason === 'unauthenticated' ? '/login?next=%2Fadministrador' : '/dashboard'}
             className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
-            {reason === 'unauthenticated' ? 'Iniciar sesión' : 'Volver al dashboard'}
+            {reason === 'unauthenticated' ? 'Iniciar sesión' : 'Volver a Mi espacio'}
           </Link>
           <Link
             href="/"

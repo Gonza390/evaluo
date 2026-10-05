@@ -80,7 +80,7 @@ export default function LoginForm() {
   const location = intent === 'premium' ? 'login_premium_intent' : 'login';
   const loginContextLabel =
     nextPath === '/dashboard'
-      ? 'tu dashboard'
+      ? 'Mi espacio'
       : nextPath === '/calendario'
         ? 'tu calendario'
         : 'la sección que querías abrir';
@@ -108,7 +108,7 @@ export default function LoginForm() {
 
     if (isSignUp && !form.getValues('acceptLegal')) {
       form.setError('acceptLegal', {
-        message: 'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
+        message: 'Tenés que aceptar los Términos y la Política de privacidad para crear tu cuenta.',
       });
       setLoading(false);
       return;
@@ -158,7 +158,7 @@ export default function LoginForm() {
   const handleEmailAuth = form.handleSubmit(async (values) => {
     if (isSignUp && !values.acceptLegal) {
       form.setError('acceptLegal', {
-        message: 'Debes aceptar los Términos y la Política de privacidad para crear tu cuenta.',
+        message: 'Tenés que aceptar los Términos y la Política de privacidad para crear tu cuenta.',
       });
       return;
     }

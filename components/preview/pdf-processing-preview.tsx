@@ -103,7 +103,7 @@ export function PdfProcessingPreview({
           <aside className="journey-background-nav">
             <strong>Tu espacio académico</strong>
             <span className="journey-nav-active">Mi espacio</span>
-            <span>Calendario de exámenes</span>
+            <span>Calendario</span>
             <span>Mis errores</span>
           </aside>
           <section className="journey-background-content">

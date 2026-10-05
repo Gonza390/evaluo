@@ -325,7 +325,7 @@ export function PaymentResult({
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-11 rounded-lg px-6 shadow-none">
-            <Link href="/dashboard">Volver al dashboard</Link>
+            <Link href="/dashboard">Volver a Mi espacio</Link>
           </Button>
         </div>
       </section>
@@ -354,7 +354,7 @@ export function PaymentResult({
             </Link>
           </Button>
           <Button asChild variant="outline" className="h-11 rounded-lg px-6 shadow-none">
-            <Link href="/dashboard">Volver al dashboard</Link>
+            <Link href="/dashboard">Volver a Mi espacio</Link>
           </Button>
         </div>
       </section>
@@ -439,7 +439,7 @@ export function PaymentResult({
             href="/dashboard"
             className="mt-4 block text-xs font-semibold text-slate-500 transition hover:text-blue-600"
           >
-            Ir al dashboard
+            Ir a Mi espacio
           </Link>
         </div>
       ) : (

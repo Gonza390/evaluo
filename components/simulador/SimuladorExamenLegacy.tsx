@@ -1591,7 +1591,7 @@ export default function SimuladorExamen({
       });
 
       if (!response.ok) {
-        throw new Error('No se pudo guardar tu feedback.');
+        throw new Error('No se pudo guardar tu opinión.');
       }
 
       setFeedbackVotes((prev) => ({ ...prev, [preguntaId]: voto }));
@@ -1631,7 +1631,7 @@ export default function SimuladorExamen({
       }
 
       toast({
-        title: voteType === 1 ? 'Gracias por tu like' : 'Gracias por tu feedback',
+        title: voteType === 1 ? 'Gracias por tu valoración' : 'Gracias por tu opinión',
         description: 'Tu valoración nos ayuda a mejorar este simulador.',
       });
     } catch (error) {
@@ -2035,7 +2035,7 @@ export default function SimuladorExamen({
         logError('simulador.shareResult', error, { materiaId, parcial: resolvedParcial, userId });
         toast({
           title: 'No pudimos compartir el resultado',
-          description: 'Intenta nuevamente en unos segundos.',
+          description: 'Intentá nuevamente en unos segundos.',
           variant: 'destructive',
         });
       }

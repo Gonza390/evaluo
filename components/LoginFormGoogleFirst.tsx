@@ -435,7 +435,7 @@ export default function LoginFormGoogleFirst() {
                     type={showPassword ? 'text' : 'password'}
                     autoComplete={isSignUp ? 'new-password' : 'current-password'}
                     placeholder="••••••••"
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm text-slate-950 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 pr-16 text-sm text-slate-950 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                   />
                   <button
                     type="button"
@@ -450,7 +450,7 @@ export default function LoginFormGoogleFirst() {
 
               <button
                 disabled={loading}
-                className="from-brand to-brand-2 h-11 w-full rounded-xl bg-gradient-to-r text-sm font-bold text-white shadow-[0_10px_24px_rgba(37,99,235,0.18)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-11 w-full rounded-xl text-sm font-bold shadow-[0_10px_24px_rgba(37,99,235,0.18)] transition disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSignUp ? 'Crear cuenta gratis' : 'Iniciar sesión'}
               </button>

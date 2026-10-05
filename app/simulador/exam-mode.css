@@ -136,7 +136,7 @@ html.evaluo-exam-scroll-lock body {
   padding-right: 4.5rem;
   border-color: color-mix(in oklch, var(--border) 88%, transparent);
   background: color-mix(in oklch, var(--background) 98%, transparent);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(var(--ui-backdrop-blur, 1.5px));
 }
 
 #evaluo-simulator-shell[data-exam-immersive='true']

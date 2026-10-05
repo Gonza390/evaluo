@@ -3,6 +3,7 @@
 @source '../components/preview';
 :root {
   --background: oklch(1 0 0);
+  --ui-backdrop-blur: 1.5px;
   --foreground: oklch(0.15 0.01 230);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.01 230);
@@ -330,6 +331,11 @@
 }
 
 @layer utilities {
+  /* Una intensidad suave para fondos; no modifica el blur decorativo de primer plano. */
+  [class*='backdrop-blur']:not([class~='backdrop-blur-none']) {
+    --tw-backdrop-blur: blur(var(--ui-backdrop-blur));
+  }
+
   .animate-study-float {
     animation: studyCardFloat 4.6s ease-in-out infinite;
   }

@@ -289,7 +289,7 @@ export function PaymentCheckoutCard({
             : isSemester
               ? `Pagás ${currency.format(offer.semesterPriceArs)} una sola vez y tenés Premium durante 6 meses. Sin renovación automática.`
               : isRecovery
-                ? 'Precio especial mensual para retomar tu checkout de Premium.'
+                ? 'Precio especial mensual para retomar tu compra de Premium.'
                 : 'Renovación mensual automática. Podés cancelar futuras renovaciones cuando quieras.'}
         </p>
 
@@ -303,7 +303,7 @@ export function PaymentCheckoutCard({
                   : 'Los 50 cupos están ocupados'}
             </p>
             <p className="mt-0.5 text-[10px] leading-4 text-slate-500">
-              El cupo se descuenta con compras aprobadas y reservas de checkout recientes.
+              Los cupos disponibles pueden cambiar mientras otras personas completan su compra.
             </p>
           </div>
         ) : null}
@@ -396,7 +396,7 @@ export function PaymentCheckoutCard({
           <div role="status" className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-3 text-center">
             <p className="text-xs font-semibold text-slate-950">Mercado Pago está abierto</p>
             <p className="mt-1 text-[11px] leading-5 text-slate-600">
-              Si cerraste esa pestaña, podés volver a abrir el checkout desde acá.
+              Si cerraste esa pestaña, podés retomar el pago desde acá.
             </p>
             <button
               type="button"
