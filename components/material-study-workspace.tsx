@@ -24,7 +24,6 @@ import {
   Loader2,
   Map as MapIcon,
   MessageSquare,
-  RotateCcw,
   Sparkles,
   SquareLibrary,
 } from 'lucide-react';
@@ -39,6 +38,7 @@ import {
   type RecommendedStudyStep,
 } from '@/components/study/recommended-study-guide';
 import { SummaryTopicCheckPopup } from '@/components/study/summary-topic-check-popup';
+import { SummaryCompletionPopup } from '@/components/study/summary-completion-popup';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
@@ -270,7 +270,10 @@ export function MaterialStudyWorkspace({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
   const [summaryEndPendingCount, setSummaryEndPendingCount] = useState<number | null>(null);
+  const [summaryCompletionOpen, setSummaryCompletionOpen] = useState(false);
   const summaryEndRef = useRef<HTMLDivElement | null>(null);
+  const summaryCompletionPromptedRef = useRef(false);
+  const summaryCompletionTimerRef = useRef<number | null>(null);
   const promptedSummaryChecksRef = useRef(new Set<number>());
   const summaryReadTimeRef = useRef(new Map<number, number>());
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
@@ -284,31 +287,70 @@ export function MaterialStudyWorkspace({
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
 
   useEffect(() => {
-    if (activeTab !== 'resumen' || !isOwner || demo || !summaryEndRef.current) {
+    if (
+      activeTab !== 'resumen' ||
+      demo ||
+      !summaryEndRef.current ||
+      summaryCompletionPromptedRef.current ||
+      summaryCheckChapterIndex !== null ||
+      recommendedActive
+    ) {
       return;
     }
 
     let cancelled = false;
+    let endVisible = false;
     const node = summaryEndRef.current;
+
+    const clearCompletionTimer = () => {
+      if (summaryCompletionTimerRef.current !== null) {
+        window.clearTimeout(summaryCompletionTimerRef.current);
+        summaryCompletionTimerRef.current = null;
+      }
+    };
+
+    const scheduleCompletion = () => {
+      clearCompletionTimer();
+      summaryCompletionTimerRef.current = window.setTimeout(() => {
+        if (cancelled || !endVisible || summaryCompletionPromptedRef.current) return;
+
+        const loadPendingCount = isOwner
+          ? getMaterialPendingStudyErrorTopicCountAction(materialId)
+          : Promise.resolve({ count: 0 });
+
+        void loadPendingCount.then(({ count }) => {
+          if (cancelled || !endVisible || summaryCompletionPromptedRef.current) return;
+          summaryCompletionPromptedRef.current = true;
+          setSummaryEndPendingCount(count);
+          setSummaryCompletionOpen(true);
+        });
+      }, 4000);
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-
-        observer.disconnect();
-        void getMaterialPendingStudyErrorTopicCountAction(materialId).then(({ count }) => {
-          if (!cancelled) setSummaryEndPendingCount(count);
-        });
+        endVisible = entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5);
+        if (endVisible) scheduleCompletion();
+        else clearCompletionTimer();
       },
-      { threshold: 0.2 }
+      { threshold: [0, 0.5, 1], rootMargin: '0px 0px -8% 0px' }
     );
 
     observer.observe(node);
 
     return () => {
       cancelled = true;
+      clearCompletionTimer();
       observer.disconnect();
     };
-  }, [activeTab, demo, isOwner, materialId, summaryCheckChapterIndex]);
+  }, [
+    activeTab,
+    demo,
+    isOwner,
+    materialId,
+    recommendedActive,
+    summaryCheckChapterIndex,
+  ]);
   const setIsViewerVisible = (value: SetStateAction<boolean>) => {
     const next = typeof value === 'function' ? value(isViewerVisible) : value;
     setLocalViewerVisible(next);
@@ -1130,90 +1172,11 @@ export function MaterialStudyWorkspace({
                     </section>
                   ))}
 
-                  <section
+                  <div
                     ref={summaryEndRef}
-                    className="mt-10 rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#F8FAFF_0%,#FFFFFF_55%,#F7F8FF_100%)] px-5 py-5 sm:px-6 sm:py-6"
-                  >
-                    <p className="text-[10.5px] font-extrabold tracking-[0.16em] text-[#2563EB] uppercase">
-                      Siguiente paso
-                    </p>
-                    <h3 className="mt-2 text-[1.3rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-[1.45rem]">
-                      Terminaste el resumen
-                    </h3>
-                    <p className="mt-2 max-w-[620px] text-[13.5px] leading-6 text-slate-600">
-                      {summaryEndPendingCount && summaryEndPendingCount > 0
-                        ? `Antes de seguir, tenés ${summaryEndPendingCount} ${summaryEndPendingCount === 1 ? 'tema' : 'temas'} para reforzar.`
-                        : 'Ya recorriste los temas principales de este PDF. Ahora podés ponerte a prueba.'}
-                    </p>
-
-                    <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-                      {summaryEndPendingCount && summaryEndPendingCount > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`
-                            )
-                          }
-                          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[13px] bg-[#2563EB] px-5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                          Reforzar mis errores
-                        </button>
-                      ) : null}
-
-                      <button
-                        type="button"
-                        onClick={() => handleStudyTabChange('ejercicios', 'summary_chapter')}
-                        className={cn(
-                          'inline-flex min-h-11 items-center justify-center gap-2 rounded-[13px] px-5 text-sm font-semibold transition',
-                          summaryEndPendingCount && summaryEndPendingCount > 0
-                            ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
-                            : 'bg-[#2563EB] text-white hover:bg-[#1D4ED8]'
-                        )}
-                      >
-                        <BrainCircuit className="h-4 w-4" />
-                        Hacer simulador
-                      </button>
-                    </div>
-
-                    <div className="mt-6 border-t border-slate-200 pt-4">
-                      <p className="text-[11px] font-bold tracking-[0.1em] text-slate-400 uppercase">
-                        ¿Querés repasar antes?
-                      </p>
-                      <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                        <button
-                          type="button"
-                          onClick={() => handleStudyTabChange('tarjetas')}
-                          className="flex min-h-12 items-center gap-2.5 rounded-[13px] border border-slate-200 bg-white px-3.5 text-left text-[13px] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                        >
-                          <Sparkles className="h-4 w-4 shrink-0 text-[#2563EB]" />
-                          Flashcards
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleStudyTabChange('glosario')}
-                          className="flex min-h-12 items-center gap-2.5 rounded-[13px] border border-slate-200 bg-white px-3.5 text-left text-[13px] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                        >
-                          <SquareLibrary className="h-4 w-4 shrink-0 text-[#2563EB]" />
-                          Glosario
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleStudyTabChange('mapa')}
-                          className="flex min-h-12 items-center justify-between gap-2.5 rounded-[13px] border border-slate-200 bg-white px-3.5 text-left text-[13px] font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-                        >
-                          <span className="inline-flex min-w-0 items-center gap-2.5">
-                            <MapIcon className="h-4 w-4 shrink-0 text-[#2563EB]" />
-                            <span>Mapa mental</span>
-                          </span>
-                          {!isPremium ? (
-                            <Crown className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                          ) : null}
-                        </button>
-                      </div>
-                    </div>
-                  </section>
+                    aria-hidden="true"
+                    className="h-8 w-full"
+                  />
                 </div>
               ) : (
                 <p className="text-[14px] leading-6 text-slate-500">
@@ -1504,6 +1467,24 @@ export function MaterialStudyWorkspace({
           onContinue={handleSummaryCheckContinue}
         />
       ) : null}
+      <SummaryCompletionPopup
+        open={summaryCompletionOpen}
+        pendingCount={summaryEndPendingCount ?? 0}
+        isPremium={isPremium}
+        onClose={() => setSummaryCompletionOpen(false)}
+        onErrors={() => {
+          setSummaryCompletionOpen(false);
+          router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
+        }}
+        onSimulator={() => {
+          setSummaryCompletionOpen(false);
+          handleStudyTabChange('ejercicios', 'summary_chapter');
+        }}
+        onReview={(tab) => {
+          setSummaryCompletionOpen(false);
+          handleStudyTabChange(tab);
+        }}
+      />
       {recommendedActive && recommendedTourStep && (
         <RecommendedStudyGuide
           step={recommendedTourStep}
