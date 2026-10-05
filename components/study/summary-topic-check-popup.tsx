@@ -2,12 +2,15 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle2, ChevronRight, CircleAlert, RotateCcw, X } from 'lucide-react';
+import { CheckCircle2, ChevronRight, CircleAlert, Loader2, RotateCcw, X } from 'lucide-react';
+import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import {
-  markStudyErrorReviewedAction,
-  recordStudentMaterialStudyResultAction,
-} from '@/lib/actions/study-errors';
+  generateInlineSummaryCheckHelpAction,
+  generateReviewCheckAction,
+  submitReviewCheckAction,
+} from '@/lib/actions/study-error-review';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import type { ReviewQuestion } from '@/lib/study-error-review-contract';
 import type { SummaryCheckQuestion } from '@/lib/student-materials/summary-checks';
 import { cn } from '@/lib/utils';
 
@@ -38,16 +41,16 @@ function normalize(value: string) {
     .trim();
 }
 
-function brief(value: string, max = 260) {
+function brief(value: string, max = 300) {
   const text = value.replace(/\s+/g, ' ').trim();
   if (text.length <= max) return text;
 
   const partial = text.slice(0, max);
   const cut = partial.lastIndexOf(' ');
-  return `${partial.slice(0, cut > 120 ? cut : max).trim()}…`;
+  return `${partial.slice(0, cut > 140 ? cut : max).trim()}…`;
 }
 
-function reinforcementText(question: SummaryCheckQuestion) {
+function fallbackReinforcementText(question: SummaryCheckQuestion) {
   const explanation = question.explanation?.trim() ?? '';
   const genericExplanation =
     /^la respuesta conserva/i.test(explanation) ||
@@ -77,7 +80,10 @@ export function SummaryTopicCheckPopup({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [errorIds, setErrorIds] = useState<Record<string, string>>({});
   const [reinforceIndex, setReinforceIndex] = useState(0);
-  const [retrySelectedAnswer, setRetrySelectedAnswer] = useState<string | null>(null);
+  const [reinforcementText, setReinforcementText] = useState('');
+  const [reinforcementMessage, setReinforcementMessage] = useState<string | null>(null);
+  const [reviewQuestion, setReviewQuestion] = useState<ReviewQuestion | null>(null);
+  const [retrySelectedIndex, setRetrySelectedIndex] = useState<number | null>(null);
   const [retryResults, setRetryResults] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,7 +97,10 @@ export function SummaryTopicCheckPopup({
     setAnswers({});
     setErrorIds({});
     setReinforceIndex(0);
-    setRetrySelectedAnswer(null);
+    setReinforcementText('');
+    setReinforcementMessage(null);
+    setReviewQuestion(null);
+    setRetrySelectedIndex(null);
     setRetryResults({});
     setIsSubmitting(false);
     trackMarketingEvent('summary_topic_check_prompted', {
@@ -263,33 +272,105 @@ export function SummaryTopicCheckPopup({
             detail: 'Te mostramos brevemente qué revisar y te damos otra oportunidad.',
           };
 
-  const startReinforcement = () => {
-    if (failedQuestions.length === 0) return;
-    setReinforceIndex(0);
-    setRetrySelectedAnswer(null);
+  const prepareReinforcement = async (
+    question: SummaryCheckQuestion,
+    index: number
+  ) => {
+    setReinforceIndex(index);
     setPhase('reinforce');
+    setReviewQuestion(null);
+    setRetrySelectedIndex(null);
+    setReinforcementMessage(null);
+    setReinforcementText('');
+    setIsSubmitting(true);
+
+    const fallback = fallbackReinforcementText(question);
+
+    if (!recordResults) {
+      setReinforcementText(fallback);
+      setIsSubmitting(false);
+      return;
+    }
+
+    const errorId = errorIds[question.id];
+    if (!errorId) {
+      setReinforcementText(fallback);
+      setReinforcementMessage(
+        'No pudimos vincular este error con el repaso automático. Igual podés seguir estudiando.'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    const result = await generateInlineSummaryCheckHelpAction(errorId, materialId);
+    if (result.success && result.text) {
+      setReinforcementText(result.text);
+    } else {
+      setReinforcementText(fallback);
+      setReinforcementMessage(
+        result.message ?? 'No pudimos generar la explicación con IA. Te mostramos la ayuda disponible.'
+      );
+    }
+
+    setIsSubmitting(false);
+  };
+
+  const startReinforcement = async () => {
+    const firstFailed = failedQuestions[0];
+    if (!firstFailed) return;
+
     trackMarketingEvent('summary_topic_check_reinforcement_started', {
       material_id: materialId,
       chapter_index: chapterIndex,
       topic: topicTitle,
       failed: failedQuestions.length,
     });
+
+    await prepareReinforcement(firstFailed, 0);
   };
 
   const startRetry = async () => {
     if (!activeFailedQuestion || isSubmitting) return;
 
     setIsSubmitting(true);
-    const errorId = errorIds[activeFailedQuestion.id];
-    if (recordResults && errorId) {
-      await markStudyErrorReviewedAction(errorId);
+    setReinforcementMessage(null);
+    setRetrySelectedIndex(null);
+
+    if (!recordResults) {
+      setReviewQuestion({
+        id: `demo:${activeFailedQuestion.id}`,
+        question: activeFailedQuestion.prompt,
+        options: activeFailedQuestion.options,
+      });
+      setPhase('retry');
+      setIsSubmitting(false);
+      return;
     }
-    setRetrySelectedAnswer(null);
+
+    const errorId = errorIds[activeFailedQuestion.id];
+    if (!errorId) {
+      setReinforcementMessage(
+        'No pudimos preparar una nueva pregunta para este error. Podés seguir estudiando.'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    const result = await generateReviewCheckAction(errorId, materialId);
+    if (!result.success || !result.question) {
+      setReinforcementMessage(
+        result.message ?? 'No pudimos preparar una nueva pregunta. Intentá nuevamente.'
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    setReviewQuestion(result.question);
     setPhase('retry');
     setIsSubmitting(false);
   };
 
-  const moveAfterRetry = (wasCorrect: boolean) => {
+  const moveAfterRetry = async (wasCorrect: boolean) => {
     if (!activeFailedQuestion) return;
 
     setRetryResults((previous) => ({
@@ -298,10 +379,10 @@ export function SummaryTopicCheckPopup({
     }));
 
     const nextIndex = reinforceIndex + 1;
-    if (nextIndex < failedQuestions.length) {
-      setReinforceIndex(nextIndex);
-      setRetrySelectedAnswer(null);
-      setPhase('reinforce');
+    const nextFailed = failedQuestions[nextIndex];
+
+    if (nextFailed) {
+      await prepareReinforcement(nextFailed, nextIndex);
       return;
     }
 
@@ -309,25 +390,31 @@ export function SummaryTopicCheckPopup({
   };
 
   const submitRetry = async () => {
-    if (!activeFailedQuestion || !retrySelectedAnswer || isSubmitting) return;
+    if (
+      !activeFailedQuestion ||
+      !reviewQuestion ||
+      retrySelectedIndex === null ||
+      isSubmitting
+    ) {
+      return;
+    }
 
     setIsSubmitting(true);
-    const wasCorrect =
-      normalize(retrySelectedAnswer) === normalize(activeFailedQuestion.answer);
+    let wasCorrect = false;
 
-    if (recordResults) {
-      await recordStudentMaterialStudyResultAction({
-        materialId,
-        sourceType: 'exercise',
-        itemKey: `summary-check:${chapterIndex}:${activeFailedQuestion.id}`,
-        wasCorrect,
-        topic: activeFailedQuestion.topic || topicTitle,
-        prompt: activeFailedQuestion.prompt,
-        explanation: activeFailedQuestion.explanation,
-        correctAnswer: activeFailedQuestion.answer,
-        selectedAnswer: retrySelectedAnswer,
-        reference: activeFailedQuestion.reference,
-      });
+    if (recordResults && !reviewQuestion.id.startsWith('demo:')) {
+      const result = await submitReviewCheckAction(reviewQuestion.id, retrySelectedIndex);
+      if (!result.success || typeof result.correct !== 'boolean') {
+        setReinforcementMessage(
+          result.message ?? 'No pudimos guardar esta respuesta. Intentá nuevamente.'
+        );
+        setIsSubmitting(false);
+        return;
+      }
+      wasCorrect = result.correct;
+    } else {
+      const selected = reviewQuestion.options[retrySelectedIndex] ?? '';
+      wasCorrect = normalize(selected) === normalize(activeFailedQuestion.answer);
     }
 
     trackMarketingEvent('summary_topic_check_retried', {
@@ -336,9 +423,10 @@ export function SummaryTopicCheckPopup({
       topic: topicTitle,
       was_correct: wasCorrect,
       reinforcement_index: reinforceIndex,
+      generated_question: recordResults && !reviewQuestion.id.startsWith('demo:'),
     });
 
-    moveAfterRetry(wasCorrect);
+    await moveAfterRetry(wasCorrect);
     setIsSubmitting(false);
   };
 
@@ -462,8 +550,14 @@ export function SummaryTopicCheckPopup({
                   onClick={submitAnswer}
                   className="inline-flex h-10 items-center justify-center gap-1 rounded-[12px] bg-[#2563EB] px-4 text-[13px] font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {questionIndex === 1 ? 'Ver resultado' : 'Siguiente'}
-                  <ChevronRight className="h-3.5 w-3.5" />
+                  {isSubmitting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      {questionIndex === 1 ? 'Ver resultado' : 'Siguiente'}
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -548,23 +642,36 @@ export function SummaryTopicCheckPopup({
                 <p className="mt-2 text-[14px] leading-6 font-semibold text-slate-900">
                   {activeFailedQuestion.topic || topicTitle}
                 </p>
-                <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
-                  {reinforcementText(activeFailedQuestion)}
-                </p>
+
+                {isSubmitting && !reinforcementText ? (
+                  <div className="mt-2 flex items-center gap-2 text-[13px] text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Preparando una explicación con tu PDF…
+                  </div>
+                ) : (
+                  <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                    {reinforcementText || fallbackReinforcementText(activeFailedQuestion)}
+                  </p>
+                )}
               </div>
 
+              {reinforcementMessage ? (
+                <p className="mt-3 text-[12px] leading-5 text-amber-700">{reinforcementMessage}</p>
+              ) : null}
+
               <p className="mt-4 text-[12.5px] leading-5 text-slate-500">
-                Ahora comprobalo una vez más antes de seguir.
+                Después te hacemos una pregunta nueva sobre la misma idea.
               </p>
 
               <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
                 <button
                   type="button"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !reinforcementText}
                   onClick={startRetry}
-                  className="inline-flex h-11 items-center justify-center rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-[#2563EB] px-4 text-sm font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Intentar de nuevo
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Comprobar de nuevo
                 </button>
                 <button
                   type="button"
@@ -578,7 +685,7 @@ export function SummaryTopicCheckPopup({
             </div>
           ) : null}
 
-          {phase === 'retry' && activeFailedQuestion ? (
+          {phase === 'retry' && activeFailedQuestion && reviewQuestion ? (
             <div className="mt-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[11px] font-bold text-[#2563EB]">Comprobalo de nuevo</span>
@@ -588,17 +695,17 @@ export function SummaryTopicCheckPopup({
               </div>
 
               <p className="mt-3 text-[15px] leading-6 font-semibold text-slate-900">
-                {activeFailedQuestion.prompt}
+                {reviewQuestion.question}
               </p>
 
               <div className="mt-4 grid gap-2">
-                {activeFailedQuestion.options.map((option) => {
-                  const selected = retrySelectedAnswer === option;
+                {reviewQuestion.options.map((option, optionIndex) => {
+                  const selected = retrySelectedIndex === optionIndex;
                   return (
                     <button
-                      key={option}
+                      key={`${optionIndex}:${option}`}
                       type="button"
-                      onClick={() => setRetrySelectedAnswer(option)}
+                      onClick={() => setRetrySelectedIndex(optionIndex)}
                       className={cn(
                         'rounded-[12px] border px-3.5 py-3 text-left text-[13px] leading-5 transition',
                         selected
@@ -612,15 +719,25 @@ export function SummaryTopicCheckPopup({
                 })}
               </div>
 
+              {reinforcementMessage ? (
+                <p className="mt-3 text-[12px] leading-5 text-amber-700">{reinforcementMessage}</p>
+              ) : null}
+
               <div className="mt-5 flex justify-end border-t border-slate-100 pt-4">
                 <button
                   type="button"
-                  disabled={!retrySelectedAnswer || isSubmitting}
+                  disabled={retrySelectedIndex === null || isSubmitting}
                   onClick={submitRetry}
                   className="inline-flex h-10 items-center justify-center gap-1 rounded-[12px] bg-[#2563EB] px-4 text-[13px] font-semibold text-white transition enabled:hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Comprobar de nuevo
-                  <ChevronRight className="h-3.5 w-3.5" />
+                  {isSubmitting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      Comprobar
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </>
+                  )}
                 </button>
               </div>
             </div>
