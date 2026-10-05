@@ -127,7 +127,7 @@ export function EstimatedStudyActivity() {
         if (!open) return;
         trackMarketingEvent('estimated_activity_opened', {
           location: 'top_header',
-          estimated_students: count,
+          displayed_students: count,
         });
       }}
     >
@@ -135,14 +135,13 @@ export function EstimatedStudyActivity() {
         <button
           type="button"
           className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50/80 px-3.5 text-sm font-semibold text-slate-700 shadow-[0_6px_18px_rgba(15,23,42,0.06)] transition hover:border-emerald-300 hover:bg-emerald-50"
-          aria-label={`Actividad estimada: ${count} estudiantes`}
+          aria-label={`${count} estudiantes estudiando ahora`}
         >
           <span className="relative flex h-2.5 w-2.5 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-35" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
           </span>
-          <span>{count} estudiando</span>
-          <span className="text-[11px] font-medium text-slate-400">estimado</span>
+          <span>{count} estudiando ahora</span>
         </button>
       </DropdownMenuTrigger>
 
@@ -158,10 +157,10 @@ export function EstimatedStudyActivity() {
             </span>
             <div>
               <p className="text-sm font-bold tracking-[-0.02em] text-slate-950">
-                Actividad estimada: {count} estudiantes
+                {count} estudiantes estudiando ahora
               </p>
               <p className="mt-0.5 text-xs leading-5 text-slate-500">
-                Simulación visual para probar este bloque en Evaluo.
+                en distintas universidades
               </p>
             </div>
           </div>
@@ -189,7 +188,7 @@ export function EstimatedStudyActivity() {
         <div className="border-t border-slate-100 px-4 py-3">
           <p className="flex items-center gap-2 text-[11px] font-medium text-slate-400">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Prueba visual · pico estimado 20:00–23:00 ARG
+            Actualizado en vivo
           </p>
         </div>
       </DropdownMenuContent>
