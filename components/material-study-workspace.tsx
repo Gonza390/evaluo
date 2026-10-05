@@ -37,6 +37,7 @@ import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
 } from '@/components/study/recommended-study-guide';
+import { SummaryTopicCheckPopup } from '@/components/study/summary-topic-check-popup';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
@@ -55,6 +56,7 @@ import {
   isPedagogicalGlossaryItem,
 } from '@/lib/student-materials/pedagogy';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 
 type MaterialStudyWorkspaceProps = {
   backHref: string;
@@ -80,8 +82,6 @@ type MaterialStudyWorkspaceProps = {
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
-  /** Preview interno: muestra comprobaciones breves dentro del resumen, sin afectar materiales reales. */
-  inlineSummaryCheckPreview?: boolean;
   /** Recorrido de muestra: contenido preparado, sin resultados ni acciones de cuenta. */
   demo?: {
     activeTab: StudyTabId;
@@ -250,7 +250,6 @@ export function MaterialStudyWorkspace({
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
-  inlineSummaryCheckPreview = false,
   demo,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
@@ -267,8 +266,8 @@ export function MaterialStudyWorkspace({
     initialRecommendedStudy && !initialDiagnostic ? 'summary' : null
   );
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [summaryCheckOpenIndex, setSummaryCheckOpenIndex] = useState<number | null>(null);
-  const [summaryCheckAnswers, setSummaryCheckAnswers] = useState<Record<string, number>>({});
+  const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
+  const promptedSummaryChecksRef = useRef(new Set<number>());
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
@@ -398,6 +397,69 @@ export function MaterialStudyWorkspace({
       })),
     [fullSummarySections]
   );
+
+  const summaryCheckPlan = useMemo(
+    () => buildSummaryCheckPlan(fullSummarySections, studyArtifacts),
+    [fullSummarySections, studyArtifacts]
+  );
+
+  const activeSummaryCheck =
+    summaryCheckChapterIndex !== null ? summaryCheckPlan[summaryCheckChapterIndex] ?? null : null;
+
+  useEffect(() => {
+    if (
+      activeTab !== 'resumen' ||
+      !isOwner ||
+      recommendedActive ||
+      recommendedTourStep ||
+      summaryCheckChapterIndex !== null
+    ) {
+      return;
+    }
+
+    const triggers = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-summary-check-trigger]')
+    );
+    if (triggers.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top);
+
+        for (const entry of visible) {
+          const element = entry.target as HTMLElement;
+          const chapterIndex = Number(element.dataset.summaryCheckTrigger);
+          if (
+            !Number.isInteger(chapterIndex) ||
+            promptedSummaryChecksRef.current.has(chapterIndex) ||
+            !summaryCheckPlan[chapterIndex]
+          ) {
+            continue;
+          }
+
+          promptedSummaryChecksRef.current.add(chapterIndex);
+          setSummaryCheckChapterIndex(chapterIndex);
+          break;
+        }
+      },
+      {
+        threshold: 1,
+        rootMargin: '0px 0px -8% 0px',
+      }
+    );
+
+    triggers.forEach((trigger) => observer.observe(trigger));
+    return () => observer.disconnect();
+  }, [
+    activeTab,
+    isOwner,
+    recommendedActive,
+    recommendedTourStep,
+    summaryCheckChapterIndex,
+    summaryCheckPlan,
+  ]);
 
   const handleComments = () => {
     setCommentsOpen((current) => !current);
@@ -799,163 +861,19 @@ export function MaterialStudyWorkspace({
 
                       <StudyRichText body={section.body} />
 
-                      {inlineSummaryCheckPreview ? (() => {
-                        const currentTitle = cleanSummaryChapterTitle(section.title).toLowerCase();
-                        const multipleChoiceQuestions = studyArtifacts.questions.filter(
-                          (question) => question.type === 'multiple_choice' && question.options.length >= 2
-                        );
-                        const sameTopicQuestions = multipleChoiceQuestions.filter((question) => {
-                          const questionSection = (question.reference.sectionTitle ?? '').toLowerCase();
-                          const questionTopic = (question.topic ?? '').toLowerCase();
-                          return (
-                            (questionSection && currentTitle && questionSection.includes(currentTitle)) ||
-                            (questionTopic && currentTitle && questionTopic.includes(currentTitle))
-                          );
-                        });
-                        const currentQuestion =
-                          sameTopicQuestions[0] ?? multipleChoiceQuestions[index % Math.max(1, multipleChoiceQuestions.length)];
-                        const previousQuestion =
-                          index > 0
-                            ? multipleChoiceQuestions.find(
-                                (question) =>
-                                  question !== currentQuestion &&
-                                  (question.reference.sectionTitle ?? '')
-                                    .toLowerCase()
-                                    .includes(
-                                      cleanSummaryChapterTitle(summaryChapters[index - 1]?.title ?? '').toLowerCase()
-                                    )
-                              ) ??
-                              multipleChoiceQuestions.find((question) => question !== currentQuestion)
-                            : sameTopicQuestions[1] ??
-                              multipleChoiceQuestions.find((question) => question !== currentQuestion);
-                        const previewQuestions = [currentQuestion, previousQuestion].filter(
-                          (question): question is NonNullable<typeof question> => Boolean(question)
-                        ).slice(0, 2);
-                        const isOpen = summaryCheckOpenIndex === index;
-                        const nextChapter = summaryChapters[index + 1];
+                      {summaryCheckPlan[index] ? (
+                        <div
+                          data-summary-check-trigger={index}
+                          aria-hidden="true"
+                          className="mt-7 h-px w-full"
+                        />
+                      ) : null}
 
-                        return (
-                          <div className="mt-7 border-t border-slate-100 pt-5">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                              <div>
-                                <p className="text-[13.5px] font-bold text-slate-900">
-                                  Practicá si entendiste
-                                </p>
-                                <p className="mt-0.5 text-[12px] text-slate-500">
-                                  2 preguntas rápidas
-                                </p>
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSummaryCheckOpenIndex(isOpen ? null : index);
-                                  }}
-                                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[#2563EB] px-3.5 text-[12.5px] font-semibold text-white transition hover:bg-[#1D4ED8]"
-                                >
-                                  {isOpen ? 'Ocultar' : 'Comprobar'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSummaryCheckOpenIndex(null);
-                                    if (nextChapter) {
-                                      document
-                                        .getElementById(nextChapter.anchor)
-                                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                    }
-                                  }}
-                                  className="inline-flex h-9 items-center justify-center gap-1 rounded-lg px-2.5 text-[12.5px] font-semibold text-slate-500 transition hover:text-slate-900"
-                                >
-                                  Seguir estudiando
-                                  <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </div>
-
-                            {isOpen && previewQuestions.length > 0 ? (
-                              <div className="mt-5 space-y-4">
-                                {previewQuestions.map((question, questionIndex) => {
-                                  const answerKey = `${index}:${question.id}`;
-                                  const selectedAnswer = summaryCheckAnswers[answerKey];
-                                  const isPrevious = index > 0 && questionIndex === 1;
-
-                                  return (
-                                    <div
-                                      key={answerKey}
-                                      className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold tracking-[0.1em] text-slate-400 uppercase">
-                                          {isPrevious ? 'Recordando lo anterior' : 'Sobre este tema'}
-                                        </span>
-                                      </div>
-                                      <p className="mt-2 text-[13.5px] leading-6 font-semibold text-slate-900">
-                                        {questionIndex + 1}. {question.prompt}
-                                      </p>
-                                      <div className="mt-3 grid gap-2">
-                                        {question.options.map((option, optionIndex) => {
-                                          const selected = selectedAnswer === optionIndex;
-                                          const answered = selectedAnswer !== undefined;
-                                          const correct = answered && option === question.answer;
-                                          const wrong = selected && option !== question.answer;
-
-                                          return (
-                                            <button
-                                              key={option}
-                                              type="button"
-                                              disabled={answered}
-                                              onClick={() =>
-                                                setSummaryCheckAnswers((current) => ({
-                                                  ...current,
-                                                  [answerKey]: optionIndex,
-                                                }))
-                                              }
-                                              className={cn(
-                                                'rounded-lg border px-3 py-2.5 text-left text-[12.5px] leading-5 transition',
-                                                correct
-                                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                                                  : wrong
-                                                    ? 'border-rose-200 bg-rose-50 text-rose-800'
-                                                    : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200'
-                                              )}
-                                            >
-                                              {option}
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : null}
-
-                            <div className="mt-5">
-                              <span className="text-[11px] font-medium text-slate-400">
-                                Capítulo {index + 1} de {summaryChapters.length}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })() : (
-                        <div className="mt-7 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                          <span className="text-[11px] font-medium text-slate-400">
-                            Capítulo {index + 1} de {summaryChapters.length}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleStudyTabChange('ejercicios', 'summary_chapter');
-                            }}
-                            className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#2563EB] transition hover:text-[#1D4ED8]"
-                          >
-                            <BrainCircuit className="h-3.5 w-3.5" />
-                            Ir a práctica
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      )}
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <span className="text-[11px] font-medium text-slate-400">
+                          Capítulo {index + 1} de {summaryChapters.length}
+                        </span>
+                      </div>
                     </section>
                   ))}
                 </div>
@@ -1237,6 +1155,17 @@ export function MaterialStudyWorkspace({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
+      {activeSummaryCheck ? (
+        <SummaryTopicCheckPopup
+          open
+          materialId={materialId}
+          chapterIndex={activeSummaryCheck.chapterIndex}
+          topicTitle={cleanSummaryChapterTitle(activeSummaryCheck.chapterTitle)}
+          questions={activeSummaryCheck.questions}
+          recordResults={materialId !== 'demo-material'}
+          onContinue={() => setSummaryCheckChapterIndex(null)}
+        />
+      ) : null}
       {recommendedActive && recommendedTourStep && (
         <RecommendedStudyGuide
           step={recommendedTourStep}
