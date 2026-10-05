@@ -272,6 +272,9 @@ export function MaterialStudyWorkspace({
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
   const summaryCheckTriggerVisibleRef = useRef(new Set<number>());
   const summaryCheckTimerRef = useRef(new Map<number, number>());
+  const lastSummaryCheckPromptRef = useRef<{ chapterIndex: number; promptedAt: number } | null>(null);
+  const summaryCheckConsecutiveSkipsRef = useRef(0);
+  const summaryCheckSuppressedRef = useRef(false);
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
@@ -407,17 +410,62 @@ export function MaterialStudyWorkspace({
     [fullSummarySections, studyArtifacts]
   );
 
-  const summaryReadThresholds = useMemo(
-    () =>
-      fullSummarySections.map((section) => {
-        const wordCount = section.body.trim().split(/\s+/).filter(Boolean).length;
-        return Math.min(15_000, Math.max(6_000, 6_000 + Math.max(0, wordCount - 25) * 120));
-      }),
-    [fullSummarySections]
-  );
+  const summaryCheckPolicy = useMemo(() => {
+    const wordCounts = fullSummarySections.map(
+      (section) => section.body.trim().split(/\s+/).filter(Boolean).length
+    );
+    const groups = new Map<number, { startIndex: number; endIndex: number; wordCount: number }>();
+
+    if (fullSummarySections.length === 0) return groups;
+
+    const totalWords = wordCounts.reduce((total, count) => total + count, 0);
+
+    // En resúmenes cortos evitamos interrumpir entre temas: una sola comprobación al final.
+    if (fullSummarySections.length <= 3) {
+      if (totalWords >= 130) {
+        const endIndex = fullSummarySections.length - 1;
+        groups.set(endIndex, { startIndex: 0, endIndex, wordCount: totalWords });
+      }
+      return groups;
+    }
+
+    // En resúmenes largos, temas muy breves se agrupan con los siguientes hasta sumar contenido útil.
+    let startIndex = 0;
+    let groupedWords = 0;
+    for (let index = 0; index < wordCounts.length; index += 1) {
+      groupedWords += wordCounts[index] ?? 0;
+      if (groupedWords < 130) continue;
+
+      groups.set(index, {
+        startIndex,
+        endIndex: index,
+        wordCount: groupedWords,
+      });
+      startIndex = index + 1;
+      groupedWords = 0;
+    }
+
+    return groups;
+  }, [fullSummarySections]);
 
   const activeSummaryCheck =
     summaryCheckChapterIndex !== null ? summaryCheckPlan[summaryCheckChapterIndex] ?? null : null;
+
+  const handleSummaryCheckContinue = useCallback(
+    (outcome: 'skipped' | 'completed') => {
+      if (outcome === 'skipped') {
+        summaryCheckConsecutiveSkipsRef.current += 1;
+        if (summaryCheckConsecutiveSkipsRef.current >= 2) {
+          summaryCheckSuppressedRef.current = true;
+        }
+      } else {
+        summaryCheckConsecutiveSkipsRef.current = 0;
+      }
+
+      setSummaryCheckChapterIndex(null);
+    },
+    []
+  );
 
   useEffect(() => {
     if (
@@ -425,7 +473,8 @@ export function MaterialStudyWorkspace({
       !isOwner ||
       recommendedActive ||
       recommendedTourStep ||
-      summaryCheckChapterIndex !== null
+      summaryCheckChapterIndex !== null ||
+      summaryCheckSuppressedRef.current
     ) {
       return;
     }
@@ -445,6 +494,17 @@ export function MaterialStudyWorkspace({
       return stored + Math.max(0, performance.now() - visibleSince);
     };
 
+    const getAccumulatedGroupReadTime = (chapterIndex: number) => {
+      const group = summaryCheckPolicy.get(chapterIndex);
+      if (!group) return 0;
+
+      let total = 0;
+      for (let index = group.startIndex; index <= group.endIndex; index += 1) {
+        total += getAccumulatedReadTime(index);
+      }
+      return total;
+    };
+
     const clearPromptTimer = (chapterIndex: number) => {
       const timer = summaryCheckTimerRef.current.get(chapterIndex);
       if (timer !== undefined) {
@@ -454,26 +514,43 @@ export function MaterialStudyWorkspace({
     };
 
     const maybePrompt = (chapterIndex: number) => {
+      const group = summaryCheckPolicy.get(chapterIndex);
       if (
+        summaryCheckSuppressedRef.current ||
         promptedSummaryChecksRef.current.has(chapterIndex) ||
+        !group ||
         !summaryCheckPlan[chapterIndex] ||
         !summaryCheckTriggerVisibleRef.current.has(chapterIndex)
       ) {
         return;
       }
 
-      const threshold = summaryReadThresholds[chapterIndex] ?? 8_000;
-      const readTime = getAccumulatedReadTime(chapterIndex);
+      const now = performance.now();
+      const previousPrompt = lastSummaryCheckPromptRef.current;
+      if (previousPrompt && chapterIndex <= previousPrompt.chapterIndex) return;
 
-      if (readTime >= threshold) {
+      const threshold = Math.min(
+        15_000,
+        Math.max(6_000, 6_000 + Math.max(0, group.wordCount - 25) * 120)
+      );
+      const readTime = getAccumulatedGroupReadTime(chapterIndex);
+      const remainingReadTime = Math.max(0, threshold - readTime);
+
+      let remainingSpacingTime = 0;
+      if (previousPrompt && chapterIndex - previousPrompt.chapterIndex < 2) {
+        remainingSpacingTime = Math.max(0, 120_000 - (now - previousPrompt.promptedAt));
+      }
+
+      if (remainingReadTime <= 0 && remainingSpacingTime <= 0) {
         clearPromptTimer(chapterIndex);
         promptedSummaryChecksRef.current.add(chapterIndex);
+        lastSummaryCheckPromptRef.current = { chapterIndex, promptedAt: now };
         setSummaryCheckChapterIndex(chapterIndex);
         return;
       }
 
       clearPromptTimer(chapterIndex);
-      const remaining = Math.max(250, threshold - readTime);
+      const remaining = Math.max(250, remainingReadTime, remainingSpacingTime);
       const timer = window.setTimeout(() => {
         summaryCheckTimerRef.current.delete(chapterIndex);
         if (!summaryCheckTriggerVisibleRef.current.has(chapterIndex)) return;
@@ -602,7 +679,7 @@ export function MaterialStudyWorkspace({
     recommendedTourStep,
     summaryCheckChapterIndex,
     summaryCheckPlan,
-    summaryReadThresholds,
+    summaryCheckPolicy,
   ]);
 
   const handleComments = () => {
@@ -1006,7 +1083,7 @@ export function MaterialStudyWorkspace({
 
                       <StudyRichText body={section.body} />
 
-                      {summaryCheckPlan[index] ? (
+                      {summaryCheckPlan[index] && summaryCheckPolicy.has(index) ? (
                         <div
                           data-summary-check-trigger={index}
                           aria-hidden="true"
@@ -1308,7 +1385,7 @@ export function MaterialStudyWorkspace({
           topicTitle={cleanSummaryChapterTitle(activeSummaryCheck.chapterTitle)}
           questions={activeSummaryCheck.questions}
           recordResults={materialId !== 'demo-material'}
-          onContinue={() => setSummaryCheckChapterIndex(null)}
+          onContinue={handleSummaryCheckContinue}
         />
       ) : null}
       {recommendedActive && recommendedTourStep && (
