@@ -1,11 +1,57 @@
-import type { PedagogicalArtifacts, PedagogicalReference, StudyQuestion } from '@/lib/student-materials/pedagogy';
+import type {
+  PedagogicalArtifacts,
+  PedagogicalReference,
+  StudyQuestion,
+} from '@/lib/student-materials/pedagogy';
 import type { StudySummarySection } from '@/lib/student-materials/types';
 
 const STOP_WORDS = new Set([
-  'para','como','este','esta','estos','estas','desde','sobre','entre','segun','tema','material',
-  'capitulo','concepto','conceptos','idea','ideas','parte','puede','pueden','tambien','donde','cuando',
-  'porque','cada','solo','solo','una','uno','unos','unas','del','las','los','que','con','por','sus',
+  'para',
+  'como',
+  'este',
+  'esta',
+  'estos',
+  'estas',
+  'desde',
+  'sobre',
+  'entre',
+  'segun',
+  'tema',
+  'material',
+  'capitulo',
+  'concepto',
+  'conceptos',
+  'idea',
+  'ideas',
+  'parte',
+  'puede',
+  'pueden',
+  'tambien',
+  'donde',
+  'cuando',
+  'porque',
+  'cada',
+  'solo',
+  'una',
+  'uno',
+  'unos',
+  'unas',
+  'del',
+  'las',
+  'los',
+  'que',
+  'con',
+  'por',
+  'sus',
 ]);
+
+const DIRECT_RECOGNITION_PATTERNS = [
+  /^segun el pdf/i,
+  /^segun el material/i,
+  /que describe correctamente/i,
+  /cual de estas afirmaciones representa mejor/i,
+  /que significa/i,
+];
 
 function clean(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -24,6 +70,14 @@ function words(value: string) {
     normalize(value)
       .split(/\s+/)
       .filter((word) => word.length >= 4 && !STOP_WORDS.has(word))
+  );
+}
+
+function optionWords(value: string) {
+  return new Set(
+    normalize(value)
+      .split(/\s+/)
+      .filter((word) => word.length >= 2)
   );
 }
 
@@ -61,6 +115,41 @@ function rotateCorrectOption(correct: string, distractors: string[], seed: numbe
   return options;
 }
 
+function hasNegation(value: string) {
+  return /\b(no|sin|nunca|ningun|ninguna|ninguno)\b/.test(normalize(value));
+}
+
+function containmentSimilarity(left: string, right: string) {
+  const leftWords = optionWords(left);
+  const rightWords = optionWords(right);
+  if (leftWords.size === 0 || rightWords.size === 0) return 0;
+
+  const shared = sharedWordCount(leftWords, rightWords);
+  return shared / Math.min(leftWords.size, rightWords.size);
+}
+
+function hasNearDuplicateOptions(options: string[]) {
+  for (let left = 0; left < options.length; left += 1) {
+    for (let right = left + 1; right < options.length; right += 1) {
+      const leftOption = options[left] ?? '';
+      const rightOption = options[right] ?? '';
+
+      if (
+        containmentSimilarity(leftOption, rightOption) >= 0.86 &&
+        hasNegation(leftOption) === hasNegation(rightOption)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isDirectRecognitionPrompt(prompt: string) {
+  const normalizedPrompt = normalize(prompt);
+  return DIRECT_RECOGNITION_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
+}
+
 export type SummaryCheckQuestion = {
   id: string;
   prompt: string;
@@ -77,10 +166,32 @@ export type SummaryCheckPlanItem = {
   questions: [SummaryCheckQuestion, SummaryCheckQuestion];
 };
 
-type Candidate = SummaryCheckQuestion & { sourceText: string };
+type CandidateOrigin = 'artifact' | 'flashcard' | 'summary';
+
+type Candidate = SummaryCheckQuestion & {
+  sourceText: string;
+  level: 'recordar' | 'comprender' | 'aplicar';
+  kind?: StudyQuestion['kind'];
+  origin: CandidateOrigin;
+  directRecognition: boolean;
+};
+
+function hasUsableMultipleChoice(question: StudyQuestion) {
+  if (question.type !== 'multiple_choice' || question.options.length < 3) return false;
+
+  const normalizedOptions = question.options.map(normalize).filter(Boolean);
+  if (new Set(normalizedOptions).size !== normalizedOptions.length) return false;
+
+  const normalizedAnswer = normalize(question.answer);
+  if (!normalizedAnswer || !normalizedOptions.includes(normalizedAnswer)) return false;
+
+  if (hasNearDuplicateOptions(question.options)) return false;
+
+  return true;
+}
 
 function fromStudyQuestion(question: StudyQuestion): Candidate | null {
-  if (question.type !== 'multiple_choice' || question.options.length < 2) return null;
+  if (!hasUsableMultipleChoice(question)) return null;
 
   return {
     id: `artifact:${question.id}`,
@@ -100,6 +211,10 @@ function fromStudyQuestion(question: StudyQuestion): Candidate | null {
     ]
       .filter(Boolean)
       .join(' '),
+    level: question.level,
+    kind: question.kind,
+    origin: 'artifact',
+    directRecognition: isDirectRecognitionPrompt(question.prompt),
   };
 }
 
@@ -112,7 +227,7 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
         .map((candidate) => truncate(candidate.back, 150));
 
       const options = rotateCorrectOption(correct, distractors, index);
-      if (options.length < 3) return null;
+      if (options.length < 3 || hasNearDuplicateOptions(options)) return null;
 
       const rawFront = clean(card.front);
       const prompt = rawFront.startsWith('¿')
@@ -125,7 +240,9 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
         options,
         answer: correct,
         explanation: `Según el material: ${clean(card.back)}`,
-        topic: rawFront.replace(/^¿Qué significa\s*/i, '').replace(/[“”"?]/g, '').trim() || 'Tema del resumen',
+        topic:
+          rawFront.replace(/^¿Qué significa\s*/i, '').replace(/[“”"?]/g, '').trim() ||
+          'Tema del resumen',
         reference: card.reference,
         sourceText: [
           rawFront,
@@ -135,6 +252,10 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
         ]
           .filter(Boolean)
           .join(' '),
+        level: card.level,
+        kind: card.kind,
+        origin: 'flashcard',
+        directRecognition: true,
       } satisfies Candidate;
     })
     .filter((candidate): candidate is Candidate => Boolean(candidate));
@@ -153,29 +274,63 @@ function buildSummaryFallbackCandidates(sections: StudySummarySection[]): Candid
       .flatMap((item) => item.sentences)
       .map((sentence) => truncate(sentence));
 
-    return section.sentences.slice(0, 2).map((sentence, sentenceIndex) => {
+    return section.sentences.slice(0, 2).flatMap((sentence, sentenceIndex) => {
       const answer = truncate(sentence);
       const options = rotateCorrectOption(answer, otherSentences, sectionIndex + sentenceIndex);
-      return {
-        id: `summary:${sectionIndex}:${sentenceIndex}`,
-        prompt:
-          sentenceIndex === 0
-            ? `¿Cuál de estas ideas corresponde a “${section.title}”?`
-            : `Según lo que acabás de leer, ¿cuál de estas afirmaciones es correcta?`,
-        options,
-        answer,
-        explanation: `Esta idea aparece en el resumen del tema “${section.title}”.`,
-        topic: section.title,
-        reference: {
-          pageStart: null,
-          pageEnd: null,
-          sectionTitle: section.title,
-          excerpt: truncate(section.sentences.join(' '), 280),
-        },
-        sourceText: `${section.title} ${section.body}`,
-      } satisfies Candidate;
+      if (options.length < 3 || hasNearDuplicateOptions(options)) return [];
+
+      const prompt =
+        sentenceIndex === 0
+          ? `¿Cuál de estas ideas corresponde a “${section.title}”?`
+          : 'Según lo que acabás de leer, ¿cuál de estas afirmaciones es correcta?';
+
+      return [
+        {
+          id: `summary:${sectionIndex}:${sentenceIndex}`,
+          prompt,
+          options,
+          answer,
+          explanation: `Esta idea aparece en el resumen del tema “${section.title}”.`,
+          topic: section.title,
+          reference: {
+            pageStart: null,
+            pageEnd: null,
+            sectionTitle: section.title,
+            excerpt: truncate(section.sentences.join(' '), 280),
+          },
+          sourceText: `${section.title} ${section.body}`,
+          level: 'comprender',
+          kind: 'section',
+          origin: 'summary',
+          directRecognition: true,
+        } satisfies Candidate,
+      ];
     });
   });
+}
+
+function pedagogicalQualityScore(candidate: Candidate) {
+  let score = 0;
+
+  if (candidate.level === 'aplicar') score += 32;
+  if (candidate.level === 'comprender') score += 20;
+  if (candidate.level === 'recordar') score -= 18;
+
+  if (candidate.kind === 'confusion') score += 22;
+  if (candidate.kind === 'relationship') score += 20;
+  if (candidate.kind === 'process') score += 20;
+  if (candidate.kind === 'formula') score += 18;
+  if (candidate.kind === 'classification') score += 14;
+  if (candidate.kind === 'section') score += 6;
+  if (candidate.kind === 'concept') score -= 4;
+
+  if (candidate.origin === 'artifact') score += 10;
+  if (candidate.origin === 'summary') score -= 12;
+  if (candidate.origin === 'flashcard') score -= 24;
+
+  if (candidate.directRecognition) score -= 18;
+
+  return score;
 }
 
 function scoreCandidate(candidate: Candidate, section: StudySummarySection) {
@@ -189,7 +344,8 @@ function scoreCandidate(candidate: Candidate, section: StudySummarySection) {
   const titleWords = Array.from(words(section.title));
   const titleShared = titleWords.filter((word) => candidateWords.has(word)).length;
 
-  let score = shared * 3 + titleShared * 5;
+  let score = shared * 3 + titleShared * 5 + pedagogicalQualityScore(candidate);
+
   if (title.length >= 6 && source.includes(title)) score += 12;
   if (
     candidate.reference.sectionTitle &&
@@ -197,10 +353,11 @@ function scoreCandidate(candidate: Candidate, section: StudySummarySection) {
   ) {
     score += 15;
   }
-  if (candidate.id.startsWith('summary:')) {
-    const sectionPrefix = `summary:${sectionIndexOf(candidate.id)}:`;
-    if (candidate.id.startsWith(sectionPrefix)) score += 25;
+
+  if (candidate.id.startsWith(`summary:${sectionIndexOf(candidate.id)}:`)) {
+    score += 4;
   }
+
   return score;
 }
 
@@ -217,18 +374,55 @@ function rankForSection(
   return candidates
     .map((candidate, candidateIndex) => {
       let score = scoreCandidate(candidate, section);
-      if (candidate.id.startsWith(`summary:${sectionIndex}:`)) score += 40;
+
+      if (candidate.id.startsWith(`summary:${sectionIndex}:`)) score += 8;
       if (
         candidate.id.startsWith('summary:') &&
         !candidate.id.startsWith(`summary:${sectionIndex}:`)
       ) {
-        score -= 20;
+        score -= 25;
       }
+
       return { candidate, candidateIndex, score };
     })
-    .filter(({ score }) => score > 0)
+    .filter(({ score }) => score > 4)
     .sort((left, right) => right.score - left.score || left.candidateIndex - right.candidateIndex)
     .map(({ candidate }) => candidate);
+}
+
+function questionIdentity(candidate: Candidate) {
+  return `${normalize(candidate.prompt)}|${normalize(candidate.answer)}`;
+}
+
+function isDistinctQuestion(candidate: Candidate, selected: Candidate[]) {
+  const identity = questionIdentity(candidate);
+  return selected.every(
+    (other) =>
+      questionIdentity(other) !== identity &&
+      normalize(other.answer) !== normalize(candidate.answer) &&
+      normalize(other.prompt) !== normalize(candidate.prompt)
+  );
+}
+
+function preferHigherOrder(candidates: Candidate[], excludedIds: Set<string>, selected: Candidate[]) {
+  const available = candidates.filter(
+    (candidate) => !excludedIds.has(candidate.id) && isDistinctQuestion(candidate, selected)
+  );
+
+  return (
+    available.find(
+      (candidate) =>
+        candidate.origin === 'artifact' &&
+        candidate.level !== 'recordar' &&
+        !candidate.directRecognition
+    ) ??
+    available.find(
+      (candidate) => candidate.origin === 'artifact' && candidate.level !== 'recordar'
+    ) ??
+    available.find((candidate) => candidate.level !== 'recordar') ??
+    available[0] ??
+    null
+  );
 }
 
 export function buildSummaryCheckPlan(
@@ -241,42 +435,77 @@ export function buildSummaryCheckPlan(
     ...artifacts.questions
       .map(fromStudyQuestion)
       .filter((candidate): candidate is Candidate => Boolean(candidate)),
-    ...buildFlashcardCandidates(artifacts),
     ...buildSummaryFallbackCandidates(sections),
+    ...buildFlashcardCandidates(artifacts),
   ];
 
   const ranked = sections.map((section, index) => rankForSection(candidates, section, index));
+  const plans: Array<SummaryCheckPlanItem | null> = [];
 
-  return sections.map((section, index) => {
+  for (let index = 0; index < sections.length; index += 1) {
+    const section = sections[index];
     const current = ranked[index] ?? [];
-
-    if (index === 0) {
-      const first = current[0];
-      const second = current.find((candidate) => candidate.id !== first?.id);
-      if (!first || !second) return null;
-      return {
-        chapterIndex: index,
-        chapterTitle: section.title,
-        questions: [first, second],
-      };
+    if (!section) {
+      plans.push(null);
+      continue;
     }
 
-    const currentQuestion = current[0];
+    if (index === 0) {
+      const selected: Candidate[] = [];
+      const first = preferHigherOrder(current, new Set(), selected);
+      if (first) selected.push(first);
+
+      const second = preferHigherOrder(
+        current,
+        new Set(first ? [first.id] : []),
+        selected
+      );
+      if (second) selected.push(second);
+
+      if (selected.length < 2) {
+        plans.push(null);
+        continue;
+      }
+
+      plans.push({
+        chapterIndex: index,
+        chapterTitle: section.title,
+        questions: [selected[0], selected[1]],
+      });
+      continue;
+    }
+
+    const currentQuestion = preferHigherOrder(current, new Set(), []);
+    if (!currentQuestion) {
+      plans.push(null);
+      continue;
+    }
+
     const previousRanked = ranked[index - 1] ?? [];
+    const recentlyUsedIds = new Set(
+      (plans[index - 1]?.questions ?? []).map((question) => question.id)
+    );
+    recentlyUsedIds.add(currentQuestion.id);
+
     const previousQuestion =
-      previousRanked.find(
-        (candidate) =>
-          candidate.id !== currentQuestion?.id &&
-          candidate.id !== ranked[index - 1]?.[0]?.id
-      ) ??
-      previousRanked.find((candidate) => candidate.id !== currentQuestion?.id);
+      preferHigherOrder(previousRanked, recentlyUsedIds, [currentQuestion]) ??
+      preferHigherOrder(
+        previousRanked,
+        new Set([currentQuestion.id]),
+        [currentQuestion]
+      );
 
-    if (!currentQuestion || !previousQuestion) return null;
+    if (!previousQuestion) {
+      plans.push(null);
+      continue;
+    }
 
-    return {
+    plans.push({
       chapterIndex: index,
       chapterTitle: section.title,
       questions: [currentQuestion, previousQuestion],
-    };
-  });
+    });
+  }
+
+  return plans;
 }
