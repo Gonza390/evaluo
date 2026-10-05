@@ -989,7 +989,7 @@ export function MaterialStudyWorkspace({
       aria-label="Contenido de estudio"
       tabIndex={0}
       className={cn(
-        'px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4 xl:h-full xl:overflow-y-auto',
+        'px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:overscroll-contain',
         demo && 'h-full min-h-0 overflow-y-auto'
       )}
     >
@@ -1007,15 +1007,7 @@ export function MaterialStudyWorkspace({
       >
         <div className="mx-auto w-full max-w-[1180px] py-1 sm:py-2">
           <header className="border-b border-slate-200 pb-7 sm:pb-8">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span className="text-[10.5px] font-extrabold tracking-[0.18em] text-[#2563EB] uppercase">
-                Guía de estudio
-              </span>
-              <span className="h-1 w-1 rounded-full bg-slate-300" />
-              <span className="text-[11.5px] font-medium text-slate-400">{fileName}</span>
-            </div>
-
-            <h2 className="mt-3 max-w-[820px] text-[1.75rem] leading-[1.08] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.15rem]">
+            <h2 className="max-w-[820px] text-[1.75rem] leading-[1.08] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.15rem]">
               {title}
             </h2>
 
