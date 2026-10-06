@@ -33,10 +33,14 @@ assert.ok(
   atLeast(packageJson.dependencies?.sharp, [0, 35, 4]),
   'Sharp debe mantenerse en 0.35.4 o superior.'
 );
-assert.ok(
-  atLeast(packageJson.devDependencies?.['eslint-config-next'], [16, 3, 5]),
-  'eslint-config-next debe acompañar el parche de Next.js.'
-);
+// Solo exigir el parche de la configuración de Next si el proyecto la utiliza.
+// La configuración propia de ESLint no necesita instalar eslint-config-next.
+if (packageJson.devDependencies?.['eslint-config-next']) {
+  assert.ok(
+    atLeast(packageJson.devDependencies['eslint-config-next'], [16, 3, 5]),
+    'Si se instala eslint-config-next, debe acompañar el parche de Next.js.'
+  );
+}
 
 for (const requiredStep of [
   'npm audit --audit-level=high',

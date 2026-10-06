@@ -34,6 +34,16 @@ function createClient(request: NextRequest, response: NextResponse) {
   );
 }
 
+function hasSessionCookie(request: NextRequest) {
+  // @supabase/ssr usa sb-<proyecto>-auth-token y puede dividirlo en .0, .1, etc.
+  // Esto solo evita inicializar Auth sin sesión; la identidad se valida con getUser.
+  return request.cookies
+    .getAll()
+    .some(
+      ({ name, value }) => /^sb-[a-zA-Z0-9_-]+-auth-token(?:\.\d+)?$/.test(name) && value.length > 0
+    );
+}
+
 function persistReferralCookie(request: NextRequest, response: NextResponse) {
   const code = normalizeReferralCode(request.nextUrl.searchParams.get('ref'));
   if (!code) return response;
@@ -153,6 +163,15 @@ export async function proxy(request: NextRequest) {
 
   if (!isProtectedRoute && !isLoginRoute && !isHomeRoute) {
     return persistReferralCookie(request, response);
+  }
+
+  if (isHomeRoute && !hasSessionCookie(request)) {
+    return persistReferralCookie(request, response);
+  }
+
+  if (isHomeRoute) {
+    // Una respuesta que valida o limpia una sesión no debe compartirse en caché.
+    response.headers.set('Cache-Control', 'private, no-store');
   }
 
   const supabase = createClient(request, response);
