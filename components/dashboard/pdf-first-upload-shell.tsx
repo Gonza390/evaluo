@@ -315,6 +315,7 @@ export function PdfFirstUploadShell({
         trackMarketingEvent('pdf_uploaded', {
           source: initialSource || 'dashboard',
           material_id: result.materialId,
+          intended_materia_id: trackingMateriaId || initialMateriaId || null,
           file_size_bytes: activeFile.size,
           environment: process.env.NODE_ENV,
           ...consumeFirstPdfDemoUpload(initialSource),

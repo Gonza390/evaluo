@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase-admin';
 import { createClientServer } from '@/lib/supabase-server';
 import { logError } from '@/lib/observability';
+import { studentMaterialIdSchema } from '@/lib/student-materials/validation';
 
 const MAX_PROMPT_VIEWS = 2;
 const PROMPT_COOLDOWN_HOURS = 12;
@@ -31,6 +32,10 @@ function argentinaTodayKey() {
 }
 
 async function requireOwnedMaterial(materialId: string) {
+  if (!studentMaterialIdSchema.safeParse(materialId).success) {
+    return { ok: false as const, reason: 'invalid_material_id' as const };
+  }
+
   const supabase = await createClientServer();
   const {
     data: { user },
@@ -93,9 +98,7 @@ export async function getExamDatePromptEligibilityAction(input: {
       materialEventMatches(event, input.materialId)
     );
 
-    const promptViews = events.filter(
-      (event) => event.event_name === 'exam_date_prompt_viewed'
-    );
+    const promptViews = events.filter((event) => event.event_name === 'exam_date_prompt_viewed');
 
     if (promptViews.length >= MAX_PROMPT_VIEWS) {
       return { success: true, eligible: false, reason: 'view_limit' };
@@ -131,9 +134,11 @@ export async function getExamDatePromptEligibilityAction(input: {
     const activeDays = new Set(
       events
         .filter((event) =>
-          ['student_material_study_opened', 'study_tab_engagement', 'flashcard_session_completed'].includes(
-            event.event_name
-          )
+          [
+            'student_material_study_opened',
+            'study_tab_engagement',
+            'flashcard_session_completed',
+          ].includes(event.event_name)
         )
         .map((event) =>
           new Intl.DateTimeFormat('en-CA', {

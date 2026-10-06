@@ -132,7 +132,9 @@ async function assertStudentMaterialQuota(userId: string) {
   }
 
   if ((pendingResult.count ?? 0) >= MAX_PENDING_STUDENT_MATERIALS) {
-    throw new Error('Ya tenés 1 material en procesamiento. Esperá a que finalice antes de subir otro.');
+    throw new Error(
+      'Ya tenés 1 material en procesamiento. Esperá a que finalice antes de subir otro.'
+    );
   }
 }
 
@@ -153,7 +155,10 @@ function parseInput(input: PdfFirstUploadInput) {
 async function removeOwnedUpload(filePath: string, userId: string) {
   if (!isOwnedStudentMaterialStoragePath(filePath, userId)) return;
   const admin = createAdminClient();
-  await admin.storage.from('biblioteca').remove([filePath]).catch(() => undefined);
+  await admin.storage
+    .from('biblioteca')
+    .remove([filePath])
+    .catch(() => undefined);
 }
 
 export async function preparePdfFirstUploadAction(
@@ -238,7 +243,8 @@ export async function finalizePdfFirstUploadAction(
     const { data: fileBlob, error: downloadError } = await admin.storage
       .from('biblioteca')
       .download(input.filePath);
-    if (downloadError || !fileBlob) throw downloadError ?? new Error('No encontramos el PDF subido.');
+    if (downloadError || !fileBlob)
+      throw downloadError ?? new Error('No encontramos el PDF subido.');
 
     const fileBytes = new Uint8Array(await fileBlob.arrayBuffer());
     if (fileBytes.byteLength !== parsed.file.size) {
@@ -267,7 +273,8 @@ export async function finalizePdfFirstUploadAction(
         user_id: user.id,
         universidad_id: null,
         carrera_id: null,
-        materia_id: parsed.metadata.materiaId ?? null,
+        // PDF-first todavía no tiene contexto académico: la materia de origen es solo intención.
+        materia_id: null,
         title: parsed.metadata.title,
         description: 'Material privado subido por el estudiante.',
         file_name: parsed.file.name,
@@ -293,7 +300,9 @@ export async function finalizePdfFirstUploadAction(
 
     shouldCleanup = false;
     await enqueueStudentMaterialJob(admin, insertedMaterial.id).catch((queueError) => {
-      logError('studentMaterials.pdfFirst.enqueue', queueError, { materialId: insertedMaterial.id });
+      logError('studentMaterials.pdfFirst.enqueue', queueError, {
+        materialId: insertedMaterial.id,
+      });
     });
 
     revalidatePath('/dashboard/materiales');

@@ -1491,7 +1491,7 @@ export function MaterialStudyWorkspace({
           }}
         />
       )}
-      {isOwner ? (
+      {isOwner && materialId !== 'demo-material' ? (
         <ExamDatePlanPrompt
           materialId={materialId}
           fileName={fileName}
