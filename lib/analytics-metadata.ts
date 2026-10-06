@@ -304,6 +304,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'material_id',
     'chapter_index',
     'topic',
+    'flow_version',
   ],
   summary_topic_check_started: [
     'attribution',
@@ -312,6 +313,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'material_id',
     'chapter_index',
     'topic',
+    'flow_version',
   ],
   summary_topic_check_answered: [
     'attribution',
