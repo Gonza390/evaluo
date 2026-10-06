@@ -1082,7 +1082,10 @@ export function MaterialStudyWorkspace({
                   {summaryChapters.length} capítulos
                 </span>
               </summary>
-              <nav className="mt-3 border-t border-slate-200 pt-3" aria-label="Índice del resumen">
+              <nav
+                className="mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t border-slate-200 pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+                aria-label="Índice del resumen"
+              >
                 <ol className="space-y-1">
                   {summaryChapters.map((chapter, index) => (
                     <li key={chapter.anchor}>
@@ -1104,12 +1107,15 @@ export function MaterialStudyWorkspace({
 
           <div className="mt-7 xl:grid xl:grid-cols-[260px_minmax(0,1fr)] xl:items-start xl:gap-10 2xl:grid-cols-[300px_minmax(0,1fr)] 2xl:gap-12">
             {summaryChapters.length > 0 ? (
-              <aside className="sticky top-4 hidden self-start xl:block">
-                <div className="border-l border-slate-200 pl-4">
-                  <p className="mb-3 text-[10.5px] font-extrabold tracking-[0.16em] text-slate-400 uppercase">
+              <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
+                <div className="flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l border-slate-200 pl-4">
+                  <p className="mb-3 shrink-0 text-[10.5px] font-extrabold tracking-[0.16em] text-slate-400 uppercase">
                     Contenido
                   </p>
-                  <nav aria-label="Índice del resumen">
+                  <nav
+                    className="min-h-0 overflow-y-auto overscroll-contain pr-2 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+                    aria-label="Índice del resumen"
+                  >
                     <ol className="space-y-1.5">
                       {summaryChapters.map((chapter, index) => (
                         <li key={chapter.anchor}>
