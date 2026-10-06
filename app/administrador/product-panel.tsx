@@ -106,6 +106,34 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
     stats.entry.gateViewed > 0 ? (stats.entry.gateRegistered / stats.entry.gateViewed) * 100 : 0;
   const failedPct =
     stats.activation.uploads > 0 ? (stats.activation.failed / stats.activation.uploads) * 100 : 0;
+  const checkStartPct =
+    stats.studyFlow.checkPrompted > 0
+      ? (stats.studyFlow.checkStarted / stats.studyFlow.checkPrompted) * 100
+      : 0;
+  const checkCompletionPct =
+    stats.studyFlow.checkStarted > 0
+      ? (stats.studyFlow.checkCompleted / stats.studyFlow.checkStarted) * 100
+      : 0;
+  const checkAccuracyPct =
+    stats.studyFlow.checkAnswers > 0
+      ? (stats.studyFlow.checkCorrectAnswers / stats.studyFlow.checkAnswers) * 100
+      : 0;
+  const reinforcementStartPct =
+    stats.studyFlow.failedCheckUsers > 0
+      ? (stats.studyFlow.reinforcementStarted / stats.studyFlow.failedCheckUsers) * 100
+      : 0;
+  const reinforcementCompletionPct =
+    stats.studyFlow.reinforcementStarted > 0
+      ? (stats.studyFlow.reinforcementCompleted / stats.studyFlow.reinforcementStarted) * 100
+      : 0;
+  const retryAccuracyPct =
+    stats.studyFlow.retryAnswers > 0
+      ? (stats.studyFlow.retryCorrectAnswers / stats.studyFlow.retryAnswers) * 100
+      : 0;
+  const summaryCompletionPct =
+    stats.studyFlow.readers > 0
+      ? (stats.studyFlow.summaryCompleted / stats.studyFlow.readers) * 100
+      : 0;
 
   return (
     <section className="admin-product">
@@ -275,6 +303,98 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
             value={stats.usage.uploadedWithoutOpen.toLocaleString('es-AR')}
             tone={stats.usage.uploadedWithoutOpen > 0 ? 'bad' : 'neutral'}
           />
+        </div>
+      </div>
+
+      <div className="admin-stage-label">④ Aprende — nuevo flujo del resumen</div>
+      <div
+        className="admin-funnel-mini"
+        aria-label={`Flujo de estudio del resumen · ${stats.studyFlow.version}`}
+      >
+        <b>{stats.studyFlow.readers.toLocaleString('es-AR')}</b> empezaron a leer
+        <span>→</span>
+        <b>{stats.studyFlow.checkStarted.toLocaleString('es-AR')}</b> comprobaron
+        <span>→</span>
+        <b>{stats.studyFlow.summaryCompleted.toLocaleString('es-AR')}</b> terminaron el resumen
+      </div>
+
+      <div className="admin-grid-3">
+        <div className="admin-card">
+          <h3>Comprensión durante la lectura</h3>
+          <span className="admin-event">summary_topic_check_*</span>
+          <MiniRow
+            label="Vieron una comprobación"
+            value={stats.studyFlow.checkPrompted.toLocaleString('es-AR')}
+          />
+          <MiniRow
+            label="La empezaron"
+            value={`${stats.studyFlow.checkStarted} · ${formatPct(checkStartPct)}`}
+            tone={stats.studyFlow.checkPrompted > 0 && checkStartPct < 50 ? 'bad' : 'neutral'}
+          />
+          <MiniRow
+            label="La completaron"
+            value={`${stats.studyFlow.checkCompleted} · ${formatPct(checkCompletionPct)}`}
+          />
+          <MiniRow
+            label="La saltearon"
+            value={stats.studyFlow.checkSkipped.toLocaleString('es-AR')}
+          />
+          <MiniRow
+            label="Respuestas correctas"
+            value={`${stats.studyFlow.checkCorrectAnswers}/${stats.studyFlow.checkAnswers} · ${formatPct(checkAccuracyPct)}`}
+          />
+        </div>
+
+        <div className="admin-card">
+          <h3>Refuerzo inmediato</h3>
+          <span className="admin-event">summary_topic_check_reinforcement_*</span>
+          <MiniRow
+            label="Usuarios que fallaron"
+            value={stats.studyFlow.failedCheckUsers.toLocaleString('es-AR')}
+          />
+          <MiniRow
+            label="Eligieron reforzar"
+            value={`${stats.studyFlow.reinforcementStarted} · ${formatPct(reinforcementStartPct)}`}
+            tone={
+              stats.studyFlow.failedCheckUsers > 0 && reinforcementStartPct < 40
+                ? 'bad'
+                : 'neutral'
+            }
+          />
+          <MiniRow
+            label="Completaron el refuerzo"
+            value={`${stats.studyFlow.reinforcementCompleted} · ${formatPct(reinforcementCompletionPct)}`}
+          />
+          <MiniRow
+            label="Acierto en reintento"
+            value={`${stats.studyFlow.retryCorrectAnswers}/${stats.studyFlow.retryAnswers} · ${formatPct(retryAccuracyPct)}`}
+            tone={stats.studyFlow.retryAnswers > 0 && retryAccuracyPct >= 50 ? 'good' : 'neutral'}
+          />
+        </div>
+
+        <div className="admin-card">
+          <h3>Fin del resumen</h3>
+          <span className="admin-event">summary_completed · summary_next_step_clicked</span>
+          <MiniRow
+            label="Llegaron al final"
+            value={`${stats.studyFlow.summaryCompleted} · ${formatPct(summaryCompletionPct)} de lectores`}
+            tone={stats.studyFlow.summaryCompleted > 0 ? 'good' : 'neutral'}
+          />
+          <MiniRow
+            label="Fueron al simulador"
+            value={stats.studyFlow.nextSimulator.toLocaleString('es-AR')}
+          />
+          <MiniRow
+            label="Fueron a Mis errores"
+            value={stats.studyFlow.nextErrors.toLocaleString('es-AR')}
+          />
+          <MiniRow
+            label="Eligieron repaso"
+            value={stats.studyFlow.nextReview.toLocaleString('es-AR')}
+          />
+          <div className="admin-note">
+            Usuarios únicos del día. La medición empieza con la versión {stats.studyFlow.version}.
+          </div>
         </div>
       </div>
 
