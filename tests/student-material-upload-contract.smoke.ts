@@ -88,4 +88,20 @@ assert.match(
   'Finalize debe comprobar ownership del path firmado.'
 );
 
+assert.match(
+  pdfFirstUploadActionsSource,
+  /resolveVerifiedMateriaId\(admin, user\.id, parsed\.metadata\)/,
+  'Si PDF-first recibe una materia, debe validarla en servidor antes de persistirla.'
+);
+assert.match(
+  pdfFirstUploadActionsSource,
+  /materia_id:\s*verifiedMateriaId/,
+  'La materia validada debe conservarse en student_materials.'
+);
+assert.match(
+  pdfFirstUploadShellSource,
+  /universidadId:\s*initialMateriaId \? initialUniversidadId \|\| null : null[\s\S]*carreraId:\s*initialMateriaId \? initialCarreraId \|\| null : null[\s\S]*materiaId:\s*initialMateriaId \|\| null/,
+  'El cliente debe enviar el contexto académico completo solo cuando existe una materia validada.'
+);
+
 console.log('Student material PDF-first direct upload contract smoke tests passed.');
