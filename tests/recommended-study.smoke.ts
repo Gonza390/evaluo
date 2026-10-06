@@ -5,6 +5,11 @@ import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy.ts'
 import type { StudentMaterialSummary, StudyGlossaryItem } from '../lib/student-materials/types.ts';
 import { selectDiagnosticQuestions } from '../lib/student-materials/diagnostic-questions.ts';
 import { getFirstReadyStudentMaterialId } from '../lib/data/student-materials.ts';
+import {
+  isAllowedAnalyticsEventName,
+  SUMMARY_FLOW_VERSION,
+} from '../lib/analytics-events.ts';
+import { sanitizeAnalyticsMetadata } from '../lib/analytics-metadata.ts';
 import type { PedagogicalArtifacts, StudyQuestion } from '../lib/student-materials/pedagogy.ts';
 
 const question = (id: string, topic: string): StudyQuestion => ({
@@ -139,6 +144,58 @@ assert.deepEqual(
   buildSummaryCheckPlan([{ title: 'Vacío', body: '' }], artifacts([])),
   [null],
   'Un apartado sin evidencia no debe inventar una comprobación.'
+);
+
+const summaryFlowEvents = [
+  'summary_reading_started',
+  'summary_topic_check_reinforcement_started',
+  'summary_topic_check_retried',
+  'summary_topic_check_reinforcement_completed',
+  'summary_completed',
+  'summary_next_step_clicked',
+] as const;
+for (const eventName of summaryFlowEvents) {
+  assert.equal(
+    isAllowedAnalyticsEventName(eventName),
+    true,
+    `${eventName} debe persistirse en analytics_events.`
+  );
+}
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('summary_next_step_clicked', {
+    material_id: 'material-1',
+    flow_version: SUMMARY_FLOW_VERSION,
+    pending_count: 2,
+    action: 'errors',
+    ignored: 'no',
+  }),
+  {
+    material_id: 'material-1',
+    flow_version: SUMMARY_FLOW_VERSION,
+    pending_count: 2,
+    action: 'errors',
+  },
+  'La metadata del nuevo funnel debe conservar la versión y la acción.'
+);
+
+const materialWorkspaceAnalyticsSource = readFileSync(
+  'components/material-study-workspace.tsx',
+  'utf8'
+);
+assert.match(
+  materialWorkspaceAnalyticsSource,
+  /trackMarketingEvent\('summary_reading_started'/,
+  'Abrir el resumen debe iniciar la medición del nuevo flujo.'
+);
+assert.match(
+  materialWorkspaceAnalyticsSource,
+  /trackMarketingEvent\('summary_completed'/,
+  'Llegar al final del resumen debe quedar medido.'
+);
+assert.match(
+  materialWorkspaceAnalyticsSource,
+  /trackMarketingEvent\('summary_next_step_clicked'/,
+  'La decisión posterior al resumen debe quedar medida.'
 );
 
 console.log('Recommended study smoke tests passed.');
