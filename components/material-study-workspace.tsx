@@ -92,6 +92,7 @@ type MaterialStudyWorkspaceProps = {
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
+  children?: ReactNode;
   /** Recorrido de muestra: contenido preparado, sin resultados ni acciones de cuenta. */
   demo?: {
     activeTab: StudyTabId;
@@ -242,6 +243,7 @@ export function MaterialStudyWorkspace({
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
+  children,
   demo,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
@@ -987,11 +989,12 @@ export function MaterialStudyWorkspace({
 
   const tabPanels = (
     <div
+      key={activeTab}
       role="region"
       aria-label="Contenido de estudio"
       tabIndex={0}
       className={cn(
-        'px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto xl:overscroll-contain',
+        'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
         demo && 'h-full min-h-0 overflow-y-auto'
       )}
     >
@@ -1387,6 +1390,7 @@ export function MaterialStudyWorkspace({
           </div>
         )}
       </TabsContent>
+      {children}
     </div>
   );
 
@@ -1395,16 +1399,49 @@ export function MaterialStudyWorkspace({
       data-demo-focus="study"
       value={activeTab}
       onValueChange={handleStudyTabChange}
-      className="flex min-w-0 flex-col gap-2.5 overflow-x-hidden"
+      className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-hidden"
     >
       {tabHeader}
       {regenerationOverlay}
-      <div className={demo ? 'min-h-0 flex-1 overflow-hidden' : undefined}>{tabPanels}</div>
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          className={cn(
+            'flex min-h-0 flex-1 flex-col overflow-hidden',
+            !demo && activeTab === 'resumen' && isViewerVisible && 'hidden'
+          )}
+        >
+          {tabPanels}
+        </div>
+        {!demo && activeTab === 'resumen' && isViewerVisible ? (
+          <div data-demo-focus="pdf" className="absolute inset-0 z-10 min-h-0 bg-white p-2">
+            <PdfViewer
+              url={viewerUrl}
+              title={title}
+              subtitle={null}
+              className="h-full min-h-0 rounded-[20px] border border-slate-200 bg-white"
+              heightClassName="h-full min-h-0"
+              pageMaxWidthClassName="max-w-[760px]"
+              showSidebarThumbnails={false}
+              theme="default"
+              initialPage={initialPdfPage}
+              persistView
+              sourceMode="blob"
+            />
+          </div>
+        ) : null}
+      </div>
     </Tabs>
   );
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-white text-slate-950 xl:h-full xl:min-h-0 xl:overflow-hidden">
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden bg-white text-slate-950',
+        demo
+          ? 'min-h-screen xl:h-full xl:min-h-0'
+          : 'h-[var(--material-study-height,100dvh)] min-h-0 flex-1'
+      )}
+    >
       {activeSummaryCheck ? (
         <SummaryTopicCheckPopup
           open
@@ -1500,12 +1537,12 @@ export function MaterialStudyWorkspace({
               data-demo-focus="study"
               value={activeTab}
               onValueChange={handleStudyTabChange}
-              className="flex h-full min-w-0 flex-col overflow-x-hidden"
+              className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
             >
               {tabHeader}
               {regenerationOverlay}
               <div className="flex min-h-0 flex-1">
-                <ResizablePanelGroup direction="horizontal" className="min-w-0 flex-1">
+                <ResizablePanelGroup direction="horizontal" className="min-h-0 min-w-0 flex-1">
                   <ResizablePanel
                     id="study-content-panel"
                     order={1}
@@ -1561,12 +1598,12 @@ export function MaterialStudyWorkspace({
           </div>
         </div>
 
-        <div className="space-y-4 xl:hidden">
-          <div className="flex flex-col rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
+        <div className={cn('xl:hidden', demo ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col')}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
             {content}
           </div>
 
-          {activeTab === 'resumen' ? (
+          {demo && activeTab === 'resumen' ? (
             isViewerVisible ? (
               <div
                 data-demo-focus="pdf"

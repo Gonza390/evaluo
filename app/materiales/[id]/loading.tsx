@@ -4,8 +4,8 @@ const SKELETON_BLOCK = 'bg-slate-200';
 
 export default function StudentMaterialLoading() {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-white text-slate-950">
-      <section className="border-b border-[#E8EDF5] bg-white">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white text-slate-950">
+      <section className="shrink-0 border-b border-[#E8EDF5] bg-white">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <Skeleton className={`h-10 w-24 rounded-full ${SKELETON_BLOCK}`} />
@@ -22,9 +22,9 @@ export default function StudentMaterialLoading() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[1600px] px-4 py-4 sm:px-6 lg:px-8">
-        <div className="hidden xl:block">
-          <div className="relative h-[calc(100vh-12rem)] min-h-[660px] overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+      <section className="mx-auto min-h-0 w-full max-w-[1600px] flex-1 overflow-hidden px-4 py-4 sm:px-6 lg:px-8">
+        <div className="hidden h-full min-h-0 xl:block">
+          <div className="relative h-full min-h-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <div className="flex h-full flex-col">
               <div className="flex flex-col gap-2.5 border-b border-slate-200 px-2.5 py-3 sm:px-4 sm:py-4">
                 <div className="flex gap-1.5 overflow-x-auto">

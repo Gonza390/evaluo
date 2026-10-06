@@ -219,9 +219,13 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
   };
 
   const shell = (
-    <div className="bg-background flex min-h-screen flex-col">
+    <div
+      className={`bg-background flex flex-col ${
+        isMaterialStudyRoute ? 'h-dvh min-h-0 overflow-hidden' : 'min-h-screen'
+      }`}
+    >
       {showTopBar ? (
-        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur">
           <div
             className={`relative flex min-h-18 items-center justify-between gap-3 py-3 sm:min-h-20 ${
               user ? 'px-3 sm:px-6' : 'mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10'
@@ -460,7 +464,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 : isLegalRoute
                   ? 'bg-background p-0'
                   : isMaterialStudyRoute
-                    ? 'bg-white p-0 pb-24 md:pb-0 xl:h-[calc(100vh-5rem)] xl:overflow-hidden'
+                    ? 'flex min-h-0 flex-col overflow-hidden bg-white p-0 pb-[calc(4.25rem+env(safe-area-inset-bottom))] md:pb-0'
                     : isExploreExperienceRoute
                       ? 'bg-white px-0 pt-0 pb-24 sm:px-0 sm:pt-0 sm:pb-32 lg:p-0'
                       : 'bg-white p-2 pb-24 sm:p-6 sm:pb-32 lg:p-6'

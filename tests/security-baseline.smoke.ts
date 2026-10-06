@@ -10,7 +10,10 @@ const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8')) as
 const ciSource = readFileSync(resolve('.github/workflows/ci.yml'), 'utf8');
 
 function numericVersion(value: string | undefined) {
-  return (value ?? '').replace(/^[^0-9]*/, '').split('.').map((part) => Number.parseInt(part, 10) || 0);
+  return (value ?? '')
+    .replace(/^[^0-9]*/, '')
+    .split('.')
+    .map((part) => Number.parseInt(part, 10) || 0);
 }
 
 function atLeast(value: string | undefined, minimum: [number, number, number]) {
@@ -22,8 +25,14 @@ function atLeast(value: string | undefined, minimum: [number, number, number]) {
   return true;
 }
 
-assert.ok(atLeast(packageJson.dependencies?.next, [16, 3, 5]), 'Next.js debe mantenerse en 16.3.5 o superior.');
-assert.ok(atLeast(packageJson.dependencies?.sharp, [0, 35, 4]), 'Sharp debe mantenerse en 0.35.4 o superior.');
+assert.ok(
+  atLeast(packageJson.dependencies?.next, [16, 3, 5]),
+  'Next.js debe mantenerse en 16.3.5 o superior.'
+);
+assert.ok(
+  atLeast(packageJson.dependencies?.sharp, [0, 35, 4]),
+  'Sharp debe mantenerse en 0.35.4 o superior.'
+);
 assert.ok(
   atLeast(packageJson.devDependencies?.['eslint-config-next'], [16, 3, 5]),
   'eslint-config-next debe acompañar el parche de Next.js.'
@@ -72,5 +81,7 @@ if (previousInternalQueueSecret === undefined) delete process.env.INTERNAL_QUEUE
 else process.env.INTERNAL_QUEUE_SECRET = previousInternalQueueSecret;
 if (previousCronSecret === undefined) delete process.env.CRON_SECRET;
 else process.env.CRON_SECRET = previousCronSecret;
+
+await import('./proxy-home.smoke.ts');
 
 console.log('Security baseline smoke tests passed.');

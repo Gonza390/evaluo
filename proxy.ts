@@ -121,6 +121,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/administrador');
 
   const isLoginRoute = pathname.startsWith('/login');
+  const isHomeRoute = pathname === '/';
 
   if (isLoginRoute) {
     const requestedNext =
@@ -150,7 +151,7 @@ export async function proxy(request: NextRequest) {
     return persistReferralCookie(request, NextResponse.redirect(signupUrl));
   }
 
-  if (!isProtectedRoute && !isLoginRoute) {
+  if (!isProtectedRoute && !isLoginRoute && !isHomeRoute) {
     return persistReferralCookie(request, response);
   }
 
@@ -158,6 +159,14 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (isHomeRoute && user) {
+    const homeResponse = NextResponse.redirect(new URL('/dashboard', request.url));
+    // La validación puede renovar la sesión: conservar esas cookies al redirigir.
+    response.cookies.getAll().forEach((cookie) => homeResponse.cookies.set(cookie));
+    homeResponse.headers.set('Cache-Control', 'private, no-store');
+    return persistReferralCookie(request, homeResponse);
+  }
 
   if (user) {
     const referralCode =
@@ -188,7 +197,10 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isLoginRoute && user) {
-    return persistReferralCookie(request, NextResponse.redirect(new URL('/dashboard', request.url)));
+    return persistReferralCookie(
+      request,
+      NextResponse.redirect(new URL('/dashboard', request.url))
+    );
   }
 
   return persistReferralCookie(request, response);
