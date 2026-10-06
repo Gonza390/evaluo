@@ -9,6 +9,7 @@ import {
   generateReviewCheckAction,
   submitReviewCheckAction,
 } from '@/lib/actions/study-error-review';
+import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import type { ReviewQuestion } from '@/lib/study-error-review-contract';
 import type { SummaryCheckQuestion } from '@/lib/student-materials/summary-checks';
@@ -100,6 +101,7 @@ export function SummaryTopicCheckPopup({
       material_id: materialId,
       chapter_index: chapterIndex,
       topic: topicTitle,
+      flow_version: SUMMARY_FLOW_VERSION,
     });
   }, [chapterIndex, materialId, open, topicTitle]);
 
@@ -142,6 +144,7 @@ export function SummaryTopicCheckPopup({
       material_id: materialId,
       chapter_index: chapterIndex,
       topic: topicTitle,
+      flow_version: SUMMARY_FLOW_VERSION,
       phase,
     });
     onContinue('skipped');
@@ -153,6 +156,7 @@ export function SummaryTopicCheckPopup({
       material_id: materialId,
       chapter_index: chapterIndex,
       topic: topicTitle,
+      flow_version: SUMMARY_FLOW_VERSION,
     });
   };
 
@@ -171,6 +175,7 @@ export function SummaryTopicCheckPopup({
       question_index: questionIndex,
       was_correct: wasCorrect,
       memory_question: isPrevious,
+      flow_version: SUMMARY_FLOW_VERSION,
     });
 
     if (recordResults) {
@@ -208,6 +213,7 @@ export function SummaryTopicCheckPopup({
         topic: topicTitle,
         correct: finalCorrect,
         total: questions.length,
+        flow_version: SUMMARY_FLOW_VERSION,
       });
       setIsSubmitting(false);
       return;
@@ -288,6 +294,7 @@ export function SummaryTopicCheckPopup({
       chapter_index: chapterIndex,
       topic: topicTitle,
       failed: failedQuestions.length,
+      flow_version: SUMMARY_FLOW_VERSION,
     });
 
     await prepareReinforcement(firstFailed, 0);
@@ -393,6 +400,7 @@ export function SummaryTopicCheckPopup({
       was_correct: wasCorrect,
       reinforcement_index: reinforceIndex,
       generated_question: recordResults && !reviewQuestion.id.startsWith('demo:'),
+      flow_version: SUMMARY_FLOW_VERSION,
     });
 
     await moveAfterRetry(wasCorrect);
@@ -406,6 +414,7 @@ export function SummaryTopicCheckPopup({
       topic: topicTitle,
       resolved: resolvedRetryCount,
       total_failed: failedQuestions.length,
+      flow_version: SUMMARY_FLOW_VERSION,
     });
     onContinue('completed');
   };
