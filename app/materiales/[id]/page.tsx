@@ -351,6 +351,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       isOwner && user ? await getFirstReadyStudentMaterialId(supabase, user.id) : null;
 
     const visibility = normalizeMaterialVisibility(material.visibility);
+    const isFirstReadyMaterial = isOwner && firstReadyMaterialId === material.id;
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
     if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
@@ -390,8 +391,8 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
-          recommendedStudyAvailable={isOwner && firstReadyMaterialId === material.id}
-          initialRecommendedStudy={isOwner && query.recorrido === '1'}
+          recommendedStudyAvailable={isFirstReadyMaterial}
+          initialRecommendedStudy={isFirstReadyMaterial && query.recorrido === '1'}
           initialTab={
             query.tab === 'tarjetas' ? 'tarjetas' : query.tab === 'mapa' ? 'mapa' : undefined
           }
