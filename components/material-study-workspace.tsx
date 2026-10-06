@@ -269,6 +269,10 @@ export function MaterialStudyWorkspace({
   const promptedSummaryChecksRef = useRef(new Set<number>());
   const summaryReadTimeRef = useRef(new Map<number, number>());
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
+  const summaryReadingVisibilityRef = useRef(
+    new Map<number, { ratio: number; top: number }>()
+  );
+  const summaryActiveReadingSectionRef = useRef<number | null>(null);
   const summaryCheckTriggerVisibleRef = useRef(new Set<number>());
   const summaryCheckTimerRef = useRef(new Map<number, number>());
   const lastSummaryCheckPromptRef = useRef<{ chapterIndex: number; promptedAt: number } | null>(
@@ -616,35 +620,79 @@ export function MaterialStudyWorkspace({
       summaryCheckTimerRef.current.set(chapterIndex, timer);
     };
 
+    const stopActiveReading = (now: number) => {
+      const activeChapterIndex = summaryActiveReadingSectionRef.current;
+      if (activeChapterIndex === null) return;
+
+      const visibleSince = summaryReadVisibleSinceRef.current.get(activeChapterIndex);
+      if (visibleSince !== undefined) {
+        const accumulated = summaryReadTimeRef.current.get(activeChapterIndex) ?? 0;
+        summaryReadTimeRef.current.set(
+          activeChapterIndex,
+          accumulated + Math.max(0, now - visibleSince)
+        );
+      }
+
+      summaryReadVisibleSinceRef.current.clear();
+      summaryActiveReadingSectionRef.current = null;
+    };
+
+    const syncActiveReadingSection = (now: number) => {
+      if (document.visibilityState !== 'visible') {
+        stopActiveReading(now);
+        return;
+      }
+
+      const dominantSection =
+        [...summaryReadingVisibilityRef.current.entries()]
+          .filter(([, visibility]) => visibility.ratio > 0)
+          .sort((left, right) => {
+            const ratioDifference = right[1].ratio - left[1].ratio;
+            if (Math.abs(ratioDifference) > 0.01) return ratioDifference;
+            return Math.abs(left[1].top) - Math.abs(right[1].top);
+          })[0]?.[0] ?? null;
+
+      if (summaryActiveReadingSectionRef.current === dominantSection) {
+        if (
+          dominantSection !== null &&
+          !summaryReadVisibleSinceRef.current.has(dominantSection)
+        ) {
+          summaryReadVisibleSinceRef.current.set(dominantSection, now);
+        }
+        return;
+      }
+
+      stopActiveReading(now);
+      summaryActiveReadingSectionRef.current = dominantSection;
+      if (dominantSection !== null) {
+        summaryReadVisibleSinceRef.current.set(dominantSection, now);
+      }
+    };
+
     const readingObserver = new IntersectionObserver(
       (entries) => {
         const now = performance.now();
+
         for (const entry of entries) {
           const element = entry.target as HTMLElement;
           const chapterIndex = Number(element.dataset.summaryReadingSection);
           if (!Number.isInteger(chapterIndex)) continue;
 
-          // Un capítulo largo puede ocupar varias pantallas y nunca mostrar el 35 % a la vez.
-          // Contamos el tiempo mientras hay contenido visible; el final del tema sigue siendo
-          // obligatorio para ofrecer la comprobación.
-          if (document.visibilityState === 'visible' && entry.isIntersecting) {
-            if (!summaryReadVisibleSinceRef.current.has(chapterIndex)) {
-              summaryReadVisibleSinceRef.current.set(chapterIndex, now);
-            }
+          if (entry.isIntersecting && entry.intersectionRatio > 0) {
+            summaryReadingVisibilityRef.current.set(chapterIndex, {
+              ratio: entry.intersectionRatio,
+              top: entry.boundingClientRect.top,
+            });
           } else {
-            const visibleSince = summaryReadVisibleSinceRef.current.get(chapterIndex);
-            if (visibleSince !== undefined) {
-              const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
-              summaryReadTimeRef.current.set(
-                chapterIndex,
-                accumulated + Math.max(0, now - visibleSince)
-              );
-              summaryReadVisibleSinceRef.current.delete(chapterIndex);
-            }
+            summaryReadingVisibilityRef.current.delete(chapterIndex);
           }
         }
+
+        // Solo el tema predominante en pantalla acumula tiempo. Así, si dos
+        // secciones se superponen en el viewport, nunca contamos lectura doble.
+        syncActiveReadingSection(now);
       },
-      { threshold: 0 }
+      { threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] }
     );
 
     const triggerObserver = new IntersectionObserver(
@@ -684,20 +732,15 @@ export function MaterialStudyWorkspace({
       const now = performance.now();
 
       if (document.visibilityState === 'hidden') {
-        for (const [chapterIndex, visibleSince] of summaryReadVisibleSinceRef.current.entries()) {
-          const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
-          summaryReadTimeRef.current.set(
-            chapterIndex,
-            accumulated + Math.max(0, now - visibleSince)
-          );
-        }
-        summaryReadVisibleSinceRef.current.clear();
+        stopActiveReading(now);
+        summaryReadingVisibilityRef.current.clear();
         summaryCheckTimerRef.current.forEach((timer) => window.clearTimeout(timer));
         summaryCheckTimerRef.current.clear();
         return;
       }
 
       // Recalcular también el recorte del scroll interno al volver a esta pestaña.
+      summaryReadingVisibilityRef.current.clear();
       readingObserver.disconnect();
       sections.forEach((section) => readingObserver.observe(section));
 
@@ -715,12 +758,8 @@ export function MaterialStudyWorkspace({
       summaryCheckTimerRef.current.forEach((timer) => window.clearTimeout(timer));
       summaryCheckTimerRef.current.clear();
 
-      const now = performance.now();
-      for (const [chapterIndex, visibleSince] of summaryReadVisibleSinceRef.current.entries()) {
-        const accumulated = summaryReadTimeRef.current.get(chapterIndex) ?? 0;
-        summaryReadTimeRef.current.set(chapterIndex, accumulated + Math.max(0, now - visibleSince));
-      }
-      summaryReadVisibleSinceRef.current.clear();
+      stopActiveReading(performance.now());
+      summaryReadingVisibilityRef.current.clear();
       summaryCheckTriggerVisibleRef.current.clear();
     };
   }, [
