@@ -55,11 +55,17 @@ const ANALYTICS_EVENT_NAMES = [
   'first_pdf_guide_completed',
   'first_pdf_guide_skipped',
   'first_pdf_practice_opened',
+  'summary_reading_started',
   'summary_topic_check_prompted',
   'summary_topic_check_started',
   'summary_topic_check_answered',
   'summary_topic_check_completed',
   'summary_topic_check_skipped',
+  'summary_topic_check_reinforcement_started',
+  'summary_topic_check_retried',
+  'summary_topic_check_reinforcement_completed',
+  'summary_completed',
+  'summary_next_step_clicked',
   'student_material_exam_started',
   'student_material_flashcards_started',
   'pdf_gate_viewed',
@@ -113,6 +119,8 @@ const ANALYTICS_EVENT_NAMES = [
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];
+
+export const SUMMARY_FLOW_VERSION = 'summary_v2';
 
 const ANALYTICS_EVENT_NAME_SET = new Set<string>(ANALYTICS_EVENT_NAMES);
 
