@@ -97,6 +97,25 @@ query.maybeSingle = async () => ({ data: null, error: null });
 assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
 
 // Las comprobaciones del lector deben ser respondibles, distintas y respaldadas por el material.
+const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
+
+assert.match(
+  materialPageSource,
+  /initialRecommendedStudy=\{isFirstReadyMaterial && query\.recorrido === '1'\}/,
+  'El recorrido manual solo debe activarse si el material sigue siendo el primer PDF listo.'
+);
+assert.match(
+  materialWorkspaceSource,
+  /summaryActiveReadingSectionRef/,
+  'El lector debe mantener una única sección activa para medir tiempo de lectura.'
+);
+assert.match(
+  materialWorkspaceSource,
+  /Solo el tema predominante en pantalla acumula tiempo/,
+  'Dos secciones visibles no deben acumular tiempo simultáneamente.'
+);
+
 const demoMaterial = JSON.parse(readFileSync('public/material-general-prueba.study.json', 'utf8')) as {
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
