@@ -30,6 +30,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const pdfFirstMetadataSchema = z.object({
   title: z.string().trim().min(1).max(180),
+  universidadId: z.string().uuid().nullable().optional(),
+  carreraId: z.string().uuid().nullable().optional(),
   materiaId: z.string().uuid().nullable().optional(),
 });
 
@@ -161,6 +163,89 @@ async function removeOwnedUpload(filePath: string, userId: string) {
     .catch(() => undefined);
 }
 
+async function resolveVerifiedMateriaId(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  metadata: PdfFirstMetadata
+) {
+  const materiaId = metadata.materiaId ?? null;
+  if (!materiaId) return null;
+
+  const universidadId = metadata.universidadId ?? null;
+  const carreraId = metadata.carreraId ?? null;
+  if (!universidadId || !carreraId) {
+    throw new Error('No pudimos validar la materia seleccionada. Volvé a intentarlo desde la materia.');
+  }
+
+  // Estas tablas aún no están completas en los tipos generados del proyecto.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
+
+  const [
+    { data: university, error: universityError },
+    { data: career, error: careerError },
+    { data: subject, error: subjectError },
+  ] = await Promise.all([
+    db
+      .from('universidades')
+      .select('id, approval_status, owner_user_id')
+      .eq('id', universidadId)
+      .maybeSingle(),
+    db
+      .from('carreras')
+      .select('id, universidad_id, approval_status, owner_user_id')
+      .eq('id', carreraId)
+      .maybeSingle(),
+    db
+      .from('materias')
+      .select('id, carrera_id, approval_status, owner_user_id')
+      .eq('id', materiaId)
+      .maybeSingle(),
+  ]);
+
+  if (universityError) throw universityError;
+  if (careerError) throw careerError;
+  if (subjectError) throw subjectError;
+
+  const universityAllowed =
+    university &&
+    (university.approval_status === 'approved' || university.owner_user_id === userId);
+  const careerAllowed =
+    career &&
+    career.universidad_id === universidadId &&
+    (career.approval_status === 'approved' || career.owner_user_id === userId);
+  const subjectAllowed =
+    subject &&
+    (subject.approval_status === 'approved' || subject.owner_user_id === userId);
+
+  if (!universityAllowed || !careerAllowed || !subjectAllowed) {
+    throw new Error('La materia seleccionada no corresponde al contexto académico indicado.');
+  }
+
+  if (subject.carrera_id === carreraId) return materiaId;
+
+  const { data: relation, error: relationError } = await db
+    .from('carrera_materias')
+    .select('id, approval_status, owner_user_id')
+    .eq('carrera_id', carreraId)
+    .eq('materia_id', materiaId)
+    .order('approval_status', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (relationError) throw relationError;
+
+  const relationAllowed =
+    relation &&
+    (relation.approval_status === 'approved' || relation.owner_user_id === userId);
+
+  if (!relationAllowed) {
+    throw new Error('La materia seleccionada no corresponde a la carrera indicada.');
+  }
+
+  return materiaId;
+}
+
 export async function preparePdfFirstUploadAction(
   input: PdfFirstUploadInput
 ): Promise<PreparePdfFirstUploadResult> {
@@ -221,6 +306,7 @@ export async function finalizePdfFirstUploadAction(
     }
 
     const admin = createAdminClient();
+    const verifiedMateriaId = await resolveVerifiedMateriaId(admin, user.id, parsed.metadata);
     const { data: existingMaterial, error: existingError } = await admin
       .from('student_materials')
       .select('id')
@@ -273,8 +359,7 @@ export async function finalizePdfFirstUploadAction(
         user_id: user.id,
         universidad_id: null,
         carrera_id: null,
-        // PDF-first todavía no tiene contexto académico: la materia de origen es solo intención.
-        materia_id: null,
+        materia_id: verifiedMateriaId,
         title: parsed.metadata.title,
         description: 'Material privado subido por el estudiante.',
         file_name: parsed.file.name,
