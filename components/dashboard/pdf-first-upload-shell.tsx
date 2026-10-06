@@ -278,7 +278,12 @@ export function PdfFirstUploadShell({
     }
 
     try {
-      const metadata = { title: activeTitle, materiaId: initialMateriaId || null };
+      const metadata = {
+        title: activeTitle,
+        universidadId: initialMateriaId ? initialUniversidadId || null : null,
+        carreraId: initialMateriaId ? initialCarreraId || null : null,
+        materiaId: initialMateriaId || null,
+      };
       const fileMetadata = {
         name: activeFile.name,
         mimeType: activeFile.type || 'application/pdf',
