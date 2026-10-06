@@ -2,6 +2,7 @@
 
 import { requireAdminAccess } from '@/lib/auth';
 import { listAdminUserIds } from '@/lib/admin-users';
+import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 const ARGENTINA_OFFSET = '-03:00';
@@ -90,6 +91,25 @@ export type ProductDailyStats = {
     registeredWithoutPdf: number;
     uploadedWithoutOpen: number;
   };
+  studyFlow: {
+    version: string;
+    readers: number;
+    checkPrompted: number;
+    checkStarted: number;
+    checkCompleted: number;
+    checkSkipped: number;
+    checkAnswers: number;
+    checkCorrectAnswers: number;
+    failedCheckUsers: number;
+    reinforcementStarted: number;
+    reinforcementCompleted: number;
+    retryAnswers: number;
+    retryCorrectAnswers: number;
+    summaryCompleted: number;
+    nextSimulator: number;
+    nextErrors: number;
+    nextReview: number;
+  };
 };
 
 function argentinaDateKey(value: Date) {
@@ -140,6 +160,28 @@ function isClientAnalyticsEvent(row: AnalyticsRow) {
   if (row.device_type === 'server') return false;
   if (row.session_key.startsWith('server:')) return false;
   return true;
+}
+
+function analyticsActorKey(row: AnalyticsRow) {
+  return row.user_id ?? row.session_key ?? null;
+}
+
+function uniqueActorCount(rows: AnalyticsRow[]) {
+  return new Set(
+    rows
+      .map(analyticsActorKey)
+      .filter((value): value is string => Boolean(value))
+  ).size;
+}
+
+function metadataNumber(row: AnalyticsRow, key: string) {
+  const value = row.metadata?.[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function metadataBoolean(row: AnalyticsRow, key: string) {
+  const value = row.metadata?.[key];
+  return typeof value === 'boolean' ? value : null;
 }
 
 async function fetchAllEvents(
@@ -432,6 +474,62 @@ export async function obtenerProductoDiarioAdministrador(
     const loggedSessionPct =
       totalSessions > 0 ? Number(((loggedSessions / totalSessions) * 100).toFixed(1)) : 0;
 
+    const summaryFlowEvents = nonAdminEvents.filter(
+      (row) => row.metadata?.flow_version === SUMMARY_FLOW_VERSION
+    );
+    const summaryFlowByName = (eventName: string) =>
+      summaryFlowEvents.filter((row) => row.event_name === eventName);
+
+    const summaryCheckCompletedEvents = summaryFlowByName('summary_topic_check_completed');
+    const failedCheckActorKeys = new Set(
+      summaryCheckCompletedEvents
+        .filter((row) => {
+          const correct = metadataNumber(row, 'correct');
+          const total = metadataNumber(row, 'total');
+          return correct !== null && total !== null && correct < total;
+        })
+        .map(analyticsActorKey)
+        .filter((value): value is string => Boolean(value))
+    );
+
+    const summaryAnswerEvents = summaryFlowByName('summary_topic_check_answered');
+    const retryEvents = summaryFlowByName('summary_topic_check_retried');
+    const nextStepEvents = summaryFlowByName('summary_next_step_clicked');
+    const nextActorsByAction = (action: string) =>
+      uniqueActorCount(nextStepEvents.filter((row) => row.metadata?.action === action));
+
+    const studyFlow = {
+      version: SUMMARY_FLOW_VERSION,
+      readers: uniqueActorCount(summaryFlowByName('summary_reading_started')),
+      checkPrompted: uniqueActorCount(summaryFlowByName('summary_topic_check_prompted')),
+      checkStarted: uniqueActorCount(summaryFlowByName('summary_topic_check_started')),
+      checkCompleted: uniqueActorCount(summaryCheckCompletedEvents),
+      checkSkipped: uniqueActorCount(summaryFlowByName('summary_topic_check_skipped')),
+      checkAnswers: summaryAnswerEvents.length,
+      checkCorrectAnswers: summaryAnswerEvents.filter(
+        (row) => metadataBoolean(row, 'was_correct') === true
+      ).length,
+      failedCheckUsers: failedCheckActorKeys.size,
+      reinforcementStarted: uniqueActorCount(
+        summaryFlowByName('summary_topic_check_reinforcement_started')
+      ),
+      reinforcementCompleted: uniqueActorCount(
+        summaryFlowByName('summary_topic_check_reinforcement_completed')
+      ),
+      retryAnswers: retryEvents.length,
+      retryCorrectAnswers: retryEvents.filter(
+        (row) => metadataBoolean(row, 'was_correct') === true
+      ).length,
+      summaryCompleted: uniqueActorCount(summaryFlowByName('summary_completed')),
+      nextSimulator: nextActorsByAction('simulator'),
+      nextErrors: nextActorsByAction('errors'),
+      nextReview: uniqueActorCount(
+        nextStepEvents.filter((row) =>
+          ['tarjetas', 'glosario', 'mapa'].includes(String(row.metadata?.action ?? ''))
+        )
+      ),
+    };
+
     return {
       success: true,
       stats: {
@@ -485,6 +583,7 @@ export async function obtenerProductoDiarioAdministrador(
           registeredWithoutPdf,
           uploadedWithoutOpen,
         },
+        studyFlow,
       },
     };
   } catch (error) {
