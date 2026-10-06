@@ -40,10 +40,14 @@ const GROQ_PRIMARY_SUMMARY_MODEL =
   process.env.GROQ_SUMMARY_MODEL ?? 'openai/gpt-oss-20b';
 const GROQ_FALLBACK_SUMMARY_MODEL = process.env.GROQ_FALLBACK_MODEL;
 const RETIRED_GROQ_MODELS = new Set(['llama-3.1-8b-instant', 'llama-3.3-70b-versatile']);
+const NVIDIA_PRIMARY_CHAT_MODEL =
+  process.env.NVIDIA_CHAT_MODEL ?? 'nvidia/nemotron-3.5-lightning-30b-a3b';
+const NVIDIA_FALLBACK_CHAT_MODEL =
+  process.env.NVIDIA_CHAT_FALLBACK_MODEL ?? 'nvidia/nemotron-3-super-120b-a12b';
 const NVIDIA_PRIMARY_SUMMARY_MODEL =
-  process.env.NVIDIA_SUMMARY_MODEL ?? 'meta/llama-3.3-70b-instruct';
+  process.env.NVIDIA_SUMMARY_MODEL ?? NVIDIA_PRIMARY_CHAT_MODEL;
 const NVIDIA_FALLBACK_SUMMARY_MODEL =
-  process.env.NVIDIA_FALLBACK_MODEL ?? 'meta/llama-3.1-8b-instruct';
+  process.env.NVIDIA_FALLBACK_MODEL ?? NVIDIA_FALLBACK_CHAT_MODEL;
 
 export function getGeminiSummaryModels() {
   return uniqueConfiguredValues([GEMINI_PRIMARY_SUMMARY_MODEL, GEMINI_FALLBACK_SUMMARY_MODEL]);
@@ -65,6 +69,10 @@ export function getGithubModelsSummaryModels() {
     GITHUB_MODELS_PRIMARY_SUMMARY_MODEL,
     GITHUB_MODELS_FALLBACK_SUMMARY_MODEL,
   ]);
+}
+
+export function getNvidiaChatModels() {
+  return uniqueConfiguredValues([NVIDIA_PRIMARY_CHAT_MODEL, NVIDIA_FALLBACK_CHAT_MODEL]);
 }
 
 export function getNvidiaSummaryModels() {
@@ -413,7 +421,7 @@ export async function requestNvidiaText(input: OpenAiCompatibleRequest) {
     logScope: 'aiProviders.nvidia.text',
     transientStatuses: NVIDIA_TRANSIENT_STATUSES,
     apiKeys: () => uniqueConfiguredValues([process.env.NVIDIA_API_KEY]),
-    models: getNvidiaSummaryModels,
+    models: getNvidiaChatModels,
     headers: (token) => ({
       Authorization: `Bearer ${token}`,
     }),
