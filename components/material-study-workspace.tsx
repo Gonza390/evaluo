@@ -37,6 +37,7 @@ import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
 } from '@/components/study/recommended-study-guide';
+import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
@@ -266,6 +267,7 @@ export function MaterialStudyWorkspace({
   const summaryEndRef = useRef<HTMLDivElement | null>(null);
   const summaryCompletionPromptedRef = useRef(false);
   const summaryCompletionTimerRef = useRef<number | null>(null);
+  const summaryReadingStartedTrackedRef = useRef(false);
   const promptedSummaryChecksRef = useRef(new Set<number>());
   const summaryReadTimeRef = useRef(new Map<number, number>());
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
@@ -283,6 +285,24 @@ export function MaterialStudyWorkspace({
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
+
+  useEffect(() => {
+    if (
+      activeTab !== 'resumen' ||
+      !isOwner ||
+      demo ||
+      recommendedActive ||
+      summaryReadingStartedTrackedRef.current
+    ) {
+      return;
+    }
+
+    summaryReadingStartedTrackedRef.current = true;
+    trackMarketingEvent('summary_reading_started', {
+      material_id: materialId,
+      flow_version: SUMMARY_FLOW_VERSION,
+    });
+  }, [activeTab, demo, isOwner, materialId, recommendedActive]);
 
   useEffect(() => {
     if (
@@ -320,6 +340,13 @@ export function MaterialStudyWorkspace({
           if (cancelled || !endVisible || summaryCompletionPromptedRef.current) return;
           summaryCompletionPromptedRef.current = true;
           setSummaryEndPendingCount(count);
+          if (isOwner) {
+            trackMarketingEvent('summary_completed', {
+              material_id: materialId,
+              pending_count: count,
+              flow_version: SUMMARY_FLOW_VERSION,
+            });
+          }
           setSummaryCompletionOpen(true);
         });
       }, 4000);
@@ -1505,14 +1532,32 @@ export function MaterialStudyWorkspace({
           isPremium={isPremium}
           onClose={() => setSummaryCompletionOpen(false)}
           onErrors={() => {
+            trackMarketingEvent('summary_next_step_clicked', {
+              material_id: materialId,
+              action: 'errors',
+              pending_count: summaryEndPendingCount ?? 0,
+              flow_version: SUMMARY_FLOW_VERSION,
+            });
             setSummaryCompletionOpen(false);
             router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
           }}
           onSimulator={() => {
+            trackMarketingEvent('summary_next_step_clicked', {
+              material_id: materialId,
+              action: 'simulator',
+              pending_count: summaryEndPendingCount ?? 0,
+              flow_version: SUMMARY_FLOW_VERSION,
+            });
             setSummaryCompletionOpen(false);
             handleStudyTabChange('ejercicios', 'summary_chapter');
           }}
           onReview={(tab) => {
+            trackMarketingEvent('summary_next_step_clicked', {
+              material_id: materialId,
+              action: tab,
+              pending_count: summaryEndPendingCount ?? 0,
+              flow_version: SUMMARY_FLOW_VERSION,
+            });
             setSummaryCompletionOpen(false);
             handleStudyTabChange(tab);
           }}
