@@ -1,12 +1,10 @@
 import Image from 'next/image';
-import { Ellipsis, Sparkles } from 'lucide-react';
 
 type TutorAvatarState = 'thinking' | 'answering';
 
-// Reemplazar por las rutas locales del personaje cuando estén disponibles.
-const avatarImages: Record<TutorAvatarState, string | null> = {
-  thinking: null,
-  answering: null,
+const avatarImages: Record<TutorAvatarState, string> = {
+  thinking: '/evi-pensando.svg',
+  answering: '/evi-avatar.svg',
 };
 
 export function StudyErrorTutorAvatar({
@@ -16,26 +14,31 @@ export function StudyErrorTutorAvatar({
   state?: TutorAvatarState;
   prominent?: boolean;
 }) {
-  const image = avatarImages[state];
+  const isThinking = state === 'thinking';
+  const sizeClass = prominent ? 'h-11 w-11' : isThinking ? 'h-11 w-11' : 'h-10 w-10';
+
   return (
     <span
       aria-hidden="true"
       data-tutor-avatar={state}
-      className={`relative mt-0.5 flex shrink-0 items-center justify-center overflow-hidden rounded-full ${prominent ? 'bg-primary text-primary-foreground h-11 w-11' : 'bg-primary/7 text-primary h-10 w-10'}`}
+      className={`relative mt-0.5 flex shrink-0 items-center justify-center ${sizeClass} ${
+        isThinking
+          ? 'overflow-visible bg-transparent'
+          : 'overflow-hidden rounded-full bg-[#2F4BFF] ring-1 ring-slate-200/80'
+      }`}
     >
-      {image ? (
-        <Image
-          src={image}
-          alt=""
-          fill
-          sizes={prominent ? '44px' : '40px'}
-          className="object-contain"
-        />
-      ) : state === 'thinking' ? (
-        <Ellipsis className="h-5 w-5 motion-safe:animate-pulse" />
-      ) : (
-        <Sparkles className="h-5 w-5" />
-      )}
+      <Image
+        src={avatarImages[state]}
+        alt=""
+        fill
+        unoptimized
+        sizes={prominent || isThinking ? '44px' : '40px'}
+        className={
+          isThinking
+            ? 'object-contain motion-safe:animate-pulse'
+            : 'object-cover'
+        }
+      />
     </span>
   );
 }
