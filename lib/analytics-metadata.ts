@@ -411,6 +411,17 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'page_type',
     'material_id',
     'question_count',
+    'flow_version',
+  ],
+  student_material_exam_completed: [
+    'attribution',
+    'anonymous_id',
+    'page_type',
+    'material_id',
+    'question_count',
+    'correct_count',
+    'score_pct',
+    'flow_version',
   ],
   student_material_flashcards_started: [
     'attribution',
