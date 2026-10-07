@@ -153,6 +153,7 @@ const summaryFlowEvents = [
   'summary_topic_check_reinforcement_completed',
   'summary_completed',
   'summary_next_step_clicked',
+  'student_material_exam_completed',
 ] as const;
 for (const eventName of summaryFlowEvents) {
   assert.equal(
@@ -176,6 +177,25 @@ assert.deepEqual(
     action: 'errors',
   },
   'La metadata del nuevo funnel debe conservar la versión y la acción.'
+);
+
+assert.deepEqual(
+  sanitizeAnalyticsMetadata('student_material_exam_completed', {
+    material_id: 'material-1',
+    question_count: 10,
+    correct_count: 8,
+    score_pct: 80,
+    flow_version: 'material_practice_v2',
+    ignored: 'no',
+  }),
+  {
+    material_id: 'material-1',
+    question_count: 10,
+    correct_count: 8,
+    score_pct: 80,
+    flow_version: 'material_practice_v2',
+  },
+  'La práctica completada debe conservar su estado para recomendar el siguiente paso.'
 );
 
 const materialWorkspaceAnalyticsSource = readFileSync(
