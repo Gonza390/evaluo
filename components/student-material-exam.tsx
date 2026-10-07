@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
+import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 
 type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
@@ -315,6 +316,7 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
       metadata: {
         material_id: materialId,
         question_count: questions.length,
+        flow_version: MATERIAL_PRACTICE_FLOW_VERSION,
       },
     });
   };
@@ -479,6 +481,16 @@ export function StudentMaterialExam({ artifacts, materialId, onComplete }: Stude
 
   const advanceExam = () => {
     if (currentIndex >= questions.length - 1) {
+      void trackClientAnalyticsEvent({
+        eventName: 'student_material_exam_completed',
+        metadata: {
+          material_id: materialId,
+          question_count: result.total,
+          correct_count: result.correct,
+          score_pct: result.percentage,
+          flow_version: MATERIAL_PRACTICE_FLOW_VERSION,
+        },
+      });
       onComplete?.();
       setFinished(true);
       return;
