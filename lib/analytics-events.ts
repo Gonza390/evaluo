@@ -67,6 +67,7 @@ const ANALYTICS_EVENT_NAMES = [
   'summary_completed',
   'summary_next_step_clicked',
   'student_material_exam_started',
+  'student_material_exam_completed',
   'student_material_flashcards_started',
   'pdf_gate_viewed',
   'pdf_gate_cta_clicked',
@@ -121,6 +122,7 @@ const ANALYTICS_EVENT_NAMES = [
 export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];
 
 export const SUMMARY_FLOW_VERSION = 'summary_v2';
+export const MATERIAL_PRACTICE_FLOW_VERSION = 'material_practice_v2';
 
 const ANALYTICS_EVENT_NAME_SET = new Set<string>(ANALYTICS_EVENT_NAMES);
 
