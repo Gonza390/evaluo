@@ -4,7 +4,6 @@ import type { ReactNode, RefObject } from 'react';
 import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MaeveStudyHero } from '@/components/dashboard/maeve-study-hero';
-import { StudyFirstVisitNudge } from '@/components/dashboard/study-first-visit-nudge';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 
 type Props = {
@@ -58,8 +57,7 @@ export function MaeveDashboardChrome({
         nextStudyAction={nextStudyAction}
         onUploadClick={openUpload}
       />
-      <StudyFirstVisitNudge materialsCount={materialsCount} onUploadClick={openUpload} />
-      <div className="[&_button]:shadow-none">{children}</div>
+      {materialsCount > 0 ? <div className="[&_button]:shadow-none">{children}</div> : null}
     </div>
   );
 }

@@ -235,9 +235,24 @@ export function PdfFirstUploadShell({
     const element = event.target as HTMLElement | null;
     const button = element?.closest('button');
     if (!button || !isUploadTriggerLabel(button.textContent ?? '')) return;
+
     event.preventDefault();
     event.stopPropagation();
+
+    const firstPdfLocation = button.dataset.firstPdfCta;
+    if (firstPdfLocation) {
+      trackMarketingEvent('first_pdf_cta_clicked', {
+        location: firstPdfLocation,
+        source: initialSource || 'dashboard',
+      });
+    }
+    trackMarketingEvent('pdf_picker_opened', {
+      location: firstPdfLocation || 'dashboard_upload',
+      source: initialSource || 'dashboard',
+    });
+
     setOpen(true);
+    pickerRef.current?.click();
   };
 
   const selectFile = (selected: File | null) => {
@@ -256,6 +271,11 @@ export function PdfFirstUploadShell({
       });
       return;
     }
+    trackMarketingEvent('pdf_selected', {
+      location: 'pdf_first_upload',
+      source: initialSource || 'dashboard',
+      file_size_bytes: selected.size,
+    });
     setFile(selected);
     setTitle(titleFromFile(selected.name));
     setExamDate(initialExamDate);
@@ -297,8 +317,7 @@ export function PdfFirstUploadShell({
 
       const supabase = getSupabaseBrowserClient();
       const { error: uploadError } = await supabase.storage
-        .from('biblioteca')
-        .uploadToSignedUrl(prepared.filePath, prepared.token, activeFile, {
+        .from('biblioteca')        .uploadToSignedUrl(prepared.filePath, prepared.token, activeFile, {
           contentType: fileMetadata.mimeType,
         });
       if (uploadError) throw new Error('No pudimos transferir el PDF. Intentá nuevamente.');
@@ -525,6 +544,16 @@ export function PdfFirstUploadShell({
 
   return (
     <div className="relative">
+      <input
+        ref={pickerRef}
+        type="file"
+        accept=".pdf,application/pdf"
+        className="sr-only"
+        onChange={(event) => {
+          selectFile(event.currentTarget.files?.[0] ?? null);
+          event.currentTarget.value = '';
+        }}
+      />
       <div
         onClickCapture={handleCapturedClick}
         className={`transition duration-200 ${open ? 'pointer-events-none blur-[5px] select-none' : ''}`}
@@ -598,18 +627,6 @@ export function PdfFirstUploadShell({
                 </div>
               </div>
             )}
-
-            <input
-              ref={pickerRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              className="sr-only"
-              onChange={(event) => {
-                selectFile(event.currentTarget.files?.[0] ?? null);
-                event.currentTarget.value = '';
-              }}
-            />
-
             {!processing ? (
               <>
                 {!file && restoringDraft ? (
@@ -897,8 +914,7 @@ export function PdfFirstUploadShell({
                                 >
                                   {requestingUniversity || availableCareers.length === 0
                                     ? 'Solicitar carrera'
-                                    : '+ Añadir carrera'}
-                                </button>
+                                    : '+ Añadir carrera'}                                </button>
                               </>
                             ) : (
                               <div className="space-y-2">
