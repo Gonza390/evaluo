@@ -86,6 +86,9 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'source',
     'file_size_bytes',
   ],
+  first_pdf_cta_viewed: ['attribution', 'anonymous_id', 'page_type', 'location'],
+  first_pdf_cta_clicked: ['attribution', 'anonymous_id', 'page_type', 'location', 'source'],
+  first_pdf_upload_opened: ['attribution', 'anonymous_id', 'page_type', 'location', 'source'],
   preguntero_landing_experiment_viewed: [
     'attribution',
     'anonymous_id',
