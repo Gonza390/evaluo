@@ -8,6 +8,8 @@ const legacyNewSource = readFileSync(resolve('app/dashboard/materiales/nuevo/pag
 const legacyUploadSource = readFileSync(resolve('app/dashboard/materiales/subir/page.tsx'), 'utf8');
 const navbarSource = readFileSync(resolve('components/navbar.tsx'), 'utf8');
 const proxySource = readFileSync(resolve('proxy.ts'), 'utf8');
+const dashboardHeroSource = readFileSync(resolve('components/dashboard/maeve-study-hero.tsx'), 'utf8');
+const nextActionSource = readFileSync(resolve('lib/dashboard-next-study-action.ts'), 'utf8');
 
 assert.match(dashboardSource, /LazyMaeveStudySpace/);
 assert.match(dashboardSource, /source\?: string/);
@@ -15,6 +17,15 @@ assert.match(dashboardSource, /dailyMinutes\?: string/);
 assert.match(dashboardSource, /requestedUniversidadId/);
 assert.match(dashboardSource, /resolvedUniversidadId/);
 assert.match(dashboardSource, /preguntero-derecho-sucesorio-p2/);
+assert.match(dashboardSource, /getDashboardNextStudyAction/);
+assert.match(dashboardSource, /nextStudyAction=\{nextStudyAction\}/);
+
+assert.match(dashboardHeroSource, /dashboard_next_action/);
+assert.match(dashboardHeroSource, /nextStudyAction\?\.cta/);
+assert.match(nextActionSource, /kind: 'reinforce'/);
+assert.match(nextActionSource, /kind: 'resume_practice'/);
+assert.match(nextActionSource, /kind: 'start_practice'/);
+assert.match(nextActionSource, /kind: 'continue_summary'/);
 
 assert.match(
   legacyMaterialsSource,
