@@ -6,12 +6,14 @@ import { ArrowRight, RotateCcw, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/useUser';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 
 type Props = {
   materialsCount: number;
   primaryMaterialHref: string | null;
   primaryMaterialReady: boolean;
   pendingReinforcementCount: number;
+  nextStudyAction: DashboardNextStudyAction | null;
   onUploadClick: () => void;
   heroRef?: RefObject<HTMLElement | null>;
 };
@@ -21,6 +23,7 @@ export function MaeveStudyHero({
   primaryMaterialHref,
   primaryMaterialReady,
   pendingReinforcementCount,
+  nextStudyAction,
   onUploadClick,
   heroRef,
 }: Props) {
@@ -46,8 +49,13 @@ export function MaeveStudyHero({
         <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-5 text-slate-500">
           {materialsCount === 0
             ? 'Subí lo que tenés que estudiar y Evaluo te guía para prepararlo.'
-            : 'Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.'}
+            : nextStudyAction?.title ?? 'Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.'}
         </p>
+        {nextStudyAction ? (
+          <p className="mx-auto mt-1.5 max-w-lg text-[12.5px] leading-5 text-slate-400">
+            {nextStudyAction.description}
+          </p>
+        ) : null}
         <div className="mt-5 flex flex-col items-center gap-3">
           {materialsCount > 0 && primaryMaterialHref ? (
             <>
@@ -55,12 +63,23 @@ export function MaeveStudyHero({
                 asChild
                 className="h-12 w-full max-w-xs rounded-2xl px-6 text-[15px] font-semibold sm:w-auto"
               >
-                <Link href={primaryMaterialHref}>
-                  {primaryMaterialReady ? 'Continuar estudiando' : 'Ver estado del PDF'}
+                <Link
+                  href={nextStudyAction?.href ?? primaryMaterialHref}
+                  onClick={() => {
+                    if (!nextStudyAction) return;
+                    trackMarketingEvent('cta_click', {
+                      location: 'dashboard_next_action',
+                      cta_name: nextStudyAction.kind,
+                      destination: nextStudyAction.href,
+                    });
+                  }}
+                >
+                  {nextStudyAction?.cta ??
+                    (primaryMaterialReady ? 'Continuar estudiando' : 'Ver estado del PDF')}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              {pendingReinforcementCount > 0 ? (
+              {pendingReinforcementCount > 0 && nextStudyAction?.kind !== 'reinforce' ? (
                 <Link
                   href="/dashboard/explicaciones"
                   onClick={() =>
