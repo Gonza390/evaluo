@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { MaeveStudyHero } from '@/components/dashboard/maeve-study-hero';
 import { StudyFirstVisitNudge } from '@/components/dashboard/study-first-visit-nudge';
+import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 
 type Props = {
   children: ReactNode;
@@ -12,6 +13,7 @@ type Props = {
   primaryMaterialHref: string | null;
   primaryMaterialReady: boolean;
   pendingReinforcementCount: number;
+  nextStudyAction: DashboardNextStudyAction | null;
 };
 
 /**
@@ -24,6 +26,7 @@ export function MaeveDashboardChrome({
   primaryMaterialHref,
   primaryMaterialReady,
   pendingReinforcementCount,
+  nextStudyAction,
 }: Props) {
   const heroRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
@@ -52,6 +55,7 @@ export function MaeveDashboardChrome({
         primaryMaterialHref={primaryMaterialHref}
         primaryMaterialReady={primaryMaterialReady}
         pendingReinforcementCount={pendingReinforcementCount}
+        nextStudyAction={nextStudyAction}
         onUploadClick={openUpload}
       />
       <StudyFirstVisitNudge materialsCount={materialsCount} onUploadClick={openUpload} />
