@@ -65,9 +65,12 @@ export async function getDashboardNextStudyAction(
   const readyById = new Map(readyMaterials.map((material) => [material.id, material]));
   const readyIds = readyMaterials.map((material) => material.id);
   const admin = createAdminClient();
+  // study_errors existe en producción pero todavía no está incluido en el tipo generado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = admin as any;
 
   const [errorsResult, eventsResult] = await Promise.all([
-    admin
+    db
       .from('study_errors')
       .select('id, student_material_id, topic, updated_at')
       .eq('user_id', userId)
