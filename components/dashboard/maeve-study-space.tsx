@@ -4,6 +4,7 @@ import { MaeveDashboardChrome } from '@/components/dashboard/maeve-dashboard-chr
 import { PdfFirstUploadShell } from '@/components/dashboard/pdf-first-upload-shell';
 import { StudentMaterialsWorkspace } from '@/components/dashboard/student-materials-workspace';
 import type { StudentMaterial } from '@/lib/data/student-materials';
+import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { getStudentMaterialRoute } from '@/lib/routes';
 
 type UniversidadOption = { id: string; nombre: string };
@@ -25,6 +26,7 @@ export type MaeveStudySpaceProps = {
   trackingMateriaId?: string;
   initialOpen?: boolean;
   pendingReinforcementCount?: number;
+  nextStudyAction?: DashboardNextStudyAction | null;
 };
 
 /**
@@ -45,6 +47,7 @@ export function MaeveStudySpace({
   trackingMateriaId = '',
   initialOpen = false,
   pendingReinforcementCount = 0,
+  nextStudyAction = null,
 }: MaeveStudySpaceProps) {
   const primaryMaterial =
     materials.find((material) => material.processing_status === 'ready') ?? materials[0] ?? null;
@@ -69,6 +72,7 @@ export function MaeveStudySpace({
         primaryMaterialHref={primaryMaterialHref}
         primaryMaterialReady={primaryMaterialReady}
         pendingReinforcementCount={pendingReinforcementCount}
+        nextStudyAction={nextStudyAction}
       >
         <StudentMaterialsWorkspace
           initialMaterials={materials}
