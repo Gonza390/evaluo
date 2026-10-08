@@ -8,6 +8,8 @@ interface SimulatorLoginGateProps {
   answeredCount: number;
   correctCount: number;
   questionLimit: number;
+  materiaNombre?: string;
+  parcial?: number;
   loginHref: string;
   signupHref: string;
   onLoginClick?: () => void;
@@ -20,6 +22,8 @@ export function SimulatorLoginGate({
   answeredCount,
   correctCount,
   questionLimit,
+  materiaNombre,
+  parcial,
   loginHref,
   signupHref,
   onLoginClick,
@@ -39,7 +43,9 @@ export function SimulatorLoginGate({
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600">
               <Trophy className="h-4 w-4" />
-              {isPregunteroAcquisition ? 'Tu progreso en el Preguntero' : 'Continúa el simulador'}
+              {isPregunteroAcquisition
+                ? `${materiaNombre || 'Preguntero'} · ${parcial === 3 ? 'Integrador' : `Parcial ${parcial ?? ''}`.trim()}`
+                : 'Continúa el simulador'}
             </div>
             <h2 className="mt-4 text-[2rem] leading-[1.02] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.7rem]">
               {isPregunteroAcquisition
