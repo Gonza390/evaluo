@@ -39,8 +39,8 @@ function buildDescription(input: {
       : `Practicá el parcial 2 de ${input.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}. Simulá el examen y revisá tus errores en Evaluo.`
-    : `${base}. Simulá el examen y revisá tus errores en Evaluo.`;
+    ? `${base} para ${context}. Practicá el examen y revisá tus errores en Evaluo.`
+    : `${base}. Practicá el examen y revisá tus errores en Evaluo.`;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -94,7 +94,7 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
   const materiaHref = `/explorar/materia/${MATERIA_SLUG}`;
   const simuladorHref = appendPregunteroAttribution(
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
-    { ...resolvedSearchParams, acq: 'preguntero_google_v1' }
+    { ...resolvedSearchParams, acq: 'preguntero_landing_v1' }
   );
   const title = `Preguntero parcial 2 de ${data.materiaNombre}`;
   const breadcrumbData = buildBreadcrumbJsonLd([
@@ -222,7 +222,7 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
               className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30"
             >
               <Target className="h-5 w-5 text-indigo-600" aria-hidden="true" />
-              <p className="mt-3 text-sm font-bold text-slate-950">Simular el parcial</p>
+              <p className="mt-3 text-sm font-bold text-slate-950">Practicar el parcial</p>
               <p className="mt-1 text-xs leading-5 text-slate-500">
                 Medí cómo venís y usá los errores para ajustar tu repaso.
               </p>
