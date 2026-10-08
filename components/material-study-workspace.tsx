@@ -387,6 +387,20 @@ export function MaterialStudyWorkspace({
     setExamDatePromptTrigger((value) => value + 1);
   };
 
+  const clearRecommendedStudyQuery = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('recorrido')) return;
+    url.searchParams.delete('recorrido');
+    const nextUrl = `${url.pathname}${url.searchParams.size > 0 ? `?${url.searchParams.toString()}` : ''}${url.hash}`;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, []);
+
+  useEffect(() => {
+    if (initialRecommendedStudy) return;
+    clearRecommendedStudyQuery();
+  }, [clearRecommendedStudyQuery, initialRecommendedStudy]);
+
   useEffect(() => {
     if (!isOwner || !recommendedStudyAvailable || demo) return;
     trackMarketingEvent('first_pdf_study_session_opened', {
@@ -443,6 +457,7 @@ export function MaterialStudyWorkspace({
           }
         );
       }
+      clearRecommendedStudyQuery();
       setRecommendedTourStep(null);
       setRecommendedActive(false);
       window.requestAnimationFrame(() => {
@@ -454,7 +469,14 @@ export function MaterialStudyWorkspace({
         heading?.focus({ preventScroll: true });
       });
     },
-    [demo, isOwner, materialId, recommendedStudyAvailable, recommendedTourStep]
+    [
+      clearRecommendedStudyQuery,
+      demo,
+      isOwner,
+      materialId,
+      recommendedStudyAvailable,
+      recommendedTourStep,
+    ]
   );
   const openRecommendedErrors = (onboardingErrorId: string | null) => {
     setRecommendedTourStep(null);
