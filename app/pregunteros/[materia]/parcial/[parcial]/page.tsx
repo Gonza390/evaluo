@@ -21,8 +21,7 @@ export const revalidate = 600;
 
 const PERSONAS_JURIDICAS_MATERIA_ID = '5a10b059-546d-41a1-8ed8-d9fb1dd7581d';
 const DERECHO_SUCESORIO_MATERIA_ID = '555d3d0a-206e-42e2-adf8-08f1063448e6';
-const CONTRATOS_EMPRESA_MATERIA_ID = '30c3bea7-49a7-4598-8728-b3beb6f17aa5';
-const GOOGLE_ACQUISITION_VARIANT = 'preguntero_google_v1';
+const PREGUNTERO_ACQUISITION_VARIANT = 'preguntero_landing_v1';
 
 type PageProps = {
   params: Promise<{
@@ -53,8 +52,8 @@ function buildParcialDescription(input: {
       : `Practicá el ${parcialLabel} de ${input.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}. Simulá el examen y revisá tus errores en Evaluo.`
-    : `${base}. Simulá el examen y revisá tus errores en Evaluo.`;
+    ? `${base} para ${context}. Practicá el examen y revisá tus errores en Evaluo.`
+    : `${base}. Practicá el examen y revisá tus errores en Evaluo.`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -130,13 +129,10 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
   }
 
   const { label } = parcialToPreguntaFilter(data.parcial);
-  const isGoogleAcquisitionExperiment =
-    data.parcial === '2' &&
-    (data.materiaId === DERECHO_SUCESORIO_MATERIA_ID ||
-      data.materiaId === CONTRATOS_EMPRESA_MATERIA_ID);
-  const simulatorSearchParams = isGoogleAcquisitionExperiment
-    ? { ...resolvedSearchParams, acq: GOOGLE_ACQUISITION_VARIANT }
-    : resolvedSearchParams;
+  const simulatorSearchParams = {
+    ...resolvedSearchParams,
+    acq: PREGUNTERO_ACQUISITION_VARIANT,
+  };
   const simuladorHref = appendPregunteroAttribution(
     `/simulador/${data.materiaId}/${data.parcialNumero}`,
     simulatorSearchParams
@@ -202,7 +198,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
             </h2>
             {data.samplePreguntas.length === 0 ? (
               <p className="text-muted-foreground mt-5 text-sm leading-7">
-                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al simulador
+                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al Preguntero
                 para ver las preguntas disponibles.
               </p>
             ) : (
@@ -276,7 +272,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
                 className="from-brand to-brand-2 mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
               >
                 <Target className="h-5 w-5" />
-                {isGoogleAcquisitionExperiment ? 'Probar 5 preguntas' : 'Practicar ahora'}
+                Probar 5 preguntas
               </Link>
             </div>
 
