@@ -111,6 +111,48 @@ export function MailPanel({
         </p>
       </header>
 
+      <section className="mb-6">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold tracking-[-0.02em] text-slate-950">Campañas activas</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Qué dispara cada automatización y para qué existe.
+            </p>
+          </div>
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+            {data.activeCampaigns.length} activas
+          </span>
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-2">
+          {data.activeCampaigns.map((campaign) => (
+            <article
+              key={campaign.id}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-700">
+                  Activa
+                </span>
+                <span className="text-xs font-medium text-slate-400">{campaign.source}</span>
+              </div>
+              <h3 className="mt-2 text-[15px] font-bold text-slate-900">{campaign.title}</h3>
+              <div className="mt-3 space-y-2 text-[13px] leading-5 text-slate-600">
+                <p>
+                  <span className="font-semibold text-slate-800">Se activa:</span>{' '}
+                  {campaign.trigger}
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-800">Motivo:</span>{' '}
+                  {campaign.purpose}
+                </p>
+                <p className="text-slate-400">{campaign.cadence}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <div className="admin-mail-filters" aria-label="Filtros de mails">
         {typeOptions.map((option) => (
           <Link
