@@ -1951,6 +1951,8 @@ export default function SimuladorExamen({
         answeredCount={answeredCount}
         correctCount={correctCount}
         questionLimit={questionLimit}
+        materiaNombre={materiaNombre}
+        parcial={parcial}
         loginHref={loginHref}
         signupHref={signupHref}
         onLoginClick={() => void emitLoginGateEvent('simulator_login_gate_cta_clicked', 'login')}
