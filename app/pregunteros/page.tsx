@@ -13,7 +13,7 @@ import { loadPregunteroHubData, summarizePregunteroHubData } from './data';
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: 'Pregunteros Siglo 21: parciales y simuladores',
+  title: 'Pregunteros Siglo 21: parciales y práctica',
   description:
     'Encontrá pregunteros de Universidad Siglo 21 por materia y parcial. Practicá preguntas, simulá el examen y revisá tus errores en Evaluo.',
   keywords: [
@@ -123,7 +123,7 @@ export default async function PregunteroHubPage() {
               <div>
                 <h2 className="text-base font-bold text-slate-950">¿Qué es un preguntero?</h2>
                 <p className="mt-2 text-sm leading-7 text-slate-600">
-                  Es un banco de preguntas de práctica asociado a una materia y a una instancia de parcial. En Evaluo podés responderlas en un simulador y revisar tus errores al terminar.
+                  Es un banco de preguntas de práctica asociado a una materia y a una instancia de parcial. En Evaluo podés responderlas en un Preguntero y revisar tus errores al terminar.
                 </p>
               </div>
             </div>
