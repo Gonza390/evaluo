@@ -108,8 +108,8 @@ function buildPregunteroDescription(data: PregunteroData) {
       : `Practicá con preguntas disponibles de ${data.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}, con parciales y simulador en Evaluo.`
-    : `${base}, con parciales y simulador en Evaluo.`;
+    ? `${base} para ${context}, con parciales y práctica en Evaluo.`
+    : `${base}, con parciales y práctica en Evaluo.`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -192,7 +192,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
     ? await getPregunteroParcialData(data.materiaId, firstParcial.parcial === 1 ? '1' : '2')
     : null;
   const simuladorHref = practiceData
-    ? `/simulador/${data.materiaId}/${practiceData.parcialNumero}`
+    ? `/simulador/${data.materiaId}/${practiceData.parcialNumero}?acq=preguntero_landing_v1`
     : materiaHref;
 
   return (
@@ -249,7 +249,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
             {data.samplePreguntas.length === 0 ? (
               <p className="text-muted-foreground mt-5 text-sm leading-7">
                 Todavía estamos cargando el banco de preguntas de esta materia. Entrá al espacio de
-                la materia para ver el simulador.
+                la materia para ver el Preguntero.
               </p>
             ) : (
               <ul className="mt-5 space-y-4">
@@ -271,7 +271,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
           <div className="space-y-6">
             <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
               <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
-                Simulá el parcial
+                Practicá el parcial
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
                 Elegí el parcial arriba y pasá de las preguntas de muestra al simulador completo.
