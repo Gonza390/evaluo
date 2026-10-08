@@ -137,7 +137,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     detail:
       data.totalPreguntas > 0
         ? `${data.totalPreguntas.toLocaleString('es-AR')} preguntas disponibles para practicar`
-        : 'Preguntas y simuladores para practicar',
+        : 'Preguntas y práctica para preparar parciales',
   });
 
   return {
@@ -274,7 +274,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
                 Practicá el parcial
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
-                Elegí el parcial arriba y pasá de las preguntas de muestra al simulador completo.
+                Elegí el parcial arriba y pasá de las preguntas de muestra al Preguntero completo.
               </p>
               <Link
                 href={materiaHref}
