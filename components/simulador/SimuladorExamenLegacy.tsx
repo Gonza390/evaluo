@@ -109,7 +109,7 @@ export interface SimuladorExamenProps {
   mode?: 'regular' | 'errores' | 'ultimo_intento';
   premiumOnly?: boolean;
   demoMode?: boolean;
-  acquisitionVariant?: 'preguntero_google_v1';
+  acquisitionVariant?: 'preguntero_google_v1' | 'preguntero_landing_v1';
 }
 
 type EstadoExamen =
@@ -449,8 +449,10 @@ export default function SimuladorExamen({
   const { isPremium } = usePremium();
   const { toast } = useToast();
   const resolvedDemoMode = demoMode && !user;
-  const isPregunteroAcquisitionDemo =
-    resolvedDemoMode && acquisitionVariant === 'preguntero_google_v1';
+  const isPregunteroAcquisition =
+    acquisitionVariant === 'preguntero_google_v1' ||
+    acquisitionVariant === 'preguntero_landing_v1';
+  const isPregunteroAcquisitionDemo = resolvedDemoMode && isPregunteroAcquisition;
 
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
   const [estado, setEstado] = useState<EstadoExamen>('loading');
@@ -591,8 +593,10 @@ export default function SimuladorExamen({
     params.set(SIMULATOR_TOUR_PARAM, '1');
     return params.toString();
   }, [searchParams]);
-  const loginHref = `/login?next=${encodeURIComponent(`${pathname}${guidedSearchParams ? `?${guidedSearchParams}` : ''}`)}`;
-  const signupHref = `/login?mode=signup&next=${encodeURIComponent(`${pathname}${guidedSearchParams ? `?${guidedSearchParams}` : ''}`)}`;
+  const authNextPath = `${pathname}${guidedSearchParams ? `?${guidedSearchParams}` : ''}`;
+  const authReason = isPregunteroAcquisition ? '&reason=preguntero' : '';
+  const loginHref = `/login?next=${encodeURIComponent(authNextPath)}${authReason}`;
+  const signupHref = `/login?mode=signup&next=${encodeURIComponent(authNextPath)}${authReason}`;
   const pdfUploadHref = useMemo(() => {
     const params = new URLSearchParams({
       openUpload: '1',
@@ -1267,7 +1271,12 @@ export default function SimuladorExamen({
             : Promise.resolve({ data: [] as Array<{ id: string }>, error: null }),
         ]);
 
-        if (!resolvedDemoMode && profileStatus && !profileStatus.isComplete) {
+        if (
+          !resolvedDemoMode &&
+          profileStatus &&
+          !profileStatus.isComplete &&
+          !isPregunteroAcquisition
+        ) {
           setEstado('profile_incomplete');
           return;
         }
@@ -1360,6 +1369,7 @@ export default function SimuladorExamen({
     user,
     userLoading,
     landingQuestionId,
+    isPregunteroAcquisition,
   ]);
 
   useEffect(() => {
