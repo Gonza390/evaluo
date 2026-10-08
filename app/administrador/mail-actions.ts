@@ -2,6 +2,7 @@
 
 import { requireAdminAccess } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { getActiveMailCampaigns, type ActiveMailCampaign } from '@/lib/email/campaign-registry';
 
 const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires';
 
@@ -29,6 +30,7 @@ export type AdminUpcomingMailRow = {
 };
 
 export type AdminMailData = {
+  activeCampaigns: ActiveMailCampaign[];
   rows: AdminMailRow[];
   upcoming: AdminUpcomingMailRow[];
   generatedAt: string;
@@ -495,6 +497,15 @@ export async function obtenerMailsAdministrador(input?: {
         contextText(row.context, 'subject') ||
         contextText(row.context, 'material_title');
       const subject = contextSubject || materiaName(row.materia_id);
+      const campaignFamily = contextText(row.context, 'campaign_family');
+      const actionTitle = contextText(row.context, 'action_title');
+      const actionCta = contextText(row.context, 'action_cta');
+      const detail =
+        campaignFamily === 'study_return_d1_v1'
+          ? `Retorno D+1 · ${actionTitle || actionCta || subject || 'próxima acción'}`
+          : subject
+            ? `Campaña · ${subject}`
+            : `Campaña · ${row.campaign_key}`;
       history.push({
         id: `campaign:${row.id}`,
         sentAt: effectiveAt,
@@ -502,7 +513,7 @@ export async function obtenerMailsAdministrador(input?: {
         label: 'Campaña',
         userName: user.name,
         userEmail: user.email,
-        detail: subject ? `Campaña · ${subject}` : `Campaña · ${row.campaign_key}`,
+        detail,
         status: row.status,
       });
     }
@@ -577,6 +588,7 @@ export async function obtenerMailsAdministrador(input?: {
     return {
       success: true,
       data: {
+        activeCampaigns: getActiveMailCampaigns(),
         rows: filteredRows.slice(0, 250),
         upcoming: upcoming.slice(0, 100),
         generatedAt: now.toISOString(),
