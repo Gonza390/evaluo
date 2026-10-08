@@ -149,7 +149,7 @@ export function PregunteroPracticeHero({
                     ))}
                   </ul>
                   <p className="text-muted-foreground mt-3 text-xs">
-                    Elegí una opción para continuar. Podés cambiarla y confirmarla en el simulador.
+                    Elegí una opción para continuar. Podés cambiarla y confirmarla en el Preguntero.
                   </p>
                 </>
               ) : null}
@@ -160,7 +160,7 @@ export function PregunteroPracticeHero({
                       Pasá de leer preguntas a practicar el examen.
                     </p>
                     <p className="text-muted-foreground mt-1 text-sm leading-6">
-                      Respondé en el simulador y revisá tu resultado al terminar.
+                      Respondé en el Preguntero y revisá tu resultado al terminar.
                     </p>
                   </div>
                   <TrackedLink
@@ -169,7 +169,7 @@ export function PregunteroPracticeHero({
                     payload={payload('preguntero_question_preview')}
                     className="text-primary hover:bg-primary/5 focus-visible:ring-ring border-primary/30 mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-bold transition focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    Responder en el simulador
+                    Responder en el Preguntero
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </TrackedLink>
                 </>
@@ -182,7 +182,7 @@ export function PregunteroPracticeHero({
           aria-label="Cómo funciona el preguntero"
         >
           {[
-            ['1', 'Simulá el parcial', `Respondé preguntas de ${materiaNombre}.`],
+            ['1', 'Practicá el parcial', `Respondé preguntas de ${materiaNombre}.`],
             ['2', 'Revisá cómo te fue', 'Conocé tu resultado y revisá tus errores al terminar.'],
             [
               '3',
