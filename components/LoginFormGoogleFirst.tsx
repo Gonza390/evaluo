@@ -164,7 +164,14 @@ export default function LoginFormGoogleFirst() {
   }, []);
 
   const isSignUp = mode === 'signup';
-  const location = intent === 'premium' ? 'login_premium_intent' : reason === 'pdf-first' ? 'login_pdf_first' : 'login';
+  const location =
+    intent === 'premium'
+      ? 'login_premium_intent'
+      : reason === 'pdf-first'
+        ? 'login_pdf_first'
+        : reason === 'preguntero'
+          ? 'login_preguntero'
+          : 'login';
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
