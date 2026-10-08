@@ -240,7 +240,7 @@ export function PregunteroPersonasJuridicasExperiment({
 
             {samplePreguntas.length === 0 ? (
               <p className="mt-5 text-sm leading-7 text-slate-600">
-                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al simulador
+                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al Preguntero
                 para ver las preguntas disponibles.
               </p>
             ) : (
