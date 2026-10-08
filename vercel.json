@@ -50,7 +50,7 @@
     },
     {
       "path": "/api/internal/study-return-d1",
-      "schedule": "30 15 * * *"
+      "schedule": "30 14 * * *"
     },
     {
       "path": "/api/internal/study-return-48h",
