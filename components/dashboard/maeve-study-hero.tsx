@@ -31,6 +31,7 @@ export function MaeveStudyHero({
 }: Props) {
   const { user, getUserName } = useUser();
   const firstPdfViewTrackedRef = useRef(false);
+  const nextActionViewTrackedRef = useRef<string | null>(null);
   const firstName = user ? getUserName().split(' ')[0] : '';
   const personalized =
     Boolean(firstName) && firstName !== 'Estudiante'
@@ -45,6 +46,19 @@ export function MaeveStudyHero({
       location: 'dashboard_empty',
     });
   }, [isFirstPdfState]);
+
+  useEffect(() => {
+    if (isFirstPdfState || !nextStudyAction) return;
+    const viewKey = `${nextStudyAction.kind}:${nextStudyAction.materialId}`;
+    if (nextActionViewTrackedRef.current === viewKey) return;
+    nextActionViewTrackedRef.current = viewKey;
+    trackMarketingEvent('dashboard_next_action_viewed', {
+      location: 'dashboard_next_action',
+      cta_name: nextStudyAction.kind,
+      destination: nextStudyAction.href,
+      material_id: nextStudyAction.materialId,
+    });
+  }, [isFirstPdfState, nextStudyAction]);
 
   return (
     <section
