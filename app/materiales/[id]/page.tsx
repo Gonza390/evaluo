@@ -352,6 +352,25 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
 
     const visibility = normalizeMaterialVisibility(material.visibility);
     const isFirstReadyMaterial = isOwner && firstReadyMaterialId === material.id;
+
+    let firstPdfGuideAlreadySeen = false;
+    if (isFirstReadyMaterial && user && query.recorrido === '1') {
+      // analytics_events todavía no está incluida en los tipos generados del cliente admin.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const adminClient = admin as any;
+      const { data: guideOutcome, error: guideOutcomeError } = await adminClient
+        .from('analytics_events')
+        .select('id')
+        .eq('user_id', user.id)
+        .in('event_name', ['first_pdf_guide_completed', 'first_pdf_guide_skipped'])
+        .contains('metadata', { material_id: material.id })
+        .limit(1)
+        .maybeSingle();
+
+      if (guideOutcomeError) throw guideOutcomeError;
+      firstPdfGuideAlreadySeen = Boolean(guideOutcome);
+    }
+
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
     if (material.universidad_id) uploadParams.set('universidadId', material.universidad_id);
@@ -392,7 +411,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
           recommendedStudyAvailable={isFirstReadyMaterial}
-          initialRecommendedStudy={isFirstReadyMaterial && query.recorrido === '1'}
+          initialRecommendedStudy={
+            isFirstReadyMaterial && query.recorrido === '1' && !firstPdfGuideAlreadySeen
+          }
           initialTab={
             query.tab === 'tarjetas' ? 'tarjetas' : query.tab === 'mapa' ? 'mapa' : undefined
           }
