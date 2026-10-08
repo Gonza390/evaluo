@@ -4,6 +4,7 @@ const ANALYTICS_EVENT_NAMES = [
   'session_ping',
   'client_error',
   'cta_click',
+  'dashboard_next_action_viewed',
   'home_viewed',
   'home_demo_viewed',
   'home_product_video_play',
