@@ -1,17 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  HelpCircle,
-  ListChecks,
-  Sparkles,
-  Target,
-} from 'lucide-react';
+import { BookOpen, ListChecks, Target } from 'lucide-react';
 import { PregunteroPersonasJuridicasExperiment } from '@/components/marketing/preguntero-personas-juridicas-experiment';
 import { PregunteroSucesorioStudyPlan } from '@/components/marketing/preguntero-sucesorio-study-plan';
+import { PregunteroPracticeHero } from '@/components/marketing/preguntero-practice-hero';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
@@ -53,8 +46,7 @@ function buildParcialDescription(input: {
   totalPreguntas: number;
 }) {
   const context = [input.carreraNombre, input.universidadNombre].filter(Boolean).join(' en ');
-  const parcialLabel =
-    input.parcial === 'integrador' ? 'integrador' : `parcial ${input.parcial}`;
+  const parcialLabel = input.parcial === 'integrador' ? 'integrador' : `parcial ${input.parcial}`;
   const base =
     input.totalPreguntas > 0
       ? `${input.totalPreguntas.toLocaleString('es-AR')} preguntas para practicar el ${parcialLabel} de ${input.materiaNombre}`
@@ -171,6 +163,7 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
           universidadNombre={data.universidadNombre}
           carreraNombre={data.carreraNombre}
           label={label}
+          previewQuestion={data.previewQuestion}
           totalPreguntas={data.totalPreguntas}
           samplePreguntas={data.samplePreguntas}
           simuladorHref={simuladorHref}
@@ -189,52 +182,17 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
     <main className="bg-background min-h-screen">
       <JsonLd data={breadcrumbData} />
 
-      <section className="border-border bg-card border-b">
-        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <Link
-            href={pregunteroHref}
-            className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-sm font-semibold transition"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Preguntero de {data.materiaNombre}
-          </Link>
-          <p className="bg-brand/10 text-brand mt-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
-            <ListChecks className="h-4 w-4" />
-            Preguntero · {label}
-          </p>
-          <h1 className="text-foreground mt-5 text-4xl font-bold tracking-[-0.06em] sm:text-5xl">
-            {buildParcialTitle(data.materiaNombre, data.parcial)}
-            {data.universidadNombre ? (
-              <span className="text-muted-foreground block text-2xl font-semibold sm:text-3xl">
-                {data.universidadNombre}
-              </span>
-            ) : null}
-          </h1>
-          <p className="text-muted-foreground mt-5 max-w-3xl text-lg leading-8">
-            Practicá tu parcial, descubrí qué necesitás reforzar y entendé por qué te equivocaste.
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            {data.totalPreguntas > 0 ? (
-              <div className="border-border bg-card inline-flex items-center gap-2 rounded-2xl border px-4 py-3">
-                <HelpCircle className="text-brand h-5 w-5" />
-                <span className="text-foreground text-sm font-semibold">
-                  {data.totalPreguntas.toLocaleString('es-AR')} preguntas del {label.toLowerCase()}
-                </span>
-              </div>
-            ) : null}
-
-            <Link
-              href={simuladorHref}
-              className="from-brand to-brand-2 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
-            >
-              <Sparkles className="h-5 w-5" />
-              {isGoogleAcquisitionExperiment ? 'Probar 5 preguntas' : 'Practicar ahora'}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PregunteroPracticeHero
+        title={buildParcialTitle(data.materiaNombre, data.parcial)}
+        materiaNombre={data.materiaNombre}
+        universidadNombre={data.universidadNombre}
+        totalPreguntas={data.totalPreguntas}
+        pregunteroHref={pregunteroHref}
+        simuladorHref={simuladorHref}
+        label={label}
+        parcial={data.parcial}
+        previewQuestion={data.previewQuestion}
+      />
 
       <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -249,11 +207,14 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
               </p>
             ) : (
               <ul className="mt-5 space-y-4">
-                {data.samplePreguntas.map((question) => (
+                {data.samplePreguntas.map((question, index) => (
                   <li
                     key={question.id}
                     className="border-border bg-card rounded-2xl border px-4 py-4"
                   >
+                    <p className="text-primary mb-2 text-xs font-bold tracking-widest uppercase">
+                      Pregunta de muestra {index + 1}
+                    </p>
                     <p className="text-foreground text-sm leading-6">{question.enunciado}</p>
                     <p className="text-muted-foreground mt-2 text-xs font-semibold">
                       {question.opcionesCount} opciones
@@ -324,7 +285,8 @@ export default async function PregunteroParcialPage({ params, searchParams }: Pa
                 Seguir con {data.materiaNombre}
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
-                Volvé al preguntero completo, revisá resúmenes o entrá a la materia para seguir estudiando.
+                Volvé al preguntero completo, revisá resúmenes o entrá a la materia para seguir
+                estudiando.
               </p>
               <div className="mt-5 flex flex-col gap-3">
                 <Link

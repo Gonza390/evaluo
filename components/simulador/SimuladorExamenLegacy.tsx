@@ -74,6 +74,7 @@ import {
   shouldAutoResumeSimulator,
 } from '@/lib/simulator-core';
 import { DEMO_LOGIN_GATE_TOTAL_QUESTIONS, DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
+import { parseSimulatorLandingEntry, getLandingOptionIndex } from '@/lib/simulator-landing-entry';
 import { logError } from '@/lib/observability';
 import {
   clearPendingExamDate,
@@ -434,6 +435,16 @@ export default function SimuladorExamen({
 }: SimuladorExamenProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const landingEntry =
+    mode === 'regular' && !premiumOnly ? parseSimulatorLandingEntry(searchParams) : null;
+  const landingQuestionId = landingEntry?.questionId;
+  const landingOption = landingEntry?.option;
+  const landingEntryConsumedRef = useRef(false);
+  const landingStartTrackedRef = useRef(false);
+  const [pendingLandingAnswer, setPendingLandingAnswer] = useState<{
+    questionId: string;
+    optionIndex: number;
+  } | null>(null);
   const { user, loading: userLoading, getUserName, getUserInitials } = useUser();
   const { isPremium } = usePremium();
   const { toast } = useToast();
@@ -548,9 +559,7 @@ export default function SimuladorExamen({
   const [showAbandonFeedback, setShowAbandonFeedback] = useState(false);
   const [showNewExamConfirm, setShowNewExamConfirm] = useState(false);
   const [timerGeneration, setTimerGeneration] = useState(0);
-  const demoGateQuestionLimit = isPregunteroAcquisitionDemo
-    ? 5
-    : DEMO_LOGIN_GATE_TOTAL_QUESTIONS;
+  const demoGateQuestionLimit = isPregunteroAcquisitionDemo ? 5 : DEMO_LOGIN_GATE_TOTAL_QUESTIONS;
   const demoCheckpointIndex = resolvedDemoMode
     ? Math.min(demoGateQuestionLimit, Math.max(1, preguntasDisponibles)) - 1
     : DEMO_TOTAL_QUESTIONS - 1;
@@ -569,16 +578,7 @@ export default function SimuladorExamen({
       acquisitionVariant,
       path: typeof window === 'undefined' ? '' : window.location.pathname,
     }),
-    [
-      acquisitionVariant,
-      carreraId,
-      materiaId,
-      mode,
-      parcial,
-      premiumOnly,
-      universidadId,
-      userId,
-    ]
+    [acquisitionVariant, carreraId, materiaId, mode, parcial, premiumOnly, universidadId, userId]
   );
   const tourForcedByParam = searchParams.get(SIMULATOR_TOUR_PARAM) === '1';
   const simulatorTourStorageKey = useMemo(
@@ -890,9 +890,23 @@ export default function SimuladorExamen({
       setFlaggedQuestions(Array.isArray(saved.flaggedQuestions) ? saved.flaggedQuestions : []);
       setFeedbackByQuestion(saved.feedback ?? {});
       setHasStarted(Boolean(saved.hasStarted));
+      const entryQuestion = saved.preguntas[0];
+      if (entryQuestion?.id === landingQuestionId && saved.selectedAnswers?.[0] === undefined) {
+        const options = seededShuffle(
+          dedupeOptionsForView(entryQuestion.opciones),
+          `${entryQuestion.id}:0`
+        ).values;
+        const index = getLandingOptionIndex(options, landingOption);
+        setPendingLandingAnswer(
+          index >= 0 ? { questionId: entryQuestion.id, optionIndex: index } : null
+        );
+        landingStartTrackedRef.current = Boolean(saved.hasStarted);
+      } else {
+        setPendingLandingAnswer(null);
+      }
       setResumeSnapshot(saved);
     },
-    [questionLimit]
+    [questionLimit, landingQuestionId, landingOption]
   );
 
   // La corrección vive en el servidor (registrarRespuestaUsuario / corregirPreguntaDemo).
@@ -1133,6 +1147,9 @@ export default function SimuladorExamen({
   }, [emitSimulatorEvent, resolvedDemoMode]);
 
   const loadFreshQuestions = useCallback(async () => {
+    const entryForLoad = landingEntryConsumedRef.current
+      ? null
+      : { questionId: landingQuestionId, option: landingOption };
     const data =
       mode === 'errores'
         ? await getPreguntasSimuladorErrores(materiaId, parcial)
@@ -1141,8 +1158,14 @@ export default function SimuladorExamen({
           : premiumOnly
             ? await getPreguntasSimuladorPremium(materiaId, parcial)
             : resolvedDemoMode
-              ? await getPreguntasSimuladorDemo(materiaId, parcial)
-              : await getPreguntasSimulador(materiaId, parcial, universidadId, carreraId);
+              ? await getPreguntasSimuladorDemo(materiaId, parcial, entryForLoad?.questionId)
+              : await getPreguntasSimulador(
+                  materiaId,
+                  parcial,
+                  universidadId,
+                  carreraId,
+                  entryForLoad?.questionId
+                );
 
     if (data && data.length > 0) {
       simulatorLifecycleRef.current.outcomeTracked = false;
@@ -1154,7 +1177,22 @@ export default function SimuladorExamen({
       setSelectedAnswers({});
       setFlaggedQuestions([]);
       setFeedbackByQuestion({});
-      setHasStarted(false);
+      const firstQuestion = data[0];
+      const entryMatches =
+        firstQuestion.id === entryForLoad?.questionId && Boolean(entryForLoad?.option);
+      const entryOptions = seededShuffle(
+        dedupeOptionsForView(firstQuestion.opciones),
+        `${firstQuestion.id}:0`
+      ).values;
+      const entryIndex = entryMatches
+        ? getLandingOptionIndex(entryOptions, entryForLoad?.option)
+        : -1;
+      const startsFromLanding = entryIndex >= 0;
+      setPendingLandingAnswer(
+        startsFromLanding ? { questionId: firstQuestion.id, optionIndex: entryIndex } : null
+      );
+      setHasStarted(startsFromLanding);
+      landingEntryConsumedRef.current = true;
       setResumeSnapshot(null);
       setEstado('playing');
       clearPersistedSimulatorState(storageKey);
@@ -1173,7 +1211,20 @@ export default function SimuladorExamen({
     resolvedDemoMode,
     storageKey,
     universidadId,
+    landingQuestionId,
+    landingOption,
   ]);
+
+  useEffect(() => {
+    if (!hasStarted || !pendingLandingAnswer || landingStartTrackedRef.current) return;
+    landingStartTrackedRef.current = true;
+    void emitSimulatorEvent('simulator_started', {
+      questionIndex: 1,
+      answered: 0,
+      progress: 0,
+      timeLeft: examDurationSeconds,
+    });
+  }, [hasStarted, pendingLandingAnswer, emitSimulatorEvent, examDurationSeconds]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -1245,7 +1296,11 @@ export default function SimuladorExamen({
 
           if (valid) {
             hydrateSavedExam(saved);
-            if (saved.hasStarted && shouldAutoResumeSimulator(saved.savedAt)) {
+            if (
+              saved.hasStarted &&
+              shouldAutoResumeSimulator(saved.savedAt) &&
+              (!landingQuestionId || saved.preguntas[0]?.id === landingQuestionId)
+            ) {
               setEstado('playing');
             } else {
               setEstado('resume_choice');
@@ -1267,7 +1322,11 @@ export default function SimuladorExamen({
 
           if (currentSnapshot) {
             hydrateSavedExam(currentSnapshot);
-            if (currentSnapshot.hasStarted && shouldAutoResumeSimulator(currentSnapshot.savedAt)) {
+            if (
+              currentSnapshot.hasStarted &&
+              shouldAutoResumeSimulator(currentSnapshot.savedAt) &&
+              (!landingQuestionId || currentSnapshot.preguntas[0]?.id === landingQuestionId)
+            ) {
               setEstado('playing');
             } else {
               setEstado('resume_choice');
@@ -1300,6 +1359,7 @@ export default function SimuladorExamen({
     storageKey,
     user,
     userLoading,
+    landingQuestionId,
   ]);
 
   useEffect(() => {
@@ -1692,6 +1752,10 @@ export default function SimuladorExamen({
 
   const handleSelectAnswer = (optionIndex: number) => {
     if (!preguntaActual) return;
+    if (pendingLandingAnswer?.questionId === preguntaActual.id) {
+      setPendingLandingAnswer({ questionId: preguntaActual.id, optionIndex });
+      return;
+    }
     if (preguntaActual.correctCount <= 1) {
       if (selectedAnswers[currentQuestionIndex] !== undefined) return;
       setSelectedAnswers((prev) => ({ ...prev, [currentQuestionIndex]: optionIndex }));
@@ -1892,6 +1956,12 @@ export default function SimuladorExamen({
       <div className="flex min-h-[600px] items-center justify-center bg-white p-6">
         <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
           <h2 className="text-2xl font-extrabold text-slate-900">Tenés un simulador en curso</h2>
+          {landingQuestionId && resumeSnapshot?.preguntas[0]?.id !== landingQuestionId ? (
+            <p className="mt-3 text-sm text-slate-600">
+              Podés retomar este intento o descartarlo para empezar con la pregunta que elegiste en
+              la landing.
+            </p>
+          ) : null}
           <p className="mt-3 text-slate-600">
             Guardamos este intento con las mismas preguntas para que puedas retomarlo sin cambios.
           </p>
@@ -2473,9 +2543,7 @@ export default function SimuladorExamen({
                         >
                           <Link
                             href={
-                              hasReadyOwnMaterial
-                                ? '/dashboard/explicaciones'
-                                : pdfActivationHref
+                              hasReadyOwnMaterial ? '/dashboard/explicaciones' : pdfActivationHref
                             }
                           >
                             {hasReadyOwnMaterial
@@ -2644,10 +2712,12 @@ export default function SimuladorExamen({
                     {!userId && wrongExplanations.length > 0 ? (
                       <div className="mt-5 border-t border-indigo-100 pt-5">
                         <p className="text-sm font-semibold text-slate-900">
-                          Ya viste qué te hizo fallar. Ahora estudiá lo que realmente entra en tu examen.
+                          Ya viste qué te hizo fallar. Ahora estudiá lo que realmente entra en tu
+                          examen.
                         </p>
                         <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-                          Creá tu cuenta y subí tus apuntes. Evaluo los procesa para encontrar estos temas y decirte dónde conviene estudiar cada uno.
+                          Creá tu cuenta y subí tus apuntes. Evaluo los procesa para encontrar estos
+                          temas y decirte dónde conviene estudiar cada uno.
                         </p>
                         <Link
                           href={pdfActivationHref}
@@ -2735,34 +2805,34 @@ export default function SimuladorExamen({
       if ((!isPregunteroAcquisitionDemo && !examDateDraft) || examDateSaving) return;
 
       if (userId) {
-          setExamDateSaving(true);
-          try {
-            const saved = await saveSimulatorExamIntent({
-              userId,
-              materiaId,
-              materiaNombre,
-              parcial,
-              eventDate: examDateDraft,
-              existingEventId: examIntentId,
-            });
-            setExamIntentId(saved.id);
-            setExamDateDraft(saved.eventDate);
-            clearPendingExamDate(materiaId, parcial);
-            trackMarketingEvent('preguntero_exam_date_captured', {
-              materia_id: materiaId,
-              parcial,
-              exam_date: saved.eventDate,
-              auth_state: 'authenticated',
-            });
-          } catch (error) {
-            logError('simulador.examIntent.save', error, {
-              materiaId,
-              parcial,
-              userId,
-            });
-          } finally {
-            setExamDateSaving(false);
-          }
+        setExamDateSaving(true);
+        try {
+          const saved = await saveSimulatorExamIntent({
+            userId,
+            materiaId,
+            materiaNombre,
+            parcial,
+            eventDate: examDateDraft,
+            existingEventId: examIntentId,
+          });
+          setExamIntentId(saved.id);
+          setExamDateDraft(saved.eventDate);
+          clearPendingExamDate(materiaId, parcial);
+          trackMarketingEvent('preguntero_exam_date_captured', {
+            materia_id: materiaId,
+            parcial,
+            exam_date: saved.eventDate,
+            auth_state: 'authenticated',
+          });
+        } catch (error) {
+          logError('simulador.examIntent.save', error, {
+            materiaId,
+            parcial,
+            userId,
+          });
+        } finally {
+          setExamDateSaving(false);
+        }
       } else if (examDateDraft) {
         writePendingExamDate(materiaId, parcial, examDateDraft);
         trackMarketingEvent('preguntero_exam_date_captured', {
@@ -2802,9 +2872,7 @@ export default function SimuladorExamen({
 
           {isPregunteroAcquisitionDemo ? (
             <div className="mt-7 border-t border-slate-200 pt-6">
-              <p className="text-base font-bold text-slate-950">
-                Probá primero, sin crear cuenta
-              </p>
+              <p className="text-base font-bold text-slate-950">Probá primero, sin crear cuenta</p>
               <p className="mt-1 text-sm leading-6 text-slate-600">
                 Respondé 5 preguntas. Después te mostramos cómo venís y podés guardar el progreso
                 para continuar con el simulador completo.
@@ -2816,7 +2884,8 @@ export default function SimuladorExamen({
                 ¿Cuándo rendís?
               </label>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                Usamos esta fecha para acompañarte hasta el examen y conectar después la práctica con tus apuntes.
+                Usamos esta fecha para acompañarte hasta el examen y conectar después la práctica
+                con tus apuntes.
               </p>
               <input
                 id="preguntero-exam-date"
@@ -2824,7 +2893,7 @@ export default function SimuladorExamen({
                 min={getLocalDateKey()}
                 value={examDateDraft}
                 onChange={(event) => setExamDateDraft(event.target.value)}
-                className="mt-3 h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-semibold text-slate-950 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="mt-3 h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-semibold text-slate-950 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </div>
           )}
@@ -3026,9 +3095,12 @@ export default function SimuladorExamen({
               {preguntaActualShuffled?.options?.map((opcion, idx) => {
                 const answerValue = selectedAnswers[currentQuestionIndex];
                 const multi = Boolean(preguntaActual && preguntaActual.correctCount > 1);
-                const selected = Array.isArray(answerValue)
-                  ? answerValue.includes(idx)
-                  : answerValue === idx;
+                const selected =
+                  pendingLandingAnswer && pendingLandingAnswer.questionId === preguntaActual?.id
+                    ? pendingLandingAnswer.optionIndex === idx
+                    : Array.isArray(answerValue)
+                      ? answerValue.includes(idx)
+                      : answerValue === idx;
                 const questionAnswered = multi
                   ? Array.isArray(answerValue) &&
                     answerValue.length === (preguntaActual?.correctCount ?? 0)
@@ -3055,6 +3127,29 @@ export default function SimuladorExamen({
                 );
               })}
             </div>
+
+            {pendingLandingAnswer && pendingLandingAnswer.questionId === preguntaActual?.id ? (
+              <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                <p className="text-sm text-slate-700">
+                  Trajimos la opción que elegiste. Podés cambiarla antes de confirmar.
+                </p>
+                <Button
+                  className="mt-3"
+                  onClick={() => {
+                    if (!pendingLandingAnswer) return;
+                    const index = pendingLandingAnswer.optionIndex;
+                    setPendingLandingAnswer(null);
+                    setSelectedAnswers((previous) => ({
+                      ...previous,
+                      [currentQuestionIndex]:
+                        (preguntaActual?.correctCount ?? 1) > 1 ? [index] : index,
+                    }));
+                  }}
+                >
+                  Confirmar respuesta
+                </Button>
+              </div>
+            ) : null}
 
             <div
               ref={navigationTourTargetRef}
