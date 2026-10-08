@@ -13,7 +13,7 @@ interface SimulatorLoginGateProps {
   onLoginClick?: () => void;
   onSignupClick?: () => void;
   onNeedsFeedback?: (reason: SimulatorNeedsReason) => void;
-  acquisitionVariant?: 'preguntero_google_v1';
+  acquisitionVariant?: 'preguntero_google_v1' | 'preguntero_landing_v1';
 }
 
 export function SimulatorLoginGate({
@@ -28,7 +28,9 @@ export function SimulatorLoginGate({
   acquisitionVariant,
 }: SimulatorLoginGateProps) {
   const preliminaryScore = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-  const isPregunteroAcquisition = acquisitionVariant === 'preguntero_google_v1';
+  const isPregunteroAcquisition =
+    acquisitionVariant === 'preguntero_google_v1' ||
+    acquisitionVariant === 'preguntero_landing_v1';
 
   return (
     <div className="flex min-h-[680px] items-center justify-center bg-white p-4 sm:p-6">
@@ -37,11 +39,11 @@ export function SimulatorLoginGate({
           <div>
             <div className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600">
               <Trophy className="h-4 w-4" />
-              {isPregunteroAcquisition ? 'Tu diagnóstico inicial' : 'Continúa el simulador'}
+              {isPregunteroAcquisition ? 'Tu progreso en el Preguntero' : 'Continúa el simulador'}
             </div>
             <h2 className="mt-4 text-[2rem] leading-[1.02] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.7rem]">
               {isPregunteroAcquisition
-                ? 'Ya viste cómo venís. Guardá el resultado y seguí.'
+                ? 'Guardá tu progreso y seguí practicando.'
                 : 'Tu primer diagnóstico ya está listo'}
             </h2>
             <p className="mt-4 max-w-[500px] text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
@@ -59,7 +61,7 @@ export function SimulatorLoginGate({
                     onClick={onSignupClick}
                     className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-600 px-6 text-base font-semibold text-white transition hover:bg-blue-700"
                   >
-                    Ver mis errores y seguir practicando
+                    Guardar progreso y continuar
                   </Link>
                   <Link
                     href={loginHref}
@@ -110,7 +112,7 @@ export function SimulatorLoginGate({
                 </dt>
                 <dd className="mt-2 text-sm leading-6 text-slate-600">
                   {isPregunteroAcquisition
-                    ? `Tus ${answeredCount} respuestas quedan guardadas. Seguís con el simulador completo de ${questionLimit} preguntas y después podés llevar tus errores a tus propios apuntes.`
+                    ? `Tus ${answeredCount} respuestas quedan guardadas. Seguís con el Preguntero completo de ${questionLimit} preguntas y después podés llevar tus errores a tus propios apuntes.`
                     : `Acceso al simulador completo de ${questionLimit} preguntas, guardado del intento, resultados finales y correcciones inteligentes de tus errores.`}
                 </dd>
               </div>
