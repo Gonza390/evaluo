@@ -694,6 +694,7 @@ function buildJsonProviderCalls(options: {
             system: SUMMARY_SYSTEM_PROMPT,
             temperature: options.temperature,
             maxTokens: options.maxTokens,
+            keyScope: 'pdf',
           });
         case 'nvidia':
           return requestNvidiaJson({
