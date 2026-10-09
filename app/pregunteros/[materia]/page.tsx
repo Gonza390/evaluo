@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
-import { ArrowLeft, BookOpen, HelpCircle, ListChecks, Sparkles, Target } from 'lucide-react';
+import { BookOpen, Sparkles, Target } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { createPublicClient } from '@/lib/supabase-public';
@@ -9,7 +9,8 @@ import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
 import { buildPregunteroSearchTitle } from '@/lib/seo-search-copy';
 import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
-import { getPregunteroMateriaStats } from '@/lib/data/preguntero';
+import { PregunteroPracticeHero } from '@/components/marketing/preguntero-practice-hero';
+import { getPregunteroParcialData, getPregunteroMateriaStats } from '@/lib/data/preguntero';
 import { buildShareCardPath } from '@/lib/share-card';
 
 export const revalidate = 600;
@@ -107,8 +108,8 @@ function buildPregunteroDescription(data: PregunteroData) {
       : `Practicá con preguntas disponibles de ${data.materiaNombre}`;
 
   return context
-    ? `${base} para ${context}, con parciales y simulador en Evaluo.`
-    : `${base}, con parciales y simulador en Evaluo.`;
+    ? `${base} para ${context}, con parciales y práctica en Evaluo.`
+    : `${base}, con parciales y práctica en Evaluo.`;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -136,7 +137,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     detail:
       data.totalPreguntas > 0
         ? `${data.totalPreguntas.toLocaleString('es-AR')} preguntas disponibles para practicar`
-        : 'Preguntas y simuladores para practicar',
+        : 'Preguntas y práctica para preparar parciales',
   });
 
   return {
@@ -184,6 +185,15 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
   }
 
   const materiaHref = `/explorar/materia/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}`;
+  const firstParcial = data.preguntasPorParcial.find(
+    (item) => item.parcial === 1 || item.parcial === 2
+  );
+  const practiceData = firstParcial
+    ? await getPregunteroParcialData(data.materiaId, firstParcial.parcial === 1 ? '1' : '2')
+    : null;
+  const simuladorHref = practiceData
+    ? `/simulador/${data.materiaId}/${practiceData.parcialNumero}?acq=preguntero_landing_v1`
+    : materiaHref;
 
   return (
     <main className="bg-background min-h-screen">
@@ -195,53 +205,40 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
         ])}
       />
 
-      <section className="border-border bg-card border-b">
-        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <Link
-            href="/pregunteros"
-            className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-sm font-semibold transition"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Todos los pregunteros
-          </Link>
-          <p className="bg-brand/10 text-brand mt-6 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase">
-            <ListChecks className="h-4 w-4" />
-            Preguntero
+      <PregunteroPracticeHero
+        title={`Preguntero de ${data.materiaNombre}`}
+        materiaNombre={data.materiaNombre}
+        universidadNombre={data.universidadNombre}
+        totalPreguntas={data.totalPreguntas}
+        pregunteroHref="/pregunteros"
+        backLabel="Todos los pregunteros"
+        simuladorHref={simuladorHref}
+        label={practiceData ? `Parcial ${practiceData.parcial}` : 'Materia'}
+        parcial={practiceData?.parcial}
+        description={buildPregunteroDescription(data)}
+        countLabel="preguntas de la materia"
+        previewQuestion={practiceData?.previewQuestion}
+      >
+        {practiceData ? (
+          <p className="text-muted-foreground mt-3 text-sm">
+            Empezá por el Parcial {practiceData.parcial} o elegí otro parcial:
           </p>
-          <h1 className="text-foreground mt-5 text-4xl font-bold tracking-[-0.06em] sm:text-5xl">
-            Preguntero de {data.materiaNombre}
-          </h1>
-          {data.universidadNombre ? (
-            <p className="text-primary mt-2 text-sm font-semibold">{data.universidadNombre}</p>
-          ) : null}
-          <p className="text-muted-foreground mt-5 max-w-3xl text-base leading-8">
-            {buildPregunteroDescription(data)}
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            {data.totalPreguntas > 0 ? (
-              <div className="border-border bg-card inline-flex items-center gap-2 rounded-2xl border px-4 py-3">
-                <HelpCircle className="text-brand h-5 w-5" />
-                <span className="text-foreground text-sm font-semibold">
-                  {data.totalPreguntas.toLocaleString('es-AR')} preguntas
-                </span>
-              </div>
-            ) : null}
-            {data.preguntasPorParcial.map((item) => (
-              <Link
-                key={item.parcial}
-                href={`/pregunteros/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}/parcial/${item.parcial}`}
-                className="border-border bg-card hover:border-brand hover:text-brand inline-flex items-center gap-2 rounded-2xl border px-4 py-3 transition"
-              >
-                <Target className="text-accent h-5 w-5" />
-                <span className="text-foreground text-sm font-semibold">
-                  Parcial {item.parcial}: {item.count.toLocaleString('es-AR')}
-                </span>
-              </Link>
-            ))}
-          </div>
+        ) : null}
+        <div className="mt-3 flex flex-wrap gap-3">
+          {data.preguntasPorParcial.map((item) => (
+            <Link
+              key={item.parcial}
+              href={`/pregunteros/${buildSeoEntitySlug(data.materiaNombre, data.materiaId)}/parcial/${item.parcial}`}
+              className="border-border bg-card hover:border-brand hover:text-brand inline-flex items-center gap-2 rounded-2xl border px-4 py-3 transition"
+            >
+              <Target className="text-accent h-5 w-5" />
+              <span className="text-foreground text-sm font-semibold">
+                Parcial {item.parcial}: {item.count.toLocaleString('es-AR')}
+              </span>
+            </Link>
+          ))}
         </div>
-      </section>
+      </PregunteroPracticeHero>
 
       <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -252,7 +249,7 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
             {data.samplePreguntas.length === 0 ? (
               <p className="text-muted-foreground mt-5 text-sm leading-7">
                 Todavía estamos cargando el banco de preguntas de esta materia. Entrá al espacio de
-                la materia para ver el simulador.
+                la materia para ver el Preguntero.
               </p>
             ) : (
               <ul className="mt-5 space-y-4">
@@ -274,10 +271,10 @@ export default async function PregunteroIntentPage({ params }: PageProps) {
           <div className="space-y-6">
             <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
               <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
-                Simulá el parcial
+                Practicá el parcial
               </h2>
               <p className="text-muted-foreground mt-3 text-sm leading-7">
-                Elegí el parcial arriba y pasá de las preguntas de muestra al simulador completo.
+                Elegí el parcial arriba y pasá de las preguntas de muestra al Preguntero completo.
               </p>
               <Link
                 href={materiaHref}
