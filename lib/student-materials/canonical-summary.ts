@@ -285,6 +285,7 @@ export async function generateCanonicalStudentMaterialSummary(
       temperature: 0.12,
       maxOutputTokens: resolveCanonicalSummaryMaxOutputTokens(model),
       responseSchema: CANONICAL_SUMMARY_RESPONSE_SCHEMA,
+      geminiKeySlot: input.geminiPdfKeySlot,
     });
 
     if (result) {
