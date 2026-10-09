@@ -491,14 +491,23 @@ async function requestGeminiCommon(input: GeminiRequest) {
         }
       }
 
-      const response = await fetchWithTimeout(`${url}?key=${encodeURIComponent(apiKey)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: input.prompt }] }],
-          generationConfig,
-        }),
-      });
+      let response: Response;
+      try {
+        response = await fetchWithTimeout(`${url}?key=${encodeURIComponent(apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: input.prompt }] }],
+            generationConfig,
+          }),
+        });
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          lastErrorMessage = `Gemini ${model} timeout`;
+          continue;
+        }
+        throw error;
+      }
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
