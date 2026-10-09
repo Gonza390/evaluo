@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!isUuid(materia_id)) {
     return {
-      title: 'Simulador',
+      title: 'Preguntero',
       robots: { index: false, follow: false },
     };
   }
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!materia) {
       return {
-        title: 'Simulador',
+        title: 'Preguntero',
         robots: { index: false, follow: false },
       };
     }
@@ -49,18 +49,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       carreraNombre = carrera?.nombre?.trim() ?? null;
     }
 
-    const materiaNombre = materia.nombre?.trim() || 'Simulador';
+    const materiaNombre = materia.nombre?.trim() || 'Preguntero';
 
     return {
-      title: `Simulador de ${materiaNombre}`,
+      title: `Preguntero de ${materiaNombre}`,
       description: carreraNombre
-        ? `Practicá con simuladores de parcial de ${materiaNombre} (${carreraNombre}) en Evaluo.`
-        : `Practicá con simuladores de parcial de ${materiaNombre} en Evaluo.`,
+        ? `Practicá el parcial de ${materiaNombre} (${carreraNombre}) con el Preguntero de Evaluo.`
+        : `Practicá el parcial de ${materiaNombre} con el Preguntero de Evaluo.`,
       robots: { index: false, follow: true },
     };
   } catch {
     return {
-      title: 'Simulador',
+      title: 'Preguntero',
     };
   }
 }
@@ -86,7 +86,10 @@ async function SimuladorContent({
   const carreraId = sParams.carrera_id as string;
   const acquisitionParam = Array.isArray(sParams.acq) ? sParams.acq[0] : sParams.acq;
   const acquisitionVariant =
-    acquisitionParam === 'preguntero_google_v1' ? 'preguntero_google_v1' : undefined;
+    acquisitionParam === 'preguntero_google_v1' ||
+    acquisitionParam === 'preguntero_landing_v1'
+      ? acquisitionParam
+      : undefined;
 
   return (
     <SimuladorExamen
@@ -134,7 +137,7 @@ export default async function SimuladorPage({ params, searchParams }: PageProps)
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-white px-6">
           <div className="border-y border-slate-200 py-8 text-sm font-semibold text-slate-600">
-            Iniciando simulador...
+            Iniciando Preguntero...
           </div>
         </div>
       }
