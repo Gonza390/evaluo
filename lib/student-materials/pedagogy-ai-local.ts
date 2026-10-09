@@ -415,6 +415,7 @@ async function requestPedagogicalMapJson(
       provider: 'groq',
       run: () =>
         requestGroqJson({
+          keyScope: 'pdf',
           system:
             'Extraé exclusivamente conocimiento del material y respondé sólo con JSON válido.',
           prompt,
