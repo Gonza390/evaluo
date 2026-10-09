@@ -57,6 +57,7 @@ import {
   buildCanonicalSourcePipelineVersion,
   CANONICAL_PEDAGOGICAL_MODEL_VERSION,
 } from '@/lib/student-materials/processing-contract';
+import { getOrAssignGeminiPdfKeySlot } from '@/lib/ai/gemini-pdf-routing';
 
 export type StudentMaterialProcessingStage =
   | 'uploaded'
@@ -105,6 +106,12 @@ export async function processStudentMaterial(input: {
   );
 
   if (!material) throw new Error('No encontramos el material que queres procesar.');
+
+  const geminiPdfKeySlot = await getOrAssignGeminiPdfKeySlot(admin, material.id);
+  logInfo('processStudentMaterial.geminiPdfKeySlot', {
+    materialId: material.id,
+    keySlot: geminiPdfKeySlot,
+  });
 
   // Conservamos la última representación canónica válida durante un reprocesamiento.
   // Si un proveedor externo falla transitoriamente, podemos reutilizar ese modelo
@@ -197,6 +204,7 @@ export async function processStudentMaterial(input: {
     materialId: material.id,
     userId: material.user_id,
     pageNumbers: selectedVisionPageNumbers,
+    geminiPdfKeySlot,
   });
 
   const text = visionExtraction.text;
@@ -303,6 +311,7 @@ export async function processStudentMaterial(input: {
         : undefined,
     materialId: material.id,
     userId: material.user_id,
+    geminiPdfKeySlot,
   };
 
   if (isVeryLargeNativePdf) {
