@@ -540,7 +540,7 @@ async function requestGeminiCommon(input: GeminiRequest) {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
-        if ([401, 404, 429, 500, 503].includes(response.status)) {
+        if ([400, 401, 404, 429, 500, 503].includes(response.status)) {
           lastErrorMessage = `Gemini ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
           continue;
         }
