@@ -184,6 +184,7 @@ async function evaluateChunksWithLlm(
         system: EVAL_SYSTEM_PROMPT,
         temperature: 0.05,
         maxTokens: 1200,
+        keyScope: 'pdf',
       });
 
       if (!result) continue;
