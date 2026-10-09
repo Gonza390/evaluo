@@ -755,6 +755,7 @@ export async function generateStudentMaterialGlossary(
   try {
     const groqResult = await requestGroqJson({
       prompt,
+      keyScope: 'pdf',
       system:
         'Sos un asistente académico experto en crear glosarios de estudio fieles al PDF. Responde solo con JSON válido.',
       temperature: 0.08,
