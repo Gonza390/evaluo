@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/supabase';
+import type { GeminiPdfKeySlot } from '@/lib/ai/providers';
 
-export type AdminClient = Pick<SupabaseClient<Database>, 'from' | 'storage'>;
+export type AdminClient = Pick<SupabaseClient<Database>, 'from' | 'storage' | 'rpc'>;
 
 export type GenerateSummaryInput = {
   title: string;
@@ -14,6 +15,7 @@ export type GenerateSummaryInput = {
   pdfBuffer?: Buffer;
   materialId?: string;
   userId?: string;
+  geminiPdfKeySlot?: GeminiPdfKeySlot;
 };
 
 export type PersistSummaryArtifactsInput = {
