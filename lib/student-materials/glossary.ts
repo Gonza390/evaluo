@@ -631,6 +631,7 @@ export async function generateStudentMaterialGlossary(
               temperature: 0.1,
               maxOutputTokens: 2600,
               responseSchema: glossarySchema,
+              geminiKeySlot: input.geminiPdfKeySlot,
             });
             if (geminiVisionResult) {
               await recordAiUsage({
@@ -669,6 +670,7 @@ export async function generateStudentMaterialGlossary(
         temperature: 0.1,
         maxOutputTokens: 2600,
         responseSchema: glossarySchema,
+        geminiKeySlot: input.geminiPdfKeySlot,
       });
       if (geminiPdfResult) {
         await recordAiUsage({
@@ -694,6 +696,7 @@ export async function generateStudentMaterialGlossary(
       prompt,
       temperature: 0.14,
       maxOutputTokens: 2400,
+      geminiKeySlot: input.geminiPdfKeySlot,
       responseSchema: {
         type: 'OBJECT',
         properties: {
