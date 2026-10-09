@@ -29,7 +29,7 @@ type SimulatorEventContext = {
   universidadId?: string;
   mode: 'regular' | 'errores' | 'ultimo_intento';
   premiumOnly: boolean;
-  acquisitionVariant?: 'preguntero_google_v1';
+  acquisitionVariant?: 'preguntero_google_v1' | 'preguntero_landing_v1';
   path: string;
 };
 
