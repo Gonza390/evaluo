@@ -13,6 +13,7 @@ export interface PregunteroParcialData {
   parcial: PregunteroParcialKey;
   parcialNumero: number;
   totalPreguntas: number;
+  previewQuestion?: { id: string; enunciado: string; opciones: string[] };
   samplePreguntas: Array<{
     id: string;
     enunciado: string;
@@ -102,7 +103,10 @@ export function buildParcialHref(
 }
 
 const loadParcialData = unstable_cache(
-  async (materiaId: string, parcial: PregunteroParcialKey): Promise<PregunteroParcialData | null> => {
+  async (
+    materiaId: string,
+    parcial: PregunteroParcialKey
+  ): Promise<PregunteroParcialData | null> => {
     const client = createPublicClient();
     const bootstrap = await getMateriaBootstrap({ materiaId });
 
@@ -122,7 +126,7 @@ const loadParcialData = unstable_cache(
           .eq('materia_id', materiaId)
           .in('parcial', parciales)
           .order('creado_at', { ascending: false })
-          .limit(5),
+          .limit(10),
       ]);
 
       const parcialSet = new Set(parciales);
@@ -139,12 +143,38 @@ const loadParcialData = unstable_cache(
         parcial,
         parcialNumero,
         totalPreguntas,
-        samplePreguntas: ((sampleRows.data ?? []) as Array<{
-          id: string;
-          enunciado: string;
-          opciones: unknown;
-          parcial: number | null;
-        }>).map((row) => ({
+        previewQuestion: (() => {
+          const sampleEnunciados = new Set(
+            (sampleRows.data ?? []).slice(0, 5).map((row) => row.enunciado?.trim() ?? '')
+          );
+          const eligibleRows = (sampleRows.data ?? []).filter(
+            (candidate) =>
+              typeof candidate.enunciado === 'string' &&
+              Array.isArray(candidate.opciones) &&
+              candidate.opciones.some(
+                (option) => typeof option === 'string' && option.trim().length > 0
+              )
+          );
+          const row =
+            eligibleRows.find((candidate) => !sampleEnunciados.has(candidate.enunciado?.trim() ?? '')) ??
+            eligibleRows[0];
+          if (!row || typeof row.enunciado !== 'string' || !Array.isArray(row.opciones))
+            return undefined;
+          const opciones = row.opciones.filter(
+            (option): option is string => typeof option === 'string' && option.trim().length > 0
+          );
+          return opciones.length > 0 && row.id
+            ? { id: row.id, enunciado: row.enunciado, opciones }
+            : undefined;
+        })(),
+        samplePreguntas: (
+          (sampleRows.data ?? []).slice(0, 5) as Array<{
+            id: string;
+            enunciado: string;
+            opciones: unknown;
+            parcial: number | null;
+          }>
+        ).map((row) => ({
           id: row.id,
           enunciado: row.enunciado,
           parcial: row.parcial ?? 1,
@@ -164,7 +194,7 @@ const loadParcialData = unstable_cache(
       };
     }
   },
-  ['preguntero-parcial-data-v2'],
+  ['preguntero-parcial-data-v4'],
   { revalidate: 600, tags: ['materia-bootstrap'] }
 );
 
