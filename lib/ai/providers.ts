@@ -458,9 +458,11 @@ function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
     return uniqueConfiguredValues([secondaryPdfKey, primaryPdfKey]);
   }
 
+  // GEMINI_API_KEY y GEMINI_PDF_API_KEY_2 quedan reservadas al
+  // procesamiento de PDFs. Las llamadas Gemini sin slot deben usar credenciales
+  // dedicadas a otras funciones cuando se configuren.
   return uniqueConfiguredValues([
     process.env.GEMINI_SUMMARY_API_KEY,
-    process.env.GEMINI_API_KEY,
     process.env.GEMINI_API_KEY_FALLBACK,
     process.env.GOOGLE_AI_KEY,
     process.env.GOOGLE_GENERATIVE_AI_API_KEY,
