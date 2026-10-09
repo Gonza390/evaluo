@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict';
 import {
+  buildSimulatorLandingHref,
+  parseSimulatorLandingEntry,
+  preferSimulatorQuestion,
+  getLandingOptionIndex,
+} from '../lib/simulator-landing-entry.ts';
+import {
   validateReviewQuestion,
   publicReviewQuestion,
   isCompleteReviewHelp,
@@ -596,4 +602,37 @@ assert.deepEqual(publicReviewQuestion({ id: 'check-1', ...reviewPayload }), {
 });
 assert.ok(!('correctIndex' in publicReviewQuestion({ id: 'check-1', ...reviewPayload })));
 
+const entryId = '0eb4946c-227e-4a21-8d2a-72496cb00eca';
+const otherEntryId = '555d3d0a-206e-42e2-adf8-08f1063448e6';
+const entryUrl = new URL(
+  buildSimulatorLandingHref(
+    '/simulador/materia/2?utm_source=google',
+    entryId,
+    'Texto & acentos: sí.'
+  ),
+  'https://evaluo.com.ar'
+);
+assert.equal(entryUrl.searchParams.get('utm_source'), 'google');
+assert.deepEqual(parseSimulatorLandingEntry(entryUrl.searchParams), {
+  questionId: entryId,
+  option: 'Texto & acentos: sí.',
+});
+assert.equal(
+  parseSimulatorLandingEntry(new URLSearchParams('entry_question=invalid&entry_option=A')),
+  null
+);
+assert.equal(
+  parseSimulatorLandingEntry(
+    new URLSearchParams({ entry_question: entryId, entry_option: 'x'.repeat(2001) })
+  ),
+  null
+);
+const entryPool = [{ id: entryId }, { id: otherEntryId }];
+assert.equal(getLandingOptionIndex(['Constante.', ' Firme.  ', 'Duradero.'], 'firme.'), 1);
+assert.equal(getLandingOptionIndex(['A', 'B'], 'Opción que ya no existe'), -1);
+assert.deepEqual(preferSimulatorQuestion([entryPool[1]], entryPool, entryId, 1), [entryPool[0]]);
+assert.deepEqual(preferSimulatorQuestion([entryPool[1]], [entryPool[1]], entryId, 1), [
+  entryPool[1],
+]);
+assert.deepEqual(preferSimulatorQuestion(entryPool, entryPool, entryId, 2), entryPool);
 console.log('Flow smoke tests passed.');
