@@ -26,6 +26,7 @@ export async function GET(request: Request) {
     requestUrl.searchParams.get('analytics_session')
   );
   const nextPathRaw = requestUrl.searchParams.get('next');
+  const reason = String(requestUrl.searchParams.get('reason') ?? '').trim();
   // Solo redirigir a rutas internas: rechaza URLs absolutas (https://), scheme
   // relativo (//host) y rutas que no empiecen con '/'.
   const nextPath =
@@ -133,6 +134,12 @@ export async function GET(request: Request) {
           activeSubjects: profile?.active_subjects,
         })
       ) {
+        // El Preguntero ya generó valor antes del registro: no interrumpir la continuidad
+        // con el perfil académico. Ese dato se puede pedir después.
+        if (reason === 'preguntero') {
+          return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
+        }
+
         // Ship B.1: no bloquear activación PDF-first con el gate de perfil académico.
         if (isPdfFirstActivationPath(nextPath)) {
           return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
