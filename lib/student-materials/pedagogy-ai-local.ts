@@ -392,7 +392,8 @@ async function mapGroupWithRecovery(
 
 async function requestPedagogicalMapJson(
   group: PedagogicalMapGroup,
-  totalChunks: number
+  totalChunks: number,
+  geminiPdfKeySlot?: GenerateSummaryInput['geminiPdfKeySlot']
 ): Promise<ProviderResult | null> {
   const prompt = PEDAGOGICAL_MAP_PROMPT(group, totalChunks);
   const attempts: Array<{
@@ -407,6 +408,7 @@ async function requestPedagogicalMapJson(
           temperature: 0.08,
           maxOutputTokens: MAP_MAX_OUTPUT_TOKENS,
           responseSchema: COMPACT_RESPONSE_SCHEMA,
+          geminiKeySlot: geminiPdfKeySlot,
         }),
     },
     {
@@ -485,7 +487,11 @@ async function mapGroupAttempt(
   input: GenerateSummaryInput
 ): Promise<CompactPedagogicalNode | null> {
   try {
-    const result = await requestPedagogicalMapJson(group, totalChunks);
+    const result = await requestPedagogicalMapJson(
+      group,
+      totalChunks,
+      input.geminiPdfKeySlot
+    );
 
     if (!result) return null;
 
