@@ -142,19 +142,6 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
     temperature: 0.2,
   };
 
-  const geminiText = await tryProvider('gemini', () =>
-    requestGeminiText({
-      ...common,
-      maxOutputTokens: 420,
-    })
-  );
-  if (geminiText) {
-    return {
-      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
-      provider: geminiText.model,
-    };
-  }
-
   const groqText = await tryProvider('groq', () =>
     requestGroqText({
       ...common,
@@ -166,6 +153,19 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
     return {
       text: truncateUtf8Text(groqText.content, MAX_AI_EXPLANATION_CHARS),
       provider: groqText.model,
+    };
+  }
+
+  const geminiText = await tryProvider('gemini', () =>
+    requestGeminiText({
+      ...common,
+      maxOutputTokens: 420,
+    })
+  );
+  if (geminiText) {
+    return {
+      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
+      provider: geminiText.model,
     };
   }
 
@@ -186,19 +186,6 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
   };
   const outputBudget = input.compact ? 260 : input.kind === 'why_wrong' ? 600 : 400;
 
-  const geminiText = await tryProvider('gemini', () =>
-    requestGeminiText({
-      ...common,
-      maxOutputTokens: outputBudget,
-    })
-  );
-  if (geminiText && isCompleteReviewHelp(geminiText.content, geminiText.finishReason)) {
-    return {
-      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
-      provider: geminiText.model,
-    };
-  }
-
   const groqText = await tryProvider('groq', () =>
     requestGroqText({
       ...common,
@@ -210,6 +197,19 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
     return {
       text: truncateUtf8Text(groqText.content, MAX_AI_EXPLANATION_CHARS),
       provider: groqText.model,
+    };
+  }
+
+  const geminiText = await tryProvider('gemini', () =>
+    requestGeminiText({
+      ...common,
+      maxOutputTokens: outputBudget,
+    })
+  );
+  if (geminiText && isCompleteReviewHelp(geminiText.content, geminiText.finishReason)) {
+    return {
+      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
+      provider: geminiText.model,
     };
   }
 
@@ -244,7 +244,6 @@ export async function generateStudyErrorReviewQuestion(input: {
     `Fragmento: ${isolateUntrustedContent(input.source.slice(0, 3000))}`,
   ].join('\n');
   const requests: Array<[TutorProvider, () => Promise<ProviderTextResult>]> = [
-    ['gemini', () => requestGeminiJson({ prompt, temperature: 0.2, maxOutputTokens: 650 })],
     [
       'groq',
       () =>
@@ -255,6 +254,7 @@ export async function generateStudyErrorReviewQuestion(input: {
           maxTokens: 650,
         }),
     ],
+    ['gemini', () => requestGeminiJson({ prompt, temperature: 0.2, maxOutputTokens: 650 })],
   ];
   for (const [provider, request] of requests) {
     const result = await tryProvider(provider, request);
