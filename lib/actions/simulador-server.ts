@@ -14,10 +14,9 @@ import {
 import { safeRecordSimulatorTopicMemory } from '@/lib/simulator-topic-memory';
 import { normalizeForCompare, parseCorrectAnswers } from '@/lib/simulator-core';
 import { DEMO_TOTAL_QUESTIONS } from '@/lib/simulator-demo';
-import {
-  enforceServerActionRateLimit,
-  getServerActionClientKey,
-} from '@/lib/rate-limit';
+import { preferSimulatorQuestion } from '@/lib/simulator-landing-entry';
+import { isUuid } from '@/lib/uuid';
+import { enforceServerActionRateLimit, getServerActionClientKey } from '@/lib/rate-limit';
 import {
   getSimulatorQuestionTopicLabels,
   recordStudyErrorCorrect,
@@ -174,11 +173,7 @@ async function selectDiverseSimulatorQuestions(
   const unseen = pool.filter((question) => !seenQuestionIds.has(question.id));
   const seen = pool.filter((question) => seenQuestionIds.has(question.id));
 
-  const unseenTarget = Math.min(
-    unseen.length,
-    limit,
-    limit >= 30 ? 20 : Math.max(limit - 10, 0)
-  );
+  const unseenTarget = Math.min(unseen.length, limit, limit >= 30 ? 20 : Math.max(limit - 10, 0));
   const seenTarget = Math.max(0, limit - unseenTarget);
 
   const selected = [
@@ -281,7 +276,8 @@ export async function getPreguntasSimulador(
   materiaId: string,
   parcial: number,
   universidadId?: string,
-  carreraId?: string
+  carreraId?: string,
+  preferredQuestionId?: string
 ): Promise<Pregunta[]> {
   try {
     const clientKey = await getServerActionClientKey();
@@ -306,7 +302,7 @@ export async function getPreguntasSimulador(
       parcial,
       questionLimit
     );
-    return diversified;
+    return preferSimulatorQuestion(diversified, sanitized, preferredQuestionId, questionLimit);
   } catch (error) {
     logError('actions.getPreguntasSimulador', error, {
       materiaId,
@@ -320,7 +316,8 @@ export async function getPreguntasSimulador(
 
 export async function getPreguntasSimuladorDemo(
   materiaId: string,
-  parcial: number
+  parcial: number,
+  preferredQuestionId?: string
 ): Promise<Pregunta[]> {
   try {
     const clientKey = await getServerActionClientKey();
@@ -391,9 +388,19 @@ export async function getPreguntasSimuladorDemo(
       return [];
     }
 
+    if (
+      typeof preferredQuestionId === 'string' &&
+      isUuid(preferredQuestionId) &&
+      !demoQuestions.some((question) => question.id === preferredQuestionId)
+    ) {
+      const { data: preferred } = await buildBaseQuery()
+        .eq('id', preferredQuestionId)
+        .maybeSingle();
+      if (preferred) demoQuestions.push(preferred as PreguntaBancoRow);
+    }
     const sanitized = demoQuestions.map(sanitizePreguntaRow);
     const shuffled = shuffleArray(sanitized);
-    return shuffled.slice(0, DEMO_TOTAL_QUESTIONS);
+    return preferSimulatorQuestion(shuffled, sanitized, preferredQuestionId, DEMO_TOTAL_QUESTIONS);
   } catch (error) {
     logError('actions.getPreguntasSimuladorDemo', error, {
       materiaId,
@@ -547,9 +554,10 @@ export async function registrarRespuestaUsuario(data: {
       return { success: false, message: 'Demasiados intentos. Volvé a intentar en unos segundos.' };
     }
 
-    const selectedAnswers = (Array.isArray(data.respuesta_seleccionada)
-      ? data.respuesta_seleccionada
-      : [data.respuesta_seleccionada]
+    const selectedAnswers = (
+      Array.isArray(data.respuesta_seleccionada)
+        ? data.respuesta_seleccionada
+        : [data.respuesta_seleccionada]
     )
       .filter((answer): answer is string => typeof answer === 'string')
       .map(normalizeForCompare)
@@ -663,9 +671,10 @@ export async function corregirPreguntaDemo(data: {
       return { success: false, message: 'No encontramos la pregunta a corregir.' };
     }
 
-    const selectedAnswers = (Array.isArray(data.respuesta_seleccionada)
-      ? data.respuesta_seleccionada
-      : [data.respuesta_seleccionada]
+    const selectedAnswers = (
+      Array.isArray(data.respuesta_seleccionada)
+        ? data.respuesta_seleccionada
+        : [data.respuesta_seleccionada]
     )
       .filter((answer): answer is string => typeof answer === 'string')
       .map(normalizeForCompare)
@@ -718,7 +727,10 @@ export async function finalizarSimuladorAction(data: {
       windowMs: 60_000,
     });
     if (!rateResult.allowed) {
-      return { success: false, message: 'Demasiadas solicitudes. Volvé a intentar en unos segundos.' };
+      return {
+        success: false,
+        message: 'Demasiadas solicitudes. Volvé a intentar en unos segundos.',
+      };
     }
 
     // 1) Re-corregir en el servidor: nada de lo reportado por el cliente se da por válido.
@@ -762,9 +774,10 @@ export async function finalizarSimuladorAction(data: {
     const answeredIds: string[] = [];
 
     for (const entry of respuestas) {
-      const selectedAnswers = (Array.isArray(entry.respuesta_seleccionada)
-        ? entry.respuesta_seleccionada
-        : [entry.respuesta_seleccionada]
+      const selectedAnswers = (
+        Array.isArray(entry.respuesta_seleccionada)
+          ? entry.respuesta_seleccionada
+          : [entry.respuesta_seleccionada]
       )
         .filter((answer): answer is string => typeof answer === 'string')
         .map(normalizeForCompare)
@@ -813,9 +826,10 @@ export async function finalizarSimuladorAction(data: {
           return;
         }
 
-        const selectedAnswer = (Array.isArray(entry.respuesta_seleccionada)
-          ? entry.respuesta_seleccionada
-          : [entry.respuesta_seleccionada]
+        const selectedAnswer = (
+          Array.isArray(entry.respuesta_seleccionada)
+            ? entry.respuesta_seleccionada
+            : [entry.respuesta_seleccionada]
         )
           .filter((answer): answer is string => typeof answer === 'string')
           .join(' · ');
