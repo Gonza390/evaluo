@@ -2,6 +2,10 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { scoreChunk } from '@/lib/rag';
+import {
+  MIN_REVIEW_EVIDENCE_LENGTH,
+  selectBestReviewEvidenceChunk,
+} from '@/lib/study-error-review-evidence';
 import type { StudyErrorSource, StudyErrorPdfRecommendation } from '@/lib/study-errors';
 
 export const reviewIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -70,10 +74,15 @@ export async function loadReviewContext(
       excerpt: null,
       relation: material.id === row.student_material_id ? 'origin' : 'best',
     };
-    if (material.id === row.student_material_id && row.reference_excerpt?.trim()) {
+    const savedExcerpt =
+      material.id === row.student_material_id ? row.reference_excerpt?.trim() ?? '' : '';
+    const hasUsableSavedEvidence =
+      savedExcerpt.length >= MIN_REVIEW_EVIDENCE_LENGTH;
+
+    if (hasUsableSavedEvidence) {
       source = {
         ...source,
-        excerpt: row.reference_excerpt.trim().slice(0, 3000),
+        excerpt: savedExcerpt.slice(0, 3000),
         pageStart: row.reference_page_start,
         pageEnd: row.reference_page_end,
         sectionTitle: row.reference_section_title,
@@ -86,19 +95,38 @@ export async function loadReviewContext(
         .order('chunk_index')
         .limit(400);
       if (chunksError) throw chunksError;
-      const query = `${row.topic ?? ''} ${row.prompt} ${row.correct_answer ?? ''}`;
-      const best = (chunks ?? [])
-        .map((chunk) => ({ ...chunk, score: scoreChunk(chunk.chunk_text, query) }))
-        .filter((chunk) => chunk.score >= 2)
-        .sort((a, b) => b.score - a.score)[0];
-      if (best)
+
+      const query = [
+        row.topic,
+        row.prompt,
+        row.correct_answer,
+        savedExcerpt,
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const best = selectBestReviewEvidenceChunk(
+        chunks ?? [],
+        query,
+        {
+          pageStart:
+            material.id === row.student_material_id ? row.reference_page_start : null,
+          pageEnd:
+            material.id === row.student_material_id ? row.reference_page_end : null,
+          sectionTitle:
+            material.id === row.student_material_id ? row.reference_section_title : null,
+        },
+        scoreChunk
+      );
+
+      if (best) {
         source = {
           ...source,
-          excerpt: best.chunk_text.slice(0, 3000),
+          excerpt: best.text.slice(0, 3000),
           pageStart: best.page_start,
           pageEnd: best.page_end,
           sectionTitle: best.section_title,
         };
+      }
     }
   }
   const contextKey = createHash('sha256')
