@@ -42,6 +42,11 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean)
       ? 'Creá tu cuenta para guardar esta carrera y organizar tus materias.'
       : 'Ingresá para guardar esta carrera y volver al plan de estudios.';
   }
+  if (reason === 'preguntero') {
+    return isSignUp
+      ? 'Guardá las respuestas que ya hiciste y seguí practicando exactamente donde quedaste.'
+      : 'Ingresá para recuperar tus respuestas y continuar el mismo Preguntero.';
+  }
   if (nextPath.startsWith('/dashboard/materiales')) {
     return isSignUp
       ? 'Creá tu cuenta para subir tu PDF y convertirlo en resumen, glosario, tarjetas y práctica.'
@@ -159,10 +164,19 @@ export default function LoginFormGoogleFirst() {
   }, []);
 
   const isSignUp = mode === 'signup';
-  const location = intent === 'premium' ? 'login_premium_intent' : reason === 'pdf-first' ? 'login_pdf_first' : 'login';
+  const location =
+    intent === 'premium'
+      ? 'login_premium_intent'
+      : reason === 'pdf-first'
+        ? 'login_pdf_first'
+        : reason === 'preguntero'
+          ? 'login_preguntero'
+          : 'login';
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
+    if (reason === 'preguntero') return nextPath;
+
     const { data } = await supabase
       .from('profiles')
       .select('universidad_id, carrera_id')
@@ -199,6 +213,7 @@ export default function LoginFormGoogleFirst() {
     try {
       const callback = new URL('/auth/callback', window.location.origin);
       callback.searchParams.set('next', nextPath);
+      if (reason) callback.searchParams.set('reason', reason);
       callback.searchParams.set('analytics_session', getAnalyticsSessionKey());
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -329,7 +344,7 @@ export default function LoginFormGoogleFirst() {
         ) : null}
 
         <h1 className="mt-3 text-[2rem] font-bold tracking-[-0.055em] text-slate-950 sm:text-[2.15rem]">
-          {isSignUp ? 'Creá tu cuenta' : 'Bienvenido'}
+          {isSignUp ? (reason === 'preguntero' ? 'Guardá tu progreso' : 'Creá tu cuenta') : 'Bienvenido'}
         </h1>
         <p className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-slate-500">{contextCopy}</p>
 
@@ -386,7 +401,7 @@ export default function LoginFormGoogleFirst() {
             className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 shadow-[0_8px_22px_rgba(15,23,42,0.06)] transition hover:border-blue-300 hover:bg-blue-50/30 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <GoogleIcon />
-            {isSignUp ? 'Registrarme con Google' : 'Continuar con Google'}
+            {isSignUp && reason !== 'preguntero' ? 'Registrarme con Google' : 'Continuar con Google'}
           </button>
 
           <div className="flex items-center gap-3" aria-hidden="true">
@@ -405,7 +420,11 @@ export default function LoginFormGoogleFirst() {
           >
             <span className="flex items-center gap-2.5">
               <Mail className="h-4 w-4" />
-              {isSignUp ? 'Registrarme con correo' : 'Usar correo y contraseña'}
+              {isSignUp
+                ? reason === 'preguntero'
+                  ? 'Continuar con correo'
+                  : 'Registrarme con correo'
+                : 'Usar correo y contraseña'}
             </span>
             <ChevronDown
               className={`h-4 w-4 transition-transform ${emailExpanded ? 'rotate-180' : ''}`}
