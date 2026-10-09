@@ -6,6 +6,10 @@ import {
   requestGeminiJson,
 } from '@/lib/ai/providers';
 import { extractJsonObject } from '@/lib/ai/json';
+import {
+  getNextInteractiveProviderOrder,
+  type InteractiveAiProvider,
+} from '@/lib/ai/interactive-provider-routing';
 import { validateReviewQuestion, isCompleteReviewHelp } from '@/lib/study-error-review-contract';
 import {
   isolateUntrustedContent,
@@ -33,7 +37,7 @@ type QuickHelpInput = {
   compact?: boolean;
 };
 
-type TutorProvider = 'groq' | 'gemini';
+type TutorProvider = InteractiveAiProvider;
 type ProviderTextResult = { content: string; model: string; finishReason?: string } | null;
 
 const unhealthyProviderUntil = new Map<TutorProvider, number>();
@@ -141,32 +145,31 @@ export async function generateTutorExplanation(input: ExplainInput): Promise<{
     prompt,
     temperature: 0.2,
   };
+  const providerOrder = await getNextInteractiveProviderOrder();
 
-  const groqText = await tryProvider('groq', () =>
-    requestGroqText({
-      ...common,
-      system: 'Sos un tutor académico que explica de forma clara y accionable.',
-      maxTokens: 420,
-    })
-  );
-  if (groqText) {
-    return {
-      text: truncateUtf8Text(groqText.content, MAX_AI_EXPLANATION_CHARS),
-      provider: groqText.model,
-    };
-  }
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqText({
+              ...common,
+              system: 'Sos un tutor académico que explica de forma clara y accionable.',
+              maxTokens: 420,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiText({
+              ...common,
+              maxOutputTokens: 420,
+            })
+          );
 
-  const geminiText = await tryProvider('gemini', () =>
-    requestGeminiText({
-      ...common,
-      maxOutputTokens: 420,
-    })
-  );
-  if (geminiText) {
-    return {
-      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
-      provider: geminiText.model,
-    };
+    if (result) {
+      return {
+        text: truncateUtf8Text(result.content, MAX_AI_EXPLANATION_CHARS),
+        provider: result.model,
+      };
+    }
   }
 
   return {
@@ -185,32 +188,31 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
     temperature: 0.2,
   };
   const outputBudget = input.compact ? 260 : input.kind === 'why_wrong' ? 600 : 400;
+  const providerOrder = await getNextInteractiveProviderOrder();
 
-  const groqText = await tryProvider('groq', () =>
-    requestGroqText({
-      ...common,
-      system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
-      maxTokens: outputBudget,
-    })
-  );
-  if (groqText && isCompleteReviewHelp(groqText.content, groqText.finishReason)) {
-    return {
-      text: truncateUtf8Text(groqText.content, MAX_AI_EXPLANATION_CHARS),
-      provider: groqText.model,
-    };
-  }
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqText({
+              ...common,
+              system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
+              maxTokens: outputBudget,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiText({
+              ...common,
+              maxOutputTokens: outputBudget,
+            })
+          );
 
-  const geminiText = await tryProvider('gemini', () =>
-    requestGeminiText({
-      ...common,
-      maxOutputTokens: outputBudget,
-    })
-  );
-  if (geminiText && isCompleteReviewHelp(geminiText.content, geminiText.finishReason)) {
-    return {
-      text: truncateUtf8Text(geminiText.content, MAX_AI_EXPLANATION_CHARS),
-      provider: geminiText.model,
-    };
+    if (result && isCompleteReviewHelp(result.content, result.finishReason)) {
+      return {
+        text: truncateUtf8Text(result.content, MAX_AI_EXPLANATION_CHARS),
+        provider: result.model,
+      };
+    }
   }
 
   return {
@@ -243,21 +245,25 @@ export async function generateStudyErrorReviewQuestion(input: {
     `Evitá repetir esta comprobación anterior: ${isolateUntrustedContent(input.previousQuestion ?? '')}`,
     `Fragmento: ${isolateUntrustedContent(input.source.slice(0, 3000))}`,
   ].join('\n');
-  const requests: Array<[TutorProvider, () => Promise<ProviderTextResult>]> = [
-    [
-      'groq',
-      () =>
-        requestGroqJson({
-          prompt,
-          system: 'Sos un docente. Respondé sólo JSON verificable con la fuente.',
-          temperature: 0.2,
-          maxTokens: 650,
-        }),
-    ],
-    ['gemini', () => requestGeminiJson({ prompt, temperature: 0.2, maxOutputTokens: 650 })],
-  ];
-  for (const [provider, request] of requests) {
-    const result = await tryProvider(provider, request);
+  const providerOrder = await getNextInteractiveProviderOrder();
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqJson({
+              prompt,
+              system: 'Sos un docente. Respondé sólo JSON verificable con la fuente.',
+              temperature: 0.2,
+              maxTokens: 650,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiJson({
+              prompt,
+              temperature: 0.2,
+              maxOutputTokens: 650,
+            })
+          );
     if (!result) continue;
     try {
       const payload = extractJsonObject(result.content);
