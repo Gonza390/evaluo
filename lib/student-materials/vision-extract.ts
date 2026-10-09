@@ -1,4 +1,5 @@
 import { requestGeminiImagesJson } from '@/lib/ai/providers';
+import type { GeminiPdfKeySlot } from '@/lib/ai/providers';
 import { extractJsonObject } from '@/lib/ai/json';
 import { logError, logInfo } from '@/lib/observability';
 import { recordAiUsage } from '@/lib/student-materials/ai-usage';
@@ -301,6 +302,7 @@ export async function enhancePdfExtractionWithVision(input: {
   materialId?: string;
   userId?: string;
   pageNumbers?: number[];
+  geminiPdfKeySlot?: GeminiPdfKeySlot;
 }): Promise<VisionEnhancedPdfExtraction> {
   const visualAnalysisEnabled = await isStudentMaterialVisualAnalysisEnabled(input.materialId);
 
@@ -388,6 +390,7 @@ export async function enhancePdfExtractionWithVision(input: {
         temperature: 0.05,
         maxOutputTokens: INITIAL_VISION_MAX_OUTPUT_TOKENS,
         responseSchema: VISION_PAGE_SCHEMA,
+        geminiKeySlot: input.geminiPdfKeySlot,
       });
 
       if (!result) return;
@@ -433,6 +436,7 @@ export async function enhancePdfExtractionWithVision(input: {
           temperature: 0.02,
           maxOutputTokens: RETRY_VISION_MAX_OUTPUT_TOKENS,
           responseSchema: VISION_PAGE_SCHEMA,
+          geminiKeySlot: input.geminiPdfKeySlot,
         });
         if (!result) return;
         await recordResult(result);
