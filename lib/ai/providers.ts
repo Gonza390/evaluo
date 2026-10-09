@@ -435,22 +435,40 @@ export async function requestNvidiaText(input: OpenAiCompatibleRequest) {
   }
 }
 
+export type GeminiPdfKeySlot = 'pdf_primary' | 'pdf_secondary';
+
 type GeminiRequest = {
   prompt: string;
   temperature: number;
   maxOutputTokens: number;
   responseSchema?: Record<string, unknown>;
   responseMimeType?: 'application/json' | 'text/plain';
+  geminiKeySlot?: GeminiPdfKeySlot;
 };
 
-async function requestGeminiCommon(input: GeminiRequest) {
-  const apiKeys = uniqueConfiguredValues([
+function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
+  const primaryPdfKey = process.env.GEMINI_API_KEY;
+  const secondaryPdfKey = process.env.GEMINI_PDF_API_KEY_2;
+
+  if (slot === 'pdf_primary') {
+    return uniqueConfiguredValues([primaryPdfKey, secondaryPdfKey]);
+  }
+
+  if (slot === 'pdf_secondary') {
+    return uniqueConfiguredValues([secondaryPdfKey, primaryPdfKey]);
+  }
+
+  return uniqueConfiguredValues([
     process.env.GEMINI_SUMMARY_API_KEY,
     process.env.GEMINI_API_KEY,
     process.env.GEMINI_API_KEY_FALLBACK,
     process.env.GOOGLE_AI_KEY,
     process.env.GOOGLE_GENERATIVE_AI_API_KEY,
   ]);
+}
+
+async function requestGeminiCommon(input: GeminiRequest) {
+  const apiKeys = getGeminiApiKeys(input.geminiKeySlot);
   const models = getGeminiSummaryModels();
   if (apiKeys.length === 0 || models.length === 0) return null;
 
@@ -551,14 +569,9 @@ async function runGeminiInlineJson(input: {
   maxOutputTokens: number;
   responseSchema?: Record<string, unknown>;
   logScope: string;
+  geminiKeySlot?: GeminiPdfKeySlot;
 }) {
-  const apiKeys = uniqueConfiguredValues([
-    process.env.GEMINI_SUMMARY_API_KEY,
-    process.env.GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY_FALLBACK,
-    process.env.GOOGLE_AI_KEY,
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-  ]);
+  const apiKeys = getGeminiApiKeys(input.geminiKeySlot);
   const models = getGeminiSummaryModels();
   if (apiKeys.length === 0 || models.length === 0) return null;
 
@@ -659,12 +672,14 @@ export async function requestGeminiPdfJson(input: {
   temperature: number;
   maxOutputTokens: number;
   responseSchema?: Record<string, unknown>;
+  geminiKeySlot?: GeminiPdfKeySlot;
 }) {
   try {
     return await runGeminiInlineJson({
       ...input,
       inlineParts: [{ mimeType: 'application/pdf', data: input.pdfBuffer.toString('base64') }],
       logScope: 'pdf',
+      geminiKeySlot: input.geminiKeySlot,
     });
   } catch (error) {
     logError('aiProviders.gemini.pdf', error);
@@ -678,6 +693,7 @@ export async function requestGeminiImagesJson(input: {
   temperature: number;
   maxOutputTokens: number;
   responseSchema?: Record<string, unknown>;
+  geminiKeySlot?: GeminiPdfKeySlot;
 }) {
   if (input.images.length === 0) {
     return null;
@@ -694,6 +710,7 @@ export async function requestGeminiImagesJson(input: {
       maxOutputTokens: input.maxOutputTokens,
       responseSchema: input.responseSchema,
       logScope: 'vision',
+      geminiKeySlot: input.geminiKeySlot,
     });
   } catch (error) {
     logError('aiProviders.gemini.vision', error);
