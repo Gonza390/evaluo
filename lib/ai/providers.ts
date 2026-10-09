@@ -1,4 +1,5 @@
 import { logError } from '@/lib/observability';
+import { getNextGeminiAppKeySlot } from '@/lib/ai/gemini-app-routing';
 
 export type AiProviderName = 'gemini' | 'groq' | 'nvidia' | 'github';
 
@@ -140,6 +141,7 @@ type OpenAiCompatibleRequest = {
   system: string;
   temperature: number;
   maxTokens: number;
+  keyScope?: 'app' | 'pdf';
 };
 
 type OpenAiCompatibleConfig = {
@@ -323,6 +325,20 @@ async function requestOpenAiCompatibleText(
 const GITHUB_MODELS_TRANSIENT_STATUSES = [401, 403, 404, 429, 500, 503];
 const GROQ_TRANSIENT_STATUSES = [401, 404, 429, 500, 503];
 
+function getGroqApiKeys(scope: 'app' | 'pdf' = 'app') {
+  const legacyKeys = uniqueConfiguredValues([
+    process.env.GROQ_API_KEY,
+    process.env.GROQ_API_KEY_FALLBACK,
+  ]);
+
+  if (scope === 'pdf') {
+    return legacyKeys;
+  }
+
+  const appKey = process.env.GROQ_APP_API_KEY;
+  return appKey ? [appKey] : legacyKeys;
+}
+
 export async function requestGitHubModelsJson(input: OpenAiCompatibleRequest) {
   const config: OpenAiCompatibleConfig = {
     endpoint: GITHUB_MODELS_ENDPOINT,
@@ -353,8 +369,7 @@ export async function requestGroqJson(input: OpenAiCompatibleRequest) {
     provider: 'groq',
     logScope: 'aiProviders.groq',
     transientStatuses: GROQ_TRANSIENT_STATUSES,
-    apiKeys: () =>
-      uniqueConfiguredValues([process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_FALLBACK]),
+    apiKeys: () => getGroqApiKeys(input.keyScope),
     models: getGroqSummaryModels,
     headers: (token) => ({
       Authorization: `Bearer ${token}`,
@@ -375,8 +390,7 @@ export async function requestGroqText(input: OpenAiCompatibleRequest) {
     provider: 'groq',
     logScope: 'aiProviders.groq.text',
     transientStatuses: GROQ_TRANSIENT_STATUSES,
-    apiKeys: () =>
-      uniqueConfiguredValues([process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_FALLBACK]),
+    apiKeys: () => getGroqApiKeys(input.keyScope),
     models: getGroqSummaryModels,
     headers: (token) => ({
       Authorization: `Bearer ${token}`,
@@ -446,7 +460,7 @@ type GeminiRequest = {
   geminiKeySlot?: GeminiPdfKeySlot;
 };
 
-function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
+async function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
   const primaryPdfKey = process.env.GEMINI_API_KEY;
   const secondaryPdfKey = process.env.GEMINI_PDF_API_KEY_2;
 
@@ -458,9 +472,24 @@ function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
     return uniqueConfiguredValues([secondaryPdfKey, primaryPdfKey]);
   }
 
-  // GEMINI_API_KEY y GEMINI_PDF_API_KEY_2 quedan reservadas al
-  // procesamiento de PDFs. Las llamadas Gemini sin slot deben usar credenciales
-  // dedicadas a otras funciones cuando se configuren.
+  const appKeys = [
+    process.env.GEMINI_APP_API_KEY_1,
+    process.env.GEMINI_APP_API_KEY_2,
+    process.env.GEMINI_APP_API_KEY_3,
+    process.env.GEMINI_APP_API_KEY_4,
+  ];
+
+  const configuredAppKeys = uniqueConfiguredValues(appKeys);
+  if (configuredAppKeys.length > 0) {
+    const startSlot = await getNextGeminiAppKeySlot();
+    const startIndex = startSlot - 1;
+    const ordered = Array.from({ length: appKeys.length }, (_, offset) => {
+      return appKeys[(startIndex + offset) % appKeys.length];
+    });
+    return uniqueConfiguredValues(ordered);
+  }
+
+  // Compatibilidad durante la migración: nunca reutilizamos las keys de PDF.
   return uniqueConfiguredValues([
     process.env.GEMINI_SUMMARY_API_KEY,
     process.env.GEMINI_API_KEY_FALLBACK,
@@ -470,7 +499,7 @@ function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
 }
 
 async function requestGeminiCommon(input: GeminiRequest) {
-  const apiKeys = getGeminiApiKeys(input.geminiKeySlot);
+  const apiKeys = await getGeminiApiKeys(input.geminiKeySlot);
   const models = getGeminiSummaryModels();
   if (apiKeys.length === 0 || models.length === 0) return null;
 
@@ -582,7 +611,7 @@ async function runGeminiInlineJson(input: {
   logScope: string;
   geminiKeySlot?: GeminiPdfKeySlot;
 }) {
-  const apiKeys = getGeminiApiKeys(input.geminiKeySlot);
+  const apiKeys = await getGeminiApiKeys(input.geminiKeySlot);
   const models = getGeminiSummaryModels();
   if (apiKeys.length === 0 || models.length === 0) return null;
 
