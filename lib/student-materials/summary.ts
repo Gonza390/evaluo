@@ -675,6 +675,7 @@ function buildJsonProviderCalls(options: {
   temperature: number;
   maxTokens: number;
   responseSchema?: Record<string, unknown>;
+  geminiPdfKeySlot?: GenerateSummaryInput['geminiPdfKeySlot'];
 }): Array<{ name: ProviderName; call: JsonProviderCall }> {
   const order: ProviderName[] = options.preferredProvider
     ? [
@@ -707,6 +708,7 @@ function buildJsonProviderCalls(options: {
             temperature: options.temperature + 0.06,
             maxOutputTokens: options.maxTokens,
             responseSchema: options.responseSchema,
+            geminiKeySlot: options.geminiPdfKeySlot,
           });
       }
     },
@@ -798,6 +800,7 @@ async function mapChunksToPartialSummaries(
         temperature: 0.1,
         maxTokens: SUMMARY_MAP_MAX_TOKENS,
         responseSchema: SUMMARY_CHUNK_RESPONSE_SCHEMA,
+        geminiPdfKeySlot: input.geminiPdfKeySlot,
       }),
       (name, error) => logError(`studentMaterialSummary.map.${name}`, error, { title: input.title })
     );
@@ -851,6 +854,7 @@ async function generateAiSummary(input: GenerateSummaryInput, sourceChunksCount:
       temperature: 0.12,
       maxTokens: SUMMARY_REDUCE_MAX_TOKENS,
       responseSchema: SUMMARY_RESPONSE_SCHEMA,
+      geminiPdfKeySlot: input.geminiPdfKeySlot,
     }),
     (name, error) =>
       logError(`studentMaterialSummary.reduce.${name}`, error, { title: input.title })
@@ -968,6 +972,7 @@ async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
             temperature: 0.12,
             maxOutputTokens: 2800,
             responseSchema: SUMMARY_RESPONSE_SCHEMA,
+            geminiKeySlot: input.geminiPdfKeySlot,
           });
           if (result) {
             visionModel = result.model;
@@ -1014,6 +1019,7 @@ async function generatePdfSummaryWithGemini(input: GenerateSummaryInput) {
       temperature: 0.12,
       maxOutputTokens: 2800,
       responseSchema: SUMMARY_RESPONSE_SCHEMA,
+      geminiKeySlot: input.geminiPdfKeySlot,
     });
 
     if (!result) {
