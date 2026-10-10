@@ -16,6 +16,7 @@ import {
   BookOpenText,
   BrainCircuit,
   Clock3,
+  CircleAlert,
   ChevronLeft,
   ChevronRight,
   Crown,
@@ -904,6 +905,8 @@ export function MaterialStudyWorkspace({
         ? '1 a 2 minutos'
         : '2 minutos';
 
+  const materialErrorsHref = `/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`;
+
   const tabHeader = (
     <div className="flex shrink-0 flex-col gap-1.5 border-b border-slate-200 px-2.5 py-2 sm:px-3 sm:py-2.5">
       <TabsList className="h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-[18px] bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -932,6 +935,24 @@ export function MaterialStudyWorkspace({
             </TabsTrigger>
           );
         })}
+        {isOwner && !demo ? (
+          <Link
+            href={materialErrorsHref}
+            data-recommended-errors
+            aria-label="Errores de este PDF"
+            onClick={() => {
+              trackMarketingEvent('cta_click', {
+                location: 'material_study_tabs',
+                cta_name: 'errors_this_pdf',
+                destination: materialErrorsHref,
+              });
+            }}
+            className="inline-flex h-8 flex-none shrink-0 items-center justify-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-2.5 text-[12px] font-medium text-slate-500 shadow-none transition hover:border-amber-200 hover:bg-amber-50/60 hover:text-amber-700 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+          >
+            <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            Errores
+          </Link>
+        ) : null}
       </TabsList>
 
       {activeTab === 'resumen' ? (
