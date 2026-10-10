@@ -56,8 +56,18 @@ export function StudyErrorsClient({
       ? (data.pending.find((item) => item.recommendation?.materialId === initialMaterialId) ??
         data.resolved.find((item) => item.recommendation?.materialId === initialMaterialId))
       : null;
+  const initialMaterialAvailable = Boolean(
+    initialMaterialId &&
+      (data.materials.some((material) => material.id === initialMaterialId) ||
+        data.pending.some((item) => item.recommendation?.materialId === initialMaterialId) ||
+        data.resolved.some((item) => item.recommendation?.materialId === initialMaterialId))
+  );
   const [materialId, setMaterialId] = useState<string | null>(
-    initialError ? (initialError.recommendation?.materialId ?? unlinkedId) : null
+    initialError
+      ? (initialError.recommendation?.materialId ?? unlinkedId)
+      : initialMaterialAvailable
+        ? (initialMaterialId ?? null)
+        : null
   );
   const [selectedId, setSelectedId] = useState<string | null>(initialError?.id ?? null);
   const [tab, setTab] = useState<'pending' | 'resolved'>(
