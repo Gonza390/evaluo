@@ -149,10 +149,6 @@ function buildMySpaceUrl(days: ReminderDays) {
   return buildTrackedUrl('/dashboard', days, 'my_space');
 }
 
-function buildCalendarUrl(days: ReminderDays) {
-  return buildTrackedUrl('/calendario', days, 'calendar_reminder');
-}
-
 function firstName(value: string | null | undefined) {
   const normalized = value?.trim();
   if (!normalized) return 'estudiante';
@@ -367,7 +363,6 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
         candidate.materiaFallback ||
         'tu materia';
       const formattedExamDate = formatExamDate(candidate.examDate);
-      const calendarUrl = buildCalendarUrl(candidate.days);
       const materialUrl = candidate.materialId
         ? buildMaterialUrl(candidate.materialId, candidate.days)
         : null;
@@ -378,8 +373,6 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
       const mySpaceUrl = buildMySpaceUrl(candidate.days);
       const destinationUrl = materialUrl ?? materiaUrl ?? mySpaceUrl;
       const displayTitle = candidate.materialTitle || candidate.calendarTitle || materia;
-      const subject = getReminderSubject(candidate.days, materia);
-
       const message = buildExamReminderMessage({
         firstname: displayFirstName,
         materia,
