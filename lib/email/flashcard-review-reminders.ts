@@ -2,7 +2,8 @@ import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
-import { sendSenderTemplate } from '@/lib/email/sender';
+import { sendSenderTransactional } from '@/lib/email/sender';
+import { buildEvaluoEmailHtml, escapeEmailHtml } from '@/lib/email/evaluo-email';
 
 type ReminderRow = {
   id: string;
@@ -17,8 +18,6 @@ type ReminderRow = {
 type StudyErrorRow = {
   topic: string | null;
 };
-
-const FLASHCARD_REVIEW_TEMPLATE_ID = 'b6mx4n';
 
 function firstName(value: string | null | undefined) {
   const normalized = value?.trim();
@@ -41,6 +40,53 @@ function buildExtraTopicsText(topicCount: number) {
   const extra = Math.max(0, topicCount - 3);
   if (extra === 0) return '';
   return `+${extra} tema${extra === 1 ? '' : 's'} más`;
+}
+
+function buildFlashcardReviewMessage(input: {
+  firstname: string;
+  materialTitle: string;
+  pendingCount: number;
+  topics: string[];
+  reviewUrl: string;
+}) {
+  const subject =
+    input.pendingCount === 1
+      ? `Tenés 1 concepto para reforzar en ${input.materialTitle}`
+      : `Tenés ${input.pendingCount} conceptos para reforzar en ${input.materialTitle}`;
+  const heading =
+    input.pendingCount === 1
+      ? 'Tenés un concepto para reforzar'
+      : `Tenés ${input.pendingCount} conceptos para reforzar`;
+
+  const visibleTopics = input.topics.slice(0, 3);
+  const topicList = visibleTopics.length
+    ? `<ul style="margin:12px 0 0;padding-left:20px;">${visibleTopics
+        .map((topic) => `<li style="margin:0 0 6px;">${escapeEmailHtml(topic)}</li>`)
+        .join('')}</ul>`
+    : '';
+  const extraTopicsText = buildExtraTopicsText(input.topics.length);
+  const extraTopics = extraTopicsText
+    ? `<p style="margin:8px 0 0;font-size:13px;color:#7F8AA3;">${escapeEmailHtml(extraTopicsText)}</p>`
+    : '';
+
+  const bodyHtml = `<p style="margin:0;">En tus flashcards de <strong>${escapeEmailHtml(
+    input.materialTitle
+  )}</strong> quedaron conceptos que todavía conviene repasar.</p>${topicList}${extraTopics}`;
+
+  const html = buildEvaluoEmailHtml({
+    firstname: input.firstname,
+    heading,
+    eyebrow: input.materialTitle,
+    bodyHtml,
+    ctaLabel: 'Repasar ahora',
+    ctaUrl: input.reviewUrl,
+    reason:
+      'Te enviamos este mensaje porque marcaste conceptos como desconocidos mientras estudiabas tus flashcards en Evaluo.',
+  });
+
+  const text = `Hola ${input.firstname}. Tenés ${input.pendingCount} concepto${input.pendingCount === 1 ? '' : 's'} para reforzar en ${input.materialTitle}. Repasá ahora: ${input.reviewUrl}`;
+
+  return { subject, html, text };
 }
 
 export async function runFlashcardReviewReminderDispatch(options?: { dryRun?: boolean }) {
@@ -168,20 +214,20 @@ export async function runFlashcardReviewReminderDispatch(options?: { dryRun?: bo
       const displayFirstName = firstName(displayName);
       const reviewUrl = buildReviewUrl(reminder.material_id);
 
-      const senderResult = await sendSenderTemplate({
-        templateId: FLASHCARD_REVIEW_TEMPLATE_ID,
+      const message = buildFlashcardReviewMessage({
+        firstname: displayFirstName,
+        materialTitle: material.title,
+        pendingCount: pendingErrors.length,
+        topics,
+        reviewUrl,
+      });
+
+      const senderResult = await sendSenderTransactional({
         toEmail: user.email,
         toName: displayName,
-        variables: {
-          firstname: displayFirstName,
-          material_title: material.title,
-          pending_count: pendingErrors.length,
-          topic_1: topics[0] ?? '',
-          topic_2: topics[1] ?? '',
-          topic_3: topics[2] ?? '',
-          extra_topics_text: buildExtraTopicsText(topics.length),
-          review_url: reviewUrl,
-        },
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
       });
 
       const { error: sentError } = await db
