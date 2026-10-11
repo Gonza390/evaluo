@@ -3,7 +3,8 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
 import { getDashboardMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
-import { sendSenderTemplate } from '@/lib/email/sender';
+import { sendSenderTransactional } from '@/lib/email/sender';
+import { buildEvaluoEmailHtml, escapeEmailHtml } from '@/lib/email/evaluo-email';
 
 const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires';
 const REMINDER_DAYS = [7, 3, 1] as const;
@@ -83,21 +84,47 @@ function formatExamDate(dateKey: string) {
   }).format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 
-function getTemplateId(days: ReminderDays) {
-  const envName =
-    days === 7
-      ? 'SENDER_TEMPLATE_EXAM_7D'
-      : days === 3
-        ? 'SENDER_TEMPLATE_EXAM_3D'
-        : 'SENDER_TEMPLATE_EXAM_1D';
-
-  return process.env[envName]?.trim() || null;
-}
-
 function getReminderSubject(days: ReminderDays, materia: string) {
   if (days === 7) return `Tu examen de ${materia} es en una semana`;
   if (days === 3) return `Te quedan 3 días para tu examen de ${materia}`;
   return `Mañana rendís ${materia}`;
+}
+
+function buildExamReminderMessage(input: {
+  firstname: string;
+  materia: string;
+  examDate: string;
+  days: ReminderDays;
+  materialTitle: string;
+  destinationUrl: string;
+}) {
+  const subject = getReminderSubject(input.days, input.materia);
+  const heading =
+    input.days === 7
+      ? 'Tu examen es en una semana'
+      : input.days === 3
+        ? 'Te quedan 3 días'
+        : 'Mañana rendís';
+
+  const bodyHtml = `<p style="margin:0 0 12px;">Tu examen de <strong>${escapeEmailHtml(
+    input.materia
+  )}</strong> está programado para <strong>${escapeEmailHtml(input.examDate)}</strong>.</p>
+<p style="margin:0;">Volvé a <strong>${escapeEmailHtml(
+    input.materialTitle
+  )}</strong> y seguí estudiando desde el material que ya preparaste.</p>`;
+
+  const html = buildEvaluoEmailHtml({
+    firstname: input.firstname,
+    heading,
+    eyebrow: input.materia,
+    bodyHtml,
+    ctaLabel: 'Continuar estudiando',
+    ctaUrl: input.destinationUrl,
+    reason: 'Te enviamos este recordatorio porque registraste esta fecha de examen en Evaluo.',
+  });
+
+  const text = `Hola ${input.firstname}. ${subject}. Tu examen es el ${input.examDate}. Continuá estudiando: ${input.destinationUrl}`;
+  return { subject, html, text };
 }
 
 function buildTrackedUrl(path: string, days: ReminderDays, content: string) {
@@ -288,18 +315,11 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     calendarCandidates: candidates.filter((candidate) => candidate.sourceType === 'calendar').length,
     sent: 0,
     duplicates: 0,
-    missingTemplate: 0,
     missingEmail: 0,
     failed: 0,
   };
 
   for (const candidate of candidates) {
-    const templateId = getTemplateId(candidate.days);
-    if (!templateId) {
-      summary.missingTemplate += 1;
-      continue;
-    }
-
     const user = userById.get(candidate.userId);
     if (!user?.email || !user.email_confirmed_at) {
       summary.missingEmail += 1;
@@ -360,32 +380,21 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
       const displayTitle = candidate.materialTitle || candidate.calendarTitle || materia;
       const subject = getReminderSubject(candidate.days, materia);
 
-      const senderResult = await sendSenderTemplate({
-        templateId,
+      const message = buildExamReminderMessage({
+        firstname: displayFirstName,
+        materia,
+        examDate: formattedExamDate,
+        days: candidate.days,
+        materialTitle: displayTitle,
+        destinationUrl,
+      });
+
+      const senderResult = await sendSenderTransactional({
         toEmail: user.email,
         toName: displayName,
-        variables: {
-          subject,
-          firstname: displayFirstName,
-          nombre: displayFirstName,
-          materia,
-          exam_date: formattedExamDate,
-          fecha_del_examen: formattedExamDate,
-          exam_date_iso: candidate.examDate,
-          days_left: candidate.days,
-          material_title: displayTitle,
-          titulo_del_material: displayTitle,
-          // Compatibilidad: las plantillas actuales usan material_url como CTA principal.
-          // destination_url es la variable canónica para nuevos templates.
-          material_url: destinationUrl,
-          exact_material_url: materialUrl ?? '',
-          materia_url: materiaUrl ?? '',
-          my_space_url: mySpaceUrl,
-          destination_url: destinationUrl,
-          calendar_url: calendarUrl,
-          reminder_source: candidate.sourceType,
-          has_material: Boolean(candidate.materialId),
-        },
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
       });
 
       const { error: markSentError } = await db
