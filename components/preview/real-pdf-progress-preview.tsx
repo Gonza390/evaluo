@@ -144,10 +144,12 @@ export function RealPdfProgressPreview({
   summary,
   glossary,
   artifacts,
+  initialErrorId,
 }: {
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
   artifacts: PedagogicalArtifacts;
+  initialErrorId?: string;
 }) {
   const [version, setVersion] = useState(0);
   const [practiceEvidence, setPracticeEvidence] = useState<PdfTopicEvidence[]>([]);
@@ -156,7 +158,7 @@ export function RealPdfProgressPreview({
   const [nextDay, setNextDay] = useState(false);
   const [firstVisit, setFirstVisit] = useState(false);
   const [tab, setTab] = useState<StudyTabId>('resumen');
-  const [progressOpen, setProgressOpen] = useState(false);
+  const [progressOpen, setProgressOpen] = useState(Boolean(initialErrorId));
   const [viewerVisible, setViewerVisible] = useState(false);
   const initialViews: StudyErrorView[] = examples.map((example, index) => ({
     id: `preview-pdf-error-${index}`,
@@ -378,7 +380,7 @@ export function RealPdfProgressPreview({
         </div>
       </div>
       <AppShellProviders>
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div className="material-study-editorial min-h-0 flex-1 overflow-hidden">
           <MaterialStudyWorkspace
             key={version}
             backHref="/preview/progreso-pdf"
@@ -400,10 +402,12 @@ export function RealPdfProgressPreview({
               viewerVisible,
               onViewerChange: setViewerVisible,
               progressOpen,
+              pendingStudyErrorCount: data.pending.length,
               onProgressChange: setProgressOpen,
               progress: (
                 <PdfProgressPanel
                   embedded
+                  initialErrorId={initialErrorId}
                   material={material}
                   sections={summary.sections}
                   data={data}

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { FileText, ArrowRight } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
-import { getStudyErrorsPageData } from '@/lib/study-errors';
+import { getPendingStudyErrorOnboarding, getStudyErrorsPageData } from '@/lib/study-errors';
 import { isUuid } from '@/lib/uuid';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
 import { getPdfAssessmentData } from '@/lib/student-materials/answer-events';
@@ -21,9 +21,9 @@ export const metadata: Metadata = {
 export default async function PdfProgressPage({
   searchParams,
 }: {
-  searchParams: Promise<{ material?: string }>;
+  searchParams: Promise<{ material?: string; error?: string; tour?: string; from?: string }>;
 }) {
-  const { material: materialId } = await searchParams;
+  const { material: materialId, error: requestedError, tour, from } = await searchParams;
   if (materialId && !isUuid(materialId)) notFound();
   const supabase = await createClientServer();
   const {
@@ -97,6 +97,13 @@ export default async function PdfProgressPage({
   ]);
   const artifacts = storedArtifacts.data
     ?.pedagogical_artifacts as unknown as PedagogicalArtifacts | null;
+  const initialErrorId = [...errors.pending, ...errors.resolved].find(
+    (item) => item.id === requestedError
+  )?.id;
+  const onboardingErrorId =
+    tour === 'first-error' && initialErrorId
+      ? await getPendingStudyErrorOnboarding(user.id, initialErrorId)
+      : null;
   const questionCounts = storedArtifacts.error
     ? undefined
     : getTopicQuestionCounts(
@@ -105,8 +112,11 @@ export default async function PdfProgressPage({
       );
   return (
     <PdfProgressPanel
-      key={`${material.id}:${assessmentData.items.map((item) => item.lastAnsweredAt).join(':')}`}
+      key={`${material.id}:${initialErrorId ?? ''}:${assessmentData.items.map((item) => item.lastAnsweredAt).join(':')}`}
       material={material}
+      initialErrorId={initialErrorId}
+      onboardingErrorId={onboardingErrorId}
+      returnToErrors={from === 'errores'}
       data={errors}
       assessmentData={assessmentData}
       questionCounts={questionCounts}

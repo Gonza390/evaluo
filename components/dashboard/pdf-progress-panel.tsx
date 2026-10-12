@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
@@ -24,6 +24,8 @@ import {
   type PdfTopicEvidence,
 } from '@/lib/student-materials/progress';
 import type { StudyErrorConversation, StudyErrorReviewActions } from './study-error-detail';
+import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
+import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 
 const StudyErrorDetail = dynamic(
   () => import('./study-error-detail').then((module) => module.StudyErrorDetail),
@@ -72,11 +74,17 @@ export function PdfProgressPanel({
   questionCounts,
   onPractice,
   onErrorProgress,
+  initialErrorId,
+  onboardingErrorId,
+  returnToErrors = false,
 }: {
   material: { id: string; title: string };
   sections: unknown;
   data: StudyErrorsPageData;
   summaryUnavailable: boolean;
+  initialErrorId?: string;
+  onboardingErrorId?: string | null;
+  returnToErrors?: boolean;
   embedded?: boolean;
   assessmentData?: { items: PdfTopicEvidence[]; loadError?: boolean };
   questionCounts?: number[];
@@ -93,8 +101,21 @@ export function PdfProgressPanel({
     ...viewOverrides[item.id],
   }));
   const [filter, setFilter] = useState('Todos');
-  const [topicId, setTopicId] = useState<string | null>(null);
-  const [errorId, setErrorId] = useState<string | null>(null);
+  const initialError = [...data.pending, ...data.resolved].find(
+    (item) => item.id === initialErrorId
+  );
+  const [topicId, setTopicId] = useState<string | null>(() =>
+    initialError
+      ? (buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find((topic) =>
+          topic.errors.some((error) => error.id === initialError.id)
+        )?.id ?? 'unmatched')
+      : null
+  );
+  const [errorId, setErrorId] = useState<string | null>(initialError?.id ?? null);
+  const [tourStep, setTourStep] = useState(
+    onboardingErrorId && initialError?.status === 'pending' ? 0 : -1
+  );
+  const tourClosing = useRef(false);
   const [conversations, setConversations] = useState<Record<string, StudyErrorConversation>>({});
   const detailRef = useRef<HTMLElement>(null);
   const [evidence, setEvidence] = useState<PdfTopicEvidence[]>([]);
@@ -132,6 +153,24 @@ export function PdfProgressPanel({
     source: selected?.recommendation ?? null,
     reviewed: Boolean(selected?.lastReviewedAt && selected.lastReviewedAt >= selected.lastFailedAt),
   };
+  useEffect(() => {
+    if (!initialErrorId) return;
+    const frame = requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ block: 'start' });
+      detailRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [initialErrorId]);
+  async function closeTour(outcome: 'completed' | 'skipped') {
+    if (tourClosing.current || !onboardingErrorId) return;
+    tourClosing.current = true;
+    try {
+      await finishStudyErrorOnboardingAction(onboardingErrorId, outcome);
+    } finally {
+      setTourStep(-1);
+      tourClosing.current = false;
+    }
+  }
 
   function openTopic(id: string, preferredErrorId?: string) {
     const errors =
@@ -340,8 +379,31 @@ export function PdfProgressPanel({
 
   return (
     <div className="mx-auto max-w-6xl px-1 py-3 sm:px-3 sm:py-4 [&_p]:leading-5!">
+      {tourStep >= 0 && selected && (
+        <PdfTourSpotlight
+          selector={
+            tourStep === 0
+              ? '[data-study-error-tour="error"]'
+              : '[data-study-error-tour="understand"]'
+          }
+          title={tourStep === 0 ? 'Tu error está en Progreso' : 'Entendé y comprobá el concepto'}
+          description={
+            tourStep === 0
+              ? 'Este tema reúne el concepto que te costó y su refuerzo.'
+              : 'Revisá la explicación. Después respondé una pregunta diferente y volvé a tus temas.'
+          }
+          progress={`${tourStep + 1} de 2`}
+          nextLabel={tourStep === 0 ? 'Siguiente' : 'Entendido'}
+          onNext={() => (tourStep === 0 ? setTourStep(1) : void closeTour('completed'))}
+          onBack={tourStep === 1 ? () => setTourStep(0) : undefined}
+          onExit={() => void closeTour('skipped')}
+          ariaLabel="Guía de Progreso"
+          footerLabel="Tu primer error"
+        />
+      )}
       {!embedded && !simulation && (
         <PdfMobileNavigation
+          hasPendingErrors={pending.length > 0}
           active="progreso"
           onSelect={(section) => {
             if (section !== 'progreso') router.push(`${materialHref}?tab=${section}`);
@@ -350,11 +412,21 @@ export function PdfProgressPanel({
       )}
       {!embedded && (
         <Link
-          href={simulation ? simulation.pdfHref : '/dashboard/progreso'}
+          href={
+            simulation
+              ? simulation.pdfHref
+              : returnToErrors
+                ? '/dashboard/explicaciones'
+                : '/dashboard/progreso'
+          }
           className="text-muted-foreground hover:text-primary inline-flex min-h-10 items-center gap-2 text-sm"
         >
           <ArrowLeft size={16} />
-          {simulation ? 'Ver PDF real · 15 páginas' : 'Mis materiales'}
+          {simulation
+            ? 'Ver PDF real · 15 páginas'
+            : returnToErrors
+              ? 'Mis errores'
+              : 'Mis materiales'}
         </Link>
       )}
       {!embedded && (

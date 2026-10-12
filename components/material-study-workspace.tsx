@@ -111,6 +111,7 @@ type MaterialStudyWorkspaceProps = {
     practice: ReactNode;
     progress?: ReactNode;
     progressOpen?: boolean;
+    pendingStudyErrorCount?: number;
     onProgressChange?: (open: boolean) => void;
     onReinforce?: (topics: string[]) => void;
   };
@@ -273,6 +274,7 @@ export function MaterialStudyWorkspace({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
   const [summaryEndPendingCount, setSummaryEndPendingCount] = useState<number | null>(null);
+  const [pendingStudyErrorCount, setPendingStudyErrorCount] = useState(0);
   const [summaryCompletionOpen, setSummaryCompletionOpen] = useState(false);
   const summaryEndRef = useRef<HTMLDivElement | null>(null);
   const summaryCompletionPromptedRef = useRef(false);
@@ -293,6 +295,24 @@ export function MaterialStudyWorkspace({
   const [localViewerVisible, setLocalViewerVisible] = useState(false);
   const activeTab = demo?.activeTab ?? localActiveTab;
   const isViewerVisible = demo?.viewerVisible ?? localViewerVisible;
+  const isDemo = Boolean(demo);
+  const hasPendingStudyErrors = (demo?.pendingStudyErrorCount ?? pendingStudyErrorCount) > 0;
+
+  useEffect(() => {
+    if (!isOwner || isDemo) return;
+    let cancelled = false;
+    const refreshPending = () => {
+      void getMaterialPendingStudyErrorTopicCountAction(materialId).then(({ count }) => {
+        if (!cancelled) setPendingStudyErrorCount(count);
+      });
+    };
+    refreshPending();
+    window.addEventListener('focus', refreshPending);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', refreshPending);
+    };
+  }, [activeTab, isOwner, isDemo, materialId]);
 
   useEffect(() => {
     if (
@@ -936,6 +956,7 @@ export function MaterialStudyWorkspace({
               key={tab.id}
               value={tab.id}
               data-recommended-tab={tab.id}
+              data-pdf-study-tab
               className={pdfStudyTabClassName}
             >
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -950,16 +971,31 @@ export function MaterialStudyWorkspace({
           );
         })}
         {demo?.progress ? (
-          <TabsTrigger value="progreso" className={pdfStudyTabClassName}>
+          <TabsTrigger
+            value="progreso"
+            data-pdf-study-tab
+            data-has-pending={hasPendingStudyErrors || undefined}
+            className={pdfStudyTabClassName}
+          >
             <CircleAlert className="h-4 w-4" />
             Progreso
+            {hasPendingStudyErrors && (
+              <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
+            )}
+            {hasPendingStudyErrors && <span className="sr-only">: errores por resolver</span>}
           </TabsTrigger>
         ) : null}
         {isOwner && !demo ? (
           <Link
             href={materialErrorsHref}
             data-recommended-errors
-            aria-label="Progreso y errores de este PDF"
+            data-pdf-study-tab
+            data-has-pending={hasPendingStudyErrors || undefined}
+            aria-label={
+              hasPendingStudyErrors
+                ? 'Progreso: errores por resolver en este PDF'
+                : 'Progreso de este PDF'
+            }
             onClick={() => {
               trackMarketingEvent('cta_click', {
                 location: 'material_study_tabs',
@@ -974,6 +1010,9 @@ export function MaterialStudyWorkspace({
           >
             <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Progreso
+            {hasPendingStudyErrors && (
+              <span className="bg-destructive size-1.5 shrink-0 rounded-full" aria-hidden="true" />
+            )}
           </Link>
         ) : null}
       </TabsList>
@@ -1606,6 +1645,7 @@ export function MaterialStudyWorkspace({
       )}
     >
       <PdfMobileNavigation
+        hasPendingErrors={hasPendingStudyErrors}
         active={demo?.progressOpen ? 'progreso' : activeTab}
         showProgress={Boolean(demo?.progress || (isOwner && !demo))}
         onSelect={(section) => {

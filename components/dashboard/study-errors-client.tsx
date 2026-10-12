@@ -15,6 +15,7 @@ import {
 import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { pdfProgressReviewHref, studyErrorGroupId } from '@/lib/study-error-navigation';
 import { AppPageHeader } from '@/components/ui/app-page-header';
 import {
   Select,
@@ -40,31 +41,35 @@ export function StudyErrorsClient({
   data,
   onboarding,
   initialMaterialId,
+  initialErrorId,
   reviewActions,
   preview = false,
 }: {
   data: StudyErrorsPageData;
   onboarding?: { active: boolean; errorId: string | null };
   initialMaterialId?: string;
+  initialErrorId?: string;
   reviewActions?: StudyErrorReviewActions;
   preview?: boolean;
 }) {
   const router = useRouter();
   const initialError = onboarding?.active
     ? data.pending.find((item) => item.id === onboarding.errorId)
-    : initialMaterialId
-      ? (data.pending.find((item) => item.recommendation?.materialId === initialMaterialId) ??
-        data.resolved.find((item) => item.recommendation?.materialId === initialMaterialId))
-      : null;
+    : initialErrorId
+      ? [...data.pending, ...data.resolved].find((item) => item.id === initialErrorId)
+      : initialMaterialId
+        ? (data.pending.find((item) => item.recommendation?.materialId === initialMaterialId) ??
+          data.resolved.find((item) => item.recommendation?.materialId === initialMaterialId))
+        : null;
   const initialMaterialAvailable = Boolean(
     initialMaterialId &&
-      (data.materials.some((material) => material.id === initialMaterialId) ||
-        data.pending.some((item) => item.recommendation?.materialId === initialMaterialId) ||
-        data.resolved.some((item) => item.recommendation?.materialId === initialMaterialId))
+    (data.materials.some((material) => material.id === initialMaterialId) ||
+      data.pending.some((item) => item.recommendation?.materialId === initialMaterialId) ||
+      data.resolved.some((item) => item.recommendation?.materialId === initialMaterialId))
   );
   const [materialId, setMaterialId] = useState<string | null>(
     initialError
-      ? (initialError.recommendation?.materialId ?? unlinkedId)
+      ? studyErrorGroupId(initialError)
       : initialMaterialAvailable
         ? (initialMaterialId ?? null)
         : null
@@ -107,9 +112,7 @@ export function StudyErrorsClient({
         });
     return Array.from(materials.values());
   }, [data.materials, views]);
-  const scoped = views.filter(
-    (item) => (item.recommendation?.materialId ?? unlinkedId) === materialId
-  );
+  const scoped = views.filter((item) => studyErrorGroupId(item) === materialId);
   const pending = scoped.filter((item) => item.status === 'pending');
   const resolved = scoped.filter((item) => item.status === 'resolved');
   const group = tab === 'pending' ? pending : resolved;
@@ -132,7 +135,7 @@ export function StudyErrorsClient({
   };
   const selectedPdf = pdfs.find((material) => material.id === materialId);
   const totalPending = views.filter((item) => item.status === 'pending').length;
-  const unlinked = views.filter((item) => !item.recommendation);
+  const unlinked = views.filter((item) => studyErrorGroupId(item) === unlinkedId);
   const unlinkedPending = unlinked.filter((item) => item.status === 'pending').length;
   const headerPendingCount = materialId ? pending.length : totalPending;
   const headerDescription = headerPendingCount ? (
@@ -145,7 +148,7 @@ export function StudyErrorsClient({
       {!materialId
         ? ' Elegí un PDF.'
         : materialId === unlinkedId
-          ? ' Asociá tus apuntes para repasarlos con tu PDF.'
+          ? ' Repasá cada concepto conservando su origen.'
           : ''}
     </>
   ) : selectedPdf ? (
@@ -184,7 +187,14 @@ export function StudyErrorsClient({
   }, [selected, preview]);
 
   function chooseMaterial(id: string) {
-    const errors = views.filter((item) => (item.recommendation?.materialId ?? unlinkedId) === id);
+    const errors = views.filter((item) => studyErrorGroupId(item) === id);
+    const pdfErrors = errors.filter((item) => item.sourceType !== 'simulator');
+    if (!preview && id !== unlinkedId && (pdfErrors.length || !errors.length)) {
+      const firstPdfError = pdfErrors.find((item) => item.status === 'pending') ?? pdfErrors[0];
+      const href = pdfProgressReviewHref(id, firstPdfError);
+      if (href) router.push(href);
+      return;
+    }
     const first = errors.find((item) => item.status === 'pending') ?? errors[0];
     setMaterialId(id);
     setSelectedId(first?.id ?? null);
@@ -324,7 +334,7 @@ export function StudyErrorsClient({
             </h2>
             <div className="divide-border border-border divide-y border-b">
               {pdfs.map((pdf) => {
-                const errors = views.filter((item) => item.recommendation?.materialId === pdf.id);
+                const errors = views.filter((item) => studyErrorGroupId(item) === pdf.id);
                 const count = errors.filter((item) => item.status === 'pending').length;
                 const topics = errors
                   .filter((item) => item.status === 'pending')
@@ -402,13 +412,10 @@ export function StudyErrorsClient({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold break-words">
-                      {unlinkedPending
-                        ? `${unlinkedPending} ${unlinkedPending === 1 ? 'concepto sin material asociado' : 'conceptos sin material asociado'}`
-                        : 'Conceptos sin material asociado'}
+                      Simulador y otros conceptos
                     </span>
                     <span className="text-muted-foreground mt-2 block text-sm">
-                      Asociá tus apuntes para repasar{' '}
-                      {unlinkedPending === 1 ? 'este concepto' : 'estos conceptos'} con tu PDF.
+                      {pendingLabel(unlinkedPending)} · Repasá el error y comprobá lo aprendido.
                     </span>
                     {unlinked.length > unlinkedPending && (
                       <span className="text-muted-foreground mt-1 block text-xs">
@@ -452,15 +459,15 @@ export function StudyErrorsClient({
               </button>
               <Select value={materialId} onValueChange={chooseMaterial}>
                 <SelectTrigger
-                  aria-label="Cambiar PDF"
+                  aria-label="Cambiar material o contexto"
                   className="hover:bg-muted/50 h-auto w-full min-w-0 flex-1 basis-full rounded-lg border-transparent px-3 py-2 text-left whitespace-normal shadow-none data-[size=default]:h-auto *:data-[slot=select-value]:line-clamp-none *:data-[slot=select-value]:block *:data-[slot=select-value]:min-w-0 sm:basis-0"
                 >
                   <SelectValue>
                     <span className="text-muted-foreground block text-xs font-normal">
-                      Cambiar PDF
+                      Cambiar material
                     </span>
                     <span className="text-foreground mt-0.5 block text-sm font-semibold [overflow-wrap:anywhere] sm:text-base">
-                      {selectedPdf?.title ?? 'Errores sin PDF asociado'}
+                      {selectedPdf?.title ?? 'Simulador y otros conceptos'}
                     </span>
                   </SelectValue>
                 </SelectTrigger>
@@ -473,17 +480,16 @@ export function StudyErrorsClient({
                           {pendingLabel(
                             views.filter(
                               (item) =>
-                                item.recommendation?.materialId === pdf.id &&
-                                item.status === 'pending'
+                                studyErrorGroupId(item) === pdf.id && item.status === 'pending'
                             ).length
                           )}
                         </span>
                       </span>
                     </SelectItem>
                   ))}
-                  {views.some((item) => !item.recommendation) && (
+                  {unlinked.length > 0 && (
                     <SelectItem value={unlinkedId} className="min-h-11">
-                      Sin PDF asociado
+                      Simulador y otros conceptos
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -600,6 +606,11 @@ export function StudyErrorsClient({
                       }))
                     }
                     onAssociate={(id) => {
+                      if (!preview && selected.sourceType !== 'simulator') {
+                        const href = pdfProgressReviewHref(id, selected);
+                        if (href) router.push(href);
+                        return;
+                      }
                       setOverrides((current) => ({
                         ...current,
                         [selected.id]: {
@@ -617,7 +628,7 @@ export function StudyErrorsClient({
                           },
                         },
                       }));
-                      setMaterialId(id);
+                      setMaterialId(selected.sourceType === 'simulator' ? unlinkedId : id);
                       router.refresh();
                     }}
                     onNext={nextError}

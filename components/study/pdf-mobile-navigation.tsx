@@ -30,10 +30,12 @@ export function PdfMobileNavigation({
   active,
   onSelect,
   showProgress = true,
+  hasPendingErrors = false,
 }: {
   active: PdfMobileSection;
   onSelect: (section: PdfMobileSection) => void;
   showProgress?: boolean;
+  hasPendingErrors?: boolean;
 }) {
   const items: Array<{ id: PdfMobileSection; label: string; icon: typeof BookOpenText }> = [
     { id: 'resumen', label: 'Resumen', icon: BookOpenText },
@@ -63,10 +65,24 @@ export function PdfMobileNavigation({
             type="button"
             onClick={() => onSelect(id)}
             aria-current={active === id ? 'page' : undefined}
-            className={itemClass(active === id)}
+            className={cn(
+              itemClass(active === id),
+              id === 'progreso' && hasPendingErrors && active !== id && 'text-destructive'
+            )}
           >
-            <Icon aria-hidden="true" className="size-5" />
+            <span className="relative">
+              <Icon aria-hidden="true" className="size-5" />
+              {id === 'progreso' && hasPendingErrors && (
+                <span
+                  className="bg-destructive absolute -top-0.5 -right-1 size-1.5 rounded-full"
+                  aria-hidden="true"
+                />
+              )}
+            </span>
             {label}
+            {id === 'progreso' && hasPendingErrors && (
+              <span className="sr-only">: errores por resolver</span>
+            )}
           </button>
         ))}
         <DropdownMenu>

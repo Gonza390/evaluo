@@ -27,12 +27,17 @@
   border-radius: 0 !important;
 }
 
-.material-study-editorial [role='tab'] {
+.material-study-editorial [role='tab'],
+.material-study-editorial [data-pdf-study-tab] {
   border: 0 !important;
   border-bottom: 2px solid transparent !important;
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+.material-study-editorial [data-pdf-study-tab][data-has-pending='true']:not([data-state='active']) {
+  color: var(--destructive) !important;
 }
 
 .material-study-editorial [role='tab'][data-state='active'] {
