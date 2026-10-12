@@ -36,10 +36,6 @@
   box-shadow: none !important;
 }
 
-.material-study-editorial [data-pdf-study-tab][data-has-pending='true']:not([data-state='active']) {
-  color: var(--destructive) !important;
-}
-
 .material-study-editorial [role='tab'][data-state='active'] {
   border-bottom-color: var(--primary) !important;
   background: transparent !important;
