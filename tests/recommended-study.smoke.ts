@@ -111,8 +111,8 @@ const materialWorkspaceSource = readFileSync('components/material-study-workspac
 
 assert.match(
   materialPageSource,
-  /initialRecommendedStudy=\{isFirstReadyMaterial && query\.recorrido === '1'\}/,
-  'El recorrido manual solo debe activarse si el material sigue siendo el primer PDF listo.'
+  /initialRecommendedStudy=\{\s*isFirstReadyMaterial && query\.recorrido === '1' && !firstPdfGuideAlreadySeen\s*\}/,
+  'El recorrido manual solo debe activarse para el primer PDF listo y si la guía todavía no fue vista.'
 );
 assert.match(
   materialWorkspaceSource,
