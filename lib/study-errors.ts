@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
 import { buildStudentMaterialContextsForQuestions } from '@/lib/student-materials/simulator-context';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
+import { isUuid } from '@/lib/uuid';
 
 export type StudyErrorSource = 'simulator' | 'flashcard' | 'exercise' | 'diagnostic';
 export type StudyErrorStatus = 'pending' | 'resolved';
@@ -92,6 +93,7 @@ export type StudyErrorsPageData = {
   resolved: StudyErrorView[];
   materials: Array<{ id: string; title: string; materiaNombre: string | null }>;
   loadError?: boolean;
+  truncated?: boolean;
 };
 
 function clean(value: string | null | undefined) {
@@ -566,22 +568,32 @@ export async function attachStudyErrorExplanation(input: {
   }
 }
 
-export async function getStudyErrorsPageData(userId: string): Promise<StudyErrorsPageData> {
+export async function getStudyErrorsPageData(
+  userId: string,
+  materialId?: string
+): Promise<StudyErrorsPageData> {
   const admin = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = admin as any;
 
   try {
-    const [{ data, error }, { data: availableMaterials, error: materialsError }] =
+    if (materialId && !isUuid(materialId)) throw new Error('Material inválido');
+    let errorsQuery = db
+      .from('study_errors')
+      .select(
+        'id, user_id, materia_id, student_material_id, source_type, source_key, question_id, topic, prompt, explanation, correct_answer, selected_answer, failure_count, status, reference_page_start, reference_page_end, reference_section_title, reference_excerpt, first_failed_at, last_failed_at, last_reviewed_at, resolved_at, metadata',
+        { count: 'exact' }
+      )
+      .eq('user_id', userId);
+    if (materialId) {
+      // Solo asociación explícita: una recomendación por similitud no mide el progreso del PDF.
+      errorsQuery = errorsQuery.or(
+        `student_material_id.eq.${materialId},and(student_material_id.is.null,metadata->>review_material_id.eq.${materialId})`
+      );
+    }
+    const [{ data, error, count }, { data: availableMaterials, error: materialsError }] =
       await Promise.all([
-        db
-          .from('study_errors')
-          .select(
-            'id, user_id, materia_id, student_material_id, source_type, source_key, question_id, topic, prompt, explanation, correct_answer, selected_answer, failure_count, status, reference_page_start, reference_page_end, reference_section_title, reference_excerpt, first_failed_at, last_failed_at, last_reviewed_at, resolved_at, metadata'
-          )
-          .eq('user_id', userId)
-          .order('last_failed_at', { ascending: false })
-          .limit(300),
+        errorsQuery.order('last_failed_at', { ascending: false }).limit(300),
         admin
           .from('student_materials')
           .select('id, title, materia_id')
@@ -836,7 +848,7 @@ export async function getStudyErrorsPageData(userId: string): Promise<StudyError
         ? (materiaNames.get(original.materia_id) ?? null)
         : null;
     }
-    return { pending, resolved, materials };
+    return { pending, resolved, materials, truncated: (count ?? 0) > rows.length };
   } catch (error) {
     logError('studyErrors.getPageData', error, { userId });
     return { pending: [], resolved: [], materials: [], loadError: true };

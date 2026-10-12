@@ -1,3 +1,4 @@
+import { buildStudyErrorReviewPrompt } from '@/lib/study-error-review-prompt';
 import { logError } from '@/lib/observability';
 import {
   requestGeminiText,
@@ -221,30 +222,10 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
   };
 }
 
-export async function generateStudyErrorReviewQuestion(input: {
-  question: string;
-  topic: string;
-  correctAnswer: string;
-  source: string;
-  previousQuestion?: string;
-}) {
-  const prompt = [
-    'Creá una comprobación breve de comprensión universitaria basada EXCLUSIVAMENTE en el fragmento recibido.',
-    'Evaluá el mismo concepto de la actividad original en una situación diferente. No copies el enunciado ni cambies solamente sinónimos.',
-    'Cambiá también el escenario concreto. Por ejemplo, si la actividad trata una cuenta mental, no vuelvas a preguntar por un cálculo o un problema matemático: aplicá el concepto en otra tarea cotidiana. El caso puede ser hipotético, pero su resolución debe derivarse del fragmento.',
-    'Usá español sencillo y voseo argentino. Evitá "según el texto" cuando no aporte al problema.',
-    'Pedí aplicar o distinguir el concepto, no reconocer su nombre. El título del tema no debe revelar la respuesta.',
-    'Ofrecé exactamente tres opciones plausibles y mutuamente excluyentes, de longitud semejante, con una sola correcta.',
-    'No uses todas/ninguna de las anteriores. No inventes datos académicos ni dependas de conocimiento fuera del fragmento.',
-    'Si no hay evidencia suficiente, o si la respuesta original contradice el fragmento, devolvé {"supported":false}.',
-    'Devolvé sólo JSON: {"supported":true,"question":"...","options":["...","...","..."],"correctIndex":0,"feedback":"Por qué la correcta se sostiene en el PDF","evidenceQuote":"Cita literal de 20 a 300 caracteres del fragmento"}.',
-    PROMPT_INJECTION_GUARD,
-    `Tema: ${isolateUntrustedContent(input.topic)}`,
-    `Actividad original: ${isolateUntrustedContent(input.question)}`,
-    `Respuesta original: ${isolateUntrustedContent(input.correctAnswer)}`,
-    `Evitá repetir esta comprobación anterior: ${isolateUntrustedContent(input.previousQuestion ?? '')}`,
-    `Fragmento: ${isolateUntrustedContent(input.source.slice(0, 3000))}`,
-  ].join('\n');
+export async function generateStudyErrorReviewQuestion(
+  input: Parameters<typeof buildStudyErrorReviewPrompt>[0]
+) {
+  const prompt = buildStudyErrorReviewPrompt(input);
   const providerOrder = await getNextInteractiveProviderOrder();
   for (const provider of providerOrder) {
     const result =

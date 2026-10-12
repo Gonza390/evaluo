@@ -56,6 +56,7 @@ export function StudyErrorHelpChat({
   topic,
   pdfTitle,
   notice,
+  compact = false,
 }: {
   messages: StudyErrorHelpMessage[];
   pendingKind: ReviewHelpKind | null;
@@ -67,6 +68,7 @@ export function StudyErrorHelpChat({
   topic: string;
   pdfTitle: string | null;
   notice?: string;
+  compact?: boolean;
 }) {
   const conversation = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -78,7 +80,9 @@ export function StudyErrorHelpChat({
 
   const turns = [
     ...messages.map((message) => ({ ...message, pending: false })),
-    ...(pendingKind ? [{ kind: pendingKind, text: '', pending: true }] : []),
+    ...(pendingKind && !messages.some((message) => message.kind === pendingKind)
+      ? [{ kind: pendingKind, text: '', pending: true }]
+      : []),
   ];
   const hasConversation = turns.length > 0;
 
@@ -89,7 +93,7 @@ export function StudyErrorHelpChat({
         <div className="min-w-0 flex-1">
           <p className="!text-primary !text-xs !leading-5 font-semibold">Evaluo</p>
           <h3 className="mt-0.5 text-base leading-6 font-semibold break-words sm:text-lg">
-            Entendamos {topic}
+            {compact ? 'Entendamos el error' : `Entendamos ${topic}`}
           </h3>
           <p className="!text-muted-foreground mt-1.5 flex items-start gap-2 !text-sm !leading-5">
             <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -103,13 +107,13 @@ export function StudyErrorHelpChat({
         ref={conversation}
         data-study-chat-scroll
         tabIndex={0}
-        className={`focus-visible:outline-ring overscroll-y-contain p-4 [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${hasConversation ? 'h-[var(--study-chat-height)] overflow-y-auto' : 'py-5'}`}
+        className={`focus-visible:outline-ring overscroll-y-contain p-4 [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-[-2px] ${hasConversation ? 'max-h-[var(--study-chat-height)] overflow-y-auto' : 'py-3'}`}
         role="log"
         aria-label="Conversación con Evaluo"
         aria-live="polite"
         aria-relevant="additions"
       >
-        {!turns.length && !savedExplanation && (
+        {!turns.length && !savedExplanation && !pendingKind && (
           <div className="flex items-start gap-2.5 sm:gap-3">
             <StudyErrorTutorAvatar />
             <div className="min-w-0 flex-1">
@@ -118,7 +122,7 @@ export function StudyErrorHelpChat({
                 {resolved
                   ? 'Este error ya quedó resuelto. Podés consultar tu respuesta anterior o seguir con otro tema.'
                   : hasPdf
-                    ? 'Podemos aclarar qué te confundió usando tus apuntes. Después podés pedir una versión más simple o un ejemplo.'
+                    ? 'Repasemos la diferencia con tu PDF.'
                     : 'Podemos aclarar qué te confundió con una explicación general. Para usar tus apuntes, asociá un PDF.'}
               </p>
               {!resolved && (
@@ -128,7 +132,7 @@ export function StudyErrorHelpChat({
                   onClick={() => onRequest('why_wrong')}
                 >
                   <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  Ayudame a entenderlo
+                  {notice ? 'Reintentar explicación' : 'Ayudame a entenderlo'}
                 </button>
               )}
             </div>
@@ -136,17 +140,15 @@ export function StudyErrorHelpChat({
         )}
         <ol className="space-y-7 sm:space-y-8">
           {turns.map((turn, index) => (
-            <li
-              key={turn.kind}
-              data-study-chat-kind={turn.kind}
-              className="last:min-h-[calc(var(--study-chat-height)-2rem)]"
-            >
-              <div className="mb-5 flex justify-end">
-                <div className="bg-primary/7 max-w-[90%] rounded-2xl rounded-br-md px-4 py-3 sm:max-w-[80%]">
-                  <p className="!text-muted-foreground mb-1 !text-[11px] font-medium">Vos</p>
-                  <p className="!text-foreground !text-sm !leading-6">{requests[turn.kind]}</p>
+            <li key={turn.kind} data-study-chat-kind={turn.kind}>
+              {!(compact && turn.kind === 'why_wrong') && (
+                <div className="mb-5 flex justify-end">
+                  <div className="bg-primary/7 max-w-[90%] rounded-2xl rounded-br-md px-4 py-3 sm:max-w-[80%]">
+                    <p className="!text-muted-foreground mb-1 !text-[11px] font-medium">Vos</p>
+                    <p className="!text-foreground !text-sm !leading-6">{requests[turn.kind]}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="flex items-start gap-2.5 sm:gap-3">
                 <StudyErrorTutorAvatar state={turn.pending ? 'thinking' : 'answering'} />
                 <div className="min-w-0 flex-1">
@@ -194,31 +196,36 @@ export function StudyErrorHelpChat({
         </p>
       )}
       {messages.length > 0 && (
-        <div
-          role="group"
-          aria-label="Opciones de la explicación"
-          className="border-border bg-muted/20 grid grid-cols-2 items-center gap-2 border-t px-4 py-3 sm:flex sm:flex-wrap"
-        >
-          {(['simpler', 'example'] as const).map((kind) => (
-            <button
-              key={kind}
-              className="focus-visible:outline-ring border-border bg-background text-foreground hover:bg-muted inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border px-2.5 py-2 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:px-4 sm:text-sm"
-              disabled={busy || (resolved && !messages.some((message) => message.kind === kind))}
-              onClick={() => onRequest(kind)}
-            >
-              {kind === 'simpler' ? 'Más simple' : 'Dame un ejemplo'}
-            </button>
-          ))}
-          {turns.some((turn) => turn.kind === 'why_wrong') && (
-            <button
-              className="text-muted-foreground hover:text-foreground focus-visible:outline-ring col-span-2 inline-flex min-h-11 w-fit items-center px-1 text-xs underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
-              disabled={busy}
-              onClick={() => onRequest('why_wrong')}
-            >
-              Ver explicación inicial
-            </button>
-          )}
-        </div>
+        <details className="border-border bg-muted/20 border-t px-4 py-2">
+          <summary className="text-muted-foreground focus-visible:outline-ring flex min-h-10 cursor-pointer items-center text-xs font-medium focus-visible:outline-2">
+            Necesito otra explicación
+          </summary>
+          <div
+            role="group"
+            aria-label="Opciones de la explicación"
+            className="grid grid-cols-2 items-center gap-2 pb-1 sm:flex sm:flex-wrap"
+          >
+            {(['simpler', 'example'] as const).map((kind) => (
+              <button
+                key={kind}
+                className="focus-visible:outline-ring border-border bg-background text-foreground hover:bg-muted inline-flex min-h-11 min-w-0 items-center justify-center rounded-full border px-2.5 py-2 text-xs font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 sm:px-4 sm:text-sm"
+                disabled={busy || (resolved && !messages.some((message) => message.kind === kind))}
+                onClick={() => onRequest(kind)}
+              >
+                {kind === 'simpler' ? 'Más simple' : 'Dame un ejemplo'}
+              </button>
+            ))}
+            {turns.some((turn) => turn.kind === 'why_wrong') && (
+              <button
+                className="text-muted-foreground hover:text-foreground focus-visible:outline-ring col-span-2 inline-flex min-h-11 w-fit items-center px-1 text-xs underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+                disabled={busy}
+                onClick={() => onRequest('why_wrong')}
+              >
+                Ver explicación inicial
+              </button>
+            )}
+          </div>
+        </details>
       )}
     </div>
   );

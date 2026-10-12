@@ -53,10 +53,11 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
         <div className="relative">
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
+            aria-label="Buscar universidad o carrera"
             placeholder="Buscar universidad o carrera..."
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            className="h-10 rounded-2xl border-slate-200 bg-white pl-10 text-sm shadow-sm sm:h-11"
+            className="h-11 rounded-2xl border-slate-200 bg-white pl-10 text-base shadow-sm sm:text-sm"
           />
         </div>
 

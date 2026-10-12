@@ -115,33 +115,29 @@ export async function generateReviewHelpAction(
           message: 'No pudimos generar la ayuda ahora. Podés leer el fragmento o reintentar.',
         };
       text = result.text;
-      const { error } = await admin
-        .from('study_error_help_cache')
-        .upsert(
-          {
-            error_id: errorId,
-            user_id: user.id,
-            context_key: helpContextKey,
-            kind,
-            help_text: text,
-          },
-          { onConflict: 'error_id,context_key,kind' }
-        );
+      const { error } = await admin.from('study_error_help_cache').upsert(
+        {
+          error_id: errorId,
+          user_id: user.id,
+          context_key: helpContextKey,
+          kind,
+          help_text: text,
+        },
+        { onConflict: 'error_id,context_key,kind' }
+      );
       if (error) throw error;
     }
     if (reusableCache && cached.context_key !== helpContextKey) {
-      const { error } = await admin
-        .from('study_error_help_cache')
-        .upsert(
-          {
-            error_id: errorId,
-            user_id: user.id,
-            context_key: helpContextKey,
-            kind,
-            help_text: text,
-          },
-          { onConflict: 'error_id,context_key,kind', ignoreDuplicates: true }
-        );
+      const { error } = await admin.from('study_error_help_cache').upsert(
+        {
+          error_id: errorId,
+          user_id: user.id,
+          context_key: helpContextKey,
+          kind,
+          help_text: text,
+        },
+        { onConflict: 'error_id,context_key,kind', ignoreDuplicates: true }
+      );
       if (error) throw error;
     }
     if (!(await markStudyErrorReviewed(user.id, errorId, row.last_failed_at)))
@@ -169,7 +165,6 @@ export async function generateReviewHelpAction(
     return { success: false, message: 'No pudimos cargar esta ayuda. Intentá nuevamente.' };
   }
 }
-
 
 export async function generateInlineSummaryCheckHelpAction(
   errorId: string,
@@ -265,7 +260,7 @@ export async function generateReviewCheckAction(
     const context = await loadReviewContext(user.id, errorId, materialId);
     if (!context || context.row.status !== 'pending')
       return { success: false, message: 'Este error ya no está pendiente. Actualizá la pantalla.' };
-    const { row, source, contextKey } = context;
+    const { row, source, contextKey, helpContextKey } = context;
     if (!source?.excerpt || source.excerpt.trim().length < 60 || !row.correct_answer) {
       return {
         success: false,
@@ -298,10 +293,31 @@ export async function generateReviewCheckAction(
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    // Solo ayudas del mismo alumno, error y fuente; nunca texto enviado por el cliente.
+    const { data: reviewedHelp, error: helpError } = await admin
+      .from('study_error_help_cache')
+      .select('kind, help_text')
+      .eq('error_id', errorId)
+      .eq('user_id', user.id)
+      .in('context_key', [helpContextKey, contextKey])
+      .order('created_at', { ascending: false })
+      .limit(6);
+    if (helpError) throw helpError;
+    const seenKinds = new Set<string>();
+    const explanations = (reviewedHelp ?? []).filter((help) => {
+      if (seenKinds.has(help.kind) || !isCompleteReviewHelp(help.help_text)) return false;
+      seenKinds.add(help.kind);
+      return true;
+    });
+    const reviewedExplanation = explanations
+      .map((help) => `${help.kind}: ${help.help_text.slice(0, 750)}`)
+      .join('\n');
     const generated = await generateStudyErrorReviewQuestion({
       question: row.prompt.slice(0, 2000),
       topic: row.topic ?? '',
       correctAnswer: row.correct_answer.slice(0, 1000),
+      selectedAnswer: row.selected_answer?.slice(0, 1000),
+      reviewedExplanation,
       source: source.excerpt,
       previousQuestion: previous?.question,
     });

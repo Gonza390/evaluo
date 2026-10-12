@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
+  Activity,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
+  type MouseEvent,
   type SetStateAction,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -51,6 +53,11 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/componen
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
+import {
+  pdfStudyTabClassName,
+  pdfStudyControlsClassName,
+} from '@/components/study/pdf-study-styles';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-material-summary';
 import {
   buildPedagogicalArtifacts,
@@ -102,6 +109,9 @@ type MaterialStudyWorkspaceProps = {
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
     practice: ReactNode;
+    progress?: ReactNode;
+    progressOpen?: boolean;
+    onProgressChange?: (open: boolean) => void;
     onReinforce?: (topics: string[]) => void;
   };
 };
@@ -113,10 +123,9 @@ const STUDY_TABS: Array<{
   label: string;
   icon: typeof BookOpenText;
   premium?: boolean;
-  featured?: boolean;
 }> = [
   { id: 'resumen', label: 'Resumen', icon: BookOpenText },
-  { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit, featured: true },
+  { id: 'ejercicios', label: 'Práctica', icon: BrainCircuit },
   { id: 'tarjetas', label: 'Flashcards', icon: Sparkles },
   { id: 'glosario', label: 'Glosario', icon: SquareLibrary },
   { id: 'mapa', label: 'Mapa mental', icon: MapIcon, premium: true },
@@ -135,7 +144,7 @@ function WorkspaceCard({ children, className }: { children: React.ReactNode; cla
   return (
     <div
       className={cn(
-        'surface-card rounded-[20px] border border-slate-200/80 bg-white p-4 shadow-[0_14px_34px_rgba(15,23,42,0.07)] sm:p-[1.05rem]',
+        'surface-card border-border/80 bg-card rounded-2xl border p-4 shadow-none sm:p-[1.05rem]',
         className
       )}
     >
@@ -156,15 +165,15 @@ function StudyDocumentShell({
   compact?: boolean;
 }) {
   return (
-    <div className="surface-card rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_34px_rgba(15,23,42,0.07)]">
+    <div className="surface-card border-border bg-card rounded-2xl border shadow-none">
       <div className={compact ? 'space-y-3 px-3 py-3' : 'space-y-5 px-4 py-4 sm:px-5 sm:py-5'}>
         <section className="space-y-1.5">
-          <h2 className="text-[1.12rem] font-bold tracking-[-0.04em] text-slate-950">{title}</h2>
+          <h2 className="text-foreground text-[1.12rem] font-bold tracking-[-0.04em]">{title}</h2>
           {description ? (
-            <p className="text-[13px] leading-6 text-slate-500">{description}</p>
+            <p className="text-muted-foreground text-[13px] leading-6">{description}</p>
           ) : null}
         </section>
-        {!compact && <div className="h-px bg-white" />}
+        {!compact && <div className="bg-card h-px" />}
         {children}
       </div>
     </div>
@@ -211,7 +220,7 @@ function MaterialMetadata({
           {index > 0 ? <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" /> : null}
           <span
             title={item}
-            className="max-w-[220px] truncate text-[11.5px] font-medium text-slate-500 xl:max-w-[260px]"
+            className="text-muted-foreground max-w-[220px] truncate text-[11.5px] font-medium xl:max-w-[260px]"
           >
             {item}
           </span>
@@ -272,9 +281,7 @@ export function MaterialStudyWorkspace({
   const promptedSummaryChecksRef = useRef(new Set<number>());
   const summaryReadTimeRef = useRef(new Map<number, number>());
   const summaryReadVisibleSinceRef = useRef(new Map<number, number>());
-  const summaryReadingVisibilityRef = useRef(
-    new Map<number, { ratio: number; top: number }>()
-  );
+  const summaryReadingVisibilityRef = useRef(new Map<number, { ratio: number; top: number }>());
   const summaryActiveReadingSectionRef = useRef<number | null>(null);
   const summaryCheckTriggerVisibleRef = useRef(new Set<number>());
   const summaryCheckTimerRef = useRef(new Map<number, number>());
@@ -703,10 +710,7 @@ export function MaterialStudyWorkspace({
           })[0]?.[0] ?? null;
 
       if (summaryActiveReadingSectionRef.current === dominantSection) {
-        if (
-          dominantSection !== null &&
-          !summaryReadVisibleSinceRef.current.has(dominantSection)
-        ) {
+        if (dominantSection !== null && !summaryReadVisibleSinceRef.current.has(dominantSection)) {
           summaryReadVisibleSinceRef.current.set(dominantSection, now);
         }
         return;
@@ -826,6 +830,16 @@ export function MaterialStudyWorkspace({
     setCommentsOpen((current) => !current);
   };
 
+  function handleSummaryChapterNavigation(event: MouseEvent<HTMLAnchorElement>, anchor: string) {
+    // Las vistas responsive comparten contenido: buscar dentro del panel que recibió el clic.
+    const chapter = event.currentTarget
+      .closest('[role="tabpanel"]')
+      ?.querySelector<HTMLElement>(`#${CSS.escape(anchor)}`);
+    if (!chapter) return;
+    event.preventDefault();
+    chapter.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
   const handleStudyTabChange = (value: string, entry: 'tab' | 'summary_chapter' = 'tab') => {
     const nextTab = value as StudyTabId;
     if (
@@ -905,11 +919,16 @@ export function MaterialStudyWorkspace({
         ? '1 a 2 minutos'
         : '2 minutos';
 
-  const materialErrorsHref = `/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`;
+  const materialErrorsHref = `/dashboard/progreso?material=${encodeURIComponent(materialId)}`;
 
   const tabHeader = (
-    <div className="flex shrink-0 flex-col gap-1.5 border-b border-slate-200 px-2.5 py-2 sm:px-3 sm:py-2.5">
-      <TabsList className="h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-[18px] bg-transparent p-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div
+      className={cn(
+        'border-border shrink-0 flex-col gap-1.5 border-b px-2.5 py-2 sm:px-3 sm:py-2.5',
+        activeTab === 'resumen' && !demo?.progressOpen ? 'flex' : 'hidden md:flex'
+      )}
+    >
+      <TabsList className="hidden h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
         {STUDY_TABS.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -917,17 +936,12 @@ export function MaterialStudyWorkspace({
               key={tab.id}
               value={tab.id}
               data-recommended-tab={tab.id}
-              className={cn(
-                'h-8 flex-none shrink-0 rounded-[13px] border bg-white px-2.5 text-[12px] shadow-none data-[state=active]:border-[#BFDBFE] data-[state=active]:bg-[#EEF4FF] data-[state=active]:text-[#2563EB] data-[state=active]:shadow-none sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]',
-                tab.featured
-                  ? 'border-indigo-200 bg-indigo-50/55 font-semibold text-indigo-700'
-                  : 'border-slate-200 text-slate-500'
-              )}
+              className={pdfStudyTabClassName}
             >
               <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {tab.label}
               {tab.premium ? (
-                <span className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-[#EEF4FF] px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.08em] text-[#2563EB] uppercase sm:text-[10px]">
+                <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.08em] uppercase sm:text-[10px]">
                   <Crown className="h-2.5 w-2.5" />
                   Premium
                 </span>
@@ -935,11 +949,17 @@ export function MaterialStudyWorkspace({
             </TabsTrigger>
           );
         })}
+        {demo?.progress ? (
+          <TabsTrigger value="progreso" className={pdfStudyTabClassName}>
+            <CircleAlert className="h-4 w-4" />
+            Progreso
+          </TabsTrigger>
+        ) : null}
         {isOwner && !demo ? (
           <Link
             href={materialErrorsHref}
             data-recommended-errors
-            aria-label="Errores de este PDF"
+            aria-label="Progreso y errores de este PDF"
             onClick={() => {
               trackMarketingEvent('cta_click', {
                 location: 'material_study_tabs',
@@ -947,22 +967,25 @@ export function MaterialStudyWorkspace({
                 destination: materialErrorsHref,
               });
             }}
-            className="inline-flex h-8 flex-none shrink-0 items-center justify-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-2.5 text-[12px] font-medium text-slate-500 shadow-none transition hover:border-amber-200 hover:bg-amber-50/60 hover:text-amber-700 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+            className={cn(
+              pdfStudyTabClassName,
+              'inline-flex items-center justify-center gap-1.5 transition'
+            )}
           >
             <CircleAlert className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            Errores
+            Progreso
           </Link>
         ) : null}
       </TabsList>
 
-      {activeTab === 'resumen' ? (
+      {activeTab === 'resumen' && !demo?.progressOpen ? (
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5 sm:gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setIsViewerVisible((current) => !current)}
-            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+            className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
           >
             {isViewerVisible ? (
               <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -976,7 +999,7 @@ export function MaterialStudyWorkspace({
             asChild
             variant="outline"
             size="sm"
-            className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+            className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
           >
             <a href={viewerUrl} target="_blank" rel="noreferrer">
               <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -990,7 +1013,7 @@ export function MaterialStudyWorkspace({
               variant="outline"
               size="sm"
               onClick={handleComments}
-              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+              className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
             >
               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Calificar
@@ -1004,7 +1027,7 @@ export function MaterialStudyWorkspace({
               size="sm"
               onClick={handleRegenerate}
               disabled={isRegenerating}
-              className="h-8 rounded-[13px] border-slate-200 bg-white px-2.5 text-[12px] text-slate-700 shadow-none hover:bg-slate-50 sm:h-9 sm:rounded-[14px] sm:px-3 sm:text-[13px]"
+              className="border-border bg-card text-foreground hover:bg-muted h-8 rounded-lg px-2.5 text-[12px] shadow-none sm:h-9 sm:rounded-lg sm:px-3 sm:text-[13px]"
             >
               <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {isRegenerating ? 'Regenerando...' : 'Regenerar'}
@@ -1017,28 +1040,28 @@ export function MaterialStudyWorkspace({
 
   const regenerationOverlay = isRegenerating ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4">
-      <div className="w-full max-w-xl overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.2)]">
+      <div className="border-border bg-card w-full max-w-xl overflow-hidden rounded-[1.75rem] border shadow-[0_30px_90px_rgba(15,23,42,0.2)]">
         <div className="bg-[linear-gradient(135deg,#FFF7ED_0%,#FFFFFF_40%,#EEF4FF_100%)] px-5 py-5 sm:px-6">
           <div className="flex items-start gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-[0_12px_28px_rgba(245,158,11,0.18)]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[1rem] bg-[#F59E0B] text-white shadow-none">
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-[1.2rem] font-bold tracking-[-0.05em] text-slate-950">
+              <h3 className="text-foreground text-[1.2rem] font-bold tracking-[-0.05em]">
                 Estamos regenerando tu material
               </h3>
-              <p className="mt-1.5 text-[13px] leading-5 text-slate-600">{fileName}</p>
+              <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">{fileName}</p>
             </div>
           </div>
         </div>
 
         <div className="space-y-5 px-5 py-5 sm:px-6">
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+            <div className="text-muted-foreground flex items-center justify-between text-[12px] font-semibold tracking-[0.16em] uppercase">
               <span>Progreso</span>
               <span>{Math.min(100, regenerationProgress)}%</span>
             </div>
-            <div className="h-3 overflow-hidden rounded-full bg-white">
+            <div className="bg-card h-3 overflow-hidden rounded-full">
               <div
                 className="h-full rounded-full bg-[linear-gradient(90deg,#F59E0B_0%,#FB923C_45%,#2563EB_100%)] transition-[width] duration-500"
                 style={{ width: `${Math.min(100, regenerationProgress)}%` }}
@@ -1046,7 +1069,7 @@ export function MaterialStudyWorkspace({
             </div>
           </div>
 
-          <div className="grid gap-2 rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
+          <div className="border-border bg-card grid gap-2 rounded-[1.25rem] border px-4 py-3">
             {regenerationStages.map(([stageId, label], index) => {
               const isActive = regenerationStageIndex === index;
               const isDone = regenerationStageIndex > index;
@@ -1059,7 +1082,11 @@ export function MaterialStudyWorkspace({
                         isDone ? 'bg-emerald-500' : isActive ? 'bg-[#F59E0B]' : 'bg-slate-300'
                       }`}
                     />
-                    <span className={isActive ? 'font-semibold text-slate-950' : 'text-slate-600'}>
+                    <span
+                      className={
+                        isActive ? 'text-foreground font-semibold' : 'text-muted-foreground'
+                      }
+                    >
                       {label}
                     </span>
                   </div>
@@ -1071,22 +1098,22 @@ export function MaterialStudyWorkspace({
             })}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-[13px] text-slate-600">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF4FF] px-3 py-1 text-[#2563EB]">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-[13px]">
+            <span className="bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full px-3 py-1">
               <Clock3 className="h-3.5 w-3.5" />
               Tiempo estimado restante: {estimatedTimeLabel}
             </span>
           </div>
 
-          <div className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
-            <p className="text-[13px] font-semibold text-slate-950">
+          <div className="border-border bg-card rounded-[1.25rem] border px-4 py-3">
+            <p className="text-foreground text-[13px] font-semibold">
               {
                 regenerationStages[
                   Math.min(regenerationStageIndex, regenerationStages.length - 1)
                 ]?.[1]
               }
             </p>
-            <p className="mt-1.5 text-[12.5px] leading-5 text-slate-500">
+            <p className="text-muted-foreground mt-1.5 text-[12.5px] leading-5">
               Podés dejar esta ventana abierta mientras armamos nuevamente el resumen y el glosario
               del PDF.
             </p>
@@ -1098,7 +1125,7 @@ export function MaterialStudyWorkspace({
 
   const tabPanels = (
     <div
-      key={activeTab}
+      key={materialId}
       role="region"
       aria-label="Contenido de estudio"
       tabIndex={0}
@@ -1108,7 +1135,7 @@ export function MaterialStudyWorkspace({
       )}
     >
       {commentsOpen && activeTab === 'resumen' ? (
-        <WorkspaceCard className="mb-3 border-[#BFDBFE] bg-white">
+        <WorkspaceCard className="border-primary/20 bg-card mb-3">
           <MaterialFeedback materialId={materialId} />
         </WorkspaceCard>
       ) : null}
@@ -1120,21 +1147,21 @@ export function MaterialStudyWorkspace({
         className="animate-tab-panel outline-none"
       >
         <div className="mx-auto w-full max-w-[1180px] py-1 sm:py-2">
-          <header className="border-b border-slate-200 pb-7 sm:pb-8">
-            <h2 className="max-w-[820px] text-[1.75rem] leading-[1.08] font-bold tracking-[-0.05em] text-slate-950 sm:text-[2.15rem]">
+          <header className="border-border border-b pb-7 sm:pb-8">
+            <h2 className="text-foreground max-w-[820px] text-[22px] leading-tight font-bold tracking-[-0.05em] sm:text-[24px]">
               {title}
             </h2>
 
-            <p className="mt-4 max-w-[780px] text-[14px] leading-6 text-slate-600 sm:text-[15px] sm:leading-7">
+            <p className="text-muted-foreground mt-3 max-w-[780px] text-[14px] leading-6">
               {studySummary.shortSummary}
             </p>
 
             {diagnosticReviewTopics.length > 0 ? (
-              <div className="mt-6 border-l-2 border-[#2563EB] pl-3.5">
-                <p className="text-[10.5px] font-bold tracking-[0.14em] text-[#2563EB] uppercase">
+              <div className="border-primary mt-6 border-l-2 pl-3.5">
+                <p className="text-primary text-[10.5px] font-bold tracking-[0.14em] uppercase">
                   Según tu diagnóstico
                 </p>
-                <p className="mt-1 text-[13.5px] font-semibold text-slate-900">
+                <p className="text-foreground mt-1 text-[13.5px] font-semibold">
                   Empezá por {diagnosticReviewTopics[0]}
                 </p>
               </div>
@@ -1142,18 +1169,18 @@ export function MaterialStudyWorkspace({
           </header>
 
           {summaryChapters.length > 0 ? (
-            <details className="group mt-5 rounded-[16px] border border-slate-200 bg-slate-50/55 px-4 py-3 xl:hidden">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold text-slate-800">
+            <details className="group border-border bg-muted/55 mt-5 rounded-[16px] border px-4 py-3 xl:hidden">
+              <summary className="text-foreground flex cursor-pointer list-none items-center justify-between gap-3 text-[13px] font-semibold">
                 <span className="inline-flex items-center gap-2">
-                  <ListTree className="h-4 w-4 text-[#2563EB]" />
+                  <ListTree className="text-primary h-4 w-4" />
                   Índice del resumen
                 </span>
-                <span className="text-[11px] font-medium text-slate-400">
+                <span className="text-muted-foreground text-[11px] font-medium">
                   {summaryChapters.length} capítulos
                 </span>
               </summary>
               <nav
-                className="mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t border-slate-200 pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
+                className="border-border mt-3 max-h-[min(42vh,360px)] overflow-y-auto overscroll-contain border-t pt-3 pr-1 [scrollbar-gutter:stable] [scrollbar-width:thin]"
                 aria-label="Índice del resumen"
               >
                 <ol className="space-y-1">
@@ -1161,9 +1188,10 @@ export function MaterialStudyWorkspace({
                     <li key={chapter.anchor}>
                       <a
                         href={`#${chapter.anchor}`}
-                        className="flex items-start gap-2.5 rounded-lg px-1 py-1.5 text-[12.5px] leading-5 text-slate-600 transition hover:text-[#2563EB]"
+                        onClick={(event) => handleSummaryChapterNavigation(event, chapter.anchor)}
+                        className="text-muted-foreground hover:text-primary flex items-start gap-2.5 rounded-lg px-1 py-1.5 text-[12.5px] leading-5 transition"
                       >
-                        <span className="mt-0.5 min-w-5 font-bold text-slate-400 tabular-nums">
+                        <span className="text-muted-foreground mt-0.5 min-w-5 font-bold tabular-nums">
                           {String(index + 1).padStart(2, '0')}
                         </span>
                         <span>{chapter.displayTitle}</span>
@@ -1175,11 +1203,11 @@ export function MaterialStudyWorkspace({
             </details>
           ) : null}
 
-          <div className="mt-7 xl:grid xl:grid-cols-[260px_minmax(0,1fr)] xl:items-start xl:gap-10 2xl:grid-cols-[300px_minmax(0,1fr)] 2xl:gap-12">
+          <div className="mt-5 xl:grid xl:grid-cols-[220px_minmax(0,1fr)] xl:items-start xl:gap-6 2xl:grid-cols-[240px_minmax(0,1fr)] 2xl:gap-8">
             {summaryChapters.length > 0 ? (
               <aside className="sticky top-4 hidden max-h-[calc(100vh-14rem)] self-start xl:block">
-                <div className="flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l border-slate-200 pl-4">
-                  <p className="mb-3 shrink-0 text-[10.5px] font-extrabold tracking-[0.16em] text-slate-400 uppercase">
+                <div className="border-border flex max-h-[calc(100vh-14rem)] min-h-0 flex-col border-l pl-4">
+                  <p className="text-muted-foreground mb-3 shrink-0 text-[10.5px] font-extrabold tracking-[0.16em] uppercase">
                     Contenido
                   </p>
                   <nav
@@ -1191,9 +1219,12 @@ export function MaterialStudyWorkspace({
                         <li key={chapter.anchor}>
                           <a
                             href={`#${chapter.anchor}`}
-                            className="group flex items-start gap-2.5 text-[12.5px] leading-5 text-slate-500 transition hover:text-[#2563EB]"
+                            onClick={(event) =>
+                              handleSummaryChapterNavigation(event, chapter.anchor)
+                            }
+                            className="group text-muted-foreground hover:text-primary flex items-start gap-2.5 text-[12.5px] leading-5 transition"
                           >
-                            <span className="min-w-5 font-bold text-slate-300 tabular-nums transition group-hover:text-[#2563EB]">
+                            <span className="group-hover:text-primary min-w-5 font-bold text-slate-300 tabular-nums transition">
                               {String(index + 1).padStart(2, '0')}
                             </span>
                             <span>{chapter.displayTitle}</span>
@@ -1214,18 +1245,18 @@ export function MaterialStudyWorkspace({
                       id={section.anchor}
                       key={`${section.title}:${section.body}`}
                       data-summary-reading-section={index}
-                      className="scroll-mt-6 border-b border-slate-200 py-9 first:pt-0 last:border-b-0 last:pb-2 sm:py-11"
+                      className="border-border scroll-mt-6 border-b py-6 first:pt-0 last:border-b-0 last:pb-2 sm:py-7"
                     >
-                      <header className="mb-5 sm:mb-6">
-                        <p className="text-[10px] font-extrabold tracking-[0.18em] text-[#2563EB] uppercase">
+                      <header className="mb-3 sm:mb-4">
+                        <p className="text-primary text-[10px] font-extrabold tracking-[0.18em] uppercase">
                           Capítulo {String(index + 1).padStart(2, '0')}
                         </p>
-                        <h3 className="mt-1.5 text-[1.35rem] leading-tight font-bold tracking-[-0.04em] text-slate-950 sm:text-[1.55rem]">
+                        <h3 className="text-foreground mt-1.5 text-[18px] leading-6 font-bold tracking-[-0.04em]">
                           {section.displayTitle}
                         </h3>
                       </header>
 
-                      <StudyRichText body={section.body} />
+                      <StudyRichText body={section.body} compact />
 
                       {summaryCheckPlan[index] && summaryCheckPolicy.has(index) ? (
                         <div
@@ -1236,7 +1267,7 @@ export function MaterialStudyWorkspace({
                       ) : null}
 
                       <div className="mt-4 border-t border-slate-100 pt-4">
-                        <span className="text-[11px] font-medium text-slate-400">
+                        <span className="text-muted-foreground text-[11px] font-medium">
                           Capítulo {index + 1} de {summaryChapters.length}
                         </span>
                       </div>
@@ -1246,7 +1277,7 @@ export function MaterialStudyWorkspace({
                   <div ref={summaryEndRef} aria-hidden="true" className="h-8 w-full" />
                 </div>
               ) : (
-                <p className="text-[14px] leading-6 text-slate-500">
+                <p className="text-muted-foreground text-[14px] leading-6">
                   Todavía no pudimos organizar el contenido por temas claros dentro del texto
                   extraído del PDF.
                 </p>
@@ -1260,15 +1291,15 @@ export function MaterialStudyWorkspace({
         <div className="px-1 py-1 sm:px-2 sm:py-2">
           {usefulGlossary.length > 0 ? (
             <div>
-              <div className="hidden grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] gap-8 border-b border-slate-200 px-2 py-3 md:grid">
-                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">
+              <div className="border-border hidden grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] gap-5 border-b px-2 py-3 md:grid">
+                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
                   Término
                 </p>
-                <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase">
+                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.13em] uppercase">
                   Definición
                 </p>
               </div>
-              <div className="divide-y divide-slate-200/80">
+              <div className="space-y-2 md:space-y-0 md:divide-y md:divide-slate-200/80">
                 {usefulGlossary.map((item) => {
                   const englishTerm =
                     item.englishTerm && item.englishTerm.trim().toLowerCase() !== 'svg'
@@ -1278,27 +1309,21 @@ export function MaterialStudyWorkspace({
                   return (
                     <article
                       key={item.term}
-                      className="grid gap-2.5 px-2 py-5 md:grid-cols-[minmax(180px,0.42fr)_minmax(0,1fr)] md:gap-8 md:px-2 md:py-5"
+                      className="border-border bg-card grid gap-2 rounded-xl border p-3 md:grid-cols-[minmax(160px,0.42fr)_minmax(0,1fr)] md:gap-5 md:rounded-none md:border-0 md:bg-transparent md:px-2 md:py-3"
                     >
                       <div className="space-y-1.5">
-                        <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
-                          Término
-                        </p>
-                        <h3 className="text-[0.94rem] font-semibold tracking-[-0.025em] text-slate-950 md:text-[0.98rem]">
+                        <h3 className="text-foreground text-[13px] font-semibold tracking-[-0.025em] md:text-[14px]">
                           {item.term}
                         </h3>
                         {englishTerm ? (
-                          <p className="text-[12px] font-medium text-slate-400 italic">
+                          <p className="text-muted-foreground text-[12px] font-medium italic">
                             {englishTerm}
                           </p>
                         ) : null}
                       </div>
 
                       <div className="space-y-1.5">
-                        <p className="text-[11px] font-bold tracking-[0.13em] text-slate-400 uppercase md:hidden">
-                          Definición
-                        </p>
-                        <p className="text-[13px] leading-5 text-slate-700 md:text-[13.5px] md:leading-6">
+                        <p className="text-foreground text-[13px] leading-5 md:text-[14px] md:leading-6">
                           {item.definition}
                         </p>
                       </div>
@@ -1308,81 +1333,89 @@ export function MaterialStudyWorkspace({
               </div>
             </div>
           ) : (
-            <p className="px-2 py-4 text-[14px] leading-6 text-slate-500">
+            <p className="text-muted-foreground px-2 py-4 text-[14px] leading-6">
               Todavía no pudimos detectar un glosario claro a partir de este PDF.
             </p>
           )}
         </div>
       </TabsContent>
 
-      <TabsContent data-demo-focus="study-section" value="tarjetas" className="animate-tab-panel">
-        <div className="px-1 py-1 sm:px-2 sm:py-2">
-          <StudentMaterialFlashcards
-            cards={studyArtifacts.flashcards}
-            materialId={materialId}
-            onComplete={demo ? undefined : requestExamDatePrompt}
-            demoMode={Boolean(demo)}
-          />
-        </div>
+      <TabsContent
+        data-demo-focus="study-section"
+        value="tarjetas"
+        forceMount
+        className="animate-tab-panel data-[state=inactive]:hidden"
+      >
+        {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
+        <Activity mode={activeTab === 'tarjetas' && !demo?.progressOpen ? 'visible' : 'hidden'}>
+          <div className="px-1 py-1 sm:px-2 sm:py-2">
+            <StudentMaterialFlashcards
+              cards={studyArtifacts.flashcards}
+              materialId={materialId}
+              onComplete={demo ? undefined : requestExamDatePrompt}
+              demoMode={Boolean(demo)}
+            />
+          </div>
+        </Activity>
       </TabsContent>
 
       <TabsContent
         value="ejercicios"
-        forceMount={recommendedActive && diagnosticMode ? true : undefined}
-        className={
-          recommendedActive && diagnosticMode && activeTab !== 'ejercicios'
-            ? 'hidden'
-            : 'animate-tab-panel'
-        }
+        forceMount
+        className="animate-tab-panel data-[state=inactive]:hidden"
       >
-        <div className="px-1 py-1 sm:px-2 sm:py-2">
-          {demo && !recommendedActive ? (
-            demo.practice
-          ) : diagnosticMode ? (
-            <StudentMaterialDiagnostic
-              artifacts={studyArtifacts}
-              materialId={materialId}
-              guided={recommendedActive}
-              demo={Boolean(demo)}
-              session={recommendedActive ? recommendedSession : undefined}
-              onSessionChange={recommendedActive ? setRecommendedSession : undefined}
-              onExit={() => {
-                setDiagnosticMode(false);
-                if (recommendedActive) {
+        <Activity mode={activeTab === 'ejercicios' && !demo?.progressOpen ? 'visible' : 'hidden'}>
+          <div className="px-1 py-1 sm:px-2 sm:py-2">
+            {demo && !recommendedActive ? (
+              demo.practice
+            ) : diagnosticMode ? (
+              <StudentMaterialDiagnostic
+                artifacts={studyArtifacts}
+                sections={studySummary.sections}
+                materialId={materialId}
+                guided={recommendedActive}
+                demo={Boolean(demo)}
+                session={recommendedActive ? recommendedSession : undefined}
+                onSessionChange={recommendedActive ? setRecommendedSession : undefined}
+                onExit={() => {
+                  setDiagnosticMode(false);
+                  if (recommendedActive) {
+                    setRecommendedTourStep(null);
+                    changeRecommendedTab('resumen');
+                  }
+                }}
+                onResult={(result) => {
+                  if (recommendedActive) {
+                    setDiagnosticReviewTopics(result.reviewTopics);
+                  }
+                }}
+                onRestart={() => {
                   setRecommendedTourStep(null);
+                }}
+                onReinforce={openRecommendedErrors}
+                onComplete={demo || recommendedActive ? undefined : requestExamDatePrompt}
+                onReviewTopics={(topics) => {
+                  setDiagnosticReviewTopics(topics);
+                  if (!recommendedActive) setDiagnosticMode(false);
                   changeRecommendedTab('resumen');
-                }
-              }}
-              onResult={(result) => {
-                if (recommendedActive) {
-                  setDiagnosticReviewTopics(result.reviewTopics);
-                }
-              }}
-              onRestart={() => {
-                setRecommendedTourStep(null);
-              }}
-              onReinforce={openRecommendedErrors}
-              onComplete={demo || recommendedActive ? undefined : requestExamDatePrompt}
-              onReviewTopics={(topics) => {
-                setDiagnosticReviewTopics(topics);
-                if (!recommendedActive) setDiagnosticMode(false);
-                changeRecommendedTab('resumen');
-              }}
-            />
-          ) : (
-            <StudentMaterialExam
-              artifacts={studyArtifacts}
-              materialId={materialId}
-              onComplete={requestExamDatePrompt}
-            />
-          )}
-        </div>
+                }}
+              />
+            ) : (
+              <StudentMaterialExam
+                artifacts={studyArtifacts}
+                sections={studySummary.sections}
+                materialId={materialId}
+                onComplete={requestExamDatePrompt}
+              />
+            )}
+          </div>
+        </Activity>
       </TabsContent>
 
       <TabsContent data-demo-focus="study-section" value="mapa" className="animate-tab-panel">
         {isPremium ? (
           <StudyDocumentShell
-            compact={Boolean(demo)}
+            compact
             title="Mapa mental"
             description={
               demo
@@ -1395,28 +1428,25 @@ export function MaterialStudyWorkspace({
                 'grid',
                 demo
                   ? 'grid-cols-2 items-start gap-3'
-                  : 'gap-4 xl:grid-cols-[1fr_220px_1fr] xl:items-center'
+                  : 'gap-3 xl:grid-cols-[1fr_200px_1fr] xl:items-center'
               )}
             >
               <div
-                className={cn(
-                  'min-w-0 rounded-[18px] border border-slate-200 bg-white',
-                  demo ? 'space-y-2 p-2' : 'space-y-3 px-4 py-4'
-                )}
+                className={cn('border-border bg-card min-w-0 rounded-2xl border', 'space-y-2 p-3')}
               >
                 <p
                   className={cn(
-                    'font-semibold text-slate-500 uppercase',
+                    'text-muted-foreground font-semibold uppercase',
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
                   {demo ? 'Temas' : 'Temas principales'}
                 </p>
                 {fullSummarySections.slice(0, 4).map((section, index) => (
-                  <div key={section.title} className={demo ? 'space-y-2' : 'space-y-3'}>
+                  <div key={section.title} className={'space-y-2'}>
                     <p
                       className={cn(
-                        'text-[13px] font-medium break-words text-slate-700',
+                        'text-foreground text-[13px] font-medium break-words',
                         demo && 'text-[13px]! leading-5!'
                       )}
                     >
@@ -1431,13 +1461,13 @@ export function MaterialStudyWorkspace({
 
               <div
                 className={cn(
-                  'rounded-[22px] border border-[#BFDBFE] bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.55),transparent_70%),linear-gradient(180deg,#FFFFFF_0%,#F8FBFF_100%)] px-4 py-5 text-center shadow-[0_14px_32px_rgba(37,99,235,0.10)]',
+                  'border-primary/20 bg-primary/5 rounded-2xl border px-3 py-3 text-center shadow-none',
                   demo && 'order-first col-span-2 py-2'
                 )}
               >
                 <p
                   className={cn(
-                    'text-xs font-semibold tracking-[0.18em] text-[#2563EB]/80 uppercase',
+                    'text-primary/80 text-xs font-semibold tracking-[0.18em] uppercase',
                     demo && 'text-xs! leading-4!'
                   )}
                 >
@@ -1445,36 +1475,35 @@ export function MaterialStudyWorkspace({
                 </p>
                 <p
                   className={cn(
-                    'mt-2.5 text-base font-semibold tracking-[-0.03em] text-slate-950',
+                    'text-foreground mt-2.5 text-base font-semibold tracking-[-0.03em]',
                     demo && 'mt-2 text-sm! leading-5!'
                   )}
                 >
                   {title}
                 </p>
                 {materiaName && (
-                  <p className="mt-1.5 text-[13px] leading-[1.45] text-slate-500">{materiaName}</p>
+                  <p className="text-muted-foreground mt-1.5 text-[13px] leading-[1.45]">
+                    {materiaName}
+                  </p>
                 )}
               </div>
 
               <div
-                className={cn(
-                  'min-w-0 rounded-[18px] border border-slate-200 bg-white',
-                  demo ? 'space-y-2 p-2' : 'space-y-3 px-4 py-4'
-                )}
+                className={cn('border-border bg-card min-w-0 rounded-2xl border', 'space-y-2 p-3')}
               >
                 <p
                   className={cn(
-                    'font-semibold text-slate-500 uppercase',
+                    'text-muted-foreground font-semibold uppercase',
                     demo ? 'text-xs! leading-4! tracking-normal' : 'text-xs tracking-[0.16em]'
                   )}
                 >
                   {demo ? 'Conceptos' : 'Conceptos clave'}
                 </p>
                 {usefulGlossary.slice(0, 4).map((item, index) => (
-                  <div key={item.term} className={demo ? 'space-y-2' : 'space-y-3'}>
+                  <div key={item.term} className={'space-y-2'}>
                     <p
                       className={cn(
-                        'text-[13px] font-medium break-words text-slate-700',
+                        'text-foreground text-[13px] font-medium break-words',
                         demo && 'text-[13px]! leading-5!'
                       )}
                     >
@@ -1489,7 +1518,7 @@ export function MaterialStudyWorkspace({
             </div>
           </StudyDocumentShell>
         ) : (
-          <div className="rounded-[20px] border border-slate-200 bg-white p-4 sm:p-5">
+          <div className="border-border bg-card rounded-2xl border p-4 sm:p-5">
             <PremiumUpsell
               title="El mapa mental es exclusivo Premium"
               description="Visualizá los temas y conceptos clave de tu PDF en un solo vistazo para estudiar más rápido y conectar las ideas."
@@ -1505,6 +1534,15 @@ export function MaterialStudyWorkspace({
           </div>
         )}
       </TabsContent>
+      {demo?.progress ? (
+        <TabsContent
+          value="progreso"
+          forceMount
+          className="animate-tab-panel data-[state=inactive]:hidden"
+        >
+          {demo.progress}
+        </TabsContent>
+      ) : null}
       {children}
     </div>
   );
@@ -1512,8 +1550,15 @@ export function MaterialStudyWorkspace({
   const content = (
     <Tabs
       data-demo-focus="study"
-      value={activeTab}
-      onValueChange={handleStudyTabChange}
+      value={demo?.progressOpen ? 'progreso' : activeTab}
+      onValueChange={(value) => {
+        demo?.onProgressChange?.(value === 'progreso');
+        if (value === 'progreso') {
+          setIsViewerVisible(false);
+          return;
+        }
+        handleStudyTabChange(value);
+      }}
       className="flex min-h-0 min-w-0 flex-1 flex-col gap-2.5 overflow-hidden"
     >
       {tabHeader}
@@ -1522,18 +1567,18 @@ export function MaterialStudyWorkspace({
         <div
           className={cn(
             'flex min-h-0 flex-1 flex-col overflow-hidden',
-            !demo && activeTab === 'resumen' && isViewerVisible && 'hidden'
+            (!demo || demo.progress) && activeTab === 'resumen' && isViewerVisible && 'hidden'
           )}
         >
           {tabPanels}
         </div>
-        {!demo && activeTab === 'resumen' && isViewerVisible ? (
-          <div data-demo-focus="pdf" className="absolute inset-0 z-10 min-h-0 bg-white p-2">
+        {(!demo || demo.progress) && activeTab === 'resumen' && isViewerVisible ? (
+          <div data-demo-focus="pdf" className="bg-card absolute inset-0 z-10 min-h-0 p-2">
             <PdfViewer
               url={viewerUrl}
               title={title}
               subtitle={null}
-              className="h-full min-h-0 rounded-[20px] border border-slate-200 bg-white"
+              className="border-border bg-card h-full min-h-0 rounded-2xl border"
               heightClassName="h-full min-h-0"
               pageMaxWidthClassName="max-w-[760px]"
               showSidebarThumbnails={false}
@@ -1551,12 +1596,37 @@ export function MaterialStudyWorkspace({
   return (
     <div
       className={cn(
-        'flex flex-col overflow-hidden bg-white text-slate-950',
+        'bg-card text-foreground flex flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0',
+        pdfStudyControlsClassName,
         demo
-          ? 'min-h-screen xl:h-full xl:min-h-0'
+          ? demo.progress
+            ? 'h-full min-h-0'
+            : 'min-h-screen xl:h-full xl:min-h-0'
           : 'h-[var(--material-study-height,100dvh)] min-h-0 flex-1'
       )}
     >
+      <PdfMobileNavigation
+        active={demo?.progressOpen ? 'progreso' : activeTab}
+        showProgress={Boolean(demo?.progress || (isOwner && !demo))}
+        onSelect={(section) => {
+          if (section === 'progreso') {
+            if (demo?.progress) {
+              demo.onProgressChange?.(true);
+              setIsViewerVisible(false);
+            } else {
+              trackMarketingEvent('cta_click', {
+                location: 'material_study_tabs',
+                cta_name: 'errors_this_pdf',
+                destination: materialErrorsHref,
+              });
+              router.push(materialErrorsHref);
+            }
+            return;
+          }
+          demo?.onProgressChange?.(false);
+          handleStudyTabChange(section);
+        }}
+      />
       {activeSummaryCheck ? (
         <SummaryTopicCheckPopup
           open
@@ -1631,24 +1701,24 @@ export function MaterialStudyWorkspace({
           triggerNonce={examDatePromptTrigger}
         />
       ) : null}
-      <section className="shrink-0 border-b border-[#E8EDF5] bg-white">
+      <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
         <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 px-4 py-2 sm:px-6 lg:px-4">
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
-              className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-slate-500 transition hover:text-[#2563EB]"
+              className="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-[11.5px] font-semibold transition"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Volver
             </Link>
 
             <div className="mt-0.5 flex min-w-0 items-baseline gap-3">
-              <h1 className="min-w-0 truncate text-[1.05rem] font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.12rem]">
+              <h1 className="text-foreground min-w-0 truncate text-[1.05rem] font-bold tracking-[-0.035em] sm:text-[1.12rem]">
                 {title}
               </h1>
               <span
                 title={fileName}
-                className="hidden max-w-[360px] min-w-0 truncate text-[11.5px] font-medium text-slate-400 xl:block"
+                className="text-muted-foreground hidden max-w-[360px] min-w-0 truncate text-[11.5px] font-medium xl:block"
               >
                 {fileName}
               </span>
@@ -1665,11 +1735,18 @@ export function MaterialStudyWorkspace({
 
       <section className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col px-2 py-2 sm:px-4 xl:px-4 xl:pb-3">
         <div className="hidden min-h-0 flex-1 xl:flex">
-          <div className="relative h-full min-h-0 w-full overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+          <div className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
               data-demo-focus="study"
-              value={activeTab}
-              onValueChange={handleStudyTabChange}
+              value={demo?.progressOpen ? 'progreso' : activeTab}
+              onValueChange={(value) => {
+                demo?.onProgressChange?.(value === 'progreso');
+                if (value === 'progreso') {
+                  setIsViewerVisible(false);
+                  return;
+                }
+                handleStudyTabChange(value);
+              }}
               className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
             >
               {tabHeader}
@@ -1682,18 +1759,18 @@ export function MaterialStudyWorkspace({
                     defaultSize={isViewerVisible ? 60 : 100}
                     minSize={42}
                   >
-                    <div className="flex h-full min-w-0 flex-col bg-white">{tabPanels}</div>
+                    <div className="bg-card flex h-full min-w-0 flex-col">{tabPanels}</div>
                   </ResizablePanel>
 
-                  {isViewerVisible ? <ResizableHandle withHandle className="bg-white" /> : null}
+                  {isViewerVisible ? <ResizableHandle withHandle className="bg-card" /> : null}
 
                   {isViewerVisible ? (
                     <ResizablePanel id="study-viewer-panel" order={2} defaultSize={40} minSize={26}>
-                      <div data-demo-focus="pdf" className="relative h-full min-w-0 bg-white p-2">
+                      <div data-demo-focus="pdf" className="bg-card relative h-full min-w-0 p-2">
                         <button
                           type="button"
                           onClick={() => setIsViewerVisible(false)}
-                          className="absolute top-1/2 left-0 z-20 inline-flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition hover:bg-slate-50"
+                          className="border-border bg-card text-muted-foreground hover:bg-muted absolute top-1/2 left-0 z-20 inline-flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-none transition"
                           aria-label="Ocultar PDF"
                         >
                           <ChevronRight className="h-4 w-4" />
@@ -1702,7 +1779,7 @@ export function MaterialStudyWorkspace({
                           url={viewerUrl}
                           title={demo ? 'PDF de muestra' : title}
                           subtitle={null}
-                          className="h-full rounded-[22px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
+                          className="border-border bg-card h-full rounded-2xl border shadow-none"
                           heightClassName="h-full min-h-0"
                           pageMaxWidthClassName="max-w-[720px]"
                           showSidebarThumbnails={false}
@@ -1718,11 +1795,11 @@ export function MaterialStudyWorkspace({
               </div>
             </Tabs>
 
-            {activeTab === 'resumen' && !isViewerVisible ? (
+            {activeTab === 'resumen' && !demo?.progressOpen && !isViewerVisible ? (
               <button
                 type="button"
                 onClick={() => setIsViewerVisible(true)}
-                className="absolute top-1/2 right-4 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.12)] transition hover:bg-slate-50"
+                className="border-border bg-card text-muted-foreground hover:bg-muted absolute top-1/2 right-4 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border shadow-none transition"
                 aria-label="Mostrar PDF"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -1731,21 +1808,26 @@ export function MaterialStudyWorkspace({
           </div>
         </div>
 
-        <div className={cn('xl:hidden', demo ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col')}>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_22px_54px_rgba(15,23,42,0.10)]">
+        <div
+          className={cn(
+            'xl:hidden',
+            demo && !demo.progress ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col'
+          )}
+        >
+          <div className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
             {content}
           </div>
 
-          {demo && activeTab === 'resumen' ? (
+          {demo && !demo.progress && activeTab === 'resumen' ? (
             isViewerVisible ? (
               <div
                 data-demo-focus="pdf"
-                className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_22px_54px_rgba(15,23,42,0.10)]"
+                className="border-border bg-card relative overflow-hidden rounded-2xl border p-2 shadow-none"
               >
                 <button
                   type="button"
                   onClick={() => setIsViewerVisible(false)}
-                  className="absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.12)] transition hover:bg-slate-50"
+                  className="border-border bg-card text-muted-foreground hover:bg-muted absolute top-4 right-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-none transition"
                   aria-label="Ocultar PDF"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -1755,7 +1837,7 @@ export function MaterialStudyWorkspace({
                   title={demo ? 'PDF de muestra' : title}
                   subtitle={null}
                   className={cn(
-                    'rounded-[20px] border border-slate-200 bg-white shadow-[0_14px_30px_rgba(15,23,42,0.08)]',
+                    'border-border bg-card rounded-2xl border shadow-none',
                     demo &&
                       'h-[var(--demo-visible-height,58vh)] sm:h-[var(--demo-visible-height,62vh)] [&>div:first-child]:px-1 [&>div:first-child>div>div:last-child]:gap-1'
                   )}
@@ -1769,13 +1851,13 @@ export function MaterialStudyWorkspace({
                 />
               </div>
             ) : (
-              <div className="rounded-[20px] border border-dashed border-slate-300 bg-white/80 px-4 py-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+              <div className="bg-card/80 rounded-2xl border border-dashed border-slate-300 px-4 py-3 shadow-none">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[12px] font-semibold tracking-[0.16em] text-slate-500 uppercase">
+                    <p className="text-muted-foreground text-[12px] font-semibold tracking-[0.16em] uppercase">
                       PDF oculto
                     </p>
-                    <p className="mt-1 text-[13px] leading-5 text-slate-600">
+                    <p className="text-muted-foreground mt-1 text-[13px] leading-5">
                       Mostrá el documento cuando quieras contrastar el resumen con el archivo
                       original.
                     </p>
@@ -1783,7 +1865,7 @@ export function MaterialStudyWorkspace({
                   <button
                     type="button"
                     onClick={() => setIsViewerVisible(true)}
-                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.10)] transition hover:bg-slate-50"
+                    className="border-border bg-card text-muted-foreground hover:bg-muted inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border shadow-none transition"
                     aria-label="Mostrar PDF"
                   >
                     <ChevronLeft className="h-4 w-4" />

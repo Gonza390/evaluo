@@ -305,7 +305,7 @@ function StudyCallout({
  * Este componente sólo interpreta la presentación: headings Markdown,
  * negritas, listas, tablas, bloques pedagógicos y referencias físicas al PDF.
  */
-export function StudyRichText({ body }: { body: string }) {
+export function StudyRichText({ body, compact = false }: { body: string; compact?: boolean }) {
   const lines = body
     .split('\n')
     .map((line) => line.trim())
@@ -324,9 +324,7 @@ export function StudyRichText({ body }: { body: string }) {
     const header = rows[0]?.columns ?? [];
     const bodyRows = rows
       .slice(1)
-      .filter((row) =>
-        row.columns.some((column) => !/^:?-+:?$/i.test(column))
-      );
+      .filter((row) => row.columns.some((column) => !/^:?-+:?$/i.test(column)));
 
     if (header.length === 0 || bodyRows.length === 0) {
       rows.length = 0;
@@ -491,9 +489,7 @@ export function StudyRichText({ body }: { body: string }) {
 
     content.push(
       <div key={itemKey} className="py-0.5">
-        <p className="text-[13.5px] leading-6 text-slate-700">
-          {renderInlineMarkdown(line)}
-        </p>
+        <p className="text-[13.5px] leading-6 text-slate-700">{renderInlineMarkdown(line)}</p>
         {renderPageReference(pageReference, itemKey)}
       </div>
     );
@@ -503,5 +499,16 @@ export function StudyRichText({ body }: { body: string }) {
     flushTable('table-final');
   }
 
-  return <div className="space-y-4 text-pretty">{content}</div>;
+  return (
+    <div
+      className={cn(
+        'text-pretty',
+        compact
+          ? 'space-y-3 [&_h4]:text-[16px] [&_h5]:text-[14px] [&_p]:text-[14px] [&_p]:leading-6'
+          : 'space-y-4'
+      )}
+    >
+      {content}
+    </div>
+  );
 }

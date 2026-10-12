@@ -8,6 +8,14 @@ import type { TutorQuickHelpKind } from '@/lib/ai-tutor';
 import { generateReviewHelpAction } from '@/lib/actions/study-error-review';
 import { hasPremiumAccess } from '@/lib/premium';
 import { enforceStrictRateLimit } from '@/lib/rate-limit';
+import { randomUUID } from 'node:crypto';
+import { isUuid } from '@/lib/uuid';
+import {
+  resolveMaterialAnswer,
+  type MaterialAnswerInput,
+} from '@/lib/student-materials/answer-evidence';
+import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import type { StudySummarySection } from '@/lib/student-materials/types';
 
 const FREE_STUDY_ERROR_EXPLANATIONS_LIMIT = 5;
 const STUDY_ERROR_EXPLANATION_WINDOW_MS = 3 * 60 * 60 * 1000;
@@ -17,28 +25,7 @@ import {
   markStudyErrorReviewed,
   recordStudyErrorCorrect,
   recordStudyErrorFailure,
-  type StudyErrorSource,
 } from '@/lib/study-errors';
-
-type StudentMaterialSource = Extract<StudyErrorSource, 'flashcard' | 'exercise' | 'diagnostic'>;
-
-type StudentMaterialStudyResultInput = {
-  materialId: string;
-  sourceType: StudentMaterialSource;
-  itemKey: string;
-  wasCorrect: boolean;
-  topic?: string | null;
-  prompt: string;
-  explanation?: string | null;
-  correctAnswer?: string | null;
-  selectedAnswer?: string | null;
-  reference?: {
-    pageStart?: number | null;
-    pageEnd?: number | null;
-    sectionTitle?: string | null;
-    excerpt?: string | null;
-  } | null;
-};
 
 function safeText(value: string | null | undefined, max = 4000) {
   return (value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
@@ -52,9 +39,7 @@ async function requireUser() {
   return user;
 }
 
-export async function recordStudentMaterialStudyResultAction(
-  input: StudentMaterialStudyResultInput
-): Promise<{
+export async function recordStudentMaterialStudyResultAction(input: MaterialAnswerInput): Promise<{
   success: boolean;
   resolved?: boolean;
   errorId?: string | null;
@@ -63,15 +48,35 @@ export async function recordStudentMaterialStudyResultAction(
   const user = await requireUser();
   if (!user) return { success: false };
 
-  if (!input.materialId || !input.itemKey || !input.prompt) {
+  if (
+    !input ||
+    !isUuid(input.materialId) ||
+    (input.resultId && !isUuid(input.resultId)) ||
+    !['exercise', 'diagnostic', 'flashcard'].includes(input.sourceType) ||
+    typeof input.wasCorrect !== 'boolean' ||
+    typeof input.itemKey !== 'string' ||
+    !input.itemKey ||
+    input.itemKey.length > 300 ||
+    typeof input.prompt !== 'string' ||
+    !input.prompt ||
+    input.prompt.length > 4000 ||
+    (input.selectedAnswer != null &&
+      (typeof input.selectedAnswer !== 'string' || input.selectedAnswer.length > 4000))
+  ) {
     return { success: false };
   }
 
   try {
     const admin = createAdminClient();
+    const rate = await enforceStrictRateLimit({
+      key: `material-answer:${user.id}`,
+      limit: 120,
+      windowMs: 60_000,
+    });
+    if (!rate.allowed) return { success: false };
     const { data: material, error } = await admin
       .from('student_materials')
-      .select('id, user_id, materia_id')
+      .select('id, user_id, materia_id, pedagogical_artifacts')
       .eq('id', input.materialId)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -86,9 +91,56 @@ export async function recordStudentMaterialStudyResultAction(
       return { success: false };
     }
 
+    const { data: summary, error: summaryError } = await admin
+      .from('student_material_summaries')
+      .select('summary_sections')
+      .eq('student_material_id', material.id)
+      .maybeSingle();
+    if (summaryError || !material.pedagogical_artifacts) return { success: false };
+    const canonical = resolveMaterialAnswer(
+      input,
+      material.pedagogical_artifacts as unknown as PedagogicalArtifacts,
+      (summary?.summary_sections ?? []) as unknown as StudySummarySection[]
+    );
+    if (!canonical) return { success: false };
+    const event = {
+      id: input.resultId ?? randomUUID(),
+      user_id: user.id,
+      material_id: material.id,
+      source_type: input.sourceType,
+      evidence_kind: canonical.evidenceKind,
+      item_key: input.itemKey,
+      topic: canonical.topic?.slice(0, 500) ?? null,
+      // El tema canónico evita que una referencia general contradiga la asociación validada.
+      section_title: canonical.topic?.slice(0, 500) ?? null,
+      prompt: canonical.prompt.slice(0, 4000),
+      selected_answer: canonical.selectedAnswer,
+      was_correct: canonical.wasCorrect,
+    };
+    const { data: inserted, error: insertError } = await admin
+      .from('student_material_answer_events')
+      .upsert(event, { onConflict: 'id', ignoreDuplicates: true })
+      .select('id');
+    if (insertError) throw insertError;
+    if (!inserted?.length) {
+      const { data: existing } = await admin
+        .from('student_material_answer_events')
+        .select('id, item_key, selected_answer')
+        .eq('id', event.id)
+        .eq('user_id', user.id)
+        .eq('material_id', material.id)
+        .maybeSingle();
+      return {
+        success: Boolean(
+          existing &&
+          existing.item_key === event.item_key &&
+          existing.selected_answer === event.selected_answer
+        ),
+      };
+    }
     const sourceKey = `${input.materialId}:${input.itemKey}`;
 
-    if (input.wasCorrect) {
+    if (canonical.wasCorrect) {
       const resolved = await recordStudyErrorCorrect({
         userId: user.id,
         sourceType: input.sourceType,
@@ -103,16 +155,16 @@ export async function recordStudentMaterialStudyResultAction(
       studentMaterialId: material.id,
       sourceType: input.sourceType,
       sourceKey,
-      topic: safeText(input.topic, 180) || null,
-      prompt: safeText(input.prompt),
-      explanation: safeText(input.explanation),
-      correctAnswer: safeText(input.correctAnswer),
-      selectedAnswer: safeText(input.selectedAnswer),
+      topic: safeText(canonical.topic, 180) || null,
+      prompt: safeText(canonical.prompt),
+      explanation: safeText(canonical.explanation),
+      correctAnswer: safeText(canonical.correctAnswer),
+      selectedAnswer: safeText(canonical.selectedAnswer),
       reference: {
-        pageStart: input.reference?.pageStart ?? null,
-        pageEnd: input.reference?.pageEnd ?? null,
-        sectionTitle: safeText(input.reference?.sectionTitle, 240) || null,
-        excerpt: safeText(input.reference?.excerpt, 1200) || null,
+        pageStart: canonical.reference?.pageStart ?? null,
+        pageEnd: canonical.reference?.pageEnd ?? null,
+        sectionTitle: safeText(canonical.topic, 240) || null,
+        excerpt: safeText(canonical.reference?.excerpt, 1200) || null,
       },
     });
 
@@ -154,9 +206,7 @@ export async function getMaterialPendingStudyErrorTopicCountAction(
 
     const rows = (data ?? []) as Array<{ topic: string | null }>;
     const topics = new Set(
-      rows
-        .map((row) => safeText(row.topic, 180).toLocaleLowerCase('es-AR'))
-        .filter(Boolean)
+      rows.map((row) => safeText(row.topic, 180).toLocaleLowerCase('es-AR')).filter(Boolean)
     );
 
     return { count: topics.size || rows.length };

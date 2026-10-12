@@ -80,6 +80,7 @@ export function FirstPdfPreviewShell({
         <main className="min-w-0 flex-1 px-4 py-6 pb-28 sm:px-7 md:pb-10 lg:px-9">{children}</main>
       </div>
       <nav
+        data-tour-nav-mobile="true"
         aria-label="Navegación móvil del preview"
         className="border-border bg-background fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t pb-[env(safe-area-inset-bottom)] md:hidden"
       >

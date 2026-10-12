@@ -1,0 +1,69 @@
+{
+  "evaluatedAt": "2026-10-11T12:30:36.994Z",
+  "results": [
+    {
+      "input": {
+        "topic": "Machine learning y deep learning",
+        "question": "Un modelo acierta durante el entrenamiento pero falla con datos nuevos. ¿Qué ocurre?",
+        "selectedAnswer": "Generalización correcta",
+        "correctAnswer": "Sobreajuste",
+        "source": "Sobreajuste: ocurre cuando el modelo memoriza demasiado los datos de entrenamiento y rinde peor en casos nuevos."
+      },
+      "help": {
+        "text": "Elegiste que se trata de una generalización correcta, pero esa idea no es la adecuada para esta situación. Cuando un modelo funciona bien con los datos que ya conoce pero falla al enfrentarse a casos nuevos, significa que no está generalizando de manera correcta. \n\nLa respuesta correcta es el sobreajuste. Según la fuente, este fenómeno ocurre cuando el modelo memoriza demasiado los datos con los que fue entrenado y, por esa razón, termina rindiendo peor al recibir información nueva. Para pensar este concepto, recordá que memorizar los ejemplos específicos del entrenamiento no sirve para resolver problemas diferentes en la práctica.",
+        "provider": "gemini-3.5-flash-lite"
+      },
+      "question": {
+        "supported": true,
+        "question": "Un sistema automatizado de atención al cliente es capaz de responder a la perfección todas las consultas de prueba que se usaron para ajustarlo, pero comete errores graves al interactuar con las preguntas reales de los usuarios en la plataforma. ¿Qué le pasó al modelo?",
+        "options": [
+          "Memorizó en exceso los datos de entrenamiento y por eso empeoró su rendimiento ante situaciones inéditas.",
+          "Logró una generalización correcta porque pudo procesar con exactitud los ejemplos que ya conocía.",
+          "Falló únicamente porque los datos que recibió en la plataforma eran demasiado breves y desordenados."
+        ],
+        "correctIndex": 0,
+        "feedback": "La opción correcta se sostiene porque el fragmento indica que el sobreajuste ocurre cuando el modelo memoriza demasiado los datos de entrenamiento y rinde peor en casos nuevos. La confusión del alumno consistía en creer que fallar con datos nuevos y acertar en el entrenamiento equivalía a una generalización correcta.",
+        "evidenceQuote": "Sobreajuste: ocurre cuando el modelo memoriza demasiado los datos de entrenamiento y rinde peor en casos nuevos."
+      }
+    },
+    {
+      "input": {
+        "topic": "Machine learning y deep learning",
+        "question": "¿Cómo se llama el uso de un modelo ya entrenado para producir una salida ante una entrada nueva?",
+        "selectedAnswer": "Entrenamiento",
+        "correctAnswer": "Inferencia",
+        "source": "Inferencia: uso del modelo ya entrenado para producir una salida ante una entrada nueva."
+      },
+      "help": {
+        "text": "Elegiste “Entrenamiento”, pero eso es cuando se ajustan pesos con datos nuevos. En tu caso, el modelo ya está entrenado y solo se le da una entrada para generar una salida; eso se llama **Inferencia**. La inferencia no modifica el modelo, solo aplica lo aprendido para predecir o clasificar. Así que la respuesta correcta es “Inferencia”. Pensá en la diferencia: entrenamiento = aprender, inferencia = usar lo aprendido.",
+        "provider": "openai/gpt-oss-20b"
+      },
+      "question": {
+        "supported": true,
+        "question": "Si ya terminaste de armar y ajustar un sistema automático de reconocimiento de voz y ahora lo ponés en funcionamiento en una aplicación para que transcriba audios de los usuarios, ¿qué proceso está realizando el sistema en ese momento?",
+        "options": [
+          "Ajustar los pesos internos del sistema utilizando los nuevos audios que envían los usuarios de la aplicación.",
+          "Utilizar el modelo ya entrenado para producir una transcripción escrita ante la llegada de un nuevo audio.",
+          "Modificar la estructura general del modelo para que aprenda a reconocer acentos diferentes en tiempo real."
+        ],
+        "correctIndex": 1,
+        "feedback": "La opción correcta es la segunda porque el sistema ya está entrenado y se limita a usar lo aprendido para generar una salida (la transcripción) ante una entrada nueva (el audio del usuario), sin modificar el modelo. El primer distractor confunde esta etapa con el entrenamiento (ajustar pesos), y el tercero plantea una modificación estructural que tampoco corresponde a la inferencia.",
+        "evidenceQuote": "Inferencia: uso del modelo ya entrenado para producir una salida ante una entrada nueva."
+      }
+    },
+    {
+      "input": {
+        "topic": "Datos, modelos generativos y lenguaje",
+        "question": "¿Una respuesta convincente de un modelo de lenguaje garantiza que la información sea correcta?",
+        "selectedAnswer": "Sí, si está bien redactada",
+        "correctAnswer": "No: puede contener errores o datos inventados",
+        "source": "Sus respuestas pueden parecer razonadas, pero el modelo sigue siendo susceptible de errores, contradicciones y datos inventados."
+      },
+      "help": {
+        "text": "Elegiste que una buena redacción garantiza la veracidad, pero eso no es correcto. Pensá que la forma en que se presenta un texto no valida su contenido real.\n\nLa fuente señala que los modelos pueden ofrecer respuestas que parecen razonadas y convincentes, pero siguen siendo susceptibles a errores, contradicciones y datos inventados. Por lo tanto, una buena redacción no asegura que la información sea siempre correcta.",
+        "provider": "gemini-3.5-flash-lite"
+      },
+      "question": null
+    }
+  ]
+}

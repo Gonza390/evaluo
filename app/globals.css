@@ -1,6 +1,13 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @source '../components/preview';
+
+/* Dentro de un PDF, la navegación de estudio reemplaza la navegación general. */
+@media (width < 768px) {
+  body:has([data-pdf-mobile-navigation]) [data-tour-nav-mobile] {
+    display: none;
+  }
+}
 :root {
   --background: oklch(1 0 0);
   --ui-backdrop-blur: 1.5px;

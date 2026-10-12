@@ -2,29 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  CheckCircle2,
-  Globe2,
-  GraduationCap,
-  MapPin,
-  Phone,
-  Save,
-  School,
-  Settings,
-} from 'lucide-react';
 import { supabase } from '@/lib/supabase-client';
 import { useUser } from '@/hooks/useUser';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { ProfileSettingsForm } from '@/components/settings/profile-settings-form';
 import { useToast } from '@/components/ui/use-toast';
 import { logError } from '@/lib/observability';
 import { resolveProfileSettingsState } from '@/lib/profile-settings';
@@ -41,12 +22,6 @@ type Carrera = {
   nombre: string;
   universidad_id: string | null;
 };
-
-const ANIOS_CARRERA = ['1', '2', '3', '4', '5', '6'] as const;
-
-function anioCarreraLabel(value: string) {
-  return value === '6' ? '6to o más' : `${value}° año`;
-}
 
 export default function ConfiguracionPage() {
   const router = useRouter();
@@ -67,9 +42,9 @@ export default function ConfiguracionPage() {
   const [universidades, setUniversidades] = useState<Universidad[]>([]);
   const [carreras, setCarreras] = useState<Carrera[]>([]);
   const [hasLoadedUniversidades, setHasLoadedUniversidades] = useState(false);
-  const [initialProfileState, setInitialProfileState] = useState<
-    ReturnType<typeof resolveProfileSettingsState> | null
-  >(null);
+  const [initialProfileState, setInitialProfileState] = useState<ReturnType<
+    typeof resolveProfileSettingsState
+  > | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -309,9 +284,7 @@ export default function ConfiguracionPage() {
         ...(changedFields.universidadId
           ? { universidad_id: currentProfileState.universidadId || null }
           : {}),
-        ...(changedFields.carreraId
-          ? { carrera_id: currentProfileState.carreraId || null }
-          : {}),
+        ...(changedFields.carreraId ? { carrera_id: currentProfileState.carreraId || null } : {}),
       });
 
       if (profileError) throw profileError;
@@ -371,306 +344,44 @@ export default function ConfiguracionPage() {
   if (!user) return null;
 
   return (
-    <div className="animate-page-enter mx-auto w-full max-w-6xl space-y-6">
-      <section className="surface-panel relative overflow-hidden p-6 sm:p-8">
-        <div className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-10 h-52 w-52 rounded-full bg-brand-2/10 blur-3xl" />
-        <div className="relative flex flex-col gap-4">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-brand-2 text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
-              <Settings className="h-7 w-7" />
-            </div>
-            <div>
-              <p className="eyebrow-label text-brand">Perfil</p>
-              <h1 className="text-foreground mt-1 text-3xl font-bold tracking-[-0.05em] sm:text-4xl">
-                Configurá tu cuenta
-              </h1>
-              <p className="section-copy mt-3 max-w-2xl">
-                Actualizá tus datos de contacto y tu recorrido académico para que Evaluo pueda
-                personalizar mejor tu experiencia.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
+    <div className="mx-auto w-full max-w-4xl space-y-5">
+      <header className="space-y-1">
+        <h1 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">
+          Configuración
+        </h1>
+        <p className="text-muted-foreground text-[13px] leading-5">
+          Actualizá tus datos personales y académicos.
+        </p>
+      </header>
+      <ProfileSettingsForm
+        nombre={nombre}
+        pais={pais}
+        telefono={telefono}
+        anioCarrera={anioCarrera}
+        universidadId={universidadId}
+        carreraId={carreraId}
+        universidadSearch={universidadSearch}
+        carreraSearch={carreraSearch}
+        setNombre={setNombre}
+        setPais={setPais}
+        setTelefono={setTelefono}
+        setAnioCarrera={setAnioCarrera}
+        setUniversidadId={setUniversidadId}
+        setCarreraId={setCarreraId}
+        setUniversidadSearch={setUniversidadSearch}
+        setCarreraSearch={setCarreraSearch}
+        email={user.email ?? ''}
+        universidades={universidades}
+        carrerasFiltradas={carrerasFiltradas}
+        universidadSeleccionada={universidadSeleccionada}
+        loadingUniversidades={loadingUniversidades}
+        loadingCarreras={loadingCarreras}
+        hasLoadedUniversidades={hasLoadedUniversidades}
+        canSave={canSave}
+        saving={saving}
+        handleSave={handleSave}
+      />
       <SubscriptionSettings />
-
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_380px]">
-        <div className="surface-panel space-y-8 p-6 sm:p-8">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="nombre" className="font-medium text-foreground">
-                Nombre
-              </Label>
-              <Input
-                id="nombre"
-                value={nombre}
-                onChange={(event) => setNombre(event.target.value)}
-                placeholder="Tu nombre completo"
-                className="h-12 rounded-xl border-input bg-card"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="font-medium text-foreground">
-                Correo electrónico registrado
-              </Label>
-              <Input
-                id="email"
-                value={user.email ?? ''}
-                readOnly
-                disabled
-                className="h-12 rounded-xl border-input bg-card text-muted-foreground disabled:opacity-100"
-              />
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2">
-              <Globe2 className="h-4 w-4 text-brand" />
-              <h2 className="text-sm font-bold text-foreground">De dónde sos</h2>
-            </div>
-            <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
-              Contanos tu país de residencia y un teléfono de contacto.
-            </p>
-            <div className="mt-4 grid gap-6 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="pais" className="font-medium text-foreground">
-                  País
-                </Label>
-                <div className="relative">
-                  <MapPin className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="pais"
-                    value={pais}
-                    onChange={(event) => setPais(event.target.value)}
-                    placeholder="Ej: Argentina"
-                    className="h-12 rounded-xl border-input bg-card pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="telefono" className="font-medium text-foreground">
-                  Teléfono <span className="font-normal text-muted-foreground">(opcional)</span>
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="telefono"
-                    type="tel"
-                    value={telefono}
-                    onChange={(event) => setTelefono(event.target.value)}
-                    placeholder="Ej: +54 9 11 1234 5678"
-                    className="h-12 rounded-xl border-input bg-card pl-10"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="universidad-search" className="font-medium text-foreground">
-                Universidad
-              </Label>
-              <div className="relative">
-                <School className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="universidad-search"
-                  value={universidadSearch}
-                  onChange={(event) => {
-                    setUniversidadSearch(event.target.value);
-                    setUniversidadId('');
-                    setCarreraId('');
-                    setCarreraSearch('');
-                  }}
-                  placeholder="Buscá tu universidad"
-                  className="h-12 rounded-xl border-input bg-card pl-10"
-                />
-              </div>
-              <div className="border-border max-h-72 overflow-y-auto rounded-2xl border bg-card">
-                {loadingUniversidades ? (
-                  <div className="flex items-center justify-center p-4">
-                    <Spinner size="sm" />
-                  </div>
-                ) : universidades.length === 0 ? (
-                  <div className="px-4 py-4 text-sm text-muted-foreground">
-                    {hasLoadedUniversidades
-                      ? 'No encontramos esa universidad.'
-                      : 'Escribí al menos 2 letras para buscar tu universidad.'}
-                  </div>
-                ) : (
-                  universidades.map((universidad) => (
-                    <button
-                      key={universidad.id}
-                      type="button"
-                      onClick={() => {
-                        setUniversidadId(universidad.id);
-                        setUniversidadSearch(universidad.nombre);
-                        setCarreraId('');
-                        setCarreraSearch('');
-                      }}
-                      className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-primary/5 ${
-                        universidadId === universidad.id
-                          ? 'bg-primary/5 text-primary'
-                          : 'text-foreground'
-                      }`}
-                    >
-                      <span>{universidad.nombre}</span>
-                      {universidadId === universidad.id ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Seleccionada
-                        </span>
-                      ) : null}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="carrera-search" className="font-medium text-foreground">
-                Carrera
-              </Label>
-              <div className="relative">
-                <GraduationCap className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="carrera-search"
-                  value={carreraSearch}
-                  onChange={(event) => {
-                    setCarreraSearch(event.target.value);
-                    setCarreraId('');
-                  }}
-                  disabled={!universidadId}
-                  placeholder={
-                    universidadSeleccionada
-                      ? `Buscá tu carrera en ${universidadSeleccionada.nombre}`
-                      : 'Primero seleccioná una universidad'
-                  }
-                  className="h-12 rounded-xl border-input bg-card pl-10 disabled:opacity-60"
-                />
-              </div>
-              <div className="border-border max-h-72 overflow-y-auto rounded-2xl border bg-card">
-                {loadingCarreras ? (
-                  <div className="flex items-center justify-center p-4">
-                    <Spinner size="sm" />
-                  </div>
-                ) : !universidadId ? (
-                  <div className="px-4 py-4 text-sm text-muted-foreground">
-                    Primero seleccioná una universidad.
-                  </div>
-                ) : carrerasFiltradas.length === 0 ? (
-                  <div className="px-4 py-4 text-sm text-muted-foreground">
-                    No encontramos carreras para esa búsqueda.
-                  </div>
-                ) : (
-                  carrerasFiltradas.map((carrera) => (
-                    <button
-                      key={carrera.id}
-                      type="button"
-                      onClick={() => {
-                        setCarreraId(carrera.id);
-                        setCarreraSearch(carrera.nombre);
-                      }}
-                      className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-primary/5 ${
-                        carreraId === carrera.id ? 'bg-primary/5 text-primary' : 'text-foreground'
-                      }`}
-                    >
-                      <span>{carrera.nombre}</span>
-                      {carreraId === carrera.id ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Seleccionada
-                        </span>
-                      ) : null}
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="anio-carrera" className="font-medium text-foreground">
-              Año de carrera que cursás{' '}
-              <span className="font-normal text-muted-foreground">(opcional)</span>
-            </Label>
-            <Select value={anioCarrera || undefined} onValueChange={setAnioCarrera}>
-              <SelectTrigger id="anio-carrera" className="h-12 w-full rounded-xl border-input bg-card">
-                <SelectValue placeholder="Seleccioná tu año" />
-              </SelectTrigger>
-              <SelectContent>
-                {ANIOS_CARRERA.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {anioCarreraLabel(value)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <aside className="surface-panel h-fit p-6 sm:p-8">
-          <h2 className="text-lg font-bold text-foreground">Resumen de tu perfil</h2>
-          <div className="mt-5 space-y-4">
-            <div className="border-border rounded-2xl border bg-card px-4 py-3">
-              <p className="eyebrow-label">Nombre</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{nombre || 'Sin completar'}</p>
-            </div>
-            <div className="border-border rounded-2xl border bg-card px-4 py-3">
-              <p className="eyebrow-label">País</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{pais || 'Sin completar'}</p>
-            </div>
-            <div className="border-border rounded-2xl border bg-card px-4 py-3">
-              <p className="eyebrow-label">Teléfono</p>
-              <p className="mt-1 text-sm font-medium text-foreground">{telefono || 'Sin completar'}</p>
-            </div>
-            <div className="border-border rounded-2xl border bg-card px-4 py-3">
-              <p className="eyebrow-label">Universidad</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {universidadSearch || 'Sin completar'}
-              </p>
-            </div>
-            <div className="border-border rounded-2xl border bg-card px-4 py-3">
-              <p className="eyebrow-label">Carrera</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {carreraSearch || 'Sin completar'}
-              </p>
-            </div>
-            <div className="border-border rounded-2xl border bg-card px-4 py-3">
-              <p className="eyebrow-label">Año de carrera</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {anioCarrera ? anioCarreraLabel(anioCarrera) : 'Sin completar'}
-              </p>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={!canSave || saving}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 mt-6 h-12 w-full rounded-xl text-sm font-semibold shadow-[0_14px_30px_rgba(37,99,235,0.24)]"
-          >
-            {saving ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                Guardando cambios
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Guardar cambios
-              </>
-            )}
-          </Button>
-          <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">
-            Podés guardar un solo cambio sin completar el resto del perfil.
-          </p>
-        </aside>
-      </section>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, Copy, Share2 } from 'lucide-react';
+import { Check, Share2 } from 'lucide-react';
 import { MaterialFeedbackPrompt } from '@/components/material-feedback-prompt';
 
 type StudentMaterialAuthorProps = {
@@ -46,7 +46,9 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     const refreshDomTargets = () => {
       const nextTarget = resolveTarget();
       if (nextTarget) setTarget(nextTarget);
-      setHasOwnerShareControl(Boolean(document.querySelector('[data-student-material-share-control]')));
+      setHasOwnerShareControl(
+        Boolean(document.querySelector('[data-student-material-share-control]'))
+      );
       return Boolean(nextTarget);
     };
 
@@ -93,25 +95,28 @@ export function StudentMaterialAuthor({ materialId }: StudentMaterialAuthorProps
     window.setTimeout(() => setCopied(false), 1800);
   };
 
-  const publicShareButton = name && target && !hasOwnerShareControl
-    ? createPortal(
-        <button
-          type="button"
-          onClick={() => void sharePublicPdf()}
-          className="from-brand to-brand-2 fixed right-4 bottom-20 z-40 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-4 text-sm font-bold text-white shadow-[0_14px_34px_rgba(37,99,235,0.26)] transition hover:-translate-y-0.5 md:right-6 md:bottom-6"
-        >
-          {copied ? (
-            <Check className="h-4 w-4" />
-          ) : typeof navigator !== 'undefined' && typeof navigator.share === 'function' ? (
-            <Share2 className="h-4 w-4" />
-          ) : (
-            <Copy className="h-4 w-4" />
-          )}
-          {copied ? 'Enlace copiado' : 'Compartir este PDF'}
-        </button>,
-        document.body
-      )
-    : null;
+  const publicShareButton =
+    name && target && !hasOwnerShareControl
+      ? createPortal(
+          <button
+            type="button"
+            onClick={() => void sharePublicPdf()}
+            aria-label={copied ? 'Enlace copiado' : 'Compartir este PDF'}
+            title={copied ? 'Enlace copiado' : 'Compartir este PDF'}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:outline-ring fixed right-4 bottom-20 z-40 inline-flex size-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-offset-2 md:right-6 md:bottom-6"
+          >
+            {copied ? (
+              <Check aria-hidden="true" className="h-4 w-4" />
+            ) : (
+              <Share2 aria-hidden="true" className="h-4 w-4" />
+            )}
+            <span role="status" className="sr-only">
+              {copied ? 'Enlace copiado' : ''}
+            </span>
+          </button>,
+          document.body
+        )
+      : null;
 
   return (
     <>

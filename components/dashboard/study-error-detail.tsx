@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  pdfStudyPrimaryButton as reviewPrimaryButton,
+  pdfStudySecondaryButton as reviewSecondaryButton,
+} from '@/components/study/pdf-study-styles';
+
+export { reviewPrimaryButton, reviewSecondaryButton };
+
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -30,10 +37,6 @@ import {
   type StudyErrorHelpMessage,
 } from './study-error-help-chat';
 
-export const reviewPrimaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
-export const reviewSecondaryButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 export const studyErrorSourceLabels = {
   simulator: 'Preguntero',
   flashcard: 'Flashcards',
@@ -74,6 +77,8 @@ export function StudyErrorDetail({
   reviewActions = liveReviewActions,
   conversation,
   onConversationChange,
+  documentHref,
+  embedded = false,
 }: {
   item: StudyErrorView;
   materials: StudyErrorsPageData['materials'];
@@ -83,6 +88,8 @@ export function StudyErrorDetail({
   onNext: () => void;
   onFinish: () => void;
   reviewActions?: StudyErrorReviewActions;
+  documentHref?: string;
+  embedded?: boolean;
   conversation: StudyErrorConversation;
   onConversationChange: (
     update: (current: StudyErrorConversation) => StudyErrorConversation
@@ -107,8 +114,10 @@ export function StudyErrorDetail({
   const [result, setResult] = useState<ReviewAnswerResult | null>(null);
   const [associateId, setAssociateId] = useState('');
   const operation = useRef(false);
+  const automaticHelpStarted = useRef(false);
   const heading = useRef<HTMLHeadingElement>(null);
   const response = useRef<HTMLDivElement>(null);
+  const resultHeading = useRef<HTMLHeadingElement>(null);
   const materialId = source?.materialId ?? item.recommendation?.materialId ?? null;
   const resolved = item.status === 'resolved';
   const savedExplanation = resolved && !messages.length ? item.explanation : null;
@@ -125,16 +134,31 @@ export function StudyErrorDetail({
     </p>
   ) : null;
   const activityHref =
-    item.sourceType === 'simulator' && item.materiaId
+    documentHref ??
+    (item.sourceType === 'simulator' && item.materiaId
       ? `/simulador/errores/${item.materiaId}?parcial=${item.parcial ?? 1}`
       : materialId
         ? `/materiales/${materialId}?studyError=${item.id}`
-        : null;
+        : null);
 
   useEffect(() => {
+    if (embedded && !question) return;
     heading.current?.focus({ preventScroll: true });
     heading.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  }, [item.id, question?.id]);
+  }, [embedded, item.id, question]);
+
+  useEffect(() => {
+    if (!result) return;
+    resultHeading.current?.focus({ preventScroll: true });
+    resultHeading.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [result]);
+
+  const startAutomaticHelp = useEffectEvent(() => help('why_wrong'));
+  useEffect(() => {
+    if (!embedded || resolved || messages.length || automaticHelpStarted.current) return;
+    automaticHelpStarted.current = true;
+    startAutomaticHelp();
+  }, [embedded, resolved, messages.length]);
 
   async function run(name: string, task: () => Promise<void>) {
     if (operation.current) return;
@@ -249,6 +273,10 @@ export function StudyErrorDetail({
     setResult(null);
     setAnswer(null);
     setNotice('');
+    requestAnimationFrame(() => {
+      response.current?.focus({ preventScroll: true });
+      response.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
     if (messages.length && !resolved)
       void run('review', async () => {
         const marked = await reviewActions.markReviewed(item.id);
@@ -276,7 +304,7 @@ export function StudyErrorDetail({
             {question.options.map((option, index) => (
               <label
                 key={index}
-                className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-4 ${result && !result.correct && answer === index ? 'border-destructive bg-destructive/5' : result?.correctIndex === index || (!result && answer === index) ? 'border-primary bg-primary/5' : 'border-border'}`}
+                className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border px-4 py-4 ${result && !result.correct && answer === index ? 'border-destructive bg-destructive/5' : result?.correctIndex === index ? 'border-emerald-500 bg-emerald-50' : !result && answer === index ? 'border-primary bg-primary/5' : 'border-border'}`}
               >
                 <input
                   type="radio"
@@ -320,13 +348,17 @@ export function StudyErrorDetail({
             </div>
           ) : (
             <div role="status" className="border-border mt-6 border-t pt-6">
-              <h3 className="flex items-center gap-2 text-xl font-bold">
+              <h3
+                ref={resultHeading}
+                tabIndex={-1}
+                className="flex items-center gap-2 text-xl font-bold outline-none"
+              >
                 {result.correct ? (
-                  <CheckCircle2 className="text-primary h-5 w-5" />
+                  <CheckCircle2 className="h-5 w-5 text-emerald-700" />
                 ) : (
                   <CircleAlert className="text-destructive h-5 w-5" />
                 )}
-                {result.correct ? 'Resolviste este error.' : 'Todavía queda por reforzar'}
+                {result.correct ? 'Resolviste el refuerzo' : 'Todavía queda por reforzar'}
               </h3>
               <p className="!text-foreground mt-2">
                 {result.correct
@@ -341,17 +373,24 @@ export function StudyErrorDetail({
               <div className="mt-5 flex flex-wrap gap-3">
                 {result.correct ? (
                   <>
+                    {embedded && (
+                      <button className={reviewPrimaryButton} onClick={onFinish}>
+                        Volver a Progreso
+                      </button>
+                    )}
                     <button
-                      className={reviewPrimaryButton}
+                      className={embedded ? reviewSecondaryButton : reviewPrimaryButton}
                       disabled={pendingCount === 0}
                       onClick={onNext}
                     >
                       Seguir con otro error
                       <ArrowRight className="h-4 w-4" />
                     </button>
-                    <button className={reviewSecondaryButton} onClick={onFinish}>
-                      Terminar por hoy
-                    </button>
+                    {!embedded && (
+                      <button className={reviewSecondaryButton} onClick={onFinish}>
+                        Terminar por hoy
+                      </button>
+                    )}
                   </>
                 ) : (
                   <button className={reviewPrimaryButton} onClick={returnToReview}>
@@ -366,25 +405,31 @@ export function StudyErrorDetail({
         <>
           <div data-study-error-tour="error">
             <div className="mb-3 flex flex-wrap gap-2 text-xs">
-              <span className="bg-muted rounded-full px-3 py-1">
+              <span className="text-muted-foreground py-1 text-xs">
                 {studyErrorSourceLabels[item.sourceType]}
               </span>
               <span className="text-muted-foreground py-1">
                 {resolved
                   ? 'Resuelto después del repaso'
-                  : `Fallaste ${item.failureCount} ${item.failureCount === 1 ? 'vez' : 'veces'}`}
+                  : `${item.failureCount} ${item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad'}`}
               </span>
             </div>
             <h2
               ref={heading}
               tabIndex={-1}
-              className="scroll-mt-24 text-2xl font-black tracking-tighter break-words outline-none sm:text-3xl"
+              className={
+                embedded
+                  ? 'sr-only'
+                  : 'scroll-mt-24 text-2xl font-black tracking-tighter break-words outline-none sm:text-3xl'
+              }
             >
               {item.topic}
             </h2>
-            <p className="!text-foreground mt-4 break-words">{item.prompt}</p>
+            <p className={`!text-foreground break-words ${embedded ? 'mt-2' : 'mt-4'}`}>
+              {item.prompt}
+            </p>
             {(item.selectedAnswer || item.correctAnswer) && (
-              <details className="group mt-3">
+              <details open={embedded || undefined} className="group mt-3">
                 <summary className="text-muted-foreground hover:text-foreground focus-visible:outline-ring flex min-h-11 w-fit cursor-pointer list-none items-center gap-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 [&::-webkit-details-marker]:hidden">
                   Ver mi respuesta anterior
                   <ChevronDown
@@ -404,8 +449,8 @@ export function StudyErrorDetail({
                     </div>
                   )}
                   {item.correctAnswer && (
-                    <div className="border-primary/40 border-l-2 pl-4">
-                      <p className="!text-primary !text-xs font-semibold">Respuesta correcta</p>
+                    <div className="border-l-2 border-emerald-500/40 pl-4">
+                      <p className="!text-xs font-semibold !text-emerald-700">Respuesta correcta</p>
                       <p className="!text-foreground mt-2 !text-sm break-words">
                         {item.correctAnswer}
                       </p>
@@ -415,13 +460,18 @@ export function StudyErrorDetail({
               </details>
             )}
           </div>
-          <section data-study-error-tour="understand" className="border-border mt-7 border-t pt-6">
+          <section
+            data-study-error-tour="understand"
+            className={`border-border border-t ${embedded ? 'mt-3 pt-3' : 'mt-7 pt-6'}`}
+          >
             <div
               ref={response}
+              tabIndex={-1}
               className="w-full scroll-mt-24"
               aria-busy={Boolean(busy && ['why_wrong', 'simpler', 'example'].includes(busy))}
             >
               <StudyErrorHelpChat
+                compact={embedded}
                 messages={messages}
                 pendingKind={pendingHelp}
                 hasPdf={Boolean(materialId)}
@@ -445,8 +495,8 @@ export function StudyErrorDetail({
                   aria-expanded={sourceOpen}
                   aria-controls={`source-${item.id}`}
                 >
-                  <BookOpen className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 break-words">
+                  <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 text-[11px] leading-4 break-words">
                     Fuente: {source.sectionTitle ?? source.materialTitle}
                     {pageLabel(source.pageStart, source.pageEnd)
                       ? ` · ${pageLabel(source.pageStart, source.pageEnd)}`
@@ -472,7 +522,11 @@ export function StudyErrorDetail({
                         : ''}
                     </p>
                     <Link
-                      href={`/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`}
+                      href={
+                        documentHref
+                          ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}`
+                          : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`
+                      }
                       className="text-primary mt-2 inline-flex min-h-11 items-center text-xs font-semibold underline"
                     >
                       Abrir PDF completo
@@ -536,45 +590,47 @@ export function StudyErrorDetail({
             )}
             {sourceNotice && inlineNotice}
           </section>
-          <section data-study-error-tour="practice" className="border-border mt-6 border-t pt-5">
-            {resolved ? (
-              <p className="!text-foreground !text-sm">
-                Este error quedó resuelto después de tu repaso.
-              </p>
-            ) : materialId && reviewed ? (
-              <>
-                <p className="!text-foreground font-semibold">¿Querés probar con otra situación?</p>
-                <button
-                  className={reviewPrimaryButton + ' mt-3'}
-                  disabled={Boolean(busy)}
-                  onClick={checkUnderstanding}
+          {(resolved || !materialId || reviewed || noticeAction === 'check') && (
+            <section data-study-error-tour="practice" className="border-border mt-3 border-t pt-3">
+              {resolved ? (
+                <p className="!text-foreground !text-sm">
+                  Este error quedó resuelto después de tu repaso.
+                </p>
+              ) : materialId && reviewed ? (
+                <>
+                  <p className="!text-foreground font-semibold">
+                    ¿Querés probar con otra situación?
+                  </p>
+                  <button
+                    className={reviewPrimaryButton + ' mt-3'}
+                    disabled={Boolean(busy)}
+                    onClick={checkUnderstanding}
+                  >
+                    {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}Comprobar qué
+                    entendí
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </>
+              ) : !materialId ? (
+                <p className="!text-muted-foreground !text-sm">
+                  Asociá un PDF para comprobar lo aprendido con una pregunta basada en tu material.
+                </p>
+              ) : null}
+              {activityHref && resolved && (
+                <Link
+                  href={activityHref}
+                  className="text-muted-foreground mt-3 inline-flex min-h-11 w-fit items-center py-2 text-xs font-semibold underline"
                 >
-                  {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}Comprobar qué
-                  entendí
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </>
-            ) : (
-              <p className="!text-muted-foreground !text-sm">
-                {materialId
-                  ? 'Pedí una explicación o leé el fragmento. Después podés comprobarlo con una pregunta diferente.'
-                  : 'Asociá un PDF para comprobar lo aprendido con una pregunta basada en tu material.'}
-              </p>
-            )}
-            {activityHref && (
-              <Link
-                href={activityHref}
-                className="text-muted-foreground mt-3 inline-flex min-h-11 w-fit items-center py-2 text-xs font-semibold underline"
-              >
-                Volver a la actividad original
-              </Link>
-            )}
-            {noticeAction === 'check' && inlineNotice}
-          </section>
+                  Volver a la actividad original
+                </Link>
+              )}
+              {noticeAction === 'check' && inlineNotice}
+            </section>
+          )}
         </>
       )}
       {(question || (!helpNotice && !sourceNotice && noticeAction !== 'check')) && inlineNotice}
-      {!question && (
+      {!question && resolved && (
         <div className="border-border mt-7 flex flex-wrap gap-3 border-t pt-5">
           <button
             className={reviewSecondaryButton}

@@ -129,10 +129,10 @@ export function ExamFocusControls() {
       onClick={toggleImmersive}
       aria-pressed={immersive}
       aria-label={immersive ? 'Salir de pantalla completa' : 'Abrir modo examen en pantalla completa'}
-      className="fixed top-[4.25rem] right-3 z-[120] inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 text-xs font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.22)] transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none sm:right-4 lg:top-[5.75rem] lg:h-11 lg:px-4 lg:text-sm"
+      className="fixed top-1.5 right-3 z-[120] inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-950 px-3 text-xs font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.22)] transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none sm:right-4 lg:top-[5.75rem] lg:px-4 lg:text-sm"
     >
       {immersive ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-      <span className="hidden sm:inline">
+      <span className="hidden lg:inline">
         {immersive
           ? nativeFullscreen
             ? 'Salir de pantalla completa'

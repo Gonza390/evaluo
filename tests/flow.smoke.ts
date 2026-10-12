@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './study-error-review-prompt.smoke.ts';
 import {
   buildSimulatorLandingHref,
   parseSimulatorLandingEntry,

@@ -241,15 +241,12 @@ function buildFlashcardCandidates(artifacts: PedagogicalArtifacts): Candidate[] 
         answer: correct,
         explanation: `Según el material: ${clean(card.back)}`,
         topic:
-          rawFront.replace(/^¿Qué significa\s*/i, '').replace(/[“”"?]/g, '').trim() ||
-          'Tema del resumen',
+          rawFront
+            .replace(/^¿Qué significa\s*/i, '')
+            .replace(/[“”"?]/g, '')
+            .trim() || 'Tema del resumen',
         reference: card.reference,
-        sourceText: [
-          rawFront,
-          card.back,
-          card.reference.sectionTitle,
-          card.reference.excerpt,
-        ]
+        sourceText: [rawFront, card.back, card.reference.sectionTitle, card.reference.excerpt]
           .filter(Boolean)
           .join(' '),
         level: card.level,
@@ -366,6 +363,75 @@ function sectionIndexOf(id: string) {
   return match ? Number(match[1]) : -1;
 }
 
+function topicLabel(value: string) {
+  return normalize(value)
+    .replace(/^\s*\d+(?:\s+\d+)*\s+/, '')
+    .trim();
+}
+
+// Primero exigir pertenencia al tema; la calidad pedagógica sólo ordena
+// preguntas que ya son pertinentes. Ni una página compartida ni el texto
+// de distractores, explicaciones o referencias generales prueban esa relación.
+function candidateSectionIndex(candidate: Candidate, sections: StudySummarySection[]) {
+  if (candidate.origin === 'summary') return sectionIndexOf(candidate.id);
+
+  const labels = [candidate.topic, candidate.reference.sectionTitle ?? ''].map(topicLabel);
+  const exactMatches = sections.flatMap((section, index) =>
+    labels.includes(topicLabel(section.title)) ? [index] : []
+  );
+  if (exactMatches.length === 1) return exactMatches[0];
+  if (exactMatches.length > 1) return -1;
+
+  // Conceptos explícitos en la consigna, sin usar las alternativas incorrectas.
+  const concepts = Array.from(candidate.prompt.matchAll(/[“"]([^”"]+)[”"]/g), (match) =>
+    topicLabel(match[1])
+  );
+  const titleMatches = sections.flatMap((section, index) => {
+    const title = ` ${topicLabel(section.title)} `;
+    return concepts.some((concept) => concept.length >= 4 && title.includes(` ${concept} `))
+      ? [index]
+      : [];
+  });
+  if (titleMatches.length === 1) return titleMatches[0];
+  if (titleMatches.length > 1) return -1;
+
+  // Compatibilidad con materiales previos sin tema explícito. Una respuesta
+  // debe estar respaldada mayoritariamente por una única sección; ante duda
+  // se omite, en lugar de atribuir evidencia a otro tema.
+  const answerWords = words(candidate.answer);
+  if (answerWords.size < 3) return -1;
+  const matches = sections
+    .map((section, index) => ({
+      index,
+      shared: sharedWordCount(answerWords, words(`${section.title} ${section.body}`)),
+    }))
+    .filter(({ shared }) => shared >= 3 && shared / answerWords.size >= 0.7)
+    .sort((left, right) => right.shared - left.shared);
+  if (!matches.length || matches[0].shared === matches[1]?.shared) return -1;
+  return matches[0].index;
+}
+
+/** Misma asociación conservadora para las respuestas de práctica y el resumen. */
+export function findSummarySectionForQuestion(
+  question: Pick<StudyQuestion, 'prompt' | 'answer' | 'reference' | 'topic'>,
+  sections: StudySummarySection[]
+) {
+  return candidateSectionIndex(
+    {
+      ...question,
+      id: 'answer-evidence',
+      topic: question.topic ?? '',
+      options: [],
+      explanation: '',
+      sourceText: '',
+      level: 'comprender',
+      origin: 'artifact',
+      directRecognition: false,
+    },
+    sections
+  );
+}
+
 function rankForSection(
   candidates: Candidate[],
   section: StudySummarySection,
@@ -404,7 +470,11 @@ function isDistinctQuestion(candidate: Candidate, selected: Candidate[]) {
   );
 }
 
-function preferHigherOrder(candidates: Candidate[], excludedIds: Set<string>, selected: Candidate[]) {
+function preferHigherOrder(
+  candidates: Candidate[],
+  excludedIds: Set<string>,
+  selected: Candidate[]
+) {
   const available = candidates.filter(
     (candidate) => !excludedIds.has(candidate.id) && isDistinctQuestion(candidate, selected)
   );
@@ -439,7 +509,17 @@ export function buildSummaryCheckPlan(
     ...buildFlashcardCandidates(artifacts),
   ];
 
-  const ranked = sections.map((section, index) => rankForSection(candidates, section, index));
+  const candidatesBySection = sections.map(() => [] as Candidate[]);
+  for (const candidate of candidates) {
+    const index = candidateSectionIndex(candidate, sections);
+    const section = sections[index];
+    if (!section) continue;
+    // El mismo nombre llega al lector y al registro existente de Mis errores.
+    candidatesBySection[index].push({ ...candidate, topic: section.title });
+  }
+  const ranked = sections.map((section, index) =>
+    rankForSection(candidatesBySection[index], section, index)
+  );
   const plans: Array<SummaryCheckPlanItem | null> = [];
 
   for (let index = 0; index < sections.length; index += 1) {
@@ -455,11 +535,7 @@ export function buildSummaryCheckPlan(
       const first = preferHigherOrder(current, new Set(), selected);
       if (first) selected.push(first);
 
-      const second = preferHigherOrder(
-        current,
-        new Set(first ? [first.id] : []),
-        selected
-      );
+      const second = preferHigherOrder(current, new Set(first ? [first.id] : []), selected);
       if (second) selected.push(second);
 
       if (selected.length < 2) {
@@ -489,11 +565,7 @@ export function buildSummaryCheckPlan(
 
     const previousQuestion =
       preferHigherOrder(previousRanked, recentlyUsedIds, [currentQuestion]) ??
-      preferHigherOrder(
-        previousRanked,
-        new Set([currentQuestion.id]),
-        [currentQuestion]
-      );
+      preferHigherOrder(previousRanked, new Set([currentQuestion.id]), [currentQuestion]);
 
     if (!previousQuestion) {
       plans.push(null);

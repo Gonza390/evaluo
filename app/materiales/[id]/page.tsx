@@ -415,7 +415,13 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
             isFirstReadyMaterial && query.recorrido === '1' && !firstPdfGuideAlreadySeen
           }
           initialTab={
-            query.tab === 'tarjetas' ? 'tarjetas' : query.tab === 'mapa' ? 'mapa' : undefined
+            query.tab === 'tarjetas' ||
+            query.tab === 'mapa' ||
+            query.tab === 'ejercicios' ||
+            query.tab === 'glosario' ||
+            query.tab === 'resumen'
+              ? query.tab
+              : undefined
           }
           initialPdfPage={initialPdfPage}
           initialViewerVisible={Boolean(query.studyError)}

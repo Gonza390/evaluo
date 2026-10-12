@@ -510,6 +510,8 @@ export default function SimuladorExamen({
     useState<SimulatorTourDirection>('forward');
   const [resumeSnapshot, setResumeSnapshot] = useState<SimuladorPersistedState | null>(null);
   const questionsTourTargetRef = useRef<HTMLDivElement | null>(null);
+  const questionHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const previousQuestionIndexRef = useRef(currentQuestionIndex);
   const markTourTargetRef = useRef<HTMLDivElement | null>(null);
   const navigationTourTargetRef = useRef<HTMLDivElement | null>(null);
   const timerTourTargetRef = useRef<HTMLDivElement | null>(null);
@@ -1794,6 +1796,15 @@ export default function SimuladorExamen({
     );
   };
 
+  useEffect(() => {
+    if (previousQuestionIndexRef.current === currentQuestionIndex) return;
+    previousQuestionIndexRef.current = currentQuestionIndex;
+    const heading = questionHeadingRef.current;
+    if (!heading) return;
+    heading.focus({ preventScroll: true });
+    heading.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [currentQuestionIndex]);
+
   const goToQuestion = useCallback(
     (index: number) => {
       if (index < 0 || index >= questionLimit || index >= preguntasDisponibles) return;
@@ -2973,7 +2984,7 @@ export default function SimuladorExamen({
         </div>
       </header>
 
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white px-4 py-3 backdrop-blur lg:hidden">
+      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white py-3 pr-16 pl-4 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5">
             <Clock3 className="h-4 w-4 text-slate-500" />
@@ -3084,8 +3095,10 @@ export default function SimuladorExamen({
                 Pregunta {currentQuestionIndex + 1}
               </p>
               <h2
+                ref={questionHeadingRef}
+                tabIndex={-1}
                 id="pregunta-actual-enunciado"
-                className="mt-2 text-base leading-relaxed font-semibold text-slate-900 sm:text-lg"
+                className="mt-2 scroll-mt-20 text-base leading-relaxed font-semibold text-slate-900 sm:text-lg"
               >
                 {preguntaActual?.enunciado}
               </h2>

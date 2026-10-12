@@ -59,6 +59,39 @@ export type Database = {
   };
   public: {
     Tables: {
+      student_material_answer_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          material_id: string;
+          source_type: string;
+          evidence_kind: string;
+          item_key: string;
+          topic: string | null;
+          section_title: string | null;
+          prompt: string;
+          selected_answer: string;
+          was_correct: boolean;
+          answered_at: string;
+        };
+        Insert: {
+          id: string;
+          user_id: string;
+          material_id: string;
+          source_type: string;
+          evidence_kind: string;
+          item_key: string;
+          topic?: string | null;
+          section_title?: string | null;
+          prompt: string;
+          selected_answer: string;
+          was_correct: boolean;
+          answered_at?: string;
+        };
+        Update: never;
+        Relationships: [];
+      };
+
       study_error_help_cache: {
         Row: StudyErrorHelpCacheRow;
         Insert: Omit<StudyErrorHelpCacheRow, 'created_at'> & { created_at?: string };
@@ -2528,6 +2561,17 @@ export type Database = {
       };
     };
     Functions: {
+      get_student_material_answer_coverage: {
+        Args: { p_user_id: string; p_material_id: string };
+        Returns: Array<{
+          topic: string | null;
+          section_title: string | null;
+          correct_count: number;
+          incorrect_count: number;
+          self_report_count: number;
+          last_answered_at: string;
+        }>;
+      };
       submit_study_error_review_check: {
         Args: { p_user_id: string; p_check_id: string; p_selected_index: number };
         Returns: Json;

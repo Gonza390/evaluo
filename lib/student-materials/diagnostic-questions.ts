@@ -1,4 +1,6 @@
 import type { PedagogicalArtifacts, StudyQuestion } from './pedagogy';
+import type { StudySummarySection } from './types';
+import { selectTopicPracticeQuestions } from '@/lib/student-materials/topic-practice';
 
 function normalize(value: string) {
   return value
@@ -18,7 +20,18 @@ function isEligible(question: StudyQuestion) {
   return question.options.some((option) => normalize(option) === answer);
 }
 
-export function selectDiagnosticQuestions(artifacts: PedagogicalArtifacts, target = 6) {
+export function selectDiagnosticQuestions(
+  artifacts: PedagogicalArtifacts,
+  target = 6,
+  sections?: StudySummarySection[]
+) {
+  if (sections?.length)
+    return selectTopicPracticeQuestions({
+      questions: artifacts.questions.filter(isEligible),
+      preferredQuestionIds: artifacts.miniExamQuestionIds,
+      targetCount: target,
+      sections,
+    });
   const preferredIds = new Set(artifacts.miniExamQuestionIds);
   const candidates = artifacts.questions
     .filter(isEligible)

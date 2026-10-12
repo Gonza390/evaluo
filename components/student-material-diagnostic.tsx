@@ -3,20 +3,24 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
+import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
 import { selectDiagnosticQuestions } from '@/lib/student-materials/diagnostic-questions';
+import type { StudySummarySection } from '@/lib/student-materials/types';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 
 type Props = {
   artifacts: PedagogicalArtifacts;
+  sections?: StudySummarySection[];
   materialId: string;
   onReviewTopics: (topics: string[]) => void;
   onExit: () => void;
   onComplete?: () => void;
   guided?: boolean;
   demo?: boolean;
+  onDemoAnswer?: (question: StudyQuestion, selectedAnswer: string) => void;
   onResult?: (result: DiagnosticResult) => void;
   onRestart?: () => void;
   onReinforce?: (onboardingErrorId: string | null) => void;
@@ -49,12 +53,14 @@ function normalize(value: string) {
 
 export function StudentMaterialDiagnostic({
   artifacts,
+  sections,
   materialId,
   onReviewTopics,
   onExit,
   onComplete,
   guided = false,
   demo = false,
+  onDemoAnswer,
   onResult,
   onRestart,
   onReinforce,
@@ -62,8 +68,8 @@ export function StudentMaterialDiagnostic({
   onSessionChange,
 }: Props) {
   const questions = useMemo(
-    () => selectDiagnosticQuestions(artifacts, guided ? 5 : 6),
-    [artifacts, guided]
+    () => selectDiagnosticQuestions(artifacts, guided ? 5 : 6, sections),
+    [artifacts, guided, sections]
   );
   const [localSession, setLocalSession] = useState(emptyDiagnosticSession);
   const { currentIndex, selectedAnswers, finished, onboardingErrorId } = session ?? localSession;
@@ -87,6 +93,7 @@ export function StudentMaterialDiagnostic({
     }));
   const [isRecordingError, setIsRecordingError] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const answerIds = useRef<Record<string, string>>({});
   const questionHeading = useRef<HTMLHeadingElement>(null);
   const resultHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -125,10 +132,10 @@ export function StudentMaterialDiagnostic({
   if (questions.length < 3) {
     return (
       <div className="mx-auto max-w-3xl px-1 py-6 sm:px-2">
-        <p className="text-sm font-semibold text-slate-900">
+        <p className="text-foreground text-sm font-semibold">
           Todavía no hay preguntas suficientes para un diagnóstico útil.
         </p>
-        <p className="mt-1 text-[13px] leading-5 text-slate-500">
+        <p className="text-muted-foreground mt-1 text-[13px] leading-5">
           Podés seguir con la práctica normal del material.
         </p>
         <Button type="button" variant="outline" onClick={onExit} className="mt-5">
@@ -144,13 +151,13 @@ export function StudentMaterialDiagnostic({
         data-recommended-result={guided || undefined}
         className="mx-auto max-w-3xl px-1 py-3 sm:px-2 sm:py-5"
       >
-        <p className="text-[11px] font-bold tracking-[0.15em] text-[#2563EB] uppercase">
+        <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
           {guided ? 'Práctica completada' : 'Diagnóstico listo'}
         </p>
         <h2
           ref={resultHeading}
           tabIndex={-1}
-          className="mt-2 text-[1.65rem] font-bold tracking-[-0.05em] text-slate-950 outline-none"
+          className="text-foreground mt-2 text-[22px] font-bold tracking-[-0.05em] outline-none"
         >
           {guided
             ? result.reviewTopics.length > 0
@@ -159,22 +166,22 @@ export function StudentMaterialDiagnostic({
             : 'Ya sabemos por dónde empezar'}
         </h2>
 
-        <div className="mt-5 border-y border-slate-200 py-4">
-          <p className="text-3xl font-bold tracking-[-0.055em] text-slate-950">
+        <div className="border-border mt-5 border-y py-4">
+          <p className="text-foreground text-3xl font-bold tracking-[-0.055em]">
             {result.correct}/{questions.length}
           </p>
-          <p className="mt-1 text-sm text-slate-500">respuestas correctas</p>
+          <p className="text-muted-foreground mt-1 text-sm">respuestas correctas</p>
         </div>
 
         <div className="mt-5">
           {result.reviewTopics.length > 0 ? (
             <>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-foreground text-sm font-semibold">
                 {guided
                   ? `${result.reviewTopics.length} ${result.reviewTopics.length === 1 ? 'tema para reforzar' : 'temas para reforzar'} de este PDF`
                   : 'Te conviene repasar primero'}
               </p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <p className="text-muted-foreground mt-1 text-sm leading-6">
                 {result.reviewTopics.slice(0, 3).join(', ')}.
               </p>
               {guided && (
@@ -187,8 +194,8 @@ export function StudentMaterialDiagnostic({
             </>
           ) : (
             <>
-              <p className="text-sm font-semibold text-slate-900">Buen dominio inicial</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <p className="text-foreground text-sm font-semibold">Buen dominio inicial</p>
+              <p className="text-muted-foreground mt-1 text-sm leading-6">
                 {guided
                   ? `Respondiste correctamente estas ${questions.length} preguntas. Podés seguir practicando con este material.`
                   : 'No detectamos un tema claramente débil en estas preguntas.'}
@@ -205,7 +212,7 @@ export function StudentMaterialDiagnostic({
                 ? onReinforce(onboardingErrorId)
                 : onReviewTopics(result.reviewTopics)
             }
-            className="h-11 w-full rounded-[14px]"
+            className="h-11 w-full rounded-lg"
           >
             {guided && result.reviewTopics.length > 0
               ? 'Reforzar mis temas'
@@ -216,7 +223,7 @@ export function StudentMaterialDiagnostic({
           <button
             type="button"
             onClick={reset}
-            className="mt-2 inline-flex h-9 w-full items-center justify-center text-xs font-semibold text-slate-500 hover:text-slate-800"
+            className="text-muted-foreground hover:text-foreground mt-2 inline-flex h-9 w-full items-center justify-center text-xs font-semibold"
           >
             {guided ? 'Volver a practicar' : 'Rehacer diagnóstico'}
           </button>
@@ -248,6 +255,7 @@ export function StudentMaterialDiagnostic({
 
     const wasCorrect = normalize(selectedAnswer) === normalize(current.answer);
     const payload = {
+      resultId: (answerIds.current[current.id] ??= crypto.randomUUID()),
       materialId,
       sourceType: 'diagnostic' as const,
       itemKey: `diagnostic:${current.id}`,
@@ -261,18 +269,26 @@ export function StudentMaterialDiagnostic({
     };
 
     if (demo) {
+      onDemoAnswer?.(current, selectedAnswer);
+      delete answerIds.current[current.id];
       advanceDiagnostic();
       return;
     }
 
-    if (guided) {
+    {
       setSaveError('');
       setIsRecordingError(true);
       try {
         const recorded = await recordStudentMaterialStudyResultAction(payload);
         if (!recorded.success) throw new Error('No se pudo guardar');
-        if (recorded.onboardingErrorId)
+        if (recorded.onboardingErrorId) {
           setOnboardingErrorId((previous) => previous ?? recorded.onboardingErrorId ?? null);
+          if (!guided) {
+            delete answerIds.current[current.id];
+            return;
+          }
+        }
+        delete answerIds.current[current.id];
         advanceDiagnostic();
       } catch {
         setSaveError(
@@ -283,23 +299,6 @@ export function StudentMaterialDiagnostic({
       }
       return;
     }
-
-    if (wasCorrect) {
-      void recordStudentMaterialStudyResultAction(payload);
-      advanceDiagnostic();
-      return;
-    }
-
-    setIsRecordingError(true);
-    const result = await recordStudentMaterialStudyResultAction(payload);
-    setIsRecordingError(false);
-
-    if (result.onboardingErrorId) {
-      setOnboardingErrorId(result.onboardingErrorId);
-      return;
-    }
-
-    advanceDiagnostic();
   };
 
   return (
@@ -319,32 +318,32 @@ export function StudentMaterialDiagnostic({
           <button
             type="button"
             onClick={onExit}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-xs font-semibold"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Salir
           </button>
-          <span aria-live="polite" className="text-xs font-medium text-slate-400">
+          <span aria-live="polite" className="text-muted-foreground text-xs font-medium">
             {currentIndex + 1} de {questions.length}
           </span>
         </div>
 
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-[#2563EB] transition-[width] duration-300"
+            className="bg-primary h-full rounded-full transition-[width] duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         <div className="mt-5">
           {current.topic ? (
-            <p className="text-xs font-semibold text-[#2563EB]">{current.topic}</p>
+            <p className="text-primary text-xs font-semibold">{current.topic}</p>
           ) : null}
           <h2
             ref={questionHeading}
             tabIndex={-1}
             data-guided-question={guided || undefined}
-            className="mt-2 text-lg leading-7 font-bold tracking-[-0.03em] text-slate-950 outline-none sm:text-xl"
+            className="text-foreground mt-2 text-[16px] leading-6 font-bold tracking-[-0.03em] outline-none sm:text-[18px]"
           >
             {current.prompt}
           </h2>
@@ -361,10 +360,10 @@ export function StudentMaterialDiagnostic({
                     setSelectedAnswers((answers) => ({ ...answers, [current.id]: option }))
                   }
                   className={cn(
-                    'w-full rounded-[14px] border px-3.5 py-3 text-left text-sm leading-5 transition sm:px-4',
+                    'w-full rounded-lg border px-3.5 py-3 text-left text-sm leading-5 transition sm:px-4',
                     selected
-                      ? 'border-[#2563EB] bg-[#F7FAFF] text-slate-950'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/60'
+                      ? 'border-primary bg-primary/5 text-foreground'
+                      : 'border-border bg-card text-foreground hover:bg-muted/60 hover:border-slate-300'
                   )}
                 >
                   {option}
@@ -378,16 +377,16 @@ export function StudentMaterialDiagnostic({
               {saveError}
             </p>
           )}
-          <div className="mt-5 flex justify-end border-t border-slate-100 pt-5">
-            <Button
-              type="button"
-              disabled={!selectedAnswer || isRecordingError}
-              onClick={() => void goNext()}
-              className="h-11 rounded-[14px] px-5"
-            >
-              {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
-            </Button>
-          </div>
+        </div>
+        <div data-pdf-question-actions className={pdfStudyQuestionActionsClassName}>
+          <Button
+            type="button"
+            disabled={!selectedAnswer || isRecordingError}
+            onClick={() => void goNext()}
+            className="h-11 rounded-lg px-5"
+          >
+            {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
+          </Button>
         </div>
       </div>
     </>

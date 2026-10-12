@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle2, ChevronRight, CircleAlert, Loader2, RotateCcw, X } from 'lucide-react';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
@@ -81,6 +81,7 @@ export function SummaryTopicCheckPopup({
   const [retryResults, setRetryResults] = useState<Record<string, boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  const answerIds = useRef<Record<string, string>>({});
 
   useEffect(() => {
     if (!open) return;
@@ -97,6 +98,7 @@ export function SummaryTopicCheckPopup({
     setRetryResults({});
     setIsSubmitting(false);
     setSaveFailed(false);
+    answerIds.current = {};
     trackMarketingEvent('summary_topic_check_prompted', {
       material_id: materialId,
       chapter_index: chapterIndex,
@@ -164,6 +166,7 @@ export function SummaryTopicCheckPopup({
     if (!selectedAnswer || !current || isSubmitting) return;
 
     setIsSubmitting(true);
+    setSaveFailed(false);
     const wasCorrect = normalize(selectedAnswer) === normalize(current.answer);
     const nextAnswers = { ...answers, [current.id]: selectedAnswer };
     setAnswers(nextAnswers);
@@ -180,6 +183,7 @@ export function SummaryTopicCheckPopup({
 
     if (recordResults) {
       const result = await recordStudentMaterialStudyResultAction({
+        resultId: (answerIds.current[current.id] ??= crypto.randomUUID()),
         materialId,
         sourceType: 'exercise',
         itemKey: `summary-check:${chapterIndex}:${current.id}`,
@@ -192,7 +196,11 @@ export function SummaryTopicCheckPopup({
         reference: current.reference,
       }).catch(() => ({ success: false, errorId: null }));
 
-      if (!result.success) setSaveFailed(true);
+      if (!result.success) {
+        setSaveFailed(true);
+        setIsSubmitting(false);
+        return;
+      }
 
       if (!wasCorrect && result.errorId) {
         setErrorIds((previous) => ({
@@ -431,7 +439,7 @@ export function SummaryTopicCheckPopup({
         aria-describedby={undefined}
         aria-labelledby="summary-topic-check-title"
         overlayClassName="z-[120] bg-foreground/45 backdrop-blur"
-        className="border-border bg-background top-auto bottom-3 z-[120] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[520px] translate-y-0 overflow-y-auto overscroll-contain rounded-[24px] p-0 [overflow-wrap:anywhere] sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-y-1/2"
+        className="border-border bg-background top-auto bottom-3 z-[120] max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-[520px] translate-y-0 overflow-y-auto overscroll-contain rounded-2xl p-0 [overflow-wrap:anywhere] sm:top-1/2 sm:bottom-auto sm:max-w-[520px] sm:-translate-y-1/2"
       >
         <div className="px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex items-start justify-between gap-4">
@@ -442,7 +450,7 @@ export function SummaryTopicCheckPopup({
               <DialogTitle asChild>
                 <h2
                   id="summary-topic-check-title"
-                  className="mt-1.5 text-[1.2rem] leading-tight font-bold tracking-[-0.035em] text-slate-950 sm:text-[1.35rem]"
+                  className="text-foreground mt-1.5 text-[18px] leading-6 font-bold tracking-[-0.035em] sm:text-[18px]"
                 >
                   {topicTitle}
                 </h2>
@@ -452,7 +460,7 @@ export function SummaryTopicCheckPopup({
               type="button"
               onClick={skip}
               aria-label="Seguir estudiando"
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              className="text-muted-foreground hover:text-foreground inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition hover:bg-slate-100"
             >
               <X className="h-4 w-4" />
             </button>
@@ -463,15 +471,15 @@ export function SummaryTopicCheckPopup({
               role="alert"
               className="border-destructive text-foreground mt-4 border-l-2 pl-3 text-sm"
             >
-              No pudimos guardar todas tus respuestas. Podés seguir repasando, pero estos resultados
-              no quedaron registrados.
+              No pudimos guardar tu respuesta. Volvé a confirmarla para conservar tu progreso, o
+              elegí seguir estudiando sin guardarla.
             </p>
           ) : null}
 
           {phase === 'choice' ? (
             <div className="mt-6">
-              <h3 className="text-[1.05rem] font-bold text-slate-950">Practicá si entendiste</h3>
-              <p className="mt-1 text-[13px] text-slate-500">
+              <h3 className="text-foreground text-[1.05rem] font-bold">Practicá si entendiste</h3>
+              <p className="text-muted-foreground mt-1 text-[13px]">
                 2 preguntas rápidas · menos de 1 minuto
               </p>
 
@@ -479,14 +487,14 @@ export function SummaryTopicCheckPopup({
                 <button
                   type="button"
                   onClick={start}
-                  className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center rounded-[13px] px-4 text-sm font-semibold text-white transition"
+                  className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold text-white transition"
                 >
                   Comprobar
                 </button>
                 <button
                   type="button"
                   onClick={skip}
-                  className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+                  className="border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-sm font-semibold transition"
                 >
                   Seguir estudiando
                   <ChevronRight className="h-4 w-4" />
@@ -501,12 +509,12 @@ export function SummaryTopicCheckPopup({
                 <span className="text-primary text-[11px] font-bold">
                   Pregunta {questionIndex + 1} de 2
                 </span>
-                <span className="text-[10.5px] font-semibold text-slate-400">
+                <span className="text-muted-foreground text-[10.5px] font-semibold">
                   {isPrevious ? 'Recordando el tema anterior' : 'Sobre este tema'}
                 </span>
               </div>
 
-              <p className="mt-3 text-[15px] leading-6 font-semibold text-slate-900">
+              <p className="text-foreground mt-3 text-[15px] leading-6 font-semibold">
                 {current.prompt}
               </p>
 
@@ -521,8 +529,8 @@ export function SummaryTopicCheckPopup({
                       className={cn(
                         'rounded-[12px] border px-3.5 py-3 text-left text-[13px] leading-5 transition',
                         selected
-                          ? 'border-primary bg-primary/5 ring-primary/10 text-slate-950 ring-1'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/70'
+                          ? 'border-primary bg-primary/5 ring-primary/10 text-foreground ring-1'
+                          : 'border-border bg-card text-foreground hover:bg-muted/70 hover:border-slate-300'
                       )}
                     >
                       {option}
@@ -535,7 +543,7 @@ export function SummaryTopicCheckPopup({
                 <button
                   type="button"
                   onClick={skip}
-                  className="text-[12.5px] font-semibold text-slate-400 transition hover:text-slate-700"
+                  className="text-muted-foreground hover:text-foreground text-[12.5px] font-semibold transition"
                 >
                   Seguir estudiando
                 </button>
@@ -575,20 +583,25 @@ export function SummaryTopicCheckPopup({
                 )}
               </div>
 
-              <p className="mt-3 text-[11px] font-bold tracking-[0.08em] text-slate-400 uppercase">
+              <p className="text-muted-foreground mt-3 text-[11px] font-bold tracking-[0.08em] uppercase">
                 {correctCount}/2 correctas
               </p>
-              <h3 className="mt-1 text-[1.08rem] font-bold text-slate-950">{resultCopy.title}</h3>
-              <p className="mt-1.5 text-[13px] leading-5 text-slate-500">{resultCopy.detail}</p>
+              <h3 className="text-foreground mt-1 text-[1.08rem] font-bold">{resultCopy.title}</h3>
+              <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
+                {resultCopy.detail}
+              </p>
 
               {failedTopics.length > 0 ? (
-                <div className="mt-4 rounded-[13px] border border-slate-200 bg-slate-50/70 px-3.5 py-3">
-                  <p className="text-[10.5px] font-bold tracking-[0.08em] text-slate-400 uppercase">
+                <div className="border-border bg-muted/70 mt-4 rounded-lg border px-3.5 py-3">
+                  <p className="text-muted-foreground text-[10.5px] font-bold tracking-[0.08em] uppercase">
                     Para reforzar
                   </p>
                   <div className="mt-1.5 grid gap-1">
                     {failedTopics.map((topic) => (
-                      <p key={topic} className="text-[13px] leading-5 font-semibold text-slate-800">
+                      <p
+                        key={topic}
+                        className="text-foreground text-[13px] leading-5 font-semibold"
+                      >
                         {topic}
                       </p>
                     ))}
@@ -600,7 +613,7 @@ export function SummaryTopicCheckPopup({
                 <button
                   type="button"
                   onClick={() => onContinue('completed')}
-                  className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] px-4 text-sm font-semibold text-white transition"
+                  className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold text-white transition"
                 >
                   Seguir estudiando
                   <ChevronRight className="h-4 w-4" />
@@ -610,7 +623,7 @@ export function SummaryTopicCheckPopup({
                   <button
                     type="button"
                     onClick={startReinforcement}
-                    className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-[13px] px-4 text-sm font-semibold text-white transition"
+                    className="bg-primary hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition"
                   >
                     <RotateCcw className="h-4 w-4" />
                     Reforzar ahora
@@ -618,7 +631,7 @@ export function SummaryTopicCheckPopup({
                   <button
                     type="button"
                     onClick={() => onContinue('completed')}
-                    className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    className="border-border bg-card text-foreground hover:bg-muted inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-sm font-semibold transition"
                   >
                     Seguir estudiando
                     <ChevronRight className="h-4 w-4" />
@@ -634,17 +647,17 @@ export function SummaryTopicCheckPopup({
                 <p className="text-[10.5px] font-extrabold tracking-[0.12em] text-amber-700 uppercase">
                   Ojo con esta idea
                 </p>
-                <p className="mt-2 text-[14px] leading-6 font-semibold text-slate-900">
+                <p className="text-foreground mt-2 text-[14px] leading-6 font-semibold">
                   {activeFailedQuestion.topic || topicTitle}
                 </p>
 
                 {isSubmitting && !reinforcementText ? (
-                  <div className="mt-2 flex items-center gap-2 text-[13px] text-slate-500">
+                  <div className="text-muted-foreground mt-2 flex items-center gap-2 text-[13px]">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Preparando una explicación con tu PDF…
                   </div>
                 ) : (
-                  <p className="mt-1.5 text-[13px] leading-5 text-slate-600">
+                  <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
                     {reinforcementText || fallbackReinforcementText(activeFailedQuestion)}
                   </p>
                 )}
@@ -654,7 +667,7 @@ export function SummaryTopicCheckPopup({
                 <p className="mt-3 text-[12px] leading-5 text-amber-700">{reinforcementMessage}</p>
               ) : null}
 
-              <p className="mt-4 text-[12.5px] leading-5 text-slate-500">
+              <p className="text-muted-foreground mt-4 text-[12.5px] leading-5">
                 Después te hacemos una pregunta nueva sobre la misma idea.
               </p>
 
@@ -663,7 +676,7 @@ export function SummaryTopicCheckPopup({
                   type="button"
                   disabled={isSubmitting || !reinforcementText}
                   onClick={startRetry}
-                  className="bg-primary enabled:hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-[13px] px-4 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+                  className="bg-primary enabled:hover:bg-primary/90 inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Comprobar de nuevo
@@ -671,7 +684,7 @@ export function SummaryTopicCheckPopup({
                 <button
                   type="button"
                   onClick={() => onContinue('completed')}
-                  className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[13px] border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="border-border bg-card text-foreground hover:bg-muted inline-flex h-11 items-center justify-center gap-1.5 rounded-lg border px-4 text-sm font-semibold transition"
                 >
                   Seguir estudiando
                   <ChevronRight className="h-4 w-4" />
@@ -684,12 +697,12 @@ export function SummaryTopicCheckPopup({
             <div className="mt-5">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-primary text-[11px] font-bold">Comprobalo de nuevo</span>
-                <span className="text-[10.5px] font-semibold text-slate-400">
+                <span className="text-muted-foreground text-[10.5px] font-semibold">
                   {reinforceIndex + 1} de {failedQuestions.length}
                 </span>
               </div>
 
-              <p className="mt-3 text-[15px] leading-6 font-semibold text-slate-900">
+              <p className="text-foreground mt-3 text-[15px] leading-6 font-semibold">
                 {reviewQuestion.question}
               </p>
 
@@ -704,8 +717,8 @@ export function SummaryTopicCheckPopup({
                       className={cn(
                         'rounded-[12px] border px-3.5 py-3 text-left text-[13px] leading-5 transition',
                         selected
-                          ? 'border-primary bg-primary/5 ring-primary/10 text-slate-950 ring-1'
-                          : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50/70'
+                          ? 'border-primary bg-primary/5 ring-primary/10 text-foreground ring-1'
+                          : 'border-border bg-card text-foreground hover:bg-muted/70 hover:border-slate-300'
                       )}
                     >
                       {option}
@@ -745,7 +758,7 @@ export function SummaryTopicCheckPopup({
                   'flex h-10 w-10 items-center justify-center rounded-full',
                   resolvedRetryCount === failedQuestions.length
                     ? 'bg-emerald-50 text-emerald-600'
-                    : 'bg-slate-100 text-slate-600'
+                    : 'text-muted-foreground bg-slate-100'
                 )}
               >
                 {resolvedRetryCount === failedQuestions.length ? (
@@ -755,12 +768,12 @@ export function SummaryTopicCheckPopup({
                 )}
               </div>
 
-              <h3 className="mt-3 text-[1.08rem] font-bold text-slate-950">
+              <h3 className="text-foreground mt-3 text-[1.08rem] font-bold">
                 {resolvedRetryCount === failedQuestions.length
                   ? 'Bien, corregiste lo que había fallado.'
                   : 'Listo. Ya repasaste este bloque.'}
               </h3>
-              <p className="mt-1.5 text-[13px] leading-5 text-slate-500">
+              <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
                 {resolvedRetryCount === failedQuestions.length
                   ? 'Podés seguir estudiando con la idea más clara.'
                   : saveFailed
@@ -773,7 +786,7 @@ export function SummaryTopicCheckPopup({
               <button
                 type="button"
                 onClick={finishReinforcement}
-                className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-[13px] px-4 text-sm font-semibold text-white transition"
+                className="bg-primary hover:bg-primary/90 mt-6 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold text-white transition"
               >
                 Seguir estudiando
                 <ChevronRight className="h-4 w-4" />
