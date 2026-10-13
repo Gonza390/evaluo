@@ -66,3 +66,15 @@ dos fallos preexistentes están documentados en la revisión anterior.
   y sin desbordamiento horizontal.
 - LISTO CON RIESGOS para revisión local: no se verificó el recorrido autenticado
   con una cuenta real. Este ajuste posterior sigue en local, sin publicar.
+
+## Integración con master — 13 de octubre
+
+- Se incorporaron los siete commits nuevos de master sin reemplazar sus ajustes
+  visuales, tracking, pruebas ni actualizaciones de dependencias.
+- El contador se refresca al cambiar la apertura de Progreso y al recuperar el
+  foco; se conserva la eliminación del refresco en cada pestaña general.
+- Lint completo y `npm test` completo aprobados. Los fallos anteriores de SEO y
+  guía del primer PDF ya fueron corregidos en los commits recibidos de master.
+- Build local aprobado con Next 16.3.7 instalado. El lockfile remoto actualizado
+  declara Next 16.3.8; no se reinstalaron dependencias en esta pasada.
+- Incremento preparado para subir a master; no se verifica aquí producción.
