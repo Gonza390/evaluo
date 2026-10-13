@@ -34,6 +34,7 @@ import {
 import {
   buildCanonicalStudentMaterialSummaryFallback,
   buildCanonicalSummaryPrompt,
+  sanitizeCanonicalSummaryPayload,
 } from '../lib/student-materials/canonical-summary.ts';
 import {
   buildCanonicalStudentMaterialGlossary,
@@ -1009,6 +1010,80 @@ assert.doesNotMatch(
   legacyPromptWithoutPages,
   /7,35 a 7,45|MARCADOR_INTERNO_NO_EXPORTAR/,
   'La generación debe seguir funcionando cuando no hay páginas originales.'
+);
+
+
+// Regresión: el umbral de expansión no puede borrar la información detallada
+// que la IA tomó de los fragmentos originales de un documento.
+const preservationFixture: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  topics: [
+    { title: 'Gasometría', description: 'El pH arterial, la PaCO2 y el bicarbonato permiten interpretar el equilibrio ácido base.', relevance: 'alta', pageReferences: [1] },
+    { title: 'Metabolismo', description: 'Las distintas rutas metabólicas regulan la disponibilidad energética para células y tejidos.', relevance: 'alta', pageReferences: [2] },
+    { title: 'Hemograma', description: 'Las fracciones celulares de la sangre permiten identificar alteraciones hematológicas relevantes.', relevance: 'alta', pageReferences: [3] },
+  ],
+  concepts: [],
+  relationships: [],
+  classifications: [],
+  processes: [],
+  formulas: [],
+  examples: [],
+  confusions: [],
+  authorsOrTheories: [],
+  examRelevantClaims: [],
+  sourceBindings: [],
+};
+const preservedGuide = sanitizeCanonicalSummaryPayload(
+  {
+    summary_short:
+      'El documento presenta tres áreas de bioquímica clínica, incluyendo interpretación de gases sanguíneos, metabolismo celular y parámetros hematológicos.',
+    key_points: [
+      'La gasometría permite analizar el equilibrio ácido base de la sangre.',
+      'El metabolismo participa de la distribución de energía del organismo.',
+      'Los resultados del hemograma permiten estudiar componentes celulares.',
+      'Las diferencias de los parámetros clínicos pueden orientar al análisis.',
+      'Cada sistema del material tiene conceptos centrales para interpretar.',
+    ],
+    sections: [
+      {
+        title: 'Gasometría arterial',
+        body: 'Dato original importante: pH de 7,35 a 7,45 y PaCO2 de 35 a 45 mmHg.',
+        source_topic_numbers: [1],
+      },
+      {
+        title: 'Metabolismo',
+        body: 'Un ejemplo breve de metabolismo vinculado al funcionamiento celular.',
+        source_topic_numbers: [2],
+      },
+      {
+        title: 'Hemograma',
+        body: 'Una síntesis breve de los parámetros hematológicos.',
+        source_topic_numbers: [3],
+      },
+    ],
+  },
+  preservationFixture,
+  'gemini-prueba'
+);
+assert.equal(
+  preservedGuide?.provider,
+  'gemini-prueba-canonical-expanded',
+  'La respuesta breve válida debe complementarse sin descartarse.'
+);
+assert.match(
+  preservedGuide?.sections[0]?.body ?? '',
+  /pH de 7,35 a 7,45 y PaCO2 de 35 a 45 mmHg/,
+  'No se debe perder la información específica del PDF cuando se expande la guía.'
+);
+assert.match(
+  preservedGuide?.sections[0]?.body ?? '',
+  /Conceptos complementarios para repasar/,
+  'La expansión debe aportar contexto canónico adicional cuando corresponde.'
+);
+assert.match(
+  preservedGuide?.sections[0]?.body ?? '',
+  /Ver en PDF · página 1$/,
+  'La expansión debe conservar la referencia al PDF al final de la sección.'
 );
 
 const canonicalGuideFallback =

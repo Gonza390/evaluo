@@ -389,7 +389,7 @@ function parseCanonicalSummaryPayload(raw: string): CanonicalSummaryPayload {
   }
 }
 
-function sanitizeCanonicalSummaryPayload(
+export function sanitizeCanonicalSummaryPayload(
   payload: CanonicalSummaryPayload,
   model: CanonicalPedagogicalModel,
   providerModel: string
@@ -516,10 +516,7 @@ function sanitizeCanonicalSummaryPayload(
               Boolean(topic)
           );
 
-        return {
-          title: section.title,
-          body: buildStructuredChapterBody(source, topics, index),
-        };
+        return supplementCanonicalChapter(section, topics);
       })
     : sections;
 
@@ -540,6 +537,54 @@ function sanitizeCanonicalSummaryPayload(
       : `${providerModel}-canonical`,
     errorMessage: null,
     sourceChunksCount: model.chunkCount,
+  };
+}
+
+/**
+ * Los cuerpos generados con evidencia original se conservan incluso si no
+ * llegan al mínimo de caracteres. Se complementan sólo los temas insuficientes,
+ * en lugar de reemplazarlos con la síntesis local (que perdería datos exactos).
+ */
+function supplementCanonicalChapter(
+  section: { title: string; body: string },
+  topics: CanonicalSummarySource['topics']
+) {
+  const normalized = normalizeComparisonKey(section.body);
+  const missing = topics
+    .filter((topic) => {
+      const significant = normalizeComparisonKey(topic.description)
+        .split(/\s+/)
+        .filter((word) => word.length > 5);
+      if (significant.length === 0) return false;
+      const unique = [...new Set(significant)];
+      const matching = unique.filter((word) => normalized.includes(word)).length;
+      return matching / unique.length < 0.45;
+    })
+    .slice(0, 8);
+
+  if (missing.length === 0) return section;
+
+  const sourceLines = missing.map(
+    (topic) =>
+      `- **${stripLeadingNumber(topic.title)}:** ${topic.description}`
+  );
+  const lines = section.body.split('\n');
+  const trailingReference = lines.at(-1)?.startsWith('Ver en PDF · ')
+    ? lines.pop()
+    : undefined;
+
+  return {
+    ...section,
+    body: cleanMultilineBlock(
+      [
+        lines.join('\n').trim(),
+        '### Conceptos complementarios para repasar',
+        ...sourceLines,
+        trailingReference,
+      ]
+        .filter(Boolean)
+        .join('\n\n')
+    ),
   };
 }
 
