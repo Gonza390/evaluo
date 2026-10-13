@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { MaterialProgressContent } from '@/components/study/material-progress-content';
 import {
   getTopicQuestionCounts,
   readPracticeSummarySections,
@@ -403,30 +401,18 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
         <LazyMaterialStudyWorkspace
           key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
           initialProgressOpen={isOwner && query.tab === 'progreso'}
-          progress={
-            isOwner && user ? (
-              <Suspense
-                fallback={
-                  <p role="status" className="text-muted-foreground p-4 text-sm">
-                    Cargando tu progreso…
-                  </p>
-                }
-              >
-                <MaterialProgressContent
-                  userId={user.id}
-                  material={{ id: material.id, title: material.title }}
-                  sections={studySummary.sections}
-                  questionCounts={getTopicQuestionCounts(
+          progressConfig={
+            isOwner && user
+              ? {
+                  questionCounts: getTopicQuestionCounts(
                     readPracticeSummarySections(studySummary.sections),
                     pedagogicalArtifacts.questions
-                  )}
-                  requestedError={query.error?.slice(0, 80)}
-                  tour={query.tour}
-                  returnToErrors={query.from === 'errores'}
-                  summaryUnavailable={studySummary.status !== 'ready'}
-                />
-              </Suspense>
-            ) : undefined
+                  ),
+                  requestedError: query.error?.slice(0, 80),
+                  tour: query.tour,
+                  returnToErrors: query.from === 'errores',
+                }
+              : undefined
           }
           backHref={backHref}
           canRegenerate={canRegenerate}
