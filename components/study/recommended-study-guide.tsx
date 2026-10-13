@@ -37,7 +37,7 @@ export function RecommendedStudyGuide({
       selector: '[data-recommended-errors]',
       title: 'Reforzá lo que te cuesta',
       description:
-        'Si te equivocás, esos conceptos quedan en Mis errores para que puedas entenderlos y volver a practicarlos.',
+        'Si te equivocás, esos conceptos quedan en Progreso para que puedas entenderlos y volver a practicarlos.',
       nextLabel: 'Empezar a estudiar',
       progress: '3 de 3 · Reforzar',
     },

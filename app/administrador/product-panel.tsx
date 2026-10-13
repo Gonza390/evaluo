@@ -385,7 +385,7 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
             value={stats.studyFlow.nextSimulator.toLocaleString('es-AR')}
           />
           <MiniRow
-            label="Fueron a Mis errores"
+            label="Fueron a Progreso"
             value={stats.studyFlow.nextErrors.toLocaleString('es-AR')}
           />
           <MiniRow

@@ -395,15 +395,49 @@ function candidateSectionIndex(candidate: Candidate, sections: StudySummarySecti
   if (titleMatches.length === 1) return titleMatches[0];
   if (titleMatches.length > 1) return -1;
 
+  // Los materiales anteriores nombraban conceptos, no el capítulo del resumen.
+  // Usar sus subtítulos explícitos; no una palabra suelta dentro de un párrafo.
+  const conceptWords = (value: string) =>
+    new Set(Array.from(words(value), (word) => word.replace(/s$/, '')));
+  const labelWords = labels.map(conceptWords).filter((label) => label.size >= 2);
+  const headingMatches = sections.flatMap((section, index) => {
+    const headings = [
+      section.title,
+      ...Array.from(section.body.matchAll(/^\s*#{1,6}\s+(.+)$/gm), (match) => match[1]),
+      ...Array.from(section.body.matchAll(/\*\*([^*\n]+):\*\*/g), (match) => match[1]),
+    ];
+    return headings.some((heading) => {
+      const headingWords = conceptWords(heading);
+      return labelWords.some((label) => Array.from(label).every((word) => headingWords.has(word)));
+    })
+      ? [index]
+      : [];
+  });
+  if (headingMatches.length === 1) return headingMatches[0];
+  if (headingMatches.length > 1) return -1;
+
+  // Una respuesta corta también puede ser evidencia de ubicación si aparece
+  // literalmente en una sola sección (p. ej. «Objetos lingüísticos»).
+  const answerPhrase = clean(normalize(candidate.answer));
+  if (answerPhrase.length >= 16 && words(candidate.answer).size >= 2) {
+    const phraseMatches = sections.flatMap((section, index) =>
+      ` ${clean(normalize(`${section.title} ${section.body}`))} `.includes(` ${answerPhrase} `)
+        ? [index]
+        : []
+    );
+    if (phraseMatches.length === 1) return phraseMatches[0];
+    if (phraseMatches.length > 1) return -1;
+  }
+
   // Compatibilidad con materiales previos sin tema explícito. Una respuesta
   // debe estar respaldada mayoritariamente por una única sección; ante duda
   // se omite, en lugar de atribuir evidencia a otro tema.
-  const answerWords = words(candidate.answer);
+  const answerWords = conceptWords(candidate.answer);
   if (answerWords.size < 3) return -1;
   const matches = sections
     .map((section, index) => ({
       index,
-      shared: sharedWordCount(answerWords, words(`${section.title} ${section.body}`)),
+      shared: sharedWordCount(answerWords, conceptWords(`${section.title} ${section.body}`)),
     }))
     .filter(({ shared }) => shared >= 3 && shared / answerWords.size >= 0.7)
     .sort((left, right) => right.shared - left.shared);

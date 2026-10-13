@@ -41,6 +41,7 @@ type NavConfigItem = {
 };
 
 function isNavItemActive(pathname: string, href: string) {
+  if (href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso') return true;
   if (href === '/dashboard') {
     return pathname === href;
   }
@@ -51,7 +52,7 @@ function isNavItemActive(pathname: string, href: string) {
 const navItems: NavConfigItem[] = [
   { label: 'Mi espacio', href: '/dashboard', icon: Home },
   { label: 'Calendario', href: '/calendario', icon: CalendarDays },
-  { label: 'Mis errores', href: '/dashboard/explicaciones', icon: CircleAlert },
+  { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
 ];
 
 function NavItem({
@@ -160,7 +161,6 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
             ))}
 
             {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} /> : null}
-
           </nav>
 
           <div className="mt-auto border-t border-slate-200/80 pt-3">
@@ -176,7 +176,9 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                   }`}
                 >
                   <Crown className="h-4 w-4 shrink-0" />
-                  {!collapsed ? <p className="text-sm font-semibold">Planes y suscripción</p> : null}
+                  {!collapsed ? (
+                    <p className="text-sm font-semibold">Planes y suscripción</p>
+                  ) : null}
                 </Link>
 
                 <button
@@ -266,11 +268,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
           </div>
         </div>
       </div>
-      <FeedbackDialog
-        open={feedbackOpen}
-        onOpenChange={setFeedbackOpen}
-        sourcePath={pathname}
-      />
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} sourcePath={pathname} />
     </aside>
   );
 }

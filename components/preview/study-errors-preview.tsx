@@ -309,7 +309,7 @@ export function StudyErrorsPreview({
             <BookOpen className="h-4 w-4" />
             Tus apuntes, tu progreso
           </div>
-          <h1 className="text-3xl font-black tracking-tighter sm:text-4xl">Mis errores</h1>
+          <h1 className="text-3xl font-black tracking-tighter sm:text-4xl">Progreso</h1>
           <p className={(materialId ? 'hidden lg:block ' : '') + '!text-muted-foreground mt-2'}>
             Entendé por qué te equivocaste y repasá el tema en tus propios PDFs.
           </p>
@@ -914,7 +914,7 @@ export function StudyErrorsPreview({
                             <section
                               id={'preview-source-' + selected.id}
                               className="border-primary/30 mb-6 border-l-2 pl-5"
-                              aria-label="PDF dentro de Mis errores"
+                              aria-label="PDF dentro de Progreso"
                             >
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <h3 className="text-sm font-semibold">{selected.section}</h3>

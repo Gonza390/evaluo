@@ -11,6 +11,7 @@ import {
 import { enforceStrictRateLimit } from '@/lib/rate-limit';
 import { isUuid } from '@/lib/uuid';
 import { logError } from '@/lib/observability';
+import { buildPdfProgress } from '@/lib/student-materials/progress';
 
 export async function getStudentMaterialPracticeContextAction(
   materialId: string
@@ -37,7 +38,7 @@ export async function getStudentMaterialPracticeContextAction(
     .maybeSingle();
   if (error || !material) return unavailable;
   try {
-    const [coverage, answers, errors, checks] = await Promise.all([
+    const [coverage, answers, errors, checks, summary] = await Promise.all([
       getPdfAssessmentData(user.id, materialId),
       createAdminClient()
         .from('student_material_answer_events')
@@ -56,8 +57,23 @@ export async function getStudentMaterialPracticeContextAction(
         .eq('status', 'correct')
         .order('answered_at', { ascending: false })
         .limit(200),
+      supabase
+        .from('student_material_summaries')
+        .select('summary_sections')
+        .eq('student_material_id', materialId)
+        .maybeSingle(),
     ]);
-    if (coverage.loadError || answers.error || errors.loadError || checks.error) return unavailable;
+    if (coverage.loadError || answers.error || errors.loadError || checks.error || summary.error)
+      return unavailable;
+    const progress = buildPdfProgress(summary.data?.summary_sections, [
+      ...errors.pending,
+      ...errors.resolved,
+    ]);
+    const chapterByErrorId = new Map(
+      progress.topics.flatMap((topic) =>
+        topic.errors.map((error) => [error.id, topic.title] as const)
+      )
+    );
     const latestChecks = new Set<string>();
     const reviewFollowups = (checks.data ?? []).flatMap((check) => {
       if (latestChecks.has(check.error_id)) return [];
@@ -69,7 +85,8 @@ export async function getStudentMaterialPracticeContextAction(
       return [
         {
           errorId: error.id,
-          topic: error.recommendation?.sectionTitle ?? error.topic,
+          topic:
+            chapterByErrorId.get(error.id) ?? error.recommendation?.sectionTitle ?? error.topic,
           correctAnswer: error.correctAnswer,
           originalPrompt: error.prompt,
           reviewPrompt: check.question,
@@ -87,7 +104,13 @@ export async function getStudentMaterialPracticeContextAction(
       pendingTopics: [
         ...new Set(
           errors.pending
-            .map((item) => item.recommendation?.sectionTitle ?? item.topic ?? '')
+            .map(
+              (item) =>
+                chapterByErrorId.get(item.id) ??
+                item.recommendation?.sectionTitle ??
+                item.topic ??
+                ''
+            )
             .filter(Boolean)
         ),
       ],

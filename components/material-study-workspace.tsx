@@ -21,7 +21,6 @@ import {
   CircleAlert,
   ChevronLeft,
   ChevronRight,
-  Crown,
   FileText,
   ListTree,
   Loader2,
@@ -966,7 +965,7 @@ export function MaterialStudyWorkspace({
     <div
       className={cn(
         'border-border shrink-0 flex-col gap-1.5 border-b px-2.5 py-2 sm:px-3 sm:py-2.5',
-        activeTab === 'resumen' && !progressOpen ? 'flex' : 'hidden md:flex'
+        'hidden md:flex'
       )}
     >
       <TabsList className="hidden h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
@@ -984,7 +983,6 @@ export function MaterialStudyWorkspace({
               {tab.label}
               {tab.premium ? (
                 <span className="bg-primary/10 text-primary ml-1 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.08em] uppercase sm:text-[10px]">
-                  <Crown className="h-2.5 w-2.5" />
                   Premium
                 </span>
               ) : null}
@@ -1888,7 +1886,7 @@ export function MaterialStudyWorkspace({
             isViewerVisible ? (
               <div
                 data-demo-focus="pdf"
-                className="border-border bg-card relative overflow-hidden rounded-2xl border p-2 shadow-none"
+                className="border-border bg-card relative hidden overflow-hidden rounded-2xl border p-2 shadow-none md:block"
               >
                 <button
                   type="button"
@@ -1917,7 +1915,7 @@ export function MaterialStudyWorkspace({
                 />
               </div>
             ) : (
-              <div className="bg-card/80 rounded-2xl border border-dashed border-slate-300 px-4 py-3 shadow-none">
+              <div className="bg-card/80 hidden rounded-2xl border border-dashed border-slate-300 px-4 py-3 shadow-none md:block">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-muted-foreground text-[12px] font-semibold tracking-[0.16em] uppercase">

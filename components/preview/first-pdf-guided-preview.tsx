@@ -81,7 +81,7 @@ const studySteps: {
     selector: '[data-demo-focus="practice"]',
     title: 'Ahora probá lo que entendiste',
     description:
-      'Respondé hasta tres preguntas. Al primer error vamos a Mis errores para repasar ese concepto. Sin nota ni reloj.',
+      'Respondé hasta tres preguntas. Al primer error vamos a Progreso para repasar ese concepto. Sin nota ni reloj.',
     nextLabel: 'Empezar práctica',
     compactDescription: 'Hasta tres preguntas. Al primer error vamos a repasarlo.',
   },
@@ -377,7 +377,7 @@ function GuidedMaterial() {
           </h2>
           <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
             Como acertaste todas, no tenemos un error tuyo para repasar. Podés ver un error de
-            ejemplo y conocer cómo funciona Mis errores.
+            ejemplo y conocer cómo funciona Progreso.
           </p>
           <Button className="mt-5" onClick={() => openError(0, 0, true)}>
             Ver un error de ejemplo
@@ -418,14 +418,14 @@ function GuidedMaterial() {
               ) : (
                 <>
                   <p className="text-muted-foreground mt-3 text-sm">
-                    Este tema quedó en Mis errores del ejemplo. Vamos a repasarlo.
+                    Este tema quedó en Progreso del ejemplo. Vamos a repasarlo.
                   </p>
                   <Button
                     variant="outline"
                     className="mt-4"
                     onClick={() => openError(questionIndex, selected)}
                   >
-                    Abrir Mis errores ahora
+                    Abrir Progreso ahora
                   </Button>
                 </>
               )}
@@ -528,7 +528,7 @@ function GuidedMaterial() {
           ) : (
             <>
               <p className="text-primary text-sm font-semibold">
-                Mis errores · Material de ejemplo
+                Progreso · Material de ejemplo
               </p>
               <p className="text-muted-foreground mt-2 flex items-start gap-2 text-sm">
                 <FileText size={16} className="mt-0.5 shrink-0" />
@@ -787,7 +787,7 @@ function GuidedMaterial() {
                 ? 'Pedí una explicación con tu material. Después podés elegir Más simple o Dame un ejemplo.'
                 : 'Leé la explicación y abrí Ver fragmento para consultar la fuente. Después comprobalo con una situación diferente.'
           }
-          progress={`Mis errores · ${errorStep + 1} de 3`}
+          progress={`Progreso · ${errorStep + 1} de 3`}
           compactDescription={
             errorStep === 0
               ? 'Revisá el concepto, la respuesta incorrecta y la correcta.'

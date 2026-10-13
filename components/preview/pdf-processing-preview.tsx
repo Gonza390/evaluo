@@ -104,7 +104,7 @@ export function PdfProcessingPreview({
             <strong>Tu espacio académico</strong>
             <span className="journey-nav-active">Mi espacio</span>
             <span>Calendario</span>
-            <span>Mis errores</span>
+            <span>Progreso</span>
           </aside>
           <section className="journey-background-content">
             {complete ? (

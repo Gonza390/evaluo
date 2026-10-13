@@ -121,3 +121,66 @@ assert.equal(
   'La evidencia ambigua se conserva fuera del contador.'
 );
 console.log('pdf-progress.smoke: OK');
+
+const historicalSections = [
+  {
+    title: '1. Conocimiento científico',
+    body: '### Epistemología y ciencia\nEstudio de los fundamentos del conocimiento.',
+  },
+  {
+    title: '2. Teoría argumentativa',
+    body: '**Argumento deductivo:** la conclusión se deriva necesariamente.\n**Corrección formal:** validez o invalidez del argumento.',
+  },
+  {
+    title: '3. Lenguaje de las teorías',
+    body: '### Tipos de objetos\nObjetos lingüísticos, objetos concretos y objetos abstractos.',
+  },
+];
+const historical = (id: string, topic: string, answer: string) => ({
+  ...error(id, topic, 'pending', topic),
+  correctAnswer: answer,
+});
+const historicalProgress = buildPdfProgress(historicalSections, [
+  {
+    ...historical('card', 'Epistemología y ciencia', 'Estudio del conocimiento'),
+    sourceType: 'flashcard',
+  },
+  historical('deduction', 'Argumentos deductivos', 'Conclusión necesaria'),
+  historical('short', 'Clasificación del lenguaje', 'Objetos lingüísticos'),
+  // El índice antiguo no prueba la relación: esta pregunta pertenece al tercer tema.
+  {
+    ...historical('moved', 'Tipos de objetos', 'Objetos lingüísticos'),
+    sourceKey: 'pdf:summary-check:0:artifact:old',
+  },
+  historical('general', 'Introducción al curso', 'Universidad de ejemplo'),
+]);
+assert.deepEqual(
+  historicalProgress.topics.map((topic) => topic.errors.length),
+  [1, 1, 2]
+);
+assert.equal(historicalProgress.unmatched.length, 1);
+assert.equal(
+  historicalProgress.evaluated,
+  0,
+  'Asociar errores históricos no inventa eventos corregidos.'
+);
+assert.equal(
+  buildPdfProgress(
+    [
+      { title: 'Uno', body: '### Tipos de objetos\nObjetos lingüísticos.' },
+      { title: 'Dos', body: '### Tipos de objetos\nObjetos lingüísticos.' },
+    ],
+    [historical('ambiguous', 'Tipos de objetos', 'Objetos lingüísticos')]
+  ).unmatched.length,
+  1
+);
+assert.equal(
+  buildPdfProgress(historicalSections, [
+    {
+      ...historical('simulator', 'Tipos de objetos', 'Objetos lingüísticos'),
+      sourceType: 'simulator',
+    },
+  ]).tracked,
+  0,
+  'Una recomendación del simulador no se transforma en evidencia del PDF.'
+);

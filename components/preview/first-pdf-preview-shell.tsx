@@ -65,7 +65,7 @@ export function FirstPdfPreviewShell({
               aria-current={section === 'errors' ? 'page' : undefined}
               className={navClass(section === 'errors')}
             >
-              <CircleAlert className="size-4" /> Mis errores{' '}
+              <CircleAlert className="size-4" /> Progreso{' '}
               {pending && (
                 <span className="bg-primary text-primary-foreground ml-auto rounded-full px-2 text-xs">
                   1
@@ -96,7 +96,7 @@ export function FirstPdfPreviewShell({
           aria-current={section === 'errors' ? 'page' : undefined}
           className={`flex min-h-16 flex-col items-center justify-center gap-1 text-xs ${section === 'errors' ? 'text-primary' : 'text-muted-foreground'}`}
         >
-          <CircleAlert className="size-5" /> Mis errores{pending ? ' · 1' : ''}
+          <CircleAlert className="size-5" /> Progreso{pending ? ' · 1' : ''}
         </button>
         <button
           disabled

@@ -779,8 +779,8 @@ export function SummaryTopicCheckPopup({
                   : saveFailed
                     ? 'Podés volver al material para repasar lo que todavía cuesta.'
                     : recordResults
-                      ? 'Lo que todavía cuesta quedó guardado en Mis errores para volver después.'
-                      : 'En tu propio PDF, lo que todavía cuesta quedaría en Mis errores para volver después.'}
+                      ? 'Lo que todavía cuesta quedó guardado en Progreso para volver después.'
+                      : 'En tu propio PDF, lo que todavía cuesta quedaría en Progreso para volver después.'}
               </p>
 
               <button

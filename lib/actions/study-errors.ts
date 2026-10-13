@@ -155,7 +155,7 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
       studentMaterialId: material.id,
       sourceType: input.sourceType,
       sourceKey,
-      topic: safeText(canonical.topic, 180) || null,
+      topic: safeText(canonical.topic, 500) || null,
       prompt: safeText(canonical.prompt),
       explanation: safeText(canonical.explanation),
       correctAnswer: safeText(canonical.correctAnswer),
@@ -163,7 +163,7 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
       reference: {
         pageStart: canonical.reference?.pageStart ?? null,
         pageEnd: canonical.reference?.pageEnd ?? null,
-        sectionTitle: safeText(canonical.topic, 240) || null,
+        sectionTitle: safeText(canonical.topic, 500) || null,
         excerpt: safeText(canonical.reference?.excerpt, 1200) || null,
       },
     });

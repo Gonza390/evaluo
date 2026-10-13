@@ -8,7 +8,6 @@ import {
   Ellipsis,
   SquareLibrary,
   Map,
-  Crown,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -119,7 +118,6 @@ export function PdfMobileNavigation({
               )}
             >
               <Map aria-hidden="true" className="size-4" /> Mapa mental
-              <Crown aria-label="Premium" className="text-primary ml-auto size-3.5" />
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

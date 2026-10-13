@@ -110,7 +110,7 @@ export function FirstStudyErrorOnboardingPrompt({
 
           <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/55 px-4 py-3">
             <p className="text-sm font-semibold text-indigo-950">
-              Te mostramos Mis errores usando este error real.
+              Te mostramos Progreso usando este error real.
             </p>
             <p className="mt-1 text-xs leading-5 text-indigo-700">
               Es un recorrido corto y aparece una sola vez.
@@ -132,7 +132,7 @@ export function FirstStudyErrorOnboardingPrompt({
               onClick={start}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700"
             >
-              Ver cómo funciona Mis errores
+              Ver cómo funciona Progreso
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>

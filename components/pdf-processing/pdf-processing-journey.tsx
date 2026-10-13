@@ -73,7 +73,7 @@ function SceneExample({ scene, sample }: { scene: number; sample: boolean }) {
   return (
     <div className="journey-example" data-kind="errors">
       <div className="journey-example-label">
-        <Lightbulb size={16} /> Mis errores
+        <Lightbulb size={16} /> Progreso
       </div>
       <div className="journey-saved-topic">
         <strong>Un concepto para reforzar</strong>

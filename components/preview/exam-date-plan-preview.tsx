@@ -71,7 +71,7 @@ export default function ExamDatePlanPreview() {
                 <div className="h-4 w-3/4 rounded bg-slate-100" />
               </div>
               <div className="mt-10 grid gap-3 sm:grid-cols-2">
-                {['Resumen', 'Flashcards', 'Práctica', 'Mis errores'].map((item) => (
+                {['Resumen', 'Flashcards', 'Práctica', 'Progreso'].map((item) => (
                   <div key={item} className="rounded-2xl border border-slate-200 p-4">
                     <div className="text-sm font-bold text-slate-500">{item}</div>
                     <div className="mt-3 h-3 w-3/4 rounded bg-slate-100" />

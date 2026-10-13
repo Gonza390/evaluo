@@ -26,6 +26,40 @@ const base: MaterialAnswerInput = {
   reference: { sectionTitle: 'Tema inventado' },
 };
 const answer = resolveMaterialAnswer(base, artifacts, sections)!;
+
+const legacyCard = {
+  front: '¿Qué es la corrección formal?',
+  back: 'Validez o invalidez de un argumento.',
+  level: 'comprender' as const,
+  reference: { pageStart: 1, pageEnd: 1, sectionTitle: 'Corrección formal', excerpt: '' },
+};
+const canonicalCardAnswer = resolveMaterialAnswer(
+  {
+    ...base,
+    sourceType: 'flashcard',
+    itemKey: 'flashcard:0',
+    prompt: legacyCard.front,
+    topic: 'Tema inventado por el cliente',
+  },
+  { ...artifacts, flashcards: [legacyCard] },
+  [
+    {
+      title: '1. Teoría argumentativa',
+      body: '**Corrección formal:** validez o invalidez del argumento.',
+    },
+    { title: '2. Hipótesis', body: 'Contrastación de las predicciones.' },
+  ]
+);
+assert.equal(
+  canonicalCardAnswer?.topic,
+  '1. Teoría argumentativa',
+  'La próxima respuesta guarda el capítulo del resumen, aunque la tarjeta use un concepto.'
+);
+assert.equal(
+  canonicalCardAnswer?.evidenceKind,
+  'self_report',
+  'Asociar una tarjeta no transforma la autoevaluación en una respuesta objetiva.'
+);
 assert.equal(
   answer.wasCorrect,
   true,

@@ -427,7 +427,7 @@ export function PdfProgressPanel({
           {simulation
             ? 'Ver PDF real · 15 páginas'
             : returnToErrors
-              ? 'Mis errores'
+              ? 'Progreso'
               : 'Mis materiales'}
         </Link>
       )}

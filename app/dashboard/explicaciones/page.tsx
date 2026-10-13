@@ -7,7 +7,7 @@ import { isUuid } from '@/lib/uuid';
 import { pdfProgressReviewHref } from '@/lib/study-error-navigation';
 
 export const metadata: Metadata = {
-  title: 'Mis errores',
+  title: 'Progreso',
   robots: {
     index: false,
     follow: false,

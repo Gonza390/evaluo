@@ -97,7 +97,7 @@ function BottomNav() {
   const bottomNavItems = user
     ? [
         { label: 'Mi espacio', href: '/dashboard', icon: Home },
-        { label: 'Mis errores', href: '/dashboard/explicaciones', icon: CircleAlert },
+        { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
         { label: 'Calendario', href: '/calendario', icon: CalendarDays },
         { label: 'Perfil', href: '/configuracion', icon: Settings },
       ]
@@ -122,9 +122,11 @@ function BottomNav() {
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =
-            item.href === '/' || item.href === '/dashboard'
-              ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            item.href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso'
+              ? true
+              : item.href === '/' || item.href === '/dashboard'
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
           return (
             <Link

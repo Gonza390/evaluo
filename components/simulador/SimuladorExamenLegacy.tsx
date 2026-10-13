@@ -2800,7 +2800,7 @@ export default function SimuladorExamen({
                           className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
                         >
                           <Sparkles className="h-4 w-4" />
-                          Ver Mis errores
+                          Ver Progreso
                         </Link>
                       </div>
                     ) : null}

@@ -187,8 +187,8 @@ export function StudentMaterialDiagnostic({
               {guided && (
                 <p className="text-muted-foreground mt-2 text-sm leading-6">
                   {demo
-                    ? 'En tu PDF, estos conceptos quedarían guardados en Mis errores.'
-                    : 'Estos conceptos quedaron guardados en Mis errores para que puedas repasarlos y comprobarlos de nuevo.'}
+                    ? 'En tu PDF, estos conceptos quedarían guardados en Progreso.'
+                    : 'Estos conceptos quedaron guardados en Progreso para que puedas repasarlos y comprobarlos de nuevo.'}
                 </p>
               )}
             </>

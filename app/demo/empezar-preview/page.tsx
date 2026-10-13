@@ -43,7 +43,7 @@ export default function EmpezarPreviewPage() {
                 {[
                   ['Mi espacio', Home],
                   ['Calendario', CalendarDays],
-                  ['Mis errores', TriangleAlert],
+                  ['Progreso', TriangleAlert],
                   ['Configuración', Settings],
                 ].map(([label, Icon], index) => {
                   const IconComponent = Icon as typeof Home;

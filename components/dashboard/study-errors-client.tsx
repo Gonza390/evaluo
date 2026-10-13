@@ -276,7 +276,7 @@ export function StudyErrorsClient({
   if (data.loadError)
     return (
       <div className="mx-auto max-w-3xl px-5 py-10">
-        <AppPageHeader title="Mis errores" />
+        <AppPageHeader title="Progreso" />
         <p role="alert" className="!text-foreground mt-4">
           No pudimos cargar tus errores. Tu progreso sigue guardado.
         </p>
@@ -304,7 +304,7 @@ export function StudyErrorsClient({
           }}
           onBack={tourStep > 0 ? () => setTourStep((step) => step - 1) : undefined}
           onExit={() => void closeTour('skipped')}
-          ariaLabel="Guía de Mis errores"
+          ariaLabel="Guía de Progreso"
           footerLabel="Tu primer error"
         />
       )}
@@ -315,7 +315,7 @@ export function StudyErrorsClient({
         <div ref={pageIntro} tabIndex={-1} className="scroll-mt-24 outline-none">
           <AppPageHeader
             eyebrow="Progreso"
-            title="Mis errores"
+            title="Progreso"
             description={<span role="status">{headerDescription}</span>}
           />
         </div>
