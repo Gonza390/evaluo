@@ -453,9 +453,39 @@ async function requestPedagogicalMapJson(
     try {
       const result = await attempt.run();
       if (result) {
+        const parsed = tryParseJsonRecord(result.content);
+        if (!parsed) {
+          logError(
+            'pedagogy.localReduce.providerInvalidPayload',
+            new Error('El proveedor devolvió contenido no JSON para el mapa pedagógico.'),
+            {
+              provider: attempt.provider,
+              model: result.model,
+              chunkIndexes: group.chunkIndexes,
+            }
+          );
+          continue;
+        }
+
+        const allowed = new Set(group.chunkIndexes.map((index) => index + 1));
+        const compact = normalizeCompactPedagogicalNode(parsed, allowed);
+        if (!hasContent(compact)) {
+          logError(
+            'pedagogy.localReduce.providerInvalidPayload',
+            new Error('El proveedor devolvió un mapa pedagógico vacío o inválido.'),
+            {
+              provider: attempt.provider,
+              model: result.model,
+              chunkIndexes: group.chunkIndexes,
+            }
+          );
+          continue;
+        }
+
         if (attempt.provider !== 'gemini') {
           logInfo('pedagogy.localReduce.providerFallback', {
             provider: attempt.provider,
+            model: result.model,
             chunkIndexes: group.chunkIndexes,
           });
         }
