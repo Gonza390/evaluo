@@ -65,10 +65,7 @@ export function PdfMobileNavigation({
             type="button"
             onClick={() => onSelect(id)}
             aria-current={active === id ? 'page' : undefined}
-            className={cn(
-              itemClass(active === id),
-              id === 'progreso' && hasPendingErrors && active !== id && 'text-destructive'
-            )}
+            className={itemClass(active === id)}
           >
             <span className="relative">
               <Icon aria-hidden="true" className="size-5" />

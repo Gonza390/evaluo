@@ -76,7 +76,8 @@ assertIncludesAll('app/pregunteros/[materia]/page.tsx', [
 assertIncludesAll('app/pregunteros/[materia]/parcial/[parcial]/page.tsx', [
   'buildPregunteroParcialSearchTitle',
   'pregunteroHref',
-  'Practicar ahora',
+  'PregunteroPracticeHero',
+  'simuladorHref={simuladorHref}',
 ]);
 
 assertIncludesAll('app/estudiar/[universidad]/[carrera]/page.tsx', [

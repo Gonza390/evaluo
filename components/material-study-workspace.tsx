@@ -331,7 +331,7 @@ export function MaterialStudyWorkspace({
       cancelled = true;
       window.removeEventListener('focus', refreshPending);
     };
-  }, [activeTab, progressOpen, isOwner, isDemo, materialId]);
+  }, [progressOpen, isOwner, isDemo, materialId]);
 
   useEffect(() => {
     if (
@@ -386,6 +386,7 @@ export function MaterialStudyWorkspace({
         void loadPendingCount.then(({ count }) => {
           if (cancelled || !endVisible || summaryCompletionPromptedRef.current) return;
           summaryCompletionPromptedRef.current = true;
+          setPendingStudyErrorCount(count);
           setSummaryEndPendingCount(count);
           if (isOwner) {
             trackMarketingEvent('summary_completed', {
@@ -1020,7 +1021,7 @@ export function MaterialStudyWorkspace({
             onClick={() => {
               trackMarketingEvent('cta_click', {
                 location: 'material_study_tabs',
-                cta_name: 'errors_this_pdf',
+                cta_name: 'progress_this_pdf',
                 destination: materialErrorsHref,
               });
             }}
@@ -1681,7 +1682,7 @@ export function MaterialStudyWorkspace({
             } else {
               trackMarketingEvent('cta_click', {
                 location: 'material_study_tabs',
-                cta_name: 'errors_this_pdf',
+                cta_name: 'progress_this_pdf',
                 destination: materialErrorsHref,
               });
               router.push(materialErrorsHref);
