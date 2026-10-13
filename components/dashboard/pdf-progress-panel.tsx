@@ -418,7 +418,7 @@ export function PdfProgressPanel({
           className="text-muted-foreground hover:text-primary mb-1 inline-flex min-h-10 items-center gap-2 text-sm"
         >
           <ArrowLeft size={16} />
-          Volver a Mis errores
+          Volver a Progreso
         </Link>
       ) : null}
       {!embedded && (

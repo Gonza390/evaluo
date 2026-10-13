@@ -43,3 +43,10 @@ inventar aciertos ni evaluaciones objetivas.
 - QA: LISTO CON RIESGOS para revisión local; no se verificó con sesión autenticada
   en navegador ni se publicó en GitHub/producción en esta pasada.
 - El build se ejecutó con Next 16.3.7 instalado; el lockfile declara 16.3.8.
+
+## Integración para GitHub
+
+Se incorporaron los nueve commits posteriores de master que mantienen el retorno
+al listado y cargan Progreso bajo demanda. Se conserva esa carga diferida, el
+tracking y la reducción del payload. El nuevo enlace de retorno también se
+renombró a Progreso. No se despliega producción durante esta integración.
