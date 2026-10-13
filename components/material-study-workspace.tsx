@@ -268,6 +268,13 @@ export function MaterialStudyWorkspace({
   const progressContent = demo?.progress ?? progress;
   const progressOpen = demo?.progressOpen ?? localProgressOpen;
   const setProgressOpen = (open: boolean) => {
+    if (open && !progressOpen && isOwner && !demo) {
+      trackMarketingEvent('cta_click', {
+        location: 'material_study_workspace',
+        cta_name: 'progress_this_pdf',
+        material_id: materialId,
+      });
+    }
     setLocalProgressOpen(open);
     demo?.onProgressChange?.(open);
     if (open) {
