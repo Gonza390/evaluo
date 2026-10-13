@@ -215,7 +215,16 @@ async function requestOpenAiCompatibleJson(
         );
       }
 
-      const json = (await response.json()) as Record<string, unknown>;
+      const rawResponse = await response.text().catch(() => '');
+      let json: Record<string, unknown>;
+      try {
+        json = JSON.parse(rawResponse) as Record<string, unknown>;
+      } catch {
+        lastErrorMessage =
+          `${cfg.provider} ${model} devolvio una respuesta no JSON: ${rawResponse.slice(0, 120)}`;
+        continue;
+      }
+
       const choices = json?.choices;
       const content = Array.isArray(choices)
         ? (
@@ -463,13 +472,14 @@ type GeminiRequest = {
 async function getGeminiApiKeys(slot?: GeminiPdfKeySlot) {
   const primaryPdfKey = process.env.GEMINI_API_KEY;
   const secondaryPdfKey = process.env.GEMINI_PDF_API_KEY_2;
+  const tertiaryPdfKey = process.env.GEMINI_PDF_API_KEY_3;
 
   if (slot === 'pdf_primary') {
-    return uniqueConfiguredValues([primaryPdfKey, secondaryPdfKey]);
+    return uniqueConfiguredValues([primaryPdfKey, secondaryPdfKey, tertiaryPdfKey]);
   }
 
   if (slot === 'pdf_secondary') {
-    return uniqueConfiguredValues([secondaryPdfKey, primaryPdfKey]);
+    return uniqueConfiguredValues([secondaryPdfKey, primaryPdfKey, tertiaryPdfKey]);
   }
 
   const appKeys = [
