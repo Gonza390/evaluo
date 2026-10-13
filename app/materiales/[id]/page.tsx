@@ -37,6 +37,7 @@ type PageProps = {
     recorrido?: string;
     error?: string;
     tour?: string;
+    from?: string;
   }>;
 };
 
@@ -421,6 +422,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                   )}
                   requestedError={query.error?.slice(0, 80)}
                   tour={query.tour}
+                  returnToErrors={query.from === 'errores'}
                   summaryUnavailable={studySummary.status !== 'ready'}
                 />
               </Suspense>
