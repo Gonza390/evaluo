@@ -10,6 +10,7 @@ export async function MaterialProgressContent({
   questionCounts,
   requestedError,
   tour,
+  returnToErrors = false,
   summaryUnavailable,
 }: {
   userId: string;
@@ -18,6 +19,7 @@ export async function MaterialProgressContent({
   questionCounts: number[];
   requestedError?: string;
   tour?: string;
+  returnToErrors?: boolean;
   summaryUnavailable: boolean;
 }) {
   const [data, assessmentData] = await Promise.all([
@@ -44,6 +46,7 @@ export async function MaterialProgressContent({
       summaryUnavailable={summaryUnavailable}
       initialErrorId={initialErrorId}
       onboardingErrorId={onboardingErrorId}
+      returnToErrors={returnToErrors}
     />
   );
 }
