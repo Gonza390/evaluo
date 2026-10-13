@@ -303,12 +303,16 @@ export async function enhancePdfExtractionWithVision(input: {
   userId?: string;
   pageNumbers?: number[];
   geminiPdfKeySlot?: GeminiPdfKeySlot;
+  forceRequiredOcr?: boolean;
 }): Promise<VisionEnhancedPdfExtraction> {
-  const visualAnalysisEnabled = await isStudentMaterialVisualAnalysisEnabled(input.materialId);
+  const visualAnalysisEnabled =
+    input.forceRequiredOcr === true ||
+    (await isStudentMaterialVisualAnalysisEnabled(input.materialId));
 
   if (!visualAnalysisEnabled) {
     logInfo('studentMaterialVisionExtract.skippedByPreference', {
       materialId: input.materialId,
+      requiredOcr: input.analysis.requiresOcr,
     });
     return {
       text: input.nativeText,
@@ -517,6 +521,7 @@ export async function enhancePdfExtractionWithVision(input: {
 
   logInfo('studentMaterialVisionExtract.complete', {
     materialId: input.materialId,
+    forcedRequiredOcr: input.forceRequiredOcr === true,
     selectedPages: selectedPageNumbers.length,
     renderedPages: renderResult.renderedPageNumbers.length,
     blankPages: deterministicBlankPages.size,
