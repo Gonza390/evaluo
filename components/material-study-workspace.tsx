@@ -101,6 +101,8 @@ type MaterialStudyWorkspaceProps = {
   initialTab?: StudyTabId;
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
+  progress?: ReactNode;
+  initialProgressOpen?: boolean;
   children?: ReactNode;
   /** Recorrido de muestra: contenido preparado, sin resultados ni acciones de cuenta. */
   demo?: {
@@ -255,11 +257,24 @@ export function MaterialStudyWorkspace({
   initialTab,
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
+  progress,
+  initialProgressOpen = false,
   children,
   demo,
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const [localProgressOpen, setLocalProgressOpen] = useState(initialProgressOpen);
+  const progressContent = demo?.progress ?? progress;
+  const progressOpen = demo?.progressOpen ?? localProgressOpen;
+  const setProgressOpen = (open: boolean) => {
+    setLocalProgressOpen(open);
+    demo?.onProgressChange?.(open);
+    if (open) {
+      setIsViewerVisible(false);
+      if (!demo) router.refresh();
+    }
+  };
   const [localActiveTab, setActiveTab] = useState<StudyTabId>(
     initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen')
   );
@@ -302,9 +317,13 @@ export function MaterialStudyWorkspace({
     if (!isOwner || isDemo) return;
     let cancelled = false;
     const refreshPending = () => {
-      void getMaterialPendingStudyErrorTopicCountAction(materialId).then(({ count }) => {
-        if (!cancelled) setPendingStudyErrorCount(count);
-      });
+      void getMaterialPendingStudyErrorTopicCountAction(materialId)
+        .then(({ count }) => {
+          if (!cancelled) setPendingStudyErrorCount(count);
+        })
+        .catch(() => {
+          // Conservamos el último valor si la conexión falla.
+        });
     };
     refreshPending();
     window.addEventListener('focus', refreshPending);
@@ -312,7 +331,7 @@ export function MaterialStudyWorkspace({
       cancelled = true;
       window.removeEventListener('focus', refreshPending);
     };
-  }, [activeTab, isOwner, isDemo, materialId]);
+  }, [activeTab, progressOpen, isOwner, isDemo, materialId]);
 
   useEffect(() => {
     if (
@@ -861,6 +880,7 @@ export function MaterialStudyWorkspace({
   }
 
   const handleStudyTabChange = (value: string, entry: 'tab' | 'summary_chapter' = 'tab') => {
+    setProgressOpen(false);
     const nextTab = value as StudyTabId;
     if (
       nextTab === 'ejercicios' &&
@@ -945,7 +965,7 @@ export function MaterialStudyWorkspace({
     <div
       className={cn(
         'border-border shrink-0 flex-col gap-1.5 border-b px-2.5 py-2 sm:px-3 sm:py-2.5',
-        activeTab === 'resumen' && !demo?.progressOpen ? 'flex' : 'hidden md:flex'
+        activeTab === 'resumen' && !progressOpen ? 'flex' : 'hidden md:flex'
       )}
     >
       <TabsList className="hidden h-auto w-full justify-start gap-1.5 overflow-x-auto rounded-2xl bg-transparent p-0 [scrollbar-width:none] md:flex [&::-webkit-scrollbar]:hidden">
@@ -970,10 +990,11 @@ export function MaterialStudyWorkspace({
             </TabsTrigger>
           );
         })}
-        {demo?.progress ? (
+        {progressContent ? (
           <TabsTrigger
             value="progreso"
             data-pdf-study-tab
+            data-recommended-errors
             data-has-pending={hasPendingStudyErrors || undefined}
             className={pdfStudyTabClassName}
           >
@@ -985,7 +1006,7 @@ export function MaterialStudyWorkspace({
             {hasPendingStudyErrors && <span className="sr-only">: errores por resolver</span>}
           </TabsTrigger>
         ) : null}
-        {isOwner && !demo ? (
+        {isOwner && !demo && !progressContent ? (
           <Link
             href={materialErrorsHref}
             data-recommended-errors
@@ -1017,7 +1038,7 @@ export function MaterialStudyWorkspace({
         ) : null}
       </TabsList>
 
-      {activeTab === 'resumen' && !demo?.progressOpen ? (
+      {activeTab === 'resumen' && !progressOpen ? (
         <div className="flex flex-wrap items-center gap-1.5 pt-0.5 sm:gap-2">
           <Button
             type="button"
@@ -1386,7 +1407,7 @@ export function MaterialStudyWorkspace({
         className="animate-tab-panel data-[state=inactive]:hidden"
       >
         {/* Conservar la tanda y pausar efectos/atajos mientras se consulta otra herramienta. */}
-        <Activity mode={activeTab === 'tarjetas' && !demo?.progressOpen ? 'visible' : 'hidden'}>
+        <Activity mode={activeTab === 'tarjetas' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
             <StudentMaterialFlashcards
               cards={studyArtifacts.flashcards}
@@ -1403,7 +1424,7 @@ export function MaterialStudyWorkspace({
         forceMount
         className="animate-tab-panel data-[state=inactive]:hidden"
       >
-        <Activity mode={activeTab === 'ejercicios' && !demo?.progressOpen ? 'visible' : 'hidden'}>
+        <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
             {demo && !recommendedActive ? (
               demo.practice
@@ -1573,13 +1594,13 @@ export function MaterialStudyWorkspace({
           </div>
         )}
       </TabsContent>
-      {demo?.progress ? (
+      {progressContent ? (
         <TabsContent
           value="progreso"
           forceMount
           className="animate-tab-panel data-[state=inactive]:hidden"
         >
-          {demo.progress}
+          {progressContent}
         </TabsContent>
       ) : null}
       {children}
@@ -1589,9 +1610,9 @@ export function MaterialStudyWorkspace({
   const content = (
     <Tabs
       data-demo-focus="study"
-      value={demo?.progressOpen ? 'progreso' : activeTab}
+      value={progressOpen ? 'progreso' : activeTab}
       onValueChange={(value) => {
-        demo?.onProgressChange?.(value === 'progreso');
+        setProgressOpen(value === 'progreso');
         if (value === 'progreso') {
           setIsViewerVisible(false);
           return;
@@ -1606,12 +1627,16 @@ export function MaterialStudyWorkspace({
         <div
           className={cn(
             'flex min-h-0 flex-1 flex-col overflow-hidden',
-            (!demo || demo.progress) && activeTab === 'resumen' && isViewerVisible && 'hidden'
+            (!demo || demo.progress) &&
+              !progressOpen &&
+              activeTab === 'resumen' &&
+              isViewerVisible &&
+              'hidden'
           )}
         >
           {tabPanels}
         </div>
-        {(!demo || demo.progress) && activeTab === 'resumen' && isViewerVisible ? (
+        {(!demo || demo.progress) && !progressOpen && activeTab === 'resumen' && isViewerVisible ? (
           <div data-demo-focus="pdf" className="bg-card absolute inset-0 z-10 min-h-0 p-2">
             <PdfViewer
               url={viewerUrl}
@@ -1646,12 +1671,12 @@ export function MaterialStudyWorkspace({
     >
       <PdfMobileNavigation
         hasPendingErrors={hasPendingStudyErrors}
-        active={demo?.progressOpen ? 'progreso' : activeTab}
-        showProgress={Boolean(demo?.progress || (isOwner && !demo))}
+        active={progressOpen ? 'progreso' : activeTab}
+        showProgress={Boolean(progressContent || (isOwner && !demo))}
         onSelect={(section) => {
           if (section === 'progreso') {
-            if (demo?.progress) {
-              demo.onProgressChange?.(true);
+            if (progressContent) {
+              setProgressOpen(true);
               setIsViewerVisible(false);
             } else {
               trackMarketingEvent('cta_click', {
@@ -1778,9 +1803,9 @@ export function MaterialStudyWorkspace({
           <div className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
               data-demo-focus="study"
-              value={demo?.progressOpen ? 'progreso' : activeTab}
+              value={progressOpen ? 'progreso' : activeTab}
               onValueChange={(value) => {
-                demo?.onProgressChange?.(value === 'progreso');
+                setProgressOpen(value === 'progreso');
                 if (value === 'progreso') {
                   setIsViewerVisible(false);
                   return;
@@ -1835,7 +1860,7 @@ export function MaterialStudyWorkspace({
               </div>
             </Tabs>
 
-            {activeTab === 'resumen' && !demo?.progressOpen && !isViewerVisible ? (
+            {activeTab === 'resumen' && !progressOpen && !isViewerVisible ? (
               <button
                 type="button"
                 onClick={() => setIsViewerVisible(true)}

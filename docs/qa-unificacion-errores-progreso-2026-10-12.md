@@ -44,3 +44,25 @@ dos fallos preexistentes están documentados en la revisión anterior.
   «Practicar ahora» en la landing de parcial. Esa landing y esa prueba no se
   modifican en este incremento.
 - La publicación en GitHub no confirma un despliegue de producción.
+
+## Progreso dentro del espacio del PDF
+
+- La página real del material entrega Progreso como contenido de una pestaña,
+  con el mismo encabezado, navegación fija y región deslizable de estudio.
+- El panel usa su variante integrada: sin encabezado de archivo ni navegación
+  propios, ancho disponible completo y título del tamaño de las otras secciones.
+- Las direcciones anteriores de Progreso conservan la comprobación de propiedad
+  y redirigen al PDF con `tab=progreso`, el error solicitado y la guía inicial.
+- Backend/Security: el contenido se entrega solo cuando `isOwner && user` en el
+  servidor; las consultas existentes reciben el ID del usuario autenticado y del
+  material autorizado. La selección de error se limita a los registros cargados.
+  No se cambia RLS, auth ni se añade un endpoint público.
+- CTO: se reutiliza el panel existente mediante un slot de servidor y Suspense.
+  Su carga no bloquea el resumen. Al abrir Progreso se refrescan los datos del
+  servidor conservando el espacio de estudio; no se añade generación de IA.
+- QA: build, ESLint de archivos afectados, pruebas de rutas, flujo y progreso
+  aprobados. Desktop y móvil 390 × 844 comprobados en el fixture: cambio entre
+  Resumen, Glosario y Progreso, encabezado conservado, región con scroll vertical
+  y sin desbordamiento horizontal.
+- LISTO CON RIESGOS para revisión local: no se verificó el recorrido autenticado
+  con una cuenta real. Este ajuste posterior sigue en local, sin publicar.

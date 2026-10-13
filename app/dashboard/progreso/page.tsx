@@ -3,15 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { FileText, ArrowRight } from 'lucide-react';
 import { createClientServer } from '@/lib/supabase-server';
-import { getPendingStudyErrorOnboarding, getStudyErrorsPageData } from '@/lib/study-errors';
 import { isUuid } from '@/lib/uuid';
-import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
-import { getPdfAssessmentData } from '@/lib/student-materials/answer-events';
-import {
-  getTopicQuestionCounts,
-  readPracticeSummarySections,
-} from '@/lib/student-materials/topic-practice';
-import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 
 export const metadata: Metadata = {
   title: 'Progreso de tu PDF',
@@ -80,48 +72,9 @@ export default async function PdfProgressPage({
         )}
       </div>
     );
-  const [errors, summary, assessmentData, storedArtifacts] = await Promise.all([
-    getStudyErrorsPageData(user.id, material.id),
-    supabase
-      .from('student_material_summaries')
-      .select('summary_sections, status')
-      .eq('student_material_id', material.id)
-      .maybeSingle(),
-    getPdfAssessmentData(user.id, material.id),
-    supabase
-      .from('student_materials')
-      .select('pedagogical_artifacts')
-      .eq('id', material.id)
-      .eq('user_id', user.id)
-      .maybeSingle(),
-  ]);
-  const artifacts = storedArtifacts.data
-    ?.pedagogical_artifacts as unknown as PedagogicalArtifacts | null;
-  const initialErrorId = [...errors.pending, ...errors.resolved].find(
-    (item) => item.id === requestedError
-  )?.id;
-  const onboardingErrorId =
-    tour === 'first-error' && initialErrorId
-      ? await getPendingStudyErrorOnboarding(user.id, initialErrorId)
-      : null;
-  const questionCounts = storedArtifacts.error
-    ? undefined
-    : getTopicQuestionCounts(
-        readPracticeSummarySections(summary.data?.summary_sections),
-        Array.isArray(artifacts?.questions) ? artifacts.questions : []
-      );
-  return (
-    <PdfProgressPanel
-      key={`${material.id}:${initialErrorId ?? ''}:${assessmentData.items.map((item) => item.lastAnsweredAt).join(':')}`}
-      material={material}
-      initialErrorId={initialErrorId}
-      onboardingErrorId={onboardingErrorId}
-      returnToErrors={from === 'errores'}
-      data={errors}
-      assessmentData={assessmentData}
-      questionCounts={questionCounts}
-      sections={summary.data?.status === 'ready' ? summary.data.summary_sections : []}
-      summaryUnavailable={Boolean(summary.error) || summary.data?.status !== 'ready'}
-    />
-  );
+  const destination = new URLSearchParams({ tab: 'progreso' });
+  if (requestedError) destination.set('error', requestedError.slice(0, 80));
+  if (tour === 'first-error') destination.set('tour', tour);
+  if (from === 'errores') destination.set('from', from);
+  redirect(`/materiales/${material.id}?${destination}`);
 }

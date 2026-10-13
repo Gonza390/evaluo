@@ -378,7 +378,9 @@ export function PdfProgressPanel({
     );
 
   return (
-    <div className="mx-auto max-w-6xl px-1 py-3 sm:px-3 sm:py-4 [&_p]:leading-5!">
+    <div
+      className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto max-w-6xl px-1 py-3 sm:px-3 sm:py-4'} [&_p]:leading-5!`}
+    >
       {tourStep >= 0 && selected && (
         <PdfTourSpotlight
           selector={
@@ -435,9 +437,11 @@ export function PdfProgressPanel({
           <span className="break-words">{material.title}</span>
         </div>
       )}
-      <h1 className="mt-2 text-xl font-semibold tracking-tight sm:text-2xl">
+      <h2
+        className={`${embedded ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} mt-2 font-semibold tracking-tight`}
+      >
         Tu progreso en este PDF
-      </h1>
+      </h2>
       <p className="text-muted-foreground mt-1 text-[13px]!">
         {simulation
           ? 'Temas y contenido del PDF real · Errores y resoluciones simulados.'

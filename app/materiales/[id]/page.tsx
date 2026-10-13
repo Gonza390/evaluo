@@ -1,4 +1,10 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { MaterialProgressContent } from '@/components/study/material-progress-content';
+import {
+  getTopicQuestionCounts,
+  readPracticeSummarySections,
+} from '@/lib/student-materials/topic-practice';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowRight, FileText, UploadCloud } from 'lucide-react';
@@ -29,6 +35,8 @@ type PageProps = {
     page?: string;
     tab?: string;
     recorrido?: string;
+    error?: string;
+    tour?: string;
   }>;
 };
 
@@ -392,6 +400,32 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           />
         ) : null}
         <LazyMaterialStudyWorkspace
+          key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
+          initialProgressOpen={isOwner && query.tab === 'progreso'}
+          progress={
+            isOwner && user ? (
+              <Suspense
+                fallback={
+                  <p role="status" className="text-muted-foreground p-4 text-sm">
+                    Cargando tu progreso…
+                  </p>
+                }
+              >
+                <MaterialProgressContent
+                  userId={user.id}
+                  material={{ id: material.id, title: material.title }}
+                  sections={studySummary.sections}
+                  questionCounts={getTopicQuestionCounts(
+                    readPracticeSummarySections(studySummary.sections),
+                    pedagogicalArtifacts.questions
+                  )}
+                  requestedError={query.error?.slice(0, 80)}
+                  tour={query.tour}
+                  summaryUnavailable={studySummary.status !== 'ready'}
+                />
+              </Suspense>
+            ) : undefined
+          }
           backHref={backHref}
           canRegenerate={canRegenerate}
           carreraName={carrera?.nombre ?? 'Sin carrera'}
