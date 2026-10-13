@@ -4,7 +4,7 @@
     "gru1"
   ],
   "git": {
-    "deploymentEnabled": true
+    "deploymentEnabled": false
   },
   "redirects": [
     {
