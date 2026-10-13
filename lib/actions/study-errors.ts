@@ -16,12 +16,15 @@ import {
 } from '@/lib/student-materials/answer-evidence';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import type { StudySummarySection } from '@/lib/student-materials/types';
+import { getPdfAssessmentData, type PdfAssessmentData } from '@/lib/student-materials/answer-events';
 
 const FREE_STUDY_ERROR_EXPLANATIONS_LIMIT = 5;
 const STUDY_ERROR_EXPLANATION_WINDOW_MS = 3 * 60 * 60 * 1000;
 import {
   finishStudyErrorOnboarding,
   getPendingStudyErrorOnboarding,
+  getStudyErrorsPageData,
+  type StudyErrorsPageData,
   markStudyErrorReviewed,
   recordStudyErrorCorrect,
   recordStudyErrorFailure,
@@ -178,6 +181,65 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
       userId: user.id,
       materialId: input.materialId,
       sourceType: input.sourceType,
+    });
+    return { success: false };
+  }
+}
+
+export type MaterialProgressDataResult =
+  | {
+      success: true;
+      data: StudyErrorsPageData;
+      assessmentData: PdfAssessmentData;
+      initialErrorId: string | null;
+      onboardingErrorId: string | null;
+    }
+  | { success: false };
+
+export async function getMaterialProgressDataAction(input: {
+  materialId: string;
+  requestedError?: string;
+  tour?: string;
+}): Promise<MaterialProgressDataResult> {
+  const user = await requireUser();
+  if (!user || !isUuid(input.materialId)) return { success: false };
+
+  try {
+    const admin = createAdminClient();
+    const { data: material, error } = await admin
+      .from('student_materials')
+      .select('id')
+      .eq('id', input.materialId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!material) return { success: false };
+
+    const [data, assessmentData] = await Promise.all([
+      getStudyErrorsPageData(user.id, material.id),
+      getPdfAssessmentData(user.id, material.id),
+    ]);
+    const requestedError =
+      input.requestedError && isUuid(input.requestedError) ? input.requestedError : null;
+    const initialErrorId =
+      [...data.pending, ...data.resolved].find((item) => item.id === requestedError)?.id ?? null;
+    const onboardingErrorId =
+      input.tour === 'first-error' && initialErrorId
+        ? await getPendingStudyErrorOnboarding(user.id, initialErrorId)
+        : null;
+
+    return {
+      success: true,
+      data: { ...data, materials: [] },
+      assessmentData,
+      initialErrorId,
+      onboardingErrorId,
+    };
+  } catch (error) {
+    logError('studyErrors.materialProgress', error, {
+      userId: user.id,
+      materialId: input.materialId,
     });
     return { success: false };
   }

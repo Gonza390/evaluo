@@ -412,6 +412,15 @@ export function PdfProgressPanel({
           }}
         />
       )}
+      {embedded && returnToErrors && !simulation ? (
+        <Link
+          href="/dashboard/explicaciones"
+          className="text-muted-foreground hover:text-primary mb-1 inline-flex min-h-10 items-center gap-2 text-sm"
+        >
+          <ArrowLeft size={16} />
+          Volver a Mis errores
+        </Link>
+      ) : null}
       {!embedded && (
         <Link
           href={

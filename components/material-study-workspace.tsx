@@ -75,6 +75,19 @@ const SummaryCompletionPopup = dynamic(() =>
     (module) => module.SummaryCompletionPopup
   )
 );
+const MaterialProgressContent = dynamic(
+  () =>
+    import('@/components/study/material-progress-content').then(
+      (module) => module.MaterialProgressContent
+    ),
+  {
+    loading: () => (
+      <p role="status" className="text-muted-foreground p-4 text-sm">
+        Cargando tu progreso…
+      </p>
+    ),
+  }
+);
 
 type MaterialStudyWorkspaceProps = {
   backHref: string;
@@ -101,6 +114,12 @@ type MaterialStudyWorkspaceProps = {
   initialPdfPage?: number | null;
   initialViewerVisible?: boolean;
   progress?: ReactNode;
+  progressConfig?: {
+    questionCounts: number[];
+    requestedError?: string;
+    tour?: string;
+    returnToErrors?: boolean;
+  };
   initialProgressOpen?: boolean;
   children?: ReactNode;
   /** Recorrido de muestra: contenido preparado, sin resultados ni acciones de cuenta. */
@@ -257,6 +276,7 @@ export function MaterialStudyWorkspace({
   initialPdfPage = null,
   initialViewerVisible: _initialViewerVisible = false,
   progress,
+  progressConfig,
   initialProgressOpen = false,
   children,
   demo,
@@ -265,14 +285,19 @@ export function MaterialStudyWorkspace({
   const router = useRouter();
   const [localProgressOpen, setLocalProgressOpen] = useState(initialProgressOpen);
   const progressContent = demo?.progress ?? progress;
+  const hasProgress = Boolean(progressContent || (progressConfig && isOwner && !demo));
   const progressOpen = demo?.progressOpen ?? localProgressOpen;
   const setProgressOpen = (open: boolean) => {
+    if (open && !progressOpen && isOwner && !demo) {
+      trackMarketingEvent('cta_click', {
+        location: 'material_study_workspace',
+        cta_name: 'progress_this_pdf',
+        material_id: materialId,
+      });
+    }
     setLocalProgressOpen(open);
     demo?.onProgressChange?.(open);
-    if (open) {
-      setIsViewerVisible(false);
-      if (!demo) router.refresh();
-    }
+    if (open) setIsViewerVisible(false);
   };
   const [localActiveTab, setActiveTab] = useState<StudyTabId>(
     initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen')
@@ -330,7 +355,7 @@ export function MaterialStudyWorkspace({
       cancelled = true;
       window.removeEventListener('focus', refreshPending);
     };
-  }, [progressOpen, isOwner, isDemo, materialId]);
+  }, [isOwner, isDemo, materialId]);
 
   useEffect(() => {
     if (
@@ -989,7 +1014,7 @@ export function MaterialStudyWorkspace({
             </TabsTrigger>
           );
         })}
-        {progressContent ? (
+        {hasProgress ? (
           <TabsTrigger
             value="progreso"
             data-pdf-study-tab
@@ -1005,7 +1030,7 @@ export function MaterialStudyWorkspace({
             {hasPendingStudyErrors && <span className="sr-only">: errores por resolver</span>}
           </TabsTrigger>
         ) : null}
-        {isOwner && !demo && !progressContent ? (
+        {isOwner && !demo && !hasProgress ? (
           <Link
             href={materialErrorsHref}
             data-recommended-errors
@@ -1593,13 +1618,26 @@ export function MaterialStudyWorkspace({
           </div>
         )}
       </TabsContent>
-      {progressContent ? (
+      {hasProgress ? (
         <TabsContent
           value="progreso"
           forceMount
           className="animate-tab-panel data-[state=inactive]:hidden"
         >
-          {progressContent}
+          {progressOpen ? (
+            progressContent ?? (
+              progressConfig ? (
+                <MaterialProgressContent
+                  material={{ id: materialId, title }}
+                  sections={studySummary.sections}
+                  questionCounts={progressConfig.questionCounts}
+                  requestedError={progressConfig.requestedError}
+                  tour={progressConfig.tour}
+                  returnToErrors={progressConfig.returnToErrors}
+                />
+              ) : null
+            )
+          ) : null}
         </TabsContent>
       ) : null}
       {children}
@@ -1671,10 +1709,10 @@ export function MaterialStudyWorkspace({
       <PdfMobileNavigation
         hasPendingErrors={hasPendingStudyErrors}
         active={progressOpen ? 'progreso' : activeTab}
-        showProgress={Boolean(progressContent || (isOwner && !demo))}
+        showProgress={Boolean(hasProgress || (isOwner && !demo))}
         onSelect={(section) => {
           if (section === 'progreso') {
-            if (progressContent) {
+            if (hasProgress) {
               setProgressOpen(true);
               setIsViewerVisible(false);
             } else {
