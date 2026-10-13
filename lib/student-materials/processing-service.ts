@@ -172,8 +172,11 @@ export async function processStudentMaterial(input: {
     pages: nativePages,
   } = await extractPdfTextAndPageCount(buffer);
   const documentAnalysis = analyzePdfDocument(buffer, nativeText, pageCount);
+  const requiredOcr =
+    documentAnalysis.requiresOcr && nativeText.trim().length === 0;
+  const visionExtractionEnabled = visualAnalysisEnabled || requiredOcr;
 
-  const selectedVisionPageNumbers = visualAnalysisEnabled
+  const selectedVisionPageNumbers = visionExtractionEnabled
     ? selectVisionPageNumbers({
         analysis: documentAnalysis,
         pages: nativePages,
@@ -181,14 +184,16 @@ export async function processStudentMaterial(input: {
       })
     : [];
 
-  if (visualAnalysisEnabled && selectedVisionPageNumbers.length > 0) {
+  if (visionExtractionEnabled && selectedVisionPageNumbers.length > 0) {
     await updateStudentMaterialProcessing(admin, material.id, {
       processingStatus: 'processing',
       processingStage: 'extracting',
       processingProgress: 27,
-      processingMessage: documentAnalysis.requiresOcr
-        ? 'Detectamos páginas escaneadas. Activamos lectura visual solo en las páginas necesarias.'
-        : 'Detectamos páginas donde la estructura visual importa. Analizamos solo esas páginas para controlar el costo.',
+      processingMessage: requiredOcr
+        ? 'Este PDF está escaneado. Activamos OCR automáticamente para poder leerlo.'
+        : documentAnalysis.requiresOcr
+          ? 'Detectamos páginas escaneadas. Activamos lectura visual solo en las páginas necesarias.'
+          : 'Detectamos páginas donde la estructura visual importa. Analizamos solo esas páginas para controlar el costo.',
       pageCount,
       processingStrategy: documentAnalysis.processingStrategy,
       documentAnalysis,
@@ -205,6 +210,7 @@ export async function processStudentMaterial(input: {
     userId: material.user_id,
     pageNumbers: selectedVisionPageNumbers,
     geminiPdfKeySlot,
+    forceRequiredOcr: requiredOcr,
   });
 
   const text = visionExtraction.text;
@@ -267,11 +273,13 @@ export async function processStudentMaterial(input: {
     processingProgress: 34,
     processingMessage: visionUsed
       ? `Lectura visual integrada en ${visionPageNumbers.length} ${visionPageNumbers.length === 1 ? 'página' : 'páginas'}. Ese contenido ya forma parte de la fuente académica del PDF.`
-      : visualAnalysisEnabled && selectedVisionPageNumbers.length === 0
-        ? 'No detectamos páginas que justifiquen análisis visual. Seguimos con el texto nativo sin costo visual adicional.'
-        : visualAnalysisEnabled
-          ? buildAnalysisMessage(documentAnalysis)
-          : 'Procesamiento estándar: usamos únicamente la extracción nativa del PDF, sin análisis visual.',
+      : requiredOcr
+        ? 'El OCR automático no recuperó texto suficiente todavía. Probamos las rutas de recuperación disponibles.'
+        : visualAnalysisEnabled && selectedVisionPageNumbers.length === 0
+          ? 'No detectamos páginas que justifiquen análisis visual. Seguimos con el texto nativo sin costo visual adicional.'
+          : visualAnalysisEnabled
+            ? buildAnalysisMessage(documentAnalysis)
+            : 'Procesamiento estándar: usamos únicamente la extracción nativa del PDF, sin análisis visual.',
     pageCount,
     processingStrategy: documentAnalysis.processingStrategy,
     documentAnalysis,
@@ -306,13 +314,19 @@ export async function processStudentMaterial(input: {
     // usuario activó explícitamente el análisis visual. En modo estándar no
     // existe fallback visual oculto ni costo de visión accidental.
     pdfBuffer:
-      visualAnalysisEnabled && documentAnalysis.requiresOcr && !visionUsed
+      visionExtractionEnabled && documentAnalysis.requiresOcr && !visionUsed
         ? buffer
         : undefined,
     materialId: material.id,
     userId: material.user_id,
     geminiPdfKeySlot,
   };
+
+  if (requiredOcr && text.trim().length === 0) {
+    throw new Error(
+      'Este PDF está escaneado y el OCR automático no pudo recuperar texto legible. Reintentá el procesamiento.'
+    );
+  }
 
   if (isVeryLargeNativePdf) {
     logInfo('processStudentMaterial.largeDocument', {
