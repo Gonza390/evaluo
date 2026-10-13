@@ -70,6 +70,13 @@ function titleFromFile(name: string) {
   );
 }
 
+function isTransientProcessingFailure(message: string | null | undefined) {
+  if (!message) return false;
+  return /timeout|timed out|429|500|502|503|504|unavailable|temporar|fetch failed|econn|socket|representaci[oó]n acad[eé]mica|ocr autom[aá]tico no pudo/i.test(
+    message
+  );
+}
+
 function isUploadTriggerLabel(label: string) {
   const normalized = label
     .toLocaleLowerCase('es-AR')
@@ -119,6 +126,8 @@ export function PdfFirstUploadShell({
   const readyTrackedRef = useRef(false);
   const firstPdfReadyTrackedRef = useRef(false);
   const directSignupOpenTrackedRef = useRef(false);
+  const autoRetryCountsRef = useRef<Record<string, number>>({});
+  const autoRetryingMaterialRef = useRef<string | null>(null);
   const [open, setOpen] = useState(initialOpen);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
@@ -185,6 +194,45 @@ export function PdfFirstUploadShell({
     const interval = window.setInterval(async () => {
       const state = await getStudentMaterialProcessingStateAction(processing.materialId);
       if (!state) return;
+
+      if (
+        state.status === 'failed' &&
+        isTransientProcessingFailure(state.error) &&
+        (autoRetryCountsRef.current[state.materialId] ?? 0) < 2
+      ) {
+        if (autoRetryingMaterialRef.current === state.materialId) return;
+
+        autoRetryCountsRef.current[state.materialId] =
+          (autoRetryCountsRef.current[state.materialId] ?? 0) + 1;
+        autoRetryingMaterialRef.current = state.materialId;
+        setProcessing({
+          ...state,
+          status: 'processing',
+          stage: 'extracting',
+          progress: Math.max(12, state.progress),
+          message: 'Tuvimos una interrupción temporal. Reintentando automáticamente…',
+          error: null,
+        });
+
+        window.setTimeout(() => {
+          void processStudentMaterialAction(state.materialId)
+            .catch(() => undefined)
+            .finally(() => {
+              if (autoRetryingMaterialRef.current === state.materialId) {
+                autoRetryingMaterialRef.current = null;
+              }
+            });
+        }, 1800);
+        return;
+      }
+
+      if (
+        state.status === 'failed' &&
+        autoRetryingMaterialRef.current === state.materialId
+      ) {
+        return;
+      }
+
       setProcessing(state);
       setDisplayProgress((current) => Math.max(current, state.progress));
       if (state.status === 'ready') router.refresh();
@@ -386,6 +434,8 @@ export function PdfFirstUploadShell({
         message: 'PDF subido. Empezamos a procesarlo.',
         error: null,
       };
+      autoRetryCountsRef.current[result.materialId] = 0;
+      autoRetryingMaterialRef.current = null;
       setProcessing(initialState);
       setDisplayProgress(10);
       void processStudentMaterialAction(result.materialId);
@@ -465,6 +515,28 @@ export function PdfFirstUploadShell({
       material_id: processing.materialId,
     });
   }, [initialSource, processing]);
+
+  const retryFailedProcessing = async () => {
+    if (!processing || processing.status !== 'failed') return;
+
+    autoRetryingMaterialRef.current = processing.materialId;
+    setProcessing({
+      ...processing,
+      status: 'processing',
+      stage: 'extracting',
+      progress: Math.max(12, processing.progress),
+      message: 'Reintentando el procesamiento…',
+      error: null,
+    });
+
+    try {
+      await processStudentMaterialAction(processing.materialId);
+    } finally {
+      if (autoRetryingMaterialRef.current === processing.materialId) {
+        autoRetryingMaterialRef.current = null;
+      }
+    }
+  };
 
   const saveContext = async () => {
     if (!processing || !canSaveContext || savingContext) return;
@@ -987,9 +1059,12 @@ export function PdfFirstUploadShell({
                     </div>
                   </>
                 ) : failed ? (
-                  <div className="mt-6 flex justify-end">
-                    <Button type="button" variant="outline" onClick={close}>
+                  <div className="mt-6 flex justify-end gap-2">
+                    <Button type="button" variant="ghost" onClick={close}>
                       Cerrar
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => void retryFailedProcessing()}>
+                      Reintentar
                     </Button>
                   </div>
                 ) : null}
