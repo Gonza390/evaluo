@@ -231,7 +231,7 @@ export async function getMaterialProgressDataAction(input: {
 
     return {
       success: true,
-      data,
+      data: { ...data, materials: [] },
       assessmentData,
       initialErrorId,
       onboardingErrorId,
