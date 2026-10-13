@@ -1086,6 +1086,61 @@ assert.match(
   'La expansión debe conservar la referencia al PDF al final de la sección.'
 );
 
+
+// Regresión de profundidad: el material clínico/conceptual denso debe recibir
+// más espacio que otro PDF de igual longitud pero sin detalles académicos.
+const lengthTopics = Array.from({ length: 16 }, (_, index) => ({
+  title: `Unidad clínica ${index + 1}`,
+  description: `Descripción académica verificable de la unidad ${index + 1}.`,
+  relevance: 'alta' as const,
+  pageReferences: [index * 2 + 1, index * 2 + 2],
+}));
+const lightLengthModel: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  topics: lengthTopics,
+  concepts: [],
+  relationships: [],
+  classifications: [],
+  processes: [],
+  formulas: [],
+  authorsOrTheories: [],
+  examples: [],
+  examRelevantClaims: [],
+  confusions: [],
+  sourceBindings: [],
+};
+const denseLengthModel: CanonicalPedagogicalModel = {
+  ...lightLengthModel,
+  concepts: Array.from({ length: 84 }, (_, index) => ({
+    term: `Parámetro de laboratorio ${index + 1}`,
+    detail: `Significado clínico y valor de referencia del parámetro ${index + 1}.`,
+    kind: 'definicion' as const,
+    pageReferences: [(index % 32) + 1],
+  })),
+  formulas: [
+    {
+      expression: 'A = B / C',
+      description: 'Relación cuantitativa respaldada por el material.',
+      pageReferences: [16],
+    },
+  ],
+};
+function extractPlannedWords(prompt: string) {
+  return Number(prompt.match(/Apuntá aproximadamente a (\d+) palabras/)?.[1] ?? 0);
+}
+const lightWords = extractPlannedWords(
+  buildCanonicalSummaryPrompt({ title: 'PDF conceptual simple' }, lightLengthModel)
+);
+const denseWords = extractPlannedWords(
+  buildCanonicalSummaryPrompt({ title: 'PDF clínico denso' }, denseLengthModel)
+);
+assert.ok(lightWords >= 3_000 && lightWords <= 3_500,
+  'Un PDF de 32 páginas con baja densidad debe conservar una guía moderada.');
+assert.ok(denseWords >= 5_000 && denseWords <= 7_500,
+  'Un PDF de 32 páginas con alta densidad debe tener más desarrollo.');
+assert.ok(denseWords > lightWords,
+  'La extensión debe adaptarse a la densidad, no sólo a la cantidad de páginas.');
+
 const canonicalGuideFallback =
   buildCanonicalStudentMaterialSummaryFallback(canonicalSummaryFixture);
 assert.equal(canonicalGuideFallback.provider, 'canonical-local-fallback');

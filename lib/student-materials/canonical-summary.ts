@@ -2,7 +2,6 @@ import { extractJsonObject } from '@/lib/ai/json';
 import { requestGeminiJson } from '@/lib/ai/providers';
 import {
   isolateUntrustedContent,
-  MAX_AI_SECTION_BODY_CHARS,
   PROMPT_INJECTION_GUARD,
 } from '@/lib/ai/safety';
 import { recordAiUsage } from '@/lib/student-materials/ai-usage';
@@ -34,6 +33,7 @@ const MIN_GUIDE_WORDS = 900;
 const MAX_GUIDE_WORDS = 7_500;
 const TARGET_WORDS_PER_SOURCE_PAGE = 175;
 const TARGET_WORDS_PER_TOPIC = 120;
+const MAX_CANONICAL_CHAPTER_BODY_CHARS = 6_800;
 const MAX_FALLBACK_TABLES_PER_CHAPTER = 2;
 
 type CanonicalGuidePlan = {
@@ -105,15 +105,36 @@ function resolveCanonicalGuidePlan(
     topicCount,
     Math.max(preferredChapterCount, Math.min(MAX_GUIDE_CHAPTERS, preferredChapterCount + 1))
   );
-  const pageDrivenWords = estimatedPageCount * TARGET_WORDS_PER_SOURCE_PAGE;
-  const topicDrivenWords = topicCount * TARGET_WORDS_PER_TOPIC;
+  // La cantidad de páginas por sí sola subestima textos densos: una fórmula,
+  // una clasificación con varios miembros o un proceso exige más desarrollo.
+  // Los PDFs simples conservan una guía corta. Los densos reciben un presupuesto
+  // mayor dentro de los límites de costo y salida existentes.
+  const detailUnits =
+    source.concepts.length +
+    source.relationships.length +
+    source.classifications.reduce(
+      (total, item) => total + Math.min(item.items.length, 6),
+      0
+    ) +
+    source.processes.reduce(
+      (total, item) => total + Math.min(item.steps.length, 6),
+      0
+    ) +
+    source.formulas.length * 2 +
+    source.examples.length;
+
+  const wordsPerPage = clamp(
+    Math.round(100 + (detailUnits / estimatedPageCount) * 30),
+    100,
+    TARGET_WORDS_PER_SOURCE_PAGE
+  );
+  const pageDrivenWords = estimatedPageCount * wordsPerPage;
+  const topicDrivenWords = Math.min(
+    topicCount * TARGET_WORDS_PER_TOPIC,
+    estimatedPageCount * TARGET_WORDS_PER_SOURCE_PAGE
+  );
   const targetWordCount = clamp(
-    Math.round(
-      Math.min(
-        pageDrivenWords,
-        Math.max(estimatedPageCount * 100, topicDrivenWords)
-      )
-    ),
+    Math.round(Math.max(pageDrivenWords, topicDrivenWords)),
     MIN_GUIDE_WORDS,
     MAX_GUIDE_WORDS
   );
@@ -450,7 +471,7 @@ export function sanitizeCanonicalSummaryPayload(
       );
       const body = truncateAtWord(
         cleanMultilineBlock(coerceBody(section.body)),
-        MAX_AI_SECTION_BODY_CHARS
+        MAX_CANONICAL_CHAPTER_BODY_CHARS
       );
       const pages = normalizePages(
         topicNumbers.flatMap(
