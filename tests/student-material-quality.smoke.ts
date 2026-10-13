@@ -947,6 +947,70 @@ assert.doesNotMatch(
   'La nueva generación no debe reenviar provenance interna costosa.'
 );
 
+
+const sourceWithOriginalEvidence: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  topics: [
+    { title: 'Gasometría arterial', description: 'Valores de referencia en sangre arterial.', relevance: 'alta', pageReferences: [1] },
+    { title: 'Equilibrio ácido-base', description: 'Clasificación y compensación del medio interno.', relevance: 'alta', pageReferences: [2] },
+  ],
+  sourceBindings: [
+    {
+      kind: 'topic',
+      key: 'Gasometría arterial',
+      references: [{
+        pageStart: 1, pageEnd: 1, chunkIndexes: [0],
+        excerpt: 'MARCADOR_INTERNO_NO_EXPORTAR',
+      }],
+    },
+  ],
+};
+const evidencePrompt = buildCanonicalSummaryPrompt(
+  {
+    title: 'Bioquímica clínica',
+    pages: [
+      'Gasometría arterial: pH normal de 7,35 a 7,45. PaCO2 entre 35 y 45 mmHg. HCO3 entre 22 y 26 mEq/L. Todos estos valores permiten describir el equilibrio ácido-base.',
+      'Equilibrio ácido-base: ante un caso clínico de acidosis metabólica, se analiza primero el pH y el bicarbonato. Luego se examina la compensación respiratoria.',
+    ],
+    text: '',
+  },
+  sourceWithOriginalEvidence
+);
+assert.match(
+  evidencePrompt,
+  /7,35 a 7,45/,
+  'El resumen híbrido debe recuperar valores cuantitativos desde los chunks originales.'
+);
+assert.match(
+  evidencePrompt,
+  /caso clínico de acidosis metabólica/,
+  'El resumen híbrido debe recuperar datos clínicos originales vinculados al tema.'
+);
+assert.doesNotMatch(
+  evidencePrompt,
+  /MARCADOR_INTERNO_NO_EXPORTAR|chunkIndexes/,
+  'No debe filtrar excerpts o índices internos de provenance al prompt.'
+);
+assert.match(
+  evidencePrompt,
+  /Valores cuantitativos: preservá parámetro/,
+  'El prompt debe exigir preservar unidades, rangos y tablas.'
+);
+assert.match(
+  evidencePrompt,
+  /Procesos: conservá secuencia/,
+  'El prompt debe preservar procesos y casos.'
+);
+const legacyPromptWithoutPages = buildCanonicalSummaryPrompt(
+  { title: 'Material sin evidencia original' },
+  sourceWithOriginalEvidence
+);
+assert.doesNotMatch(
+  legacyPromptWithoutPages,
+  /7,35 a 7,45|MARCADOR_INTERNO_NO_EXPORTAR/,
+  'La generación debe seguir funcionando cuando no hay páginas originales.'
+);
+
 const canonicalGuideFallback =
   buildCanonicalStudentMaterialSummaryFallback(canonicalSummaryFixture);
 assert.equal(canonicalGuideFallback.provider, 'canonical-local-fallback');

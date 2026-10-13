@@ -427,7 +427,7 @@ export async function processStudentMaterial(input: {
     processingProgress: 65,
     processingMessage:
       pedagogicalModel
-        ? 'Generando la guía de estudio desde el modelo pedagógico canónico.'
+        ? 'Generando la guía desde los temas detectados y fragmentos del PDF.'
         : documentAnalysis.processingStrategy === 'slide_layout'
           ? 'Generando resumen y glosario a partir de bloques visuales y temas detectados.'
           : 'Generando resumen y glosario en paralelo.',
