@@ -48,4 +48,17 @@ assert.ok(
     isolateUntrustedContent(adversarial)
   )
 );
+// Caso real de IPC: la respuesta equivocada describe "ciencia", no
+// "epistemología". Ambas están en el PDF; el prompt debe permitir contrastarlas.
+const ipc = buildStudyErrorReviewPrompt({
+  topic: 'Epistemologia',
+  question: 'Según el PDF, ¿qué describe correctamente “Epistemologia”?',
+  correctAnswer: 'Reflexion racional, ordenada y sistematica acerca de la ciencia y su objetivo.',
+  selectedAnswer: 'Conocimiento institucionalizado que cumple requisitos de una comunidad cientifica y producto historico.',
+  source: 'Epistemología: reflexión racional, ordenada y sistemática acerca de la ciencia, su objetivo. CIENCIA: conocimiento institucionalizado que cumple requisitos de una comunidad científica, producto de un desarrollo histórico.',
+});
+assert.ok(ipc.includes('contrastar dos definiciones presentes en el PDF'));
+assert.ok(ipc.includes('eso NO contradice la respuesta correcta'));
+assert.ok(ipc.includes('Si ni la respuesta correcta ni una distinción verificable pueden sostenerse'));
+assert.ok(ipc.includes('Respuesta equivocada del alumno:'));
 console.log('Study error review prompt smoke tests passed.');

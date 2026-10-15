@@ -364,6 +364,7 @@ export async function generateReviewCheckAction(
       source: evidence.excerpt,
       previousQuestion: previous?.question,
     });
+    metadata.provider_outcomes = generated.providerOutcomes;
     if (!generated.question) {
       return fail(
         generated.failureReason,

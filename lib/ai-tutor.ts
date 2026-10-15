@@ -230,12 +230,15 @@ export type ReviewQuestionGenerationFailure =
 export async function generateStudyErrorReviewQuestion(
   input: Parameters<typeof buildStudyErrorReviewPrompt>[0]
 ): Promise<
-  | { question: NonNullable<ReturnType<typeof validateReviewQuestion>>; failureReason: null }
-  | { question: null; failureReason: ReviewQuestionGenerationFailure }
+  | { question: NonNullable<ReturnType<typeof validateReviewQuestion>>; failureReason: null; providerOutcomes: string[] }
+  | { question: null; failureReason: ReviewQuestionGenerationFailure; providerOutcomes: string[] }
 > {
   const prompt = buildStudyErrorReviewPrompt(input);
   const providerOrder = await getNextInteractiveProviderOrder();
+  const providerOutcomes: string[] = [];
   let receivedResponse = false;
+  let abstained = false;
+  let invalid = false;
   for (const provider of providerOrder) {
     const result =
       provider === 'groq'
@@ -254,31 +257,47 @@ export async function generateStudyErrorReviewQuestion(
               maxOutputTokens: 650,
             })
           );
-    if (!result) continue;
+    if (!result) {
+      providerOutcomes.push(`${provider}:unavailable`);
+      continue;
+    }
     receivedResponse = true;
     try {
       const payload = extractJsonObject(result.content);
-      // La abstención fundamentada es válida: jamás creamos respuestas sin evidencia.
+      // Una abstención del primer proveedor no descarta otra interpretación
+      // válida del PDF. Consultamos el fallback sin relajar la cita obligatoria.
       if (
         payload &&
         typeof payload === 'object' &&
         'supported' in payload &&
         payload.supported === false
-      )
-        return { question: null, failureReason: 'unsupported_by_source' };
+      ) {
+        abstained = true;
+        providerOutcomes.push(`${provider}:abstained`);
+        continue;
+      }
       const question = validateReviewQuestion(payload, input.source, input.question);
       if (
         question &&
         (!input.previousQuestion ||
           validateReviewQuestion(payload, input.source, input.previousQuestion))
-      )
-        return { question, failureReason: null };
+      ) {
+        providerOutcomes.push(`${provider}:accepted`);
+        return { question, failureReason: null, providerOutcomes };
+      }
     } catch {
       // Rechazo del formato o de la evidencia: probar el proveedor alternativo.
     }
+    invalid = true;
+    providerOutcomes.push(`${provider}:invalid`);
   }
   return {
     question: null,
-    failureReason: receivedResponse ? 'invalid_response' : 'provider_unavailable',
+    failureReason: !receivedResponse
+      ? 'provider_unavailable'
+      : abstained && !invalid
+        ? 'unsupported_by_source'
+        : 'invalid_response',
+    providerOutcomes,
   };
 }
