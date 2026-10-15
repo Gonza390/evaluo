@@ -2,6 +2,7 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { scoreChunk } from '@/lib/rag';
+import { selectReviewCheckEvidence } from '@/lib/study-error-review-evidence';
 import type { StudyErrorSource, StudyErrorPdfRecommendation } from '@/lib/study-errors';
 
 export const reviewIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -127,4 +128,48 @@ export async function loadReviewContext(
     )
     .digest('hex');
   return { row, source, contextKey, helpContextKey };
+}
+
+
+// Ampliamos la fuente sólo para generar una comprobación; las ayudas guardadas
+// y sus claves de caché siguen usando la referencia original.
+export async function loadExpandedReviewCheckEvidence(input: {
+  row: ReviewErrorRow;
+  source: StudyErrorPdfRecommendation | null;
+}) {
+  const { row, source } = input;
+  const original = source?.excerpt ?? null;
+  const page = source?.pageStart ?? row.reference_page_start;
+  if (!source?.materialId || !page || page < 1) {
+    return selectReviewCheckEvidence({
+      originalExcerpt: original,
+      topic: row.topic,
+      question: row.prompt,
+      correctAnswer: row.correct_answer,
+      page,
+      chunks: [],
+    });
+  }
+
+  // Material y titular ya fueron verificados por loadReviewContext.
+  // Nunca consultamos contenido de PDFs ajenos ni de otra materia.
+  const nearbyPages = [page - 1, page, page + 1].filter((n) => n > 0);
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('student_material_chunks')
+    .select('chunk_index, chunk_text, page_start, page_end')
+    .eq('student_material_id', source.materialId)
+    .in('page_start', nearbyPages)
+    .order('chunk_index', { ascending: true })
+    .limit(30);
+  if (error) throw error;
+
+  return selectReviewCheckEvidence({
+    originalExcerpt: original,
+    topic: row.topic,
+    question: row.prompt,
+    correctAnswer: row.correct_answer,
+    page,
+    chunks: data ?? [],
+  });
 }

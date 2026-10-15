@@ -2,7 +2,8 @@
 
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
-import { loadReviewContext, reviewIdPattern } from '@/lib/study-error-review-context';
+import { loadReviewContext, loadExpandedReviewCheckEvidence, reviewIdPattern } from '@/lib/study-error-review-context';
+import { createHash } from 'node:crypto';
 import { generateTutorQuickHelp, generateStudyErrorReviewQuestion } from '@/lib/ai-tutor';
 import { markStudyErrorReviewed } from '@/lib/study-errors';
 import { hasPremiumAccess } from '@/lib/premium';
@@ -256,35 +257,78 @@ export async function generateReviewCheckAction(
   const user = await currentUser();
   if (!user || !validInput(errorId, materialId))
     return { success: false, message: 'Sesión o solicitud no válida.' };
+
+  const metadata: Record<string, unknown> = {
+    study_error_id: errorId,
+    material_id: materialId,
+  };
+  const trackCheck = async (
+    eventName: 'study_error_check_requested' | 'study_error_check_failed',
+    reason?: string
+  ) => {
+    await trackServerAnalyticsEvent({
+      eventName,
+      userId: user.id,
+      path: '/dashboard/explicaciones',
+      metadata: reason ? { ...metadata, reason } : { ...metadata },
+    });
+  };
+  const fail = async (reason: string, message: string) => {
+    await trackCheck('study_error_check_failed', reason);
+    return { success: false, message };
+  };
+
   try {
+    await trackCheck('study_error_check_requested');
     const context = await loadReviewContext(user.id, errorId, materialId);
     if (!context || context.row.status !== 'pending')
-      return { success: false, message: 'Este error ya no está pendiente. Actualizá la pantalla.' };
+      return fail('invalid_context', 'Este error ya no está pendiente. Actualizá la pantalla.');
+
     const { row, source, contextKey, helpContextKey } = context;
-    if (!source?.excerpt || source.excerpt.trim().length < 60 || !row.correct_answer) {
-      return {
-        success: false,
-        message:
-          'Todavía no hay suficiente evidencia en este PDF para hacer una comprobación confiable. Repasá el material y volvé a la actividad original.',
-      };
+    metadata.source_type = row.source_type;
+    metadata.original_evidence_chars = source?.excerpt?.length ?? 0;
+    if (!row.correct_answer) {
+      return fail(
+        'insufficient_evidence',
+        'Todavía no hay suficiente evidencia en este PDF para hacer una comprobación confiable. Repasá el material y volvé a la actividad original.'
+      );
     }
     if (!row.last_reviewed_at || new Date(row.last_reviewed_at) < new Date(row.last_failed_at)) {
-      return { success: false, message: 'Primero repasá la explicación o el fragmento del PDF.' };
+      return fail('review_required', 'Primero repasá la explicación o el fragmento del PDF.');
     }
+
+    // El contexto expandido se usa sólo para generar y validar la pregunta.
+    // Si no encontramos chunks pertinentes, conservamos la referencia original.
+    const evidence = await loadExpandedReviewCheckEvidence({ row, source });
+    metadata.evidence_mode = evidence.mode;
+    metadata.expanded_evidence_chars = evidence.excerpt?.length ?? 0;
+    metadata.evidence_chunks = evidence.chunkCount;
+    if (!evidence.excerpt || evidence.excerpt.trim().length < 60) {
+      return fail(
+        'insufficient_evidence',
+        'Todavía no hay suficiente evidencia en este PDF para hacer una comprobación confiable. Repasá el material y volvé a la actividad original.'
+      );
+    }
+
+    // La clave debe cambiar si ampliamos la fuente: no reutilizamos una pregunta
+    // generada contra un fragmento de contexto anterior.
+    const checkContextKey = createHash('sha256')
+      .update(JSON.stringify([contextKey, evidence.excerpt]))
+      .digest('hex');
     const admin = createAdminClient();
     const { data: cached, error: cacheError } = await admin
       .from('study_error_review_checks')
       .select('id, question, options')
       .eq('error_id', errorId)
       .eq('user_id', user.id)
-      .eq('context_key', contextKey)
+      .eq('context_key', checkContextKey)
       .eq('status', 'open')
       .maybeSingle();
     if (cacheError) throw cacheError;
     if (cached) return { success: true, question: publicReviewQuestion(cached) };
-    // Pedir más ayuda no debe consumir las comprobaciones necesarias para cerrar el repaso.
+
     const limitMessage = await generationLimit(user.id, 'check');
-    if (limitMessage) return { success: false, message: limitMessage };
+    if (limitMessage) return fail('rate_limited', limitMessage);
     const { data: previous } = await admin
       .from('study_error_review_checks')
       .select('question')
@@ -293,7 +337,6 @@ export async function generateReviewCheckAction(
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    // Solo ayudas del mismo alumno, error y fuente; nunca texto enviado por el cliente.
     const { data: reviewedHelp, error: helpError } = await admin
       .from('study_error_help_cache')
       .select('kind, help_text')
@@ -318,28 +361,28 @@ export async function generateReviewCheckAction(
       correctAnswer: row.correct_answer.slice(0, 1000),
       selectedAnswer: row.selected_answer?.slice(0, 1000),
       reviewedExplanation,
-      source: source.excerpt,
+      source: evidence.excerpt,
       previousQuestion: previous?.question,
     });
-    if (!generated)
-      return {
-        success: false,
-        message:
-          'No pudimos crear una pregunta bien respaldada por este fragmento. El error sigue pendiente; podés repasar o volver a la actividad original.',
-      };
+    if (!generated.question) {
+      return fail(
+        generated.failureReason,
+        'No pudimos crear una pregunta bien respaldada por este fragmento. El error sigue pendiente; podés repasar o volver a la actividad original.'
+      );
+    }
     const { data: inserted, error } = await admin
       .from('study_error_review_checks')
       .insert({
         error_id: errorId,
         user_id: user.id,
         material_id: materialId,
-        context_key: contextKey,
+        context_key: checkContextKey,
         source_failed_at: row.last_failed_at,
-        question: generated.question,
-        options: generated.options,
-        correct_index: generated.correctIndex,
-        feedback: generated.feedback,
-        evidence_quote: generated.evidenceQuote,
+        question: generated.question.question,
+        options: generated.question.options,
+        correct_index: generated.question.correctIndex,
+        feedback: generated.question.feedback,
+        evidence_quote: generated.question.evidenceQuote,
       })
       .select('id, question, options')
       .single();
@@ -349,7 +392,7 @@ export async function generateReviewCheckAction(
         .select('id, question, options')
         .eq('error_id', errorId)
         .eq('user_id', user.id)
-        .eq('context_key', contextKey)
+        .eq('context_key', checkContextKey)
         .eq('status', 'open')
         .single();
       if (concurrent) return { success: true, question: publicReviewQuestion(concurrent) };
@@ -359,12 +402,12 @@ export async function generateReviewCheckAction(
       eventName: 'study_error_check_started',
       userId: user.id,
       path: '/dashboard/explicaciones',
-      metadata: { study_error_id: errorId, material_id: materialId },
+      metadata: { ...metadata },
     });
     return { success: true, question: publicReviewQuestion(inserted) };
   } catch (error) {
     logError('studyErrors.reviewCheck', error, { userId: user.id, errorId });
-    return { success: false, message: 'No pudimos preparar la comprobación. Intentá nuevamente.' };
+    return fail('unexpected_error', 'No pudimos preparar la comprobación. Intentá nuevamente.');
   }
 }
 

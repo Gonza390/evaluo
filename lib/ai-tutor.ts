@@ -222,11 +222,20 @@ export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
   };
 }
 
+export type ReviewQuestionGenerationFailure =
+  | 'provider_unavailable'
+  | 'unsupported_by_source'
+  | 'invalid_response';
+
 export async function generateStudyErrorReviewQuestion(
   input: Parameters<typeof buildStudyErrorReviewPrompt>[0]
-) {
+): Promise<
+  | { question: NonNullable<ReturnType<typeof validateReviewQuestion>>; failureReason: null }
+  | { question: null; failureReason: ReviewQuestionGenerationFailure }
+> {
   const prompt = buildStudyErrorReviewPrompt(input);
   const providerOrder = await getNextInteractiveProviderOrder();
+  let receivedResponse = false;
   for (const provider of providerOrder) {
     const result =
       provider === 'groq'
@@ -246,26 +255,30 @@ export async function generateStudyErrorReviewQuestion(
             })
           );
     if (!result) continue;
+    receivedResponse = true;
     try {
       const payload = extractJsonObject(result.content);
-      // La abstención es un resultado pedagógico válido, no una falla de proveedor.
+      // La abstención fundamentada es válida: jamás creamos respuestas sin evidencia.
       if (
         payload &&
         typeof payload === 'object' &&
         'supported' in payload &&
         payload.supported === false
       )
-        return null;
+        return { question: null, failureReason: 'unsupported_by_source' };
       const question = validateReviewQuestion(payload, input.source, input.question);
       if (
         question &&
         (!input.previousQuestion ||
           validateReviewQuestion(payload, input.source, input.previousQuestion))
       )
-        return question;
+        return { question, failureReason: null };
     } catch {
-      // Salida inválida: un fallback acotado, sin persistir datos no validados.
+      // Rechazo del formato o de la evidencia: probar el proveedor alternativo.
     }
   }
-  return null;
+  return {
+    question: null,
+    failureReason: receivedResponse ? 'invalid_response' : 'provider_unavailable',
+  };
 }
