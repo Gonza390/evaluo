@@ -7,21 +7,16 @@ ASSET_DIR = ROOT / 'public' / 'testimonials'
 ASSET_DIR.mkdir(parents=True, exist_ok=True)
 
 sources = {
-    'tomas-fernandez.webp': 'https://images.pexels.com/photos/7968337/pexels-photo-7968337.jpeg?cs=tinysrgb&dpr=1&w=500',
-    'sofia-martinez.webp': 'https://img.magnific.com/foto-gratis/mujer-joven-alegre-que-toma-selfie_74855-4032.jpg?semt=ais_hybrid&w=740&q=80',
-    'lucia-gonzalez.webp': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_AdyiB21xLW4f41KGuNQimu8xD1EhHn8Jl0qiODnD7NP6HnQLuhpwDDRE&s=10',
+    'tomas-fernandez.jpg': 'https://images.pexels.com/photos/7968337/pexels-photo-7968337.jpeg?cs=tinysrgb&dpr=1&w=320',
+    'sofia-martinez.jpg': 'https://img.magnific.com/foto-gratis/mujer-joven-alegre-que-toma-selfie_74855-4032.jpg?semt=ais_hybrid&w=320&q=75',
+    'lucia-gonzalez.jpg': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_AdyiB21xLW4f41KGuNQimu8xD1EhHn8Jl0qiODnD7NP6HnQLuhpwDDRE&s=10',
 }
 
 for filename, url in sources.items():
-    stem = Path(filename).stem
-    source = Path('/tmp') / f'{stem}.jpg'
-    subprocess.run(['curl', '-fL', '--retry', '3', url, '-o', str(source)], check=True)
     subprocess.run([
-        'ffmpeg', '-y', '-i', str(source),
-        '-vf', 'scale=320:320:force_original_aspect_ratio=increase,crop=320:320',
-        '-c:v', 'libwebp', '-q:v', '72', '-preset', 'picture',
-        str(ASSET_DIR / filename),
-    ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        'curl', '-fL', '--retry', '3', url,
+        '-o', str(ASSET_DIR / filename),
+    ], check=True)
 
 path = ROOT / 'components' / 'marketing' / 'home-redesign.tsx'
 text = path.read_text()
@@ -35,7 +30,7 @@ new_block = '''      <section className="sec" style={{ paddingBottom: '48px' }}>
           <div className="cells">
             <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                <Image src="/testimonials/sofia-martinez.webp" alt="Sofía Martínez" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <Image src="/testimonials/sofia-martinez.jpg" alt="Sofía Martínez" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 <div>
                   <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Sofía Martínez</b>
                   <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Derecho · Universidad de Buenos Aires</span>
@@ -47,7 +42,7 @@ new_block = '''      <section className="sec" style={{ paddingBottom: '48px' }}>
             </div>
             <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                <Image src="/testimonials/tomas-fernandez.webp" alt="Tomás Fernández" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <Image src="/testimonials/tomas-fernandez.jpg" alt="Tomás Fernández" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 <div>
                   <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Tomás Fernández</b>
                   <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Psicología · Universidad Nacional de Tres de Febrero</span>
@@ -59,7 +54,7 @@ new_block = '''      <section className="sec" style={{ paddingBottom: '48px' }}>
             </div>
             <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                <Image src="/testimonials/lucia-gonzalez.webp" alt="Lucía González" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <Image src="/testimonials/lucia-gonzalez.jpg" alt="Lucía González" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 <div>
                   <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Lucía González</b>
                   <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Marketing · Universidad Siglo 21</span>
