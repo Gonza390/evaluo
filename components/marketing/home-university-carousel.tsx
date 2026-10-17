@@ -66,10 +66,6 @@ export function HomeUniversityCarousel({ universities }: { universities: Univers
     if (logos) resizeObserver.observe(logos);
 
     function animate(time: number) {
-      if (previousTime !== undefined && time - previousTime < 1000 / 30) {
-        frame = window.requestAnimationFrame(animate);
-        return;
-      }
       const elapsed = previousTime === undefined ? 0 : Math.min(time - previousTime, 64);
       previousTime = time;
       if (maximum > 1) {
