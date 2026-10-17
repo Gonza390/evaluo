@@ -72,12 +72,12 @@ export function ExamRemindersPanel() {
     <div className="surface-card rounded-[var(--radius-card)] bg-white/90 backdrop-blur">
       <div className="flex items-center justify-between px-5 pt-5">
         <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-indigo-500" />
+          <Bell className="h-4 w-4 text-blue-500" />
           <h3 className="text-xl font-semibold text-slate-950">Próximos parciales</h3>
         </div>
         <Link
           href="/calendario"
-          className="text-xs font-semibold text-indigo-600 transition hover:text-indigo-700"
+          className="text-xs font-semibold text-blue-600 transition hover:text-blue-700"
         >
           Calendario
         </Link>
@@ -107,11 +107,11 @@ export function ExamRemindersPanel() {
           reminders.map((reminder) => (
             <div
               key={reminder.id}
-              className="flex items-start justify-between gap-3 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/60 to-white p-3"
+              className="flex items-start justify-between gap-3 rounded-xl border border-blue-100 bg-gradient-to-r from-indigo-50/60 to-white p-3"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[12px] font-semibold text-indigo-700">
+                  <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[12px] font-semibold text-blue-700">
                     {daysRemainingLabel(reminder.daysRemaining)}
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export function ExamRemindersPanel() {
       </div>
 
       <div className="flex items-center gap-1.5 border-t border-slate-100 px-5 py-3 text-[12px] text-slate-500">
-        <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+        <Sparkles className="h-3.5 w-3.5 text-blue-400" />
         Recordatorios disponibles en Premium
       </div>
     </div>

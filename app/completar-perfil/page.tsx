@@ -29,7 +29,7 @@ function ProfileSetupLoading({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className={`w-full ${compact ? 'max-w-xl' : 'max-w-2xl'} border-y border-slate-200 py-10 text-center`}>
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
           <Spinner size="sm" />
         </div>
         <p className="mt-4 text-sm font-semibold text-slate-800">Preparando tu experiencia académica</p>

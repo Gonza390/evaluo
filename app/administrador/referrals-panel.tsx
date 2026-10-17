@@ -176,7 +176,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
     <section>
       <div className="flex flex-col gap-2 border-b border-slate-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase">Adquisición</p>
+          <p className="text-[11px] font-bold tracking-[0.16em] text-blue-600 uppercase">Adquisición</p>
           <h2 className="mt-1 text-xl font-bold tracking-[-0.04em] text-slate-950">Referidos y descuentos</h2>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
             Creá marcas, referentes y códigos. El histórico comercial no se elimina al pausar una campaña.
@@ -235,7 +235,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
       <div className="mt-7 grid gap-6 xl:grid-cols-2">
         <div className="border-t border-slate-200 pt-5">
           <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-indigo-600" />
+            <Building2 className="h-4 w-4 text-blue-600" />
             <h3 className="font-bold text-slate-950">Marcas</h3>
           </div>
           <form onSubmit={submitBrand} className="mt-3 flex gap-2">
@@ -243,7 +243,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               value={brandName}
               onChange={(event) => setBrandName(event.target.value)}
               placeholder="Ej. Marca Universitaria"
-              className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              className="h-11 min-w-0 flex-1 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
             />
             <button
               disabled={pending}
@@ -275,7 +275,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
                         })
                       )
                     }
-                    className="text-xs font-semibold text-slate-500 hover:text-indigo-700 disabled:opacity-50"
+                    className="text-xs font-semibold text-slate-500 hover:text-blue-700 disabled:opacity-50"
                   >
                     {brand.status === 'active' ? 'Pausar' : 'Activar'}
                   </button>
@@ -289,14 +289,14 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
 
         <div className="border-t border-slate-200 pt-5">
           <div className="flex items-center gap-2">
-            <UserRoundPlus className="h-4 w-4 text-indigo-600" />
+            <UserRoundPlus className="h-4 w-4 text-blue-600" />
             <h3 className="font-bold text-slate-950">Referentes</h3>
           </div>
           <form onSubmit={submitPartner} className="mt-3 grid gap-2 sm:grid-cols-2">
             <select
               value={partnerBrandId}
               onChange={(event) => setPartnerBrandId(event.target.value)}
-              className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-indigo-400"
+              className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-400"
             >
               <option value="">Elegir marca</option>
               {data.brands.map((brand) => (
@@ -309,18 +309,18 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               value={partnerName}
               onChange={(event) => setPartnerName(event.target.value)}
               placeholder="Persona / referente"
-              className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+              className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400"
             />
             <input
               value={partnerEmail}
               onChange={(event) => setPartnerEmail(event.target.value)}
               type="email"
               placeholder="Email (opcional)"
-              className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400"
+              className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400"
             />
             <button
               disabled={pending || !data.brands.length}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:border-indigo-300 hover:text-indigo-700 disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-800 hover:border-blue-300 hover:text-blue-700 disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
               Crear referente
@@ -349,7 +349,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
 
       <div className="mt-7 border-t border-slate-200 pt-5">
         <div className="flex items-center gap-2">
-          <BadgePercent className="h-4 w-4 text-indigo-600" />
+          <BadgePercent className="h-4 w-4 text-blue-600" />
           <h3 className="font-bold text-slate-950">Nuevo código</h3>
         </div>
         <form onSubmit={submitCode} className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -361,7 +361,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
                 setCodeBrandId(event.target.value);
                 setCodePartnerId('');
               }}
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-blue-400"
             >
               <option value="">Elegir marca</option>
               {data.brands.filter((brand) => brand.status === 'active').map((brand) => (
@@ -376,7 +376,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
             <select
               value={codePartnerId}
               onChange={(event) => setCodePartnerId(event.target.value)}
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-blue-400"
             >
               <option value="">Elegir referente</option>
               {partnersForCode.map((partner) => (
@@ -392,7 +392,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               value={codeValue}
               onChange={(event) => setCodeValue(event.target.value.toUpperCase())}
               placeholder="MARCA20"
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 font-mono text-sm font-semibold uppercase outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 font-mono text-sm font-semibold uppercase outline-none focus:border-blue-400"
             />
           </label>
           <label className="text-xs font-semibold text-slate-600">
@@ -404,7 +404,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               min="0.01"
               max="100"
               step="0.01"
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-blue-400"
             />
           </label>
           <label className="text-xs font-semibold text-slate-600">
@@ -412,7 +412,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
             <select
               value={appliesTo}
               onChange={(event) => setAppliesTo(event.target.value as typeof appliesTo)}
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-900 outline-none focus:border-blue-400"
             >
               <option value="all">Mensual y 6 meses</option>
               <option value="monthly">Sólo mensual</option>
@@ -428,7 +428,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               min="1"
               step="1"
               placeholder="Sin límite"
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-blue-400"
             />
           </label>
           <label className="text-xs font-semibold text-slate-600">
@@ -437,7 +437,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               value={startsAt}
               onChange={(event) => setStartsAt(event.target.value)}
               type="datetime-local"
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-blue-400"
             />
           </label>
           <label className="text-xs font-semibold text-slate-600">
@@ -446,12 +446,12 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
               value={endsAt}
               onChange={(event) => setEndsAt(event.target.value)}
               type="datetime-local"
-              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-indigo-400"
+              className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal outline-none focus:border-blue-400"
             />
           </label>
           <button
             disabled={pending || !codePartnerId}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 md:col-span-2 xl:col-span-4"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 md:col-span-2 xl:col-span-4"
           >
             <Plus className="h-4 w-4" />
             Crear código
@@ -633,7 +633,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
                           disabled={pending || hasHistory}
                           title={hasHistory ? 'Con historial, las condiciones comerciales quedan congeladas.' : 'Editar'}
                           onClick={() => setEditingCode(code)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-35"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-35"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -648,7 +648,7 @@ export function ReferralsPanel({ data }: { data: ReferralAdminData }) {
                               })
                             )
                           }
-                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-600 hover:text-indigo-700 disabled:opacity-50"
+                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 px-2 text-[11px] font-semibold text-slate-600 hover:text-blue-700 disabled:opacity-50"
                         >
                           <Play className={`h-3 w-3 ${code.isActive ? 'rotate-180' : ''}`} />
                           {code.isActive ? 'Pausar' : 'Activar'}

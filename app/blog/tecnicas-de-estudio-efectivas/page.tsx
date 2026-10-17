@@ -107,11 +107,11 @@ const sources = [
 
 function EvidenceRefs({ refs }: { refs: number[] }) {
   return (
-    <sup className="ml-1 whitespace-nowrap text-[10px] font-bold text-indigo-700">
+    <sup className="ml-1 whitespace-nowrap text-[10px] font-bold text-blue-700">
       {refs.map((ref, index) => (
         <span key={ref}>
           {index > 0 ? ', ' : ''}
-          <a href={`#fuente-${ref}`} className="underline decoration-indigo-200 underline-offset-2 hover:decoration-indigo-500">
+          <a href={`#fuente-${ref}`} className="underline decoration-blue-200 underline-offset-2 hover:decoration-blue-500">
             {ref}
           </a>
         </span>
@@ -134,11 +134,11 @@ function Technique({
   return (
     <section id={`tecnica-${number}`} className="scroll-mt-8">
       <div className="flex items-baseline gap-3">
-        <span className="font-mono text-xs font-bold text-indigo-700">{number}</span>
+        <span className="font-mono text-xs font-bold text-blue-700">{number}</span>
         <h2 className="text-2xl font-bold tracking-[-0.035em] text-slate-950 sm:text-3xl">{title}</h2>
       </div>
       <div className="mt-5 space-y-4 text-[15px] leading-7 text-slate-600">{children}</div>
-      <div className="mt-5 border-l-2 border-indigo-500 pl-4 text-sm leading-7 text-slate-700">
+      <div className="mt-5 border-l-2 border-blue-500 pl-4 text-sm leading-7 text-slate-700">
         <strong className="text-slate-950">Cómo aplicarlo:</strong> {practice}
       </div>
     </section>
@@ -180,7 +180,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-950 selection:bg-indigo-100 selection:text-indigo-950">
+    <div className="min-h-screen bg-white text-slate-950 selection:bg-blue-100 selection:text-blue-950">
       <MarketingAnalyticsSlot />
       <JsonLd
         data={[
@@ -205,7 +205,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
       <main>
         <article className="mx-auto max-w-[780px] px-4 pb-16 pt-10 sm:px-6 sm:pt-14 lg:pb-20">
           <header>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Guía de estudio
             </p>
             <h1 className="mt-4 text-[2.6rem] font-bold leading-[1.02] tracking-[-0.055em] text-slate-950 sm:text-[3.6rem]">
@@ -249,7 +249,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 ['#preguntas', 'Preguntas frecuentes'],
                 ['#fuentes', 'Fuentes'],
               ].map(([href, label]) => (
-                <a key={href} href={href} className="text-slate-600 transition hover:text-indigo-700">
+                <a key={href} href={href} className="text-slate-600 transition hover:text-blue-700">
                   {label}
                 </a>
               ))}
@@ -257,7 +257,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </nav>
 
           <section id="evidencia" className="scroll-mt-8 mb-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Qué dice la evidencia
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -413,7 +413,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section id="elegir" className="scroll-mt-8 mt-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Elegir según la tarea
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -443,7 +443,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section id="sesion-60" className="scroll-mt-8 mt-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Ejemplo práctico
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -460,7 +460,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 ['50–60 min', 'Corregir', 'Compará con la fuente, anotá errores y decidí qué tema necesita otro repaso más adelante.'],
               ].map(([time, title, text]) => (
                 <li key={time} className="grid gap-2 border-b border-slate-200 py-5 last:border-b-0 sm:grid-cols-[90px_110px_1fr] sm:gap-4">
-                  <span className="font-mono text-xs font-bold text-indigo-700">{time}</span>
+                  <span className="font-mono text-xs font-bold text-blue-700">{time}</span>
                   <strong className="text-sm text-slate-950">{title}</strong>
                   <span className="text-sm leading-6 text-slate-600">{text}</span>
                 </li>
@@ -469,7 +469,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section id="dias" className="scroll-mt-8 mt-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Antes del examen
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -494,7 +494,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section id="errores" className="scroll-mt-8 mt-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Errores frecuentes
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -517,7 +517,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section id="combinar" className="scroll-mt-8 mt-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Cómo llevarlo a la práctica
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -532,7 +532,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 ['05', 'Volvé después', 'Programá otro contacto con los temas débiles para recuperar de nuevo sin mirar.'],
               ].map(([number, title, text]) => (
                 <li key={number} className="grid gap-2 py-5 sm:grid-cols-[42px_130px_1fr] sm:gap-4">
-                  <span className="font-mono text-xs font-bold text-indigo-700">{number}</span>
+                  <span className="font-mono text-xs font-bold text-blue-700">{number}</span>
                   <strong className="text-sm text-slate-950">{title}</strong>
                   <span className="text-sm leading-6 text-slate-600">{text}</span>
                 </li>
@@ -545,7 +545,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section className="mt-14 border border-slate-200 bg-slate-50 p-6 sm:p-8">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Aplicarlo con tu propio material
             </p>
             <h2 className="mt-3 text-2xl font-bold tracking-[-0.035em] text-slate-950">
@@ -555,13 +555,13 @@ export default function TecnicasDeEstudioEfectivasPage() {
               En Evaluo podés trabajar sobre tus propios apuntes o PDFs y pasar del material a distintas formas de estudio: una guía para entender, flashcards para recuperar conceptos y práctica para comprobar qué recordás.
             </p>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-sm font-semibold">
-              <Link href="/estudiar-pdf-con-ia" className="text-indigo-700 hover:text-indigo-900">
+              <Link href="/estudiar-pdf-con-ia" className="text-blue-700 hover:text-blue-900">
                 Cómo estudiar un PDF con IA
               </Link>
-              <Link href="/funciones/crear-flashcards-desde-pdf" className="text-indigo-700 hover:text-indigo-900">
+              <Link href="/funciones/crear-flashcards-desde-pdf" className="text-blue-700 hover:text-blue-900">
                 Crear flashcards desde un PDF
               </Link>
-              <Link href="/pregunteros" className="text-indigo-700 hover:text-indigo-900">
+              <Link href="/pregunteros" className="text-blue-700 hover:text-blue-900">
                 Practicar con Pregunteros
               </Link>
             </div>
@@ -573,7 +573,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
                 cta_name: 'estudiar_mi_material',
                 destination: uploadHref,
               }}
-              className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700"
+              className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
             >
               Estudiar mi material
             </TrackedLink>
@@ -592,7 +592,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
           </section>
 
           <section id="preguntas" className="scroll-mt-8 mt-14">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">
               Preguntas frecuentes
             </p>
             <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -634,7 +634,7 @@ export default function TecnicasDeEstudioEfectivasPage() {
                     href={source.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition hover:text-indigo-700 hover:decoration-indigo-300"
+                    className="font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 transition hover:text-blue-700 hover:decoration-blue-300"
                   >
                     {source.title}
                   </a>

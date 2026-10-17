@@ -54,7 +54,7 @@ const related = [
 
 export default function CrearMapaMentalDesdePdfPage() {
   return (
-    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <MarketingAnalyticsSlot />
       <JsonLd
         data={buildBreadcrumbJsonLd([
@@ -71,7 +71,7 @@ export default function CrearMapaMentalDesdePdfPage() {
         <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_75%_15%,rgba(99,102,241,0.15),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto grid w-full max-w-[1240px] gap-12 px-4 pb-16 pt-12 sm:px-8 sm:pb-24 sm:pt-18 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:px-10">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-[11px] font-bold text-blue-700">
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Organización visual desde tu material
               </span>
               <h1 className="mt-5 text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[66px]">
@@ -92,7 +92,7 @@ export default function CrearMapaMentalDesdePdfPage() {
                     cta_name: 'subir_pdf',
                     destination: uploadHref,
                   }}
-                  className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                  className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
                   Crear mapa mental desde mi PDF
@@ -110,11 +110,11 @@ export default function CrearMapaMentalDesdePdfPage() {
             </div>
 
             <div className="relative">
-              <div className="absolute -inset-8 rounded-[44px] bg-indigo-100/55 blur-3xl" />
+              <div className="absolute -inset-8 rounded-[44px] bg-blue-100/55 blur-3xl" />
               <div className="relative overflow-hidden rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-7">
                 <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
                       <FileText className="h-4.5 w-4.5" aria-hidden="true" />
                     </span>
                     <div>
@@ -122,22 +122,22 @@ export default function CrearMapaMentalDesdePdfPage() {
                       <p className="text-sm font-bold text-slate-950">Marketing I.pdf</p>
                     </div>
                   </div>
-                  <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold text-indigo-700">Ejemplo visual</span>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">Ejemplo visual</span>
                 </div>
 
                 <div className="relative mt-6 min-h-[360px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50/70 p-5 sm:p-7">
-                  <div className="absolute left-1/2 top-[72px] h-[90px] w-px -translate-x-1/2 bg-indigo-200" />
-                  <div className="absolute left-[25%] right-[25%] top-[161px] h-px bg-indigo-200" />
-                  <div className="absolute left-[25%] top-[161px] h-[54px] w-px bg-indigo-200" />
-                  <div className="absolute right-[25%] top-[161px] h-[54px] w-px bg-indigo-200" />
+                  <div className="absolute left-1/2 top-[72px] h-[90px] w-px -translate-x-1/2 bg-blue-200" />
+                  <div className="absolute left-[25%] right-[25%] top-[161px] h-px bg-blue-200" />
+                  <div className="absolute left-[25%] top-[161px] h-[54px] w-px bg-blue-200" />
+                  <div className="absolute right-[25%] top-[161px] h-[54px] w-px bg-blue-200" />
 
-                  <div className="relative mx-auto flex w-fit items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-600 px-5 py-3 text-white shadow-lg shadow-indigo-200/70">
+                  <div className="relative mx-auto flex w-fit items-center gap-2 rounded-2xl border border-blue-200 bg-blue-600 px-5 py-3 text-white shadow-lg shadow-blue-200/70">
                     <Layers3 className="h-4 w-4" aria-hidden="true" />
                     <span className="text-xs font-bold">Marketing</span>
                   </div>
 
                   <div className="relative mt-[82px] grid grid-cols-2 gap-5 sm:gap-8">
-                    <div className="rounded-2xl border border-indigo-200 bg-white p-4 text-center shadow-sm">
+                    <div className="rounded-2xl border border-blue-200 bg-white p-4 text-center shadow-sm">
                       <p className="text-xs font-bold text-slate-950">Segmentación</p>
                       <div className="mt-3 flex flex-wrap justify-center gap-2">
                         {['Demográfica', 'Geográfica', 'Conductual'].map((label) => (
@@ -145,7 +145,7 @@ export default function CrearMapaMentalDesdePdfPage() {
                         ))}
                       </div>
                     </div>
-                    <div className="rounded-2xl border border-indigo-200 bg-white p-4 text-center shadow-sm">
+                    <div className="rounded-2xl border border-blue-200 bg-white p-4 text-center shadow-sm">
                       <p className="text-xs font-bold text-slate-950">Posicionamiento</p>
                       <div className="mt-3 flex flex-wrap justify-center gap-2">
                         {['Propuesta de valor', 'Diferenciación'].map((label) => (
@@ -166,7 +166,7 @@ export default function CrearMapaMentalDesdePdfPage() {
 
         <section className="py-16 sm:py-24">
           <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-            <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">Para qué sirve</p>
+            <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Para qué sirve</p>
             <h2 className="mt-4 max-w-3xl text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.05]">
               Usá una vista visual cuando necesitás entender cómo se relacionan las ideas.
             </h2>
@@ -181,7 +181,7 @@ export default function CrearMapaMentalDesdePdfPage() {
                 ['03', 'Volvé al material', 'Usá el mapa como guía y seguí con resumen, flashcards o práctica cuando lo necesites.'],
               ].map(([number, title, text]) => (
                 <article key={number} className="rounded-[22px] border border-slate-200 bg-white p-6 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
-                  <p className="text-[10px] font-black text-indigo-700">{number}</p>
+                  <p className="text-[10px] font-black text-blue-700">{number}</p>
                   <h3 className="mt-4 text-base font-bold text-slate-950">{title}</h3>
                   <p className="mt-2 text-xs leading-6 text-slate-600">{text}</p>
                 </article>
@@ -200,11 +200,11 @@ export default function CrearMapaMentalDesdePdfPage() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.07)] sm:p-6"
+                  className="group rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.07)] sm:p-6"
                 >
-                  <h3 className="text-sm font-bold tracking-tight text-slate-950 group-hover:text-indigo-700 sm:text-[15px]">{item.title}</h3>
+                  <h3 className="text-sm font-bold tracking-tight text-slate-950 group-hover:text-blue-700 sm:text-[15px]">{item.title}</h3>
                   <p className="mt-2 text-xs leading-5 text-slate-600 sm:text-[13px] sm:leading-6">{item.description}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-indigo-700">
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-blue-700">
                     Ver página <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                 </Link>
@@ -216,7 +216,7 @@ export default function CrearMapaMentalDesdePdfPage() {
         <section className="bg-white py-16 sm:py-20">
           <div className="mx-auto grid w-full max-w-[1040px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-14">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">Preguntas frecuentes</p>
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Preguntas frecuentes</p>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">Sobre mapas mentales desde PDF</h2>
             </div>
             <div className="divide-y divide-slate-200 border-y border-slate-200">

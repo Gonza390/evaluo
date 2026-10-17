@@ -208,7 +208,7 @@ export default function SimuladorExamen(props: SimuladorExamenProps) {
     return (
       <div className="flex min-h-[700px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_26%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] px-6">
         <div className="text-center">
-          <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-indigo-600" />
+          <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
           <p className="mt-4 text-sm font-semibold text-slate-700">Guardando tu resultado...</p>
         </div>
       </div>

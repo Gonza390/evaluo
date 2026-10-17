@@ -104,7 +104,7 @@
 
 /* Las cards del Plan de estudios se mantienen; se quitan los badges redundantes de disponibilidad. */
 .career-editorial .surface-card span.bg-emerald-50,
-.career-editorial .surface-card span.bg-indigo-50,
+.career-editorial .surface-card span.bg-blue-50,
 .career-editorial .surface-card span.bg-slate-100.text-slate-500 {
   display: none !important;
 }

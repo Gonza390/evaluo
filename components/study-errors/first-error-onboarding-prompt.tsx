@@ -108,11 +108,11 @@ export function FirstStudyErrorOnboardingPrompt({
             </div>
           </DialogHeader>
 
-          <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/55 px-4 py-3">
-            <p className="text-sm font-semibold text-indigo-950">
+          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/55 px-4 py-3">
+            <p className="text-sm font-semibold text-blue-950">
               Te mostramos Progreso usando este error real.
             </p>
-            <p className="mt-1 text-xs leading-5 text-indigo-700">
+            <p className="mt-1 text-xs leading-5 text-blue-700">
               Es un recorrido corto y aparece una sola vez.
             </p>
           </div>
@@ -130,7 +130,7 @@ export function FirstStudyErrorOnboardingPrompt({
             <button
               type="button"
               onClick={start}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
               Ver cómo funciona Progreso
               <ArrowRight className="h-4 w-4" />

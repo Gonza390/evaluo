@@ -70,7 +70,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => setActiveFilter(filter.id)}
-                className={`rounded-xl px-2.5 py-2 text-[12px] font-semibold transition sm:px-3 sm:text-sm ${isActive ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white'}`}
+                className={`rounded-xl px-2.5 py-2 text-[12px] font-semibold transition sm:px-3 sm:text-sm ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white'}`}
               >
                 {filter.label}
               </button>
@@ -83,7 +83,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
         <section className="mt-7 [content-visibility:auto] [contain-intrinsic-size:720px]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-600 uppercase">Universidades</p>
+              <p className="text-[12px] font-bold tracking-[0.18em] text-blue-600 uppercase">Universidades</p>
               <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">Elegí tu universidad</h2>
             </div>
             <p className="shrink-0 text-sm font-semibold text-slate-500">{visibleUniversidades.length} resultados</p>
@@ -95,7 +95,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
                 <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
                 <h3 className="text-xl font-semibold text-slate-900">No encontramos universidades</h3>
                 <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
-                <Link href="/solicitar-universidad" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                <Link href="/solicitar-universidad" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
                   Solicitar que la sumemos
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -105,10 +105,10 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {visibleUniversidades.map((universidad) => (
                 <Link key={universidad.id} href={getUniversityRoute(universidad.id)} className="block">
-                  <Card className="surface-card h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]">
+                  <Card className="surface-card h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[var(--shadow-panel)]">
                     <CardContent className="flex h-full items-center justify-between gap-4 p-4">
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><Building2 className="h-5 w-5" /></div>
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Building2 className="h-5 w-5" /></div>
                         <CardTitle className="min-w-0 text-[1.05rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">{universidad.nombre}</CardTitle>
                       </div>
                       <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
@@ -125,7 +125,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
         <section className="mt-7 [content-visibility:auto] [contain-intrinsic-size:1100px]">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-600 uppercase">Carreras</p>
+              <p className="text-[12px] font-bold tracking-[0.18em] text-blue-600 uppercase">Carreras</p>
               <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">Elegí tu carrera</h2>
             </div>
             <p className="shrink-0 text-sm font-semibold text-slate-500">{filteredCarreras.length} resultados</p>
@@ -143,10 +143,10 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               {visibleCarreras.map((carrera) => (
                 <Link key={carrera.id} href={getCareerRoute(carrera.id)} className="block">
-                  <Card className="surface-card h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]">
+                  <Card className="surface-card h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[var(--shadow-panel)]">
                     <CardContent className="flex h-full items-center justify-between gap-4 p-4">
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"><GraduationCap className="h-5 w-5" /></div>
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><GraduationCap className="h-5 w-5" /></div>
                         <div className="min-w-0">
                           <CardTitle className="text-[1.1rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.15rem]">{carrera.nombre}</CardTitle>
                           <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">{carrera.universidadNombre}</p>
@@ -162,7 +162,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
 
           {!normalizedSearch && activeFilter === 'todo' && sortedCarreras.length > 8 ? (
             <div className="mt-5 flex justify-center">
-              <button type="button" onClick={() => setShowAllCareers((value) => !value)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700" aria-expanded={showAllCareers}>
+              <button type="button" onClick={() => setShowAllCareers((value) => !value)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700" aria-expanded={showAllCareers}>
                 {showAllCareers ? 'Ver menos carreras' : `Ver las ${sortedCarreras.length} carreras`}
                 <ChevronDown className={`h-4 w-4 transition ${showAllCareers ? 'rotate-180' : ''}`} />
               </button>
@@ -176,7 +176,7 @@ export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
           <p className="text-sm font-semibold text-slate-800">¿No encontrás tu universidad?</p>
           <p className="mt-0.5 text-xs leading-5 text-slate-500">Pedinos que la sumemos. Para enviar la solicitud necesitás crear una cuenta.</p>
         </div>
-        <Link href="/solicitar-universidad" className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700">
+        <Link href="/solicitar-universidad" className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700">
           <PlusCircle className="h-4 w-4" />
           Solicitar universidad
         </Link>

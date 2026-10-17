@@ -112,7 +112,7 @@ export function ManualReferralCode({
     return (
       <div className="w-full border-t border-slate-200 pt-3 text-left">
         <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 sm:text-xs">
-          <Tag className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
+          <Tag className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
           ¿Tenés un código de descuento?
         </div>
 
@@ -175,7 +175,7 @@ export function ManualReferralCode({
     <div className="mx-auto mb-7 max-w-2xl">
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <Tag className="h-4 w-4 text-indigo-600" aria-hidden="true" />
+          <Tag className="h-4 w-4 text-blue-600" aria-hidden="true" />
           ¿Tenés un código de descuento?
         </div>
 

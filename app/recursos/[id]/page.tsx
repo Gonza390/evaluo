@@ -435,7 +435,7 @@ function RecursoContent() {
             Volver
           </button>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
             Lector Evaluo
           </div>
@@ -649,7 +649,7 @@ function RecursoContent() {
                         onClick={() => setSelectedResourceId(recurso.id)}
                         className={`animate-saas-lift-in w-full rounded-2xl border p-4 text-left transition ${
                           active
-                            ? 'border-indigo-300 bg-indigo-50 shadow-[0_10px_30px_rgba(79,93,255,0.12)]'
+                            ? 'border-blue-300 bg-blue-50 shadow-[0_10px_30px_rgba(79,93,255,0.12)]'
                             : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-white'
                         }`}
                       >
@@ -706,7 +706,7 @@ export default function Page() {
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-white">
           <div className="text-center">
-            <Loader2 className="mx-auto h-8 w-8 animate-spin text-indigo-600" />
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
             <p className="mt-3 text-sm font-semibold text-slate-700">Cargando lector...</p>
           </div>
         </div>

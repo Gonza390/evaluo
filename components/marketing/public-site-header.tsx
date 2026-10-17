@@ -83,25 +83,25 @@ export function PublicSiteHeader({
         >
           <Link
             href="/#producto"
-            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Producto
           </Link>
           <Link
             href="/#como-funciona"
-            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Cómo funciona
           </Link>
           <Link
             href="/ia-para-estudiantes"
-            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             IA para estudiar
           </Link>
           <Link
             href="/pricing"
-            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="rounded-full px-4 py-2 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Planes
           </Link>

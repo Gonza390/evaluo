@@ -43,7 +43,7 @@ export function ReferralPortalNavLink({
       title={collapsed ? 'Referidos' : undefined}
       className={`group flex items-center rounded-lg text-[13px] font-medium transition-colors duration-150 ${
         active
-          ? 'bg-indigo-50/80 text-indigo-700'
+          ? 'bg-blue-50/80 text-blue-700'
           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
       } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'gap-2.5 px-3 py-2.5'}`}
     >

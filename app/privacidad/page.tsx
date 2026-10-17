@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             </Link>
 
             <div className="mt-8 border-b border-slate-200 pb-8">
-              <p className="text-xs font-bold tracking-[0.26em] text-indigo-600 uppercase">Legal</p>
+              <p className="text-xs font-bold tracking-[0.26em] text-blue-600 uppercase">Legal</p>
               <h1 className="mt-4 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
                 Política de privacidad
               </h1>

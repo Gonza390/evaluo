@@ -32,7 +32,7 @@ export default async function PremiumSimuladorPage({ params }: { params: Params 
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center font-bold text-indigo-600">
+        <div className="p-8 text-center font-bold text-blue-600">
           Iniciando simulador premium...
         </div>
       }

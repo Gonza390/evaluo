@@ -83,7 +83,7 @@ export function SimulatorNeedsSurvey({
       )}
     >
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
           <MessageSquareText className="h-4 w-4" />
         </span>
         <div className="min-w-0">
@@ -110,10 +110,10 @@ export function SimulatorNeedsSurvey({
                 onSelect(reason.value);
               }}
               className={cn(
-                'min-h-9 rounded-full border px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:outline-none',
+                'min-h-9 rounded-full border px-3 py-2 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none',
                 active
-                  ? 'border-indigo-300 bg-indigo-50 text-indigo-700 shadow-sm'
-                  : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-200 hover:text-indigo-700'
+                  ? 'border-blue-300 bg-blue-50 text-blue-700 shadow-sm'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:text-blue-700'
               )}
             >
               {reason.label}
@@ -132,7 +132,7 @@ export function SimulatorNeedsSurvey({
           onChange={(event) => setComment(event.target.value.slice(0, 1200))}
           rows={3}
           placeholder="Ej.: me gustaría que hubiera más preguntas de casos prácticos..."
-          className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+          className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm leading-6 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
         />
         <div className="mt-1 flex items-center justify-between gap-3">
           <p className="text-[11px] text-slate-400">{comment.length}/1200</p>
@@ -144,7 +144,7 @@ export function SimulatorNeedsSurvey({
         type="button"
         disabled={!selected || submitting}
         onClick={() => void handleSubmit()}
-        className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
+        className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-45"
       >
         <Send className="h-4 w-4" />
         {submitting ? 'Enviando...' : 'Enviar opinión'}

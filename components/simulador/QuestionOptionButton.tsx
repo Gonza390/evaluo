@@ -261,12 +261,12 @@ export function QuestionOptionButton({
       {portalHost
         ? createPortal(
             <div
-              className="mt-5 rounded-2xl border border-indigo-200 bg-[linear-gradient(135deg,#EEF0FF_0%,#FFFFFF_100%)] p-4 shadow-[0_12px_28px_rgba(99,102,241,0.08)]"
+              className="mt-5 rounded-2xl border border-blue-200 bg-[linear-gradient(135deg,#EEF0FF_0%,#FFFFFF_100%)] p-4 shadow-[0_12px_28px_rgba(99,102,241,0.08)]"
               role="status"
               aria-live="polite"
             >
               <div className="flex items-start gap-3">
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
                   <Sparkles className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">

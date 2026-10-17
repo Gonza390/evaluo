@@ -643,7 +643,7 @@ export default function MateriaList({
                                 </span>
                               )}
                               {hasQuestions ? (
-                                <span className="rounded-full bg-indigo-50 px-2 py-1 text-indigo-700">
+                                <span className="rounded-full bg-blue-50 px-2 py-1 text-blue-700">
                                   Práctica disponible
                                 </span>
                               ) : null}
@@ -710,7 +710,7 @@ export default function MateriaList({
                 <button
                   type="button"
                   onClick={() => setVisibleCount((current) => current + MATERIAS_PAGE_SIZE)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#2563EB] transition hover:border-[#93C5FD] hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#2563EB] transition hover:border-[#93C5FD] hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   Ver más materias ({materiasFiltradas.length - visibleMaterias.length})
                 </button>

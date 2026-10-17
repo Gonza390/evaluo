@@ -28,13 +28,13 @@ function DemoPlaceholder() {
         ))}
       </div>
       <div className="px-5 py-7 sm:px-7">
-        <div className="h-3 w-32 rounded-full bg-indigo-50" />
+        <div className="h-3 w-32 rounded-full bg-blue-50" />
         <div className="mt-4 h-7 w-2/3 rounded-full bg-slate-100" />
         <div className="mt-3 h-4 w-full max-w-lg rounded-full bg-slate-100" />
         <div className="mt-8 space-y-4 border-t border-slate-100 pt-5">
           {Array.from({ length: 3 }, (_, index) => (
             <div key={index} className="grid grid-cols-[28px_minmax(0,1fr)] gap-3">
-              <div className="h-3 rounded-full bg-indigo-50" />
+              <div className="h-3 rounded-full bg-blue-50" />
               <div className="space-y-2">
                 <div className="h-3 w-32 rounded-full bg-slate-100" />
                 <div className="h-3 w-full max-w-md rounded-full bg-slate-100" />

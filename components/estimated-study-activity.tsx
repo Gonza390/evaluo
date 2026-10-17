@@ -219,7 +219,7 @@ export function EstimatedStudyActivity() {
       >
         <div className="px-4 pb-3 pt-4">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
               <GraduationCap className="h-4.5 w-4.5" />
             </span>
             <div>

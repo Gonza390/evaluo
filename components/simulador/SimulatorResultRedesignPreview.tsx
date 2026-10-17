@@ -107,7 +107,7 @@ export function SimulatorResultRedesignPreview({ improved = false }: Props) {
 
             <div className="p-6 sm:p-8 lg:p-10">
               <div className="border-b border-slate-200 pb-6">
-                <p className="text-[12px] font-semibold tracking-[0.18em] text-indigo-700 uppercase">
+                <p className="text-[12px] font-semibold tracking-[0.18em] text-blue-700 uppercase">
                   Siguiente paso
                 </p>
                 <h2 className="mt-3 text-xl font-bold tracking-[-0.03em] text-slate-950">

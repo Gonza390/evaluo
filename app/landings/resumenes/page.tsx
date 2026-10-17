@@ -215,7 +215,7 @@ export default async function ResumenesLanding() {
   };
 
   return (
-    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <JsonLd
         data={[
           buildCollectionPageJsonLd({
@@ -231,7 +231,7 @@ export default async function ResumenesLanding() {
 
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto w-full max-w-[1080px] px-4 py-14 sm:px-8 sm:py-20">
-          <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-indigo-700 uppercase">
+          <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-blue-700 uppercase">
             <FileText className="h-4 w-4" />
             Material disponible hoy
           </p>
@@ -290,7 +290,7 @@ export default async function ResumenesLanding() {
                     >
                       <div className="grid gap-6 lg:grid-cols-[1fr_0.72fr] lg:items-start">
                         <div>
-                          <p className="text-[11px] font-bold tracking-[0.14em] text-indigo-700 uppercase">
+                          <p className="text-[11px] font-bold tracking-[0.14em] text-blue-700 uppercase">
                             Universidad Siglo 21
                           </p>
                           <h3 className="mt-2 text-2xl font-bold tracking-[-0.035em] text-slate-950">
@@ -298,12 +298,12 @@ export default async function ResumenesLanding() {
                           </h3>
                           <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
-                              <BookOpen className="h-3.5 w-3.5 text-indigo-700" />
+                              <BookOpen className="h-3.5 w-3.5 text-blue-700" />
                               {item.summaryCount.toLocaleString('es-AR')} resúmenes
                             </span>
                             {item.questionCount > 0 ? (
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1.5">
-                                <HelpCircle className="h-3.5 w-3.5 text-indigo-700" />
+                                <HelpCircle className="h-3.5 w-3.5 text-blue-700" />
                                 {item.questionCount.toLocaleString('es-AR')} preguntas
                               </span>
                             ) : null}
@@ -330,14 +330,14 @@ export default async function ResumenesLanding() {
                             {item.questionCount > 0 ? (
                               <Link
                                 href={pregunteroHref}
-                                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
                               >
                                 Practicar preguntas
                               </Link>
                             ) : null}
                             <Link
                               href={studyHref}
-                              className="inline-flex min-h-11 items-center justify-center px-2 py-2.5 text-sm font-semibold text-indigo-700 hover:underline"
+                              className="inline-flex min-h-11 items-center justify-center px-2 py-2.5 text-sm font-semibold text-blue-700 hover:underline"
                             >
                               Cómo estudiar {item.materiaNombre}
                             </Link>
@@ -382,7 +382,7 @@ export default async function ResumenesLanding() {
           <div className="mx-auto w-full max-w-[1080px] px-4 sm:px-8">
             <div className="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
               <div>
-                <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+                <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                   Del resumen al parcial
                 </p>
                 <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -397,7 +397,7 @@ export default async function ResumenesLanding() {
                   ['04', 'Volvé sólo a lo débil', 'Usá los errores para decidir qué parte del material necesitás revisar otra vez.'],
                 ].map(([number, title, text]) => (
                   <div key={number} className="grid gap-2 py-5 sm:grid-cols-[48px_150px_1fr] sm:gap-4">
-                    <span className="font-mono text-xs font-bold text-indigo-700">{number}</span>
+                    <span className="font-mono text-xs font-bold text-blue-700">{number}</span>
                     <strong className="text-sm text-slate-950">{title}</strong>
                     <span className="text-sm leading-6 text-slate-600">{text}</span>
                   </div>
@@ -410,7 +410,7 @@ export default async function ResumenesLanding() {
         <section className="py-14 sm:py-16">
           <div className="mx-auto grid w-full max-w-[1080px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.75fr_1.25fr]">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                 Preguntas frecuentes
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -440,7 +440,7 @@ export default async function ResumenesLanding() {
             </div>
             <Link
               href="/explorar"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:text-blue-700"
             >
               <Library className="h-4 w-4" />
               Explorar materias

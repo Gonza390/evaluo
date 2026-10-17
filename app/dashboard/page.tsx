@@ -169,13 +169,13 @@ export default async function DashboardPage({
         <ReferralPortalDashboardShortcut />
         <div className="mx-auto max-w-6xl">
           {isSucesorioPlan ? (
-            <section className="mb-5 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-5 py-4 sm:px-6">
+            <section className="mb-5 rounded-2xl border border-blue-100 bg-blue-50/60 px-5 py-4 sm:px-6">
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-100">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm ring-1 ring-blue-100">
                   <Sparkles className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black tracking-[0.13em] text-indigo-700 uppercase">
+                  <p className="text-[10px] font-black tracking-[0.13em] text-blue-700 uppercase">
                     Plan de estudio · Derecho Sucesorio · Parcial 2
                   </p>
                   <h1 className="mt-1 text-lg font-bold tracking-[-0.035em] text-slate-950">
@@ -186,14 +186,14 @@ export default async function DashboardPage({
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
                     {formattedExamDate ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-indigo-100">
-                        <CalendarDays className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-blue-100">
+                        <CalendarDays className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
                         Rendís {formattedExamDate}
                       </span>
                     ) : null}
                     {safeDailyMinutes ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-indigo-100">
-                        <Clock3 className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 ring-1 ring-blue-100">
+                        <Clock3 className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
                         {safeDailyMinutes} min por día
                       </span>
                     ) : null}

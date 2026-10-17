@@ -122,7 +122,7 @@ export function NotificationBell() {
                   className="flex items-start justify-between gap-3 border-b border-slate-50 px-4 py-3"
                 >
                   <div className="min-w-0">
-                    <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[12px] font-semibold text-indigo-700">
+                    <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[12px] font-semibold text-blue-700">
                       {daysRemainingLabel(reminder.daysRemaining)}
                     </span>
                     <p className="mt-1.5 truncate text-sm font-semibold text-slate-900">

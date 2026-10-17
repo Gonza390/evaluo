@@ -45,7 +45,7 @@ type FaqItem = {
 
 function Shell({ currentPath, breadcrumbLabel, trackingPrefix, children }: ShellProps) {
   return (
-    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <MarketingAnalyticsSlot />
       <JsonLd
         data={buildBreadcrumbJsonLd([
@@ -72,7 +72,7 @@ function PrimaryCta({ label, trackingPrefix, location }: { label: string; tracki
         cta_name: 'subir_pdf',
         destination: uploadHref,
       }}
-      className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+      className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
     >
       <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
       {label}
@@ -91,7 +91,7 @@ function DemoCta({ trackingPrefix, label = 'Ver una sesión de estudio de ejempl
         cta_name: 'ver_demo_material',
         destination: demoHref,
       }}
-      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
     >
       {label}
       <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -102,7 +102,7 @@ function DemoCta({ trackingPrefix, label = 'Ver una sesión de estudio de ejempl
 function SectionIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return (
     <div className="max-w-3xl">
-      <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">{eyebrow}</p>
+      <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">{eyebrow}</p>
       <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[46px] lg:leading-[1.05]">
         {title}
       </h2>
@@ -121,11 +121,11 @@ function RelatedSection({ title, links }: { title: string; links: RelatedLink[] 
             <Link
               key={item.href}
               href={item.href}
-              className="group rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.07)] sm:p-6"
+              className="group rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.07)] sm:p-6"
             >
-              <h3 className="text-sm font-bold tracking-tight text-slate-950 group-hover:text-indigo-700 sm:text-[15px]">{item.title}</h3>
+              <h3 className="text-sm font-bold tracking-tight text-slate-950 group-hover:text-blue-700 sm:text-[15px]">{item.title}</h3>
               <p className="mt-2 text-xs leading-5 text-slate-600 sm:text-[13px] sm:leading-6">{item.description}</p>
-              <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-indigo-700">
+              <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-blue-700">
                 {item.cta} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </span>
             </Link>
@@ -141,7 +141,7 @@ function FaqSection({ title, items }: { title: string; items: FaqItem[] }) {
     <section className="bg-white py-16 sm:py-20">
       <div className="mx-auto grid w-full max-w-[1040px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-14">
         <div>
-          <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">Preguntas frecuentes</p>
+          <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Preguntas frecuentes</p>
           <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">{title}</h2>
         </div>
         <div className="divide-y divide-slate-200 border-y border-slate-200">
@@ -173,7 +173,7 @@ function DemoSection({
       <div className="mx-auto grid w-full max-w-[1120px] gap-8 px-4 sm:px-8 lg:grid-cols-[1fr_0.85fr] lg:items-center">
         <SectionIntro eyebrow={eyebrow} title={title} description={description} />
         <div className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] sm:p-7">
-          <p className="text-[10px] font-black tracking-[0.14em] text-indigo-700 uppercase">Demo de Evaluo</p>
+          <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">Demo de Evaluo</p>
           <p className="mt-3 text-lg font-bold text-slate-950">Mirá el material ya transformado antes de subir el tuyo.</p>
           <p className="mt-2 text-sm leading-7 text-slate-600">
             La demo muestra una sesión de estudio con resumen, glosario, tarjetas, ejercicios y el resto del material conectado en un mismo espacio.
@@ -276,7 +276,7 @@ export function IaParaEstudiantesExperience() {
       <main>
         <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_50%_0%,rgba(99,102,241,0.13),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto w-full max-w-[1120px] px-4 pb-16 pt-14 text-center sm:px-8 sm:pb-24 sm:pt-20">
-            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
+            <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-[11px] font-bold text-blue-700">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> IA para estudiantes universitarios sobre tus propios materiales
             </span>
             <h1 className="mx-auto mt-5 max-w-5xl text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[66px]">
@@ -300,15 +300,15 @@ export function IaParaEstudiantesExperience() {
                   <Link
                     key={intent.title}
                     href={intent.href}
-                    className="group flex h-full flex-col rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_24px_55px_rgba(15,23,42,0.09)] sm:p-7"
+                    className="group flex h-full flex-col rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_24px_55px_rgba(15,23,42,0.09)] sm:p-7"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-indigo-600" aria-hidden="true" />
+                      <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-1 group-hover:text-blue-600" aria-hidden="true" />
                     </div>
-                    <p className="mt-5 text-[10px] font-black tracking-[0.14em] text-indigo-700 uppercase">{intent.eyebrow}</p>
+                    <p className="mt-5 text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">{intent.eyebrow}</p>
                     <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 sm:min-h-[3.5rem]">{intent.title}</h2>
                     <p className="mt-3 text-sm leading-6 text-slate-600">{intent.description}</p>
                   </Link>
@@ -328,7 +328,7 @@ export function IaParaEstudiantesExperience() {
             <div className="rounded-[28px] border border-slate-200 bg-slate-50/60 p-5 sm:p-7">
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-indigo-700" aria-hidden="true" />
+                  <FileText className="h-5 w-5 text-blue-700" aria-hidden="true" />
                   <div>
                     <p className="text-[10px] font-bold text-slate-500">FUENTE DE ESTUDIO</p>
                     <p className="text-sm font-bold text-slate-950">Tus apuntes o un PDF</p>
@@ -343,7 +343,7 @@ export function IaParaEstudiantesExperience() {
                   ['Comprobar', 'Ejercicios'],
                 ].map(([title, value]) => (
                   <div key={title} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-[10px] font-black text-indigo-700 uppercase">{title}</p>
+                    <p className="text-[10px] font-black text-blue-700 uppercase">{title}</p>
                     <p className="mt-2 text-xs font-bold text-slate-900">{value}</p>
                   </div>
                 ))}
@@ -367,7 +367,7 @@ export function IaParaEstudiantesExperience() {
                 ['Antes del final', 'Volvé sobre lo débil', 'Priorizá conceptos que seguís confundiendo y combiná repaso breve con práctica en lugar de releer todo desde cero.'],
               ].map(([when, title, text]) => (
                 <div key={when} className="grid gap-2 py-5 sm:grid-cols-[150px_190px_1fr] sm:gap-5">
-                  <span className="text-xs font-bold uppercase tracking-[0.1em] text-indigo-700">{when}</span>
+                  <span className="text-xs font-bold uppercase tracking-[0.1em] text-blue-700">{when}</span>
                   <strong className="text-sm leading-6 text-slate-950">{title}</strong>
                   <span className="text-sm leading-7 text-slate-600">{text}</span>
                 </div>
@@ -377,7 +377,7 @@ export function IaParaEstudiantesExperience() {
               Si querés profundizar el método detrás de este recorrido, podés revisar nuestra guía de{' '}
               <Link
                 href="/blog/tecnicas-de-estudio-efectivas"
-                className="font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 transition hover:decoration-indigo-500"
+                className="font-semibold text-blue-700 underline decoration-blue-200 underline-offset-4 transition hover:decoration-blue-500"
               >
                 técnicas de estudio efectivas
               </Link>
@@ -401,7 +401,7 @@ export function IaParaEstudiantesExperience() {
                 ['04', 'Corregir', 'Volvé al material solo en los puntos donde aparecieron dudas o errores.'],
               ].map(([number, title, text]) => (
                 <article key={number} className="rounded-[22px] border border-slate-200 bg-white p-5 sm:p-6">
-                  <p className="text-[10px] font-black tracking-[0.14em] text-indigo-700">{number}</p>
+                  <p className="text-[10px] font-black tracking-[0.14em] text-blue-700">{number}</p>
                   <h3 className="mt-3 text-base font-bold text-slate-950">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
                 </article>
@@ -434,7 +434,7 @@ export function IaParaEstudiantesExperience() {
               Este mismo método también puede aplicarse a un ingreso universitario. Como ejemplo concreto, podés ver{' '}
               <Link
                 href="/como-estudiar-ingreso-unlam"
-                className="font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 transition hover:decoration-indigo-500"
+                className="font-semibold text-blue-700 underline decoration-blue-200 underline-offset-4 transition hover:decoration-blue-500"
               >
                 cómo preparar el ingreso UNLaM 2027
               </Link>
@@ -496,7 +496,7 @@ export function EstudiarPdfExperience() {
         <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.14),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-4 pb-16 pt-10 sm:px-8 sm:pb-24 sm:pt-16 lg:grid-cols-[0.84fr_1.16fr] lg:items-center lg:gap-14 lg:px-10">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-[11px] font-bold text-blue-700">
                 <FileText className="h-3.5 w-3.5" aria-hidden="true" /> Tu PDF como fuente de toda la sesión
               </span>
               <h1 className="mt-5 text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[64px]">
@@ -539,8 +539,8 @@ export function EstudiarPdfExperience() {
                 ['04', 'Recordar', 'Flashcards para intentar recuperar conceptos antes de ver la respuesta.'],
                 ['05', 'Practicar', 'Ejercicios para comprobar qué quedó claro y qué conviene revisar.'],
               ].map(([n, title, text]) => (
-                <div key={n} className="border-t-2 border-indigo-200 pt-5">
-                  <p className="text-[10px] font-black text-indigo-700">{n}</p>
+                <div key={n} className="border-t-2 border-blue-200 pt-5">
+                  <p className="text-[10px] font-black text-blue-700">{n}</p>
                   <h3 className="mt-3 text-base font-bold text-slate-950">{title}</h3>
                   <p className="mt-2 text-xs leading-6 text-slate-600">{text}</p>
                 </div>
@@ -642,7 +642,7 @@ export function ResumirPdfExperience() {
         <section className="border-b border-slate-100 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto w-full max-w-[1180px] px-4 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20">
             <div className="mx-auto max-w-4xl text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-[11px] font-bold text-blue-700">
                 <ScanText className="h-3.5 w-3.5" aria-hidden="true" /> Resumen pensado para seguir estudiando
               </span>
               <h1 className="mt-5 text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[64px]">
@@ -677,32 +677,32 @@ export function ResumirPdfExperience() {
               </div>
 
               <div className="hidden items-center justify-center lg:flex">
-                <ArrowRight className="h-6 w-6 text-indigo-400" aria-hidden="true" />
+                <ArrowRight className="h-6 w-6 text-blue-400" aria-hidden="true" />
               </div>
 
-              <div className="rounded-[26px] border border-indigo-200 bg-white p-6 shadow-[0_18px_45px_rgba(79,70,229,0.08)]">
-                <div className="flex items-center gap-3 border-b border-indigo-100 pb-4">
-                  <Sparkles className="h-5 w-5 text-indigo-700" aria-hidden="true" />
+              <div className="rounded-[26px] border border-blue-200 bg-white p-6 shadow-[0_18px_45px_rgba(79,70,229,0.08)]">
+                <div className="flex items-center gap-3 border-b border-blue-100 pb-4">
+                  <Sparkles className="h-5 w-5 text-blue-700" aria-hidden="true" />
                   <div>
-                    <p className="text-[10px] font-black tracking-[0.12em] text-indigo-700 uppercase">Resumen · ejemplo ilustrativo</p>
+                    <p className="text-[10px] font-black tracking-[0.12em] text-blue-700 uppercase">Resumen · ejemplo ilustrativo</p>
                     <p className="text-sm font-bold text-slate-950">Segmentación de mercado</p>
                   </div>
                 </div>
                 <div className="mt-5 space-y-5">
                   <div>
-                    <p className="text-[10px] font-black text-indigo-700 uppercase">Idea central</p>
+                    <p className="text-[10px] font-black text-blue-700 uppercase">Idea central</p>
                     <p className="mt-1 text-sm leading-6 text-slate-700">Dividir un mercado en grupos con características o necesidades similares para analizarlos y decidir a cuáles dirigirse.</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-indigo-700 uppercase">Conceptos relacionados</p>
+                    <p className="text-[10px] font-black text-blue-700 uppercase">Conceptos relacionados</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {['segmento', 'mercado objetivo', 'propuesta de valor'].map((term) => (
-                        <span key={term} className="rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-700">{term}</span>
+                        <span key={term} className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">{term}</span>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-indigo-700 uppercase">Siguiente paso</p>
+                    <p className="text-[10px] font-black text-blue-700 uppercase">Siguiente paso</p>
                     <p className="mt-1 text-sm leading-6 text-slate-700">Volver al glosario, llevar estos conceptos a flashcards o comprobarlos con ejercicios.</p>
                   </div>
                 </div>
@@ -726,7 +726,7 @@ export function ResumirPdfExperience() {
                 ['4', 'Siguiente acción', 'Pasá del resumen a flashcards, ejercicios o de vuelta al PDF original según lo que necesites.'],
               ].map(([n, title, text]) => (
                 <article key={n} className="rounded-[24px] border border-slate-200 p-6">
-                  <span className="text-xs font-black text-indigo-700">0{n}</span>
+                  <span className="text-xs font-black text-blue-700">0{n}</span>
                   <h3 className="mt-4 text-lg font-bold text-slate-950">{title}</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
                 </article>
@@ -827,7 +827,7 @@ export function FlashcardsPdfExperience() {
         <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_78%_30%,rgba(99,102,241,0.15),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
           <div className="mx-auto grid w-full max-w-[1240px] gap-12 px-4 pb-16 pt-12 sm:px-8 sm:pb-24 sm:pt-18 lg:grid-cols-[0.86fr_1.14fr] lg:items-center lg:px-10">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3.5 py-1.5 text-[11px] font-bold text-blue-700">
                 <Layers3 className="h-3.5 w-3.5" aria-hidden="true" /> Tarjetas desde tus propios apuntes
               </span>
               <h1 className="mt-5 text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[64px]">
@@ -843,12 +843,12 @@ export function FlashcardsPdfExperience() {
             </div>
 
             <div className="relative min-h-[430px]">
-              <div className="absolute left-[10%] right-[4%] top-10 h-[330px] rotate-3 rounded-[28px] border border-indigo-100 bg-indigo-50/70" />
+              <div className="absolute left-[10%] right-[4%] top-10 h-[330px] rotate-3 rounded-[28px] border border-blue-100 bg-blue-50/70" />
               <div className="absolute left-[5%] right-[9%] top-5 h-[350px] -rotate-2 rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.06)]" />
               <div className="relative z-10 mt-2 rounded-[30px] border border-slate-200 bg-white p-7 shadow-[0_30px_70px_rgba(15,23,42,0.12)] sm:p-9">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] font-black tracking-[0.14em] text-indigo-700 uppercase">Ejemplo de flashcard</p>
+                    <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">Ejemplo de flashcard</p>
                     <p className="mt-1 text-xs font-bold text-slate-500">Marketing I · Segmentación</p>
                   </div>
                   <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600">Tarjeta 1</span>
@@ -857,8 +857,8 @@ export function FlashcardsPdfExperience() {
                   <p className="text-[10px] font-bold tracking-[0.12em] text-white/55 uppercase">Frente</p>
                   <p className="mt-4 text-xl font-bold leading-7">¿Qué significa segmentar un mercado?</p>
                 </div>
-                <div className="mt-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-5">
-                  <p className="text-[10px] font-black tracking-[0.12em] text-indigo-700 uppercase">Respuesta · ejemplo</p>
+                <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
+                  <p className="text-[10px] font-black tracking-[0.12em] text-blue-700 uppercase">Respuesta · ejemplo</p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">Dividir el mercado en grupos con características o necesidades similares para analizarlos y decidir a cuáles dirigirse.</p>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-bold text-slate-500">
@@ -889,7 +889,7 @@ export function FlashcardsPdfExperience() {
                 return (
                   <div key={String(title)} className="relative rounded-[22px] border border-slate-200 p-5">
                     <div className="flex items-center justify-between">
-                      <IconComponent className="h-5 w-5 text-indigo-700" aria-hidden="true" />
+                      <IconComponent className="h-5 w-5 text-blue-700" aria-hidden="true" />
                       <span className="text-[10px] font-black text-slate-600">0{index + 1}</span>
                     </div>
                     <h3 className="mt-4 text-base font-bold text-slate-950">{String(title)}</h3>

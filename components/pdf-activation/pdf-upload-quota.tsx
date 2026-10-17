@@ -25,13 +25,13 @@ export function PdfUploadQuotaStatus({ quota }: { quota: PdfUploadQuotaView }) {
   if (quota.isPremium || quota.limit === null || quota.remaining === null) return null;
 
   return (
-    <div className="mb-3 flex flex-col gap-1 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-      <p className="text-xs font-bold text-indigo-800">
+    <div className="mb-3 flex flex-col gap-1 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <p className="text-xs font-bold text-blue-800">
         {quota.remaining === 1
           ? 'Gratis · Te queda 1 de 2 PDFs'
           : `Gratis · ${quota.remaining} de ${quota.limit} PDFs disponibles`}
       </p>
-      <p className="text-[11px] leading-4 text-indigo-700/80">
+      <p className="text-[11px] leading-4 text-blue-700/80">
         Cada PDF libera su cupo 15 días después de subirlo.
       </p>
     </div>
@@ -52,11 +52,11 @@ export function PdfUploadLimitReached({
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="border-b border-indigo-100 bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.16),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8faff_100%)] px-5 py-6 sm:px-7 sm:py-8">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+      <div className="border-b border-blue-100 bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.16),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8faff_100%)] px-5 py-6 sm:px-7 sm:py-8">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
           <Sparkles className="h-5 w-5" />
         </span>
-        <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-700">
+        <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-blue-700">
           Tu cupo gratuito
         </p>
         <h1 className="mt-2 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
@@ -72,7 +72,7 @@ export function PdfUploadLimitReached({
       <div className="px-5 py-5 sm:px-7 sm:py-6">
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
           <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-700 ring-1 ring-slate-200">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-blue-700 ring-1 ring-slate-200">
               <FileUp className="h-4 w-4" />
             </span>
             <div>
@@ -87,7 +87,7 @@ export function PdfUploadLimitReached({
         <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <Link
             href={pricingHref}
-            className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+            className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
             Continuar con Premium
             <ArrowRight className="h-4 w-4" />

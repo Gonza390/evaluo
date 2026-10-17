@@ -470,7 +470,7 @@
   color: var(--admin-accent) !important;
 }
 
-.admin-shell [class*="bg-indigo-50"],
+.admin-shell [class*="bg-blue-50"],
 .admin-shell [class*="bg-blue-50"],
 .admin-shell [class*="bg-sky-50"],
 .admin-shell [class*="bg-violet-50"],
@@ -478,8 +478,8 @@
   background-color: var(--admin-accent-soft) !important;
 }
 
-.admin-shell [class*="bg-indigo-600"],
-.admin-shell [class*="bg-indigo-700"],
+.admin-shell [class*="bg-blue-600"],
+.admin-shell [class*="bg-blue-700"],
 .admin-shell [class*="bg-blue-600"],
 .admin-shell [class*="bg-blue-700"] {
   background-color: var(--admin-accent) !important;

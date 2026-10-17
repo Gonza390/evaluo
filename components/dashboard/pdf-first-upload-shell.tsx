@@ -703,7 +703,7 @@ export function PdfFirstUploadShell({
               <>
                 {!file && restoringDraft ? (
                   <div className="mt-6 flex min-h-44 flex-col items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-5 text-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-indigo-600" aria-hidden="true" />
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" aria-hidden="true" />
                     <span className="mt-3 text-sm font-semibold text-slate-950">
                       Recuperando tu PDF…
                     </span>
@@ -715,9 +715,9 @@ export function PdfFirstUploadShell({
                   <button
                     type="button"
                     onClick={() => pickerRef.current?.click()}
-                    className="mt-6 flex min-h-44 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 text-center transition hover:border-indigo-300 hover:bg-indigo-50/40"
+                    className="mt-6 flex min-h-44 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 text-center transition hover:border-blue-300 hover:bg-blue-50/40"
                   >
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white">
                       <Upload className="h-5 w-5" />
                     </span>
                     <span className="mt-3 text-sm font-semibold text-slate-950">
@@ -732,7 +732,7 @@ export function PdfFirstUploadShell({
                       onClick={() => pickerRef.current?.click()}
                       className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-300"
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-600 shadow-sm">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
                         <FileText className="h-5 w-5" />
                       </span>
                       <span className="min-w-0 flex-1">
@@ -770,7 +770,7 @@ export function PdfFirstUploadShell({
                           htmlFor="pdf-first-exam-date"
                           className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-slate-700"
                         >
-                          <CalendarDays className="h-3.5 w-3.5 text-indigo-600" />
+                          <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
                           Fecha de examen
                         </label>
                         <Input
@@ -824,7 +824,7 @@ export function PdfFirstUploadShell({
             ) : (
               <div className="mt-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center text-indigo-600">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center text-blue-600">
                     {ready ? (
                       <CheckCircle2 className="h-5 w-5" />
                     ) : failed ? (
@@ -851,7 +851,7 @@ export function PdfFirstUploadShell({
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
                   <div
-                    className="h-full rounded-full bg-indigo-600 transition-all duration-700"
+                    className="h-full rounded-full bg-blue-600 transition-all duration-700"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -898,7 +898,7 @@ export function PdfFirstUploadShell({
                                   setAddingCareer(false);
                                   setNewCareer('');
                                 }}
-                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                               >
                                 <option value="">Seleccionar universidad</option>
                                 {universidades.map((uni) => (
@@ -919,7 +919,7 @@ export function PdfFirstUploadShell({
                                   setAddingCareer(false);
                                   setNewCareer('');
                                 }}
-                                className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
                               >
                                 Mi universidad no aparece
                               </button>
@@ -966,7 +966,7 @@ export function PdfFirstUploadShell({
                                   id="pdf-first-career"
                                   value={careerId}
                                   onChange={(event) => setCareerId(event.target.value)}
-                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 transition outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                                   disabled={requestingUniversity}
                                 >
                                   <option value="">Seleccionar carrera</option>
@@ -982,7 +982,7 @@ export function PdfFirstUploadShell({
                                     setAddingCareer(true);
                                     setCareerId('');
                                   }}
-                                  className="mt-2 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+                                  className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700"
                                 >
                                   {requestingUniversity || availableCareers.length === 0
                                     ? 'Solicitar carrera'

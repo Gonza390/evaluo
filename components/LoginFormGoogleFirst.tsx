@@ -338,7 +338,7 @@ export default function LoginFormGoogleFirst() {
 
       <div className="mx-auto mt-8 max-w-[390px] text-center sm:mt-10">
         {intent === 'premium' && isSignUp ? (
-          <span className="inline-flex rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+          <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
             Evaluo Premium
           </span>
         ) : null}
@@ -358,8 +358,8 @@ export default function LoginFormGoogleFirst() {
         ) : null}
 
         {reason === 'pdf-first' && pdfDraftMeta ? (
-          <div className="mt-5 flex items-center gap-3 rounded-xl border border-indigo-100 bg-indigo-50/60 px-4 py-3 text-left">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm">
+          <div className="mt-5 flex items-center gap-3 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-left">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
               <FileText className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">

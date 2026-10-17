@@ -27,7 +27,7 @@ export default function EmpezarPreviewPage() {
           <div className="border-b border-slate-200 bg-white px-4 py-4 sm:px-7">
             <div className="mx-auto flex max-w-6xl items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-indigo-600" />
+                <div className="h-9 w-9 rounded-xl bg-blue-600" />
                 <div>
                   <p className="font-bold tracking-[-0.03em]">Evaluo</p>
                   <p className="text-[11px] text-slate-400">Tu espacio académico</p>
@@ -51,7 +51,7 @@ export default function EmpezarPreviewPage() {
                     <div
                       key={String(label)}
                       className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm ${
-                        index === 0 ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500'
+                        index === 0 ? 'bg-blue-50 text-blue-700' : 'text-slate-500'
                       }`}
                     >
                       <IconComponent className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function EmpezarPreviewPage() {
                 <p className="mt-2 text-sm text-slate-500">
                   Retomá tu PDF donde lo dejaste o sumá otro material cuando lo necesites.
                 </p>
-                <div className="mx-auto mt-5 h-11 w-40 rounded-xl bg-indigo-600" />
+                <div className="mx-auto mt-5 h-11 w-40 rounded-xl bg-blue-600" />
               </div>
 
               <div className="mt-5 grid gap-3">
@@ -83,7 +83,7 @@ export default function EmpezarPreviewPage() {
                     className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <FileText className="h-5 w-5" />
                       </div>
                       <div>
@@ -112,7 +112,7 @@ export default function EmpezarPreviewPage() {
 
           <div className="max-h-[calc(100svh-2rem)] overflow-y-auto px-5 pb-5 pt-7 sm:max-h-[calc(100svh-3rem)] sm:px-8 sm:pb-7 sm:pt-8">
             <header className="pr-8 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">
                 Empezá con tus apuntes
               </p>
               <h2 className="mx-auto mt-3 max-w-[420px] text-[1.8rem] font-bold leading-[1.06] tracking-[-0.055em] sm:text-[2.15rem]">
@@ -125,7 +125,7 @@ export default function EmpezarPreviewPage() {
 
             <div className="mx-auto mt-6 max-w-[430px] space-y-4 sm:mt-7">
               <div className="flex gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                   <FileUp className="h-[18px] w-[18px]" />
                 </span>
                 <div>
@@ -164,7 +164,7 @@ export default function EmpezarPreviewPage() {
             <div className="mx-auto mt-6 max-w-[430px]">
               <button
                 type="button"
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-center text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.24)]"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-center text-sm font-semibold text-white shadow-[0_12px_28px_rgba(79,70,229,0.24)]"
               >
                 Subir mis apuntes y empezar
                 <ArrowRight className="h-4 w-4" />
@@ -172,7 +172,7 @@ export default function EmpezarPreviewPage() {
 
               <button
                 type="button"
-                className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-2 text-center text-sm font-semibold text-indigo-600"
+                className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-2 text-center text-sm font-semibold text-blue-600"
               >
                 <Eye className="h-4 w-4" />
                 Ver cómo queda un PDF procesado

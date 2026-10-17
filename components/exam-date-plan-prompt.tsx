@@ -188,11 +188,11 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
 
           {!saved ? (
             <div className="p-6 pb-7 sm:p-8">
-              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+              <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                 <CalendarDays className="h-5 w-5" />
               </div>
 
-              <p className="pr-10 text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
+              <p className="pr-10 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
                 Organizá tu repaso
               </p>
 
@@ -220,7 +220,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                   value={examDate}
                   min={minDate}
                   onChange={(event) => setExamDate(event.target.value)}
-                  className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 pr-12 text-[15px] font-semibold text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                  className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 pr-12 text-[15px] font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 />
                 <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
               </div>
@@ -249,7 +249,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                 <Check className="h-5 w-5" />
               </div>
 
-              <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
+              <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
                 Plan de repaso
               </p>
 
@@ -270,7 +270,7 @@ export function ExamDatePlanPrompt({ materialId, fileName, triggerNonce = 0 }: P
                     key={item.label}
                     className={`grid grid-cols-[88px_1fr] gap-3 px-4 py-3.5 ${index > 0 ? 'border-t border-[#E7EBF4]' : ''}`}
                   >
-                    <div className="text-[11px] font-black text-indigo-600">{item.label}</div>
+                    <div className="text-[11px] font-black text-blue-600">{item.label}</div>
                     <div className="text-[12px] leading-5 text-slate-600">{item.text}</div>
                   </div>
                 ))}

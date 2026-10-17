@@ -69,7 +69,7 @@ export default async function PregunteroHubPage() {
 
         <section className="border-b border-slate-200">
           <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-            <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-indigo-700 uppercase">
+            <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-blue-700 uppercase">
               <ListChecks className="h-4 w-4" aria-hidden="true" />
               Universidad Siglo 21
             </p>
@@ -96,7 +96,7 @@ export default async function PregunteroHubPage() {
                   <Link
                     key={materia.materiaId}
                     href={`/pregunteros/${buildSeoEntitySlug(materia.materiaNombre, materia.materiaId)}`}
-                    className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                    className="inline-flex min-h-10 items-center rounded-xl border border-slate-200 px-3.5 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
                   >
                     {materia.materiaNombre}
                   </Link>
@@ -119,7 +119,7 @@ export default async function PregunteroHubPage() {
 
           <div className="mt-10 border-t border-slate-200 pt-6">
             <div className="flex items-start gap-3">
-              <Target className="mt-1 h-5 w-5 shrink-0 text-indigo-700" aria-hidden="true" />
+              <Target className="mt-1 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" />
               <div>
                 <h2 className="text-base font-bold text-slate-950">¿Qué es un preguntero?</h2>
                 <p className="mt-2 text-sm leading-7 text-slate-600">

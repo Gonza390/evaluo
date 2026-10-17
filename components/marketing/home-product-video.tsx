@@ -90,8 +90,8 @@ export function HomeProductVideo() {
     >
       <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-center lg:gap-14 lg:px-10">
         <div className="min-w-0">
-          <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+          <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
               <PlayCircle className="h-4 w-4" aria-hidden="true" />
             </span>
             Ver cómo funciona
@@ -118,7 +118,7 @@ export function HomeProductVideo() {
             <HomePdfPickerButton
                   location="home_product_video"
                   ctaName="probar_con_mi_pdf_video"
-                  className="from-brand to-brand-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:w-auto"
+                  className="from-brand to-brand-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:w-auto"
                 >
               <UploadCloud className="h-4 w-4" aria-hidden="true" />
               Probar con mi PDF

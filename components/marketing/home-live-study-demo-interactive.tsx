@@ -42,7 +42,7 @@ export function HomeLiveStudyDemo() {
     <div className="relative min-w-0 overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_24px_64px_rgba(15,23,42,0.10)]">
       <div className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 px-4 py-3.5 sm:px-6 sm:py-4">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center text-indigo-600">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center text-blue-600">
             <FileText className="h-5 w-5" />
           </span>
           <p className="truncate text-xs font-bold text-slate-950 sm:text-sm">Marketing I - Parcial 1.pdf</p>
@@ -60,12 +60,12 @@ export function HomeLiveStudyDemo() {
             onClick={() => changeView(view.id)}
             aria-pressed={activeView === view.id}
             className={`relative min-w-0 px-1 py-3 text-[9px] font-bold transition sm:px-3 sm:text-[11px] ${
-              activeView === view.id ? 'text-indigo-700' : 'text-slate-400 hover:text-slate-700'
+              activeView === view.id ? 'text-blue-700' : 'text-slate-400 hover:text-slate-700'
             }`}
           >
             <span className="truncate">{view.label}</span>
             {activeView === view.id && (
-              <span className="absolute inset-x-2 bottom-0 h-0.5 bg-indigo-600 sm:inset-x-4" />
+              <span className="absolute inset-x-2 bottom-0 h-0.5 bg-blue-600 sm:inset-x-4" />
             )}
           </button>
         ))}
@@ -74,7 +74,7 @@ export function HomeLiveStudyDemo() {
       <div className="min-h-[330px] min-w-0 px-4 py-5 sm:min-h-[350px] sm:px-7 sm:py-6">
         {activeView === 'resumen' && (
           <div className="animate-surface-reveal">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
+            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-blue-600 uppercase">
               <Sparkles className="h-3.5 w-3.5" />
               Resumen del material
             </div>
@@ -95,7 +95,7 @@ export function HomeLiveStudyDemo() {
                   key={title}
                   className="grid grid-cols-[30px_minmax(0,1fr)] gap-3 border-b border-slate-100 py-3.5 sm:py-4"
                 >
-                  <span className="pt-0.5 text-[9px] font-black text-indigo-500">0{index + 1}</span>
+                  <span className="pt-0.5 text-[9px] font-black text-blue-500">0{index + 1}</span>
                   <div className="min-w-0">
                     <p className="text-[11px] font-bold text-slate-900 sm:text-xs">{title}</p>
                     <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-[11px] sm:leading-5">
@@ -110,7 +110,7 @@ export function HomeLiveStudyDemo() {
 
         {activeView === 'flashcard' && (
           <div className="animate-surface-reveal">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
+            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-blue-600 uppercase">
               <Layers3 className="h-3.5 w-3.5" />
               Flashcard
             </div>
@@ -125,7 +125,7 @@ export function HomeLiveStudyDemo() {
                 onClick={() => setShowFlashcardAnswer((value) => !value)}
                 aria-label={showFlashcardAnswer ? 'Volver a la pregunta' : 'Girar flashcard para ver la respuesta'}
                 aria-pressed={showFlashcardAnswer}
-                className="group relative block min-h-[245px] w-full rounded-[22px] text-left outline-none [perspective:1200px] focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:min-h-[265px]"
+                className="group relative block min-h-[245px] w-full rounded-[22px] text-left outline-none [perspective:1200px] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:min-h-[265px]"
               >
                 <div
                   className={`relative min-h-[245px] w-full transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none sm:min-h-[265px] ${
@@ -137,7 +137,7 @@ export function HomeLiveStudyDemo() {
                     className="absolute inset-0 flex flex-col rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_16px_38px_rgba(15,23,42,0.08)] [backface-visibility:hidden] sm:px-7 sm:py-6"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
+                      <span className="text-[9px] font-bold tracking-[0.15em] text-blue-600 uppercase">
                         Pregunta
                       </span>
                       <span className="inline-flex items-center gap-1.5 text-[9px] font-semibold text-slate-400 sm:text-[10px]">
@@ -194,7 +194,7 @@ export function HomeLiveStudyDemo() {
 
         {activeView === 'ejercicio' && (
           <div className="animate-surface-reveal">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
+            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-blue-600 uppercase">
               <CircleHelp className="h-3.5 w-3.5" />
               Ejercicio rápido
             </div>
@@ -209,7 +209,7 @@ export function HomeLiveStudyDemo() {
                   {['Segmentación de mercado', 'Elección del mercado meta', 'Posicionamiento en el mercado'].map(
                     (label, index) => (
                       <div key={label} className="grid grid-cols-[26px_minmax(0,1fr)] items-center gap-3">
-                        <span className="text-[10px] font-black text-indigo-500">0{index + 1}</span>
+                        <span className="text-[10px] font-black text-blue-500">0{index + 1}</span>
                         <p className="text-xs font-bold text-slate-700">{label}</p>
                       </div>
                     ),
@@ -219,7 +219,7 @@ export function HomeLiveStudyDemo() {
                 <button
                   type="button"
                   onClick={() => setShowExerciseAnswer(true)}
-                  className="inline-flex items-center gap-2 text-xs font-bold text-indigo-700 transition hover:text-indigo-900"
+                  className="inline-flex items-center gap-2 text-xs font-bold text-blue-700 transition hover:text-blue-900"
                 >
                   Mostrar solución
                   <Check className="h-4 w-4" />
@@ -237,7 +237,7 @@ export function HomeLiveStudyDemo() {
 
         {activeView === 'diagnostico' && (
           <div className="animate-surface-reveal">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-indigo-600 uppercase">
+            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.15em] text-blue-600 uppercase">
               <CircleHelp className="h-3.5 w-3.5" />
               Diagnóstico sobre tu PDF
             </div>
@@ -259,7 +259,7 @@ export function HomeLiveStudyDemo() {
                     : isSelected
                       ? 'border-amber-200 bg-amber-50/70 text-amber-900'
                       : 'border-slate-200 text-slate-400'
-                  : 'border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-slate-900';
+                  : 'border-slate-200 text-slate-600 hover:border-blue-300 hover:text-slate-900';
 
                 return (
                   <button

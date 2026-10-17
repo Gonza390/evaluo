@@ -72,7 +72,7 @@ export function ExplanationsHistoryClient({
     <div className="animate-page-enter min-h-screen bg-gradient-to-br from-background/95 via-white/80 to-indigo-50/20 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-5">
-          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
             Premium
           </div>
@@ -119,7 +119,7 @@ export function ExplanationsHistoryClient({
               >
                 <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-indigo-500" />
+                    <CalendarDays className="h-4 w-4 text-blue-500" />
                     <h2 className="text-sm font-bold text-slate-900">{materiaNombre}</h2>
                   </div>
                   <span className="text-xs font-medium text-slate-500">
@@ -188,7 +188,7 @@ export function ExplanationsHistoryClient({
                                 {item.respuestaCorrecta}
                               </p>
                             ) : null}
-                            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                            <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3">
                               <StudyRichText body={item.explicacion} />
                             </div>
                           </div>
@@ -205,7 +205,7 @@ export function ExplanationsHistoryClient({
         <div className="mt-6 text-center">
           <Link
             href="/dashboard"
-            className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+            className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
           >
             Volver a Mi espacio
           </Link>

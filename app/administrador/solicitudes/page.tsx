@@ -59,7 +59,7 @@ function RequesterEmail({ email }: { email: string | null }) {
   return (
     <a
       href={`mailto:${email}`}
-      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-700 hover:underline"
+      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 hover:underline"
     >
       <Mail className="h-3.5 w-3.5" /> {email}
     </a>
@@ -90,12 +90,12 @@ export default async function SolicitudesUniversidadAdministradorPage() {
           <div>
             <Link
               href="/administrador?panel=biblioteca"
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
             >
               ← Volver al administrador
             </Link>
             <div className="mt-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-white">
                 <Building2 className="h-5 w-5" />
               </div>
               <div>
@@ -119,7 +119,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
         <section className="mt-7">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-indigo-700">
+              <div className="flex items-center gap-2 text-blue-700">
                 <LockKeyhole className="h-4 w-4" />
                 <p className="text-xs font-bold uppercase tracking-[0.12em]">Catálogo privado</p>
               </div>
@@ -131,7 +131,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                 catálogo general.
               </p>
             </div>
-            <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
               {academicResult.rows.length} pendientes
             </span>
           </div>
@@ -158,7 +158,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-indigo-700">
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-blue-700">
                           {row.kind === 'career' ? 'Carrera' : 'Materia'}
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400">
@@ -218,7 +218,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 text-slate-700">
-                <Building2 className="h-4 w-4 text-indigo-600" />
+                <Building2 className="h-4 w-4 text-blue-600" />
                 <p className="text-xs font-bold uppercase tracking-[0.12em]">Nuevas universidades</p>
               </div>
               <h2 className="mt-1 text-xl font-bold tracking-[-0.035em] text-slate-950">
@@ -284,7 +284,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                               Universidad
                             </p>
                             <p className="mt-1 flex items-center gap-2 text-base font-semibold text-slate-950">
-                              <Building2 className="h-4 w-4 text-indigo-600" /> {row.universityName}
+                              <Building2 className="h-4 w-4 text-blue-600" /> {row.universityName}
                             </p>
                             <p className="mt-1 text-sm text-slate-500">
                               {[row.city, row.country].filter(Boolean).join(', ')}
@@ -295,7 +295,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                               Carrera
                             </p>
                             <p className="mt-1 flex items-center gap-2 text-base font-semibold text-slate-950">
-                              <GraduationCap className="h-4 w-4 text-indigo-600" />{' '}
+                              <GraduationCap className="h-4 w-4 text-blue-600" />{' '}
                               {row.careerName ?? 'Todavía no informada'}
                             </p>
                           </div>
@@ -337,12 +337,12 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                           assignableUniversitiesResult.rows.length > 0 ? (
                             <form
                               action={asignarSolicitudUniversidadExistenteAdministrador}
-                              className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3"
+                              className="rounded-2xl border border-blue-100 bg-blue-50/60 p-3"
                             >
                               <input type="hidden" name="requestId" value={row.id} />
                               <label
                                 htmlFor={`existing-university-${row.id}`}
-                                className="text-xs font-semibold text-indigo-950"
+                                className="text-xs font-semibold text-blue-950"
                               >
                                 {isOpen ? 'Ya tenemos esta universidad' : 'Cambiar universidad asignada'}
                               </label>
@@ -351,7 +351,7 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                                 name="universityId"
                                 defaultValue={row.approvedUniversityId ?? suggestedUniversity?.id ?? ''}
                                 required
-                                className="mt-2 h-10 w-full rounded-xl border border-indigo-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                                className="mt-2 h-10 w-full rounded-xl border border-blue-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                               >
                                 <option value="">Elegir universidad existente…</option>
                                 {assignableUniversitiesResult.rows.map((university) => (
@@ -361,13 +361,13 @@ export default async function SolicitudesUniversidadAdministradorPage() {
                                 ))}
                               </select>
                               {suggestedUniversity ? (
-                                <p className="mt-2 text-[11px] leading-4 text-indigo-700">
+                                <p className="mt-2 text-[11px] leading-4 text-blue-700">
                                   Coincidencia sugerida: {suggestedUniversity.nombre}
                                 </p>
                               ) : null}
                               <button
                                 type="submit"
-                                className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                                className="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
                               >
                                 <Building2 className="h-4 w-4" />{' '}
                                 {isOpen ? 'Asignar existente' : 'Guardar asignación'}

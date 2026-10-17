@@ -188,7 +188,7 @@ export function ContextualPdfNudge() {
         className={`fixed max-w-md border bg-white shadow-[0_24px_80px_rgba(15,23,42,0.28)] ${
           isMateria
             ? 'top-1/2 left-1/2 z-50 max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain rounded-[26px] border-white/80 p-5 sm:w-[440px] sm:p-6'
-            : 'inset-x-3 bottom-3 z-40 mx-auto rounded-2xl border-indigo-100 bg-white/95 p-4 backdrop-blur sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]'
+            : 'inset-x-3 bottom-3 z-40 mx-auto rounded-2xl border-blue-100 bg-white/95 p-4 backdrop-blur sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[390px]'
         }`}
       >
         <button
@@ -202,7 +202,7 @@ export function ContextualPdfNudge() {
 
         {isMateria ? (
           <>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[11px] font-bold tracking-[0.02em] text-indigo-700">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5 text-[11px] font-bold tracking-[0.02em] text-blue-700">
               <Sparkles className="h-3.5 w-3.5" />
               Estudiá con tu propio material
             </div>
@@ -246,7 +246,7 @@ export function ContextualPdfNudge() {
         ) : (
           <>
             <div className="flex items-start gap-3 pr-8">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                 <FileUp className="h-5 w-5" />
               </span>
               <div className="min-w-0">

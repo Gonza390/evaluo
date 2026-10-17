@@ -54,16 +54,16 @@ export function FaqAccordion() {
       {FAQ_ITEMS.map((item) => (
         <details
           key={item.question}
-          className="group rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 open:border-indigo-200 open:shadow-md open:ring-1 open:ring-indigo-50/50"
+          className="group rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-200 open:border-blue-200 open:shadow-md open:ring-1 open:ring-blue-50/50"
         >
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-left">
             <div className="flex items-center gap-3">
-              <HelpCircle className="h-5 w-5 shrink-0 text-slate-400 transition-colors group-open:text-indigo-600" />
+              <HelpCircle className="h-5 w-5 shrink-0 text-slate-400 transition-colors group-open:text-blue-600" />
               <span className="text-[14px] font-bold tracking-tight text-slate-800 sm:text-[15px]">
                 {item.question}
               </span>
             </div>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 transition-all group-open:rotate-180 group-open:bg-indigo-50 group-open:text-indigo-600">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 transition-all group-open:rotate-180 group-open:bg-blue-50 group-open:text-blue-600">
               <ChevronDown className="h-4 w-4" />
             </span>
           </summary>

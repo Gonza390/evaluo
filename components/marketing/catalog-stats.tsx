@@ -76,7 +76,7 @@ export async function CatalogStats() {
             {idx > 0 && (
               <span className="mr-2 hidden h-4 w-px bg-white/20 sm:block" aria-hidden="true" />
             )}
-            <Icon className="h-4 w-4 text-indigo-300" />
+            <Icon className="h-4 w-4 text-blue-300" />
             <span className="text-sm font-bold text-white">{item.value}</span>
             <span className="text-xs text-white/70">{item.label}</span>
           </div>

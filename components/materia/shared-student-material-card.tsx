@@ -134,7 +134,7 @@ export function SharedStudentMaterialCard({
           <div className="mt-4 border-t border-slate-100 pt-3">
             <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400">
               <div className="flex items-center gap-2">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF2FF] text-[9px] font-black text-[#4F5DFF]">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF2FF] text-[9px] font-black text-[#2563EB]">
                   EV
                 </div>
                 <span>Compartido por un estudiante</span>

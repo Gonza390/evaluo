@@ -312,7 +312,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
   ];
 
   return (
-    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <JsonLd
         data={[
           buildBreadcrumbJsonLd([
@@ -345,7 +345,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
 
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto w-full max-w-[1080px] px-4 py-12 sm:px-8 sm:py-16">
-          <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-indigo-700 uppercase">
+          <p className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-blue-700 uppercase">
             <FileText className="h-4 w-4" />
             {data.universidadNombre || 'Guía por materia'}
             {data.carreraNombre ? ` · ${data.carreraNombre}` : ''}
@@ -364,7 +364,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
           <div className="mt-7 flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
             {data.questionCount > 0 ? (
               <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2">
-                <HelpCircle className="h-4 w-4 text-indigo-700" />
+                <HelpCircle className="h-4 w-4 text-blue-700" />
                 {data.questionCount.toLocaleString('es-AR')} preguntas
               </span>
             ) : null}
@@ -380,13 +380,13 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             ) : null}
             {data.summaryCount > 0 ? (
               <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2">
-                <BookOpen className="h-4 w-4 text-indigo-700" />
+                <BookOpen className="h-4 w-4 text-blue-700" />
                 {data.summaryCount.toLocaleString('es-AR')} resúmenes
               </span>
             ) : null}
             {data.resourceCount > 0 ? (
               <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2">
-                <Library className="h-4 w-4 text-indigo-700" />
+                <Library className="h-4 w-4 text-blue-700" />
                 {data.resourceCount.toLocaleString('es-AR')} recursos
               </span>
             ) : null}
@@ -405,14 +405,14 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             {data.hasSummaries ? (
               <Link
                 href={resumenesHref}
-                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-700"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
               >
                 Ver resúmenes
               </Link>
             ) : null}
             <Link
               href={materiaHref}
-              className="inline-flex min-h-12 items-center justify-center px-2 py-3 text-sm font-semibold text-indigo-700 hover:underline"
+              className="inline-flex min-h-12 items-center justify-center px-2 py-3 text-sm font-semibold text-blue-700 hover:underline"
             >
               Ver espacio de la materia
             </Link>
@@ -424,7 +424,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
         <section className="py-12 sm:py-16">
           <div className="mx-auto w-full max-w-[1080px] px-4 sm:px-8">
             <div className="max-w-3xl">
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                 Contenido real
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -438,7 +438,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
 
             <div className="mt-9 grid gap-4 md:grid-cols-3">
               <article className="rounded-[22px] border border-slate-200 p-6">
-                <ListChecks className="h-5 w-5 text-indigo-700" />
+                <ListChecks className="h-5 w-5 text-blue-700" />
                 <h3 className="mt-4 text-lg font-bold text-slate-950">Preguntas de práctica</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   {data.questionCount > 0
@@ -448,7 +448,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                 {data.hasQuestions ? (
                   <Link
                     href={pregunteroHref}
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-indigo-700 hover:underline"
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline"
                   >
                     Ir al preguntero <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -456,13 +456,13 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
               </article>
 
               <article className="rounded-[22px] border border-slate-200 p-6">
-                <Target className="h-5 w-5 text-indigo-700" />
+                <Target className="h-5 w-5 text-blue-700" />
                 <h3 className="mt-4 text-lg font-bold text-slate-950">Parciales disponibles</h3>
                 <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
                   {data.partial1Count > 0 ? (
                     <Link
                       href={`${pregunteroHref}/parcial/1`}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5 transition hover:border-indigo-300 hover:text-indigo-700"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5 transition hover:border-blue-300 hover:text-blue-700"
                     >
                       <span>Parcial 1</span>
                       <strong>{data.partial1Count.toLocaleString('es-AR')} preguntas</strong>
@@ -471,7 +471,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                   {data.partial2Count > 0 ? (
                     <Link
                       href={`${pregunteroHref}/parcial/2`}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5 transition hover:border-indigo-300 hover:text-indigo-700"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5 transition hover:border-blue-300 hover:text-blue-700"
                     >
                       <span>Parcial 2</span>
                       <strong>{data.partial2Count.toLocaleString('es-AR')} preguntas</strong>
@@ -484,7 +484,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
               </article>
 
               <article className="rounded-[22px] border border-slate-200 p-6">
-                <BookOpen className="h-5 w-5 text-indigo-700" />
+                <BookOpen className="h-5 w-5 text-blue-700" />
                 <h3 className="mt-4 text-lg font-bold text-slate-950">Material para repasar</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   {hasStudyMaterials
@@ -494,7 +494,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                 {data.hasSummaries ? (
                   <Link
                     href={resumenesHref}
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-indigo-700 hover:underline"
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline"
                   >
                     Ver material <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -509,7 +509,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             <div className="mx-auto w-full max-w-[1080px] px-4 sm:px-8">
               <div className="grid gap-9 lg:grid-cols-[0.72fr_1.28fr]">
                 <div>
-                  <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+                  <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                     Material visible
                   </p>
                   <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -525,7 +525,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                   {data.summaries.map((item) => (
                     <div key={`summary-${item.id}`} className="py-4">
                       <div className="flex items-start gap-3">
-                        <BookOpen className="mt-1 h-4 w-4 shrink-0 text-indigo-700" />
+                        <BookOpen className="mt-1 h-4 w-4 shrink-0 text-blue-700" />
                         <div>
                           <p className="text-sm font-bold text-slate-950">{item.title}</p>
                           {item.detail ? (
@@ -552,7 +552,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                     <div className="py-5">
                       <Link
                         href={resumenesHref}
-                        className="inline-flex items-center gap-2 text-sm font-bold text-indigo-700 hover:underline"
+                        className="inline-flex items-center gap-2 text-sm font-bold text-blue-700 hover:underline"
                       >
                         Ver todos los resúmenes de {materiaNombre}
                         <ArrowRight className="h-4 w-4" />
@@ -569,7 +569,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
           <section className="py-12 sm:py-16">
             <div className="mx-auto w-full max-w-[1080px] px-4 sm:px-8">
               <div className="max-w-3xl">
-                <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+                <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                   Práctica
                 </p>
                 <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -587,7 +587,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                     key={question.id}
                     className="rounded-[20px] border border-slate-200 bg-white p-5"
                   >
-                    <p className="text-xs font-bold tracking-[0.12em] text-indigo-700 uppercase">
+                    <p className="text-xs font-bold tracking-[0.12em] text-blue-700 uppercase">
                       Parcial {question.parcial}
                     </p>
                     <p className="mt-3 line-clamp-4 text-sm leading-7 text-slate-800">
@@ -613,7 +613,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
         <section className="border-y border-slate-200 bg-slate-50/50 py-12 sm:py-16">
           <div className="mx-auto grid w-full max-w-[1080px] gap-9 px-4 sm:px-8 lg:grid-cols-[0.72fr_1.28fr]">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                 Recorrido recomendado
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -650,7 +650,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
                 ],
               ].map(([number, title, text]) => (
                 <div key={number} className="grid gap-2 py-5 sm:grid-cols-[48px_150px_1fr] sm:gap-4">
-                  <span className="font-mono text-xs font-bold text-indigo-700">{number}</span>
+                  <span className="font-mono text-xs font-bold text-blue-700">{number}</span>
                   <strong className="text-sm text-slate-950">{title}</strong>
                   <span className="text-sm leading-6 text-slate-600">{text}</span>
                 </div>
@@ -662,7 +662,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
         <section className="py-12 sm:py-16">
           <div className="mx-auto grid w-full max-w-[1080px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.72fr_1.28fr]">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
                 Preguntas frecuentes
               </p>
               <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-950">
@@ -694,7 +694,7 @@ export default async function EstudiarMateriaLanding({ params }: PageProps) {
             </div>
             <Link
               href={materiaHref}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:text-blue-700"
             >
               Ir a {materiaNombre}
               <ArrowRight className="h-4 w-4" />

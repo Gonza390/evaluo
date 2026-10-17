@@ -165,15 +165,15 @@ export function InteractiveDemo() {
       {/* Indicador de Pasos */}
       <div className="mb-6 flex items-center justify-between gap-3 border-b border-slate-100 pb-5">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
             <Sparkles className="h-4.5 w-4.5 animate-pulse" />
           </div>
           <span className="text-sm font-bold text-slate-800">Demo interactiva</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-500">
-          <span className={`rounded-full px-2 py-0.5 transition ${step === 0 ? 'bg-indigo-600 text-white' : 'bg-white'}`}>1. Universidad</span>
+          <span className={`rounded-full px-2 py-0.5 transition ${step === 0 ? 'bg-blue-600 text-white' : 'bg-white'}`}>1. Universidad</span>
           <ChevronRight className="h-3 w-3 text-slate-300" />
-          <span className={`rounded-full px-2 py-0.5 transition ${step === 1 ? 'bg-indigo-600 text-white' : 'bg-white'}`}>2. Práctica</span>
+          <span className={`rounded-full px-2 py-0.5 transition ${step === 1 ? 'bg-blue-600 text-white' : 'bg-white'}`}>2. Práctica</span>
         </div>
       </div>
 
@@ -191,16 +191,16 @@ export function InteractiveDemo() {
               <button
                 key={key}
                 onClick={() => handleSelectUni(key)}
-                className={`group flex flex-col items-center justify-between rounded-2xl border bg-white p-6 text-center transition-all hover:border-indigo-400 hover:bg-white hover:shadow-lg hover:-translate-y-0.5`}
+                className={`group flex flex-col items-center justify-between rounded-2xl border bg-white p-6 text-center transition-all hover:border-blue-400 hover:bg-white hover:shadow-lg hover:-translate-y-0.5`}
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F1B3D] to-[#2563EB] text-xl font-bold text-white shadow-md group-hover:scale-110 transition-transform">
                   {uni.shortName}
                 </div>
                 <div className="mt-5">
-                  <h4 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{uni.shortName}</h4>
+                  <h4 className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{uni.shortName}</h4>
                   <p className="mt-1 text-[12px] font-medium text-slate-500 leading-4">{uni.name}</p>
                 </div>
-                <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
                   Explorar cátedra
                   <ArrowRight className="h-3.5 w-3.5" />
                 </div>
@@ -209,7 +209,7 @@ export function InteractiveDemo() {
           </div>
 
           <div className="mt-8 rounded-2xl bg-white p-4 border border-slate-100 flex items-center gap-3">
-            <GraduationCap className="h-6 w-6 text-indigo-500 shrink-0" />
+            <GraduationCap className="h-6 w-6 text-blue-500 shrink-0" />
             <p className="text-xs text-slate-600 leading-relaxed">
               <strong>¿Tu universidad no está listada?</strong> No te preocupes. Evaluo está pensado para todas las facultades del país. Podés subir el programa de tu materia y la plataforma generará resúmenes y simuladores personalizados para vos.
             </p>
@@ -228,10 +228,10 @@ export function InteractiveDemo() {
               </div>
 
               <h3 className="mt-4 text-lg font-bold text-[#0F1B3D]">
-                Materia: <span className="text-indigo-600">{currentUni.materia}</span>
+                Materia: <span className="text-blue-600">{currentUni.materia}</span>
               </h3>
               <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-100">
-                <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
+                <BookOpen className="h-3.5 w-3.5 text-blue-500" />
                 Unidad: {currentUni.summary.unit}
               </div>
 
@@ -240,7 +240,7 @@ export function InteractiveDemo() {
                 <ul className="space-y-2.5">
                   {currentUni.summary.points.map((point, index) => (
                     <li key={index} className="flex items-start gap-2.5 text-xs text-slate-600 leading-5">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                       <span>{point}</span>
                     </li>
                   ))}
@@ -260,7 +260,7 @@ export function InteractiveDemo() {
           <div className="flex flex-col justify-between rounded-2xl bg-white p-5 md:p-6 lg:rounded-none">
             <div>
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
                   <Bot className="h-3.5 w-3.5" />
                   Simulador Cátedra
                 </span>
@@ -268,7 +268,7 @@ export function InteractiveDemo() {
               </div>
 
               <div className="mt-4 flex gap-2">
-                <HelpCircle className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                <HelpCircle className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                 <p className="text-sm font-bold text-slate-800 leading-6">
                   {currentUni.question.text}
                 </p>
@@ -280,7 +280,7 @@ export function InteractiveDemo() {
                   const isSelected = selectedAnswer === idx;
                   const isCorrect = idx === currentUni.question.correctIndex;
                   
-                  let optionStyle = 'border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/20';
+                  let optionStyle = 'border-slate-100 hover:border-blue-200 hover:bg-blue-50/20';
                   if (answered) {
                     if (isCorrect) {
                       optionStyle = 'border-emerald-200 bg-emerald-50/30 text-emerald-950 font-semibold';
@@ -291,7 +291,7 @@ export function InteractiveDemo() {
                     }
                   } else {
                     if (isSelected) {
-                      optionStyle = 'border-indigo-600 bg-indigo-50/30';
+                      optionStyle = 'border-blue-600 bg-blue-50/30';
                     }
                   }
 
@@ -308,7 +308,7 @@ export function InteractiveDemo() {
                           : answered && isSelected
                             ? 'border-red-500 bg-red-500 text-white'
                             : isSelected
-                              ? 'border-indigo-600 bg-indigo-600 text-white'
+                              ? 'border-blue-600 bg-blue-600 text-white'
                               : 'border-slate-300 bg-white text-slate-500'
                       }`}>
                         {answered && isCorrect ? (
@@ -327,12 +327,12 @@ export function InteractiveDemo() {
 
               {/* Explicación de la IA */}
               {answered && (
-                <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50/20 p-4 animate-tab-panel">
+                <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/20 p-4 animate-tab-panel">
                   <div className="flex items-center gap-2 mb-2">
-                    <Bot className="h-4.5 w-4.5 text-indigo-600" />
-                    <span className="text-xs font-bold text-indigo-950">Explicación Paso a Paso de Evaluo IA:</span>
+                    <Bot className="h-4.5 w-4.5 text-blue-600" />
+                    <span className="text-xs font-bold text-blue-950">Explicación Paso a Paso de Evaluo IA:</span>
                   </div>
-                  <p className="text-[12px] leading-5 text-indigo-900 whitespace-pre-line">
+                  <p className="text-[12px] leading-5 text-blue-900 whitespace-pre-line">
                     {currentUni.question.explanation}
                   </p>
                 </div>
@@ -358,7 +358,7 @@ export function InteractiveDemo() {
                   subject: currentUni.materia,
                   destination: '/explorar'
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 py-3 px-5 text-xs font-bold text-white shadow-[0_8px_20px_rgba(79,93,255,0.22)] hover:bg-indigo-700 transition"
+                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 py-3 px-5 text-xs font-bold text-white shadow-[0_8px_20px_rgba(79,93,255,0.22)] hover:bg-blue-700 transition"
               >
                 Buscar todo mi plan de {currentUni.shortName}
                 <ArrowRight className="h-3.5 w-3.5" />

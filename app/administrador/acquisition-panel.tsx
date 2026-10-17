@@ -212,7 +212,7 @@ function SourceCard({
             <p className="mt-0.5 text-[11px] font-medium text-slate-500">{meta.subtitle}</p>
           </div>
         </div>
-        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-600" />
+        <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
       </div>
 
       <div className="mt-5 flex items-end justify-between gap-3">
@@ -302,11 +302,11 @@ function BehaviorPanel({ detail }: { detail: AcquisitionSourceDetail }) {
               <p className="text-2xl font-bold tracking-[-0.04em] text-slate-950">
                 {item.count.toLocaleString('es-AR')}
               </p>
-              <p className="text-xs font-bold text-indigo-600">{formatPct(item.pct)}</p>
+              <p className="text-xs font-bold text-blue-600">{formatPct(item.pct)}</p>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
               <div
-                className="h-full rounded-full bg-indigo-500"
+                className="h-full rounded-full bg-blue-500"
                 style={{ width: `${Math.min(100, Math.max(0, item.pct))}%` }}
               />
             </div>
@@ -538,7 +538,7 @@ export function AcquisitionPanel({
               }`}
               className={`inline-flex min-h-10 items-center justify-center rounded-lg px-2.5 text-xs font-semibold transition ${
                 option.value === activePeriod
-                  ? 'bg-indigo-50 text-indigo-700'
+                  ? 'bg-blue-50 text-blue-700'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >

@@ -166,7 +166,7 @@ export function PregunteroPersonasJuridicasExperiment({
                     key={String(stepTitle)}
                     className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
                   >
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                       <StepIcon className="h-5 w-5" />
                     </span>
                     <h2 className="mt-5 text-lg font-bold tracking-tight text-slate-950">
@@ -179,8 +179,8 @@ export function PregunteroPersonasJuridicasExperiment({
             ) : (
               <>
                 <div>
-                  <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">
-                    <span className="h-px w-8 bg-indigo-500" />
+                  <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
+                    <span className="h-px w-8 bg-blue-500" />
                     Más que un preguntero
                   </div>
                   <h2 className="mt-5 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">
@@ -205,7 +205,7 @@ export function PregunteroPersonasJuridicasExperiment({
                       key={number}
                       className="grid grid-cols-[42px_minmax(0,1fr)] gap-4 border-b border-slate-200 px-5 py-5 last:border-b-0 sm:px-6"
                     >
-                      <span className="pt-0.5 text-[10px] font-black text-indigo-700">
+                      <span className="pt-0.5 text-[10px] font-black text-blue-700">
                         {number}
                       </span>
                       <div>
@@ -226,7 +226,7 @@ export function PregunteroPersonasJuridicasExperiment({
           <div className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-700 uppercase">
+                <p className="text-[10px] font-bold tracking-[0.14em] text-blue-700 uppercase">
                   Preguntas reales
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950">
@@ -247,7 +247,7 @@ export function PregunteroPersonasJuridicasExperiment({
               <ul className="mt-6 divide-y divide-slate-100 border-y border-slate-100">
                 {samplePreguntas.map((question, index) => (
                   <li key={question.id} className="grid grid-cols-[34px_minmax(0,1fr)] gap-3 py-5">
-                    <span className="pt-0.5 text-[10px] font-black text-indigo-700">
+                    <span className="pt-0.5 text-[10px] font-black text-blue-700">
                       0{index + 1}
                     </span>
                     <div>
@@ -284,8 +284,8 @@ export function PregunteroPersonasJuridicasExperiment({
                   href={String(href)}
                   className={
                     active
-                      ? 'rounded-full border border-indigo-200 bg-indigo-50 px-3.5 py-1.5 text-xs font-semibold text-indigo-700'
-                      : 'rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-indigo-200 hover:text-indigo-700'
+                      ? 'rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-semibold text-blue-700'
+                      : 'rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-blue-200 hover:text-blue-700'
                   }
                 >
                   {String(text)}
@@ -305,21 +305,21 @@ export function PregunteroPersonasJuridicasExperiment({
               <div className="mt-5 flex flex-col gap-3">
                 <Link
                   href={pregunteroHref}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:underline"
                 >
                   <ListChecks className="h-5 w-5" />
                   Ver preguntero completo
                 </Link>
                 <Link
                   href={materiaHref}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:underline"
                 >
                   <BookOpen className="h-5 w-5" />
                   Entrar a la materia
                 </Link>
                 <Link
                   href={resumenHref}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 hover:underline"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:underline"
                 >
                   <BookOpen className="h-5 w-5" />
                   Ver resúmenes
@@ -330,15 +330,15 @@ export function PregunteroPersonasJuridicasExperiment({
             <div
               className={
                 variant === 'a'
-                  ? 'rounded-[26px] border border-indigo-100 bg-indigo-50/70 p-6'
+                  ? 'rounded-[26px] border border-blue-100 bg-blue-50/70 p-6'
                   : 'rounded-[26px] bg-slate-950 p-6 text-white shadow-xl'
               }
             >
               <p
                 className={
                   variant === 'a'
-                    ? 'text-xs font-bold text-indigo-700'
-                    : 'text-xs font-bold text-indigo-200'
+                    ? 'text-xs font-bold text-blue-700'
+                    : 'text-xs font-bold text-blue-200'
                 }
               >
                 Llegá al parcial sabiendo qué reforzar.

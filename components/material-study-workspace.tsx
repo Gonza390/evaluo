@@ -1214,7 +1214,7 @@ export function MaterialStudyWorkspace({
       aria-label="Contenido de estudio"
       tabIndex={0}
       className={cn(
-        'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
+        'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
         demo && 'h-full min-h-0 overflow-y-auto'
       )}
     >

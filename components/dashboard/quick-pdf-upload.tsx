@@ -318,7 +318,7 @@ export function QuickPdfUpload({
     return (
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
             <Loader2 className="h-5 w-5 animate-spin" />
           </span>
           <div className="min-w-0 flex-1">
@@ -328,7 +328,7 @@ export function QuickPdfUpload({
             <p className="mt-1 text-sm leading-6 text-slate-600">{processingMessage}</p>
             <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-indigo-600 transition-all duration-500"
+                className="h-full rounded-full bg-blue-600 transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -358,9 +358,9 @@ export function QuickPdfUpload({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex min-h-28 w-full items-center gap-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-5 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40"
+            className="flex min-h-28 w-full items-center gap-4 rounded-xl border border-dashed border-slate-300 bg-slate-50/70 px-4 py-5 text-left transition hover:border-blue-300 hover:bg-blue-50/40"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm ring-1 ring-slate-200">
               {selectedFile ? <CheckCircle2 className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
             </span>
             <span className="min-w-0 flex-1">
@@ -397,7 +397,7 @@ export function QuickPdfUpload({
             <button
               type="button"
               onClick={() => setEditingContext(true)}
-              className="shrink-0 text-xs font-semibold text-indigo-700 hover:text-indigo-800"
+              className="shrink-0 text-xs font-semibold text-blue-700 hover:text-blue-800"
             >
               Cambiar
             </button>
@@ -413,7 +413,7 @@ export function QuickPdfUpload({
                   setCarreraId('');
                   setMateriaId('');
                 }}
-                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-indigo-400"
+                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-blue-400"
               >
                 <option value="">Elegir</option>
                 {universidades.map((item) => (
@@ -431,7 +431,7 @@ export function QuickPdfUpload({
                   setCarreraId(event.target.value);
                   setMateriaId('');
                 }}
-                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-indigo-400"
+                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-blue-400"
               >
                 <option value="">Elegir</option>
                 {filteredCarreras.map((item) => (
@@ -446,7 +446,7 @@ export function QuickPdfUpload({
                 value={materiaId}
                 disabled={!carreraId}
                 onChange={(event) => setMateriaId(event.target.value)}
-                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-indigo-400"
+                className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none disabled:bg-slate-50 disabled:text-slate-400 focus:border-blue-400"
               >
                 <option value="">Elegir</option>
                 {filteredMaterias.map((item) => (
@@ -487,12 +487,12 @@ export function QuickPdfUpload({
               setErrorMessage(null);
               setAnalyzeVisuals(event.target.checked);
             }}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 disabled:cursor-not-allowed"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 disabled:cursor-not-allowed"
           />
           <span className="flex min-w-0 gap-2">
             <ImageIcon
               className={`mt-0.5 h-4 w-4 shrink-0 ${
-                visualUnavailable ? 'text-slate-400' : 'text-indigo-600'
+                visualUnavailable ? 'text-slate-400' : 'text-blue-600'
               }`}
             />
             <span>
@@ -515,7 +515,7 @@ export function QuickPdfUpload({
             type="checkbox"
             checked={shareWithCatalog}
             onChange={(event) => setShareWithCatalog(event.target.checked)}
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600"
+            className="h-4 w-4 rounded border-slate-300 text-blue-600"
           />
           <span>Compartir con estudiantes de esta materia</span>
         </label>
@@ -530,7 +530,7 @@ export function QuickPdfUpload({
           type="button"
           onClick={handleUpload}
           disabled={uploading || !selectedFile}
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           {uploading ? 'Subiendo PDF...' : 'Preparar PDF'}

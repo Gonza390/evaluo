@@ -24,7 +24,7 @@ export function StudyErrorTutorAvatar({
       className={`relative mt-0.5 flex shrink-0 items-center justify-center ${sizeClass} ${
         isThinking
           ? 'overflow-visible bg-transparent'
-          : 'overflow-hidden rounded-full bg-[#2F4BFF] ring-1 ring-slate-200/80'
+          : 'overflow-hidden rounded-full bg-[#2563EB] ring-1 ring-slate-200/80'
       }`}
     >
       <Image

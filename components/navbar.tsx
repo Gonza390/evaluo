@@ -169,7 +169,7 @@ export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
                 <Link
                   href="/pricing"
                   title={collapsed ? 'Planes y suscripción' : undefined}
-                  className={`text-brand flex items-center rounded-lg transition-colors hover:bg-indigo-50/70 ${
+                  className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
                     collapsed
                       ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
                       : 'w-full gap-2.5 px-3 py-2.5'

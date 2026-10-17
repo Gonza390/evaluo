@@ -84,7 +84,7 @@ function StepBadge({ step }: { step: FunnelStep }) {
         <span
           key={item}
           className={`h-1 rounded-full transition-all duration-300 ${
-            item === step ? 'w-7 bg-indigo-600' : item < step ? 'w-3 bg-indigo-300' : 'w-3 bg-slate-200'
+            item === step ? 'w-7 bg-blue-600' : item < step ? 'w-3 bg-blue-300' : 'w-3 bg-slate-200'
           }`}
         />
       ))}
@@ -307,7 +307,7 @@ export function MapaMentalPremiumFunnel({
     if (targetStep === 1) {
       return (
         <section className="funnel-step funnel-step-one mx-auto flex h-full w-full max-w-5xl flex-col items-center justify-start overflow-y-auto px-1 py-4 text-center sm:justify-center sm:py-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-100 bg-white text-indigo-600 shadow-[0_12px_32px_rgba(79,70,229,0.12)] sm:h-14 sm:w-14">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-[0_12px_32px_rgba(79,70,229,0.12)] sm:h-14 sm:w-14">
             <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
           </div>
 
@@ -326,7 +326,7 @@ export function MapaMentalPremiumFunnel({
                   key={benefit.title}
                   className="benefit-card flex min-h-[72px] min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-white/95 p-3.5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.05)] sm:min-h-[90px] sm:gap-4 sm:p-5"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 text-indigo-600 sm:h-12 sm:w-12">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 text-blue-600 sm:h-12 sm:w-12">
                     <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
@@ -364,7 +364,7 @@ export function MapaMentalPremiumFunnel({
           </div>
 
           <div className="comparison-card relative mt-4 w-full max-w-3xl rounded-[1.65rem] border border-slate-200 bg-white/95 p-2 shadow-[0_16px_44px_rgba(15,23,42,0.065)] sm:p-2.5">
-            <div className="premium-column-shell pointer-events-none absolute bottom-2 right-2 top-2 w-[78px] overflow-hidden rounded-[1.35rem] border border-indigo-200 bg-[linear-gradient(180deg,rgba(238,242,255,0.98),rgba(255,255,255,0.99),rgba(238,242,255,0.98))] shadow-[0_12px_30px_rgba(79,70,229,0.11)] sm:bottom-2.5 sm:right-2.5 sm:top-2.5 sm:w-[128px] sm:rounded-[1.5rem]">
+            <div className="premium-column-shell pointer-events-none absolute bottom-2 right-2 top-2 w-[78px] overflow-hidden rounded-[1.35rem] border border-blue-200 bg-[linear-gradient(180deg,rgba(238,242,255,0.98),rgba(255,255,255,0.99),rgba(238,242,255,0.98))] shadow-[0_12px_30px_rgba(79,70,229,0.11)] sm:bottom-2.5 sm:right-2.5 sm:top-2.5 sm:w-[128px] sm:rounded-[1.5rem]">
               <div className="premium-column-sheen absolute -left-1/2 h-16 w-[200%] rotate-[-12deg] bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.96),transparent)] opacity-80" />
             </div>
 
@@ -411,7 +411,7 @@ export function MapaMentalPremiumFunnel({
     return (
       <section className="funnel-step mx-auto flex h-full w-full max-w-4xl flex-col justify-start overflow-y-auto px-1 py-4 sm:justify-center sm:py-3">
         <div className="text-center">
-          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
             <Crown className="h-5 w-5" aria-hidden="true" />
           </div>
           <h1 className="mt-2.5 text-2xl font-extrabold tracking-[-0.045em] text-slate-950 sm:text-3xl lg:text-[2.25rem]">
@@ -428,20 +428,20 @@ export function MapaMentalPremiumFunnel({
             onClick={() => selectBillingMode('semester')}
             className={`relative min-w-0 rounded-2xl border-2 p-3.5 text-left transition sm:p-4 ${
               billingMode === 'semester'
-                ? 'border-indigo-500 bg-indigo-50/50 shadow-[0_12px_35px_rgba(79,70,229,0.11)]'
-                : 'border-slate-200 bg-white hover:border-indigo-200'
+                ? 'border-blue-500 bg-blue-50/50 shadow-[0_12px_35px_rgba(79,70,229,0.11)]'
+                : 'border-slate-200 bg-white hover:border-blue-200'
             }`}
             aria-pressed={billingMode === 'semester'}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <span className="inline-flex rounded-full bg-indigo-600 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-[0.08em] text-white sm:text-[9px]">
+                <span className="inline-flex rounded-full bg-blue-600 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-[0.08em] text-white sm:text-[9px]">
                   Recomendado
                 </span>
                 <h2 className="mt-2 text-sm font-bold text-slate-950 sm:text-base">6 meses</h2>
               </div>
               {billingMode === 'semester' ? (
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white sm:h-6 sm:w-6">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white sm:h-6 sm:w-6">
                   <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </span>
               ) : (
@@ -468,8 +468,8 @@ export function MapaMentalPremiumFunnel({
             onClick={() => selectBillingMode('monthly')}
             className={`min-w-0 rounded-2xl border-2 p-3.5 text-left transition sm:p-4 ${
               billingMode === 'monthly'
-                ? 'border-indigo-500 bg-indigo-50/50 shadow-[0_12px_35px_rgba(79,70,229,0.11)]'
-                : 'border-slate-200 bg-white hover:border-indigo-200'
+                ? 'border-blue-500 bg-blue-50/50 shadow-[0_12px_35px_rgba(79,70,229,0.11)]'
+                : 'border-slate-200 bg-white hover:border-blue-200'
             }`}
             aria-pressed={billingMode === 'monthly'}
           >
@@ -481,7 +481,7 @@ export function MapaMentalPremiumFunnel({
                 <h2 className="mt-2 text-sm font-bold text-slate-950 sm:text-base">Mensual</h2>
               </div>
               {billingMode === 'monthly' ? (
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white sm:h-6 sm:w-6">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white sm:h-6 sm:w-6">
                   <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </span>
               ) : (
@@ -517,7 +517,7 @@ export function MapaMentalPremiumFunnel({
           </button>
 
           <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] font-medium text-slate-500 sm:text-[11px]">
-            <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
+            <ShieldCheck className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" />
             Mercado Pago · conexión segura
           </p>
 
@@ -580,7 +580,7 @@ export function MapaMentalPremiumFunnel({
       `}</style>
 
       <div className="pointer-events-none absolute -left-24 top-24 h-56 w-56 rounded-full bg-blue-100/45 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 bottom-12 h-64 w-64 rounded-full bg-indigo-100/45 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 bottom-12 h-64 w-64 rounded-full bg-blue-100/45 blur-3xl" />
 
       <div className="relative mx-auto flex h-[100svh] w-full max-w-[1180px] flex-col px-4 pb-3 pt-3 sm:px-7 sm:pb-4 sm:pt-4 lg:px-10">
         <div className="flex shrink-0 items-center justify-between gap-4">
@@ -591,7 +591,7 @@ export function MapaMentalPremiumFunnel({
           <button
             type="button"
             onClick={closeFlow}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-500 shadow-sm transition hover:border-slate-300 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Cerrar Premium"
           >
             <X className="h-4 w-4" />

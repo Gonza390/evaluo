@@ -1292,7 +1292,7 @@ export default function CalendarioPage() {
                 {formState.type === 'exam' ? (
                   <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
                     <div className="flex items-center gap-2">
-                      <BellRing className="h-4 w-4 text-indigo-500" />
+                      <BellRing className="h-4 w-4 text-blue-500" />
                       <p className="text-[12px] font-bold text-slate-800">Recordatorios</p>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-5 text-slate-500">

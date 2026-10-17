@@ -104,7 +104,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 id="feedback-category"
                 value={category}
                 onChange={(event) => setCategory(event.target.value as FeedbackCategory)}
-                className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100/70"
+                className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               >
                 {feedbackCategories.map((item) => (
                   <option key={item.value} value={item.value}>
@@ -125,7 +125,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 rows={6}
                 autoFocus
                 placeholder="Contanos qué pensás..."
-                className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100/70"
+                className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               />
             </div>
 
@@ -141,7 +141,7 @@ export function FeedbackDialog({ open, onOpenChange, sourcePath }: FeedbackDialo
                 value={phone}
                 onChange={(event) => setPhone(event.target.value.slice(0, 40))}
                 placeholder="Ej. +54 9 11 1234 5678"
-                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-100/70"
+                className="mt-2 h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
               />
               <p className="mt-1.5 text-xs leading-5 text-slate-500">
                 Dejá tu número si querés que podamos responderte más rápido.

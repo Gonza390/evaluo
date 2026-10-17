@@ -77,9 +77,9 @@ const CALLOUT_CONFIG: Record<StudyCalloutKind, StudyCalloutConfig> = {
   formula: {
     label: 'Fórmula',
     icon: Sigma,
-    containerClassName: 'border-indigo-400 bg-indigo-50/30',
-    iconClassName: 'bg-indigo-100 text-indigo-700',
-    labelClassName: 'text-indigo-800',
+    containerClassName: 'border-blue-400 bg-blue-50/30',
+    iconClassName: 'bg-blue-100 text-blue-700',
+    labelClassName: 'text-blue-800',
   },
   confusion: {
     label: 'Confusión frecuente',
@@ -189,7 +189,7 @@ function renderInlineMarkdown(value: string): ReactNode {
           key={token + '-' + index}
           role="math"
           aria-label={display}
-          className="mx-0.5 inline-flex max-w-full items-baseline overflow-x-auto rounded-md border border-indigo-100 bg-indigo-50/70 px-1.5 py-0.5 font-mono text-[0.94em] font-semibold text-slate-900 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-0.5 inline-flex max-w-full items-baseline overflow-x-auto rounded-md border border-blue-100 bg-blue-50/70 px-1.5 py-0.5 font-mono text-[0.94em] font-semibold text-slate-900 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {display}
         </span>

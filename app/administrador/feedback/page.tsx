@@ -327,7 +327,7 @@ export default async function FeedbackAdminPage({
       <div className="mx-auto max-w-7xl">
         <header className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="flex items-center gap-2 text-sm font-semibold text-indigo-700">
+            <div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
               <MessageSquareText className="h-4 w-4" />
               Feedback
             </div>
@@ -359,7 +359,7 @@ export default async function FeedbackAdminPage({
             prefetch={false}
             className={`border-b-2 px-0 py-3 text-sm font-semibold transition ${
               activeView === 'general'
-                ? 'border-indigo-600 text-indigo-700'
+                ? 'border-blue-600 text-blue-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -370,7 +370,7 @@ export default async function FeedbackAdminPage({
             prefetch={false}
             className={`border-b-2 px-0 py-3 text-sm font-semibold transition ${
               activeView === 'simuladores'
-                ? 'border-indigo-600 text-indigo-700'
+                ? 'border-blue-600 text-blue-700'
                 : 'border-transparent text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -433,7 +433,7 @@ export default async function FeedbackAdminPage({
                           {phone ? (
                             <a
                               href={`tel:${phoneHref}`}
-                              className="inline-flex items-center gap-1.5 text-sm font-medium text-indigo-700 hover:underline"
+                              className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:underline"
                             >
                               <Phone className="h-3.5 w-3.5" />
                               {phone}

@@ -2013,7 +2013,7 @@ export default function SimuladorExamen({
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Button
               onClick={continueSavedExam}
-              className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+              className="rounded-xl bg-blue-600 hover:bg-blue-700"
             >
               Retomar {Object.keys(resumeSnapshot?.selectedAnswers ?? {}).length}/
               {resumeSnapshot?.preguntas?.length ?? 0} respondidas
@@ -2505,8 +2505,8 @@ export default function SimuladorExamen({
                   </div>
 
                   <div className="mt-6 grid gap-4 lg:grid-cols-[0.7fr_1fr_1fr]">
-                    <div className="rounded-[24px] border border-indigo-200 bg-indigo-50/70 p-5">
-                      <p className="text-[12px] font-semibold tracking-[0.18em] text-indigo-700 uppercase">
+                    <div className="rounded-[24px] border border-blue-200 bg-blue-50/70 p-5">
+                      <p className="text-[12px] font-semibold tracking-[0.18em] text-blue-700 uppercase">
                         Preparación estimada
                       </p>
                       <p className="mt-2 text-3xl font-bold text-slate-950">{porcentaje}%</p>
@@ -2540,8 +2540,8 @@ export default function SimuladorExamen({
                     </div>
                   </div>
 
-                  <div className="mt-6 rounded-[28px] border border-indigo-200 bg-[linear-gradient(135deg,#EEF0FF_0%,#FFFFFF_100%)] p-6 shadow-[0_18px_40px_rgba(99,102,241,0.10)]">
-                    <p className="text-[12px] font-semibold tracking-[0.18em] text-indigo-700 uppercase">
+                  <div className="mt-6 rounded-[28px] border border-blue-200 bg-[linear-gradient(135deg,#EEF0FF_0%,#FFFFFF_100%)] p-6 shadow-[0_18px_40px_rgba(99,102,241,0.10)]">
+                    <p className="text-[12px] font-semibold tracking-[0.18em] text-blue-700 uppercase">
                       Próxima actividad recomendada
                     </p>
                     <div className="mt-2 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -2562,7 +2562,7 @@ export default function SimuladorExamen({
                       {erroresPendientes > 0 ? (
                         <Button
                           asChild
-                          className="h-12 w-full shrink-0 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700 lg:w-auto"
+                          className="h-12 w-full shrink-0 rounded-xl bg-blue-600 px-6 hover:bg-blue-700 lg:w-auto"
                         >
                           <Link
                             href={
@@ -2578,7 +2578,7 @@ export default function SimuladorExamen({
                       ) : (
                         <Button
                           onClick={reiniciarSimulador}
-                          className="h-12 shrink-0 rounded-xl bg-indigo-600 px-6 hover:bg-indigo-700"
+                          className="h-12 shrink-0 rounded-xl bg-blue-600 px-6 hover:bg-blue-700"
                         >
                           Intentar otro modelo
                           <ChevronRight className="h-4 w-4" />
@@ -2605,7 +2605,7 @@ export default function SimuladorExamen({
                         {'href' in card ? (
                           <Link
                             href={card.href}
-                            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+                            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
                           >
                             {card.cta}
                             <ChevronRight className="h-4 w-4" />
@@ -2614,7 +2614,7 @@ export default function SimuladorExamen({
                           <button
                             type="button"
                             onClick={card.onClick}
-                            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+                            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
                           >
                             {card.cta}
                             <ChevronRight className="h-4 w-4" />
@@ -2733,7 +2733,7 @@ export default function SimuladorExamen({
                       </div>
                     )}
                     {!userId && wrongExplanations.length > 0 ? (
-                      <div className="mt-5 border-t border-indigo-100 pt-5">
+                      <div className="mt-5 border-t border-blue-100 pt-5">
                         <p className="text-sm font-semibold text-slate-900">
                           Ya viste qué te hizo fallar. Ahora estudiá lo que realmente entra en tu
                           examen.
@@ -2764,7 +2764,7 @@ export default function SimuladorExamen({
                         </p>
                         <Link
                           href={hasReadyOwnMaterial ? '/dashboard/explicaciones' : pdfUploadHref}
-                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-center text-sm font-semibold text-white transition hover:bg-indigo-700 sm:w-auto"
+                          className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-center text-sm font-semibold text-white transition hover:bg-blue-700 sm:w-auto"
                         >
                           {hasReadyOwnMaterial
                             ? 'Ver dónde estudiarlos en mis apuntes'
@@ -2797,7 +2797,7 @@ export default function SimuladorExamen({
                       <div className="mt-4">
                         <Link
                           href="/dashboard/explicaciones"
-                          className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700"
+                          className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700"
                         >
                           <Sparkles className="h-4 w-4" />
                           Ver Progreso
@@ -2880,7 +2880,7 @@ export default function SimuladorExamen({
     return (
       <div className="flex min-h-[560px] items-center justify-center bg-white p-4 sm:p-6">
         <Card className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
-          <p className="text-sm font-semibold text-indigo-600">
+          <p className="text-sm font-semibold text-blue-600">
             {materiaNombre || `Materia ${materiaId}`}
           </p>
           <h2 className="mt-1 text-2xl font-extrabold tracking-[-0.03em] text-slate-950">
@@ -2916,7 +2916,7 @@ export default function SimuladorExamen({
                 min={getLocalDateKey()}
                 value={examDateDraft}
                 onChange={(event) => setExamDateDraft(event.target.value)}
-                className="mt-3 h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-semibold text-slate-950 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="mt-3 h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base font-semibold text-slate-950 transition outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               />
             </div>
           )}
@@ -2924,7 +2924,7 @@ export default function SimuladorExamen({
           <Button
             onClick={() => void startPractice()}
             disabled={(!isPregunteroAcquisitionDemo && !examDateDraft) || examDateSaving}
-            className="mt-6 h-12 w-full rounded-xl bg-indigo-600 text-base font-bold hover:bg-indigo-700"
+            className="mt-6 h-12 w-full rounded-xl bg-blue-600 text-base font-bold hover:bg-blue-700"
           >
             {examDateSaving
               ? 'Guardando...'
@@ -2972,7 +2972,7 @@ export default function SimuladorExamen({
             </button>
 
             <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
-              <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
+              <div className="grid h-7 w-7 place-items-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
                 {getUserInitials()}
               </div>
               <span className="max-w-[130px] truncate text-sm font-medium text-slate-700">
@@ -3103,7 +3103,7 @@ export default function SimuladorExamen({
                 {preguntaActual?.enunciado}
               </h2>
               {preguntaActual && preguntaActual.correctCount > 1 ? (
-                <p className="mt-2 text-xs font-semibold text-indigo-700">
+                <p className="mt-2 text-xs font-semibold text-blue-700">
                   Seleccioná {preguntaActual.correctCount} opciones correctas.
                 </p>
               ) : null}
@@ -3154,7 +3154,7 @@ export default function SimuladorExamen({
             </div>
 
             {pendingLandingAnswer && pendingLandingAnswer.questionId === preguntaActual?.id ? (
-              <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+              <div className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4">
                 <p className="text-sm text-slate-700">
                   Trajimos la opción que elegiste. Podés cambiarla antes de confirmar.
                 </p>
@@ -3196,7 +3196,7 @@ export default function SimuladorExamen({
               <Button
                 onClick={() => (isLastQuestion ? requestFinalizar() : goNext())}
                 disabled={isFinishing}
-                className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700"
+                className="rounded-xl bg-blue-600 px-5 hover:bg-blue-700"
               >
                 {isDemoCheckpointQuestion
                   ? 'Continuar'
@@ -3366,7 +3366,7 @@ export default function SimuladorExamen({
             <Button
               onClick={() => (isLastQuestion ? requestFinalizar() : goNext())}
               disabled={isFinishing}
-              className="h-10 flex-1 rounded-xl bg-indigo-600 px-3 text-[13px] hover:bg-indigo-700"
+              className="h-10 flex-1 rounded-xl bg-blue-600 px-3 text-[13px] hover:bg-blue-700"
             >
               {isDemoCheckpointQuestion ? 'Continuar' : isLastQuestion ? 'Finalizar' : 'Siguiente'}
               {!isLastQuestion || isDemoCheckpointQuestion ? (

@@ -251,7 +251,7 @@ export default function LoginForm() {
 
         <div className="mt-8 text-center lg:text-left">
           {intent === 'premium' && isSignUp ? (
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-blue-700 uppercase">
               Evaluo Premium
             </div>
           ) : null}
@@ -349,14 +349,14 @@ export default function LoginForm() {
                           Acepto los{' '}
                           <Link
                             href="/terminos"
-                            className="font-semibold text-indigo-600 hover:underline"
+                            className="font-semibold text-blue-600 hover:underline"
                           >
                             Términos
                           </Link>{' '}
                           y la{' '}
                           <Link
                             href="/privacidad"
-                            className="font-semibold text-indigo-600 hover:underline"
+                            className="font-semibold text-blue-600 hover:underline"
                           >
                             Política de privacidad
                           </Link>

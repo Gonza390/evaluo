@@ -586,7 +586,7 @@ export default function PdfViewer({
                         className={cn(
                           'w-full rounded-2xl border p-2 text-left transition',
                           active
-                            ? 'border-indigo-300 bg-indigo-50'
+                            ? 'border-blue-300 bg-blue-50'
                             : 'border-slate-200 bg-white hover:bg-white',
                           isStudyTheme &&
                             (active
@@ -740,10 +740,10 @@ export default function PdfViewer({
                   {isPreviewLocked && showPreviewGate ? (
                     <div className="sticky bottom-3 z-10 mx-auto mt-6 flex w-full max-w-2xl justify-center px-1 sm:bottom-4 sm:px-3">
                       <div className="absolute inset-x-5 -top-10 h-14 rounded-full bg-gradient-to-t from-white via-white/80 to-transparent blur-2xl" />
-                      <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-indigo-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
-                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">
+                      <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-blue-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
+                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-blue-700 uppercase">
                           Preview disponible
-                          <span className="rounded-full bg-white px-2 py-0.5 text-[12px] text-indigo-600">
+                          <span className="rounded-full bg-white px-2 py-0.5 text-[12px] text-blue-600">
                             {previewPageLimit} paginas
                           </span>
                         </div>

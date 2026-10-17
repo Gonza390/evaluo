@@ -86,9 +86,9 @@ export default async function PricingPage({
         </div>
 
         <section className="relative overflow-hidden border-b border-slate-200">
-          <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-100/70 blur-3xl" />
+          <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-100/70 blur-3xl" />
           <div className="relative mx-auto max-w-5xl px-4 pt-10 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-14">
-            <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-800">
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               Evaluo Premium
             </span>
@@ -100,17 +100,17 @@ export default async function PricingPage({
               Premium.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
-              <ShieldCheck className="h-4 w-4 text-indigo-700" aria-hidden="true" />
+              <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
               Pago seguro con Mercado Pago
             </p>
           </div>
         </section>
 
         {showRecovery ? (
-          <section className="border-b border-indigo-100 bg-indigo-50/40 px-4 py-12 sm:px-6">
+          <section className="border-b border-blue-100 bg-blue-50/40 px-4 py-12 sm:px-6">
             <div className="mx-auto max-w-xl">
               <div className="mb-6 text-center">
-                <p className="text-xs font-bold tracking-[0.18em] text-indigo-700 uppercase">
+                <p className="text-xs font-bold tracking-[0.18em] text-blue-700 uppercase">
                   Retomá tu compra
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
@@ -134,7 +134,7 @@ export default async function PricingPage({
         <section id="elegir-plan" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl">
             <div className="mb-7 text-center">
-              <p className="text-xs font-bold tracking-[0.18em] text-indigo-700 uppercase">
+              <p className="text-xs font-bold tracking-[0.18em] text-blue-700 uppercase">
                 Planes
               </p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
@@ -167,7 +167,7 @@ export default async function PricingPage({
               <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] border-b border-slate-200 bg-slate-50 px-3 py-4 text-[11px] font-bold text-slate-900 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 min-[360px]:text-xs sm:grid-cols-[1fr_140px_140px] sm:px-6 sm:text-sm">
                 <span>Función</span>
                 <span className="text-center">Gratis</span>
-                <span className="text-center text-indigo-700">Premium</span>
+                <span className="text-center text-blue-700">Premium</span>
               </div>
               {comparison.map(([feature, free, premium]) => (
                 <div
@@ -186,7 +186,7 @@ export default async function PricingPage({
                   </span>
                   <span className="flex justify-center">
                     {premium ? (
-                      <Check className="h-5 w-5 text-indigo-700" aria-label="Incluido" />
+                      <Check className="h-5 w-5 text-blue-700" aria-label="Incluido" />
                     ) : null}
                   </span>
                 </div>
@@ -197,7 +197,7 @@ export default async function PricingPage({
               <p>Los pagos se procesan de forma segura con Mercado Pago.</p>
               <p className="mt-2">
                 Al comprar aceptás los{' '}
-                <Link href="/facturacion" className="font-semibold text-indigo-700 hover:underline">
+                <Link href="/facturacion" className="font-semibold text-blue-700 hover:underline">
                   términos de facturación
                 </Link>
                 .

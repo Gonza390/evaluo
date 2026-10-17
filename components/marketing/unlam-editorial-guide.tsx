@@ -35,7 +35,7 @@ function OfficialLink({ href, children }: { href: string; children: React.ReactN
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 font-semibold text-indigo-700 underline decoration-indigo-200 underline-offset-4 transition hover:decoration-indigo-500"
+      className="inline-flex items-center gap-1.5 font-semibold text-blue-700 underline decoration-blue-200 underline-offset-4 transition hover:decoration-blue-500"
     >
       {children}
       <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
@@ -45,15 +45,15 @@ function OfficialLink({ href, children }: { href: string; children: React.ReactN
 
 function SectionKicker({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-indigo-700">{children}</p>
+    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-blue-700">{children}</p>
   );
 }
 
 function StudyNote({ children }: { children: React.ReactNode }) {
   return (
-    <aside className="my-6 border-l-4 border-indigo-500 bg-indigo-50/80 px-4 py-3.5 text-sm leading-6 text-slate-700">
+    <aside className="my-6 border-l-4 border-blue-500 bg-blue-50/80 px-4 py-3.5 text-sm leading-6 text-slate-700">
       <div className="flex gap-3">
-        <Lightbulb className="mt-1 h-4.5 w-4.5 shrink-0 text-indigo-700" aria-hidden="true" />
+        <Lightbulb className="mt-1 h-4.5 w-4.5 shrink-0 text-blue-700" aria-hidden="true" />
         <div>{children}</div>
       </div>
     </aside>
@@ -73,7 +73,7 @@ export function UnlamEditorialGuide() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-white text-slate-950 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-white text-slate-950 selection:bg-blue-100 selection:text-blue-900">
       <MarketingAnalyticsSlot />
 
       <div className="border-b border-slate-100 bg-white">
@@ -91,7 +91,7 @@ export function UnlamEditorialGuide() {
           <div className="mx-auto grid w-full max-w-[1240px] lg:grid-cols-[minmax(0,1.25fr)_360px]">
             <div className="px-4 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
               <div className="max-w-[820px]">
-                <div className="flex flex-wrap items-center gap-3 text-[11px] font-black uppercase tracking-[0.17em] text-indigo-700">
+                <div className="flex flex-wrap items-center gap-3 text-[11px] font-black uppercase tracking-[0.17em] text-blue-700">
                   <span>Guía 2027</span>
                   <span className="h-1 w-1 rounded-full bg-gradient-to-r from-brand to-brand-2" />
                   <span>Universidad Nacional de La Matanza</span>
@@ -110,10 +110,10 @@ export function UnlamEditorialGuide() {
               </div>
             </div>
 
-            <aside className="border-t border-slate-200 bg-indigo-50/60 px-5 py-8 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-10">
+            <aside className="border-t border-slate-200 bg-blue-50/60 px-5 py-8 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-10">
               <div className="flex items-center gap-3">
-                <CalendarDays className="h-5 w-5 text-indigo-700" aria-hidden="true" />
-                <p className="text-[11px] font-black uppercase tracking-[0.17em] text-indigo-700">Segunda instancia 2027</p>
+                <CalendarDays className="h-5 w-5 text-blue-700" aria-hidden="true" />
+                <p className="text-[11px] font-black uppercase tracking-[0.17em] text-blue-700">Segunda instancia 2027</p>
               </div>
               <h2 className="mt-3 font-serif text-2xl font-semibold leading-tight sm:text-[28px]">Las fechas que importan</h2>
               <dl className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
@@ -143,11 +143,11 @@ export function UnlamEditorialGuide() {
           <div className="mx-auto grid w-full max-w-[1240px] gap-0 lg:grid-cols-[250px_minmax(0,1fr)]">
             <aside className="hidden border-r border-slate-200 bg-white/70 px-7 py-11 lg:block">
               <div className="sticky top-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-700">En esta guía</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-700">En esta guía</p>
                 <nav className="mt-4 flex flex-col gap-2.5">
                   {toc.map(([href, label], index) => (
                     <a key={href} href={href} className="group flex gap-3 text-sm leading-5 text-slate-600 hover:text-slate-950">
-                      <span className="font-mono text-[11px] text-slate-400 group-hover:text-indigo-700">{String(index + 1).padStart(2, '0')}</span>
+                      <span className="font-mono text-[11px] text-slate-400 group-hover:text-blue-700">{String(index + 1).padStart(2, '0')}</span>
                       <span>{label}</span>
                     </a>
                   ))}
@@ -198,7 +198,7 @@ export function UnlamEditorialGuide() {
                       const IconComponent = Icon as typeof FileText;
                       return (
                         <div key={String(title)} className="bg-white p-5 sm:p-6">
-                          <IconComponent className="h-5 w-5 text-indigo-700" aria-hidden="true" />
+                          <IconComponent className="h-5 w-5 text-blue-700" aria-hidden="true" />
                           <h3 className="mt-4 font-serif text-2xl font-semibold">{String(title)}</h3>
                           <p className="mt-2 text-sm leading-7 text-slate-600">{String(text)}</p>
                         </div>
@@ -230,7 +230,7 @@ export function UnlamEditorialGuide() {
                       ['06', 'Volver', 'Revisá solo los temas débiles y repetí el ciclo.'],
                     ].map(([number, title, text]) => (
                       <li key={number} className="grid gap-3 border-b border-slate-200 py-5 sm:grid-cols-[54px_120px_1fr] sm:items-start">
-                        <span className="font-mono text-sm font-bold text-indigo-700">{number}</span>
+                        <span className="font-mono text-sm font-bold text-blue-700">{number}</span>
                         <span className="font-bold text-slate-950">{title}</span>
                         <span className="text-sm leading-7 text-slate-600">{text}</span>
                       </li>
@@ -243,15 +243,15 @@ export function UnlamEditorialGuide() {
                 <section id="matematica" className="scroll-mt-8">
                   <SectionKicker>04 · Materias prácticas</SectionKicker>
                   <div className="flex items-start gap-4">
-                    <Sigma className="mt-1 h-7 w-7 shrink-0 text-indigo-700" aria-hidden="true" />
+                    <Sigma className="mt-1 h-7 w-7 shrink-0 text-blue-700" aria-hidden="true" />
                     <h2 className="font-serif text-[2rem] font-semibold leading-[1.12] tracking-[-0.025em] sm:text-[2.35rem]">Matemática se aprende resolviendo.</h2>
                   </div>
                   <p className="mt-6 text-[15px] leading-7 text-slate-600">
                     Leer un procedimiento no alcanza: necesitás resolver ejercicios sin apoyo. Entendé primero el método y después dedicá la mayor parte de la sesión a aplicarlo.
                   </p>
 
-                  <div className="mt-6 grid gap-2 border border-indigo-100 bg-indigo-50/60 p-4 sm:grid-cols-[120px_1fr]">
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-indigo-700">Ejemplo</p>
+                  <div className="mt-6 grid gap-2 border border-blue-100 bg-blue-50/60 p-4 sm:grid-cols-[120px_1fr]">
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-blue-700">Ejemplo</p>
                     <p className="text-sm leading-6 text-slate-700">
                       Si estás trabajando ecuaciones, leé un ejemplo resuelto, cerrá el manual y resolvé <strong>3x + 7 = 22</strong>. Si fallás, identificá el paso exacto antes de intentar otro ejercicio.
                     </p>
@@ -292,7 +292,7 @@ export function UnlamEditorialGuide() {
                       ['1 día antes', 'Repaso breve. Nada de intentar incorporar una unidad completa nueva.'],
                     ].map(([when, action]) => (
                       <div key={when} className="grid border-b border-slate-100 last:border-b-0 sm:grid-cols-[170px_1fr]">
-                        <div className="bg-indigo-50/80 px-4 py-3.5 text-sm font-bold text-slate-950">{when}</div>
+                        <div className="bg-blue-50/80 px-4 py-3.5 text-sm font-bold text-slate-950">{when}</div>
                         <div className="px-4 py-3.5 text-sm leading-7 text-slate-600">{action}</div>
                       </div>
                     ))}
@@ -303,11 +303,11 @@ export function UnlamEditorialGuide() {
               <section id="evaluo" className="scroll-mt-8 my-12 -mx-4 overflow-hidden bg-[#050B2C] text-white sm:-mx-8 lg:-mx-14">
                 <div className="grid lg:grid-cols-[0.86fr_1.14fr]">
                   <div className="px-4 py-9 sm:px-7 lg:px-9 lg:py-11">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-indigo-300/20 bg-indigo-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-indigo-200">
-                      <span className="h-1.5 w-1.5 rounded-full bg-indigo-300" />
+                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-blue-400/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.17em] text-blue-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-300" />
                       Evaluo aplicado a tu material
                     </div>
-                    <p className="mt-7 text-[11px] font-black uppercase tracking-[0.18em] text-indigo-300">06 · Del manual a una sesión de estudio</p>
+                    <p className="mt-7 text-[11px] font-black uppercase tracking-[0.18em] text-blue-300">06 · Del manual a una sesión de estudio</p>
                     <h2 className="mt-4 max-w-xl font-serif text-[2rem] font-semibold leading-[1.08] tracking-[-0.025em] text-white sm:text-[2.35rem]">
                       La guía te dice qué hacer. Evaluo te ayuda a hacerlo con tu material.
                     </h2>
@@ -318,7 +318,7 @@ export function UnlamEditorialGuide() {
                     <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2.5 text-xs text-slate-300">
                       {['Resumen', 'Conceptos', 'Flashcards', 'Práctica'].map((label) => (
                         <span key={label} className="inline-flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-indigo-300" aria-hidden="true" />
+                          <CheckCircle2 className="h-4 w-4 text-blue-300" aria-hidden="true" />
                           {label}
                         </span>
                       ))}
@@ -351,7 +351,7 @@ export function UnlamEditorialGuide() {
                     <div className="overflow-hidden rounded-[20px] border border-white/10 bg-slate-50 text-slate-900 shadow-[0_18px_44px_rgba(0,0,0,0.24)]">
                       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                             <FileText className="h-4.5 w-4.5" aria-hidden="true" />
                           </span>
                           <div>
@@ -365,7 +365,7 @@ export function UnlamEditorialGuide() {
                       <div className="grid gap-3 p-3.5 sm:p-4">
                         <div className="rounded-xl border border-slate-200 bg-white p-4">
                           <div className="flex items-center justify-between gap-3">
-                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">01 · Resumen</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-blue-600">01 · Resumen</p>
                             <span className="text-[10px] text-slate-400">Ecuaciones</span>
                           </div>
                           <p className="mt-3 text-sm font-bold text-slate-950">Idea central</p>
@@ -375,10 +375,10 @@ export function UnlamEditorialGuide() {
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-4">
-                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-600">02 · Flashcard</p>
+                          <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-blue-600">02 · Flashcard</p>
                             <p className="mt-3 text-xs font-bold leading-5 text-slate-900">¿Qué debe conservarse al operar ambos miembros de una ecuación?</p>
-                            <div className="mt-3 border-t border-indigo-100 pt-3 text-[11px] leading-5 text-slate-600">Intentá responder antes de ver la explicación.</div>
+                            <div className="mt-3 border-t border-blue-100 pt-3 text-[11px] leading-5 text-slate-600">Intentá responder antes de ver la explicación.</div>
                           </div>
                           <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-4">
                             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-700">03 · Práctica</p>
@@ -390,10 +390,10 @@ export function UnlamEditorialGuide() {
 
                         <div className="flex items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-white">
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-indigo-300">Siguiente paso</p>
+                            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-blue-300">Siguiente paso</p>
                             <p className="mt-1 text-xs font-semibold">Volver solo a lo que todavía cuesta</p>
                           </div>
-                          <ArrowRight className="h-4 w-4 text-indigo-300" aria-hidden="true" />
+                          <ArrowRight className="h-4 w-4 text-blue-300" aria-hidden="true" />
                         </div>
                       </div>
                     </div>
@@ -465,14 +465,14 @@ export function UnlamEditorialGuide() {
                 </section>
 
                 <section className="mt-16 border-t border-slate-200 pt-8">
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-indigo-700">Seguir estudiando</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-700">Seguir estudiando</p>
                   <div className="mt-5 grid gap-4 sm:grid-cols-3">
                     {[
                       ['/estudiar-pdf-con-ia', 'Estudiar un PDF con IA'],
                       ['/funciones/resumir-pdf-con-ia', 'Resumir un PDF para estudiar'],
                       ['/funciones/crear-flashcards-desde-pdf', 'Crear flashcards desde un PDF'],
                     ].map(([href, label]) => (
-                      <Link key={href} href={href} className="border-t-2 border-[#17201b] pt-3 text-sm font-bold leading-6 transition hover:text-indigo-700">
+                      <Link key={href} href={href} className="border-t-2 border-[#17201b] pt-3 text-sm font-bold leading-6 transition hover:text-blue-700">
                         {label} <ArrowRight className="ml-1 inline h-3.5 w-3.5" aria-hidden="true" />
                       </Link>
                     ))}

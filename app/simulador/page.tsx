@@ -39,7 +39,7 @@ async function SimuladorContent({
     return (
       <div className="flex min-h-screen items-center justify-center bg-white p-6 text-center">
         <div className="w-full max-w-lg rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.08)] sm:p-8">
-          <p className="text-xs font-bold tracking-[0.16em] text-indigo-700 uppercase">
+          <p className="text-xs font-bold tracking-[0.16em] text-blue-700 uppercase">
             Práctica no disponible
           </p>
           <h1 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950">
@@ -52,13 +52,13 @@ async function SimuladorContent({
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/explorar"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               Explorar materias
             </Link>
             <Link
               href={user ? '/dashboard' : '/'}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               {user ? 'Ir a mis materias' : 'Volver al inicio'}
             </Link>

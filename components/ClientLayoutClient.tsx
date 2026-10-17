@@ -299,7 +299,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                       </p>
                     </div>
 
-                    <span className="inline-flex shrink-0 items-center gap-1 text-indigo-600">
+                    <span className="inline-flex shrink-0 items-center gap-1 text-blue-600">
                       <Flame className="h-4 w-4" />
                       <span className="text-xs font-semibold">{streakDays}</span>
                     </span>

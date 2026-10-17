@@ -58,7 +58,7 @@ export default function ExamDatePlanPreview() {
           <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[1fr_320px]">
             <section className="min-h-[560px] rounded-[22px] border border-slate-200 bg-white p-5 sm:p-7">
               <div className="mb-6 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-indigo-50" />
+                <div className="h-10 w-10 rounded-xl bg-blue-50" />
                 <div>
                   <div className="h-3 w-40 rounded bg-slate-200" />
                   <div className="mt-2 h-2.5 w-24 rounded bg-slate-100" />
@@ -82,11 +82,11 @@ export default function ExamDatePlanPreview() {
             </section>
 
             <aside className="hidden rounded-[22px] border border-slate-200 bg-slate-50/70 p-5 lg:block">
-              <div className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-600">Tu material</div>
+              <div className="text-xs font-bold uppercase tracking-[0.14em] text-blue-600">Tu material</div>
               <div className="mt-3 text-sm font-bold text-slate-900">{SAMPLE_FILE}</div>
               <div className="mt-5 h-3 w-full rounded bg-slate-200" />
               <div className="mt-2 h-3 w-4/5 rounded bg-slate-200" />
-              <div className="mt-8 h-11 rounded-xl bg-indigo-100" />
+              <div className="mt-8 h-11 rounded-xl bg-blue-100" />
             </aside>
           </div>
         </div>
@@ -109,11 +109,11 @@ export default function ExamDatePlanPreview() {
 
               {!saved ? (
                 <div className="p-6 pb-7 sm:p-8">
-                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                  <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                     <CalendarDays className="h-5 w-5" />
                   </div>
 
-                  <p className="pr-10 text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
+                  <p className="pr-10 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
                     Organizá tu repaso
                   </p>
 
@@ -135,7 +135,7 @@ export default function ExamDatePlanPreview() {
                       value={date}
                       min={addDays(new Date().toISOString().slice(0, 10), 1)}
                       onChange={(event) => setDate(event.target.value)}
-                      className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 pr-12 text-[15px] font-semibold text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                      className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 pr-12 text-[15px] font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                     />
                     <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
                   </div>
@@ -159,7 +159,7 @@ export default function ExamDatePlanPreview() {
                     <Check className="h-5 w-5" />
                   </div>
 
-                  <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.15em] text-indigo-600">
+                  <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.15em] text-blue-600">
                     Plan de repaso
                   </p>
 
@@ -177,7 +177,7 @@ export default function ExamDatePlanPreview() {
                         key={item.label}
                         className={`grid grid-cols-[88px_1fr] gap-3 px-4 py-3.5 ${index > 0 ? 'border-t border-[#E7EBF4]' : ''}`}
                       >
-                        <div className="text-[11px] font-black text-indigo-600">{item.label}</div>
+                        <div className="text-[11px] font-black text-blue-600">{item.label}</div>
                         <div className="text-[12px] leading-5 text-slate-600">{item.text}</div>
                       </div>
                     ))}

@@ -179,7 +179,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className={`h-1 flex-1 rounded-full ${index < step ? 'bg-indigo-600' : 'bg-slate-100'}`}
+                className={`h-1 flex-1 rounded-full ${index < step ? 'bg-blue-600' : 'bg-slate-100'}`}
               />
             ))}
           </div>
@@ -189,7 +189,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'university' ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
                   <School className="h-5 w-5" />
                 </span>
                 <div>
@@ -206,23 +206,23 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                   value={universityQuery}
                   onChange={(event) => setUniversityQuery(event.target.value)}
                   placeholder="Ej. Universidad de Buenos Aires"
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                 />
               </div>
 
               {universityMatches.length ? (
-                <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
-                  <div className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600">¿Buscabas alguna de estas?</div>
+                <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50/40 p-3">
+                  <div className="text-xs font-bold uppercase tracking-[0.12em] text-blue-600">¿Buscabas alguna de estas?</div>
                   <div className="mt-2 space-y-2">
                     {universityMatches.map(({ university }) => (
                       <button
                         key={university.id}
                         type="button"
                         onClick={() => useUniversity(university)}
-                        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+                        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
                       >
                         <p className="min-w-0 font-bold leading-5 text-slate-950">{university.nombre}</p>
-                        <span className="shrink-0 text-xs font-bold text-indigo-600">Usar esta universidad</span>
+                        <span className="shrink-0 text-xs font-bold text-blue-600">Usar esta universidad</span>
                       </button>
                     ))}
                   </div>
@@ -235,7 +235,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                 type="button"
                 onClick={openMissingUniversity}
                 disabled={universityQuery.trim().length < 3}
-                className="mt-3 flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="mt-3 flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Mi universidad no aparece
               </button>
@@ -245,7 +245,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'missing-university' ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white"><School className="h-5 w-5" /></span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white"><School className="h-5 w-5" /></span>
                 <div>
                   <h1 className="text-[1.4rem] font-bold tracking-[-0.04em] text-slate-950">Agregá tu universidad</h1>
                   <p className="mt-0.5 text-sm leading-5 text-slate-500">La revisamos después. Podés seguir completando tu carrera ahora.</p>
@@ -260,7 +260,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                     value={missingUniversityName}
                     onChange={(event) => setMissingUniversityName(event.target.value)}
                     placeholder="Ej. Universidad Nacional del Delta"
-                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                   />
                 </div>
                 <div>
@@ -272,7 +272,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                       value={missingUniversityCity}
                       onChange={(event) => setMissingUniversityCity(event.target.value)}
                       placeholder="Ej. Buenos Aires"
-                      className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                      className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                     />
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                 type="button"
                 onClick={continueWithMissingUniversity}
                 disabled={missingUniversityName.trim().length < 3}
-                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:opacity-40"
+                className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-40"
               >
                 Continuar <ArrowRight className="h-4 w-4" />
               </button>
@@ -292,7 +292,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'career' && selectedUniversity ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white"><GraduationCap className="h-5 w-5" /></span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white"><GraduationCap className="h-5 w-5" /></span>
                 <div>
                   <h1 className="text-[1.4rem] font-bold tracking-[-0.04em] text-slate-950">¿Qué carrera estudiás?</h1>
                   <p className="mt-0.5 text-sm leading-5 text-slate-500">{selectedUniversity.nombre}</p>
@@ -308,7 +308,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                       value={careerQuery}
                       onChange={(event) => setCareerQuery(event.target.value)}
                       placeholder="Ej. Licenciatura en Psicología"
-                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                     />
                   </div>
                   <div>
@@ -318,14 +318,14 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                       value={facultyName}
                       onChange={(event) => setFacultyName(event.target.value)}
                       placeholder="Ej. Facultad de Psicología"
-                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                      className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => setView('done')}
                     disabled={careerQuery.trim().length < 3}
-                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:opacity-40"
+                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-40"
                   >
                     Enviar solicitud y seguir <ArrowRight className="h-4 w-4" />
                   </button>
@@ -339,7 +339,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                       <p className="mt-1 font-bold text-slate-950">{selectedCareer.nombre}</p>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setSelectedCareer(null)} className="mt-3 text-sm font-semibold text-indigo-700">Buscar otra</button>
+                  <button type="button" onClick={() => setSelectedCareer(null)} className="mt-3 text-sm font-semibold text-blue-700">Buscar otra</button>
                 </div>
               ) : (
                 <>
@@ -351,23 +351,23 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                       value={careerQuery}
                       onChange={(event) => setCareerQuery(event.target.value)}
                       placeholder="Ej. Martillero"
-                      className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                     />
                   </div>
 
                   {careerMatches.length ? (
-                    <div className="mt-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3">
-                      <div className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600">¿Buscabas alguna de estas?</div>
+                    <div className="mt-3 rounded-2xl border border-blue-100 bg-blue-50/40 p-3">
+                      <div className="text-xs font-bold uppercase tracking-[0.12em] text-blue-600">¿Buscabas alguna de estas?</div>
                       <div className="mt-2 space-y-2">
                         {careerMatches.map(({ career }) => (
                           <button
                             key={career.id}
                             type="button"
                             onClick={() => useCareer(career)}
-                            className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-indigo-300 hover:shadow-md"
+                            className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:border-blue-300 hover:shadow-md"
                           >
                             <p className="min-w-0 font-bold leading-5 text-slate-950">{career.nombre}</p>
-                            <span className="shrink-0 text-xs font-bold text-indigo-600">Usar esta carrera</span>
+                            <span className="shrink-0 text-xs font-bold text-blue-600">Usar esta carrera</span>
                           </button>
                         ))}
                       </div>
@@ -380,7 +380,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                     type="button"
                     onClick={() => setView('request-career')}
                     disabled={careerQuery.trim().length < 3}
-                    className="mt-3 flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700 disabled:opacity-40"
+                    className="mt-3 flex h-10 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:border-blue-200 hover:text-blue-700 disabled:opacity-40"
                   >
                     No es ninguna de estas · Solicitar nueva carrera
                   </button>
@@ -392,7 +392,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'request-career' && selectedUniversity ? (
             <>
               <div className="flex items-start gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white"><GraduationCap className="h-5 w-5" /></span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white"><GraduationCap className="h-5 w-5" /></span>
                 <div>
                   <h1 className="text-[1.4rem] font-bold tracking-[-0.04em] text-slate-950">Solicitá tu carrera</h1>
                   <p className="mt-0.5 text-sm leading-5 text-slate-500">{selectedUniversity.nombre}</p>
@@ -405,7 +405,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                     id="request-career"
                     value={careerQuery}
                     onChange={(event) => setCareerQuery(event.target.value)}
-                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                   />
                 </div>
                 <div>
@@ -415,14 +415,14 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
                     value={facultyName}
                     onChange={(event) => setFacultyName(event.target.value)}
                     placeholder="Ej. Facultad de Psicología"
-                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50"
+                    className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-50"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => setView('done')}
                   disabled={careerQuery.trim().length < 3}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700 disabled:opacity-40"
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-40"
                 >
                   Enviar solicitud y seguir <ArrowRight className="h-4 w-4" />
                 </button>
@@ -433,7 +433,7 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
           {view === 'done' && selectedUniversity ? (
             <div className="flex h-full flex-col justify-center">
               <div className="text-center">
-                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-[0_10px_24px_rgba(79,70,229,0.18)]"><Check className="h-6 w-6" /></span>
+                <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-[0_10px_24px_rgba(79,70,229,0.18)]"><Check className="h-6 w-6" /></span>
                 <h1 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950">Empezá con tu primer material</h1>
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
                   Tu solicitud quedó registrada. Podés subir un PDF propio o ver un ejemplo para conocer cómo lo transforma Evaluo.
@@ -443,17 +443,17 @@ export function CareerDuplicateSuggestionsDemo({ universities, careers }: Props)
               <div className="mt-6 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
                 <a
                   href="/dashboard/materiales/subir?source=onboarding_missing_catalog"
-                  className="group relative rounded-2xl border-2 border-indigo-200 bg-white p-5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition hover:border-indigo-300 hover:shadow-[0_14px_32px_rgba(79,70,229,0.10)]"
+                  className="group relative rounded-2xl border-2 border-blue-200 bg-white p-5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition hover:border-blue-300 hover:shadow-[0_14px_32px_rgba(79,70,229,0.10)]"
                 >
-                  <span className="absolute right-3 top-3 rounded-full bg-indigo-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-indigo-600">
+                  <span className="absolute right-3 top-3 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-blue-600">
                     Recomendado
                   </span>
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 transition group-hover:bg-indigo-100">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-100">
                     <FileUp className="h-5 w-5" />
                   </span>
                   <h2 className="mt-4 text-lg font-bold text-slate-950">Subir mi PDF</h2>
                   <p className="mt-1.5 max-w-[230px] text-sm leading-5 text-slate-500">Usá tu propio material y preparalo para estudiar con Evaluo.</p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600">
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-blue-600">
                     Elegir PDF <ArrowRight className="h-4 w-4" />
                   </span>
                 </a>

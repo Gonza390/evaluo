@@ -26,7 +26,7 @@ export function HomeHowItWorksInteractive() {
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-[0.68fr_1.32fr] lg:items-start lg:gap-14">
           <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-bold text-indigo-700 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1 text-xs font-bold text-blue-700 shadow-sm">
               <UploadCloud className="h-3.5 w-3.5" />
               Así de simple
             </span>
@@ -50,21 +50,21 @@ export function HomeHowItWorksInteractive() {
                 >
                   <div className="h-full px-0 py-5 sm:min-h-[190px] sm:px-5 sm:py-6">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm transition group-hover:bg-indigo-600 group-hover:text-white">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm transition group-hover:bg-blue-600 group-hover:text-white">
                         <Icon className="h-4 w-4" aria-hidden="true" />
                       </span>
-                      <span className="text-[10px] font-black text-slate-400 transition group-hover:text-indigo-700">
+                      <span className="text-[10px] font-black text-slate-400 transition group-hover:text-blue-700">
                         0{index + 1}
                       </span>
                     </div>
-                    <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950 transition group-hover:text-indigo-800">
+                    <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950 transition group-hover:text-blue-800">
                       {step.title}
                     </h3>
                     <p className="mt-2 text-xs leading-5 text-slate-600">{step.description}</p>
                   </div>
 
                   <span
-                    className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-indigo-600 transition-transform duration-200 group-hover:scale-x-100"
+                    className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-blue-600 transition-transform duration-200 group-hover:scale-x-100"
                     aria-hidden="true"
                   />
                 </article>

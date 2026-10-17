@@ -44,7 +44,7 @@ export default async function ReferidosPage() {
   if (!portal) {
     return (
       <section className="mx-auto w-full max-w-5xl px-2 py-6 sm:px-0 sm:py-10">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">Referidos</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Referidos</p>
         <h1 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
           No hay un programa asociado a esta cuenta
         </h1>
@@ -99,7 +99,7 @@ export default async function ReferidosPage() {
   return (
     <section className="mx-auto w-full max-w-6xl px-2 py-6 sm:px-0 sm:py-8">
       <div className="border-b border-slate-200 pb-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">Programa de referidos</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">Programa de referidos</p>
         <div className="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">

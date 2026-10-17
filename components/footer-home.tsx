@@ -16,7 +16,7 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
             <Link
               href="/"
               aria-label="Ir al inicio de Evaluo"
-              className="inline-flex items-center gap-2 font-bold text-slate-950 transition hover:text-indigo-700"
+              className="inline-flex items-center gap-2 font-bold text-slate-950 transition hover:text-blue-700"
             >
               <Image src="/icon.png" alt="" width={28} height={28} className="h-7 w-7" />
               Evaluo

@@ -235,18 +235,18 @@ export function PaymentCheckoutCard({
     <article
       className={`relative flex flex-col overflow-hidden rounded-3xl bg-white p-6 sm:p-8 ${
         featured
-          ? 'border-2 border-indigo-300 shadow-xl shadow-indigo-100/60'
+          ? 'border-2 border-blue-300 shadow-xl shadow-blue-100/60'
           : 'border border-slate-200'
       }`}
     >
       {featured && isSemester ? (
-        <div className="absolute right-5 top-5 rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+        <div className="absolute right-5 top-5 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
           Recomendado
         </div>
       ) : null}
 
       <div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">
+        <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
           <Sparkles className="h-3.5 w-3.5" />
           {isSemester ? 'Premium · 6 meses' : isRecovery ? 'Oferta especial' : 'Premium mensual'}
         </span>
@@ -294,7 +294,7 @@ export function PaymentCheckoutCard({
         </p>
 
         {isSemester ? (
-          <div className="mt-3 text-[11px] leading-4 text-indigo-800">
+          <div className="mt-3 text-[11px] leading-4 text-blue-800">
             <p className="font-bold">
               {offer?.semesterRemaining == null
                 ? 'Verificando los 50 cupos…'
@@ -335,8 +335,8 @@ export function PaymentCheckoutCard({
       <ul className="mt-7 flex-1 space-y-4">
         {features.map((feature) => (
           <li key={feature} className="flex gap-3 text-sm leading-6 text-slate-800">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50">
-              <Check className="h-3.5 w-3.5 text-indigo-700" aria-hidden="true" />
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-50">
+              <Check className="h-3.5 w-3.5 text-blue-700" aria-hidden="true" />
             </span>
             {feature}
           </li>
@@ -393,7 +393,7 @@ export function PaymentCheckoutCard({
           </p>
         ) : null}
         {checkoutUrl && !error ? (
-          <div role="status" className="mt-3 rounded-xl border border-indigo-100 bg-indigo-50 px-3 py-3 text-center">
+          <div role="status" className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-3 py-3 text-center">
             <p className="text-xs font-semibold text-slate-950">Mercado Pago está abierto</p>
             <p className="mt-1 text-[11px] leading-5 text-slate-600">
               Si cerraste esa pestaña, podés retomar el pago desde acá.
@@ -401,7 +401,7 @@ export function PaymentCheckoutCard({
             <button
               type="button"
               onClick={() => window.open(checkoutUrl, 'evaluo-mercadopago')}
-              className="mt-2 text-xs font-semibold text-indigo-700 underline-offset-4 hover:underline"
+              className="mt-2 text-xs font-semibold text-blue-700 underline-offset-4 hover:underline"
             >
               Volver a abrir Mercado Pago
             </button>
@@ -409,7 +409,7 @@ export function PaymentCheckoutCard({
         ) : null}
 
         <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-indigo-700" />
+          <ShieldCheck className="h-4 w-4 shrink-0 text-blue-700" />
           {isSemester
             ? 'Pago seguro con Mercado Pago · Sin renovación automática'
             : 'Pago seguro con Mercado Pago · Renovación mensual'}

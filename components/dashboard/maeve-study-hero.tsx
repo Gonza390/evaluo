@@ -65,7 +65,7 @@ export function MaeveStudyHero({
       ref={heroRef}
       className={
         isFirstPdfState
-          ? 'rounded-[1.5rem] border border-indigo-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.12),transparent_28%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] px-4 py-7 shadow-[0_18px_52px_rgba(79,70,229,0.08)] sm:px-8 sm:py-9'
+          ? 'rounded-[1.5rem] border border-blue-100 bg-[radial-gradient(circle_at_85%_10%,rgba(99,102,241,0.12),transparent_28%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] px-4 py-7 shadow-[0_18px_52px_rgba(79,70,229,0.08)] sm:px-8 sm:py-9'
           : 'rounded-[1.35rem] border border-slate-200/80 bg-white px-4 py-6 sm:px-6 sm:py-7'
       }
     >
@@ -73,7 +73,7 @@ export function MaeveStudyHero({
         <p
           className={
             isFirstPdfState
-              ? 'text-[11px] font-bold tracking-[0.16em] text-indigo-600 uppercase'
+              ? 'text-[11px] font-bold tracking-[0.16em] text-blue-600 uppercase'
               : 'text-[11px] font-semibold tracking-[0.16em] text-slate-400 uppercase'
           }
         >
@@ -98,9 +98,9 @@ export function MaeveStudyHero({
             {FIRST_PDF_STEPS.map((step, index) => (
               <div
                 key={step}
-                className="flex items-center gap-2 rounded-xl border border-indigo-100/80 bg-white/80 px-3 py-2.5 text-left shadow-[0_6px_18px_rgba(15,23,42,0.03)]"
+                className="flex items-center gap-2 rounded-xl border border-blue-100/80 bg-white/80 px-3 py-2.5 text-left shadow-[0_6px_18px_rgba(15,23,42,0.03)]"
               >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-bold text-indigo-700">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[11px] font-bold text-blue-700">
                   {index + 1}
                 </span>
                 <span className="text-[12px] font-semibold text-slate-700">{step}</span>
@@ -142,7 +142,7 @@ export function MaeveStudyHero({
                       destination: '/dashboard/explicaciones',
                     })
                   }
-                  className="inline-flex min-h-10 items-center gap-2 px-3 text-sm font-semibold text-indigo-700 transition hover:text-indigo-900"
+                  className="inline-flex min-h-10 items-center gap-2 px-3 text-sm font-semibold text-blue-700 transition hover:text-blue-900"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Tenés {pendingReinforcementCount}{' '}

@@ -87,16 +87,16 @@ const toneStyles: Record<
     primary: 'bg-rose-600 hover:bg-rose-700',
   },
   premium: {
-    surface: 'border-indigo-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F7F8FF_100%)]',
-    icon: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-    eyebrow: 'text-indigo-700',
-    primary: 'bg-indigo-600 hover:bg-indigo-700',
+    surface: 'border-blue-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F7F8FF_100%)]',
+    icon: 'border-blue-200 bg-blue-50 text-blue-700',
+    eyebrow: 'text-blue-700',
+    primary: 'bg-blue-600 hover:bg-blue-700',
   },
   loading: {
     surface: 'border-slate-200 bg-white',
-    icon: 'border-indigo-100 bg-indigo-50 text-indigo-700',
-    eyebrow: 'text-indigo-600',
-    primary: 'bg-indigo-600 hover:bg-indigo-700',
+    icon: 'border-blue-100 bg-blue-50 text-blue-700',
+    eyebrow: 'text-blue-600',
+    primary: 'bg-blue-600 hover:bg-blue-700',
   },
 };
 

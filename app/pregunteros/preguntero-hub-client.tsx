@@ -161,14 +161,14 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
               onFocus={() => void ensureCatalog().catch(() => undefined)}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar universidad, carrera o materia"
-              className="h-11 w-full rounded-xl border border-slate-300 bg-white pr-11 pl-10 text-sm text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white pr-11 pl-10 text-sm text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery('')}
                 aria-label="Limpiar búsqueda"
-                className="absolute top-1/2 right-2.5 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="absolute top-1/2 right-2.5 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -180,7 +180,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
             <select
               value={universidad}
               onChange={(event) => setUniversidad(event.target.value)}
-              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="all">Todas las universidades</option>
               {universidades.map((nombre) => (
@@ -210,7 +210,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
               setQuery('');
               setUniversidad('all');
             }}
-            className="mt-3 text-sm font-bold text-indigo-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="mt-3 text-sm font-bold text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Ver todos los pregunteros
           </button>
@@ -231,10 +231,10 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
                   aria-expanded={isExpanded}
                   aria-controls={panelId}
                   aria-busy={isLoadingCareer}
-                  className="group flex w-full min-w-0 items-center gap-3 px-1 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+                  className="group flex w-full min-w-0 items-center gap-3 px-1 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-bold tracking-[0.08em] text-indigo-700 uppercase">{carrera.universidadNombre}</p>
+                    <p className="text-xs font-bold tracking-[0.08em] text-blue-700 uppercase">{carrera.universidadNombre}</p>
                     <h2 className="mt-1 break-words text-base font-bold tracking-[-0.025em] text-slate-950 sm:text-lg">{carrera.carreraNombre}</h2>
                     <p className="mt-1 text-sm text-slate-600">
                       {isLoadingCareer
@@ -242,7 +242,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
                         : `${carrera.materiaCount} ${carrera.materiaCount === 1 ? 'materia con preguntero' : 'materias con preguntero'}`}
                     </p>
                   </div>
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition group-hover:bg-slate-100 group-hover:text-indigo-700">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition group-hover:bg-slate-100 group-hover:text-blue-700">
                     <ChevronDown className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} aria-hidden="true" />
                   </span>
                 </button>
@@ -253,11 +253,11 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
                       <li key={materia.materiaId} className="min-w-0">
                         <Link
                           href={`/pregunteros/${buildSeoEntitySlug(materia.materiaNombre, materia.materiaId)}`}
-                          className="group flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-indigo-50 hover:text-indigo-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                          className="group flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-700 transition hover:bg-blue-50 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         >
-                          <BookOpen className="h-4 w-4 shrink-0 text-slate-500 group-hover:text-indigo-700" aria-hidden="true" />
+                          <BookOpen className="h-4 w-4 shrink-0 text-slate-500 group-hover:text-blue-700" aria-hidden="true" />
                           <span className="min-w-0 flex-1 break-words">{materia.materiaNombre}</span>
-                          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-indigo-700" aria-hidden="true" />
+                          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-700" aria-hidden="true" />
                         </Link>
                       </li>
                     ))}
@@ -274,7 +274,7 @@ export function PregunteroHubClient({ carreras }: { carreras: PregunteroHubCarre
           <button
             type="button"
             onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
           >
             Ver más carreras
           </button>

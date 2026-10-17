@@ -30,21 +30,21 @@ export default async function AdministradorLayout({ children }: { children: Reac
       <div className="fixed right-5 bottom-5 z-[70] hidden items-center gap-2 lg:flex">
         <Link
           href="/administrador"
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-lg transition hover:border-indigo-200 hover:text-indigo-700"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-lg transition hover:border-blue-200 hover:text-blue-700"
         >
           <LayoutDashboard className="h-4 w-4" />
           Panel
         </Link>
         <Link
           href="/administrador/feedback"
-          className="inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-200 bg-white px-3 text-xs font-semibold text-indigo-700 shadow-lg transition hover:bg-indigo-50"
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-blue-200 bg-white px-3 text-xs font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
         >
           <MessageSquareText className="h-4 w-4" />
           Feedback
         </Link>
         <Link
           href="/administrador/solicitudes"
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-3 text-xs font-semibold text-white shadow-lg transition hover:bg-indigo-700"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-blue-600 px-3 text-xs font-semibold text-white shadow-lg transition hover:bg-blue-700"
         >
           <Building2 className="h-4 w-4" />
           Solicitudes universidades

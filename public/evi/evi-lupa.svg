@@ -23,6 +23,6 @@
 <path d="M188 112 L186 150" stroke="#FFC933" stroke-width="5" stroke-linecap="round" fill="none"/>
 <circle cx="186" cy="152" r="8.5" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
 <circle cx="188" cy="96" r="17" fill="#CFE0FF" fill-opacity="0.85" stroke="#1B1B3A" stroke-width="5"/>
-<path d="M180.5 97 L186 102.5 L195.5 90" stroke="#2F4BFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M180.5 97 L186 102.5 L195.5 90" stroke="#2563EB" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 <path d="M179 89 Q182 83 188 82" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" fill="none"/>
 </svg>

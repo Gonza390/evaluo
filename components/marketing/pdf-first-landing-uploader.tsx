@@ -105,11 +105,11 @@ export function PdfFirstLandingUploader() {
 
   return (
     <div className="relative">
-      <div className="absolute -inset-6 rounded-[40px] bg-indigo-100/50 blur-3xl" aria-hidden="true" />
+      <div className="absolute -inset-6 rounded-[40px] bg-blue-100/50 blur-3xl" aria-hidden="true" />
       <div className="relative rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-6">
         <div className="flex items-center justify-between gap-3 px-1 pb-4">
           <div>
-            <p className="text-[10px] font-black tracking-[0.14em] text-indigo-700 uppercase">Empezá con tu archivo</p>
+            <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">Empezá con tu archivo</p>
             <p className="mt-1 text-sm font-bold text-slate-950">Primero elegís el PDF. Después creás tu cuenta.</p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex">
@@ -133,7 +133,7 @@ export function PdfFirstLandingUploader() {
           <button
             type="button"
             onClick={chooseFile}
-            className="group flex min-h-[235px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed border-slate-300 bg-slate-50/80 px-6 text-center transition hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+            className="group flex min-h-[235px] w-full flex-col items-center justify-center rounded-[22px] border-2 border-dashed border-slate-300 bg-slate-50/80 px-6 text-center transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
             <span className="from-brand to-brand-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
               <UploadCloud className="h-6 w-6" aria-hidden="true" />
@@ -144,7 +144,7 @@ export function PdfFirstLandingUploader() {
         ) : (
           <div>
             <div className="flex items-center gap-3 rounded-[20px] border border-slate-200 bg-slate-50 p-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700 shadow-sm">
                 <FileText className="h-5 w-5" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
@@ -168,7 +168,7 @@ export function PdfFirstLandingUploader() {
               type="button"
               onClick={() => void continueWithFile()}
               disabled={saving}
-              className="from-brand to-brand-2 mt-4 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
+              className="from-brand to-brand-2 mt-4 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-70"
             >
               {saving ? <Loader2 className="h-4.5 w-4.5 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="h-4.5 w-4.5" aria-hidden="true" />}
               {saving ? 'Guardando tu selección…' : 'Crear material de estudio'}
@@ -178,7 +178,7 @@ export function PdfFirstLandingUploader() {
               type="button"
               onClick={chooseFile}
               disabled={saving}
-              className="mt-3 w-full text-center text-xs font-semibold text-slate-500 transition hover:text-indigo-700 disabled:opacity-50"
+              className="mt-3 w-full text-center text-xs font-semibold text-slate-500 transition hover:text-blue-700 disabled:opacity-50"
             >
               Cambiar archivo
             </button>

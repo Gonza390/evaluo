@@ -40,7 +40,7 @@ export default function PdfUploadQuotaPreviewPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-2xl space-y-10">
         <header>
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-700">Preview interno</p>
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Preview interno</p>
           <h1 className="mt-2 text-3xl font-bold tracking-[-0.05em] text-slate-950">
             Estados de carga de PDF
           </h1>

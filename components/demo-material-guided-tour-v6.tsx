@@ -533,7 +533,7 @@ export function DemoMaterialGuidedTourV6({
           {spotlights.map((spotlight, index) => (
             <div
               key={`${spotlight.kind}-border-${index}`}
-              className="pointer-events-none absolute border-2 border-indigo-300 shadow-[0_0_0_2px_rgba(255,255,255,0.46),0_12px_32px_rgba(15,23,42,0.14)]"
+              className="pointer-events-none absolute border-2 border-blue-300 shadow-[0_0_0_2px_rgba(255,255,255,0.46),0_12px_32px_rgba(15,23,42,0.14)]"
               style={{
                 top: spotlight.top,
                 left: spotlight.left,
@@ -565,7 +565,7 @@ export function DemoMaterialGuidedTourV6({
         <div className="p-4.5 sm:p-5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-sm font-black text-indigo-600">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-sm font-black text-blue-600">
                 {stepIndex + 1}
               </span>
               <span className="text-xs font-bold tracking-[0.1em] text-slate-400 uppercase">
@@ -596,7 +596,7 @@ export function DemoMaterialGuidedTourV6({
             <button
               type="button"
               onClick={() => setPrepareNonce((current) => current + 1)}
-              className="mt-5 flex h-10 w-full items-center justify-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700"
+              className="mt-5 flex h-10 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
             >
               Reintentar este paso
             </button>
@@ -608,7 +608,7 @@ export function DemoMaterialGuidedTourV6({
                   markSeen();
                   trackMarketingEvent('demo_material_tour_upload_clicked', { source });
                 }}
-                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition hover:bg-indigo-700"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(79,70,229,0.18)] transition hover:bg-blue-700"
               >
                 <FileUp className="h-4 w-4" />
                 Subir mi PDF
@@ -636,7 +636,7 @@ export function DemoMaterialGuidedTourV6({
               <button
                 type="button"
                 onClick={() => setStepIndex((current) => Math.min(TOUR_STEPS.length - 1, current + 1))}
-                className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white transition hover:bg-indigo-700"
+                className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-bold text-white transition hover:bg-blue-700"
               >
                 Siguiente
                 <ArrowRight className="h-4 w-4" />

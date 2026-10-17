@@ -115,7 +115,7 @@ export function SeoStudyLanding({
   trackingPrefix,
 }: SeoStudyLandingProps) {
   return (
-    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <MarketingAnalyticsSlot />
       <JsonLd
         data={buildBreadcrumbJsonLd([
@@ -131,7 +131,7 @@ export function SeoStudyLanding({
 
           <div className="grid items-center gap-10 pt-10 sm:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:pt-20">
             <div className="min-w-0">
-              <span className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50/80 px-3.5 py-1.5 text-[11px] font-bold text-indigo-700 shadow-sm sm:text-xs">
+              <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3.5 py-1.5 text-[11px] font-bold text-blue-700 shadow-sm sm:text-xs">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {eyebrow}
               </span>
@@ -157,7 +157,7 @@ export function SeoStudyLanding({
                     cta_name: 'subir_pdf',
                     destination: uploadHref,
                   }}
-                  className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:px-8"
+                  className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:px-8"
                 >
                   <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
                   {primaryCtaLabel}
@@ -167,7 +167,7 @@ export function SeoStudyLanding({
                 {secondaryCta ? (
                   <Link
                     href={secondaryCta.href}
-                    className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 sm:px-7"
+                    className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 shadow-[0_6px_20px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:px-7"
                   >
                     {secondaryCta.label}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -190,7 +190,7 @@ export function SeoStudyLanding({
               <div className="relative overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.11)]">
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                       <FileText className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <div>
@@ -210,7 +210,7 @@ export function SeoStudyLanding({
                       <div
                         key={label}
                         className={`border-l-2 px-3 py-2.5 text-[10px] font-bold ${
-                          index === 0 ? 'border-indigo-600 text-indigo-800' : 'border-transparent text-slate-500'
+                          index === 0 ? 'border-blue-600 text-blue-800' : 'border-transparent text-slate-500'
                         }`}
                       >
                         {label}
@@ -219,7 +219,7 @@ export function SeoStudyLanding({
                   </aside>
 
                   <div className="min-w-0 p-5 sm:p-6 lg:p-7">
-                    <p className="text-[10px] font-bold tracking-[0.14em] text-indigo-700 uppercase">Mismo material, distintas formas de estudiar</p>
+                    <p className="text-[10px] font-bold tracking-[0.14em] text-blue-700 uppercase">Mismo material, distintas formas de estudiar</p>
                     <h2 className="mt-2 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">
                       Pasá de leer a practicar sin cambiar de apunte.
                     </h2>
@@ -231,7 +231,7 @@ export function SeoStudyLanding({
                         ['Ejercicios', 'Práctica para comprobar qué entendiste del material.'],
                       ].map(([label, text], index) => (
                         <div key={label} className="grid grid-cols-[28px_minmax(0,1fr)] gap-3 border-b border-slate-100 py-4">
-                          <span className="text-[10px] font-black text-indigo-700">0{index + 1}</span>
+                          <span className="text-[10px] font-black text-blue-700">0{index + 1}</span>
                           <div>
                             <p className="text-[11px] font-bold text-slate-900">{label}</p>
                             <p className="mt-1 text-[10px] leading-4 text-slate-600">{text}</p>
@@ -264,7 +264,7 @@ export function SeoStudyLanding({
                 const Icon = iconMap[feature.icon];
                 return (
                   <article key={feature.title} className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] sm:p-6">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
                       <Icon className="h-4.5 w-4.5" aria-hidden="true" />
                     </span>
                     <h3 className="mt-5 text-sm font-bold tracking-tight text-slate-950 sm:text-[15px]">{feature.title}</h3>
@@ -279,7 +279,7 @@ export function SeoStudyLanding({
         <section className="border-b border-slate-100 bg-slate-50/50 py-16 sm:py-24">
           <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start lg:gap-16 lg:px-10">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">Cómo funciona</p>
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Cómo funciona</p>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">{stepsHeading}</h2>
               <p className="mt-4 max-w-[520px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{stepsIntro}</p>
             </div>
@@ -287,7 +287,7 @@ export function SeoStudyLanding({
             <div className="border-t border-slate-200">
               {steps.map((step, index) => (
                 <div key={step.title} className="grid grid-cols-[42px_minmax(0,1fr)] gap-4 border-b border-slate-200 py-5 sm:py-6">
-                  <span className="pt-0.5 text-[10px] font-black text-indigo-700">0{index + 1}</span>
+                  <span className="pt-0.5 text-[10px] font-black text-blue-700">0{index + 1}</span>
                   <div>
                     <h3 className="text-sm font-bold tracking-tight text-slate-950">{step.title}</h3>
                     <p className="mt-1.5 text-xs leading-5 text-slate-600 sm:text-[13px] sm:leading-6">{step.description}</p>
@@ -301,7 +301,7 @@ export function SeoStudyLanding({
         <section className="border-b border-slate-100 bg-white py-16 sm:py-24">
           <div className="mx-auto grid w-full max-w-[1240px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-10">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">{exampleEyebrow}</p>
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">{exampleEyebrow}</p>
               <h2 className="mt-4 max-w-[560px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">{exampleHeading}</h2>
               <p className="mt-4 max-w-[560px] text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{exampleDescription}</p>
             </div>
@@ -313,7 +313,7 @@ export function SeoStudyLanding({
               <dl className="divide-y divide-slate-100 px-5 sm:px-6">
                 {exampleItems.map((item) => (
                   <div key={item.label} className="grid gap-1 py-4 sm:grid-cols-[150px_minmax(0,1fr)] sm:gap-5 sm:py-5">
-                    <dt className="text-[10px] font-bold tracking-[0.08em] text-indigo-700 uppercase">{item.label}</dt>
+                    <dt className="text-[10px] font-bold tracking-[0.08em] text-blue-700 uppercase">{item.label}</dt>
                     <dd className="text-xs leading-5 text-slate-700 sm:text-[13px] sm:leading-6">{item.value}</dd>
                   </div>
                 ))}
@@ -334,11 +334,11 @@ export function SeoStudyLanding({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="group rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.07)] sm:p-6"
+                  className="group rounded-[22px] border border-slate-200 bg-white p-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.07)] sm:p-6"
                 >
-                  <h3 className="text-sm font-bold tracking-tight text-slate-950 group-hover:text-indigo-700 sm:text-[15px]">{item.title}</h3>
+                  <h3 className="text-sm font-bold tracking-tight text-slate-950 group-hover:text-blue-700 sm:text-[15px]">{item.title}</h3>
                   <p className="mt-2 text-xs leading-5 text-slate-600 sm:text-[13px] sm:leading-6">{item.description}</p>
-                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-indigo-700">
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-blue-700">
                     Ver herramienta
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
@@ -351,7 +351,7 @@ export function SeoStudyLanding({
         <section className="border-b border-slate-100 bg-white py-16 sm:py-24">
           <div className="mx-auto grid w-full max-w-[1040px] gap-10 px-4 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-14">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-indigo-700 uppercase">Preguntas frecuentes</p>
+              <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Preguntas frecuentes</p>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl">Antes de subir tu material</h2>
             </div>
 
@@ -372,7 +372,7 @@ export function SeoStudyLanding({
           <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
             <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_40%),linear-gradient(180deg,#050B2C_0%,var(--heading)_100%)] p-8 text-center shadow-xl md:p-14">
               <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center">
-                <Sparkles className="h-5 w-5 text-indigo-200" aria-hidden="true" />
+                <Sparkles className="h-5 w-5 text-blue-200" aria-hidden="true" />
                 <h2 className="mt-5 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
                   Probalo con el material que ya estás estudiando.
                 </h2>
@@ -389,9 +389,9 @@ export function SeoStudyLanding({
                   }}
                   className="mt-8 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-white px-7 text-sm font-bold text-slate-950 shadow-md transition hover:-translate-y-0.5 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <UploadCloud className="h-4.5 w-4.5 text-indigo-700" aria-hidden="true" />
+                  <UploadCloud className="h-4.5 w-4.5 text-blue-700" aria-hidden="true" />
                   {primaryCtaLabel}
-                  <ArrowRight className="h-4 w-4 text-indigo-700" aria-hidden="true" />
+                  <ArrowRight className="h-4 w-4 text-blue-700" aria-hidden="true" />
                 </TrackedLink>
               </div>
             </div>

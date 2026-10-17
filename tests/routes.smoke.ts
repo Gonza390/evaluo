@@ -252,7 +252,7 @@ assert.doesNotMatch(
   /animate-pulse rounded-full bg-white(?:["\s]|$)/
 );
 assert.match(materiaStudyHomeSource, /bg-primary hover:bg-primary\/90/);
-assert.match(materiaStudyHomeSource, /border border-indigo-200 bg-white/);
+assert.match(materiaStudyHomeSource, /border border-blue-200 bg-white/);
 
 assert.match(materialJobsSource, /STUDENT_MATERIAL_JOB_LEASE_MS = 7 \* 60 \* 1000/);
 assert.match(materialJobsSource, /processing_status: 'failed'/);

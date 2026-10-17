@@ -63,7 +63,7 @@ export const metadata: Metadata = {
 
 export default function ParcialesLanding() {
   return (
-    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="animate-page-enter w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100 selection:text-blue-900">
       <JsonLd
         data={[
           buildCollectionPageJsonLd({
@@ -79,8 +79,8 @@ export default function ParcialesLanding() {
       <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.14),transparent_35%),radial-gradient(circle_at_top_left,rgba(37,99,235,0.08),transparent_25%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
         <div className="mx-auto w-full max-w-[1240px] px-4 pt-10 pb-16 sm:px-8 sm:pt-20 sm:pb-24">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50/80 px-3 py-1.5 text-[12px] font-bold text-indigo-700 ring-1 ring-indigo-200/50">
-              <FileText className="h-4 w-4 text-indigo-600" />
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-50/80 px-3 py-1.5 text-[12px] font-bold text-blue-700 ring-1 ring-blue-200/50">
+              <FileText className="h-4 w-4 text-blue-600" />
               Pregunteros por materia
             </span>
 
@@ -109,7 +109,7 @@ export default function ParcialesLanding() {
       <section className="py-16 sm:py-24">
         <div className="mx-auto w-full max-w-[1240px] px-6 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3.5 py-1 text-xs font-bold text-indigo-700">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3.5 py-1 text-xs font-bold text-blue-700">
               <Sparkles className="h-3.5 w-3.5" />
               ¿Por qué practicar preguntas?
             </span>
@@ -146,9 +146,9 @@ export default function ParcialesLanding() {
               return (
                 <article
                   key={item.title}
-                  className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-indigo-300 hover:shadow-md"
+                  className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="mt-5 text-[15px] font-bold tracking-tight text-slate-800">
@@ -238,7 +238,7 @@ export default function ParcialesLanding() {
             <div className="mt-8">
               <Link
                 href="/pregunteros"
-                className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-8 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60"
+                className="from-brand to-brand-2 inline-flex h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-8 text-sm font-bold text-white shadow-lg shadow-blue-950/40 transition hover:translate-y-[-1px] hover:shadow-blue-950/60"
               >
                 <PlayCircle className="h-4.5 w-4.5" />
                 Ver pregunteros

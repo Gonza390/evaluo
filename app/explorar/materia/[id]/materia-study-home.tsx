@@ -439,7 +439,7 @@ export default function MateriaStudyHome({
                   setPracticeOpen(true);
                   trackAction('materia_practice_picker_opened', { source: 'materia_action_cta' });
                 }}
-                className="text-primary hover:border-primary/40 hover:bg-primary/5 mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-white px-5 text-sm font-semibold transition sm:w-auto"
+                className="text-primary hover:border-primary/40 hover:bg-primary/5 mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-white px-5 text-sm font-semibold transition sm:w-auto"
               >
                 <Zap className="h-4 w-4" />
                 Ver prácticas disponibles

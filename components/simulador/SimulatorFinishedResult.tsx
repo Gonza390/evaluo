@@ -247,8 +247,8 @@ export function SimulatorFinishedResult({
             </div>
 
             <div className="p-6 sm:p-8 lg:p-10">
-              <div className="rounded-[24px] border border-indigo-200 bg-[linear-gradient(135deg,#F5F3FF_0%,#FFFFFF_58%,#EEF2FF_100%)] p-5 sm:p-6">
-                <p className="text-[12px] font-bold tracking-[0.18em] text-indigo-700 uppercase">Siguiente paso recomendado</p>
+              <div className="rounded-[24px] border border-blue-200 bg-[linear-gradient(135deg,#F5F3FF_0%,#FFFFFF_58%,#EEF2FF_100%)] p-5 sm:p-6">
+                <p className="text-[12px] font-bold tracking-[0.18em] text-blue-700 uppercase">Siguiente paso recomendado</p>
 
                 {wrong > 0 ? (
                   !materialContextReady && userId ? (
@@ -312,7 +312,7 @@ export function SimulatorFinishedResult({
                       {userId ? (
                         <Link
                           href={misErroresHref}
-                          className="mt-4 inline-flex text-sm font-semibold text-slate-500 transition hover:text-indigo-700"
+                          className="mt-4 inline-flex text-sm font-semibold text-slate-500 transition hover:text-blue-700"
                         >
                           Ver qué fallé
                         </Link>
@@ -336,7 +336,7 @@ export function SimulatorFinishedResult({
                   <button
                     type="button"
                     onClick={onNewExam}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-indigo-700"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-blue-700"
                   >
                     <RotateCcw className="h-4 w-4" />
                     Hacer otro Simulador

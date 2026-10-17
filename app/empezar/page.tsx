@@ -124,7 +124,7 @@ export default async function EmpezarPage() {
 
           <div className="max-h-[calc(100vh-2rem)] overflow-y-auto px-5 pb-5 pt-7 sm:max-h-[calc(100vh-3rem)] sm:px-8 sm:pb-7 sm:pt-8">
             <header className="pr-8 text-center">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-600">
                 Empezá con tus apuntes
               </p>
               <h1
@@ -143,7 +143,7 @@ export default async function EmpezarPage() {
 
             <div className="mx-auto mt-6 max-w-[430px] space-y-4 sm:mt-7">
               <div className="flex gap-3.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                   <FileUp className="h-[18px] w-[18px]" />
                 </span>
                 <div>
@@ -181,7 +181,7 @@ export default async function EmpezarPage() {
 
             {hasPendingAcademicContext ? (
               <div className="mx-auto mt-5 flex max-w-[430px] items-start gap-2 rounded-xl bg-slate-50 px-3 py-2.5 text-[11px] leading-5 text-slate-500">
-                <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-600" />
                 Tu carrera o materia está en revisión, pero podés empezar ahora. Tu material se mantiene privado.
               </div>
             ) : null}
@@ -197,7 +197,7 @@ export default async function EmpezarPage() {
 
               <Link
                 href="/demo/material-estudio"
-                className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-2 text-center text-sm font-semibold text-indigo-600 transition hover:text-indigo-800"
+                className="mt-2.5 inline-flex min-h-10 w-full items-center justify-center gap-2 text-center text-sm font-semibold text-blue-600 transition hover:text-blue-800"
               >
                 <Eye className="h-4 w-4" />
                 Ver cómo queda un PDF procesado

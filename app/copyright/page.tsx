@@ -46,7 +46,7 @@ export default function CopyrightPage() {
             </Link>
 
             <div className="mt-8 border-b border-slate-200 pb-8">
-              <p className="text-xs font-bold uppercase tracking-[0.26em] text-indigo-600">Legal</p>
+              <p className="text-xs font-bold uppercase tracking-[0.26em] text-blue-600">Legal</p>
               <h1 className="mt-4 text-4xl font-bold tracking-[-0.06em] text-slate-950 sm:text-5xl">
                 Copyright
               </h1>

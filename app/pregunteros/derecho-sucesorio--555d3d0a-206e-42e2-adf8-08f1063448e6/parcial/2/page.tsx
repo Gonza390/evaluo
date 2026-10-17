@@ -143,7 +143,7 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
 
         <section className="mx-auto w-full max-w-[1160px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="min-w-0">
-            <p className="text-[11px] font-black tracking-[0.14em] text-indigo-700 uppercase">
+            <p className="text-[11px] font-black tracking-[0.14em] text-blue-700 uppercase">
               Preguntas de muestra
             </p>
             <div className="mt-2 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -163,7 +163,7 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
                     className="min-w-0 rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-5"
                   >
                     <div className="flex min-w-0 gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-[11px] font-black text-indigo-700">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[11px] font-black text-blue-700">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -199,9 +199,9 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
           <div className="grid min-w-0 gap-4 md:grid-cols-3">
             <Link
               href={pregunteroHref}
-              className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30"
+              className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-blue-200 hover:bg-blue-50/30"
             >
-              <ListChecks className="h-5 w-5 text-indigo-600" aria-hidden="true" />
+              <ListChecks className="h-5 w-5 text-blue-600" aria-hidden="true" />
               <p className="mt-3 text-sm font-bold text-slate-950">Preguntero completo</p>
               <p className="mt-1 text-xs leading-5 [overflow-wrap:anywhere] text-slate-500">
                 Volvé a todas las preguntas de {data.materiaNombre}.
@@ -209,9 +209,9 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
             </Link>
             <Link
               href={materiaHref}
-              className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30"
+              className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-blue-200 hover:bg-blue-50/30"
             >
-              <BookOpen className="h-5 w-5 text-indigo-600" aria-hidden="true" />
+              <BookOpen className="h-5 w-5 text-blue-600" aria-hidden="true" />
               <p className="mt-3 text-sm font-bold text-slate-950">Ver la materia</p>
               <p className="mt-1 text-xs leading-5 text-slate-500">
                 Entrá al contexto completo de Derecho Sucesorio.
@@ -219,9 +219,9 @@ export default async function DerechoSucesorioParcial2Page({ searchParams }: Pag
             </Link>
             <Link
               href={simuladorHref}
-              className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-indigo-200 hover:bg-indigo-50/30"
+              className="min-w-0 rounded-[20px] border border-slate-200 p-5 transition hover:border-blue-200 hover:bg-blue-50/30"
             >
-              <Target className="h-5 w-5 text-indigo-600" aria-hidden="true" />
+              <Target className="h-5 w-5 text-blue-600" aria-hidden="true" />
               <p className="mt-3 text-sm font-bold text-slate-950">Practicar el parcial</p>
               <p className="mt-1 text-xs leading-5 text-slate-500">
                 Medí cómo venís y usá los errores para ajustar tu repaso.

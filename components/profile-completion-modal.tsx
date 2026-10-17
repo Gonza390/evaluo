@@ -717,15 +717,15 @@ export function ProfileCompletionModal({
                                 value={uni.nombre}
                                 onSelect={() => selectUniversidad(uni)}
                                 className={cn(
-                                  'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-indigo-50',
+                                  'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-blue-50',
                                   universidadId === uni.id
-                                    ? 'bg-indigo-50 text-indigo-700'
+                                    ? 'bg-blue-50 text-blue-700'
                                     : 'text-slate-700'
                                 )}
                               >
                                 <span className="font-medium">{uni.nombre}</span>
                                 {universidadId === uni.id && (
-                                  <CheckCircle2 className="h-4 w-4 shrink-0 text-indigo-600" />
+                                  <CheckCircle2 className="h-4 w-4 shrink-0 text-blue-600" />
                                 )}
                               </CommandItem>
                             ))}
@@ -807,15 +807,15 @@ export function ProfileCompletionModal({
                                 value={car.nombre}
                                 onSelect={() => selectCarrera(car)}
                                 className={cn(
-                                  'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-indigo-50',
+                                  'flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-blue-50',
                                   carreraId === car.id
-                                    ? 'bg-indigo-50 text-indigo-700'
+                                    ? 'bg-blue-50 text-blue-700'
                                     : 'text-slate-700'
                                 )}
                               >
                                 <span className="font-medium">{car.nombre}</span>
                                 {carreraId === car.id && (
-                                  <CheckCircle2 className="h-4 w-4 shrink-0 text-indigo-600" />
+                                  <CheckCircle2 className="h-4 w-4 shrink-0 text-blue-600" />
                                 )}
                               </CommandItem>
                             ))}

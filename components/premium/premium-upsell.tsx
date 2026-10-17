@@ -127,15 +127,15 @@ export function PremiumUpsell({
       className="min-h-[440px] w-full sm:min-h-[500px]"
     >
       {features && features.length > 0 ? (
-        <div className="rounded-2xl border border-indigo-100 bg-white/80 p-4 text-left">
-          <p className="flex items-center gap-1.5 text-xs font-bold tracking-[0.1em] text-indigo-700 uppercase">
+        <div className="rounded-2xl border border-blue-100 bg-white/80 p-4 text-left">
+          <p className="flex items-center gap-1.5 text-xs font-bold tracking-[0.1em] text-blue-700 uppercase">
             <Crown className="h-3.5 w-3.5" />
             Con Premium desbloqueás
           </p>
           <ul className="mt-3 space-y-2.5">
             {features.map((feature) => (
               <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
                 <span>{feature}</span>
               </li>
             ))}

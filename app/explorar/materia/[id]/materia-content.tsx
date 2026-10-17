@@ -852,7 +852,7 @@ export default function MateriaContent({
                         materia_id: materiaId,
                       });
                     }}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-[#4F5DFF] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4050f0]"
                   >
                     <Download className="h-4 w-4" />
                     Descargar
@@ -1005,7 +1005,7 @@ export default function MateriaContent({
                     });
                     void handleSecureDownload(recurso);
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#4F5DFF] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4050f0]"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2563EB] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4050f0]"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Descargar
@@ -1389,7 +1389,7 @@ export default function MateriaContent({
                     value={busqueda}
                     onChange={(event) => setBusqueda(event.target.value)}
                     placeholder="Buscar resumen..."
-                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pr-4 pl-10 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:ring-2 focus:ring-[#4F5DFF]/20 focus:outline-none sm:h-10 sm:w-72"
+                    className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pr-4 pl-10 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 focus:outline-none sm:h-10 sm:w-72"
                   />
                 </div>
               </div>
@@ -1403,11 +1403,11 @@ export default function MateriaContent({
                   <button
                     key={unidad.id}
                     onClick={() => setActiveUnidad(String(unidad.id))}
-                    className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
+                    className={`surface-card rounded-[var(--radius-card)] p-4 text-left transition ${activeUnidad === String(unidad.id) ? 'border-[#2563EB] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
                   >
                     <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
                     <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
-                    <p className="mt-3 text-xs font-medium text-[#4F5DFF]">
+                    <p className="mt-3 text-xs font-medium text-[#2563EB]">
                       {realResumenesCount} resúmenes
                     </p>
                   </button>
@@ -1430,11 +1430,11 @@ export default function MateriaContent({
                   <div key={unidad.id} className="space-y-3">
                     <button
                       onClick={() => setActiveUnidad(String(unidad.id))}
-                      className={`surface-card w-full rounded-[var(--radius-card)] p-4 text-left transition ${isActiveModule ? 'border-[#4F5DFF] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
+                      className={`surface-card w-full rounded-[var(--radius-card)] p-4 text-left transition ${isActiveModule ? 'border-[#2563EB] bg-[#EEF2FF] shadow-[var(--shadow-card)]' : 'hover:border-slate-300'}`}
                     >
                       <p className="text-sm font-semibold text-slate-900">{unidad.nombre}</p>
                       <p className="mt-2 text-xs leading-5 text-slate-500">{unidad.descripcion}</p>
-                      <p className="mt-3 text-xs font-medium text-[#4F5DFF]">
+                      <p className="mt-3 text-xs font-medium text-[#2563EB]">
                         {realResumenesCount} resúmenes
                       </p>
                     </button>
@@ -1589,7 +1589,7 @@ export default function MateriaContent({
                           <button
                             type="button"
                             onClick={() => void handleSharePreguntero(simulador.parcial)}
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#C7D2FE] hover:text-[#4F5DFF]"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-[#C7D2FE] hover:text-[#2563EB]"
                             aria-label={`Compartir ${simulador.titulo}`}
                             title="Compartir"
                           >
@@ -1615,7 +1615,7 @@ export default function MateriaContent({
                             label: simulador.titulo,
                           })
                         }
-                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0] sm:w-auto"
+                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4050f0] sm:w-auto"
                       >
                         Iniciar Preguntero
                       </Link>
