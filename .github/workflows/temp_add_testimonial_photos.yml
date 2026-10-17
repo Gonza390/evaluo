@@ -1,0 +1,157 @@
+name: temp_add_testimonial_photos
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  add-photos:
+    if: github.event.head_commit.message != 'chore: remove testimonial photo workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Download and optimize testimonial photos
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/testimonials
+
+          curl -fL --retry 3 'https://images.pexels.com/photos/7968337/pexels-photo-7968337.jpeg?cs=tinysrgb&dpr=1&w=500' -o /tmp/tomas.jpg
+          curl -fL --retry 3 'https://img.magnific.com/foto-gratis/mujer-joven-alegre-que-toma-selfie_74855-4032.jpg?semt=ais_hybrid&w=740&q=80' -o /tmp/sofia.jpg
+          curl -fL --retry 3 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_AdyiB21xLW4f41KGuNQimu8xD1EhHn8Jl0qiODnD7NP6HnQLuhpwDDRE&s=10' -o /tmp/lucia.jpg
+
+          magick /tmp/tomas.jpg -auto-orient -resize '320x320^' -gravity center -extent 320x320 -strip -quality 82 public/testimonials/tomas-fernandez.webp
+          magick /tmp/sofia.jpg -auto-orient -resize '320x320^' -gravity center -extent 320x320 -strip -quality 82 public/testimonials/sofia-martinez.webp
+          magick /tmp/lucia.jpg -auto-orient -resize '320x320^' -gravity center -extent 320x320 -strip -quality 82 public/testimonials/lucia-gonzalez.webp
+
+      - name: Update landing testimonials
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('components/marketing/home-redesign.tsx')
+          text = path.read_text()
+
+          old = '''      <section className="sec" style={{ paddingBottom: '48px' }}>
+        <div className="w">
+          <div className="eb l">Lo que cuentan</div>
+          <h2 style={{ fontSize: '36px', maxWidth: '640px' }}>
+            Estudiantes que ya saben dónde están parados.
+          </h2>
+          <div className="cells">
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                “Antes estudiaba releyendo todo el apunte y no sabía si realmente estaba preparado. Con Evaluo pude practicar a partir de mi PDF y ver qué temas necesitaba repasar. Me sirvió para organizar mejor el estudio antes del parcial.”
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                Estudiante de Derecho · Universidad de Buenos Aires
+              </b>
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                “Practiqué sobre mis apuntes y aproveché mejor el tiempo de repaso.”
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                Estudiante de Psicología · Universidad Nacional de Tres de Febrero
+              </b>
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                “Con el progreso por tema supe qué volver a estudiar, en vez de releer todo.”
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                Estudiante de Marketing · Universidad Siglo 21
+    <span style={{ display: 'block', marginTop: '8px', fontSize: '11px', color: 'var(--s5)' }}>
+      Testimonio de ejemplo
+    </span>
+              </b>
+            </div>
+          </div>
+        </div>
+      </section>'''
+
+          new = '''      <section className="sec" style={{ paddingBottom: '48px' }}>
+        <div className="w">
+          <div className="eb l">Lo que cuentan</div>
+          <h2 style={{ fontSize: '36px', maxWidth: '640px' }}>
+            Estudiantes que ya saben dónde están parados.
+          </h2>
+          <div className="cells">
+            <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+                <Image src="/testimonials/sofia-martinez.webp" alt="Sofía Martínez" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <div>
+                  <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Sofía Martínez</b>
+                  <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Derecho · Universidad de Buenos Aires</span>
+                </div>
+              </div>
+              <p style={{ fontSize: '14px', margin: 0 }}>
+                “Antes estudiaba releyendo todo el apunte y no sabía si realmente estaba preparado. Con Evaluo pude practicar a partir de mi PDF y ver qué temas necesitaba repasar. Me sirvió para organizar mejor el estudio antes del parcial.”
+              </p>
+            </div>
+            <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+                <Image src="/testimonials/tomas-fernandez.webp" alt="Tomás Fernández" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <div>
+                  <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Tomás Fernández</b>
+                  <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Psicología · Universidad Nacional de Tres de Febrero</span>
+                </div>
+              </div>
+              <p style={{ fontSize: '14px', margin: 0 }}>
+                “Practiqué sobre mis apuntes y aproveché mejor el tiempo de repaso.”
+              </p>
+            </div>
+            <div style={{ padding: '22px', border: '1px solid #E2E8F0', borderRadius: '20px', background: '#fff', height: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+                <Image src="/testimonials/lucia-gonzalez.webp" alt="Lucía González" width={64} height={64} style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                <div>
+                  <b style={{ display: 'block', fontSize: '13px', color: 'var(--t)' }}>Lucía González</b>
+                  <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', lineHeight: 1.4, color: 'var(--s5)' }}>Estudiante de Marketing · Universidad Siglo 21</span>
+                </div>
+              </div>
+              <p style={{ fontSize: '14px', margin: 0 }}>
+                “Con el progreso por tema supe qué volver a estudiar, en vez de releer todo.”
+              </p>
+              <span style={{ display: 'block', marginTop: '10px', fontSize: '11px', color: 'var(--s5)' }}>Testimonio de ejemplo</span>
+            </div>
+          </div>
+        </div>
+      </section>'''
+
+          if old not in text:
+              raise SystemExit('Expected testimonial block was not found.')
+          path.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Commit testimonial changes to master
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'evaluo-admin'
+          git config user.email 'evaluo-admin@users.noreply.github.com'
+          git rm -f .github/workflows/_temp_add_testimonial_photos.yml
+          git add public/testimonials components/marketing/home-redesign.tsx
+          git commit -m 'content: add testimonial photos'
+          git push origin HEAD:master
+
+      - name: Remove temporary workflow from main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout -B main origin/main
+          git rm .github/workflows/temp_add_testimonial_photos.yml
+          git config user.name 'evaluo-admin'
+          git config user.email 'evaluo-admin@users.noreply.github.com'
+          git commit -m 'chore: remove testimonial photo workflow'
+          git push origin HEAD:main
