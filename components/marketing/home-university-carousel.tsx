@@ -77,7 +77,7 @@ export function HomeUniversityCarousel({ universities }: { universities: Univers
           0,
           Math.min(maximum, position + (elapsed / 1000) * 36 * directionRef.current)
         );
-        viewport.scrollLeft = position;
+        viewport!.scrollLeft = position;
         if (position >= maximum) directionRef.current = -1;
         else if (position <= 0) directionRef.current = 1;
       }
