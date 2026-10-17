@@ -42,9 +42,7 @@ jobs:
                   raise SystemExit(f'Expected landing testimonial placeholder not found: {old}')
               text = text.replace(old, new, 1)
 
-          marker = '''              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
-                Estudiante de Marketing · Universidad Siglo 21
-              </b>'''
+          marker = 'Estudiante de Marketing · Universidad Siglo 21'
           addition = marker + '''
               <span style={{ display: 'block', marginTop: '8px', fontSize: '11px', color: 'var(--s5)' }}>
                 Testimonio de ejemplo
