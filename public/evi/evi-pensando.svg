@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 0 220 220" width="440" height="440">
+<title>Evi pensando</title>
+<ellipse cx="105" cy="210" rx="56" ry="7" fill="#1B1B3A" opacity="0.14"/>
+<path d="M84 200 V212" stroke="#1B1B3A" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M126 200 V212" stroke="#1B1B3A" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M172 130 Q188 140 190 156" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="190" cy="161" r="9" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
+<path d="M38 132 Q22 138 20 154" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="20" cy="159" r="9" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
+<path d="M54 18 H130 L172 60 V184 Q172 202 154 202 H56 Q38 202 38 184 V36 Q38 18 54 18 Z" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M130 18 V46 Q130 60 144 60 H172 Z" fill="#FFC933" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M62 162 H148" stroke="#D5D8F5" stroke-width="6" stroke-linecap="round" fill="none"/>
+<path d="M62 180 H122" stroke="#FFC933" stroke-width="9" stroke-linecap="round" fill="none"/>
+<path d="M70 88 Q82 80 94 88" stroke="#1B1B3A" stroke-width="4" stroke-linecap="round" fill="none"/>
+<circle cx="84" cy="102" r="7" fill="#1B1B3A"/>
+<circle cx="130" cy="100" r="7" fill="#1B1B3A"/>
+<circle cx="86.5" cy="99.5" r="2" fill="#FFFFFF"/>
+<circle cx="132.5" cy="97.5" r="2" fill="#FFFFFF"/>
+<ellipse cx="64" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<ellipse cx="146" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<path d="M96 129 Q106 124 116 129" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="14" cy="40" r="5" fill="#2F4BFF"/>
+<circle cx="2" cy="22" r="3.5" fill="#2F4BFF"/>
+</svg>

@@ -90,7 +90,7 @@ export function HomePdfPickerButton({
         ref={inputRef}
         type="file"
         accept=".pdf,application/pdf"
-        className="sr-only"
+        className="hidden"
         onChange={(event) => {
           const file = event.currentTarget.files?.[0] ?? null;
           event.currentTarget.value = '';

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 10 154 154" width="512" height="512">
+<title>Evi, avatar</title>
+<defs>
+<clipPath id="evi-circle"><circle cx="105" cy="87" r="77"/></clipPath>
+</defs>
+<g clip-path="url(#evi-circle)">
+<circle cx="105" cy="87" r="77" fill="#2F4BFF"/>
+<path d="M54 18 H130 L172 60 V184 Q172 202 154 202 H56 Q38 202 38 184 V36 Q38 18 54 18 Z" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M130 18 V46 Q130 60 144 60 H172 Z" fill="#FFC933" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M62 162 H148" stroke="#D5D8F5" stroke-width="6" stroke-linecap="round" fill="none"/>
+<circle cx="82" cy="104" r="7" fill="#1B1B3A"/>
+<circle cx="128" cy="104" r="7" fill="#1B1B3A"/>
+<circle cx="84.5" cy="101.5" r="2" fill="#FFFFFF"/>
+<circle cx="130.5" cy="101.5" r="2" fill="#FFFFFF"/>
+<ellipse cx="64" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<ellipse cx="146" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<path d="M93 124 Q105 138 117 124" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+</g>
+</svg>

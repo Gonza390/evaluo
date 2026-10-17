@@ -519,10 +519,23 @@ assert.match(
   /secondaryActionHref="\/preview\/primer-pdf\?source=dashboard_empty"/
 );
 
-const homeHeroSource = readFileSync(resolve('components/marketing/home-hero-v2.tsx'), 'utf8');
-assert.match(homeHeroSource, /Probar con mi PDF/);
-assert.match(homeHeroSource, /Ver ejemplo con un PDF/);
-assert.match(homeHeroSource, /\/preview\/primer-pdf\?source=home_hero/);
+const homeHeroSource = readFileSync(resolve('components/marketing/home-redesign.tsx'), 'utf8');
+assert.match(homeHeroSource, /HomePdfPickerButton/);
+assert.match(homeHeroSource, /Subir mis apuntes/);
+assert.match(homeHeroSource, /href="#demo"/);
+for (const anchor of ['producto', 'como-funciona', 'faq']) {
+  assert.ok(
+    homeHeroSource.includes(`id="${anchor}"`),
+    `Se conserva el destino del footer: ${anchor}.`
+  );
+}
+const homePageSource = readFileSync(resolve('app/page.tsx'), 'utf8');
+assert.match(
+  homePageSource,
+  /<FooterHome \/>/,
+  'La landing mantiene el footer completo existente.'
+);
+assert.match(homePageSource, /canonical: '\/'/);
 
 const firstErrorPromptSource = readFileSync(
   resolve('components/study-errors/first-error-onboarding-prompt.tsx'),

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 0 220 220" width="440" height="440">
+<title>Evi festejando</title>
+<ellipse cx="105" cy="210" rx="56" ry="7" fill="#1B1B3A" opacity="0.14"/>
+<path d="M84 200 V212" stroke="#1B1B3A" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M126 200 V212" stroke="#1B1B3A" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M172 128 Q192 122 196 100" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="196" cy="95" r="9" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
+<path d="M38 128 Q18 122 14 100" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="14" cy="95" r="9" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
+<path d="M54 18 H130 L172 60 V184 Q172 202 154 202 H56 Q38 202 38 184 V36 Q38 18 54 18 Z" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M130 18 V46 Q130 60 144 60 H172 Z" fill="#FFC933" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M62 162 H148" stroke="#D5D8F5" stroke-width="6" stroke-linecap="round" fill="none"/>
+<path d="M62 180 H122" stroke="#FFC933" stroke-width="9" stroke-linecap="round" fill="none"/>
+<path d="M72 106 Q82 94 92 106" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<path d="M118 106 Q128 94 138 106" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<ellipse cx="64" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<ellipse cx="146" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<path d="M90 120 Q105 146 120 120 Z" fill="#1B1B3A" stroke="#1B1B3A" stroke-width="4" stroke-linejoin="round"/>
+<path d="M98 132 Q105 128 112 132 Q105 140 98 132 Z" fill="#FF8A7A"/>
+<circle cx="2" cy="40" r="4" fill="#FF8A7A"/>
+<circle cx="30" cy="10" r="3.5" fill="#FFC933"/>
+<circle cx="190" cy="34" r="4" fill="#2F4BFF"/>
+<circle cx="168" cy="8" r="3.5" fill="#FF8A7A"/>
+<rect x="104" y="2" width="8" height="8" rx="2" transform="rotate(25 108 6)" fill="#2F4BFF"/>
+<rect x="8" y="64" width="7" height="7" rx="2" transform="rotate(-20 11 67)" fill="#FFC933"/>
+</svg>

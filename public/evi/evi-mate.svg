@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-10 0 220 220" width="440" height="440">
+<title>Evi tomando mate</title>
+<ellipse cx="105" cy="210" rx="56" ry="7" fill="#1B1B3A" opacity="0.14"/>
+<path d="M84 200 V212" stroke="#1B1B3A" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M126 200 V212" stroke="#1B1B3A" stroke-width="7" stroke-linecap="round" fill="none"/>
+<path d="M38 132 Q22 138 20 154" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<circle cx="20" cy="159" r="9" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
+<path d="M172 130 Q176 144 180 152" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<path d="M184 134 Q180 128 184 122 Q188 116 184 110" stroke="#B8BCE0" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+<path d="M192 142 L203 114" stroke="#1B1B3A" stroke-width="8" stroke-linecap="round" fill="none"/>
+<path d="M192 142 L203 114" stroke="#C9CCD6" stroke-width="4" stroke-linecap="round" fill="none"/>
+<path d="M176 142 Q174 166 190 168 Q206 166 204 142 Z" fill="#8A5A3C" stroke="#1B1B3A" stroke-width="4" stroke-linejoin="round"/>
+<ellipse cx="190" cy="142" rx="14" ry="4.5" fill="#3E2A1C" stroke="#1B1B3A" stroke-width="3"/>
+<path d="M179 154 Q190 160 201 154" stroke="#C9A24C" stroke-width="3" stroke-linecap="round" fill="none"/>
+<circle cx="180" cy="156" r="9" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5"/>
+<path d="M54 18 H130 L172 60 V184 Q172 202 154 202 H56 Q38 202 38 184 V36 Q38 18 54 18 Z" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M130 18 V46 Q130 60 144 60 H172 Z" fill="#FFC933" stroke="#1B1B3A" stroke-width="5" stroke-linejoin="round"/>
+<path d="M62 162 H148" stroke="#D5D8F5" stroke-width="6" stroke-linecap="round" fill="none"/>
+<path d="M62 180 H122" stroke="#FFC933" stroke-width="9" stroke-linecap="round" fill="none"/>
+<path d="M72 102 Q82 112 92 102" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<path d="M118 102 Q128 112 138 102" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+<ellipse cx="64" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<ellipse cx="146" cy="124" rx="10" ry="6" fill="#FF8A7A" opacity="0.85"/>
+<path d="M95 126 Q105 134 115 126" stroke="#1B1B3A" stroke-width="5" stroke-linecap="round" fill="none"/>
+</svg>

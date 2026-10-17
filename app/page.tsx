@@ -1,19 +1,12 @@
 import type { Metadata } from 'next';
-import {
-  ArrowRight,
-  Sparkles,
-  UploadCloud,
-} from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
-import { HomeHeroV2 } from '@/components/marketing/home-hero-v2';
 import { HomeFunnelTracker } from '@/components/marketing/home-funnel-tracker';
-import { HomeLiveStudyDemo } from '@/components/marketing/home-live-study-demo';
-import { HomeHowItWorksInteractive } from '@/components/marketing/home-how-it-works-interactive';
-import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
+import { HomeRedesign } from '@/components/marketing/home-redesign';
+import { HOME_REDESIGN_FAQS } from '@/components/marketing/home-redesign-faqs';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { FaqAccordion, FAQ_ITEMS } from '@/components/marketing/faq-accordion';
 import { buildFaqJsonLd, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
+import './home-redesign.css';
 
 export const metadata: Metadata = {
   title: { absolute: 'Evaluo | Estudiá tu PDF con IA y prepará tu examen' },
@@ -27,150 +20,32 @@ export const metadata: Metadata = {
     siteName: 'Evaluo',
     locale: 'es_AR',
     title: 'Subí tu PDF y prepará tu examen | Evaluo',
-    description:
-      'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
+    description: 'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
     url: '/',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Subí tu PDF y prepará tu examen | Evaluo',
-    description:
-      'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
+    description: 'Estudiá, practicá y detectá qué reforzar usando tus propios apuntes.',
   },
 };
 
-const demoJourney = [
-  ['01', 'Tu material', 'Partimos de un fragmento del PDF de Marketing I.'],
-  ['02', 'Entendé el tema', 'El resumen organiza el concepto sin cambiar de fuente.'],
-  ['03', 'Ponete a prueba', 'Respondé una pregunta basada en el mismo contenido.'],
-  ['04', 'Repasá el error', 'Usá la explicación para saber qué tema conviene volver a trabajar.'],
-] as const;
-
-/** Signup → materiales with open-upload modal (post-#70 PDF-first activation). */
-const primaryHref =
-  '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
+const primaryHref = '/login?mode=signup&next=%2Fdashboard%2Fmateriales%3FopenUpload%3D1';
 
 export default function Home() {
   return (
-    <div className="w-full min-w-0 overflow-x-clip bg-white text-slate-900 selection:bg-indigo-100 selection:text-indigo-900">
-      <a
-        href="#producto"
-        className="fixed top-3 left-3 z-[100] -translate-y-20 rounded-xl bg-slate-950 px-4 py-3 text-sm font-bold text-white shadow-lg transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2"
-      >
+    <div className="home-redesign-root">
+      <a href="#contenido" className="reference-skip-link">
         Saltar al contenido
       </a>
       <MarketingAnalyticsSlot />
       <HomeFunnelTracker />
-      <JsonLd data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(FAQ_ITEMS)]} />
-
-      <HomeHeroV2 primaryHref={primaryHref} />
-
-      <HomeHowItWorksInteractive />
-
-      <section
-        id="demo"
-        className="scroll-mt-20 relative overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_30%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] py-20 sm:py-24 lg:py-28"
-      >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent" />
-        <div className="mx-auto grid w-full max-w-[1280px] gap-12 px-4 sm:px-8 lg:grid-cols-[0.6fr_1.4fr] lg:items-center lg:gap-16 lg:px-10">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-indigo-300 uppercase">
-              <span className="h-px w-8 shrink-0 bg-indigo-400" />
-              Demo interactiva
-            </div>
-            <h2 className="mt-5 max-w-[520px] text-3xl font-bold tracking-[-0.045em] text-white sm:text-4xl lg:text-[48px] lg:leading-[1.03]">
-              Ahora probalo vos.
-            </h2>
-            <p className="mt-5 max-w-[500px] text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
-              Interactuá con un apunte de Marketing I: leé un concepto, respondé y descubrí qué conviene repasar.
-            </p>
-
-            <div className="mt-8 border-t border-white/10">
-              {demoJourney.map(([number, title, description]) => (
-                <div
-                  key={number}
-                  className="grid grid-cols-[38px_minmax(0,1fr)] gap-4 border-b border-white/10 py-4 sm:py-4.5"
-                >
-                  <span className="pt-0.5 text-[10px] font-black text-indigo-300">{number}</span>
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-bold tracking-tight text-white">{title}</h3>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-400">{description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-              <HomePdfPickerButton
-                  location="home_real_material_demo"
-                  ctaName="probar_con_mi_pdf_demo"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-white px-5 text-xs font-bold text-slate-950 shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:bg-indigo-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                <UploadCloud className="h-4 w-4 shrink-0" />
-                Probar con mi PDF
-                <ArrowRight className="h-4 w-4 shrink-0" />
-              </HomePdfPickerButton>
-
-            </div>
-          </div>
-
-          <div className="relative min-w-0 lg:scale-[1.02]">
-            <div className="pointer-events-none absolute -inset-8 rounded-[42px] bg-indigo-500/10 blur-3xl" />
-            <div className="relative">
-              <HomeLiveStudyDemo />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="faq" className="scroll-mt-20 border-t border-slate-100 bg-white py-16 sm:scroll-mt-24 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-          <div className="mx-auto mb-10 max-w-3xl text-center">
-            <h2 className="text-foreground text-3xl font-bold tracking-tight sm:text-4xl lg:text-[40px]">
-              Preguntas frecuentes
-            </h2>
-            <p className="mt-3 text-sm text-slate-600 sm:text-base">
-              Cómo funciona Evaluo cuando estudiás desde tus propios apuntes y PDFs.
-            </p>
-          </div>
-
-          <FaqAccordion />
-        </div>
-      </section>
-
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
-          <div className="relative min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_40%),radial-gradient(circle_at_bottom_left,rgba(37,99,235,0.08),transparent_40%),linear-gradient(180deg,#050B2C_0%,var(--heading)_100%)] p-5 text-center shadow-xl sm:p-8 md:p-14">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
-
-            <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-xs font-bold text-indigo-100 backdrop-blur-sm">
-                <Sparkles className="h-3.5 w-3.5 animate-pulse text-indigo-200" />
-                Comenzá hoy mismo
-              </span>
-
-              <h2 className="mt-6 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Empezá con el PDF que tenés que estudiar.
-              </h2>
-              <p className="mt-4 max-w-xl text-xs leading-6 text-white/90 sm:text-sm">
-                Convertí tu material en una experiencia de repaso y práctica.
-              </p>
-
-              <div className="mt-8 flex w-full max-w-md justify-center">
-                <HomePdfPickerButton
-                  location="home_final_cta"
-                  ctaName="probar_con_mi_pdf_final"
-                  className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-lg shadow-indigo-950/40 transition hover:translate-y-[-1px] hover:shadow-indigo-950/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:w-auto"
-                >
-                  <UploadCloud className="h-4.5 w-4.5 shrink-0" />
-                  Probar con mi PDF
-                </HomePdfPickerButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      <JsonLd
+        data={[buildOrganizationJsonLd(), buildWebsiteJsonLd(), buildFaqJsonLd(HOME_REDESIGN_FAQS)]}
+      />
+      <main id="contenido">
+        <HomeRedesign primaryHref={primaryHref} />
+      </main>
       <FooterHome />
     </div>
   );

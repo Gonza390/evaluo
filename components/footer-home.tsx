@@ -55,7 +55,10 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
         <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr] lg:gap-10">
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <Link href="/" className="inline-flex items-center gap-2 text-xl font-bold tracking-tight">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-xl font-bold tracking-tight"
+            >
               <Image src="/icon.png" alt="" width={32} height={32} className="h-8 w-8" />
               <span>Evaluo</span>
             </Link>
@@ -63,7 +66,8 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
               Te ayudamos a aprobar, te impulsamos a crecer.
             </p>
             <p className="mt-2 max-w-sm text-[11px] leading-5 text-white/55">
-              Desde tus apuntes o PDFs podés crear resúmenes, mapas mentales, glosarios, flashcards y práctica para estudiar el mismo material de distintas formas.
+              Desde tus apuntes o PDFs podés crear resúmenes, mapas mentales, glosarios, flashcards
+              y práctica para estudiar el mismo material de distintas formas.
             </p>
             <div className="mt-4 flex gap-3">
               <a
@@ -89,62 +93,99 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
             </div>
           </div>
 
-          <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-white/60">
+          <div className="flex w-full max-w-sm flex-col self-center text-left md:max-w-none md:self-start">
+            <p className="text-[12px] font-semibold tracking-wider text-white/60 uppercase">
               Navegación
             </p>
-            <nav className="mt-3 flex flex-col gap-2">
+            <nav
+              aria-label="Navegación del sitio"
+              tabIndex={0}
+              className="focus-visible:outline-primary mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto overscroll-y-contain rounded-sm pr-4 [scrollbar-color:var(--muted-foreground)_transparent] [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-4 [&>a]:flex [&>a]:min-h-11 [&>a]:shrink-0 [&>a]:items-center"
+            >
               <Link href="/#producto" className="text-xs text-white/80 transition hover:text-white">
                 Producto
               </Link>
-              <Link href="/ia-para-estudiantes" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/ia-para-estudiantes"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 IA para estudiar
               </Link>
-              <Link href="/estudiar-pdf-con-ia" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/estudiar-pdf-con-ia"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Estudiar PDF con IA
               </Link>
-              <Link href="/funciones/resumir-pdf-con-ia" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/funciones/resumir-pdf-con-ia"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Resumir PDF con IA
               </Link>
-              <Link href="/funciones/crear-flashcards-desde-pdf" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/funciones/crear-flashcards-desde-pdf"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Crear flashcards desde PDF
               </Link>
-              <Link href="/funciones/crear-mapa-mental-desde-pdf" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/funciones/crear-mapa-mental-desde-pdf"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Mapas mentales con IA
               </Link>
-              <Link href="/como-estudiar-ingreso-unlam" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/como-estudiar-ingreso-unlam"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Cómo estudiar para el Ingreso UNLaM 2027
               </Link>
-              <Link href="/blog/tecnicas-de-estudio-efectivas" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/blog/tecnicas-de-estudio-efectivas"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Técnicas de estudio efectivas
               </Link>
-              <Link href="/#como-funciona" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/#como-funciona"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Cómo funciona
               </Link>
               <Link href="/#faq" className="text-xs text-white/80 transition hover:text-white">
                 Preguntas frecuentes
               </Link>
-              <Link href="/login?mode=signup" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/login?mode=signup"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Crear cuenta gratis
               </Link>
             </nav>
           </div>
 
           <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-white/60">
+            <p className="text-[12px] font-semibold tracking-wider text-white/60 uppercase">
               Legal
             </p>
             <nav className="mt-3 flex flex-col gap-2">
               <Link href="/terminos" className="text-xs text-white/80 transition hover:text-white">
                 Términos y condiciones
               </Link>
-              <Link href="/privacidad" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/privacidad"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Política de privacidad
               </Link>
               <Link href="/copyright" className="text-xs text-white/80 transition hover:text-white">
                 Copyright
               </Link>
-              <Link href="/facturacion" className="text-xs text-white/80 transition hover:text-white">
+              <Link
+                href="/facturacion"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
                 Facturación
               </Link>
             </nav>
@@ -153,7 +194,8 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
 
         <div className="mt-6 border-t border-white/10 pt-4 text-center md:text-left">
           <p className="text-[12px] text-white/60">
-            Copyright <span suppressHydrationWarning>{new Date().getFullYear()}</span> Evaluo. Todos los derechos reservados.
+            Copyright <span suppressHydrationWarning>{new Date().getFullYear()}</span> Evaluo. Todos
+            los derechos reservados.
           </p>
         </div>
       </div>
