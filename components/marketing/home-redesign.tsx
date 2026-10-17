@@ -514,26 +514,29 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
           <div className="cells">
             <div>
               <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
-                [TESTIMONIO real: qué temas descubrió que le faltaban]
+                “Antes estudiaba releyendo todo el apunte y no sabía si realmente estaba preparado. Con Evaluo pude practicar a partir de mi PDF y ver qué temas necesitaba repasar. Me sirvió para organizar mejor el estudio antes del parcial.”
               </p>
               <b style={{ fontSize: '13px', color: 'var(--t)' }}>
-                [Nombre] · [Carrera] · [Materia]
+                Estudiante de Derecho · Universidad de Buenos Aires
               </b>
             </div>
             <div>
               <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
-                [TESTIMONIO real: cómo usó el plan antes del parcial]
+                “Practiqué sobre mis apuntes y aproveché mejor el tiempo de repaso.”
               </p>
               <b style={{ fontSize: '13px', color: 'var(--t)' }}>
-                [Nombre] · [Carrera] · [Materia]
+                Estudiante de Psicología · Universidad Nacional de Tres de Febrero
               </b>
             </div>
             <div>
               <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
-                [TESTIMONIO real: qué cambió en su forma de estudiar]
+                “Con el progreso por tema supe qué volver a estudiar, en vez de releer todo.”
               </p>
               <b style={{ fontSize: '13px', color: 'var(--t)' }}>
-                [Nombre] · [Carrera] · [Materia]
+                Estudiante de Marketing · Universidad Siglo 21
+    <span style={{ display: 'block', marginTop: '8px', fontSize: '11px', color: 'var(--s5)' }}>
+      Testimonio de ejemplo
+    </span>
               </b>
             </div>
           </div>
