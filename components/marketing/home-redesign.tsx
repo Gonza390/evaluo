@@ -547,7 +547,6 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
               <p style={{ fontSize: '14px', margin: 0 }}>
                 “Con el progreso por tema supe qué volver a estudiar, en vez de releer todo.”
               </p>
-              <span style={{ display: 'block', marginTop: '10px', fontSize: '11px', color: 'var(--s5)' }}>Testimonio de ejemplo</span>
             </div>
           </div>
         </div>
