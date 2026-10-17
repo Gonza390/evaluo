@@ -8,6 +8,12 @@ import {
   getLandingOptionIndex,
 } from '../lib/simulator-landing-entry.ts';
 import {
+  buildSimulatorLandingHref,
+  parseSimulatorLandingEntry,
+  preferSimulatorQuestion,
+  getLandingOptionIndex,
+} from '../lib/simulator-landing-entry.ts';
+import {
   validateReviewQuestion,
   publicReviewQuestion,
   isCompleteReviewHelp,

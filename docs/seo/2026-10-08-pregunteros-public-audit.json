@@ -1,0 +1,2410 @@
+{
+  "checkedAt": "2026-10-08T11:43:57.289Z",
+  "scope": "HTML público de producción anterior al despliegue del diseño local; sin JS ni Core Web Vitals",
+  "total": 267,
+  "problems": 0,
+  "rows": [
+    {
+      "url": "https://evaluo.com.ar/pregunteros",
+      "status": 200,
+      "title": "Pregunteros Siglo 21: parciales y simuladores | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c",
+      "status": 200,
+      "title": "Preguntero de Administración | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Administración | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Administración | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Administración | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion--5fce5a07-b29f-4fab-85f5-d54cd203f61c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8",
+      "status": 200,
+      "title": "Preguntero de Administración y Gestión Inmobiliaria | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Administración y Gestión Inmobiliaria | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Administración y Gestión Inmobiliaria | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Administración y Gestión Inmobiliaria | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145",
+      "status": 200,
+      "title": "Preguntero de Análisis Cuantitativo Financiero | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Análisis Cuantitativo Financiero | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Análisis Cuantitativo Financiero | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Análisis Cuantitativo Financiero | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/analisis-cuantitativo-financiero--af5ab91d-176b-4c48-8823-d78dc1f01145/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99",
+      "status": 200,
+      "title": "Preguntero de Aprender en el Siglo 21 | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Aprender en el Siglo 21 | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Aprender en el Siglo 21 | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Aprender en el Siglo 21 | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/aprender-en-el-siglo-21--eb923481-2207-4895-9ae4-2a0b984d9b99/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb",
+      "status": 200,
+      "title": "Preguntero de Auditoría I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Auditoría I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Auditoría I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Auditoría I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/auditoria-i--1144d7a8-dffd-4227-818c-bf1e783da1fb/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae",
+      "status": 200,
+      "title": "Preguntero de Base de Datos I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Base de Datos I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Base de Datos I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Base de Datos I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/base-de-datos-i--f6b7f456-4603-4b95-af07-dd5f0b8510ae/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d",
+      "status": 200,
+      "title": "Preguntero de Bases del Derecho Privado | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Bases del Derecho Privado | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Bases del Derecho Privado | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Bases del Derecho Privado | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/bases-del-derecho-privado--06717c88-179e-4628-b668-779c40cf5f5d/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1",
+      "status": 200,
+      "title": "Preguntero de Campañas Publicitarias | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Campañas Publicitarias | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Campañas Publicitarias | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Campañas Publicitarias | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040",
+      "status": 200,
+      "title": "Preguntero de Ciberdelitos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Ciberdelitos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Ciberdelitos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Ciberdelitos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/ciberdelitos--42411bbd-8067-4ed0-882e-7e237bc9f040/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29",
+      "status": 200,
+      "title": "Preguntero de Comercio Electrónico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Comercio Electrónico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Comercio Electrónico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Comercio Electrónico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comercio-electronico--624a7402-740c-48da-86a8-14ae7232dd29/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67",
+      "status": 200,
+      "title": "Preguntero de Comportamiento del Consumidor | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Comportamiento del Consumidor | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Comportamiento del Consumidor | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Comportamiento del Consumidor | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/comportamiento-del-consumidor--fb1fea00-62b5-4167-8551-1b5f0f975f67/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb",
+      "status": 200,
+      "title": "Preguntero de Concursos y Quiebras | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Concursos y Quiebras | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Concursos y Quiebras | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Concursos y Quiebras | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/concursos-y-quiebras--95a4dbc2-e426-4bb5-92a6-b0c59cd260eb/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f",
+      "status": 200,
+      "title": "Preguntero de Contabilidad Básica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Contabilidad Básica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Contabilidad Básica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Contabilidad Básica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d",
+      "status": 200,
+      "title": "Preguntero de Contabilidad de Costos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Contabilidad de Costos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Contabilidad de Costos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Contabilidad de Costos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141",
+      "status": 200,
+      "title": "Preguntero de Contabilidad Intermedia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Contabilidad Intermedia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Contabilidad Intermedia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Contabilidad Intermedia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6",
+      "status": 200,
+      "title": "Preguntero de Contratos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Contratos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Contratos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Contratos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos--c9a3d61e-d4fe-4eed-8aa6-fc4717d981d6/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5",
+      "status": 200,
+      "title": "Preguntero de Contratos de Empresa | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Contratos de Empresa | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Contratos de Empresa | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Contratos de Empresa | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01",
+      "status": 200,
+      "title": "Preguntero de Derecho Administrativo | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Administrativo | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Administrativo | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Administrativo | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-administrativo--03df1d46-ae66-40ba-bc66-98b41df34d01/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955",
+      "status": 200,
+      "title": "Preguntero de Derecho Ambiental | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Ambiental | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Ambiental | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Ambiental | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-ambiental--68eaeafd-a926-48c2-93b1-816adbde3955/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4",
+      "status": 200,
+      "title": "Preguntero de Derecho Bancario y Mercado de Capitales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Bancario y Mercado de Capitales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Bancario y Mercado de Capitales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Bancario y Mercado de Capitales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47",
+      "status": 200,
+      "title": "Preguntero de Derecho Constitucional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Constitucional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Constitucional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Constitucional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c",
+      "status": 200,
+      "title": "Preguntero de Derecho de Daños | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho de Daños | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho de Daños | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho de Daños | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130",
+      "status": 200,
+      "title": "Preguntero de Derecho de Familia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho de Familia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho de Familia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho de Familia | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223",
+      "status": 200,
+      "title": "Preguntero de Derecho de Integración Regional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho de Integración Regional | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho de Integración Regional | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho de Integración Regional | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-de-integracion-regional--43371ad9-cab6-40f0-8298-10f1c7a12223/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b",
+      "status": 200,
+      "title": "Preguntero de Derecho del Consumidor y del Usuario | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho del Consumidor y del Usuario | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho del Consumidor y del Usuario | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho del Consumidor y del Usuario | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-consumidor-y-del-usuario--e0b27242-1dd0-4de2-94d3-9cca8563589b/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9",
+      "status": 200,
+      "title": "Preguntero de Derecho del Trabajo y la Seguridad Social | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho del Trabajo y la Seguridad Social | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho del Trabajo y la Seguridad Social | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho del Trabajo y la Seguridad Social | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-del-trabajo-y-la-seguridad-social--1f25f0f0-06c6-4cc0-87d4-090c5b5bf3d9/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc",
+      "status": 200,
+      "title": "Preguntero de Derecho Internacional Privado | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Internacional Privado | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Internacional Privado | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Internacional Privado | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23",
+      "status": 200,
+      "title": "Preguntero de Derecho Internacional Público | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Internacional Público | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Internacional Público | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Internacional Público | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c",
+      "status": 200,
+      "title": "Preguntero de Derecho Penal Económico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Penal Económico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Penal Económico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Penal Económico | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-economico--ef1c75fb-74b0-4531-8640-18a120a8e19c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa",
+      "status": 200,
+      "title": "Preguntero de Derecho Penal: Parte Especial | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Penal: Parte Especial | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Penal: Parte Especial | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Penal: Parte Especial | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-especial--c0ce7d07-e402-4314-8916-ba64c50687aa/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2",
+      "status": 200,
+      "title": "Preguntero de Derecho Penal: Parte General | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Penal: Parte General | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Penal: Parte General | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Penal: Parte General | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8",
+      "status": 200,
+      "title": "Preguntero de Derecho Procesal Penal | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Procesal Penal | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Procesal Penal | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Procesal Penal | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a",
+      "status": 200,
+      "title": "Preguntero de Derecho Procesal Público | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Procesal Público | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Procesal Público | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Procesal Público | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207",
+      "status": 200,
+      "title": "Preguntero de Derecho Público Provincial y Municipal | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Público Provincial y Municipal | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Público Provincial y Municipal | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Público Provincial y Municipal | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6",
+      "status": 200,
+      "title": "Preguntero de Derecho Sucesorio | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Sucesorio | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Sucesorio | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Sucesorio | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c",
+      "status": 200,
+      "title": "Preguntero de Derecho Tributario | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derecho Tributario | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derecho Tributario | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derecho Tributario | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derecho-tributario--2afc22b7-5438-4959-a0b1-ce31db18e06c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155",
+      "status": 200,
+      "title": "Preguntero de Derechos Humanos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derechos Humanos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derechos Humanos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derechos Humanos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-humanos--6e6a7910-7ed9-4c07-a211-449d34f89155/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6",
+      "status": 200,
+      "title": "Preguntero de Derechos Reales | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Derechos Reales | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Derechos Reales | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Derechos Reales | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/derechos-reales--db518ecd-5911-4102-8962-977c1dde60e6/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1",
+      "status": 200,
+      "title": "Preguntero de Desarrollo Emprendedor | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Desarrollo Emprendedor | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Desarrollo Emprendedor | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Desarrollo Emprendedor | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/desarrollo-emprendedor--d41eb18c-e8da-4a9c-a7d4-dee7873afaf1/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6",
+      "status": 200,
+      "title": "Preguntero de Economía Argentina | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Economía Argentina | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Economía Argentina | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Economía Argentina | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c",
+      "status": 200,
+      "title": "Preguntero de Economía I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Economía I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Economía I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Economía I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b",
+      "status": 200,
+      "title": "Preguntero de Economía Internacional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Economía Internacional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Economía Internacional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Economía Internacional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d",
+      "status": 200,
+      "title": "Preguntero de Estrategia Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Estrategia Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Estrategia Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Estrategia Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78",
+      "status": 200,
+      "title": "Preguntero de Ética y Deontología Profesional | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Ética y Deontología Profesional | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Ética y Deontología Profesional | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Ética y Deontología Profesional | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e",
+      "status": 200,
+      "title": "Preguntero de Finanzas Públicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Finanzas Públicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Finanzas Públicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Finanzas Públicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/finanzas-publicas--aca664da-fadf-4798-8e3a-0d30acccd87e/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0",
+      "status": 200,
+      "title": "Preguntero de Historia del Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Historia del Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Historia del Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Historia del Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec",
+      "status": 200,
+      "title": "Preguntero de Informática Jurídica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Informática Jurídica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Informática Jurídica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Informática Jurídica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07",
+      "status": 200,
+      "title": "Preguntero de Introducción a la Filosofía | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Introducción a la Filosofía | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Introducción a la Filosofía | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Introducción a la Filosofía | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-a-la-filosofia--7c1dbf06-4c6b-4e30-920a-fece996d4f07/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4",
+      "status": 200,
+      "title": "Preguntero de Introducción al Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Introducción al Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Introducción al Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Introducción al Derecho | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453",
+      "status": 200,
+      "title": "Preguntero de Marketing I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Marketing I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Marketing I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Marketing I | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-i--4c28f824-1b82-4898-a6d4-3650ba517453/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac",
+      "status": 200,
+      "title": "Preguntero de Marketing Móvil | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Marketing Móvil | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Marketing Móvil | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Marketing Móvil | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552",
+      "status": 200,
+      "title": "Preguntero de Mediación, Arbitraje y Negociación | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Mediación, Arbitraje y Negociación | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Mediación, Arbitraje y Negociación | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Mediación, Arbitraje y Negociación | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2",
+      "status": 200,
+      "title": "Preguntero de Obligaciones | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Obligaciones | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Obligaciones | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Obligaciones | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/obligaciones--ae1539f1-ff6d-4be1-b705-bfc1926daac2/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c",
+      "status": 200,
+      "title": "Preguntero de Oratoria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Oratoria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Oratoria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Oratoria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d",
+      "status": 200,
+      "title": "Preguntero de Personas Jurídicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Personas Jurídicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Personas Jurídicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Personas Jurídicas | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f",
+      "status": 200,
+      "title": "Preguntero de Plan de Marketing Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Plan de Marketing Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Plan de Marketing Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Plan de Marketing Digital | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7",
+      "status": 200,
+      "title": "Preguntero de Posicionamiento en Buscadores (SEO y SEM) | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Posicionamiento en Buscadores (SEO y SEM) | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Posicionamiento en Buscadores (SEO y SEM) | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Posicionamiento en Buscadores (SEO y SEM) | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/posicionamiento-en-buscadores-seo-y-sem--20da8866-ebb0-4247-853e-25ea0f369ff7/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/principios-de-economia--9659604c-1459-4d73-abd1-69993837022d",
+      "status": 200,
+      "title": "Preguntero de Principios de Economía | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/principios-de-economia--9659604c-1459-4d73-abd1-69993837022d",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/principios-de-economia--9659604c-1459-4d73-abd1-69993837022d/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Principios de Economía | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/principios-de-economia--9659604c-1459-4d73-abd1-69993837022d/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c",
+      "status": 200,
+      "title": "Preguntero de Procesos Civiles y Comerciales | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Procesos Civiles y Comerciales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Procesos Civiles y Comerciales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Procesos Civiles y Comerciales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/procesos-civiles-y-comerciales--b253779c-ed7e-4d5d-9d7d-c646164a325c/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708",
+      "status": 200,
+      "title": "Preguntero de Programación Lógica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Programación Lógica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Programación Lógica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Programación Lógica | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7",
+      "status": 200,
+      "title": "Preguntero de Recursos Informáticos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Recursos Informáticos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Recursos Informáticos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Recursos Informáticos | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/recursos-informaticos--2a8704a4-b44a-4dce-a478-9a6a603ecdd7/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca",
+      "status": 200,
+      "title": "Preguntero de Redacción Publicitaria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Redacción Publicitaria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Redacción Publicitaria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Redacción Publicitaria | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6",
+      "status": 200,
+      "title": "Preguntero de Sitios Web y Publicidad Digital | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Sitios Web y Publicidad Digital | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Sitios Web y Publicidad Digital | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Sitios Web y Publicidad Digital | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f",
+      "status": 200,
+      "title": "Preguntero de Sociología General | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Sociología General | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Sociología General | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Sociología General | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492",
+      "status": 200,
+      "title": "Preguntero de Tecnología, Humanidades y Modelos Globales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Tecnología, Humanidades y Modelos Globales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Tecnología, Humanidades y Modelos Globales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Tecnología, Humanidades y Modelos Globales | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/tecnologia-humanidades-y-modelos-globales--374e4043-a0ac-4803-b313-d8b600178492/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888",
+      "status": 200,
+      "title": "Preguntero de Teoría de la Argumentación Jurídica | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Teoría de la Argumentación Jurídica | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Teoría de la Argumentación Jurídica | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Teoría de la Argumentación Jurídica | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836",
+      "status": 200,
+      "title": "Preguntero de Teoría General del Proceso | Siglo 21 | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836/parcial/1",
+      "status": 200,
+      "title": "Preguntero Parcial 1: Teoría General del Proceso | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836/parcial/1",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836/parcial/2",
+      "status": 200,
+      "title": "Preguntero Parcial 2: Teoría General del Proceso | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836/parcial/2",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836/parcial/integrador",
+      "status": 200,
+      "title": "Preguntero Integrador: Teoría General del Proceso | Evaluo",
+      "canonical": "https://evaluo.com.ar/pregunteros/teoria-general-del-proceso--65555e52-cad7-42f1-b9d7-a2d2bbc43836/parcial/integrador",
+      "robots": "index, follow",
+      "h1": 1,
+      "issues": []
+    }
+  ]
+}

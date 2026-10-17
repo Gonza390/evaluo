@@ -1,0 +1,185 @@
+{
+  "checkedOn": "2026-10-08",
+  "property": "sc-domain:evaluo.com.ar",
+  "scope": "Producción anterior al diseño local. Lectura de Search Console autenticado, Rich Results Test y PageSpeed Insights; sin solicitudes de indexación ni cambios de propiedad.",
+  "manualActions": {
+    "status": "No se ha detectado ningún problema",
+    "url": "https://search.google.com/search-console/manual-actions?resource_id=sc-domain%3Aevaluo.com.ar"
+  },
+  "securityIssues": {
+    "status": "No se ha detectado ningún problema",
+    "url": "https://search.google.com/search-console/security-issues?resource_id=sc-domain%3Aevaluo.com.ar"
+  },
+  "sitemap": {
+    "url": "https://evaluo.com.ar/sitemap.xml",
+    "status": "Correcto",
+    "lastRead": "2026-10-05",
+    "discoveredPages": 519,
+    "scope": "Todo el dominio"
+  },
+  "indexation": {
+    "updatedOn": "2026-10-03",
+    "scope": "Todo el dominio",
+    "indexed": 510,
+    "notIndexed": 140,
+    "reasons": {
+      "noindex": 59,
+      "redirect": 26,
+      "notFound": 1,
+      "alternateCanonical": 1,
+      "discoveredNotIndexed": 50,
+      "robotsBlocked": 3,
+      "crawledNotIndexed": 0
+    },
+    "noindexExamplesChecked": 59,
+    "pregunteroNoindexExamples": 0,
+    "discoveredExamplesChecked": 50,
+    "pregunteroDiscoveredExamples": 37,
+    "discoveredPregunteroUrls": [
+      "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/2",
+      "https://evaluo.com.ar/pregunteros/administracion-y-gestion-inmobiliaria--50da9d59-a6ad-4784-b964-6553fa6814f8/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/campanas-publicitarias--80d2abf1-24fa-40e5-96cb-633543a00ba1/parcial/2",
+      "https://evaluo.com.ar/pregunteros/contabilidad-basica--4b1e8678-5b56-4f41-8c85-02d259eb744f/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/contabilidad-de-costos--2b6e5609-88de-44fe-8322-b5044430e60d/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/contabilidad-intermedia--6e2aeadd-c1a1-4695-a377-73bcd853e141/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/contratos-de-empresa--30c3bea7-49a7-4598-8728-b3beb6f17aa5/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/derecho-bancario-y-mercado-de-capitales--730d0e14-c852-42c4-be01-cdc9a445c3c4/parcial/1",
+      "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/1",
+      "https://evaluo.com.ar/pregunteros/derecho-de-danos--cc152ecd-13ac-418d-90c2-757fca2fbd0c/parcial/1",
+      "https://evaluo.com.ar/pregunteros/derecho-de-familia--a3a5810a-f6fe-44f5-824a-f0870dae6130/parcial/2",
+      "https://evaluo.com.ar/pregunteros/derecho-internacional-privado--e77cfa34-5026-4ddc-aecc-0966bd05f1bc/parcial/1",
+      "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/1",
+      "https://evaluo.com.ar/pregunteros/derecho-internacional-publico--7b75a1fe-3354-4180-aaf7-e2a8af2feb23/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/derecho-penal-parte-general--ad0bbb49-20b8-4886-911e-7290226c85a2/parcial/2",
+      "https://evaluo.com.ar/pregunteros/derecho-procesal-penal--7cd2ba21-2542-416c-b844-7f1f816c77c8/parcial/2",
+      "https://evaluo.com.ar/pregunteros/derecho-procesal-publico--a3f01be6-2087-493f-b436-83bdd39eed8a/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/derecho-publico-provincial-y-municipal--c1f98921-6532-4486-a252-6a536ee49207/parcial/1",
+      "https://evaluo.com.ar/pregunteros/derecho-sucesorio--555d3d0a-206e-42e2-adf8-08f1063448e6/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/economia-argentina--5658d715-4bed-414b-b51d-2516fb5ebcf6/parcial/1",
+      "https://evaluo.com.ar/pregunteros/economia-i--948816e6-7f39-4b5b-a32b-a7fdd8bc6a9c/parcial/1",
+      "https://evaluo.com.ar/pregunteros/economia-internacional--83e02ca1-4422-43ba-9c58-c2a5d77e015b/parcial/2",
+      "https://evaluo.com.ar/pregunteros/estrategia-digital--3d0f1271-ef2d-44ce-98f1-0fb93ebe557d/parcial/1",
+      "https://evaluo.com.ar/pregunteros/etica-y-deontologia-profesional--1f05ec26-3e9d-42be-acd1-4a77ec6e1d78/parcial/2",
+      "https://evaluo.com.ar/pregunteros/historia-del-derecho--10dd08fc-8478-4d7b-aa0f-518a5d1076a0/parcial/1",
+      "https://evaluo.com.ar/pregunteros/informatica-juridica--dd732df7-c046-4256-bccc-fd9dd27e41ec/parcial/1",
+      "https://evaluo.com.ar/pregunteros/introduccion-al-derecho--1e982199-1870-4b0c-b2db-cd1f1fde5dc4/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/marketing-movil--7c755839-a18c-4a38-8088-bb65e546ccac/parcial/2",
+      "https://evaluo.com.ar/pregunteros/mediacion-arbitraje-y-negociacion--aa29a473-715f-43e6-bb96-dce56a076552/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/1",
+      "https://evaluo.com.ar/pregunteros/oratoria--a38a56a8-099b-4310-83a1-b4c0a31bd60c/parcial/integrador",
+      "https://evaluo.com.ar/pregunteros/personas-juridicas--5a10b059-546d-41a1-8ed8-d9fb1dd7581d/parcial/2",
+      "https://evaluo.com.ar/pregunteros/plan-de-marketing-digital--66e9fcea-6873-4035-89eb-2ed40126022f/parcial/2",
+      "https://evaluo.com.ar/pregunteros/programacion-logica--c2666107-d831-4a92-b55f-e5a1ef3bb708/parcial/1",
+      "https://evaluo.com.ar/pregunteros/sitios-web-y-publicidad-digital--010f5c60-f485-49f5-b975-1d74230613f6/parcial/2",
+      "https://evaluo.com.ar/pregunteros/sociologia-general--7d9d4f12-8aa1-4904-92a9-f9d42d44ca2f/parcial/2",
+      "https://evaluo.com.ar/pregunteros/teoria-de-la-argumentacion-juridica--b8417139-a4dd-44ca-ba51-7d346d66c888/parcial/2"
+    ],
+    "limitation": "Los 37 provienen del informe agregado del 3/10; solo Constitucional P1 recibió además inspección individual actual. No implica que los restantes sigan sin indexarse hoy ni que esta lista cubra otras causas de exclusión."
+  },
+  "inspections": [
+    {
+      "url": "https://evaluo.com.ar/pregunteros/redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca/parcial/2",
+      "status": "La URL está en Google",
+      "indexed": true,
+      "lastCrawl": "2026-09-05 10:48:23",
+      "crawler": "Googlebot smartphone",
+      "crawlAllowed": true,
+      "indexAllowed": true,
+      "googleCanonical": "URL inspeccionada",
+      "liveTest": "La URL está disponible para Google; la página se puede indexar",
+      "liveTestDate": "2026-10-08",
+      "report": "https://search.google.com/search-console/inspect?resource_id=sc-domain%3Aevaluo.com.ar&id=BpziJenY-Tfs1ude_f1WPQ",
+      "liveReport": "https://search.google.com/search-console/inspect?resource_id=sc-domain%3Aevaluo.com.ar&id=d0sUkSESD9hbizRAgtxM2g&alt_id=BpziJenY-Tfs1ude_f1WPQ"
+    },
+    {
+      "url": "https://evaluo.com.ar/pregunteros/derecho-constitucional--add6fa39-5df1-4037-8b9d-34a99e91af47/parcial/1",
+      "status": "La URL no está en Google",
+      "indexed": false,
+      "reason": "Descubierta: actualmente sin indexar",
+      "lastCrawl": null,
+      "sitemap": "https://evaluo.com.ar/sitemap.xml",
+      "referringPage": "No se ha detectado ninguna",
+      "report": "https://search.google.com/search-console/inspect?resource_id=sc-domain%3Aevaluo.com.ar&id=rQp89kOP_MKebUK43cc8eQ"
+    }
+  ],
+  "breadcrumbsSearchConsole": {
+    "updatedOn": "2026-10-06",
+    "valid": 13,
+    "invalid": 0,
+    "scope": "Elementos detectados por Google; no todas las URLs del sitemap"
+  },
+  "richResults": [
+    {
+      "route": "Redacción Publicitaria P2",
+      "report": "https://search.google.com/test/rich-results/result?id=9OtYusDiSWiWACwgabTkuw",
+      "validBreadcrumbLists": 1
+    },
+    {
+      "route": "Derecho Constitucional general",
+      "report": "https://search.google.com/test/rich-results/result?id=Q3wST1gCC341EhS9Wks1VA",
+      "validBreadcrumbLists": 1
+    },
+    {
+      "route": "Derecho Sucesorio P2 (ruta estática)",
+      "report": "https://search.google.com/test/rich-results/result?id=yjTT5fWTByZxFAiaCRSdYg",
+      "validBreadcrumbLists": 1
+    },
+    {
+      "route": "Personas Jurídicas P1 (experimento)",
+      "report": "https://search.google.com/test/rich-results/result?id=uGmD6B_cRJjTqALYAINPRQ",
+      "validBreadcrumbLists": 1
+    }
+  ],
+  "pagespeed": {
+    "url": "https://pagespeed.web.dev/analysis/https-evaluo-com-ar-pregunteros-redaccion-publicitaria--0eb4946c-227e-4a21-8d2a-72496cb00eca-parcial-2/u1gdm3bdt8?form_factor=mobile",
+    "testedOn": "2026-10-08",
+    "lighthouseVersion": "13.5",
+    "lab": {
+      "mobile": {
+        "performance": 99,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpSeconds": 1.1,
+        "lcpSeconds": 1.9,
+        "tbtMs": 10,
+        "cls": 0,
+        "speedIndexSeconds": 2.7
+      },
+      "desktop": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100,
+        "fcpSeconds": 0.3,
+        "lcpSeconds": 0.5,
+        "tbtMs": 10,
+        "cls": 0,
+        "speedIndexSeconds": 1.1
+      }
+    },
+    "field": {
+      "scope": "Origen completo: URL sin muestras suficientes, últimos 28 días. No son métricas específicas de esta landing.",
+      "mobile": {
+        "assessment": "No superada",
+        "lcpSeconds": 2.8,
+        "cls": 0,
+        "inpMs": null,
+        "fcpSeconds": 2.6
+      },
+      "desktop": {
+        "assessment": "No superada",
+        "lcpSeconds": 3.4,
+        "cls": 0.16,
+        "inpMs": null,
+        "fcpSeconds": 2.4
+      }
+    },
+    "accessibilityFinding": "Contraste insuficiente en etiqueta PREGUNTERO · PARCIAL 2 y chip del parcial seleccionado de la versión publicada."
+  },
+  "coreWebVitalsSearchConsole": {
+    "updatedOn": "2026-10-05",
+    "mobile": "No se han recogido suficientes datos de uso en los últimos 90 días",
+    "desktop": "No se han recogido suficientes datos de uso en los últimos 90 días"
+  }
+}
