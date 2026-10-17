@@ -1,7 +1,13 @@
 from pathlib import Path
-import base64
 import re
 import subprocess
+import sys
+
+try:
+    from PIL import Image, ImageOps
+except ImportError:
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', 'Pillow'], check=True)
+    from PIL import Image, ImageOps
 
 ROOT = Path.cwd()
 ASSET_DIR = ROOT / 'public' / 'testimonials'
@@ -17,11 +23,10 @@ for filename, url in sources.items():
     stem = Path(filename).stem
     source = Path('/tmp') / f'{stem}.jpg'
     subprocess.run(['curl', '-fL', '--retry', '3', url, '-o', str(source)], check=True)
-    subprocess.run([
-        'magick', str(source), '-auto-orient', '-resize', '320x320^',
-        '-gravity', 'center', '-extent', '320x320', '-strip', '-quality', '82',
-        str(ASSET_DIR / filename),
-    ], check=True)
+
+    image = ImageOps.exif_transpose(Image.open(source).convert('RGB'))
+    image = ImageOps.fit(image, (320, 320), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+    image.save(ASSET_DIR / filename, 'WEBP', quality=82, method=6)
 
 path = ROOT / 'components' / 'marketing' / 'home-redesign.tsx'
 text = path.read_text()
