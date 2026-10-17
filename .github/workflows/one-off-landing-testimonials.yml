@@ -1,0 +1,101 @@
+name: One-off landing testimonials
+
+on:
+  push:
+    branches:
+      - chore/landing-testimonials
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: "!contains(github.event.head_commit.message, 'content: add landing testimonials')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Replace landing testimonial placeholders
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('components/marketing/home-redesign.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''          <div className="cells">
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                [TESTIMONIO real: qué temas descubrió que le faltaban]
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                [Nombre] · [Carrera] · [Materia]
+              </b>
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                [TESTIMONIO real: cómo usó el plan antes del parcial]
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                [Nombre] · [Carrera] · [Materia]
+              </b>
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                [TESTIMONIO real: qué cambió en su forma de estudiar]
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                [Nombre] · [Carrera] · [Materia]
+              </b>
+            </div>
+          </div>'''
+
+          new = '''          <div className="cells">
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                “Antes estudiaba releyendo todo el apunte y no sabía si realmente estaba preparado. Con Evaluo pude practicar a partir de mi PDF y ver qué temas necesitaba repasar. Me sirvió para organizar mejor el estudio antes del parcial.”
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                Estudiante de Derecho · Universidad de Buenos Aires
+              </b>
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                “Practiqué sobre mis apuntes y aproveché mejor el tiempo de repaso.”
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                Estudiante de Psicología · Universidad Nacional de Tres de Febrero
+              </b>
+            </div>
+            <div>
+              <p style={{ fontSize: '14px', margin: '0 0 12px' }}>
+                “Con el progreso por tema supe qué volver a estudiar, en vez de releer todo.”
+              </p>
+              <b style={{ fontSize: '13px', color: 'var(--t)' }}>
+                Estudiante de Marketing · Universidad Siglo 21
+              </b>
+              <span style={{ display: 'block', marginTop: '8px', fontSize: '11px', color: 'var(--s5)' }}>
+                Testimonio de ejemplo
+              </span>
+            </div>
+          </div>'''
+
+          if old not in text:
+              raise SystemExit('Landing testimonial placeholder block not found; refusing to modify the file.')
+
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Commit and remove one-off workflow
+        run: |
+          rm .github/workflows/one-off-landing-testimonials.yml
+          git config user.name "evaluo-admin"
+          git config user.email "evaluo-admin@users.noreply.github.com"
+          git add components/marketing/home-redesign.tsx .github/workflows/one-off-landing-testimonials.yml
+          git commit -m "content: add landing testimonials"
+          git push origin HEAD:${{ github.ref_name }}
