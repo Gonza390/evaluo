@@ -95,7 +95,7 @@ export function selectTopicPracticeQuestions({
     const groups = Array.from({ length: sections.length + 1 }, () => [] as StudyQuestion[]);
     const answered = new Set(
       context.answeredItemKeys.map((key) =>
-        key.replace(/^(?:exercise|diagnostic):/, '').replace(/^summary-check:\\d+:artifact:/, '')
+        key.replace(/^(?:exercise|diagnostic):/, '').replace(/^summary-check:\d+:artifact:/, '')
       )
     );
     for (const question of eligible) {
