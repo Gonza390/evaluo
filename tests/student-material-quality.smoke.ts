@@ -738,6 +738,12 @@ const canonicalGlossaryFixture: CanonicalPedagogicalModel = {
       kind: 'definicion',
     },
     {
+      term: 'Deep learning',
+      detail: 'Aprendizaje automático que usa redes neuronales profundas para reconocer patrones complejos.',
+      kind: 'definicion',
+      pageReferences: [6],
+    },
+    {
       term: 'Material canónico de prueba',
       detail: 'Asignatura o materia correspondiente al material de estudio.',
       kind: 'definicion',
