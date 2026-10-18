@@ -11,6 +11,12 @@ import {
   resolveExamSizeOptions,
 } from '../lib/student-materials/practice-questions.ts';
 import {
+  practiceBankSignature,
+  practiceDraftKey,
+  readPracticeDraft,
+  type PracticeDraft,
+} from '../lib/student-materials/practice-session.ts';
+import {
   selectDelayedReviewQuestion,
   REVIEW_DELAY_MS,
 } from '../lib/student-materials/delayed-review.ts';
@@ -365,4 +371,36 @@ assert.deepEqual(
   new Set(sections.map((section) => section.title)),
   'Cobertura incluye todas las secciones evaluables de la muestra.'
 );
+const originalDraft: PracticeDraft = {
+  version: 1,
+  materialId: 'test-pdf',
+  bankSignature: practiceBankSignature(eightyUnique),
+  questionIds: complete.map((item) => item.id),
+  selectedSize: 80,
+  currentIndex: 37,
+  selectedAnswers: { [complete[0]!.id]: complete[0]!.type === 'multiple_choice' ? complete[0]!.options[0]! : 'n/a' },
+  openDrafts: { [complete.find((q) => q.type === 'open')!.id]: 'Mi respuesta escrita' },
+  revealed: { [complete[0]!.id]: true },
+  openAssessments: { [complete.find((q) => q.type === 'open')!.id]: 'review' },
+  answerIds: { [complete[0]!.id]: 'record-id-1' },
+  contextUnavailable: false,
+  savedAt: Date.now(),
+};
+const restored = readPracticeDraft(JSON.stringify(originalDraft), 'test-pdf', eightyUnique);
+assert.ok(restored, 'La práctica guardada debe poder reanudarse tras recargar.');
+assert.deepEqual(restored!.questionIds, originalDraft.questionIds,
+  'La práctica guardada debe conservar el orden aleatorio original.');
+assert.equal(restored!.currentIndex, 37);
+assert.deepEqual(restored!.openDrafts, originalDraft.openDrafts);
+assert.deepEqual(restored!.openAssessments, originalDraft.openAssessments);
+assert.equal(practiceDraftKey('test-pdf'), 'evaluo:practice-draft:v1:test-pdf');
+assert.equal(readPracticeDraft(JSON.stringify(originalDraft), 'other-pdf', eightyUnique), null);
+assert.equal(readPracticeDraft(JSON.stringify(originalDraft), 'test-pdf', eightyUnique.slice(1)), null,
+  'Un banco regenerado no puede recuperar una práctica obsoleta.');
+assert.equal(readPracticeDraft(JSON.stringify({ ...originalDraft, savedAt: 1 }), 'test-pdf', eightyUnique), null,
+  'Los intentos guardados expiran para no acumular datos indefinidamente.');
+assert.equal(readPracticeDraft(JSON.stringify({
+  ...originalDraft, questionIds: [...originalDraft.questionIds, originalDraft.questionIds[0]],
+}), 'test-pdf', eightyUnique), null,
+  'No recuperar una práctica con preguntas duplicadas o alteradas.');
 console.log('topic-practice.smoke: OK');

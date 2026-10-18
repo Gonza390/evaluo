@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,12 @@ import {
 import { getStudentMaterialPracticeContextAction } from '@/lib/actions/student-material-practice';
 import type { StudySummarySection } from '@/lib/student-materials/types';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
+import {
+  practiceBankSignature,
+  practiceDraftKey,
+  readPracticeDraft,
+  type PracticeDraft,
+} from '@/lib/student-materials/practice-session';
 
 type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
@@ -90,6 +96,103 @@ export function StudentMaterialExam({
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [openAssessments, setOpenAssessments] = useState<Record<string, OpenAssessment>>({});
   const [finished, setFinished] = useState(false);
+  const [savedDraft, setSavedDraft] = useState<PracticeDraft | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const isSimulation = Boolean(simulation);
+  const bankSignature = useMemo(
+    () => practiceBankSignature(eligibleQuestions),
+    [eligibleQuestions]
+  );
+
+  useEffect(() => {
+    if (isSimulation) {
+      setDraftLoaded(true);
+      return;
+    }
+    try {
+      const key = practiceDraftKey(materialId);
+      const raw = window.localStorage.getItem(key);
+      const restored = readPracticeDraft(raw, materialId, eligibleQuestions);
+      if (raw && !restored) window.localStorage.removeItem(key);
+      setSavedDraft(restored);
+    } catch {
+      setSavedDraft(null);
+    }
+    setDraftLoaded(true);
+  }, [materialId, bankSignature, eligibleQuestions, isSimulation]);
+
+  // Guardado automático en este dispositivo. No persistir contenidos del PDF
+  // ni hacer una llamada al servidor por cada tecla del estudiante.
+  useEffect(() => {
+    if (isSimulation || !draftLoaded || !started || finished || !questions.length) return;
+    const draft: PracticeDraft = {
+      version: 1,
+      materialId,
+      bankSignature,
+      questionIds: questions.map((question) => question.id),
+      selectedSize: questions.length,
+      currentIndex,
+      selectedAnswers,
+      openDrafts,
+      revealed,
+      openAssessments,
+      answerIds: { ...answerIds.current },
+      contextUnavailable,
+      savedAt: Date.now(),
+    };
+    try {
+      window.localStorage.setItem(practiceDraftKey(materialId), JSON.stringify(draft));
+    } catch {
+      // Cuota de navegador o almacenamiento bloqueado: la práctica sigue funcionando.
+    }
+  }, [
+    bankSignature, contextUnavailable, currentIndex, draftLoaded, finished,
+    isRecordingError, isSimulation, materialId, openAssessments, openDrafts,
+    questions, revealed, selectedAnswers, started,
+  ]);
+
+  useEffect(() => {
+    if (isSimulation || !finished) return;
+    try {
+      window.localStorage.removeItem(practiceDraftKey(materialId));
+    } catch {
+      // No bloquear la finalización por permisos de almacenamiento.
+    }
+    setSavedDraft(null);
+  }, [finished, isSimulation, materialId]);
+
+  const discardSavedDraft = () => {
+    try {
+      window.localStorage.removeItem(practiceDraftKey(materialId));
+    } catch {
+      // Ignorar almacenamiento deshabilitado.
+    }
+    setSavedDraft(null);
+  };
+
+  const resumeExam = () => {
+    if (!savedDraft) return;
+    const byId = new Map(eligibleQuestions.map((question) => [question.id, question]));
+    const frozen = savedDraft.questionIds
+      .map((id) => byId.get(id))
+      .filter((question): question is StudyQuestion => Boolean(question));
+    if (frozen.length !== savedDraft.questionIds.length) {
+      discardSavedDraft();
+      return;
+    }
+    answerIds.current = { ...savedDraft.answerIds };
+    setQuestions(frozen);
+    setSelectedSize(savedDraft.selectedSize);
+    setCurrentIndex(savedDraft.currentIndex);
+    setSelectedAnswers({ ...savedDraft.selectedAnswers });
+    setOpenDrafts({ ...savedDraft.openDrafts });
+    setRevealed({ ...savedDraft.revealed });
+    setOpenAssessments({ ...savedDraft.openAssessments });
+    setContextUnavailable(savedDraft.contextUnavailable);
+    setFinished(false);
+    setStarted(true);
+    setSavedDraft(null);
+  };
 
   const current = questions[currentIndex];
 
@@ -156,6 +259,7 @@ export function StudentMaterialExam({
     });
     setQuestions(nextQuestions);
     setContextUnavailable(Boolean(context.loadError));
+    setSavedDraft(null);
     clearAttempt();
     setStarted(true);
     setPreparing(false);
@@ -171,6 +275,7 @@ export function StudentMaterialExam({
   };
 
   const resetExam = () => {
+    discardSavedDraft();
     clearAttempt();
     setStarted(false);
   };
@@ -203,6 +308,31 @@ export function StudentMaterialExam({
             práctica. En Completo respondés todas las preguntas disponibles. Al terminar, recibís tu resultado.
           </p>
         </header>
+
+        {savedDraft && !isSimulation && (
+          <div className="border-primary/30 bg-primary/5 mt-5 rounded-xl border px-4 py-4">
+            <p className="text-foreground text-sm font-semibold">
+              Tenés una práctica sin terminar
+            </p>
+            <p className="text-muted-foreground mt-1 text-[13px]">
+              Retomá desde la pregunta {savedDraft.currentIndex + 1} de{' '}
+              {savedDraft.questionIds.length}. Tus respuestas anteriores siguen guardadas
+              en este navegador.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <Button type="button" onClick={resumeExam} className="h-10 rounded-lg">
+                Continuar donde quedé <ArrowRight className="h-4 w-4" />
+              </Button>
+              <button
+                type="button"
+                onClick={discardSavedDraft}
+                className="text-muted-foreground hover:text-foreground text-xs font-medium underline"
+              >
+                Descartar práctica guardada
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-3 py-5 sm:grid-cols-3">
           {sizeOptions.map((option) => {
@@ -482,6 +612,12 @@ export function StudentMaterialExam({
             {levelLabel(current.level)}
           </span>
         </div>
+
+        {!isSimulation && questions.length >= 20 && (
+          <p className="text-muted-foreground text-[11px]">
+            Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y continuar.
+          </p>
+        )}
 
         <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
           <div
