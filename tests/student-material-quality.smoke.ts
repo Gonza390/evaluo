@@ -1251,7 +1251,7 @@ assert.equal(resolveQuestionCategoryFactor({ pageCount: 22, topicCount: 27 }), 1
 
 // Material largo con evidencia académica distribuida: ampliar cobertura sin
 // duplicar llamadas a la IA ni inventar preguntas fuera del modelo original.
-const longModel: CanonicalPedagogicalModel = {
+const denseQuestionBankModel: CanonicalPedagogicalModel = {
   ...canonicalSummaryFixture,
   topics: Array.from({ length: 100 }, (_, i) => ({
     title: `Tema ${i + 1}`,
@@ -1280,7 +1280,7 @@ const longModel: CanonicalPedagogicalModel = {
 const longBank = buildPedagogicalArtifacts({
   summary: canonicalGuideFallback,
   glossary: canonicalGlossary,
-  canonicalModel: longModel,
+  canonicalModel: denseQuestionBankModel,
   pageCount: 94,
 });
 assert.ok(longBank.questions.length > 43,
