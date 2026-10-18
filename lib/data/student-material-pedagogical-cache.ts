@@ -1,5 +1,7 @@
 import { buildPedagogicalArtifacts } from '@/lib/student-material-summary';
 import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
+import { PEDAGOGICAL_QUALITY_REPORT_VERSION } from '@/lib/student-materials/quality';
+import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 import { logError } from '@/lib/observability';
 
 export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = PEDAGOGICAL_ARTIFACTS_VERSION;
@@ -48,7 +50,7 @@ export async function loadOrBuildPedagogicalArtifacts({
         .order('chunk_index', { ascending: true }),
       db
         .from('student_materials')
-        .select('pedagogical_model')
+        .select('pedagogical_model, page_count, pedagogical_quality_report')
         .eq('id', materialId)
         .maybeSingle(),
     ]);
@@ -61,6 +63,7 @@ export async function loadOrBuildPedagogicalArtifacts({
     summary,
     glossary,
     canonicalModel,
+    pageCount: typeof modelRow?.page_count === 'number' ? modelRow.page_count : null,
     chunks: (sourceChunks ?? []).map((chunk: {
       chunk_text: string;
       page_start: number | null;
@@ -75,11 +78,27 @@ export async function loadOrBuildPedagogicalArtifacts({
     })),
   });
 
+  // Cuando se reconstruye un banco anterior, refrescar también la medición
+  // de cobertura de práctica. El score histórico de extracción se conserva.
+  const previousQuality = modelRow?.pedagogical_quality_report;
+  const updatedQuality =
+    previousQuality && typeof previousQuality === 'object' && !Array.isArray(previousQuality)
+      ? {
+          ...previousQuality,
+          version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
+          practiceCoverage: analyzeQuestionBankCoverage(
+            artifacts.questions,
+            summary.sections,
+            typeof modelRow?.page_count === 'number' ? modelRow.page_count : null
+          ),
+        }
+      : null;
   const { error: persistError } = await db
     .from('student_materials')
     .update({
       pedagogical_artifacts: artifacts,
       pedagogical_artifacts_version: CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION,
+      ...(updatedQuality ? { pedagogical_quality_report: updatedQuality } : {}),
     })
     .eq('id', materialId);
 
