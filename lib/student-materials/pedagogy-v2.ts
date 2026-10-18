@@ -6,6 +6,7 @@ import type {
 import {
   buildPedagogicalArtifacts as buildLegacyPedagogicalArtifacts,
   resolveFlashcardLimit,
+  findGroundedSourceExcerpt,
   type PedagogicalArtifacts,
   type PedagogicalChunk,
   type PedagogicalReference,
@@ -330,7 +331,12 @@ function resolveReference(
       pageStart: pages[0] ?? null,
       pageEnd: pages.at(-1) ?? pages[0] ?? null,
       sectionTitle: findTopicTitle(model, pages),
-      excerpt: literalSourceExcerpt(chunks, pages, searchText) ?? truncate(excerpt, 220),
+      ...(findGroundedSourceExcerpt(chunks, pages, searchText, excerpt) ?? {
+        pageStart: pages[0] ?? null,
+        pageEnd: pages.at(-1) ?? pages[0] ?? null,
+        sectionTitle: findTopicTitle(model, pages),
+        excerpt: truncate(excerpt, 220),
+      }),
     };
   }
 
@@ -355,7 +361,12 @@ function resolveReference(
       pageStart: bindingPages[0] ?? null,
       pageEnd: bindingPages.at(-1) ?? bindingPages[0] ?? null,
       sectionTitle: findTopicTitle(model, bindingPages),
-      excerpt: literalSourceExcerpt(chunks, bindingPages, searchText) ?? truncate(excerpt, 220),
+      ...(findGroundedSourceExcerpt(chunks, bindingPages, searchText, excerpt) ?? {
+        pageStart: bindingPages[0] ?? null,
+        pageEnd: bindingPages.at(-1) ?? bindingPages[0] ?? null,
+        sectionTitle: findTopicTitle(model, bindingPages),
+        excerpt: truncate(excerpt, 220),
+      }),
     };
   }
 
@@ -383,27 +394,6 @@ function resolveReference(
   };
 }
 
-function literalSourceExcerpt(
-  chunks: PedagogicalChunk[],
-  pages: number[],
-  searchText: string
-): string | null {
-  const wanted = normalize(searchText);
-  if (wanted.length < 5) return null;
-  const pageSet = new Set(pages);
-  const matching = chunks.find((chunk) =>
-    chunk.pageStart !== null &&
-    pageSet.has(chunk.pageStart) &&
-    normalize(chunk.text).includes(wanted)
-  );
-  if (!matching) return null;
-  const exactIndex = matching.text.toLocaleLowerCase('es')
-    .indexOf(searchText.toLocaleLowerCase('es'));
-  const source = exactIndex >= 0
-    ? matching.text.slice(Math.max(0, exactIndex - 60), exactIndex + 260)
-    : matching.text;
-  return truncate(source, 220);
-}
 
 function findTopicTitle(model: CanonicalPedagogicalModel, pages: number[]) {
   const pageSet = new Set(pages);

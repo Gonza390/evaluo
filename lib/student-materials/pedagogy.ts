@@ -11,7 +11,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 9;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 10;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -201,6 +201,65 @@ function findReference(term: string, chunks: PedagogicalChunk[], fallback: Pedag
     : fallback;
 }
 
+/**
+ * Encuentra un pasaje LITERAL de la misma página que reúna términos del
+ * concepto y la respuesta. Nunca fabrica una cita desde la paráfrasis.
+ * Devolver null si no hay suficiente coincidencia: no es un verificador
+ * semántico, solamente una pista de procedencia verificable.
+ */
+export function findGroundedSourceExcerpt(
+  chunks: PedagogicalChunk[],
+  pageReferences: number[],
+  subject: string,
+  description: string
+): PedagogicalReference | null {
+  const pages = new Set(pageReferences.filter((page) => Number.isInteger(page) && page > 0));
+  if (pages.size === 0) return null;
+  const stop = new Set([
+    'material', 'pagina', 'segun', 'sobre', 'entre', 'desde', 'hasta',
+    'puede', 'pueden', 'porque', 'tambien', 'donde', 'cuando', 'todos',
+    'todas', 'otros', 'otras', 'parte', 'forma', 'mismo', 'misma',
+    'dentro', 'deben', 'deber', 'para', 'como', 'este', 'esta', 'estos',
+    'estas', 'seran', 'tiene', 'tienen', 'realizar', 'relacion', 'acuerdo'
+  ]);
+  const keywords = (value: string) => [...new Set(
+    normalizeForDedupe(value).split(/\s+/)
+      .filter((word) => word.length >= 5 && !stop.has(word))
+  )];
+  const topic = keywords(subject);
+  const answer = keywords(description).slice(0, 32);
+  let found: PedagogicalChunk | null = null;
+  let foundScore = -1;
+  let anchorWord = '';
+
+  for (const chunk of chunks) {
+    if (chunk.pageStart === null || !pages.has(chunk.pageStart)) continue;
+    const normalized = normalizeForDedupe(chunk.text);
+    const topicHits = topic.filter((word) => normalized.includes(word));
+    const answerHits = answer.filter((word) => normalized.includes(word));
+    const matches = new Set([...topicHits, ...answerHits]);
+    if (matches.size < 2 || (topicHits.length === 0 && answerHits.length < 3)) continue;
+    const score = topicHits.length * 4 + answerHits.length +
+      Math.min(1, chunk.text.length / 1000);
+    if (score <= foundScore) continue;
+    found = chunk;
+    foundScore = score;
+    anchorWord = topicHits[0] ?? answerHits[0] ?? '';
+  }
+  if (!found) return null;
+  const near = normalizeForDedupe(found.text).indexOf(anchorWord);
+  // El offset normalizado es aproximado con acentos, pero el slice se toma
+  // directamente del texto original y sigue siendo una cita literal.
+  const start = Math.max(0, near - 60);
+  const original = found.text.slice(start, start + 260);
+  return {
+    pageStart: found.pageStart,
+    pageEnd: found.pageEnd ?? found.pageStart,
+    sectionTitle: found.sectionTitle,
+    excerpt: truncateAtWord(original, 220),
+  };
+}
+
 function referenceFromPages(
   pages: number[] | undefined,
   sectionTitle: string | null,
@@ -209,31 +268,15 @@ function referenceFromPages(
 ) {
   const pageNumbers = (pages ?? []).filter((page) => Number.isFinite(page) && page > 0);
   if (pageNumbers.length > 0) {
-    // Una referencia de página no equivale a una cita textual. Preferimos
-    // reproducir el texto original de los chunks cuando el término solicitado
-    // aparece en esa página, evitando mostrar como "fragmento del PDF" una
-    // paráfrasis construida por el modelo pedagógico.
-    const pageSet = new Set(pageNumbers);
-    const sought = normalizeForDedupe(sectionTitle ?? '');
-    const source = sought.length >= 4
-      ? chunks.find((chunk) =>
-          (chunk.pageStart !== null && pageSet.has(chunk.pageStart)) &&
-          normalizeForDedupe(chunk.text).includes(sought)
-        )
-      : null;
-    const matchIndex = source && sectionTitle
-      ? source.text.toLocaleLowerCase('es').indexOf(sectionTitle.toLocaleLowerCase('es'))
-      : -1;
-    const originalExcerpt = source
-      ? matchIndex >= 0
-        ? source.text.slice(Math.max(0, matchIndex - 70), matchIndex + 240)
-        : source.text
-      : null;
+    const grounded = findGroundedSourceExcerpt(
+      chunks, pageNumbers, sectionTitle ?? '', excerpt
+    );
+    if (grounded) return grounded;
     return {
       pageStart: Math.min(...pageNumbers),
       pageEnd: Math.max(...pageNumbers),
       sectionTitle,
-      excerpt: truncateAtWord(originalExcerpt ?? excerpt, 220),
+      excerpt: truncateAtWord(excerpt, 220),
     } satisfies PedagogicalReference;
   }
 
