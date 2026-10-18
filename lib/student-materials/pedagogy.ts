@@ -11,7 +11,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 8;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 9;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();

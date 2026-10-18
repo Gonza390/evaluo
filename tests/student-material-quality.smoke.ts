@@ -1420,6 +1420,10 @@ assert.ok(
   ),
   'Ninguna flashcard debe quedar sin pregunta, respuesta ni referencia.'
 );
+assert.ok(
+  integratedLongArtifacts.flashcards.every((card) => card.reference.pageStart !== null),
+  'Con suficiente evidencia, las tarjetas del PDF largo deben permitir volver a la página.'
+);
 
 
 const canonicalPedagogy = buildPedagogicalArtifacts({
@@ -1437,7 +1441,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  8,
+  9,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(

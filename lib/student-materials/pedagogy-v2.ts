@@ -79,7 +79,15 @@ function buildCanonicalFlashcards(
   limit: number
 ) {
   const candidates = buildCandidates(model, chunks);
-  if (candidates.length <= limit) return candidates.map((candidate) => candidate.card);
+  // Una tarjeta sin página de respaldo no debe desplazar a otra que sí
+  // permite regresar a la fuente. En materiales densos exigimos trazabilidad.
+  const withPage = candidates.filter(
+    (candidate) =>
+      candidate.card.reference.pageStart !== null &&
+      candidate.card.reference.excerpt.trim().length >= 20
+  );
+  const supported = withPage.length >= Math.min(6, limit) ? withPage : candidates;
+  if (supported.length <= limit) return supported.map((candidate) => candidate.card);
 
   const quotas: Array<[FlashcardKind, number]> = [
     ['concept', 3],
@@ -93,13 +101,13 @@ function buildCanonicalFlashcards(
   const selected = new Map<string, FlashcardCandidate>();
 
   for (const [kind, quota] of quotas) {
-    const bucket = candidates.filter((candidate) => candidate.kind === kind);
+    const bucket = supported.filter((candidate) => candidate.kind === kind);
     for (const candidate of takeEvenlyAcrossPages(bucket, quota)) {
       selected.set(candidate.id, candidate);
     }
   }
 
-  const remaining = candidates.filter((candidate) => !selected.has(candidate.id));
+  const remaining = supported.filter((candidate) => !selected.has(candidate.id));
   for (const candidate of takeEvenlyAcrossPages(remaining, limit - selected.size)) {
     selected.set(candidate.id, candidate);
   }
@@ -322,7 +330,7 @@ function resolveReference(
       pageStart: pages[0] ?? null,
       pageEnd: pages.at(-1) ?? pages[0] ?? null,
       sectionTitle: findTopicTitle(model, pages),
-      excerpt: truncate(excerpt, 220),
+      excerpt: literalSourceExcerpt(chunks, pages, searchText) ?? truncate(excerpt, 220),
     };
   }
 
@@ -347,7 +355,7 @@ function resolveReference(
       pageStart: bindingPages[0] ?? null,
       pageEnd: bindingPages.at(-1) ?? bindingPages[0] ?? null,
       sectionTitle: findTopicTitle(model, bindingPages),
-      excerpt: truncate(excerpt, 220),
+      excerpt: literalSourceExcerpt(chunks, bindingPages, searchText) ?? truncate(excerpt, 220),
     };
   }
 
@@ -373,6 +381,28 @@ function resolveReference(
     sectionTitle: null,
     excerpt: truncate(excerpt, 220),
   };
+}
+
+function literalSourceExcerpt(
+  chunks: PedagogicalChunk[],
+  pages: number[],
+  searchText: string
+): string | null {
+  const wanted = normalize(searchText);
+  if (wanted.length < 5) return null;
+  const pageSet = new Set(pages);
+  const matching = chunks.find((chunk) =>
+    chunk.pageStart !== null &&
+    pageSet.has(chunk.pageStart) &&
+    normalize(chunk.text).includes(wanted)
+  );
+  if (!matching) return null;
+  const exactIndex = matching.text.toLocaleLowerCase('es')
+    .indexOf(searchText.toLocaleLowerCase('es'));
+  const source = exactIndex >= 0
+    ? matching.text.slice(Math.max(0, exactIndex - 60), exactIndex + 260)
+    : matching.text;
+  return truncate(source, 220);
 }
 
 function findTopicTitle(model: CanonicalPedagogicalModel, pages: number[]) {
