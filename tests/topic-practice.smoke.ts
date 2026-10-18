@@ -275,12 +275,20 @@ assert.notEqual(
   transfer.id,
   'Si falla el historial, usar el reparto inicial seguro.'
 );
-// Modos progresivos: en un banco de 80, Completo debe ofrecer las 80.
-assert.deepEqual(resolveExamSizeOptions(80).map((item) => [item.mode, item.count]), [
-  ['brief', 12],
-  ['coverage', 32],
-  ['complete', 80],
-]);
+// Los tres modos deben escalar con el tamaño del banco, no repetir 12 siempre.
+for (const [total, brief, coverage] of [
+  [20, 4, 12],
+  [40, 8, 16],
+  [80, 16, 32],
+  [120, 24, 48],
+  [200, 30, 80],
+] as const) {
+  assert.deepEqual(resolveExamSizeOptions(total).map((item) => [item.mode, item.count]), [
+    ['brief', brief],
+    ['coverage', coverage],
+    ['complete', total],
+  ]);
+}
 assert.deepEqual(resolveExamSizeOptions(20).map((item) => item.mode), [
   'brief', 'coverage', 'complete',
 ]);
@@ -298,19 +306,53 @@ const eightyUnique = getDistinctEligibleExamQuestions([
 ]);
 assert.equal(eightyUnique.length, 80, 'No mostrar duplicados como preguntas disponibles.');
 
+const seededRandom = (seed: number) => () => {
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return seed / 4294967296;
+};
 const complete = selectTopicPracticeQuestions({
   questions: eightyUnique,
   targetCount: 80,
   complete: true,
   sections,
+  random: seededRandom(7),
 });
 assert.equal(complete.length, 80, 'Completo incluye todo el banco, también las abiertas.');
 assert.equal(new Set(complete.map((item) => item.id)).size, 80);
 assert.equal(complete.filter((item) => item.type === 'open').length, 12);
 assert.deepEqual(
-  complete.slice(0, 4).map((item) => item.topic),
-  sections.map((section) => section.title),
-  'Completo debe intercalar preguntas de distintas secciones.'
+  new Set(complete.map((item) => item.id)),
+  new Set(eightyUnique.map((item) => item.id)),
+  'Completo no puede perder ni agregar preguntas durante la mezcla.'
+);
+assert.notDeepEqual(
+  complete.map((item) => item.id),
+  eightyUnique.map((item) => item.id),
+  'Completo no debe conservar el orden de extracción.'
+);
+const differentAttempt = selectTopicPracticeQuestions({
+  questions: eightyUnique,
+  targetCount: 80,
+  complete: true,
+  sections,
+  random: seededRandom(21),
+});
+assert.notDeepEqual(
+  complete.map((item) => item.id),
+  differentAttempt.map((item) => item.id),
+  'Una nueva práctica completa debe poder presentar un orden distinto.'
+);
+const completeWithoutSections = selectTopicPracticeQuestions({
+  questions: eightyUnique,
+  targetCount: 80,
+  complete: true,
+  sections: [],
+  random: seededRandom(7),
+});
+assert.deepEqual(
+  complete.map((item) => item.id),
+  completeWithoutSections.map((item) => item.id),
+  'El orden aleatorio de Completo no debe depender de los capítulos.'
 );
 const coverage = selectTopicPracticeQuestions({
   questions: eightyUnique,

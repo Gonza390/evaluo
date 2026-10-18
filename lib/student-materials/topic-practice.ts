@@ -77,6 +77,7 @@ export function selectTopicPracticeQuestions({
   sections,
   context = emptyTopicPracticeContext,
   complete = false,
+  random = Math.random,
   now = Date.now(),
 }: {
   questions: StudyQuestion[];
@@ -85,40 +86,20 @@ export function selectTopicPracticeQuestions({
   sections: StudySummarySection[];
   context?: TopicPracticeContext;
   complete?: boolean;
+  random?: () => number;
   now?: number;
 }) {
   const eligible = getDistinctEligibleExamQuestions(questions);
   if (complete) {
-    // Modo Completo: conservar TODAS las preguntas únicas y válidas, incluso
-    // las abiertas. Repartirlas por capítulos para no concentrar un mismo tema.
-    if (!sections.length) return eligible;
-    const groups = Array.from({ length: sections.length + 1 }, () => [] as StudyQuestion[]);
-    const answered = new Set(
-      context.answeredItemKeys.map((key) =>
-        key.replace(/^(?:exercise|diagnostic):/, '').replace(/^summary-check:\d+:artifact:/, '')
-      )
-    );
-    for (const question of eligible) {
-      const section = findSummarySectionForQuestion(question, sections);
-      groups[section < 0 ? sections.length : section].push(question);
+    // Completo: todas las preguntas únicas y válidas, en orden aleatorio.
+    // No agrupar por capítulos ni priorizar los temas ya evaluados.
+    // La pantalla congela esta selección al iniciar el intento.
+    const shuffled = [...eligible];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const nextIndex = Math.min(index, Math.max(0, Math.floor(random() * (index + 1))));
+      [shuffled[index], shuffled[nextIndex]] = [shuffled[nextIndex]!, shuffled[index]!];
     }
-    for (const group of groups) {
-      group.sort((a, b) =>
-        Number(answered.has(a.id)) - Number(answered.has(b.id))
-      );
-    }
-    const selected: StudyQuestion[] = [];
-    let remaining = true;
-    while (remaining) {
-      remaining = false;
-      for (const group of groups) {
-        const question = group.shift();
-        if (!question) continue;
-        selected.push(question);
-        remaining = true;
-      }
-    }
-    return selected;
+    return shuffled;
   }
   if (!sections.length) return resolveExamQuestions(eligible, preferredQuestionIds, targetCount);
   const progress = buildPdfProgress(sections, [], context.loadError ? [] : context.evidence);

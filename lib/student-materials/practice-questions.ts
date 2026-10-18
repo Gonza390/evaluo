@@ -114,9 +114,9 @@ export function resolveExamSizeOptions(
 ): ExamSizeOption[] {
   if (totalQuestions <= 0) return [];
 
-  const brief = totalQuestions <= 12
-    ? Math.max(1, Math.round(totalQuestions * 0.35))
-    : Math.min(15, Math.max(5, Math.round(totalQuestions * 0.15)));
+  // El repaso breve escala con el banco: 20% de las preguntas disponibles.
+  // Límite de 30 para que siga siendo una sesión relativamente corta.
+  const brief = Math.min(30, Math.max(1, Math.round(totalQuestions * 0.20)));
   const coverage = Math.max(
     brief + 1,
     Math.round(totalQuestions * 0.4),
