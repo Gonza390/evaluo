@@ -884,7 +884,7 @@ function findExactCanonicalEvidence(
   // No se hacen coincidencias parciales ni de similitud: podrían asignar
   // una definición de otro concepto al alumno.
   const withoutClarification = normalizeForDedupe(
-    query.replace(/\\([^)]*\\)/g, ' ')
+    query.replace(/\([^)]*\)/g, ' ')
   );
   const aliases = new Set([needle, withoutClarification].filter(Boolean));
   const candidate = canonicalEvidenceCandidates(model).find(
