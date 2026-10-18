@@ -158,7 +158,10 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
       const quote = cleanLine(question.reference.excerpt)
         .toLocaleLowerCase('es')
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+        .replace(/[\u0300-\u036f]/g, '')
+        // Los extractos de más de 220 caracteres se acortan visualmente
+        // con puntos suspensivos, que no forman parte del texto fuente.
+        .replace(/\.\.\.$/, '');
       if (quote.length < 30) return false;
       const actualPage = normalizedPages[question.reference.pageStart! - 1] ?? '';
       return actualPage.includes(quote);
