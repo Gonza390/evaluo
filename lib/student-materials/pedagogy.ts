@@ -1,3 +1,4 @@
+import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
 import type {
   CanonicalPedagogicalModel,
   CanonicalPedagogicalSourceKind,
@@ -754,7 +755,8 @@ function buildCanonicalFlashcards(
       (item) =>
         isCleanAcademicLabel(item.source) &&
         isCleanAcademicLabel(item.target) &&
-        cleanLine(item.description).length >= 20
+        cleanLine(item.description).length >= 20 &&
+        !hasSourceContradictedCausalDirection(item, chunks)
     ),
     limit,
     (item) => item.pageReferences
@@ -872,6 +874,17 @@ function canonicalEvidenceCandidates(model: CanonicalPedagogicalModel) {
   );
 }
 
+function findExactCanonicalEvidence(
+  model: CanonicalPedagogicalModel,
+  query: string
+): CanonicalEvidence | null {
+  const needle = normalizeForDedupe(query);
+  const candidate = canonicalEvidenceCandidates(model).find(
+    (item) => normalizeForDedupe(item.label) === needle
+  );
+  return candidate ? { ...candidate, score: 100 } : null;
+}
+
 function findCanonicalEvidence(
   model: CanonicalPedagogicalModel,
   query: string
@@ -983,33 +996,17 @@ function comparisonEntitySupported(
 
 function buildExpectedComparisonAnswer(
   model: CanonicalPedagogicalModel,
-  pair: ComparisonPair,
-  reference: PedagogicalReference
-) {
-  const left = findCanonicalEvidence(model, pair.left);
-  const right = findCanonicalEvidence(model, pair.right);
-
-  if (left && right) {
-    return truncateAtWord(
-      `“${pair.left}” se caracteriza en el material por: ${left.detail} En cambio, “${pair.right}” se caracteriza por: ${right.detail}`,
-      480
-    );
+  pair: ComparisonPair
+): string | null {
+  // No se deben construir respuestas modelo mezclando conceptos elegidos por
+  // parecido de palabras. Una comparación exige evidencia distinta para ambos.
+  const left = findExactCanonicalEvidence(model, pair.left);
+  const right = findExactCanonicalEvidence(model, pair.right);
+  if (!left || !right || normalizeForDedupe(left.detail) === normalizeForDedupe(right.detail)) {
+    return null;
   }
-
-  const sourceAnswer = buildExpectedSectionAnswer(reference.excerpt);
-  if (
-    sourceAnswer.length >= 40 &&
-    normalizeForDedupe(sourceAnswer) !==
-      normalizeForDedupe(`${pair.left} ${pair.right}`)
-  ) {
-    return truncateAtWord(
-      `La comparación debe distinguir “${pair.left}” de “${pair.right}”. ${sourceAnswer}`,
-      480
-    );
-  }
-
   return truncateAtWord(
-    `La comparación correcta debe explicar qué caracteriza a “${pair.left}”, qué caracteriza a “${pair.right}” y cuál es la diferencia respaldada por el material.`,
+    `“${pair.left}” se caracteriza en el material por: ${left.detail} En cambio, “${pair.right}” se caracteriza por: ${right.detail}`,
     480
   );
 }
@@ -1040,15 +1037,18 @@ function buildExpectedConfusionAnswer(
 ) {
   const pair = extractConfusionPair(confusion);
   if (pair) {
-    const left = findCanonicalEvidence(model, pair.left);
-    const right = findCanonicalEvidence(model, pair.right);
+    const left = findExactCanonicalEvidence(model, pair.left);
+    const right = findExactCanonicalEvidence(model, pair.right);
 
-    if (left && right) {
-      return truncateAtWord(
-        `La distinción clave es esta: “${pair.left}” ${left.detail} En cambio, “${pair.right}” ${right.detail}`,
-        480
-      );
+    // Si no se pueden contrastar dos conceptos distintos, omitir la respuesta:
+    // una definición repetida para ambos enseña justamente la confusión.
+    if (!left || !right || normalizeForDedupe(left.detail) === normalizeForDedupe(right.detail)) {
+      return null;
     }
+    return truncateAtWord(
+      `La distinción clave es esta: “${pair.left}” ${left.detail} En cambio, “${pair.right}” ${right.detail}`,
+      480
+    );
   }
 
   const misconception = cleanLine(confusion).match(
@@ -1248,7 +1248,9 @@ function buildCanonicalRelationshipQuestions(
   limit = 9
 ) {
   const relationships = model.relationships.filter(
-    (item) => cleanLine(item.description).length >= 16
+    (item) =>
+      cleanLine(item.description).length >= 16 &&
+      !hasSourceContradictedCausalDirection(item, chunks)
   );
   const selected = selectDistributedByPages(relationships, limit, (item) => item.pageReferences);
 
@@ -1536,6 +1538,9 @@ function buildCanonicalComparisonQuestions(
         return null;
       }
 
+      const answer = buildExpectedComparisonAnswer(model, pair);
+      if (!answer) return null;
+
       return {
         id: `model-comparison-${index + 1}`,
         type: 'open',
@@ -1544,7 +1549,7 @@ function buildCanonicalComparisonQuestions(
         topic: truncateAtWord(`${pair.left} ↔ ${pair.right}`, 100),
         prompt: `Compará “${pair.left}” con “${pair.right}” según el PDF. Explicá al menos una diferencia concreta usando los criterios del material.`,
         options: [],
-        answer: buildExpectedComparisonAnswer(model, pair, reference),
+        answer,
         explanation:
           'Una respuesta sólida debe definir ambos elementos, marcar una diferencia concreta y respaldarla con el criterio presentado en el PDF.',
         reference,
@@ -1560,7 +1565,7 @@ function buildCanonicalConfusionQuestions(
   chunks: PedagogicalChunk[],
   limit = 3
 ) {
-  return model.confusions.slice(0, limit).map((confusion, index): StudyQuestion => {
+  return model.confusions.slice(0, limit).map((confusion, index): StudyQuestion | null => {
     const reference = referenceFromBinding(
       model,
       'confusion',
@@ -1569,6 +1574,8 @@ function buildCanonicalConfusionQuestions(
       chunks,
       confusion
     );
+    const answer = buildExpectedConfusionAnswer(model, confusion, reference);
+    if (!answer) return null;
 
     return {
       id: `model-confusion-${index + 1}`,
@@ -1578,12 +1585,12 @@ function buildCanonicalConfusionQuestions(
       topic: 'Confusión frecuente',
       prompt: `Aclará con tus palabras esta confusión que el material considera importante: “${truncateAtWord(confusion, 180)}”`,
       options: [],
-      answer: buildExpectedConfusionAnswer(model, confusion, reference),
+      answer,
       explanation:
         'Una respuesta sólida debe identificar qué interpretación es incorrecta y explicar la distinción correcta con apoyo en el PDF.',
       reference,
     };
-  });
+  }).filter((question): question is StudyQuestion => Boolean(question));
 }
 
 function buildOpenSectionQuestions(
