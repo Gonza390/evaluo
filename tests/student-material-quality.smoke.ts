@@ -1339,6 +1339,23 @@ assert.ok(new Set(longBank.questions.map((q) => q.topic)).size >= 35,
   'Las preguntas de PDFs extensos deben distribuirse entre conceptos diferentes.');
 assert.ok(longBank.questions.length <= 120,
   'El banco extenso debe respetar un límite razonable sin llenar con contenido ficticio.');
+assert.ok(longBank.questions.every((question) => question.id.startsWith('q-v11-')),
+  'Las preguntas nuevas deben usar IDs incompatibles con los posicionales antiguos.');
+assert.equal(
+  new Set(longBank.questions.map((question) => question.id)).size,
+  longBank.questions.length,
+  'No puede haber colisiones de ID entre preguntas del mismo banco.'
+);
+assert.deepEqual(
+  buildPedagogicalArtifacts({
+    summary: canonicalGuideFallback,
+    glossary: canonicalGlossary,
+    canonicalModel: denseQuestionBankModel,
+    pageCount: 94,
+  }).questions.map((question) => question.id),
+  longBank.questions.map((question) => question.id),
+  'Las preguntas del mismo PDF deben conservar sus identificadores al reprocesar.'
+);
 assert.ok(longBank.questions
   .filter((question) => question.kind === 'concept' && question.type === 'multiple_choice')
   .every((question) => question.explanation.includes(question.answer)),
@@ -1441,7 +1458,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  10,
+  11,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(

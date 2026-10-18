@@ -11,7 +11,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 10;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 11;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -34,6 +34,30 @@ function dedupeStrings(items: string[]) {
     seen.add(key);
     return true;
   });
+}
+
+/**
+ * El número de posición (model-concept-1) podía referirse a otra pregunta al
+ * regenerar un PDF. Identificadores ligados al contenido preservan los
+ * intentos sólo cuando la pregunta y respuesta realmente siguen iguales.
+ * El prefijo v11 separa los registros de las versiones previas.
+ */
+function contentStableQuestionId(question: StudyQuestion) {
+  const content = [
+    question.kind,
+    question.type,
+    question.topic ?? '',
+    question.prompt,
+    question.answer,
+    question.reference.pageStart ?? '',
+  ].map(String).map(normalizeForDedupe).join('|');
+  let hash = 2166136261;
+  let second = 16777619;
+  for (let index = 0; index < content.length; index += 1) {
+    hash = Math.imul(hash ^ content.charCodeAt(index), 16777619) >>> 0;
+    second = Math.imul(second + content.charCodeAt(index), 2246822519) >>> 0;
+  }
+  return `q-v11-${question.kind}-${hash.toString(36)}-${second.toString(36)}`;
 }
 
 function dedupeQuestions(items: StudyQuestion[]) {
@@ -1852,7 +1876,10 @@ export function buildPedagogicalArtifacts(input: {
   const questions = selectBalancedQuestionBank(
     availableQuestions,
     questionBankTarget
-  );
+  ).map((question) => ({
+    ...question,
+    id: contentStableQuestionId(question),
+  }));
   const miniExam = selectMiniExamQuestions(questions, 8);
   const allItems = [...flashcards, ...questions];
 
