@@ -1771,4 +1771,50 @@ assert.ok(
   'Si las entidades comparadas no tienen evidencia específica, no se fabrica una respuesta modelo.'
 );
 
+
+const supportedParentheticalComparison: CanonicalPedagogicalModel = {
+  ...unsafeComparisonModel,
+  concepts: [
+    {
+      term: 'Doxa',
+      detail: 'Conocimiento subjetivo y particular, basado en las apariencias.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+    {
+      term: 'Episteme',
+      detail: 'Conocimiento justificado que aspira a objetividad y universalidad.',
+      kind: 'definicion',
+      pageReferences: [1],
+    },
+  ],
+  confusions: [
+    'Confundir doxa (conocimiento vulgar subjetivo) con episteme (conocimiento científico objetivo y universal).',
+  ],
+};
+const supportedParentheticalOutput = buildPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  canonicalModel: supportedParentheticalComparison,
+  chunks: [{
+    text: 'La doxa es opinión no justificada y la episteme aspira al conocimiento fundamentado.',
+    pageStart: 1,
+    pageEnd: 1,
+    sectionTitle: 'Conocimiento',
+    excerpt: '',
+  }],
+  pageCount: 1,
+});
+assert.ok(
+  supportedParentheticalOutput.questions.some(
+    (question) =>
+      question.kind === 'confusion' &&
+      /doxa/i.test(question.answer) &&
+      /episteme/i.test(question.answer) &&
+      /subjetivo/i.test(question.answer) &&
+      /objetividad/i.test(question.answer)
+  ),
+  'Con dos conceptos explícitos y diferentes deben conservarse las comparaciones aunque incluyan aclaraciones entre paréntesis.'
+);
+
 console.log('Student material quality smoke tests passed.');
