@@ -879,8 +879,16 @@ function findExactCanonicalEvidence(
   query: string
 ): CanonicalEvidence | null {
   const needle = normalizeForDedupe(query);
+  // Aclaraciones entre paréntesis no forman parte del nombre del concepto:
+  // "doxa (conocimiento vulgar)" debe poder encontrar "Doxa".
+  // No se hacen coincidencias parciales ni de similitud: podrían asignar
+  // una definición de otro concepto al alumno.
+  const withoutClarification = normalizeForDedupe(
+    query.replace(/\\([^)]*\\)/g, ' ')
+  );
+  const aliases = new Set([needle, withoutClarification].filter(Boolean));
   const candidate = canonicalEvidenceCandidates(model).find(
-    (item) => normalizeForDedupe(item.label) === needle
+    (item) => aliases.has(normalizeForDedupe(item.label))
   );
   return candidate ? { ...candidate, score: 100 } : null;
 }
