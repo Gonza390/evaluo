@@ -39,6 +39,7 @@ export function selectBalancedQuestionBank(
   const selected: StudyQuestion[] = [];
   const pending = [...questions];
   const usedTopics = new Set<string>();
+  const usedChapters = new Set<string>();
   const usedPages = new Set<number>();
   const perKind = new Map<StudyQuestion['kind'], number>();
   let openCount = 0;
@@ -53,7 +54,9 @@ export function selectBalancedQuestionBank(
       const topic = item.topic?.trim().toLocaleLowerCase('es') ?? '';
       const page = item.reference.pageStart;
       const kindCount = perKind.get(item.kind) ?? 0;
+      const chapter = item.chapterTitle?.trim().toLocaleLowerCase('es') ?? '';
       const score =
+        (chapter && !usedChapters.has(chapter) ? 55 : 0) +
         (topic && !usedTopics.has(topic) ? 9 : 0) +
         (page && !usedPages.has(page) ? 7 : 0) +
         (kindCount === 0 ? 6 : 0) -
@@ -70,6 +73,7 @@ export function selectBalancedQuestionBank(
     if (!item) break;
     selected.push(item);
     if (item.topic) usedTopics.add(item.topic.trim().toLocaleLowerCase('es'));
+    if (item.chapterTitle) usedChapters.add(item.chapterTitle.trim().toLocaleLowerCase('es'));
     if (item.reference.pageStart) usedPages.add(item.reference.pageStart);
     perKind.set(item.kind, (perKind.get(item.kind) ?? 0) + 1);
     if (item.type === 'open') openCount += 1;

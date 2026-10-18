@@ -1326,6 +1326,36 @@ assert.equal(
   4,
   'Los cuatro cuartos del documento deben tener preguntas cuando la fuente las respalda.'
 );
+// Hay fuentes suficientes en cada capítulo: al menos una pregunta de opción
+// múltiple debe vincularse de manera fiable con cada sección.
+const longSummaryWithChapters = {
+  ...canonicalGuideFallback,
+  sections: Array.from({ length: 10 }, (_, i) => {
+    const concept = i * 9 + 1;
+    return {
+      title: `Unidad ${i + 1}: concepto ${concept}`,
+      body: `En esta unidad se estudia el Concepto ${concept} y se desarrolla su definición diferenciada dentro del proceso educativo.`,
+    };
+  }),
+};
+const chapterBank = buildPedagogicalArtifacts({
+  summary: longSummaryWithChapters,
+  glossary: canonicalGlossary,
+  canonicalModel: denseQuestionBankModel,
+  pageCount: 94,
+});
+const chapterAudit = analyzeQuestionBankCoverage(
+  chapterBank.questions,
+  longSummaryWithChapters.sections,
+  94
+);
+assert.equal(chapterAudit.chaptersWithAutoCorrectableQuestions, 10,
+  'Si el contenido canónico permite preguntar por cada capítulo, el banco debe representarlos a todos.');
+assert.ok(chapterBank.questions.filter((question) => question.chapterTitle).every((question) =>
+  question.reference.pageStart !== null &&
+  longSummaryWithChapters.sections.some((section) => section.title === question.chapterTitle)
+), 'La asociación de capítulo requiere evidencia localizada, no inferencias sin fuente.');
+assert.ok(chapterBank.questions.length <= 120);
 
 const canonicalPedagogy = buildPedagogicalArtifacts({
   summary: canonicalGuideFallback,

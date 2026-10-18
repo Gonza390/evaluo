@@ -155,6 +155,9 @@ export type StudyQuestion = {
     | 'confusion'
     | 'section';
   topic?: string;
+  // Asociación verificada con un capítulo concreto del resumen, distinta
+  // del concepto específico que sigue figurando en "topic".
+  chapterTitle?: string;
   prompt: string;
   options: string[];
   answer: string;
@@ -1528,6 +1531,96 @@ function buildOpenSectionQuestions(
   });
 }
 
+/**
+ * Reservar una pregunta corregible por capítulo siempre que un concepto
+ * canónico esté presente de forma inequívoca en ese capítulo del resumen.
+ *
+ * La pertenencia sólo se asigna con coincidencia explícita y única del término
+ * en el resumen; si el PDF no permite hacerlo con seguridad, el capítulo
+ * permanece sin cobertura automática y así se informa en quality.
+ */
+function anchorAndCompleteChapterQuestions(
+  questions: StudyQuestion[],
+  summary: StudentMaterialSummary,
+  model: CanonicalPedagogicalModel,
+  chunks: PedagogicalChunk[]
+): StudyQuestion[] {
+  const chapters = summary.sections;
+  if (chapters.length === 0) return questions;
+  const chapterTexts = chapters.map((section) =>
+    ` ${normalizeForDedupe(section.body)} `
+  );
+  const uniqueChapterForConcept = (term: string) => {
+    const normalized = normalizeForDedupe(term);
+    if (normalized.length < 7 || normalized.split(/\\s+/).length > 7) return -1;
+    const matches = chapterTexts.flatMap((body, index) =>
+      body.includes(` ${normalized} `) ? [index] : []
+    );
+    return matches.length === 1 ? matches[0] : -1;
+  };
+  const usedPrompts = new Set(questions.map((question) => normalizeForDedupe(question.prompt)));
+  const anchored = questions.map((question) => {
+    if (question.kind !== 'concept' || question.type !== 'multiple_choice' || !question.topic)
+      return question;
+    const index = uniqueChapterForConcept(question.topic);
+    return index < 0 ? question : { ...question, chapterTitle: chapters[index]!.title };
+  });
+  const covered = new Set(
+    anchored.filter((item) => item.chapterTitle && item.type === 'multiple_choice')
+      .map((item) => item.chapterTitle)
+  );
+
+  for (let index = 0; index < chapters.length; index += 1) {
+    const chapter = chapters[index]!;
+    if (covered.has(chapter.title)) continue;
+    const candidates = model.concepts.filter((concept) =>
+      cleanLine(concept.term).length >= 7 &&
+      cleanLine(concept.detail).length >= 30 &&
+      (concept.pageReferences ?? []).some((page) => Number.isInteger(page) && page > 0) &&
+      uniqueChapterForConcept(concept.term) === index
+    );
+
+    for (const concept of candidates) {
+      const correct = truncateAtWord(concept.detail, 210);
+      const distractors = rankSemanticItems(
+        `${concept.term} ${concept.detail}`,
+        concept.pageReferences,
+        model.concepts.filter((item) => item !== concept),
+        (item) => `${item.term} ${item.detail}`,
+        (item) => item.pageReferences,
+        3
+      ).map((item) => truncateAtWord(item.detail, 210));
+      const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
+      if (options.length < 3) continue;
+      const prompt = `¿Qué explica el PDF sobre “${concept.term}”?`;
+      if (usedPrompts.has(normalizeForDedupe(prompt))) continue;
+
+      // También la pregunta de cobertura hereda una referencia verificable.
+      const reference = referenceFromPages(
+        concept.pageReferences, concept.term, concept.detail, chunks
+      );
+      if (reference.pageStart === null) continue;
+      anchored.push({
+        id: `chapter-concept-${index + 1}`,
+        type: 'multiple_choice',
+        level: 'comprender',
+        kind: 'concept',
+        topic: concept.term,
+        chapterTitle: chapter.title,
+        prompt,
+        options,
+        answer: correct,
+        explanation: `La respuesta corresponde a la definición de “${concept.term}” recuperada del PDF.`,
+        reference,
+      });
+      usedPrompts.add(normalizeForDedupe(prompt));
+      covered.add(chapter.title);
+      break;
+    }
+  }
+  return anchored;
+}
+
 function selectMiniExamQuestions(questions: StudyQuestion[], limit = 8) {
   const selected: StudyQuestion[] = [];
   const selectedIds = new Set<string>();
@@ -1677,7 +1770,16 @@ export function buildPedagogicalArtifacts(input: {
     ...buildOpenSectionQuestions(input.summary, chunks, model, sectionQuestionLimit),
   ];
 
-  const availableQuestions = dedupeQuestions([...modelQuestions, ...fallbackQuestions]);
+  const availableQuestions = dedupeQuestions(
+    model
+      ? anchorAndCompleteChapterQuestions(
+          [...modelQuestions, ...fallbackQuestions],
+          input.summary,
+          model,
+          chunks
+        )
+      : [...modelQuestions, ...fallbackQuestions]
+  );
   // No agregar preguntas ficticias: la meta crece con la cantidad de contenido
   // realmente disponible, pero sólo se eligen ítems respaldados por el PDF.
   const questions = selectBalancedQuestionBank(

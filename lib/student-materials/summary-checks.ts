@@ -447,9 +447,18 @@ function candidateSectionIndex(candidate: Candidate, sections: StudySummarySecti
 
 /** Misma asociación conservadora para las respuestas de práctica y el resumen. */
 export function findSummarySectionForQuestion(
-  question: Pick<StudyQuestion, 'prompt' | 'answer' | 'reference' | 'topic'>,
+  question: Pick<StudyQuestion, 'prompt' | 'answer' | 'reference' | 'topic'> & {
+    chapterTitle?: string;
+  },
   sections: StudySummarySection[]
 ) {
+  if (question.chapterTitle) {
+    const normalized = topicLabel(question.chapterTitle);
+    const matches = sections.flatMap((section, index) =>
+      topicLabel(section.title) === normalized ? [index] : []
+    );
+    if (matches.length === 1) return matches[0];
+  }
   return candidateSectionIndex(
     {
       ...question,
