@@ -32,6 +32,7 @@ type BuildPedagogicalArtifactsInput = {
   glossary: StudyGlossaryItem[];
   chunks?: PedagogicalChunk[];
   canonicalModel?: CanonicalPedagogicalModel | null;
+  pageCount?: number | null;
 };
 
 

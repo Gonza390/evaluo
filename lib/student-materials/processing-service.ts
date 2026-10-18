@@ -545,6 +545,7 @@ export async function processStudentMaterial(input: {
   const pedagogicalArtifacts = buildPedagogicalArtifacts({
     summary,
     glossary,
+    pageCount,
     canonicalModel: pedagogicalModel,
     chunks: traceableChunks.map((chunk) => ({
       text: chunk.text,

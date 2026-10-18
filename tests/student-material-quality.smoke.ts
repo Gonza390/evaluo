@@ -42,6 +42,10 @@ import {
   resolveCanonicalGlossaryLimit,
 } from '../lib/student-materials/canonical-glossary.ts';
 import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.ts';
+import {
+  resolveQuestionBankTarget,
+  resolveQuestionCategoryFactor,
+} from '../lib/student-materials/question-bank.ts';
 
 function normalizeForTest(value: string) {
   return value
@@ -1241,6 +1245,51 @@ assert.ok(
   'El mini parcial debe tener dificultad progresiva.'
 );
 
+assert.equal(resolveQuestionCategoryFactor({ pageCount: 94, topicCount: 104 }), 4);
+assert.equal(resolveQuestionBankTarget({ pageCount: 94, topicCount: 104 }), 120);
+assert.equal(resolveQuestionCategoryFactor({ pageCount: 22, topicCount: 27 }), 1);
+
+// Material largo con evidencia académica distribuida: ampliar cobertura sin
+// duplicar llamadas a la IA ni inventar preguntas fuera del modelo original.
+const longModel: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  topics: Array.from({ length: 100 }, (_, i) => ({
+    title: `Tema ${i + 1}`,
+    description: `Conceptos y relaciones del tema ${i + 1}.`,
+    relevance: 'alta' as const,
+    pageReferences: [i + 1],
+  })),
+  concepts: Array.from({ length: 150 }, (_, i) => ({
+    term: `Concepto ${i + 1}`,
+    detail: `Definición diferenciada del concepto ${i + 1}, con efectos sobre el proceso educativo y relación con el conocimiento científico del tema.`,
+    kind: 'definicion' as const,
+    pageReferences: [(i % 94) + 1],
+  })),
+  relationships: Array.from({ length: 90 }, (_, i) => ({
+    source: `Concepto ${i + 1}`,
+    target: `Concepto ${i + 2}`,
+    description: `El concepto ${i + 1} favorece la comprensión del concepto ${i + 2} mediante un análisis científico verificable.`,
+    pageReferences: [(i % 94) + 1],
+  })),
+  classifications: [],
+  processes: [],
+  formulas: [],
+  examRelevantClaims: [],
+  confusions: [],
+};
+const longBank = buildPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  canonicalModel: longModel,
+  pageCount: 94,
+});
+assert.ok(longBank.questions.length > 43,
+  'Un PDF largo y denso debe disponer de más preguntas que el banco fijo anterior.');
+assert.ok(new Set(longBank.questions.map((q) => q.topic)).size >= 35,
+  'Las preguntas de PDFs extensos deben distribuirse entre conceptos diferentes.');
+assert.ok(longBank.questions.length <= 120,
+  'El banco extenso debe respetar un límite razonable sin llenar con contenido ficticio.');
+
 const canonicalPedagogy = buildPedagogicalArtifacts({
   summary: canonicalGuideFallback,
   glossary: canonicalGlossary,
@@ -1256,7 +1305,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  5,
+  6,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(

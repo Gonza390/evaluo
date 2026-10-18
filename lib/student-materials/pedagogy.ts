@@ -4,8 +4,13 @@ import type {
   StudyGlossaryItem,
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
+import {
+  resolveQuestionBankTarget,
+  resolveQuestionCategoryFactor,
+  selectBalancedQuestionBank,
+} from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 5;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 6;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -1117,12 +1122,13 @@ function buildFallbackMultipleChoice(
 
 function buildCanonicalConceptQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 10
 ) {
   const concepts = model.concepts.filter(
     (concept) => cleanLine(concept.term).length >= 3 && cleanLine(concept.detail).length >= 12
   );
-  const selected = selectDistributedByPages(concepts, 10, (concept) => concept.pageReferences);
+  const selected = selectDistributedByPages(concepts, limit, (concept) => concept.pageReferences);
 
   return selected
     .map((concept, index): StudyQuestion => {
@@ -1165,12 +1171,13 @@ function buildCanonicalConceptQuestions(
 
 function buildCanonicalRelationshipQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 9
 ) {
   const relationships = model.relationships.filter(
     (item) => cleanLine(item.description).length >= 16
   );
-  const selected = selectDistributedByPages(relationships, 9, (item) => item.pageReferences);
+  const selected = selectDistributedByPages(relationships, limit, (item) => item.pageReferences);
 
   return selected
     .map((item, index): StudyQuestion => {
@@ -1250,10 +1257,11 @@ function extractClassificationItemDetail(
 
 function buildCanonicalClassificationQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 10
 ) {
   const eligible = model.classifications.filter((classification) => classification.items.length >= 3);
-  const selected = selectDistributedByPages(eligible, 10, (classification) => classification.pageReferences);
+  const selected = selectDistributedByPages(eligible, limit, (classification) => classification.pageReferences);
 
   return selected
     .map((classification, index): StudyQuestion | null => {
@@ -1311,10 +1319,11 @@ function processScenarioSteps(title: string, steps: string[]) {
 
 function buildCanonicalProcessQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 8
 ) {
   const eligible = model.processes.filter((process) => process.steps.length >= 2);
-  const selected = selectDistributedByPages(eligible, 8, (process) => process.pageReferences);
+  const selected = selectDistributedByPages(eligible, limit, (process) => process.pageReferences);
 
   return selected
     .map((process, index): StudyQuestion | null => {
@@ -1363,10 +1372,11 @@ function isPhFormula(expression: string) {
 
 function buildCanonicalFormulaQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 5
 ) {
   return model.formulas
-    .slice(0, 5)
+    .slice(0, limit)
     .map((formula, index): StudyQuestion | null => {
       if (isPhFormula(formula.expression)) {
         const exponent = 5;
@@ -1426,7 +1436,8 @@ function buildCanonicalFormulaQuestions(
 
 function buildCanonicalComparisonQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 4
 ) {
   const questions = model.examRelevantClaims
     .filter((claim) => COMPARISON_SIGNAL_PATTERN.test(claim))
@@ -1466,14 +1477,15 @@ function buildCanonicalComparisonQuestions(
     })
     .filter((question): question is StudyQuestion => Boolean(question));
 
-  return questions.slice(0, 4);
+  return questions.slice(0, limit);
 }
 
 function buildCanonicalConfusionQuestions(
   model: CanonicalPedagogicalModel,
-  chunks: PedagogicalChunk[]
+  chunks: PedagogicalChunk[],
+  limit = 3
 ) {
-  return model.confusions.slice(0, 3).map((confusion, index): StudyQuestion => {
+  return model.confusions.slice(0, limit).map((confusion, index): StudyQuestion => {
     const reference = referenceFromBinding(
       model,
       'confusion',
@@ -1502,9 +1514,10 @@ function buildCanonicalConfusionQuestions(
 function buildOpenSectionQuestions(
   summary: StudentMaterialSummary,
   chunks: PedagogicalChunk[],
-  model?: CanonicalPedagogicalModel | null
+  model?: CanonicalPedagogicalModel | null,
+  limit = 4
 ) {
-  return summary.sections.slice(0, 4).map((section, index): StudyQuestion => {
+  return summary.sections.slice(0, limit).map((section, index): StudyQuestion => {
     const reference = findReference(
       section.title,
       chunks,
@@ -1611,6 +1624,7 @@ export function buildPedagogicalArtifacts(input: {
   glossary: StudyGlossaryItem[];
   chunks?: PedagogicalChunk[];
   canonicalModel?: CanonicalPedagogicalModel | null;
+  pageCount?: number | null;
 }): PedagogicalArtifacts {
   const chunks = input.chunks ?? [];
   const model = input.canonicalModel;
@@ -1653,15 +1667,25 @@ export function buildPedagogicalArtifacts(input: {
     ),
   ].slice(0, flashcardLimit);
 
+  const topicCount = model?.topics.length ?? sectionTitles.length;
+  const categoryFactor = resolveQuestionCategoryFactor({
+    pageCount: input.pageCount,
+    topicCount,
+  });
+  const questionBankTarget = resolveQuestionBankTarget({
+    pageCount: input.pageCount,
+    topicCount,
+  });
+  const sectionQuestionLimit = Math.min(input.summary.sections.length, 4 * categoryFactor);
   const modelQuestions = model
     ? [
-        ...buildCanonicalConceptQuestions(model, chunks),
-        ...buildCanonicalRelationshipQuestions(model, chunks),
-        ...buildCanonicalClassificationQuestions(model, chunks),
-        ...buildCanonicalProcessQuestions(model, chunks),
-        ...buildCanonicalFormulaQuestions(model, chunks),
-        ...buildCanonicalComparisonQuestions(model, chunks),
-        ...buildCanonicalConfusionQuestions(model, chunks),
+        ...buildCanonicalConceptQuestions(model, chunks, 10 * categoryFactor),
+        ...buildCanonicalRelationshipQuestions(model, chunks, 9 * categoryFactor),
+        ...buildCanonicalClassificationQuestions(model, chunks, 10 * categoryFactor),
+        ...buildCanonicalProcessQuestions(model, chunks, 8 * categoryFactor),
+        ...buildCanonicalFormulaQuestions(model, chunks, 5 * categoryFactor),
+        ...buildCanonicalComparisonQuestions(model, chunks, 4 * categoryFactor),
+        ...buildCanonicalConfusionQuestions(model, chunks, 3 * categoryFactor),
       ]
     : [];
 
@@ -1669,10 +1693,16 @@ export function buildPedagogicalArtifacts(input: {
     ...(modelQuestions.length < 12
       ? buildFallbackMultipleChoice(concepts, chunks, sectionTitles)
       : []),
-    ...buildOpenSectionQuestions(input.summary, chunks, model),
+    ...buildOpenSectionQuestions(input.summary, chunks, model, sectionQuestionLimit),
   ];
 
-  const questions = dedupeQuestions([...modelQuestions, ...fallbackQuestions]);
+  const availableQuestions = dedupeQuestions([...modelQuestions, ...fallbackQuestions]);
+  // No agregar preguntas ficticias: la meta crece con la cantidad de contenido
+  // realmente disponible, pero sólo se eligen ítems respaldados por el PDF.
+  const questions = selectBalancedQuestionBank(
+    availableQuestions,
+    Math.max(availableQuestions.length > questionBankTarget ? questionBankTarget : 0, questionBankTarget)
+  );
   const miniExam = selectMiniExamQuestions(questions, 8);
   const allItems = [...flashcards, ...questions];
 
@@ -1682,7 +1712,7 @@ export function buildPedagogicalArtifacts(input: {
     miniExamQuestionIds: miniExam.map((question) => question.id),
     coverage: {
       conceptsUsed: model?.concepts.length ?? concepts.length,
-      sectionsUsed: Math.min(4, input.summary.sections.length),
+      sectionsUsed: sectionQuestionLimit,
       referencedItems: allItems.filter((item) => item.reference.excerpt.length > 0).length,
       totalItems: allItems.length,
     },
