@@ -327,16 +327,13 @@ function resolveReference(
   const pages = normalizePages(directPages ?? []);
 
   if (pages.length > 0) {
+    const grounded = findGroundedSourceExcerpt(chunks, pages, searchText, excerpt);
+    if (grounded) return grounded;
     return {
       pageStart: pages[0] ?? null,
       pageEnd: pages.at(-1) ?? pages[0] ?? null,
       sectionTitle: findTopicTitle(model, pages),
-      ...(findGroundedSourceExcerpt(chunks, pages, searchText, excerpt) ?? {
-        pageStart: pages[0] ?? null,
-        pageEnd: pages.at(-1) ?? pages[0] ?? null,
-        sectionTitle: findTopicTitle(model, pages),
-        excerpt: truncate(excerpt, 220),
-      }),
+      excerpt: truncate(excerpt, 220),
     };
   }
 
@@ -357,16 +354,13 @@ function resolveReference(
   );
 
   if (bindingPages.length > 0) {
+    const grounded = findGroundedSourceExcerpt(chunks, bindingPages, searchText, excerpt);
+    if (grounded) return grounded;
     return {
       pageStart: bindingPages[0] ?? null,
       pageEnd: bindingPages.at(-1) ?? bindingPages[0] ?? null,
       sectionTitle: findTopicTitle(model, bindingPages),
-      ...(findGroundedSourceExcerpt(chunks, bindingPages, searchText, excerpt) ?? {
-        pageStart: bindingPages[0] ?? null,
-        pageEnd: bindingPages.at(-1) ?? bindingPages[0] ?? null,
-        sectionTitle: findTopicTitle(model, bindingPages),
-        excerpt: truncate(excerpt, 220),
-      }),
+      excerpt: truncate(excerpt, 220),
     };
   }
 
