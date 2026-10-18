@@ -6,8 +6,9 @@ import type {
   StudentMaterialSummary,
 } from '@/lib/student-materials/types';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 2;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 3;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -131,6 +132,12 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   const artifactReferenceRatio =
     artifactCount > 0 ? referencedArtifactCount / artifactCount : 0;
 
+  const practiceCoverage = analyzeQuestionBankCoverage(
+    input.artifacts.questions,
+    input.summary.sections,
+    input.pageCount
+  );
+
   const questionLevelCounts = {
     recordar: input.artifacts.questions.filter((item) => item.level === 'recordar').length,
     comprender: input.artifacts.questions.filter((item) => item.level === 'comprender').length,
@@ -233,6 +240,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     applicationQuestionRatio:
       Math.round(applicationQuestionRatio * 1000) / 1000,
     miniExamQuestionCount: input.artifacts.miniExamQuestionIds.length,
+    practiceCoverage,
     artifactReferenceRatio: Math.round(artifactReferenceRatio * 1000) / 1000,
     issues,
   };

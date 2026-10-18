@@ -193,6 +193,19 @@ export type StudentMaterialPedagogicalQualityReport = {
   };
   applicationQuestionRatio: number;
   miniExamQuestionCount: number;
+  practiceCoverage?: {
+    eligibleQuestionCount: number;
+    autoCorrectableQuestionCount: number;
+    summaryChapterCount: number;
+    chaptersWithQuestions: number;
+    chaptersWithAutoCorrectableQuestions: number;
+    chaptersWithoutAutoCorrectableQuestions: string[];
+    questionsWithoutReliableChapter: number;
+    distinctReferencedPages: number;
+    pageReferenceRatio: number | null;
+    quartersWithReferencedQuestions: number;
+    status: 'unknown' | 'limited' | 'distributed';
+  };
   artifactReferenceRatio: number;
   issues: string[];
 };

@@ -8,9 +8,10 @@ import {
   resolveQuestionBankTarget,
   resolveQuestionCategoryFactor,
   selectBalancedQuestionBank,
+  selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 6;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 7;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -329,27 +330,7 @@ function selectDistributedByPages<T>(
   limit: number,
   getPages: (item: T) => number[] | undefined
 ) {
-  const selected: T[] = [];
-  const deferred: T[] = [];
-  const pagesSeen = new Set<number>();
-
-  for (const item of items) {
-    const page = (getPages(item) ?? []).filter((value) => value > 0).sort((a, b) => a - b)[0];
-    if (page && !pagesSeen.has(page)) {
-      selected.push(item);
-      pagesSeen.add(page);
-    } else {
-      deferred.push(item);
-    }
-    if (selected.length >= limit) return selected.slice(0, limit);
-  }
-
-  for (const item of deferred) {
-    if (selected.length >= limit) break;
-    selected.push(item);
-  }
-
-  return selected.slice(0, limit);
+  return selectSourceDistributedItems(items, limit, getPages);
 }
 
 function selectDistractorDefinitions(

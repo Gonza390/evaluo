@@ -45,6 +45,8 @@ import type { CanonicalPedagogicalModel } from '../lib/student-materials/types.t
 import {
   resolveQuestionBankTarget,
   resolveQuestionCategoryFactor,
+  selectSourceDistributedItems,
+  analyzeQuestionBankCoverage,
 } from '../lib/student-materials/question-bank.ts';
 
 function normalizeForTest(value: string) {
@@ -1249,6 +1251,31 @@ assert.equal(resolveQuestionCategoryFactor({ pageCount: 94, topicCount: 104 }), 
 assert.equal(resolveQuestionBankTarget({ pageCount: 94, topicCount: 104 }), 120);
 assert.equal(resolveQuestionCategoryFactor({ pageCount: 22, topicCount: 27 }), 1);
 
+const hundredPageConcepts = Array.from({ length: 100 }, (_, i) => ({
+  label: `Concepto de la página ${i + 1}`,
+  pageReferences: [i + 1],
+}));
+const distributedConcepts = selectSourceDistributedItems(
+  hundredPageConcepts, 10, (item) => item.pageReferences
+);
+assert.equal(distributedConcepts.length, 10);
+assert.deepEqual(
+  distributedConcepts.map((item) => item.pageReferences[0]),
+  [1, 12, 23, 34, 45, 56, 67, 78, 89, 100],
+  'Muestrear a lo largo de todo el PDF, no sólo las primeras 10 páginas.'
+);
+const twoPerPage = selectSourceDistributedItems(
+  Array.from({ length: 100 }, (_, i) => ({
+    label: `Concepto ${i + 1}`,
+    pageReferences: [Math.floor(i / 2) + 1],
+  })),
+  70,
+  (item) => item.pageReferences
+);
+assert.equal(new Set(twoPerPage.map((item) => item.pageReferences[0])).size, 50,
+  'Usar todas las páginas con evidencia antes de repetir preguntas de la misma página.');
+
+
 // Material largo con evidencia académica distribuida: ampliar cobertura sin
 // duplicar llamadas a la IA ni inventar preguntas fuera del modelo original.
 const denseQuestionBankModel: CanonicalPedagogicalModel = {
@@ -1289,6 +1316,16 @@ assert.ok(new Set(longBank.questions.map((q) => q.topic)).size >= 35,
   'Las preguntas de PDFs extensos deben distribuirse entre conceptos diferentes.');
 assert.ok(longBank.questions.length <= 120,
   'El banco extenso debe respetar un límite razonable sin llenar con contenido ficticio.');
+const longPages = longBank.questions
+  .map((item) => item.reference.pageStart)
+  .filter((page): page is number => page !== null);
+assert.ok(longPages.some((page) => page <= 15) && longPages.some((page) => page >= 75),
+  'Un PDF largo debe generar preguntas tanto del comienzo como del final.');
+assert.equal(
+  new Set(longPages.map((page) => Math.ceil(page / (94 / 4)))).size,
+  4,
+  'Los cuatro cuartos del documento deben tener preguntas cuando la fuente las respalda.'
+);
 
 const canonicalPedagogy = buildPedagogicalArtifacts({
   summary: canonicalGuideFallback,
@@ -1305,7 +1342,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  6,
+  7,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
@@ -1444,6 +1481,15 @@ assert.equal(
   canonicalQuality.artifactReferenceRatio,
   1,
   'Flashcards y preguntas deben conservar referencia a la fuente.'
+);
+assert.equal(canonicalQuality.practiceCoverage?.eligibleQuestionCount,
+  analyzeQuestionBankCoverage(canonicalPedagogy.questions, canonicalGuideFallback.sections, 7).eligibleQuestionCount,
+  'La cobertura de práctica debe medirse con preguntas que pasan sus filtros, no con el banco bruto.'
+);
+assert.ok(
+  canonicalQuality.practiceCoverage &&
+  canonicalQuality.practiceCoverage.chaptersWithAutoCorrectableQuestions <= canonicalQuality.practiceCoverage.summaryChapterCount,
+  'El indicador debe distinguir capítulos con preguntas autocorregibles.'
 );
 assert.ok(
   canonicalQuality.pedagogicalDepthScore >= 55,

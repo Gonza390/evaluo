@@ -1,4 +1,7 @@
 import type { StudyQuestion } from '@/lib/student-materials/pedagogy';
+import type { StudySummarySection } from '@/lib/student-materials/types';
+import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
+import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
 
 type QuestionBankContext = { pageCount?: number | null; topicCount: number };
 
@@ -72,4 +75,139 @@ export function selectBalancedQuestionBank(
     if (item.type === 'open') openCount += 1;
   }
   return selected;
+}
+
+
+/**
+ * Muestreo estratificado por páginas del PDF. El selector anterior terminaba
+ * tras encontrar N páginas al principio, aunque hubiera contenido al final.
+ * Priorizamos una evidencia por página a lo largo de TODO el documento antes
+ * de repetir páginas; el resultado es determinístico para un mismo modelo.
+ */
+export function selectSourceDistributedItems<T>(
+  items: T[],
+  limit: number,
+  getPages: (item: T) => number[] | undefined
+): T[] {
+  if (limit <= 0 || items.length === 0) return [];
+  if (items.length <= limit) return [...items];
+
+  const byPage = new Map<number, T[]>();
+  const noPage: T[] = [];
+  for (const item of items) {
+    const page = (getPages(item) ?? [])
+      .filter((value) => Number.isInteger(value) && value > 0)
+      .sort((left, right) => left - right)[0];
+    if (!page) {
+      noPage.push(item);
+      continue;
+    }
+    const existing = byPage.get(page) ?? [];
+    existing.push(item);
+    byPage.set(page, existing);
+  }
+
+  const pages = [...byPage.keys()].sort((left, right) => left - right);
+  if (pages.length === 0) return noPage.slice(0, limit);
+
+  const selected: T[] = [];
+  const sampleCount = Math.min(limit, pages.length);
+  // Incluir ambos extremos y puntos intermedios incluso con cupos bajos.
+  for (let position = 0; position < sampleCount; position += 1) {
+    const index = sampleCount === 1
+      ? Math.floor((pages.length - 1) / 2)
+      : Math.round((position * (pages.length - 1)) / (sampleCount - 1));
+    const group = byPage.get(pages[index]!)!;
+    const item = group.shift();
+    if (item) selected.push(item);
+  }
+  if (selected.length >= limit) return selected;
+
+  // Repartir las restantes en rondas, no concentrarlas en las primeras páginas.
+  let added = true;
+  while (selected.length < limit && added) {
+    added = false;
+    for (const page of pages) {
+      if (selected.length >= limit) break;
+      const item = byPage.get(page)?.shift();
+      if (!item) continue;
+      selected.push(item);
+      added = true;
+    }
+  }
+  for (const item of noPage) {
+    if (selected.length >= limit) break;
+    selected.push(item);
+  }
+  return selected;
+}
+
+export type PracticeCoverageAudit = {
+  eligibleQuestionCount: number;
+  autoCorrectableQuestionCount: number;
+  summaryChapterCount: number;
+  chaptersWithQuestions: number;
+  chaptersWithAutoCorrectableQuestions: number;
+  chaptersWithoutAutoCorrectableQuestions: string[];
+  questionsWithoutReliableChapter: number;
+  distinctReferencedPages: number;
+  pageReferenceRatio: number | null;
+  quartersWithReferencedQuestions: number;
+  status: 'unknown' | 'limited' | 'distributed';
+};
+
+/** Cobertura de evaluación, separada del éxito de extracción del PDF. */
+export function analyzeQuestionBankCoverage(
+  questions: StudyQuestion[],
+  sections: StudySummarySection[],
+  pageCount: number | null
+): PracticeCoverageAudit {
+  const eligible = getDistinctEligibleExamQuestions(questions);
+  const byChapter = sections.map(() => ({ all: 0, auto: 0 }));
+  const pageNumbers = new Set<number>();
+  let unassigned = 0;
+  let autoCount = 0;
+  for (const item of eligible) {
+    if (item.type === 'multiple_choice') autoCount += 1;
+    const page = item.reference.pageStart;
+    if (page !== null && Number.isInteger(page) && page > 0 &&
+        (pageCount === null || page <= pageCount)) pageNumbers.add(page);
+    const index = findSummarySectionForQuestion(item, sections);
+    if (index < 0) {
+      unassigned += 1;
+      continue;
+    }
+    byChapter[index]!.all += 1;
+    if (item.type === 'multiple_choice') byChapter[index]!.auto += 1;
+  }
+  const distinctPages = [...pageNumbers];
+  const validPageCount = pageCount !== null && Number.isInteger(pageCount) && pageCount > 0;
+  const quarters = validPageCount
+    ? new Set(distinctPages.map((page) => Math.min(4, Math.ceil(page * 4 / pageCount)))).size
+    : 0;
+  const evaluatedChapters = byChapter.filter((item) => item.auto > 0).length;
+  const ratio = validPageCount ? distinctPages.length / pageCount : null;
+  const status =
+    sections.length === 0 || !validPageCount
+      ? 'unknown'
+      : evaluatedChapters / sections.length < 0.75 ||
+          (pageCount >= 25 && quarters < 4)
+        ? 'limited'
+        : 'distributed';
+
+  return {
+    eligibleQuestionCount: eligible.length,
+    autoCorrectableQuestionCount: autoCount,
+    summaryChapterCount: sections.length,
+    chaptersWithQuestions: byChapter.filter((item) => item.all > 0).length,
+    chaptersWithAutoCorrectableQuestions: evaluatedChapters,
+    chaptersWithoutAutoCorrectableQuestions: sections
+      .filter((_, index) => byChapter[index]!.auto === 0)
+      .map((section) => section.title),
+    questionsWithoutReliableChapter: unassigned,
+    distinctReferencedPages: pageNumbers.size,
+    pageReferenceRatio: ratio === null ? null : Math.round(ratio * 1000) / 1000,
+    quartersWithReferencedQuestions: quarters,
+    status,
+  };
 }
