@@ -11,7 +11,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 7;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 8;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -430,7 +430,7 @@ function isAdministrativeCanonicalConcept(
 }
 
 const MIN_FLASHCARD_TARGET = 12;
-const MAX_FLASHCARD_TARGET = 30;
+const MAX_FLASHCARD_TARGET = 80;
 
 export function resolveFlashcardLimit(input: {
   canonicalModel?: CanonicalPedagogicalModel | null;
@@ -489,6 +489,8 @@ export function resolveFlashcardLimit(input: {
   if (academicDensity <= 60) return 16;
   if (academicDensity <= 100) return 20;
   if (academicDensity <= 160) return 24;
+  if (academicDensity <= 240) return 45;
+  if (academicDensity <= 360) return 60;
   return MAX_FLASHCARD_TARGET;
 }
 
@@ -1141,7 +1143,7 @@ function buildCanonicalConceptQuestions(
             : `¿Cuál de estas afirmaciones representa mejor “${concept.term}” según el material?`,
         options,
         answer: correct,
-        explanation: `La respuesta conserva la descripción que el PDF asigna a “${concept.term}”. Los distractores provienen de conceptos cercanos del mismo material.`,
+        explanation: `En el material, “${concept.term}” se define como: ${correct}. Las demás opciones expresan definiciones de otros conceptos, no de éste.`,
         reference: referenceFromPages(
           concept.pageReferences,
           concept.term,
@@ -1176,20 +1178,22 @@ function buildCanonicalRelationshipQuestions(
         3
       ).map((candidate) => truncateAtWord(candidate.description, 190));
       const options = placeCorrectOption(correct, distractors, (index + 1) % 4).slice(0, 4);
+      // Reconocer una relación no demuestra transferencia a un caso nuevo.
+      // Reservar "aplicar" para consignas con una tarea contextual verificable.
       const isCausal = CAUSAL_SIGNAL_PATTERN.test(item.description);
 
       return {
         id: `model-relationship-${index + 1}`,
         type: 'multiple_choice',
-        level: isCausal ? 'aplicar' : 'comprender',
+        level: 'comprender',
         kind: 'relationship',
         topic: `${item.source} ↔ ${item.target}`,
         prompt: isCausal
-          ? `En una situación donde interviene “${item.source}”, ¿qué consecuencia o vínculo con “${item.target}” coincide con lo explicado en el PDF?`
-          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”?`,
+          ? `¿Qué consecuencia vincula “${item.source}” con “${item.target}” en el PDF?`
+          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”}”?`,
         options,
         answer: correct,
-        explanation: `El PDF vincula explícitamente “${item.source}” con “${item.target}” de esta manera.`,
+        explanation: `La relación presentada en el PDF es: ${correct}. Se vincula específicamente “${item.source}” con “${item.target}”.`,
         reference: referenceFromPages(
           item.pageReferences,
           `${item.source} ${item.target}`,
@@ -1279,7 +1283,7 @@ function buildCanonicalClassificationQuestions(
         prompt: `Un caso del material se describe así: “${truncateAtWord(correct.detail, 175)}”. Dentro de “${classification.title}”, ¿a qué categoría corresponde?`,
         options,
         answer: correct.label,
-        explanation: `La descripción corresponde a “${correct.label}” dentro de la clasificación “${classification.title}”. Las alternativas pertenecen a esa misma clasificación.`,
+        explanation: `El caso describe “${correct.label}” porque se caracteriza por: ${truncateAtWord(correct.detail, 180)}. Las demás categorías tienen criterios distintos.`,
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -1337,7 +1341,7 @@ function buildCanonicalProcessQuestions(
           .join(' → ')}. ¿Qué proceso del PDF describe mejor el caso?`,
         options,
         answer: process.title,
-        explanation: `Las acciones forman parte del proceso “${process.title}” tal como está organizado en el material.`,
+        explanation: `La secuencia de acciones identifica “${process.title}”. El material lo organiza en estos pasos: ${truncateAtWord(process.steps.join(' → '), 260)}.`,
         reference: referenceFromPages(
           process.pageReferences,
           process.title,
@@ -1610,7 +1614,7 @@ function anchorAndCompleteChapterQuestions(
         prompt,
         options,
         answer: correct,
-        explanation: `La respuesta corresponde a la definición de “${concept.term}” recuperada del PDF.`,
+        explanation: `Según el PDF, “${concept.term}” significa: ${correct}. Las demás opciones describen otros conceptos del material.`,
         reference,
       });
       usedPrompts.add(normalizeForDedupe(prompt));
@@ -1784,7 +1788,7 @@ export function buildPedagogicalArtifacts(input: {
   // realmente disponible, pero sólo se eligen ítems respaldados por el PDF.
   const questions = selectBalancedQuestionBank(
     availableQuestions,
-    Math.max(availableQuestions.length > questionBankTarget ? questionBankTarget : 0, questionBankTarget)
+    questionBankTarget
   );
   const miniExam = selectMiniExamQuestions(questions, 8);
   const allItems = [...flashcards, ...questions];

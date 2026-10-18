@@ -26,7 +26,28 @@ export function buildCanonicalStudentMaterialGlossary(
   const candidates = mergeCandidates(buildCandidates(model));
   const selected = selectCanonicalGlossaryCandidates(model, candidates);
 
+  // "Alta" debe discriminar conceptos más centrales frente a otros
+  // complementarios. Cuando la extracción marcó todo como alta, utilizar
+  // prioridad estructural y recurrencia temática relativa, sin cambiar
+  // las definiciones ni atribuir importancia pedagógica absoluta.
+  const highShare = selected.filter((item) => item.importance === 'alta').length / Math.max(1, selected.length);
+  const ranked = [...selected].sort((left, right) =>
+    left.priority - right.priority ||
+    right.pageReferences.length - left.pageReferences.length ||
+    left.term.localeCompare(right.term, 'es', { sensitivity: 'base' })
+  );
+  const highestPriority = new Set(
+    highShare > 0.9 && selected.length >= 12
+      ? ranked.slice(0, Math.max(1, Math.ceil(selected.length * 0.4))).map((item) => item.id)
+      : []
+  );
   return selected
+    .map((item) => ({
+      ...item,
+      importance: highestPriority.size > 0
+        ? (highestPriority.has(item.id) ? 'alta' as const : 'media' as const)
+        : item.importance,
+    }))
     .sort((left, right) =>
       left.term.localeCompare(right.term, 'es', { sensitivity: 'base' })
     )
@@ -47,13 +68,14 @@ export function resolveCanonicalGlossaryLimit(
   const pageCount = inferCanonicalPageCount(model);
   const topicCount = model.topics.length;
 
+  // Los documentos breves conservan el volumen habitual. En PDFs largos el
+  // glosario escala por páginas y riqueza temática, sin inventar conceptos.
+  if (pageCount <= 25) {
+    return Math.min(50, Math.max(18, Math.ceil(pageCount * 2.25), Math.min(44, topicCount * 2)));
+  }
   return Math.min(
-    50,
-    Math.max(
-      18,
-      Math.ceil(pageCount * 2.25),
-      Math.min(44, topicCount * 2)
-    )
+    120,
+    Math.max(50, Math.ceil(pageCount * 0.95), Math.ceil(topicCount * 0.63))
   );
 }
 
@@ -264,15 +286,20 @@ function selectCanonicalGlossaryCandidates(
     definitionsByPage.set(page, bucket);
   }
 
-  for (const [, bucket] of [...definitionsByPage.entries()].sort(
-    ([left], [right]) => left - right
-  )) {
-    const representatives = bucket.length <= 3 ? bucket : takeEvenly(bucket, 3);
-    for (const candidate of representatives) {
-      if (selected.size >= limit) break;
-      selected.set(candidate.id, candidate);
-    }
-    if (selected.size >= limit) break;
+  // El selector anterior consumía el cupo desde la primera página hacia
+  // adelante. Reservar primero un representante de páginas repartidas por
+  // TODO el PDF; después completar con definiciones adicionales relevantes.
+  const byPage = [...definitionsByPage.entries()]
+    .sort(([left], [right]) => left - right);
+  const primaryRepresentatives = byPage
+    .map(([, bucket]) => bucket[0])
+    .filter((candidate): candidate is CanonicalGlossaryCandidate => Boolean(candidate));
+  const representativeTarget = Math.min(
+    primaryRepresentatives.length,
+    Math.ceil(limit * 0.65)
+  );
+  for (const candidate of takeEvenly(primaryRepresentatives, representativeTarget)) {
+    selected.set(candidate.id, candidate);
   }
 
   // Garantizamos presencia de los temas del documento, especialmente para
@@ -342,9 +369,10 @@ function selectCanonicalGlossaryCandidates(
     }
   }
 
-  for (const candidate of ordered) {
+  const uncoveredCandidates = ordered.filter((candidate) => !selected.has(candidate.id));
+  for (const candidate of takeEvenly(uncoveredCandidates, limit - selected.size)) {
     if (selected.size >= limit) break;
-    if (!selected.has(candidate.id)) selected.set(candidate.id, candidate);
+    selected.set(candidate.id, candidate);
   }
 
   return [...selected.values()];

@@ -863,6 +863,29 @@ assert.equal(
   34,
   'El glosario denso de 15 páginas debe quedar limitado a 34 entradas.'
 );
+// En un PDF extenso, el límite crece y conserva la parte final del contenido.
+const extensiveGlossaryModel: CanonicalPedagogicalModel = {
+  ...denseGlossaryFixture,
+  topics: Array.from({ length: 100 }, (_, i) => ({
+    title: `Unidad ${i + 1}`, description: `Tema de la página ${i + 1}`,
+    relevance: i % 3 === 0 ? 'alta' as const : 'media' as const,
+    pageReferences: [i + 1],
+  })),
+  concepts: Array.from({ length: 190 }, (_, i) => ({
+    term: `Término jurídico extenso ${i + 1}`,
+    detail: `Explicación particular del concepto ${i + 1} respaldada por la página indicada.`,
+    kind: 'definicion' as const,
+    pageReferences: [(i % 100) + 1],
+  })),
+};
+const extensiveGlossary = buildCanonicalStudentMaterialGlossary(extensiveGlossaryModel);
+assert.ok(extensiveGlossary.length >= 90 && extensiveGlossary.length <= 120,
+  'La cantidad del glosario largo debe escalar sin exceder un tope razonable.');
+assert.ok(extensiveGlossary.some((item) => /página 9[0-9]|página 100/i.test(item.context)),
+  'El glosario largo debe representar términos del final del documento.');
+assert.ok(extensiveGlossary.some((item) => item.importance === 'media'),
+  'La prioridad del glosario debe permitir diferenciar términos centrales y complementarios.');
+
 assert.ok(
   denseCanonicalGlossary.some(
     (item) => item.term === 'Concepto representativo página 8'
@@ -1210,13 +1233,12 @@ const veryDenseFlashcardFixture: CanonicalPedagogicalModel = {
     pageReferences: [(index % 30) + 1],
   })),
 };
-assert.equal(
+assert.ok(
   resolveFlashcardLimit({
     canonicalModel: veryDenseFlashcardFixture,
     glossary: denseCanonicalGlossary,
-  }),
-  30,
-  'Un material de muy alta densidad académica debe poder llegar al techo de 30 flashcards.'
+  }) >= 45,
+  'Los PDFs muy densos deben poder tener más de 30 flashcards.'
 );
 
 const pedagogy = buildPedagogicalArtifacts({
@@ -1372,7 +1394,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  7,
+  8,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
