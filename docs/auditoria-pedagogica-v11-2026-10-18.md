@@ -48,6 +48,23 @@
 4. **Resumen de respaldo:** en Derecho Indiano el cuerpo de seis secciones del resumen Gemini tiene 10.918 caracteres y el local 6.333. El respaldo incluye secciones genéricas («Contenido complementario») con menor desarrollo; la diferencia de longitud por sí sola no demuestra mejor calidad.
 5. **Evaluación de aprendizaje:** falta evidencia de mejora pre/post y retención diferida. Una prueba de contenido nunca puede demostrar por sí sola que ayuda a aprobar.
 
+## Reproducción sin escritura con modelos y fragmentos reales
+
+Se ejecutaron las reglas de filtrado del PR sobre los modelos canónicos y los fragmentos de texto **ya almacenados**, sin alterar las filas ni reenviar información a proveedores de IA. Es una prueba de los **filtros**, no una regeneración completa del pipeline de IA.
+
+| Corpus almacenado | Versión de artefactos | Fragmentos leídos | Relación causal contradictoria detectada | Confusiones iniciales: conservadas / descartadas |
+|---|---:|---:|---:|---:|
+| Derecho Indiano, 28 páginas | 11 | 34 | 1 (afecta 1 pregunta y 1 flashcard almacenadas) | 3 / 0 |
+| IPC UBA, 18 páginas | 11 | 38 | 0 | 1 / 2 |
+| Concursos y Quiebras, 100 páginas | **5** | 286 | 0 | 1 / 2 |
+| Filosofía, 94 páginas | **5** | 172 | 0 | 1 / 2 |
+
+En los dos documentos largos, las generaciones guardadas siguen siendo **v5**: los modelos canónicos permiten evaluar el filtrado, pero **no** atribuir métricas completas de salida a v11. No se obtuvo ni se regeneró el PDF binario original desde estas pruebas.
+
+El ajuste adicional del PR permite comparar términos claros incluso cuando la consigna contiene aclaraciones entre paréntesis: por ejemplo, «doxa (conocimiento vulgar)» y «episteme (conocimiento científico)», conservando sus definiciones distintas. No acepta correspondencias difusas que puedan reproducir el error de deducción/inducción.
+
+**Impacto en tokens:** esta rama agrega expresiones regulares y filtrado local en la generación de artefactos; no añade invocaciones a proveedores de IA ni amplía sus prompts. Por tanto, el costo directo de tokens de esta modificación es **cero por generación**. Si se solicita procesar otra vez un PDF completo, se aplican los costos habituales de IA de ese procesamiento.
+
 ## Criterios de cierre para las primeras correcciones
 
 - Regresión automatizada que reproduzca causalidad invertida y comparación ambigua y confirme su bloqueo.
