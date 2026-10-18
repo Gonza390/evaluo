@@ -93,6 +93,11 @@ export async function loadOrBuildPedagogicalArtifacts({
           ),
         }
       : null;
+  // Las previews pueden apuntar al mismo Supabase que producción.
+  // No reemplazar un banco persistido con el contrato experimental del branch:
+  // el banco de preview se calcula para la vista actual, sin migrar datos.
+  if (process.env.VERCEL_ENV === 'preview') return artifacts;
+
   const { error: persistError } = await db
     .from('student_materials')
     .update({
