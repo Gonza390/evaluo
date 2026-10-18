@@ -19,6 +19,7 @@ import {
   resolveFlashcardLimit,
 } from '../lib/student-materials/pedagogy.ts';
 import { buildStudentMaterialPedagogicalQualityReport } from '../lib/student-materials/quality.ts';
+import { buildPedagogicalArtifacts as buildCurrentPedagogicalArtifacts } from '../lib/student-materials/pedagogy-v2.ts';
 import {
   buildPedagogicalMapGroupFromIndexes,
   expandCompactPedagogicalNode,
@@ -1383,6 +1384,43 @@ assert.ok(chapterBank.questions.filter((question) => question.chapterTitle).ever
   longSummaryWithChapters.sections.some((section) => section.title === question.chapterTitle)
 ), 'La asociación de capítulo requiere evidencia localizada, no inferencias sin fuente.');
 assert.ok(chapterBank.questions.length <= 120);
+
+// Prueba integrada del generador ACTUAL (v2): glosario, flashcards y preguntas
+// comparten el modelo académico, pero se distribuyen en todas las páginas.
+const integratedLongArtifacts = buildCurrentPedagogicalArtifacts({
+  summary: longSummaryWithChapters,
+  glossary: extensiveGlossary,
+  canonicalModel: denseQuestionBankModel,
+  pageCount: 94,
+});
+assert.ok(
+  integratedLongArtifacts.flashcards.length >= 40,
+  'La implementación activa v2 debe generar más de 30 tarjetas para un material extenso.'
+);
+assert.ok(
+  integratedLongArtifacts.questions.length > 43,
+  'La práctica real del wrapper v2 debe ampliar el banco canónico.'
+);
+const integratedCardPages = integratedLongArtifacts.flashcards
+  .map((card) => card.reference.pageStart)
+  .filter((page): page is number => page !== null);
+assert.ok(
+  integratedCardPages.some((page) => page <= 20) &&
+  integratedCardPages.some((page) => page >= 75),
+  'Las flashcards de un PDF extenso deben recuperar contenidos del comienzo y del final.'
+);
+assert.equal(
+  new Set(integratedLongArtifacts.flashcards.map((card) => normalizeForTest(card.front))).size,
+  integratedLongArtifacts.flashcards.length,
+  'Las tarjetas no deben repetir consignas.'
+);
+assert.ok(
+  integratedLongArtifacts.flashcards.every(
+    (card) => card.front.trim() && card.back.trim() && card.reference.excerpt.trim()
+  ),
+  'Ninguna flashcard debe quedar sin pregunta, respuesta ni referencia.'
+);
+
 
 const canonicalPedagogy = buildPedagogicalArtifacts({
   summary: canonicalGuideFallback,
