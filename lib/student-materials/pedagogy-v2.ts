@@ -1,3 +1,4 @@
+import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
 import type {
   CanonicalPedagogicalModel,
   StudyGlossaryItem,
@@ -171,7 +172,9 @@ function buildCandidates(
     });
   });
 
-  model.relationships.forEach((relationship) => {
+  model.relationships.filter((relationship) =>
+    !hasSourceContradictedCausalDirection(relationship, chunks)
+  ).forEach((relationship) => {
     const source = clean(relationship.source);
     const target = clean(relationship.target);
     const detail = clean(relationship.description);
