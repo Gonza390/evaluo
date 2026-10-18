@@ -1190,7 +1190,7 @@ function buildCanonicalRelationshipQuestions(
         topic: `${item.source} ↔ ${item.target}`,
         prompt: isCausal
           ? `¿Qué consecuencia vincula “${item.source}” con “${item.target}” en el PDF?`
-          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”}”?`,
+          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”?`,
         options,
         answer: correct,
         explanation: `La relación presentada en el PDF es: ${correct}. Se vincula específicamente “${item.source}” con “${item.target}”.`,
