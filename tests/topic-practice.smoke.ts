@@ -7,6 +7,10 @@ import {
 } from '../lib/student-materials/topic-practice.ts';
 import { selectDiagnosticQuestions } from '../lib/student-materials/diagnostic-questions.ts';
 import {
+  getDistinctEligibleExamQuestions,
+  resolveExamSizeOptions,
+} from '../lib/student-materials/practice-questions.ts';
+import {
   selectDelayedReviewQuestion,
   REVIEW_DELAY_MS,
 } from '../lib/student-materials/delayed-review.ts';
@@ -270,5 +274,53 @@ assert.notEqual(
   unavailable[0]?.id,
   transfer.id,
   'Si falla el historial, usar el reparto inicial seguro.'
+);
+// Modos progresivos: en un banco de 80, Completo debe ofrecer las 80.
+assert.deepEqual(resolveExamSizeOptions(80).map((item) => [item.mode, item.count]), [
+  ['brief', 12],
+  ['coverage', 32],
+  ['complete', 80],
+]);
+assert.deepEqual(resolveExamSizeOptions(20).map((item) => item.mode), [
+  'brief', 'coverage', 'complete',
+]);
+assert.deepEqual(resolveExamSizeOptions(3).map((item) => item.count), [1, 2, 3]);
+assert.deepEqual(resolveExamSizeOptions(1).map((item) => item.count), [1]);
+
+const eighty = Array.from({ length: 80 }, (_, index) => {
+  const section = index % sections.length;
+  const entry = question(`bank-${index}`, section, index % 7 === 0 ? 'open' : 'multiple_choice');
+  return { ...entry, prompt: `Consigna completa número ${index + 1}` };
+});
+const eightyUnique = getDistinctEligibleExamQuestions([
+  ...eighty,
+  { ...eighty[0], id: 'bank-duplicate' },
+]);
+assert.equal(eightyUnique.length, 80, 'No mostrar duplicados como preguntas disponibles.');
+
+const complete = selectTopicPracticeQuestions({
+  questions: eightyUnique,
+  targetCount: 80,
+  complete: true,
+  sections,
+});
+assert.equal(complete.length, 80, 'Completo incluye todo el banco, también las abiertas.');
+assert.equal(new Set(complete.map((item) => item.id)).size, 80);
+assert.equal(complete.filter((item) => item.type === 'open').length, 12);
+assert.deepEqual(
+  complete.slice(0, 4).map((item) => item.topic),
+  sections.map((section) => section.title),
+  'Completo debe intercalar preguntas de distintas secciones.'
+);
+const coverage = selectTopicPracticeQuestions({
+  questions: eightyUnique,
+  targetCount: 32,
+  sections,
+});
+assert.equal(coverage.length, 32, 'Cobertura usa la cantidad elegida.');
+assert.deepEqual(
+  new Set(coverage.map((item) => item.topic)),
+  new Set(sections.map((section) => section.title)),
+  'Cobertura incluye todas las secciones evaluables de la muestra.'
 );
 console.log('topic-practice.smoke: OK');

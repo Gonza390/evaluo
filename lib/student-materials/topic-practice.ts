@@ -12,6 +12,7 @@ import {
   type PdfTopicEvidence,
 } from '@/lib/student-materials/progress';
 import {
+  getDistinctEligibleExamQuestions,
   isEligibleExamQuestion,
   normalizeAnswer,
   resolveExamQuestions,
@@ -75,6 +76,7 @@ export function selectTopicPracticeQuestions({
   targetCount,
   sections,
   context = emptyTopicPracticeContext,
+  complete = false,
   now = Date.now(),
 }: {
   questions: StudyQuestion[];
@@ -82,9 +84,42 @@ export function selectTopicPracticeQuestions({
   targetCount: number;
   sections: StudySummarySection[];
   context?: TopicPracticeContext;
+  complete?: boolean;
   now?: number;
 }) {
-  const eligible = questions.filter(isEligibleExamQuestion);
+  const eligible = getDistinctEligibleExamQuestions(questions);
+  if (complete) {
+    // Modo Completo: conservar TODAS las preguntas únicas y válidas, incluso
+    // las abiertas. Repartirlas por capítulos para no concentrar un mismo tema.
+    if (!sections.length) return eligible;
+    const groups = Array.from({ length: sections.length + 1 }, () => [] as StudyQuestion[]);
+    const answered = new Set(
+      context.answeredItemKeys.map((key) =>
+        key.replace(/^(?:exercise|diagnostic):/, '').replace(/^summary-check:\\d+:artifact:/, '')
+      )
+    );
+    for (const question of eligible) {
+      const section = findSummarySectionForQuestion(question, sections);
+      groups[section < 0 ? sections.length : section].push(question);
+    }
+    for (const group of groups) {
+      group.sort((a, b) =>
+        Number(answered.has(a.id)) - Number(answered.has(b.id))
+      );
+    }
+    const selected: StudyQuestion[] = [];
+    let remaining = true;
+    while (remaining) {
+      remaining = false;
+      for (const group of groups) {
+        const question = group.shift();
+        if (!question) continue;
+        selected.push(question);
+        remaining = true;
+      }
+    }
+    return selected;
+  }
   if (!sections.length) return resolveExamQuestions(eligible, preferredQuestionIds, targetCount);
   const progress = buildPdfProgress(sections, [], context.loadError ? [] : context.evidence);
   const answered = new Set(
@@ -185,6 +220,15 @@ export function selectTopicPracticeQuestions({
     if (question.type === 'open' && openCount >= maxOpen) continue;
     selected.push(question);
     if (question.type === 'open') openCount += 1;
+  }
+  // Cuando se agotan las preguntas corregibles, las abiertas todavía pueden
+  // completar la cobertura solicitada; su evaluación sigue siendo declarada.
+  if (selected.length < targetCount) {
+    for (const question of [...groups.flat(), ...extra]) {
+      if (selected.length >= targetCount) break;
+      if (question.type !== 'open' || selected.some((item) => item.id === question.id)) continue;
+      selected.push(question);
+    }
   }
   return selected;
 }

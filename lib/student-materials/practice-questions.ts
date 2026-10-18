@@ -1,7 +1,8 @@
 import type { StudyQuestion } from './pedagogy';
 
-type ExamSizeOption = {
+export type ExamSizeOption = {
   count: number;
+  mode: 'brief' | 'coverage' | 'complete';
   label: string;
   description: string;
 };
@@ -90,37 +91,61 @@ export function isEligibleExamQuestion(question: StudyQuestion) {
   return Boolean(question.prompt.trim() && question.answer.trim());
 }
 
-export function resolveExamSizeOptions(totalQuestions: number): ExamSizeOption[] {
+/** Un ítem cuenta una sola vez y sólo si permite una evaluación verificable. */
+export function getDistinctEligibleExamQuestions(questions: StudyQuestion[]): StudyQuestion[] {
+  const seen = new Set<string>();
+  return questions.filter((question) => {
+    if (!isEligibleExamQuestion(question)) return false;
+    const identity = `${normalizeAnswer(question.prompt)}|${normalizeAnswer(question.answer)}`;
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+}
+
+/**
+ * Tres modos progresivos: repaso breve, cobertura de capítulos y el banco completo.
+ * No inventamos preguntas: el tamaño siempre se acota a las disponibles.
+ * assessedSections cuenta los capítulos con al menos una pregunta corregible.
+ */
+export function resolveExamSizeOptions(
+  totalQuestions: number,
+  assessedSections = 0
+): ExamSizeOption[] {
   if (totalQuestions <= 0) return [];
 
-  let counts: number[];
-
-  if (totalQuestions <= 6) {
-    counts = [Math.min(3, totalQuestions), Math.min(5, totalQuestions), totalQuestions];
-  } else if (totalQuestions <= 11) {
-    counts = [5, Math.min(8, totalQuestions), totalQuestions];
-  } else if (totalQuestions <= 19) {
-    counts = [5, Math.min(10, totalQuestions), Math.min(15, totalQuestions)];
-  } else if (totalQuestions <= 29) {
-    counts = [8, 12, Math.min(20, totalQuestions)];
-  } else {
-    counts = [10, 15, 20];
-  }
-
-  const uniqueCounts = Array.from(new Set(counts.filter((count) => count > 0))).sort(
-    (left, right) => left - right
+  const brief = totalQuestions <= 12
+    ? Math.max(1, Math.round(totalQuestions * 0.35))
+    : Math.min(15, Math.max(5, Math.round(totalQuestions * 0.15)));
+  const coverage = Math.max(
+    brief + 1,
+    Math.round(totalQuestions * 0.4),
+    totalQuestions >= 20 ? 12 : Math.round(totalQuestions * 0.7),
+    Math.min(assessedSections, totalQuestions - 1)
   );
+  const counts = [Math.min(brief, totalQuestions - 2), Math.min(coverage, totalQuestions - 1), totalQuestions]
+    .filter((count) => count >= 1);
+  const uniqueCounts = [...new Set(counts)].sort((left, right) => left - right);
 
-  return uniqueCounts.map((count, index) => ({
-    count,
-    label: index === 0 ? 'Rápido' : index === uniqueCounts.length - 1 ? 'Intensivo' : 'Recomendado',
-    description:
-      index === 0
-        ? 'Repaso breve de los puntos centrales.'
-        : index === uniqueCounts.length - 1
-          ? 'Mayor cobertura del contenido del PDF.'
-          : 'Buen equilibrio entre tiempo y cobertura.',
-  }));
+  const modes: ExamSizeOption['mode'][] = uniqueCounts.length === 3
+    ? ['brief', 'coverage', 'complete']
+    : uniqueCounts.length === 2
+      ? ['brief', 'complete']
+      : ['complete'];
+
+  return uniqueCounts.map((count, index) => {
+    const mode = modes[index];
+    return {
+      count,
+      mode,
+      label: mode === 'brief' ? 'Repaso breve' : mode === 'coverage' ? 'Cobertura' : 'Completo',
+      description: mode === 'brief'
+        ? 'Repasá los puntos principales en pocos minutos.'
+        : mode === 'coverage'
+          ? 'Practicá una selección amplia y distribuida entre los temas.'
+          : 'Practicá todas las preguntas disponibles de este PDF.',
+    };
+  });
 }
 
 export function resolveExamQuestions(

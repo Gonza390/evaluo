@@ -12,7 +12,7 @@ import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
-  isEligibleExamQuestion,
+  getDistinctEligibleExamQuestions,
   resolveExamSizeOptions,
   normalizeAnswer,
   levelLabel,
@@ -49,9 +49,10 @@ export function StudentMaterialExam({
   sections = [],
   simulation,
 }: StudentMaterialExamProps) {
-  const eligibleQuestions = useMemo(() => {
-    return artifacts.questions.filter(isEligibleExamQuestion);
-  }, [artifacts.questions]);
+  const eligibleQuestions = useMemo(
+    () => getDistinctEligibleExamQuestions(artifacts.questions),
+    [artifacts.questions]
+  );
   const eligibleIds = useMemo(
     () => new Set(eligibleQuestions.map((question) => question.id)),
     [eligibleQuestions]
@@ -60,18 +61,24 @@ export function StudentMaterialExam({
     () => artifacts.miniExamQuestionIds.filter((id) => eligibleIds.has(id)),
     [artifacts.miniExamQuestionIds, eligibleIds]
   );
-  const sizeOptions = useMemo(
-    () => resolveExamSizeOptions(eligibleQuestions.length),
-    [eligibleQuestions.length]
+  const questionCounts = useMemo(
+    () => getTopicQuestionCounts(sections, eligibleQuestions),
+    [sections, eligibleQuestions]
   );
-  const defaultSize = sizeOptions[Math.floor(sizeOptions.length / 2)]?.count ?? 0;
+  const assessedSections = questionCounts.filter((count) => count > 0).length;
+  const sizeOptions = useMemo(
+    () => resolveExamSizeOptions(eligibleQuestions.length, assessedSections),
+    [eligibleQuestions.length, assessedSections]
+  );
+  const defaultSize = sizeOptions.find((option) => option.mode === 'coverage')?.count
+    ?? sizeOptions[Math.floor(sizeOptions.length / 2)]?.count
+    ?? 0;
   const [selectedSize, setSelectedSize] = useState(defaultSize);
   const [started, setStarted] = useState(false);
   // Congelar la tanda: los nuevos resultados no deben cambiar preguntas en pleno intento.
   const [questions, setQuestions] = useState<StudyQuestion[]>([]);
   const [preparing, setPreparing] = useState(false);
   const [contextUnavailable, setContextUnavailable] = useState(false);
-  const questionCounts = getTopicQuestionCounts(sections, eligibleQuestions);
   const unavailableTopics = questionCounts.filter((count) => count === 0).length;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
@@ -143,6 +150,7 @@ export function StudentMaterialExam({
       questions: eligibleQuestions,
       preferredQuestionIds,
       targetCount: selectedSize || defaultSize,
+      complete: sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode === 'complete',
       sections,
       context,
     });
@@ -192,7 +200,7 @@ export function StudentMaterialExam({
           </h2>
           <p className="text-muted-foreground mt-2 max-w-2xl text-[13.5px] leading-6">
             Priorizamos los temas del resumen que faltan evaluar y después los que necesitan más
-            práctica. Al terminar, recibís tu nota.
+            práctica. En Completo respondés todas las preguntas disponibles. Al terminar, recibís tu resultado.
           </p>
         </header>
 
