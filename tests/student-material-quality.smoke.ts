@@ -1,3 +1,4 @@
+import { hasSourceContradictedCausalDirection } from '../lib/student-materials/answer-integrity.ts';
 import assert from 'node:assert/strict';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import {
@@ -1653,6 +1654,115 @@ assert.equal(
   missingCanonicalQuality.status,
   'fail',
   'Un PDF con contenido no puede quedar listo si falta el modelo pedagógico canónico.'
+);
+
+
+/**
+ * Regresiones tomadas de materiales reales de 2026-10-18 (sin datos de alumnos).
+ * PDF Derecho Indiano: la fuente dice que las Leyes fueron consecuencia
+ * del sermón; el modelo había invertido la dirección en una respuesta.
+ * PDF IPC: no se puede repetir la misma definición a ambos lados de una
+ * comparación deductivo/inductivo.
+ */
+const causalSourceChunk = {
+  text: 'Aquellas leyes fueron consecuencia política y jurídica del sermón pronunciado por Fray Antonio de Montesinos en Santo Domingo.',
+  pageStart: 7,
+  pageEnd: 7,
+  sectionTitle: 'Leyes protectoras',
+  excerpt: '',
+};
+const reversedRelationship = {
+  source: 'Sermón de Fray Antonio de Montesinos',
+  target: 'Leyes de Burgos',
+  description: 'El sermón fue la consecuencia política y jurídica que provocó la sanción de las Leyes de Burgos.',
+  pageReferences: [7],
+};
+assert.equal(
+  hasSourceContradictedCausalDirection(reversedRelationship, [causalSourceChunk]),
+  true,
+  'Debe detectar cuando el modelo invierte la causalidad que consta en el PDF.'
+);
+assert.equal(
+  hasSourceContradictedCausalDirection({
+    ...reversedRelationship,
+    description: 'El sermón de Montesinos motivó la sanción de las Leyes de Burgos.',
+  }, [causalSourceChunk]),
+  false,
+  'No debe descartar una relación que expresa correctamente la dirección causal.'
+);
+assert.equal(
+  hasSourceContradictedCausalDirection(reversedRelationship, [{
+    ...causalSourceChunk,
+    pageStart: 9,
+    pageEnd: 9,
+  }]),
+  false,
+  'No debe comparar fragmentos de otra página como si fueran evidencia del concepto.'
+);
+const reversedRelationshipModel: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  relationships: [reversedRelationship],
+  confusions: [],
+  examRelevantClaims: [],
+};
+const reversedRelationshipResult = buildCurrentPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  canonicalModel: reversedRelationshipModel,
+  chunks: [causalSourceChunk],
+  pageCount: 7,
+});
+assert.ok(
+  !reversedRelationshipResult.questions.some(
+    (question) => question.kind === 'relationship' &&
+      /sermón fue la consecuencia/i.test(question.answer)
+  ),
+  'Una relación causal refutada no puede usarse como respuesta correcta.'
+);
+assert.ok(
+  !reversedRelationshipResult.flashcards.some(
+    (card) => /sermón fue la consecuencia/i.test(card.back)
+  ),
+  'Una flashcard no debe reutilizar una relación causal refutada.'
+);
+
+const unsafeComparisonModel: CanonicalPedagogicalModel = {
+  ...canonicalSummaryFixture,
+  concepts: [
+    {
+      term: 'Argumento deductivo',
+      detail: 'Su validez se establece por la estructura lógica de sus premisas.',
+      kind: 'definicion',
+      pageReferences: [7],
+    },
+    {
+      term: 'Argumento inductivo',
+      detail: 'Las premisas apoyan la conclusión con una determinada probabilidad.',
+      kind: 'definicion',
+      pageReferences: [8],
+    },
+  ],
+  relationships: [],
+  confusions: [
+    'Confundir la validez deductiva (determinada por la estructura) con la determinación de la validez inductiva (basada en la cantidad de casos).',
+  ],
+  examRelevantClaims: [],
+};
+const unsafeComparisonOutput = buildPedagogicalArtifacts({
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  canonicalModel: unsafeComparisonModel,
+  chunks: [{
+    text: 'La validez deductiva se determina por la estructura, mientras el argumento inductivo ofrece una conclusión probable.',
+    pageStart: 7,
+    pageEnd: 7,
+    sectionTitle: 'Validez deductiva e inductiva',
+    excerpt: '',
+  }],
+});
+assert.ok(
+  !unsafeComparisonOutput.questions.some((question) => question.kind === 'confusion'),
+  'Si las entidades comparadas no tienen evidencia específica, no se fabrica una respuesta modelo.'
 );
 
 console.log('Student material quality smoke tests passed.');
