@@ -309,6 +309,14 @@ export function StudentMaterialExam({
           </p>
         </header>
 
+        {sections.length > 0 && assessedSections < sections.length && (
+          <p className="text-muted-foreground mt-4 text-xs leading-5" role="status">
+            El banco tiene preguntas autocorregibles asociadas a {assessedSections} de{' '}
+            {sections.length} capítulos del resumen. Los demás no se consideran
+            evaluados, incluso en el modo Completo.
+          </p>
+        )}
+
         {savedDraft && !isSimulation && (
           <div className="border-primary/30 bg-primary/5 mt-5 rounded-xl border px-4 py-4">
             <p className="text-foreground text-sm font-semibold">

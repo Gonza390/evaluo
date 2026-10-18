@@ -1338,6 +1338,11 @@ assert.ok(new Set(longBank.questions.map((q) => q.topic)).size >= 35,
   'Las preguntas de PDFs extensos deben distribuirse entre conceptos diferentes.');
 assert.ok(longBank.questions.length <= 120,
   'El banco extenso debe respetar un límite razonable sin llenar con contenido ficticio.');
+assert.ok(longBank.questions
+  .filter((question) => question.kind === 'concept' && question.type === 'multiple_choice')
+  .every((question) => question.explanation.includes(question.answer)),
+  'El feedback de conceptos debe explicar el contenido correcto y no sólo decir que el PDF lo respalda.'
+);
 const longPages = longBank.questions
   .map((item) => item.reference.pageStart)
   .filter((page): page is number => page !== null);
@@ -1542,6 +1547,11 @@ assert.ok(
   canonicalQuality.practiceCoverage &&
   canonicalQuality.practiceCoverage.chaptersWithAutoCorrectableQuestions <= canonicalQuality.practiceCoverage.summaryChapterCount,
   'El indicador debe distinguir capítulos con preguntas autocorregibles.'
+);
+assert.ok(
+  canonicalQuality.practiceSourceAudit &&
+  canonicalQuality.practiceSourceAudit.questionsWithPageReference >= 0,
+  'La auditoría debe registrar la trazabilidad literal por página sin declarar veracidad semántica.'
 );
 assert.ok(
   canonicalQuality.pedagogicalDepthScore >= 55,

@@ -206,6 +206,11 @@ export type StudentMaterialPedagogicalQualityReport = {
     quartersWithReferencedQuestions: number;
     status: 'unknown' | 'limited' | 'distributed';
   };
+  practiceSourceAudit?: {
+    questionsWithPageReference: number;
+    questionsWithLiteralSourceExcerpt: number;
+    literalQuoteRatio: number | null;
+  } | null;
   artifactReferenceRatio: number;
   issues: string[];
 };

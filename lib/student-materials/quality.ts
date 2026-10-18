@@ -8,7 +8,7 @@ import type {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 3;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 4;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -138,6 +138,40 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     input.pageCount
   );
 
+  // La cita literal se comprueba contra las páginas extraídas. No pretende
+  // demostrar que todas las inferencias del modelo sean semánticamente ciertas.
+  // Pero impide confundir una cita generada con texto realmente recuperado.
+  const quoteSourceAudit = input.pages ? (() => {
+    const normalizedPages = input.pages!.map((page) =>
+      cleanLine(page)
+        .toLocaleLowerCase('es')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    );
+    const referenced = input.artifacts.questions.filter((question) =>
+      question.reference.pageStart !== null &&
+      Number.isInteger(question.reference.pageStart) &&
+      question.reference.pageStart! >= 1 &&
+      question.reference.pageStart! <= normalizedPages.length
+    );
+    const matchingQuotes = referenced.filter((question) => {
+      const quote = cleanLine(question.reference.excerpt)
+        .toLocaleLowerCase('es')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+      if (quote.length < 30) return false;
+      const actualPage = normalizedPages[question.reference.pageStart! - 1] ?? '';
+      return actualPage.includes(quote);
+    });
+    return {
+      questionsWithPageReference: referenced.length,
+      questionsWithLiteralSourceExcerpt: matchingQuotes.length,
+      literalQuoteRatio: referenced.length > 0
+        ? Math.round((matchingQuotes.length / referenced.length) * 1000) / 1000
+        : null,
+    };
+  })() : null;
+
   const questionLevelCounts = {
     recordar: input.artifacts.questions.filter((item) => item.level === 'recordar').length,
     comprender: input.artifacts.questions.filter((item) => item.level === 'comprender').length,
@@ -203,6 +237,14 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   if (pedagogicalDepthScore < 55) {
     issues.push('pedagogical_depth_low');
   }
+  if (
+    quoteSourceAudit?.literalQuoteRatio !== null &&
+    quoteSourceAudit?.literalQuoteRatio !== undefined &&
+    quoteSourceAudit.questionsWithPageReference >= 8 &&
+    quoteSourceAudit.literalQuoteRatio < 0.5
+  ) {
+    issues.push('practice_source_quotes_not_verifiable');
+  }
 
   const status: StudentMaterialPedagogicalQualityReport['status'] =
     !input.summary.hasContent ||
@@ -241,6 +283,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
       Math.round(applicationQuestionRatio * 1000) / 1000,
     miniExamQuestionCount: input.artifacts.miniExamQuestionIds.length,
     practiceCoverage,
+    practiceSourceAudit: quoteSourceAudit,
     artifactReferenceRatio: Math.round(artifactReferenceRatio * 1000) / 1000,
     issues,
   };

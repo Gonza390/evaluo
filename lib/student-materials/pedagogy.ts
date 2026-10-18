@@ -209,11 +209,31 @@ function referenceFromPages(
 ) {
   const pageNumbers = (pages ?? []).filter((page) => Number.isFinite(page) && page > 0);
   if (pageNumbers.length > 0) {
+    // Una referencia de página no equivale a una cita textual. Preferimos
+    // reproducir el texto original de los chunks cuando el término solicitado
+    // aparece en esa página, evitando mostrar como "fragmento del PDF" una
+    // paráfrasis construida por el modelo pedagógico.
+    const pageSet = new Set(pageNumbers);
+    const sought = normalizeForDedupe(sectionTitle ?? '');
+    const source = sought.length >= 4
+      ? chunks.find((chunk) =>
+          (chunk.pageStart !== null && pageSet.has(chunk.pageStart)) &&
+          normalizeForDedupe(chunk.text).includes(sought)
+        )
+      : null;
+    const matchIndex = source && sectionTitle
+      ? source.text.toLocaleLowerCase('es').indexOf(sectionTitle.toLocaleLowerCase('es'))
+      : -1;
+    const originalExcerpt = source
+      ? matchIndex >= 0
+        ? source.text.slice(Math.max(0, matchIndex - 70), matchIndex + 240)
+        : source.text
+      : null;
     return {
       pageStart: Math.min(...pageNumbers),
       pageEnd: Math.max(...pageNumbers),
       sectionTitle,
-      excerpt: truncateAtWord(excerpt, 220),
+      excerpt: truncateAtWord(originalExcerpt ?? excerpt, 220),
     } satisfies PedagogicalReference;
   }
 
