@@ -30,7 +30,7 @@ const sceneOpacity = (frame: number, start: number, inEnd: number, outStart: num
 const Brand: React.FC<{large?: boolean}> = ({large = false}) => (
   <div style={{display: 'flex', alignItems: 'center', gap: large ? 18 : 12}}>
     <Img
-      src={staticFile('icon.png')}
+      src={staticFile('evaluo-logo-icono.svg')}
       style={{
         width: large ? 68 : 46,
         height: large ? 68 : 46,
@@ -509,7 +509,7 @@ const HubScene: React.FC = () => {
           zIndex: 10,
         }}
       >
-        <Img src={staticFile('icon.png')} style={{width: 128, height: 128, objectFit: 'contain'}} />
+        <Img src={staticFile('evaluo-logo-icono.svg')} style={{width: 128, height: 128, objectFit: 'contain'}} />
       </div>
 
       {cards.map(([label, icon, x, y], index) => {
