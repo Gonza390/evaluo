@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
-import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import {
+  recordStudentMaterialStudyResultAction,
+  finishStudyErrorOnboardingAction,
+} from '@/lib/actions/study-errors';
 import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
@@ -38,6 +41,7 @@ type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
+  onReturnToTopic?: (reinforce: boolean) => void;
   sections?: StudySummarySection[];
   topicSectionIndex?: number;
   simulation?: {
@@ -53,6 +57,7 @@ export function StudentMaterialExam({
   artifacts,
   materialId,
   onComplete,
+  onReturnToTopic,
   sections = [],
   simulation,
   topicSectionIndex,
@@ -326,6 +331,15 @@ export function StudentMaterialExam({
   if (!started) {
     return (
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+        {topicSectionIndex !== undefined && onReturnToTopic && (
+          <button
+            type="button"
+            onClick={() => onReturnToTopic(false)}
+            className="text-primary mb-3 min-h-11 text-sm font-semibold"
+          >
+            Volver al contenido del tema
+          </button>
+        )}
         <header className="border-border border-b pb-5">
           <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
             {topicSectionIndex === undefined
@@ -456,29 +470,35 @@ export function StudentMaterialExam({
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
         <header className="border-border border-b pb-6">
           <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
-            Práctica completada
+            Práctica completada{topicTitle ? ` · ${topicTitle}` : ''}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
             <h2 className="text-foreground text-3xl font-bold tracking-[-0.07em]">
-              {result.percentage}%
+              {topicSectionIndex === undefined
+                ? `${result.percentage}%`
+                : `${result.correct} de ${result.total}`}
             </h2>
             <p className="text-muted-foreground pb-1 text-sm">
-              {result.correct} de {result.total} respuestas consolidadas
+              {topicSectionIndex === undefined
+                ? `${result.correct} de ${result.total} respuestas consolidadas`
+                : 'Respuestas correctas en esta tanda'}
             </p>
           </div>
         </header>
 
         <div className="border-border grid border-b py-5 sm:grid-cols-3 sm:divide-x sm:divide-slate-200">
-          {(['recordar', 'comprender', 'aplicar'] as const).map((level) => (
-            <div key={level} className="py-2 sm:px-5 first:sm:pl-0 last:sm:pr-0">
-              <p className="text-muted-foreground text-[11px] font-bold tracking-[0.14em] uppercase">
-                {levelLabel(level)}
-              </p>
-              <p className="text-foreground mt-1 text-lg font-bold">
-                {result.levels[level].correct}/{result.levels[level].total}
-              </p>
-            </div>
-          ))}
+          {(['recordar', 'comprender', 'aplicar'] as const)
+            .filter((level) => topicSectionIndex === undefined || result.levels[level].total > 0)
+            .map((level) => (
+              <div key={level} className="py-2 sm:px-5 first:sm:pl-0 last:sm:pr-0">
+                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.14em] uppercase">
+                  {levelLabel(level)}
+                </p>
+                <p className="text-foreground mt-1 text-lg font-bold">
+                  {result.levels[level].correct}/{result.levels[level].total}
+                </p>
+              </div>
+            ))}
         </div>
 
         <section className="border-border border-b py-5">
@@ -503,8 +523,9 @@ export function StudentMaterialExam({
 
         {topicSectionIndex !== undefined && (
           <p className="text-muted-foreground mt-4 text-sm!">
-            Resultado de esta tanda de {topicTitle}. Incluye {result.total} preguntas; no representa
-            el dominio de todo el tema.
+            Resultado de esta tanda de {topicTitle}. Incluye {result.total}{' '}
+            {result.total === 1 ? 'pregunta' : 'preguntas'}; no representa el dominio de todo el
+            tema.
           </p>
         )}
         {topicSectionIndex === undefined && sections.length > 0 && (
@@ -523,7 +544,15 @@ export function StudentMaterialExam({
           </p>
         )}
         <div className="flex flex-wrap gap-3 pt-5">
-          {simulation ? (
+          {topicSectionIndex !== undefined && onReturnToTopic ? (
+            <Button
+              onClick={() => onReturnToTopic(result.wrong.length > 0)}
+              className="h-auto min-h-11 whitespace-normal"
+            >
+              {result.wrong.length > 0 ? 'Reforzar este tema' : 'Volver al tema'}
+              <ArrowRight className="h-4 w-4 shrink-0" />
+            </Button>
+          ) : simulation ? (
             <Button variant="outline" onClick={simulation.onProgress}>
               Ver mi progreso
             </Button>
@@ -535,7 +564,11 @@ export function StudentMaterialExam({
               Ver mi progreso
             </Link>
           )}
-          <Button onClick={resetExam} className="h-11 w-full rounded-lg sm:w-auto">
+          <Button
+            variant={topicSectionIndex !== undefined ? 'outline' : 'default'}
+            onClick={resetExam}
+            className="h-11 w-full rounded-lg sm:w-auto"
+          >
             <RotateCcw className="h-4 w-4" />
             Continuar mi práctica
           </Button>
@@ -619,6 +652,13 @@ export function StudentMaterialExam({
     delete answerIds.current[current.id];
 
     if (result.onboardingErrorId) {
+      if (topicSectionIndex !== undefined && onReturnToTopic) {
+        // Este recorrido ya conduce al refuerzo del tema al terminar la tanda.
+        // Evitar que el tutorial general saque al alumno de su material.
+        void finishStudyErrorOnboardingAction(result.onboardingErrorId, 'legacy').catch(() => {});
+        advanceExam();
+        return;
+      }
       setOnboardingErrorId(result.onboardingErrorId);
       return;
     }
@@ -637,6 +677,20 @@ export function StudentMaterialExam({
         }}
       />
       <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
+        {topicSectionIndex !== undefined && (
+          <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <p className="text-muted-foreground text-sm!">{topicTitle}</p>
+            {onReturnToTopic && (
+              <button
+                type="button"
+                onClick={() => onReturnToTopic(false)}
+                className="text-primary min-h-11 text-sm font-semibold"
+              >
+                Volver al tema
+              </button>
+            )}
+          </div>
+        )}
         {contextUnavailable && (
           <p role="status" className="text-muted-foreground text-xs!">
             {topicSectionIndex === undefined

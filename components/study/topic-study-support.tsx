@@ -17,29 +17,28 @@ export function TopicStudySupport({
   const card = flashcards[cardIndex];
   return (
     <div className="divide-border border-border mt-6 divide-y border-t">
-      <details className="py-3">
-        <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
-          Conceptos importantes {concepts.length > 0 && `(${concepts.length})`}
-        </summary>
+      <section className="py-5" aria-label="Conceptos importantes de este tema">
+        <h3 className="text-base font-semibold">2 · Conceptos importantes</h3>
+        <p className="text-muted-foreground mt-2 text-sm leading-6">
+          Revisá estas definiciones del glosario antes de continuar.
+        </p>
         {concepts.length ? (
-          <div className="divide-border divide-y">
+          <dl className="divide-border mt-3 divide-y">
             {concepts.map((concept, index) => (
-              <details key={`${concept.term}-${index}`} className="py-2">
-                <summary className="text-primary min-h-11 cursor-pointer py-3 text-sm">
-                  {concept.term}
-                </summary>
-                <p className="text-foreground pb-3 text-sm leading-6 whitespace-pre-line">
+              <div key={`${concept.term}-${index}`} className="py-4">
+                <dt className="text-foreground text-sm font-semibold">{concept.term}</dt>
+                <dd className="text-foreground mt-2 max-w-prose text-sm leading-6 whitespace-pre-line">
                   {concept.definition}
-                </p>
-              </details>
+                </dd>
+              </div>
             ))}
-          </div>
+          </dl>
         ) : (
           <p className="text-muted-foreground py-3 text-sm">
             Todavía no hay conceptos del glosario con una asociación clara a este tema.
           </p>
         )}
-      </details>
+      </section>
       <details className="py-3">
         <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
           Repasar con flashcards {flashcards.length > 0 && `(${flashcards.length})`}

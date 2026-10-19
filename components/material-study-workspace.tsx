@@ -304,6 +304,9 @@ export function MaterialStudyWorkspace({
   );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(undefined);
+  const [topicReturn, setTopicReturn] = useState<{ index: number; reinforce: boolean } | null>(
+    null
+  );
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   // Una sesión compartida por las vistas móvil y escritorio evita perder respuestas al redimensionar.
@@ -1490,10 +1493,19 @@ export function MaterialStudyWorkspace({
               <StudentMaterialExam
                 key={practiceSectionIndex ?? 'all'}
                 topicSectionIndex={practiceSectionIndex}
+                onReturnToTopic={
+                  hasProgress
+                    ? (reinforce) => {
+                        if (practiceSectionIndex === undefined) return;
+                        setTopicReturn({ index: practiceSectionIndex, reinforce });
+                        setProgressOpen(true);
+                      }
+                    : undefined
+                }
                 artifacts={studyArtifacts}
                 sections={studySummary.sections}
                 materialId={materialId}
-                onComplete={requestExamDatePrompt}
+                onComplete={practiceSectionIndex === undefined ? requestExamDatePrompt : undefined}
               />
             )}
           </div>
@@ -1638,12 +1650,15 @@ export function MaterialStudyWorkspace({
                   material={{ id: materialId, title }}
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
+                  initialTopicSectionIndex={topicReturn?.index}
+                  initialReinforce={topicReturn?.reinforce}
                   onPracticeTopic={(index) => {
+                    setTopicReturn({ index, reinforce: false });
                     setPracticeSectionIndex(index);
                     setDiagnosticMode(false);
                     handleStudyTabChange('ejercicios', 'summary_chapter');
                   }}
-                  requestedError={progressConfig.requestedError}
+                  requestedError={topicReturn ? undefined : progressConfig.requestedError}
                   tour={progressConfig.tour}
                   returnToErrors={progressConfig.returnToErrors}
                 />

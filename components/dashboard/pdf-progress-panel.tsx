@@ -84,6 +84,8 @@ export function PdfProgressPanel({
   sourcePdfHref,
   onErrorProgress,
   initialErrorId,
+  initialTopicSectionIndex,
+  initialReinforce = false,
   onboardingErrorId,
   returnToErrors = false,
 }: {
@@ -92,6 +94,8 @@ export function PdfProgressPanel({
   data: StudyErrorsPageData;
   summaryUnavailable: boolean;
   initialErrorId?: string;
+  initialTopicSectionIndex?: number;
+  initialReinforce?: boolean;
   onboardingErrorId?: string | null;
   returnToErrors?: boolean;
   embedded?: boolean;
@@ -115,7 +119,13 @@ export function PdfProgressPanel({
   }));
   const [filter, setFilter] = useState('Todos');
   const [search, setSearch] = useState('');
-  const [reviewOpen, setReviewOpen] = useState(Boolean(initialErrorId));
+  const initialTopic = buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find(
+    (topic) => topic.id === `section-${initialTopicSectionIndex}`
+  );
+  const initialTopicError = initialReinforce
+    ? initialTopic?.errors.find((error) => error.status === 'pending')
+    : undefined;
+  const [reviewOpen, setReviewOpen] = useState(Boolean(initialErrorId || initialTopicError));
   const initialError = [...data.pending, ...data.resolved].find(
     (item) => item.id === initialErrorId
   );
@@ -124,9 +134,14 @@ export function PdfProgressPanel({
       ? (buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find((topic) =>
           topic.errors.some((error) => error.id === initialError.id)
         )?.id ?? 'unmatched')
-      : null
+      : (initialTopic?.id ?? null)
   );
-  const [errorId, setErrorId] = useState<string | null>(initialError?.id ?? null);
+  const [errorId, setErrorId] = useState<string | null>(
+    initialError?.id ??
+      initialTopicError?.id ??
+      initialTopic?.errors.find((error) => error.status === 'pending')?.id ??
+      null
+  );
   const [tourStep, setTourStep] = useState(
     onboardingErrorId && initialError?.status === 'pending' ? 0 : -1
   );
@@ -147,6 +162,7 @@ export function PdfProgressPanel({
   const selected = views.find((error) => error.id === errorId);
   const currentTopic = topics.find((topic) => topic.id === topicId);
   const currentSectionIndex = currentTopic ? Number(currentTopic.id.replace('section-', '')) : -1;
+  const nextStudyTopic = currentTopic ? topics[topics.indexOf(currentTopic) + 1] : undefined;
   const currentSection = Array.isArray(sections) ? sections[currentSectionIndex] : null;
   const resources = useMemo(
     () =>
@@ -202,13 +218,13 @@ export function PdfProgressPanel({
     reviewed: Boolean(selected?.lastReviewedAt && selected.lastReviewedAt >= selected.lastFailedAt),
   };
   useEffect(() => {
-    if (!initialErrorId) return;
+    if (!initialErrorId && initialTopicSectionIndex === undefined) return;
     const frame = requestAnimationFrame(() => {
       detailRef.current?.scrollIntoView({ block: 'start' });
       detailRef.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [initialErrorId]);
+  }, [initialErrorId, initialTopicSectionIndex]);
   async function closeTour(outcome: 'completed' | 'skipped') {
     if (tourClosing.current || !onboardingErrorId) return;
     tourClosing.current = true;
@@ -253,6 +269,9 @@ export function PdfProgressPanel({
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring mx-auto w-full max-w-4xl py-4 focus-visible:outline-2"
     >
+      <p className="text-muted-foreground mb-2 truncate text-xs" title={material.title}>
+        {material.title}
+      </p>
       {currentTopic && (
         <p className="text-muted-foreground mb-3 text-xs">
           Tema {topics.findIndex((topic) => topic.id === currentTopic.id) + 1} de {topics.length} ·{' '}
@@ -278,85 +297,93 @@ export function PdfProgressPanel({
               ? 'Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.'
               : currentTopic && topicAssessmentCount(currentTopic) > 0
                 ? 'Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.'
-                : 'Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.'}
+                : currentQuestionCount === 0
+                  ? 'Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.'
+                  : 'Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.'}
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            {selected?.status === 'pending' ? (
-              <button
-                type="button"
-                onClick={() => setReviewOpen(true)}
-                className={actionClass + ' bg-primary text-primary-foreground'}
-              >
-                Reforzar dificultades <ArrowRight size={16} />
-              </button>
-            ) : summaryBody ? (
-              <a
-                href={`#${panelId}-topic-summary`}
-                className={
-                  actionClass +
-                  (currentTopic && topicAssessmentCount(currentTopic) > 0
-                    ? ' border-border border'
-                    : ' bg-primary text-primary-foreground')
-                }
-              >
-                Estudiar este tema <ArrowRight size={16} />
-              </a>
-            ) : null}
-            {canPracticeTopic ? (
-              <button
-                type="button"
-                onClick={() => onPracticeTopic?.(currentSectionIndex)}
-                className={
-                  actionClass +
-                  (selected?.status === 'pending' ||
-                  !currentTopic ||
-                  topicAssessmentCount(currentTopic) === 0
-                    ? ' border-border border'
-                    : ' bg-primary text-primary-foreground')
-                }
-              >
-                {currentTopic?.errors.some((error) => error.status === 'resolved')
-                  ? 'Volver a comprobar'
-                  : currentTopic && topicAssessmentCount(currentTopic) > 0
-                    ? 'Comprobar lo aprendido'
-                    : 'Practicar este tema'}
-              </button>
-            ) : onPractice ? (
-              <button
-                type="button"
-                onClick={onPractice}
-                className={
-                  actionClass +
-                  (currentTopic &&
-                  topicAssessmentCount(currentTopic) > 0 &&
-                  selected?.status !== 'pending'
-                    ? ' bg-primary text-primary-foreground'
-                    : ' border-border border')
-                }
-              >
-                Practicar el PDF
-              </button>
-            ) : (
-              <Link
-                href={simulation ? materialHref : materialHref + '?tab=ejercicios'}
-                className={
-                  actionClass +
-                  (currentTopic &&
-                  topicAssessmentCount(currentTopic) > 0 &&
-                  selected?.status !== 'pending'
-                    ? ' bg-primary text-primary-foreground'
-                    : ' border-border border')
-                }
-              >
-                Practicar el PDF
-              </Link>
-            )}
-          </div>
-          <p className="text-muted-foreground mt-2 text-xs!">
-            {canPracticeTopic
-              ? `${currentQuestionCount} ${currentQuestionCount === 1 ? 'pregunta disponible para este tema. Una respuesta no alcanza para evaluar todo el capítulo.' : 'preguntas disponibles para este tema. El resultado muestra tu desempeño en la tanda.'}`
-              : 'La práctica general incluye distintos temas del PDF.'}
-          </p>
+          {(selected?.status === 'pending' || currentAnswered > 0) && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {selected?.status === 'pending' ? (
+                <button
+                  type="button"
+                  onClick={() => setReviewOpen(true)}
+                  className={actionClass + ' bg-primary text-primary-foreground'}
+                >
+                  Reforzar dificultades <ArrowRight size={16} />
+                </button>
+              ) : summaryBody ? (
+                <a
+                  href={`#${panelId}-topic-summary`}
+                  className={
+                    actionClass +
+                    (currentTopic && topicAssessmentCount(currentTopic) > 0
+                      ? ' border-border border'
+                      : ' bg-primary text-primary-foreground')
+                  }
+                >
+                  Estudiar este tema <ArrowRight size={16} />
+                </a>
+              ) : null}
+              {canPracticeTopic ? (
+                <button
+                  type="button"
+                  onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                  className={
+                    actionClass +
+                    (selected?.status === 'pending' ||
+                    !currentTopic ||
+                    topicAssessmentCount(currentTopic) === 0
+                      ? ' border-border border'
+                      : ' bg-primary text-primary-foreground')
+                  }
+                >
+                  {currentTopic?.errors.some((error) => error.status === 'resolved')
+                    ? 'Volver a comprobar'
+                    : currentTopic && topicAssessmentCount(currentTopic) > 0
+                      ? 'Comprobar lo aprendido'
+                      : 'Practicar este tema'}
+                </button>
+              ) : onPractice ? (
+                <button
+                  type="button"
+                  onClick={onPractice}
+                  className={
+                    actionClass +
+                    (currentTopic &&
+                    topicAssessmentCount(currentTopic) > 0 &&
+                    selected?.status !== 'pending'
+                      ? ' bg-primary text-primary-foreground'
+                      : ' border-border border')
+                  }
+                >
+                  Practicar el PDF
+                </button>
+              ) : (
+                <Link
+                  href={simulation ? materialHref : materialHref + '?tab=ejercicios'}
+                  className={
+                    actionClass +
+                    (currentTopic &&
+                    topicAssessmentCount(currentTopic) > 0 &&
+                    selected?.status !== 'pending'
+                      ? ' bg-primary text-primary-foreground'
+                      : ' border-border border')
+                  }
+                >
+                  Practicar el PDF
+                </Link>
+              )}
+            </div>
+          )}
+          {(currentQuestionCount !== 0 ||
+            selected?.status === 'pending' ||
+            currentAnswered > 0) && (
+            <p className="text-muted-foreground mt-2 text-xs!">
+              {canPracticeTopic
+                ? `${currentQuestionCount} ${currentQuestionCount === 1 ? 'pregunta disponible para este tema. Una respuesta no alcanza para evaluar todo el capítulo.' : 'preguntas disponibles para este tema. El resultado muestra tu desempeño en la tanda.'}`
+                : 'La práctica general incluye distintos temas del PDF.'}
+            </p>
+          )}
           {currentQuestionCount === 0 && (
             <p role="status" className="border-border mt-4 rounded-lg border p-3 text-sm!">
               Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su
@@ -368,21 +395,100 @@ export function PdfProgressPanel({
             className="border-border mt-6 scroll-mt-4 border-t pt-5"
             aria-label="Contenido de este tema"
           >
-            <h3 className="text-base font-semibold">Aprendé el tema</h3>
+            <h3 className="text-base font-semibold">1 · Leé el resumen del tema</h3>
             {summaryBody ? (
-              <div className="mt-4 text-base leading-7 whitespace-pre-line">{summaryBody}</div>
+              <div className="mt-4 max-w-prose text-base leading-7 whitespace-pre-line">
+                {summaryBody}
+              </div>
             ) : (
               <p className="text-muted-foreground mt-3">
                 El contenido de este tema todavía no está disponible.
               </p>
             )}
           </section>
+          {(sourcePdfHref ?? simulation?.pdfHref) && (
+            <a
+              href={sourcePdfHref ?? simulation?.pdfHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary inline-flex min-h-11 items-center gap-2 text-sm underline underline-offset-4"
+            >
+              <FileText size={16} /> Consultar el PDF original
+            </a>
+          )}
           <TopicStudySupport
             key={currentTopic?.id ?? 'unmatched'}
             concepts={resources.concepts}
             flashcards={resources.flashcards}
             pdfHref={sourcePdfHref ?? simulation?.pdfHref}
           />
+          {currentTopic && (
+            <section
+              className="border-border border-t py-5"
+              aria-label="Cómo continuar con tu estudio"
+            >
+              <h3 className="text-base font-semibold">3 · Elegí cómo continuar</h3>
+              <p className="text-muted-foreground mt-2 text-sm!">
+                {canPracticeTopic
+                  ? nextStudyTopic
+                    ? 'Podés comprobar lo que entendiste o seguir estudiando el siguiente tema. Vos elegís.'
+                    : 'Podés comprobar lo que entendiste o volver a elegir otro tema del PDF.'
+                  : nextStudyTopic
+                    ? 'Podés seguir estudiando sin hacer una práctica. Este tema todavía no tiene preguntas disponibles.'
+                    : 'Podés volver al contenido de cualquier tema. Este tema todavía no tiene preguntas disponibles.'}
+              </p>
+              <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                {canPracticeTopic && (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                    className={actionClass + ' bg-primary text-primary-foreground'}
+                  >
+                    Practicar este tema <ArrowRight size={16} />
+                  </button>
+                )}
+                {nextStudyTopic ? (
+                  <button
+                    type="button"
+                    onClick={() => openTopic(nextStudyTopic.id)}
+                    className={
+                      actionClass +
+                      (canPracticeTopic
+                        ? ' border-border border'
+                        : ' bg-primary text-primary-foreground')
+                    }
+                  >
+                    Seguir con el tema {topics.indexOf(nextStudyTopic) + 1} <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={closeTopic}
+                    className={actionClass + ' border-border border'}
+                  >
+                    Volver a todos los temas
+                  </button>
+                )}
+              </div>
+              {canPracticeTopic && (
+                <p className="text-muted-foreground mt-2 text-xs!">
+                  {currentQuestionCount}{' '}
+                  {currentQuestionCount === 1 ? 'pregunta disponible' : 'preguntas disponibles'} de
+                  este tema
+                </p>
+              )}
+              {nextStudyTopic ? (
+                <p className="text-muted-foreground mt-3 text-sm! break-words">
+                  Siguiente: {nextStudyTopic.title}
+                </p>
+              ) : (
+                <p className="text-muted-foreground mt-3 text-sm!">
+                  Llegaste al último tema del PDF. Podés volver a cualquiera para estudiar o
+                  practicar.
+                </p>
+              )}
+            </section>
+          )}
           <details className="border-border border-t py-3">
             <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
               Tu aprendizaje
@@ -435,6 +541,15 @@ export function PdfProgressPanel({
           </details>
         </div>
       )}
+      {reviewOpen && (
+        <button
+          type="button"
+          onClick={() => setReviewOpen(false)}
+          className="text-primary my-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
+        >
+          <ArrowLeft size={16} /> Volver al contenido del tema
+        </button>
+      )}
       {reviewOpen && currentErrors.length > 1 && (
         <details className="my-4">
           <summary className="text-muted-foreground min-h-11 cursor-pointer py-3 text-sm">
@@ -458,10 +573,11 @@ export function PdfProgressPanel({
       {reviewOpen && selected ? (
         <StudyErrorDetail
           embedded
+          topicContext
           key={conversationKey}
           item={selected}
           materials={[{ ...material, materiaNombre: null }]}
-          pendingCount={pending.length}
+          pendingCount={currentErrors.filter((error) => error.status === 'pending').length}
           conversation={conversations[conversationKey] ?? initialConversation}
           reviewActions={reviewActions}
           documentHref={simulation?.pdfHref}
@@ -503,17 +619,19 @@ export function PdfProgressPanel({
             window.location.assign(`/dashboard/progreso?material=${material.id}`);
           }}
           onNext={() => {
-            const other = pending.find((error) => error.id !== selected.id);
+            const other = currentErrors.find(
+              (error) => error.id !== selected.id && error.status === 'pending'
+            );
             if (other) {
               const topic = topics.find((item) =>
                 item.errors.some((error) => error.id === other.id)
               );
               openTopic(topic?.id ?? 'unmatched', other.id);
             } else {
-              closeTopic();
+              setReviewOpen(false);
             }
           }}
-          onFinish={closeTopic}
+          onFinish={() => setReviewOpen(false)}
         />
       ) : null}
     </section>

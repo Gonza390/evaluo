@@ -79,6 +79,7 @@ export function StudyErrorDetail({
   onConversationChange,
   documentHref,
   embedded = false,
+  topicContext = false,
 }: {
   item: StudyErrorView;
   materials: StudyErrorsPageData['materials'];
@@ -90,6 +91,7 @@ export function StudyErrorDetail({
   reviewActions?: StudyErrorReviewActions;
   documentHref?: string;
   embedded?: boolean;
+  topicContext?: boolean;
   conversation: StudyErrorConversation;
   onConversationChange: (
     update: (current: StudyErrorConversation) => StudyErrorConversation
@@ -363,10 +365,16 @@ export function StudyErrorDetail({
               <p className="!text-foreground mt-2">
                 {result.correct
                   ? pendingCount === 0
-                    ? 'No te quedan errores pendientes en este PDF.'
+                    ? topicContext
+                      ? 'No te quedan dificultades pendientes en este tema.'
+                      : 'No te quedan errores pendientes en este PDF.'
                     : pendingCount === 1
-                      ? 'Te queda 1 error pendiente en este PDF.'
-                      : `Te quedan ${pendingCount} errores pendientes en este PDF.`
+                      ? topicContext
+                        ? 'Te queda 1 dificultad pendiente en este tema.'
+                        : 'Te queda 1 error pendiente en este PDF.'
+                      : topicContext
+                        ? `Te quedan ${pendingCount} dificultades pendientes en este tema.`
+                        : `Te quedan ${pendingCount} errores pendientes en este PDF.`
                   : 'El error sigue pendiente. Volvé a la explicación y pedí una versión más simple o un ejemplo.'}
               </p>
               <p className="!text-foreground mt-3 !text-sm">{result.feedback}</p>
@@ -375,7 +383,7 @@ export function StudyErrorDetail({
                   <>
                     {embedded && (
                       <button className={reviewPrimaryButton} onClick={onFinish}>
-                        Volver a Progreso
+                        {topicContext ? 'Volver al tema' : 'Volver a Progreso'}
                       </button>
                     )}
                     <button
@@ -383,7 +391,7 @@ export function StudyErrorDetail({
                       disabled={pendingCount === 0}
                       onClick={onNext}
                     >
-                      Seguir con otro error
+                      {topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error'}
                       <ArrowRight className="h-4 w-4" />
                     </button>
                     {!embedded && (
@@ -637,11 +645,11 @@ export function StudyErrorDetail({
             disabled={Boolean(busy) || pendingCount <= (resolved ? 0 : 1)}
             onClick={onNext}
           >
-            Seguir con otro error
+            {topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error'}
             <ArrowRight className="h-4 w-4" />
           </button>
           <button className={reviewSecondaryButton} disabled={Boolean(busy)} onClick={onFinish}>
-            Terminar por hoy
+            {topicContext ? 'Volver al tema' : 'Terminar por hoy'}
           </button>
         </div>
       )}

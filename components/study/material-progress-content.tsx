@@ -14,6 +14,8 @@ export function MaterialProgressContent({
   sections,
   questionCounts,
   requestedError,
+  initialTopicSectionIndex,
+  initialReinforce,
   tour,
   returnToErrors = false,
   onPracticeTopic,
@@ -25,6 +27,8 @@ export function MaterialProgressContent({
   sections: unknown;
   questionCounts: number[];
   requestedError?: string;
+  initialTopicSectionIndex?: number;
+  initialReinforce?: boolean;
   tour?: string;
   returnToErrors?: boolean;
   onPracticeTopic?: (sectionIndex: number) => void;
@@ -86,6 +90,8 @@ export function MaterialProgressContent({
         .map((item) => item.lastAnsweredAt)
         .join(':')}:${result.data.resolved.map((item) => item.id).join(':')}`}
       embedded
+      initialTopicSectionIndex={initialTopicSectionIndex}
+      initialReinforce={initialReinforce}
       material={material}
       sections={sections}
       data={result.data}
