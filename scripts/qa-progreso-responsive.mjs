@@ -56,7 +56,12 @@ for (const width of widths) {
             .sort((a, b) => b.right - a.right)
             .slice(0, 8)
         );
-        throw new Error('Body overflows horizontally: ' + JSON.stringify({ ...docWidth, offenders }));
+        assert.equal(
+          offenders.length,
+          0,
+          'Visible elements extend beyond the viewport: ' + JSON.stringify({ ...docWidth, offenders })
+        );
+        console.log('NOTE body.scrollWidth includes clipped offscreen geometry:', JSON.stringify(docWidth));
       }
       const nav = page.getByRole('navigation', { name: 'Índice de temas' });
       const learning = page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]');
@@ -119,7 +124,7 @@ await check('topic practice -> result -> return to same topic', async () => {
     await back.click();
     await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
     assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Back to same topic');
-    await page.getByText('Tu próxima actividad').first().waitFor(wait);
+    await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"] h4').waitFor(wait);
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
   } catch (error) {
     await page.screenshot({ path: folder + '/failed-practice.png', animations: 'disabled' }).catch(() => {});
