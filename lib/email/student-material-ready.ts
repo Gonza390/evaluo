@@ -66,7 +66,7 @@ export function buildStudentMaterialReadyMessage(input: {
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te avisamos porque el PDF que subiste terminó de procesarse.</p>
 
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-                  <img src="https://evaluo.com.ar/icon.png" width="52" height="52" alt="Evaluo" style="display:block;width:52px;height:52px;margin:0 auto 10px;object-fit:contain;border:0;" />
+                  <img src="https://evaluo.com.ar/evaluo-logo-icono.svg" width="52" height="52" alt="Evaluo" style="display:block;width:52px;height:52px;margin:0 auto 10px;object-fit:contain;border:0;" />
                   <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                 </div>
               </td>
