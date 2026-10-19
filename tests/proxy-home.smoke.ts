@@ -151,6 +151,34 @@ try {
     'Las rutas privadas mantienen Auth obligatorio.'
   );
 
+  // Un refresh expirado puede limpiar la cookie mientras se valida Auth:
+  // la redirección a login debe propagar esa eliminación al navegador.
+  authState.cookies = [
+    { name: 'sb-test-auth-token', value: '', options: { path: '/', maxAge: 0 } },
+  ];
+  const expiredPrivate = await proxy(
+    new NextRequest('https://evaluo.com.ar/dashboard', {
+      headers: { cookie: 'sb-test-auth-token=expired-token' },
+    })
+  );
+  assert.equal(new URL(expiredPrivate.headers.get('location')!).pathname, '/login');
+  assert.equal(expiredPrivate.cookies.get('sb-test-auth-token')?.maxAge, 0);
+
+  // Una sesión renovada desde /login debe sobrevivir al redirect al dashboard.
+  authState.user = { id: 'test-user' };
+  authState.cookies = [
+    { name: 'sb-test-auth-token', value: 'new-session-token', options: { path: '/', maxAge: 3600 } },
+  ];
+  const alreadyLoggedIn = await proxy(
+    new NextRequest('https://evaluo.com.ar/login', {
+      headers: { cookie: 'sb-test-auth-token=old-session-token' },
+    })
+  );
+  assert.equal(new URL(alreadyLoggedIn.headers.get('location')!).pathname, '/dashboard');
+  assert.equal(alreadyLoggedIn.cookies.get('sb-test-auth-token')?.value, 'new-session-token');
+  authState.user = null;
+  authState.cookies = [];
+
   const callsBeforeLogin = authState.calls;
   const loginGuest = await proxy(new NextRequest('https://evaluo.com.ar/login'));
   assert.equal(loginGuest.headers.get('location'), null);
