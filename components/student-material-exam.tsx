@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -322,6 +322,9 @@ export function StudentMaterialExam({
     setStarted(false);
   };
 
+  const startTopicPractice = useEffectEvent(() => {
+    void startExam();
+  });
   // Para un tema se empieza directamente: no hay pantalla para elegir cantidad.
   // Un borrador previo se ofrece para retomar antes de crear una tanda nueva.
   useEffect(() => {
@@ -335,7 +338,7 @@ export function StudentMaterialExam({
       eligibleQuestions.length === 0
     ) return;
     topicAutoStartRequested.current = true;
-    void startExam();
+    startTopicPractice();
   }, [topicSectionIndex, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
 
   if (eligibleQuestions.length === 0 || sizeOptions.length === 0) {
