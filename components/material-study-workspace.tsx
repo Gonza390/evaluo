@@ -1862,12 +1862,6 @@ export function MaterialStudyWorkspace({
               <h1 className="text-foreground min-w-0 truncate text-[1.05rem] font-bold tracking-[-0.035em] sm:text-[1.12rem]">
                 {title}
               </h1>
-              <span
-                title={fileName}
-                className="text-muted-foreground hidden max-w-[360px] min-w-0 truncate text-[11.5px] font-medium xl:block"
-              >
-                {fileName}
-              </span>
             </div>
           </div>
 
