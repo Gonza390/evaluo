@@ -23,7 +23,7 @@ type Tab = 'summary' | 'glossary' | 'cards' | 'exam';
 
 const Brand: React.FC<{large?: boolean}> = ({large = false}) => (
   <div style={{display: 'flex', alignItems: 'center', gap: large ? 18 : 12}}>
-    <Img src={staticFile('icon.png')} style={{width: large ? 70 : 46, height: large ? 70 : 46, objectFit: 'contain'}} />
+    <Img src={staticFile('evaluo-logo-icono.svg')} style={{width: large ? 70 : 46, height: large ? 70 : 46, objectFit: 'contain'}} />
     <div style={{fontSize: large ? 48 : 30, fontWeight: 900, letterSpacing: '-0.055em', color: INK}}>Evaluo</div>
   </div>
 );
