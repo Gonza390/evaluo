@@ -1,0 +1,109 @@
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { chromium } from 'playwright';
+
+const baseUrl = process.env.QA_BASE_URL || 'http://127.0.0.1:3100';
+const folder = process.env.QA_ARTIFACTS_DIR || 'qa-artifacts/progreso';
+const widths = [355, 433, 853, 1024, 1280, 1440, 1920];
+await mkdir(folder, { recursive: true });
+
+const browser = await chromium.launch({ headless: true });
+const failures = [];
+async function check(label, run) {
+  try {
+    await run();
+    console.log('PASS', label);
+  } catch (error) {
+    failures.push(label + ': ' + (error?.stack || error));
+    console.error('FAIL', label, error);
+  }
+}
+const wait = { timeout: 25000 };
+const target = baseUrl + '/preview/progreso-pdf?tab=progreso&nuevo=1';
+
+for (const width of widths) {
+  await check('progreso layout ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
+    try {
+      const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      assert.equal(response?.status(), 200, 'Preview should load');
+      await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+      const firstAction = page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first();
+      await firstAction.click();
+      await page.locator('[id^="real-detail-title"]').waitFor(wait);
+      const docWidth = await page.evaluate(() => ({
+        root: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+        viewport: window.innerWidth,
+      }));
+      assert.ok(docWidth.root <= docWidth.viewport + 1, 'Document overflows horizontally: ' + JSON.stringify(docWidth));
+      assert.ok(docWidth.body <= docWidth.viewport + 1, 'Body overflows horizontally: ' + JSON.stringify(docWidth));
+      const nav = page.getByRole('navigation', { name: 'Índice de temas' });
+      const learning = page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]');
+      assert.equal(await nav.isVisible(), width >= 1024, 'Topic index responsive breakpoint');
+      assert.equal(await learning.isVisible(), width >= 1280, 'Learning rail responsive breakpoint');
+      if (width >= 1024) {
+        await nav.getByRole('button').nth(1).click();
+        await page.locator('[id^="real-detail-title"]').waitFor(wait);
+        assert.match((await page.locator('[id^="real-detail-title"]').textContent()) ?? '', /machine learning|deep learning/i, 'Second topic navigation');
+      } else {
+        await page.getByRole('button', { name: 'Volver a los temas' }).click();
+        await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
+      }
+      await page.screenshot({ path: folder + '/progreso-' + width + '.png', fullPage: false, animations: 'disabled' });
+    } finally {
+      await page.close();
+    }
+  });
+}
+
+await check('topic practice -> result -> return to same topic', async () => {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  try {
+    await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+    await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
+    const nav = page.getByRole('navigation', { name: 'Índice de temas' });
+    await nav.getByRole('button').nth(1).click();
+    const titleBefore = (await page.locator('[id^="real-detail-title"]').textContent())?.trim();
+    await page.getByRole('button', { name: 'Practicar el tema', exact: true }).click();
+    await page.getByRole('button', { name: 'Empezar práctica' }).click();
+    let finished = false;
+    for (let count = 0; count < 30; count++) {
+      const question = page.locator('article').first();
+      await question.waitFor(wait);
+      if (await page.getByRole('button', { name: 'Comprobar respuesta' }).isVisible().catch(() => false)) {
+        await question.getByRole('button').first().click();
+        await page.getByRole('button', { name: 'Comprobar respuesta' }).click();
+      } else if (await page.getByRole('button', { name: 'Ver respuesta esperada' }).isVisible().catch(() => false)) {
+        await question.locator('textarea').fill('Respuesta de prueba');
+        await page.getByRole('button', { name: 'Ver respuesta esperada' }).click();
+        await page.getByRole('button', { name: 'Necesito repasar' }).click();
+      }
+      const finalButton = page.getByRole('button', { name: 'Ver resultado' });
+      if (await finalButton.isVisible().catch(() => false)) {
+        await finalButton.click();
+        finished = true;
+        break;
+      }
+      await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    }
+    assert.ok(finished, 'Practice should finish within thirty questions');
+    const back = page.getByRole('button', { name: /Reforzar este tema|Volver al tema/ }).first();
+    await back.click();
+    await page.locator('[id^="real-detail-title"]').waitFor(wait);
+    assert.equal((await page.locator('[id^="real-detail-title"]').textContent())?.trim(), titleBefore, 'Back to same topic');
+    await page.getByText('Tu próxima actividad').first().waitFor(wait);
+    await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
+  } finally {
+    await page.close();
+  }
+});
+
+await browser.close();
+if (failures.length) {
+  console.error('\nQA failures:\n' + failures.join('\n\n'));
+  process.exitCode = 1;
+} else {
+  console.log('\nResponsive and guided practice QA passed.');
+}
