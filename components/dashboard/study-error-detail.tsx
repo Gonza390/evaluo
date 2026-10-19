@@ -348,7 +348,7 @@ export function StudyErrorDetail({
               </div>
             )}
           </section>
-          <section ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
+          <div ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
             <div>
               <h3 id="reinforcement-explanation-heading" className="text-lg font-semibold">
                 Entendamos por qué
@@ -423,7 +423,7 @@ export function StudyErrorDetail({
             )}
             {helpNotice && inlineNotice}
             {sourceNotice && inlineNotice}
-          </section>
+          </div>
           {resolved ? (
             <section className="border-primary/20 bg-primary/5 rounded-xl border p-5">
               <h3 className="text-lg font-semibold">Esta dificultad ya fue reforzada</h3>
