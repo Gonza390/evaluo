@@ -326,7 +326,7 @@ export default function LoginFormGoogleFirst() {
 
         <div className="flex items-center gap-2 text-sm font-bold tracking-tight text-slate-950">
           <Image
-            src="/icon.png"
+            src="/evaluo-logo-icono.svg"
             alt=""
             width={30}
             height={30}
