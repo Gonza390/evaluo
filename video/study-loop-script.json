@@ -1,0 +1,72 @@
+[
+  {
+    "start": 0,
+    "end": 6,
+    "title": "¿Por qué me equivoqué?",
+    "step": "EL ERROR",
+    "voice": "Te equivocaste. Ves la respuesta correcta, pero todavía no entendés qué te confundió."
+  },
+  {
+    "start": 6,
+    "end": 14,
+    "title": "Todo empieza con tu PDF",
+    "step": "01 · TUS APUNTES",
+    "voice": "Volvamos al principio. Subís tus apuntes a Evaluo y empezás a estudiar con tu propio material."
+  },
+  {
+    "start": 14,
+    "end": 23,
+    "title": "Descubrí qué necesitás reforzar",
+    "step": "02 · DIAGNÓSTICO",
+    "voice": "El diagnóstico inicial te ayuda a descubrir qué entendés y qué conceptos necesitás reforzar. Ya tenés un punto de partida."
+  },
+  {
+    "start": 23,
+    "end": 32,
+    "title": "Estudiá. Practicá. Detectá tus dudas.",
+    "step": "03 · PRÁCTICA",
+    "voice": "Consultás el resumen, repasás con flashcards y respondés preguntas. Al practicar, aparecen las dudas que una lectura sola puede dejar pasar."
+  },
+  {
+    "start": 32,
+    "end": 41,
+    "title": "Tus errores, en tu PDF",
+    "step": "04 · MIS ERRORES",
+    "voice": "En Mis errores elegís tus apuntes y encontrás los temas pendientes. Empezamos por Finalismo, el concepto que más te costó."
+  },
+  {
+    "start": 41,
+    "end": 54,
+    "title": "Ayudame a entenderlo",
+    "step": "05 · ENTENDER",
+    "voice": "Pedís ayuda y recibís una explicación apoyada en tu PDF. Podés pedirla más simple o ver un ejemplo. Lo importante es entender qué te confundió."
+  },
+  {
+    "start": 54,
+    "end": 64,
+    "title": "Volvé al fragmento de tus apuntes",
+    "step": "06 · LA FUENTE",
+    "voice": "La fuente está a mano. Abrís el fragmento de tus apuntes y conectás la explicación con lo que estás estudiando, sin salir del repaso."
+  },
+  {
+    "start": 64,
+    "end": 75,
+    "title": "Ahora, aplicalo en otra situación",
+    "step": "07 · COMPROBAR",
+    "voice": "Después respondés una pregunta diferente sobre el mismo concepto. Si todavía te cuesta, volvés a la explicación y probás otra forma de entenderlo."
+  },
+  {
+    "start": 75,
+    "end": 83,
+    "title": "Ya tenés un próximo paso",
+    "step": "08 · TU AVANCE",
+    "voice": "Esta vez lo aplicaste bien. Ves tu avance y elegís seguir con otro error o terminar por hoy."
+  },
+  {
+    "start": 83,
+    "end": 90,
+    "title": "Entendé lo que te cuesta.",
+    "step": "EVALUO",
+    "voice": "Y más adelante, volver a practicar ayuda a comprobar qué recordás. Estudiá con tu PDF en Evaluo."
+  }
+]

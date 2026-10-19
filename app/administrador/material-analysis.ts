@@ -1,8 +1,9 @@
 'use server';
 
 import pdf from 'pdf-parse-fork';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireAdminAccess } from '@/lib/auth';
+import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 
 export interface ProcessResult {
@@ -594,6 +595,8 @@ export async function analizarMaterialConIA(
     }
 
     revalidatePath('/administrador');
+    // Nuevas preguntas en el banco: invalida el pool cacheado del simulador.
+    revalidateTag('preguntas-banco-pool', 'max');
 
     return {
       success: true,
@@ -605,7 +608,7 @@ export async function analizarMaterialConIA(
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Error procesando el material con la IA.';
-    console.error('Error al analizar material con IA:', error);
+    logError('admin.analizarMaterialIA', error);
     return {
       success: false,
       message,

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 
 export const metadata: Metadata = {
   title: 'Iniciar sesión',
-  description: 'Accede a tu cuenta de Evaluo para retomar materias, materiales y simuladores.',
+  description: 'Accedé a tu cuenta de Evaluo para retomar materias, materiales y simuladores.',
   robots: {
     index: false,
     follow: false,
@@ -10,5 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default function LoginLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <MarketingAnalyticsSlot />
+      {children}
+    </>
+  );
 }

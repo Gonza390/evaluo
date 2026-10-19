@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 
 export default function RedditRedirectPage() {
-  redirect(
+  permanentRedirect(
     '/?utm_source=reddit&utm_medium=community&utm_campaign=reddit&utm_content=shortlink'
   );
 }

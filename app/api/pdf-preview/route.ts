@@ -1,9 +1,10 @@
 import { PDFDocument } from 'pdf-lib';
 import { NextResponse } from 'next/server';
-import { enforceRateLimit, getRequestClientKey } from '@/lib/rate-limit';
+import { PDF_PREVIEW_PAGE_LIMIT } from '@/lib/pdf-preview';
+import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/rate-limit';
 import { createAdminClient } from '@/lib/supabase-admin';
-
-const PREVIEW_PAGE_LIMIT = 3;
+import { createClientServer } from '@/lib/supabase-server';
+import { logError } from '@/lib/observability';
 
 function getStorageObjectPath(resourcePath: string) {
   if (!/^https?:\/\//i.test(resourcePath)) {
@@ -30,14 +31,17 @@ function getStorageObjectPath(resourcePath: string) {
 export async function GET(request: Request) {
   try {
     const clientKey = getRequestClientKey(request);
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       key: `pdf-preview:${clientKey}`,
       limit: 30,
       windowMs: 60_000,
     });
 
     if (!rateLimit.allowed) {
-      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+      return NextResponse.json(
+        { error: 'rate_limited' },
+        { status: 429, headers: rateLimitHeaders(rateLimit) }
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -53,9 +57,14 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient();
+    // Validación de visibilidad con RLS: solo se sirve el preview si el recurso
+    // o resumen es visible para el solicitante (las policies de recursos/
+    // resumenes deciden). La descarga del blob usa admin porque el bucket
+    // biblioteca es admin-only.
+    const server = await createClientServer();
     const [{ data: resourceMatch }, { data: resumenMatch }] = await Promise.all([
-      admin.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
-      admin.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
+      server.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
+      server.from('resumenes').select('id').eq('file_url', objectPath).limit(1).maybeSingle(),
     ]);
 
     if (!resourceMatch && !resumenMatch) {
@@ -77,7 +86,7 @@ export async function GET(request: Request) {
 
     const previewPdf = await PDFDocument.create();
     const pageCount = sourcePdf.getPageCount();
-    const previewCount = Math.min(PREVIEW_PAGE_LIMIT, pageCount);
+    const previewCount = Math.min(PDF_PREVIEW_PAGE_LIMIT, pageCount);
 
     if (previewCount === 0) {
       return NextResponse.json({ error: 'Empty pdf' }, { status: 422 });
@@ -94,11 +103,12 @@ export async function GET(request: Request) {
     return new Response(previewBytes, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Cache-Control': 'private, max-age=60',
+        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        ...Object.fromEntries(rateLimitHeaders(rateLimit)),
       },
     });
   } catch (error) {
-    console.error('PDF preview error:', error);
+    logError('api.pdfPreview', error);
     return NextResponse.json({ error: 'Unexpected error' }, { status: 500 });
   }
 }

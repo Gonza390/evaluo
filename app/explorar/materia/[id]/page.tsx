@@ -1,140 +1,269 @@
-import { createClientServer } from '@/lib/supabase-server';
-import MateriaContent from './materia-content';
 import type { Metadata } from 'next';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import { getCanonicalMateriaId } from '@/lib/materia-aliases';
+import { isUuid } from '@/lib/uuid';
+import { getMateriaBootstrap } from '@/lib/data/materia-bootstrap';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { MateriaPracticeLinks } from '@/components/seo/materia-practice-links';
+import { buildBreadcrumbJsonLd, buildLearningResourceJsonLd } from '@/lib/seo';
+import { getMateriaSeoContentSignals } from '@/lib/seo-content-signals';
+import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildMateriaSearchTitle } from '@/lib/seo-search-copy';
+import { buildShareCardPath } from '@/lib/share-card';
+import {
+  buildMateriaSharePath,
+  getApprovedShareCreatorLabel,
+} from '@/lib/materia-share-path';
+import { createPublicClient } from '@/lib/supabase-public';
+import { fetchSharedStudentMaterialsByMateria } from '@/lib/data/student-materials';
+import MateriaStudyHome from './materia-study-home';
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ carreraId?: string }>;
+  searchParams?: Promise<{
+    carreraId?: string;
+    tab?: string;
+    modulo?: string;
+    creador?: string;
+  }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const supabase = await createClientServer();
+export const revalidate = 600;
 
-  try {
-    const { data: materia } = await supabase
-      .from('materias')
-      .select('id, nombre')
-      .eq('id', resolvedParams.id)
-      .maybeSingle();
+function resolveMateriaId(routeValue: string) {
+  return getCanonicalMateriaId(parseSeoEntitySlug(routeValue).id);
+}
 
-    if (!materia) {
-      return {
-        title: 'Materia',
-        robots: {
-          index: false,
-          follow: false,
-        },
-      };
-    }
+function buildMateriaQuery(searchParams: {
+  carreraId?: string;
+  tab?: string;
+  modulo?: string;
+  creador?: string;
+}) {
+  const params = new URLSearchParams();
+  const carreraId = searchParams.carreraId?.trim();
+  const tab = searchParams.tab?.trim();
+  const modulo = searchParams.modulo?.trim();
+  const creador = searchParams.creador?.trim();
 
-    return {
-      title: `${materia.nombre} | Materia`,
-      description: `Estudia ${materia.nombre} con resúmenes, preguntas y simuladores en Evaluo.`,
-      alternates: {
-        canonical: `/explorar/materia/${materia.id}`,
-      },
-      openGraph: {
-        title: `${materia.nombre} | Evaluo`,
-        description: `Accede a materiales, preguntas y simuladores para ${materia.nombre}.`,
-        url: `https://evaluo.com.ar/explorar/materia/${materia.id}`,
-      },
-    };
-  } catch {
-    return {
-      title: 'Materia',
-    };
+  if (carreraId) params.set('carreraId', carreraId);
+  if (tab) params.set('tab', tab);
+  if (modulo) params.set('modulo', modulo);
+  if (creador) params.set('creador', creador);
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+async function getMateriaStudyHomeData(materiaId: string) {
+  const client = createPublicClient();
+
+  const [partial1, partial2, sharedStudentMaterials] = await Promise.all([
+    client
+      .from('preguntas_banco_public')
+      .select('id', { count: 'exact', head: true })
+      .eq('materia_id', materiaId)
+      .eq('parcial', 1),
+    client
+      .from('preguntas_banco_public')
+      .select('id', { count: 'exact', head: true })
+      .eq('materia_id', materiaId)
+      .eq('parcial', 2),
+    fetchSharedStudentMaterialsByMateria(client, materiaId, 6).catch(() => []),
+  ]);
+
+  const partial1Count = partial1.error ? 0 : (partial1.count ?? 0);
+  const partial2Count = partial2.error ? 0 : (partial2.count ?? 0);
+
+  return {
+    questionCounts: {
+      1: partial1Count,
+      2: partial2Count,
+      3: partial1Count + partial2Count,
+    } as Record<1 | 2 | 3, number>,
+    sharedStudentMaterials,
+  };
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve({} as { creador?: string }),
+  ]);
+  const canonicalMateriaId = resolveMateriaId(resolvedParams.id);
+  const [bootstrap, contentSignals] = await Promise.all([
+    getMateriaBootstrap({
+      materiaId: canonicalMateriaId,
+      requestedCarreraId: '',
+    }),
+    getMateriaSeoContentSignals(canonicalMateriaId),
+  ]);
+  const materiaNombre = bootstrap.materiaNombre?.trim() || 'Materia';
+  const universidadNombre = bootstrap.universidadNombre?.trim();
+  const creatorLabel = getApprovedShareCreatorLabel(resolvedSearchParams.creador);
+  const canonicalHref = `/explorar/materia/${buildSeoEntitySlug(materiaNombre, canonicalMateriaId)}`;
+  const socialHref = universidadNombre
+    ? buildMateriaSharePath(materiaNombre, universidadNombre)
+    : canonicalHref;
+  const hasStudyMaterial =
+    contentSignals.summaryCount +
+      contentSignals.summaryResourceCount +
+      contentSignals.resourceCount >
+    0;
+
+  let description: string;
+  if (contentSignals.questionCount > 0) {
+    description = `Parciales y preguntas de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''}. Practicá modelos de examen con respuestas explicadas${hasStudyMaterial ? ' y repasá con resúmenes y material de estudio' : ''}.`;
+  } else if (hasStudyMaterial) {
+    description = `Resúmenes y material de estudio de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} para preparar parciales y repasar en Evaluo.`;
+  } else {
+    description = `Material de estudio y práctica de ${materiaNombre}${universidadNombre ? ` en ${universidadNombre}` : ''} para preparar tus parciales en Evaluo.`;
   }
+
+  if (creatorLabel) {
+    description = `${description} Contenido compartido con ${creatorLabel}.`;
+  }
+
+  const seoTitle = buildMateriaSearchTitle(materiaNombre, universidadNombre);
+  const socialTitle = creatorLabel
+    ? `${materiaNombre} — con ${creatorLabel} | Evaluo`
+    : `${seoTitle} | Evaluo`;
+  const socialImage = buildShareCardPath({
+    kind: 'materia',
+    title: materiaNombre,
+    subtitle: universidadNombre || 'Recursos de estudio',
+    detail:
+      contentSignals.questionCount > 0
+        ? 'Modelos de examen con explicación de cada respuesta'
+        : 'Recursos, práctica y material de estudio en un solo lugar',
+  });
+
+  return {
+    title: seoTitle,
+    description,
+    alternates: {
+      canonical: canonicalHref,
+    },
+    openGraph: {
+      title: socialTitle,
+      description,
+      url: socialHref,
+      images: [
+        { url: socialImage, width: 1200, height: 630, alt: `${materiaNombre} en Evaluo` },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: socialTitle,
+      description,
+      images: [socialImage],
+    },
+    robots: {
+      index: bootstrap.materiaFound !== false && contentSignals.hasAcademicContent,
+      follow: true,
+    },
+  };
 }
 
 export default async function MateriaPage({ params, searchParams }: PageProps) {
   const [resolvedParams, resolvedSearchParams] = await Promise.all([
     params,
-    searchParams ?? Promise.resolve({} as { carreraId?: string }),
+    searchParams ??
+      Promise.resolve({} as {
+        carreraId?: string;
+        tab?: string;
+        modulo?: string;
+        creador?: string;
+      }),
   ]);
-  const materiaId = resolvedParams.id;
-  const requestedCarreraId = resolvedSearchParams.carreraId?.trim() ?? '';
-  const supabase = await createClientServer();
+  const parsedMateriaId = parseSeoEntitySlug(resolvedParams.id).id;
+  const canonicalMateriaId = getCanonicalMateriaId(parsedMateriaId);
 
-  let materiaNombre = '';
-  let carreraId = '';
-  let carreraNombre = '';
-  let universidadId = '';
-  let universidadNombre = '';
-
-  try {
-    const { data: materia, error: materiaError } = await supabase
-      .from('materias')
-      .select('id, nombre, carrera_id')
-      .eq('id', materiaId)
-      .single();
-
-    if (materiaError) {
-      console.error('Error fetching materia:', materiaError);
-    } else if (materia) {
-      materiaNombre = materia.nombre;
-      let resolvedCarreraId = requestedCarreraId || materia.carrera_id || '';
-
-      if (!requestedCarreraId && !resolvedCarreraId) {
-        const { data: carreraMateria, error: carreraMateriaError } = await supabase
-          .from('carrera_materias')
-          .select('carrera_id, prioridad')
-          .eq('materia_id', materiaId)
-          .order('prioridad', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-
-        if (carreraMateriaError) {
-          console.error('Error fetching carrera_materias:', carreraMateriaError);
-        } else if (carreraMateria?.carrera_id) {
-          resolvedCarreraId = carreraMateria.carrera_id;
-        }
-      }
-
-      if (resolvedCarreraId) {
-        carreraId = resolvedCarreraId;
-
-        const { data: carrera, error: carreraError } = await supabase
-          .from('carreras')
-          .select('id, nombre, universidad_id')
-          .eq('id', resolvedCarreraId)
-          .maybeSingle();
-
-        if (carreraError) {
-          console.error('Error fetching carrera:', carreraError);
-        } else if (carrera) {
-          carreraNombre = carrera.nombre;
-
-          if (carrera.universidad_id) {
-            universidadId = carrera.universidad_id;
-
-            const { data: universidad, error: uniError } = await supabase
-              .from('universidades')
-              .select('id, nombre')
-              .eq('id', carrera.universidad_id)
-              .maybeSingle();
-
-            if (uniError) {
-              console.error('Error fetching universidad:', uniError);
-            } else if (universidad) {
-              universidadNombre = universidad.nombre;
-            }
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error loading materia data:', error);
+  if (canonicalMateriaId !== parsedMateriaId) {
+    redirect(`/explorar/materia/${canonicalMateriaId}${buildMateriaQuery(resolvedSearchParams)}`);
   }
 
+  const materiaId = canonicalMateriaId;
+  if (!isUuid(materiaId)) {
+    return notFound();
+  }
+
+  const requestedCarreraId = resolvedSearchParams.carreraId?.trim() ?? '';
+  const [bootstrap, studyHomeData] = await Promise.all([
+    getMateriaBootstrap({
+      materiaId,
+      requestedCarreraId,
+    }),
+    getMateriaStudyHomeData(materiaId),
+  ]);
+
+  if (bootstrap.materiaFound === false) {
+    return notFound();
+  }
+
+  const canonicalSegment = buildSeoEntitySlug(bootstrap.materiaNombre, materiaId);
+  const pregunteroHref = `/pregunteros/${canonicalSegment}`;
+
+  if (
+    resolvedSearchParams.tab?.trim().toLowerCase() === 'pregunteros' &&
+    studyHomeData.questionCounts[3] > 0
+  ) {
+    permanentRedirect(pregunteroHref);
+  }
+
+  if (
+    resolvedSearchParams.tab?.trim().toLowerCase() === 'resumenes' &&
+    bootstrap.initialResumenes.length > 0
+  ) {
+    permanentRedirect(`/resumenes/${canonicalSegment}`);
+  }
+
+  if (resolvedParams.id !== canonicalSegment) {
+    const canonicalQuery = buildMateriaQuery({
+      carreraId: resolvedSearchParams.carreraId,
+      modulo: resolvedSearchParams.modulo,
+      creador: resolvedSearchParams.creador,
+    });
+    permanentRedirect(`/explorar/materia/${canonicalSegment}${canonicalQuery}`);
+  }
+
+  const canonicalHref = `/explorar/materia/${canonicalSegment}`;
+
   return (
-    <MateriaContent
-        materiaId={materiaId}
-        materiaNombre={materiaNombre}
-        carreraId={carreraId}
-        carreraNombre={carreraNombre}
-        universidadId={universidadId}
-        universidadNombre={universidadNombre}
+    <>
+      <JsonLd
+        data={[
+          buildBreadcrumbJsonLd([
+            { name: 'Inicio', path: '/' },
+            { name: 'Explorar', path: '/explorar' },
+            { name: bootstrap.materiaNombre, path: canonicalHref },
+          ]),
+          buildLearningResourceJsonLd({
+            name: bootstrap.materiaNombre,
+            universityName: bootstrap.universidadNombre,
+            careerName: bootstrap.carreraNombre,
+            url: canonicalHref,
+          }),
+        ]}
       />
+      <MateriaStudyHome
+        materiaId={materiaId}
+        materiaNombre={bootstrap.materiaNombre}
+        carreraId={bootstrap.carreraId || requestedCarreraId || undefined}
+        carreraNombre={bootstrap.carreraNombre}
+        universidadId={bootstrap.universidadId}
+        universidadNombre={bootstrap.universidadNombre}
+        contextError={bootstrap.contextError}
+        initialResumenes={bootstrap.initialResumenes}
+        initialResumenesError={bootstrap.initialResumenesError}
+        sharedStudentMaterials={studyHomeData.sharedStudentMaterials}
+        questionCounts={studyHomeData.questionCounts}
+      />
+      <MateriaPracticeLinks
+        materiaId={materiaId}
+        materiaNombre={bootstrap.materiaNombre}
+        questionCounts={studyHomeData.questionCounts}
+      />
+    </>
   );
 }

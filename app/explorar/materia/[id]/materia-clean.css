@@ -1,0 +1,143 @@
+.materia-editorial {
+  min-height: 100%;
+  background: var(--background);
+}
+
+/* El encabezado de materia funciona como información de página, no como hero promocional. */
+.materia-editorial .animate-page-enter > section:first-of-type {
+  min-height: 0 !important;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+  background: var(--background) !important;
+  box-shadow: none !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type > div.absolute,
+.materia-editorial .animate-page-enter > section:first-of-type > div[style] {
+  display: none !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type > div.relative {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type .rounded-full {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type h1 {
+  color: var(--foreground) !important;
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type p,
+.materia-editorial .animate-page-enter > section:first-of-type span,
+.materia-editorial .animate-page-enter > section:first-of-type svg {
+  color: var(--muted-foreground) !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type button {
+  border: 1px solid color-mix(in oklch, var(--border) 92%, transparent) !important;
+  border-radius: 10px !important;
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type button:hover {
+  border-color: color-mix(in oklch, var(--primary) 28%, var(--border)) !important;
+  background: color-mix(in oklch, var(--primary) 3%, var(--background)) !important;
+}
+
+.materia-editorial .animate-page-enter > section:first-of-type button svg {
+  color: currentColor !important;
+}
+
+/* Estudiar y practicar son acciones de la página; no necesitan dos grandes cards promocionales. */
+.materia-editorial main > section[aria-label='Acciones principales'] {
+  gap: 0 !important;
+  border-top: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+}
+
+.materia-editorial main > section[aria-label='Acciones principales'] > a,
+.materia-editorial main > section[aria-label='Acciones principales'] > div {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--background) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.materia-editorial main > section[aria-label='Acciones principales'] > a:hover,
+.materia-editorial main > section[aria-label='Acciones principales'] > div:hover {
+  border-color: transparent !important;
+  background: var(--background) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Los iconos acompañan el contenido en lugar de vivir dentro de otra tarjeta. */
+.materia-editorial main > section[aria-label='Acciones principales'] > a > div:first-child > div:first-child,
+.materia-editorial main > section[aria-label='Acciones principales'] > div > button:first-child > div:first-child {
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Los cuatro resultados del PDF se leen como capacidades, no como mini-cards. */
+.materia-editorial main > section[aria-label='Acciones principales'] > a > div:nth-child(2) > div {
+  justify-content: flex-start !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding-inline: 0 !important;
+  box-shadow: none !important;
+}
+
+.materia-editorial main > section[aria-label='Acciones principales'] > a > div:nth-child(3),
+.materia-editorial main > section[aria-label='Acciones principales'] > div > button:nth-child(2) {
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+/* Materiales, resúmenes y opciones de práctica siguen delimitados: son objetos reales. */
+.materia-editorial main article,
+.materia-editorial main [id='practicar-preguntero'] a {
+  box-shadow: none !important;
+}
+
+@media (min-width: 1024px) {
+  .materia-editorial main > section[aria-label='Acciones principales'] > a {
+    padding-right: 2rem !important;
+    border-right: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
+  }
+
+  .materia-editorial main > section[aria-label='Acciones principales'] > div {
+    padding-left: 2rem !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .materia-editorial main > section[aria-label='Acciones principales'] > a {
+    border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
+  }
+}
+
+@media (max-width: 639px) {
+  .materia-editorial .animate-page-enter > section:first-of-type > div.relative {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .materia-editorial main > section[aria-label='Acciones principales'] > a,
+  .materia-editorial main > section[aria-label='Acciones principales'] > div {
+    padding-inline: 0 !important;
+  }
+}

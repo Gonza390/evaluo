@@ -23,7 +23,7 @@ export function ElegantLoader({
         <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(79,93,255,0.14),transparent_68%)] blur-xl" />
         <Spinner size={size} className="absolute" />
         <Icon
-          className={`${iconSize} relative z-10 animate-[loaderFloat_2.6s_ease-in-out_infinite] stroke-slate-500 stroke-[1.8] group-[.global]:stroke-indigo-600`}
+          className={`${iconSize} relative z-10 animate-[loaderFloat_2.6s_ease-in-out_infinite] stroke-slate-500 stroke-[1.8] group-[.global]:stroke-blue-600`}
         />
       </div>
       <p className="text-sm leading-relaxed font-medium tracking-[0.01em] text-slate-500">{text}</p>

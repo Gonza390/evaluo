@@ -1,4 +1,6 @@
-import { createAdminClient } from '@/lib/supabase-admin';
+import { unstable_cache } from 'next/cache';
+import { createPublicClient } from '@/lib/supabase-public';
+import { fetchExplorarCatalogDataRpc } from '@/lib/data/catalog-performance';
 
 export type ExplorarUniversidad = {
   id: string;
@@ -7,55 +9,30 @@ export type ExplorarUniversidad = {
   materiasCount: number;
 };
 
-export async function fetchExplorarUniversidades(): Promise<ExplorarUniversidad[]> {
-  const admin = createAdminClient();
+export type ExplorarCarrera = {
+  id: string;
+  nombre: string;
+  universidadId: string | null;
+  universidadNombre: string;
+  materiasCount: number;
+  readyMateriasCount: number;
+  questionMateriasCount: number;
+};
 
-  const [universidadesResult, carrerasResult, carreraMateriasResult] = await Promise.all([
-    admin.from('universidades').select('id, nombre').order('nombre'),
-    admin.from('carreras').select('id, universidad_id'),
-    admin.from('carrera_materias').select('carrera_id, materia_id'),
-  ]);
+export type ExplorarData = {
+  universidades: ExplorarUniversidad[];
+  carreras: ExplorarCarrera[];
+};
 
-  if (universidadesResult.error) {
-    throw universidadesResult.error;
+const loadExplorarData = unstable_cache(
+  async () => fetchExplorarCatalogDataRpc(createPublicClient()) as Promise<ExplorarData>,
+  ['explorar-catalog'],
+  {
+    revalidate: 600,
+    tags: ['explorar-catalog'],
   }
+);
 
-  if (carrerasResult.error) {
-    throw carrerasResult.error;
-  }
-
-  if (carreraMateriasResult.error) {
-    throw carreraMateriasResult.error;
-  }
-
-  const carrerasPorUniversidad = new Map<string, string[]>();
-  const materiasPorUniversidad = new Map<string, Set<string>>();
-  const carreraToUniversity = new Map<string, string>();
-
-  for (const carrera of carrerasResult.data ?? []) {
-    const universityId = carrera.universidad_id;
-    if (!universityId) continue;
-    carreraToUniversity.set(carrera.id, universityId);
-    const current = carrerasPorUniversidad.get(universityId) ?? [];
-    current.push(carrera.id);
-    carrerasPorUniversidad.set(universityId, current);
-  }
-
-  for (const relation of carreraMateriasResult.data ?? []) {
-    const carreraId = relation.carrera_id;
-    const materiaId = relation.materia_id;
-    if (!carreraId || !materiaId) continue;
-    const universityId = carreraToUniversity.get(carreraId);
-    if (!universityId) continue;
-    const current = materiasPorUniversidad.get(universityId) ?? new Set<string>();
-    current.add(materiaId);
-    materiasPorUniversidad.set(universityId, current);
-  }
-
-  return (universidadesResult.data ?? []).map((universidad) => ({
-    id: universidad.id,
-    nombre: universidad.nombre,
-    carrerasCount: carrerasPorUniversidad.get(universidad.id)?.length ?? 0,
-    materiasCount: materiasPorUniversidad.get(universidad.id)?.size ?? 0,
-  }));
+export async function fetchExplorarData(): Promise<ExplorarData> {
+  return loadExplorarData();
 }

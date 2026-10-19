@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase-client';
 
@@ -14,11 +22,27 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 interface UserProviderProps {
   children: ReactNode;
+  initialUser?: User | null;
 }
 
-export function UserProvider({ children }: UserProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+function isSameUserSnapshot(currentUser: User | null, nextUser: User | null) {
+  if (currentUser === nextUser) return true;
+  if (!currentUser || !nextUser) return false;
+
+  return (
+    currentUser.id === nextUser.id &&
+    currentUser.email === nextUser.email &&
+    currentUser.updated_at === nextUser.updated_at &&
+    currentUser.last_sign_in_at === nextUser.last_sign_in_at &&
+    JSON.stringify(currentUser.app_metadata ?? {}) === JSON.stringify(nextUser.app_metadata ?? {}) &&
+    JSON.stringify(currentUser.user_metadata ?? {}) === JSON.stringify(nextUser.user_metadata ?? {})
+  );
+}
+
+export function UserProvider({ children, initialUser }: UserProviderProps) {
+  const hasServerSnapshot = initialUser !== undefined;
+  const [user, setUser] = useState<User | null>(initialUser ?? null);
+  const [loading, setLoading] = useState(!hasServerSnapshot);
 
   const getUserName = useCallback((): string => {
     if (!user) return 'Estudiante';
@@ -42,14 +66,19 @@ export function UserProvider({ children }: UserProviderProps) {
   useEffect(() => {
     let isMounted = true;
 
-    void supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) {
-        return;
-      }
-
-      setUser(session?.user ?? null);
+    const applySessionUser = (nextUser: User | null) => {
+      setUser((currentUser) =>
+        isSameUserSnapshot(currentUser, nextUser) ? currentUser : nextUser
+      );
       setLoading(false);
-    });
+    };
+
+    if (!hasServerSnapshot) {
+      void supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!isMounted) return;
+        applySessionUser(session?.user ?? null);
+      });
+    }
 
     const {
       data: { subscription },
@@ -58,23 +87,25 @@ export function UserProvider({ children }: UserProviderProps) {
         return;
       }
 
-      setUser(session?.user ?? null);
-      setLoading(false);
+      applySessionUser(session?.user ?? null);
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [hasServerSnapshot]);
 
-  const value: UserContextType = {
-    user,
-    loading,
-    isAuthenticated: Boolean(user),
-    getUserName,
-    getUserInitials,
-  };
+  const value = useMemo<UserContextType>(
+    () => ({
+      user,
+      loading,
+      isAuthenticated: Boolean(user),
+      getUserName,
+      getUserInitials,
+    }),
+    [getUserInitials, getUserName, loading, user]
+  );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

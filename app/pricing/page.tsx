@@ -1,86 +1,212 @@
-import { Clock3, Sparkles } from 'lucide-react';
-import { TrackedLink } from '@/components/marketing/tracked-link';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Check, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { FooterHome } from '@/components/footer-home';
+import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
+import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
-export default function PricingPage() {
+const pricingDescription =
+  'Empezá gratis o elegí Evaluo Premium mensual o por 6 meses para preparar tus parciales.';
+
+export const metadata: Metadata = {
+  title: 'Planes y precios',
+  description: pricingDescription,
+  alternates: { canonical: '/pricing' },
+  openGraph: {
+    type: 'website',
+    url: '/pricing',
+    siteName: 'Evaluo',
+    locale: 'es_AR',
+    title: 'Planes y precios | Evaluo',
+    description: pricingDescription,
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Planes y precios de Evaluo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Planes y precios | Evaluo',
+    description: pricingDescription,
+    images: ['/opengraph-image.png'],
+  },
+};
+
+const premiumFeatures = [
+  'Todo lo de Gratis',
+  'Simuladores completos para practicar parciales',
+  'Explicaciones de respuestas sin límite diario',
+  'Práctica personalizada según tus errores',
+  'Seguimiento de progreso por tema',
+  'Convertí tus propios apuntes en material para estudiar',
+];
+
+const freeFeatures = [
+  'Resúmenes y materiales compartidos por materia',
+  'Pregunteros para practicar',
+  'Simuladores en formato básico',
+  'Una revisión de errores por semana',
+];
+
+const comparison = [
+  ['Resúmenes y materiales', true, true],
+  ['Pregunteros', true, true],
+  ['Simuladores completos', false, true],
+  ['Explicaciones de respuestas sin límite diario', false, true],
+  ['Práctica personalizada de errores', false, true],
+  ['Progreso avanzado por tema', false, true],
+] as const;
+
+export default async function PricingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ source?: string; materia?: string; recovery?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+  const source = String(params.source ?? 'pricing_direct').slice(0, 80);
+  const materiaId = String(params.materia ?? '').slice(0, 80) || undefined;
+  const showRecovery = params.recovery === '1';
+
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(79,93,255,0.12),transparent_24%),linear-gradient(180deg,#f8fbff_0%,#ffffff_48%,#f6f8fc_100%)] px-4 py-10 sm:px-6 sm:py-14">
-      <MarketingPageViewTracker eventName="pricing_view" payload={{ location: 'pricing_page' }} />
+    <>
+      <main className="min-h-screen w-full min-w-0 overflow-x-clip bg-white text-slate-950">
+        <MarketingPageViewTracker
+          eventName="pricing_view"
+          payload={{ location: source, plan_context: 'premium', recovery: showRecovery }}
+        />
 
-      <div className="mx-auto max-w-4xl">
-        <section className="surface-panel overflow-hidden px-5 py-8 sm:px-8 sm:py-10">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600">
-              <Sparkles className="h-3.5 w-3.5" />
-              Premium en preparación
-            </div>
-            <h1 className="mt-5 text-[2.15rem] font-black tracking-[-0.06em] text-slate-950 sm:text-5xl">
-              Estamos trabajando para ofrecer una experiencia premium realmente fuerte.
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+          <PublicSiteHeader trackingLocation="pricing_header" />
+        </div>
+
+        <section className="relative overflow-hidden border-b border-slate-200">
+          <div className="absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-blue-100/70 blur-3xl" />
+          <div className="relative mx-auto max-w-5xl px-4 pt-10 pb-12 text-center sm:px-6 sm:pt-14 sm:pb-14">
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Evaluo Premium
+            </span>
+            <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] break-words min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
+              Estudiá mejor. Elegí el plan que te acompañe.
             </h1>
-            <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-              Preferimos abrir estas funciones cuando estén a la altura de la plataforma. Muy pronto vas
-              a tener simuladores premium, explicaciones avanzadas y seguimiento más fino.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
+              Empezá gratis. Cuando quieras más práctica, explicaciones y seguimiento, pasate a
+              Premium.
+            </p>
+            <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
+              <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
+              Pago seguro con Mercado Pago
             </p>
           </div>
+        </section>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <section className="surface-card rounded-[var(--radius-card)] bg-white/94 p-5 shadow-none">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                <Clock3 className="h-5 w-5" />
+        {showRecovery ? (
+          <section className="border-b border-blue-100 bg-blue-50/40 px-4 py-12 sm:px-6">
+            <div className="mx-auto max-w-xl">
+              <div className="mb-6 text-center">
+                <p className="text-xs font-bold tracking-[0.18em] text-blue-700 uppercase">
+                  Retomá tu compra
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
+                  Premium mensual a $9.990
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Esta oferta está disponible si empezaste una compra y todavía no la completaste.
+                </p>
               </div>
-              <h2 className="mt-4 text-base font-bold text-slate-900">Simuladores premium</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Sets más curados, más largos y mejor adaptados al examen real.
-              </p>
-            </section>
-            <section className="surface-card rounded-[var(--radius-card)] bg-white/94 p-5 shadow-none">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <h2 className="mt-4 text-base font-bold text-slate-900">Explicaciones avanzadas</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Más contexto, más corrección y mejores recomendaciones para subir tu nota.
-              </p>
-            </section>
-            <section className="surface-card rounded-[var(--radius-card)] bg-white/94 p-5 shadow-none">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                <Sparkles className="h-5 w-5" />
-              </div>
-              <h2 className="mt-4 text-base font-bold text-slate-900">Seguimiento inteligente</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Un progreso mucho más claro para saber qué reforzar antes de rendir.
-              </p>
-            </section>
-          </div>
+              <PaymentCheckoutCard
+                features={premiumFeatures}
+                source={source === 'pricing_direct' ? 'checkout_recovery' : source}
+                materiaId={materiaId}
+                offerCode="recovery"
+                featured
+              />
+            </div>
+          </section>
+        ) : null}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <TrackedLink
-              href="/dashboard"
-              eventName="pricing_cta_click"
-              payload={{
-                location: 'pricing_page',
-                cta_name: 'volver_dashboard',
-                destination: '/dashboard',
-              }}
-              className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Volver al dashboard
-            </TrackedLink>
-            <TrackedLink
-              href="/explorar"
-              eventName="pricing_cta_click"
-              payload={{
-                location: 'pricing_page',
-                cta_name: 'seguir_explorando',
-                destination: '/explorar',
-              }}
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              Seguir explorando
-            </TrackedLink>
+        <section id="elegir-plan" className="px-4 py-12 sm:px-6 sm:py-16">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-7 text-center">
+              <p className="text-xs font-bold tracking-[0.18em] text-blue-700 uppercase">
+                Planes
+              </p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+                Gratis o Premium. Sin vueltas.
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                Premium es siempre el mismo. Elegí si preferís pagarlo mes a mes o cubrir un
+                semestre con 6 meses.
+              </p>
+            </div>
+
+            <PricingPlanSelector
+              freeFeatures={freeFeatures}
+              premiumFeatures={premiumFeatures}
+              source={source}
+              materiaId={materiaId}
+            />
+
+            <div className="mx-auto mt-16 max-w-3xl text-center">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                Premium te ayuda a saber qué estudiar después.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+                No se trata sólo de tener más herramientas: practicá, entendé tus errores y enfocá
+                tu tiempo en los temas que más necesitás reforzar antes del parcial.
+              </p>
+            </div>
+
+            <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white">
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] border-b border-slate-200 bg-slate-50 px-3 py-4 text-[11px] font-bold text-slate-900 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 min-[360px]:text-xs sm:grid-cols-[1fr_140px_140px] sm:px-6 sm:text-sm">
+                <span>Función</span>
+                <span className="text-center">Gratis</span>
+                <span className="text-center text-blue-700">Premium</span>
+              </div>
+              {comparison.map(([feature, free, premium]) => (
+                <div
+                  key={feature}
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] items-center border-b border-slate-200 px-3 py-4 text-sm last:border-0 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 sm:grid-cols-[1fr_140px_140px] sm:px-6"
+                >
+                  <span className="min-w-0 pr-2 text-[13px] leading-5 break-words text-slate-800 min-[360px]:pr-3 min-[360px]:text-sm">
+                    {feature}
+                  </span>
+                  <span className="flex justify-center">
+                    {free ? (
+                      <Check className="h-5 w-5 text-emerald-700" aria-label="Incluido" />
+                    ) : (
+                      <X className="h-5 w-5 text-slate-500" aria-label="No incluido" />
+                    )}
+                  </span>
+                  <span className="flex justify-center">
+                    {premium ? (
+                      <Check className="h-5 w-5 text-blue-700" aria-label="Incluido" />
+                    ) : null}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center text-sm text-slate-600">
+              <p>Los pagos se procesan de forma segura con Mercado Pago.</p>
+              <p className="mt-2">
+                Al comprar aceptás los{' '}
+                <Link href="/facturacion" className="font-semibold text-blue-700 hover:underline">
+                  términos de facturación
+                </Link>
+                .
+              </p>
+            </div>
           </div>
         </section>
-      </div>
-    </main>
+      </main>
+      <FooterHome />
+    </>
   );
 }

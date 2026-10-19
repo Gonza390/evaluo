@@ -6,11 +6,34 @@ on:
       - main
       - master
       - 'codex/**'
+      - 'perf/**'
   pull_request:
 
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Security audit
+        run: npm audit --audit-level=high
+
   quality:
     runs-on: ubuntu-latest
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
     steps:
       - name: Checkout
@@ -25,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Lint
         run: npm run lint
 
@@ -33,3 +59,42 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Performance budget
+        run: npm run performance:budget
+
+      - name: Lighthouse CI
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=./lighthouserc.cjs
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/reports
+          if-no-files-found: ignore
+          retention-days: 14
+
+  release-gate:
+    name: CI required
+    if: always()
+    needs: [security, quality]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require security and quality
+        env:
+          SECURITY_RESULT: ${{ needs.security.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+        run: |
+          test "$SECURITY_RESULT" = "success"
+          test "$QUALITY_RESULT" = "success"
+
+# Nota: el repositorio todavía no contiene un baseline inicial reproducible de
+# Supabase. Las migraciones históricas más antiguas asumen tablas preexistentes
+# (por ejemplo public.profiles), por lo que `supabase db reset` desde una DB vacía
+# produce un falso negativo antes de llegar a las migraciones actuales.
+#
+# Las migraciones incrementales nuevas deben validarse contra el schema real y
+# mantener sus versiones alineadas con `supabase_migrations.schema_migrations`.
+# Cuando se incorpore un baseline completo, el replay desde cero debe volver a
+# activarse como job de CI.

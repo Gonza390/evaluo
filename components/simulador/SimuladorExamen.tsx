@@ -1,2065 +1,223 @@
-﻿'use client';
+'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import {
-  checkProfileStatus,
-  finalizarSimuladorAction,
-  getWrongAnswersExplanations,
-  getPreguntasSimuladorErrores,
-  getPreguntasSimuladorDemo,
-  getPreguntasSimuladorUltimoIntentoPremium,
-  getPreguntasSimuladorPremium,
-  getPreguntasSimulador,
-  registrarRespuestaUsuario,
-  submitSimulatorRatingAction,
-  type Pregunta,
-} from '@/app/actions';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
-import { ProfileCompletionModal } from '@/components/profile-completion-modal';
-import { ElegantLoader } from '@/components/ui/elegant-loader';
-import { Spinner } from '@/components/ui/spinner';
-import { useUser } from '@/hooks/useUser';
-import { trackSimulatorMarketingEvent } from '@/lib/marketing-analytics';
-import { buildShareReferralUrl, getAttributionSnapshot } from '@/lib/attribution';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import LegacySimuladorExamen from '@/components/simulador/SimuladorExamenLegacy';
+import type { SimuladorExamenProps as LegacySimuladorExamenProps } from '@/components/simulador/SimuladorExamenLegacy';
+import { SimulatorFinishedResult } from '@/components/simulador/SimulatorFinishedResult';
 import { supabase } from '@/lib/supabase-client';
-import { cn } from '@/lib/utils';
-import {
-  AlertCircle,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Clock3,
-  Flag,
-  LogOut,
-  RefreshCcw,
-  Star,
-  ThumbsDown,
-  ThumbsUp,
-  Trophy,
-} from 'lucide-react';
+import { logError } from '@/lib/observability';
+import { getPendingStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
+import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 
-interface SimuladorExamenProps {
-  materiaId: string;
+export type SimuladorExamenProps = LegacySimuladorExamenProps;
+
+type AttemptRow = {
+  id: string;
+  user_id: string;
+  materia_id: string;
   parcial: number;
-  universidadId?: string;
-  carreraId?: string;
-  mode?: 'regular' | 'errores' | 'ultimo_intento';
-  premiumOnly?: boolean;
-  demoMode?: boolean;
-}
-
-type EstadoExamen = 'loading' | 'resume_choice' | 'playing' | 'demo_gate' | 'finished' | 'error' | 'profile_incomplete';
-
-const TOTAL_QUESTIONS = 30;
-const MIXED_TOTAL_QUESTIONS = 50;
-const DEMO_TOTAL_QUESTIONS = 10;
-const EXAM_TIME_SECONDS = 30 * 60;
-const optionLabels = ['a', 'b', 'c', 'd'];
-type SimuladorPersistedState = {
-  version: 2;
-  userId: string | null;
-  materiaId: string;
-  parcial: number;
-  mode: 'regular' | 'errores' | 'ultimo_intento';
-  preguntas: Pregunta[];
-  currentQuestionIndex: number;
-  timeLeft: number;
-  selectedAnswers: Record<number, number | number[]>;
-  flaggedQuestions: number[];
-  hasStarted: boolean;
-  savedAt: string;
+  total_questions: number;
+  correct_answers: number;
+  wrong_answers: number;
+  answered_questions: number;
+  mode: string;
+  created_at: string;
 };
 
-type ShuffledQuestionMeta = {
-  options: string[];
-  displayedToOriginal: number[];
-};
+const RESULT_MARKER_SELECTOR =
+  'img[alt="Resultado final del simulador"], img[alt="Resultado motivacional del simulador"]';
+const ATTEMPT_WAIT_RETRIES = 24;
+const ATTEMPT_WAIT_MS = 500;
 
-type ExamSummaryCard =
-  | {
-      label: string;
-      title: string;
-      description: string;
-      cta: string;
-      href: string;
-    }
-  | {
-      label: string;
-      title: string;
-      description: string;
-      cta: string;
-      onClick: () => void;
-    };
-
-type ErrorFocusInsight = {
-  title: string;
-  description: string;
-  recommendation: string;
-};
-
-function seededShuffle<T>(items: T[], seedInput: string): { values: T[]; indexMap: number[] } {
-  const values = items.map((value, index) => ({ value, index }));
-  let seed = 0;
-  for (let i = 0; i < seedInput.length; i += 1) {
-    seed = (seed * 31 + seedInput.charCodeAt(i)) >>> 0;
-  }
-
-  const random = () => {
-    seed = (seed * 1664525 + 1013904223) >>> 0;
-    return seed / 4294967296;
-  };
-
-  for (let i = values.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(random() * (i + 1));
-    [values[i], values[j]] = [values[j], values[i]];
-  }
-
-  return {
-    values: values.map((item) => item.value),
-    indexMap: values.map((item) => item.index),
-  };
+function wait(milliseconds: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
 }
 
-function dedupeOptionsForView(options: string[]): string[] {
-  const seen = new Set<string>();
-  const unique: string[] = [];
-  for (const option of options) {
-    const clean = option.replace(/\s+/g, ' ').trim();
-    if (!clean) continue;
-    const key = clean.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(clean);
-  }
-  return unique;
-}
+export default function SimuladorExamen(props: SimuladorExamenProps) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const baselineAttemptIdRef = useRef<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const bridgeDisabledRef = useRef(false);
+  const resolvingAttemptRef = useRef(false);
 
-function parseCorrectAnswers(raw: string): string[] {
-  return raw
-    .split(/\s*(?:\||;)\s*/g)
-    .map((item) => item.replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
-}
-
-function isMultiAnswer(raw: string): boolean {
-  return parseCorrectAnswers(raw).length > 1;
-}
-
-function normalizeForCompare(value: string): string {
-  return value.replace(/\s+/g, ' ').trim().toLowerCase();
-}
-
-function pickDeterministicItem<T>(items: T[], seed: string): T {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return items[hash % items.length];
-}
-
-function getSuggestedModule(parcial: number, seed: string) {
-  const normalizedParcial = Number(parcial) === 2 ? 2 : 1;
-  const modules = normalizedParcial === 1 ? [1, 2] : [3, 4];
-  return pickDeterministicItem(modules, seed);
-}
-
-function inferErrorFocus(preguntasErradas: Pregunta[], suggestedModule: number): ErrorFocusInsight {
-  if (preguntasErradas.length === 0) {
-    return {
-      title: `Buen dominio del Módulo ${suggestedModule}`,
-      description: 'No detectamos un patrón fuerte de error en este intento.',
-      recommendation: `Si quieres consolidarlo más, repasa una vez el Módulo ${suggestedModule} y vuelve a intentar.`,
-    };
-  }
-
-  const theoryKeywords = [
-    'concepto',
-    'defina',
-    'definir',
-    'segun',
-    'indique',
-    'mencione',
-    'verdadero',
-    'falso',
-    'afirmacion',
-    'caracteristica',
-  ];
-  const appliedKeywords = [
-    'caso',
-    'situacion',
-    'aplique',
-    'resolver',
-    'resuelva',
-    'calcule',
-    'procedimiento',
-    'paciente',
-    'empresa',
-    'ejemplo',
-  ];
-
-  let theoryCount = 0;
-  let appliedCount = 0;
-
-  for (const pregunta of preguntasErradas) {
-    const normalized = normalizeForCompare(pregunta.enunciado);
-    if (theoryKeywords.some((keyword) => normalized.includes(keyword))) theoryCount += 1;
-    if (appliedKeywords.some((keyword) => normalized.includes(keyword))) appliedCount += 1;
-  }
-
-  if (appliedCount > theoryCount) {
-    return {
-      title: `Te costaron más las preguntas de aplicación del Módulo ${suggestedModule}`,
-      description: 'Tus errores aparecen más en consignas donde hay que aplicar criterios a casos o situaciones concretas.',
-      recommendation: `Repasa ejemplos resueltos y luego vuelve a practicar el Módulo ${suggestedModule} con foco en aplicación práctica.`,
-    };
-  }
-
-  return {
-    title: `Fallaste más en preguntas teóricas del Módulo ${suggestedModule}`,
-    description: 'Tus errores se concentran más en definiciones, criterios base y preguntas de marco conceptual.',
-    recommendation: `Te conviene reforzar primero los conceptos clave del Módulo ${suggestedModule} antes del próximo intento.`,
-  };
-}
-
-function resolveExamParcial(parcial: number, preguntas: Pregunta[]): number {
-  const questionParcial = preguntas.find((pregunta) => pregunta.parcial === 1 || pregunta.parcial === 2)?.parcial;
-  return questionParcial === 2 ? 2 : Number(parcial) === 2 ? 2 : 1;
-}
-
-function getQuestionLimit(parcial: number) {
-  return Number(parcial) === 3 ? MIXED_TOTAL_QUESTIONS : TOTAL_QUESTIONS;
-}
-
-function getExamDurationSeconds(parcial: number) {
-  return Number(parcial) === 3 ? 50 * 60 : EXAM_TIME_SECONDS;
-}
-
-function getParcialLabel(parcial: number) {
-  return Number(parcial) === 3 ? 'Mixto (Parcial 1 + 2)' : `Parcial ${parcial}`;
-}
-
-function getAnalyticsSessionKey() {
-  const key = 'evaluo_session_key';
-  const existing = window.localStorage.getItem(key);
-  if (existing) return existing;
-  const value = `${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
-  window.localStorage.setItem(key, value);
-  return value;
-}
-
-async function trackSimulatorAnalytics(eventName: string, payload: Record<string, unknown>) {
-  try {
-    await fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event_name: eventName,
-        ...payload,
-      }),
-      keepalive: true,
-    });
-  } catch {
-    // ignore tracking failures
-  }
-}
-
-export default function SimuladorExamen({
-  materiaId,
-  parcial,
-  universidadId,
-  carreraId,
-  mode = 'regular',
-  premiumOnly = false,
-  demoMode = false,
-}: SimuladorExamenProps) {
-  const { user, loading: userLoading, getUserName, getUserInitials } = useUser();
-  const { toast } = useToast();
-  const resolvedDemoMode = demoMode && !user;
-
-  const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
-  const [estado, setEstado] = useState<EstadoExamen>('loading');
-  const [userId, setUserId] = useState<string | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const examDurationSeconds = getExamDurationSeconds(parcial);
-  const questionLimit = getQuestionLimit(parcial);
-  const [timeLeft, setTimeLeft] = useState(examDurationSeconds);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | number[]>>({});
-  const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
-  const [isFinishing, setIsFinishing] = useState(false);
-  const [aciertosFinales, setAciertosFinales] = useState(0);
-  const [respondidasFinales, setRespondidasFinales] = useState(0);
+  const [baselineReady, setBaselineReady] = useState(false);
+  const [finishDetected, setFinishDetected] = useState(false);
+  const [finishedAttempt, setFinishedAttempt] = useState<AttemptRow | null>(null);
+  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
   const [materiaNombre, setMateriaNombre] = useState('');
-  const [wrongExplanations, setWrongExplanations] = useState<
-    Array<{ preguntaId: string; enunciado: string; explicacion: string; provider: string; source: string }>
-  >([]);
-  const [loadingExplanations, setLoadingExplanations] = useState(false);
-  const [explanationsMetrics, setExplanationsMetrics] = useState<{ cacheHits: number; generatedCount: number } | null>(null);
-  const [feedbackLoading, setFeedbackLoading] = useState<Record<string, 1 | -1 | undefined>>({});
-  const [feedbackVotes, setFeedbackVotes] = useState<Record<string, 1 | -1>>({});
-  const [simulatorVote, setSimulatorVote] = useState<1 | -1 | null>(null);
-  const [simulatorVoteLoading, setSimulatorVoteLoading] = useState(false);
-  const [showResultsFace, setShowResultsFace] = useState(false);
-  const [isMobileResults, setIsMobileResults] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [resumeSnapshot, setResumeSnapshot] = useState<SimuladorPersistedState | null>(null);
-  const simulatorLifecycleRef = useRef({
-    estado: 'loading' as EstadoExamen,
-    hasStarted: false,
-    currentQuestionIndex: 0,
-    answeredCount: 0,
-    preguntasDisponibles: 0,
-    timeLeft: examDurationSeconds,
-    userId: null as string | null,
-    outcomeTracked: false,
-  });
-  const storageKey = useMemo(
-    () =>
-      `evaluo_simulador_in_progress:${resolvedDemoMode ? 'demo' : 'full'}:${mode}:${materiaId}:${parcial}`,
-    [resolvedDemoMode, mode, materiaId, parcial]
-  );
 
-  const preguntasDisponibles = preguntas.length;
-  const preguntaActual = preguntas[currentQuestionIndex];
-  const shuffledMetaByQuestion = useMemo<ShuffledQuestionMeta[]>(() => {
-    return preguntas.map((question, index) => {
-      const rawOptions = Array.isArray(question.opciones)
-        ? dedupeOptionsForView(question.opciones)
-        : [];
-      const seed = `${question.id}:${index}:${question.respuesta_correcta}`;
-      const { values, indexMap } = seededShuffle(rawOptions, seed);
-      return { options: values, displayedToOriginal: indexMap };
-    });
-  }, [preguntas]);
-  const preguntaActualShuffled = shuffledMetaByQuestion[currentQuestionIndex];
-  const answeredCount = useMemo(() => Object.keys(selectedAnswers).length, [selectedAnswers]);
-  const unansweredCount = Math.max(0, preguntasDisponibles - answeredCount);
-  const demoCheckpointIndex = DEMO_TOTAL_QUESTIONS - 1;
-  const progressPercent = preguntasDisponibles
-    ? Math.round((answeredCount / preguntasDisponibles) * 100)
-    : 0;
+  const mode = props.mode ?? 'regular';
 
-  const emitSimulatorEvent = useCallback(
-    async (
-      eventName: 'simulator_started' | 'simulator_resumed' | 'simulator_finished' | 'simulator_abandoned',
-      overrides?: Partial<{
-        questionIndex: number;
-        answered: number;
-        progress: number;
-        timeLeft: number;
-      }>
-    ) => {
-      if (typeof window === 'undefined') return;
-      const sessionKey = getAnalyticsSessionKey();
-      const payload = {
-        session_key: sessionKey,
-        user_id: userId,
-        path: window.location.pathname,
-        metadata: {
-          attribution: getAttributionSnapshot(),
-          materia_id: materiaId,
-          parcial,
-          carrera_id: carreraId,
-          universidad_id: universidadId,
-          mode,
-          premium_only: premiumOnly,
-          question_index: overrides?.questionIndex ?? currentQuestionIndex + 1,
-          answered_count: overrides?.answered ?? answeredCount,
-          progress_pct: overrides?.progress ?? progressPercent,
-          time_left_sec: overrides?.timeLeft ?? timeLeft,
-        },
-      };
+  const fetchLatestAttempt = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('simulator_attempts')
+      .select(
+        'id, user_id, materia_id, parcial, total_questions, correct_answers, wrong_answers, answered_questions, mode, created_at'
+      )
+      .eq('user_id', userId)
+      .eq('materia_id', props.materiaId)
+      .eq('parcial', props.parcial)
+      .eq('mode', mode)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-      await trackSimulatorAnalytics(eventName, payload);
-      if (eventName === 'simulator_started' || eventName === 'simulator_finished') {
-        trackSimulatorMarketingEvent(eventName, {
-          materia_id: materiaId,
-          parcial,
-          mode,
-          premium_only: premiumOnly,
-          question_index: overrides?.questionIndex ?? currentQuestionIndex + 1,
-          answered_count: overrides?.answered ?? answeredCount,
-          progress_pct: overrides?.progress ?? progressPercent,
-        });
-      }
-    },
-    [answeredCount, carreraId, currentQuestionIndex, materiaId, mode, parcial, premiumOnly, progressPercent, timeLeft, universidadId, userId]
-  );
+    if (error) throw error;
+    return (data as AttemptRow | null) ?? null;
+  }, [mode, props.materiaId, props.parcial]);
 
   useEffect(() => {
-    simulatorLifecycleRef.current = {
-      estado,
-      hasStarted,
-      currentQuestionIndex,
-      answeredCount,
-      preguntasDisponibles,
-      timeLeft,
-      userId,
-      outcomeTracked: simulatorLifecycleRef.current.outcomeTracked,
-    };
-  }, [answeredCount, currentQuestionIndex, estado, hasStarted, preguntasDisponibles, timeLeft, userId]);
+    let active = true;
 
-  const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const progressRingStyle = {
-    background: `conic-gradient(#2563EB ${progressPercent * 3.6}deg, #E6EAF2 ${progressPercent * 3.6}deg)`,
-  };
-
-  const hydrateSavedExam = useCallback((saved: SimuladorPersistedState) => {
-    const limitedQuestions = saved.preguntas.slice(0, questionLimit);
-    setPreguntas(limitedQuestions);
-    setCurrentQuestionIndex(
-      Math.max(0, Math.min(saved.currentQuestionIndex ?? 0, Math.max(0, limitedQuestions.length - 1)))
-    );
-      setTimeLeft(Math.max(0, Math.min(saved.timeLeft ?? examDurationSeconds, examDurationSeconds)));
-    setSelectedAnswers(saved.selectedAnswers ?? {});
-    setFlaggedQuestions(Array.isArray(saved.flaggedQuestions) ? saved.flaggedQuestions : []);
-    setHasStarted(Boolean(saved.hasStarted));
-    setResumeSnapshot(saved);
-  }, [questionLimit]);
-
-  const computeCorrectAnswers = useCallback(() => {
-    return Object.entries(selectedAnswers).reduce((acc, [index, optionIndex]) => {
-      const pregunta = preguntas[Number(index)];
-      if (!pregunta) return acc;
-      const meta = shuffledMetaByQuestion[Number(index)];
-      if (!meta) return acc;
-      const correctAnswers = parseCorrectAnswers(pregunta.respuesta_correcta);
-      if (correctAnswers.length > 1) {
-        const selectedIdx = Array.isArray(optionIndex) ? optionIndex : [];
-        const selectedValues = selectedIdx
-          .map((idx) => meta.displayedToOriginal[idx])
-          .filter((idx) => typeof idx === 'number')
-          .map((idx) => normalizeForCompare(pregunta.opciones[idx]));
-        const expected = correctAnswers.map(normalizeForCompare);
-        const isSame =
-          selectedValues.length === expected.length &&
-          selectedValues.every((value) => expected.includes(value));
-        return isSame ? acc + 1 : acc;
-      }
-      const selectedSingle = Array.isArray(optionIndex) ? optionIndex[0] : optionIndex;
-      const originalIndex = meta.displayedToOriginal[selectedSingle];
-      const selectedOption = typeof originalIndex === 'number' ? pregunta.opciones[originalIndex] : '';
-      return normalizeForCompare(selectedOption) === normalizeForCompare(correctAnswers[0] ?? '') ? acc + 1 : acc;
-    }, 0);
-  }, [preguntas, selectedAnswers, shuffledMetaByQuestion]);
-
-  const isCorrectAnswer = useCallback(
-    (questionIndex: number, optionIndex: number | number[]) => {
-      const pregunta = preguntas[questionIndex];
-      if (!pregunta) return false;
-      const meta = shuffledMetaByQuestion[questionIndex];
-      if (!meta) return false;
-      const correctAnswers = parseCorrectAnswers(pregunta.respuesta_correcta);
-      if (correctAnswers.length > 1) {
-        const selectedIdx = Array.isArray(optionIndex) ? optionIndex : [];
-        const selectedValues = selectedIdx
-          .map((idx) => meta.displayedToOriginal[idx])
-          .filter((idx) => typeof idx === 'number')
-          .map((idx) => normalizeForCompare(pregunta.opciones[idx]));
-        const expected = correctAnswers.map(normalizeForCompare);
-        return (
-          selectedValues.length === expected.length &&
-          selectedValues.every((value) => expected.includes(value))
-        );
-      }
-      const selectedSingle = Array.isArray(optionIndex) ? optionIndex[0] : optionIndex;
-      const originalIndex = meta.displayedToOriginal[selectedSingle];
-      return normalizeForCompare(pregunta.opciones[originalIndex] ?? '') === normalizeForCompare(correctAnswers[0] ?? '');
-    },
-    [preguntas, shuffledMetaByQuestion]
-  );
-
-  const isCorrectChoice = useCallback(
-    (questionIndex: number, optionIndex: number) => {
-      const pregunta = preguntas[questionIndex];
-      if (!pregunta) return false;
-      const meta = shuffledMetaByQuestion[questionIndex];
-      if (!meta) return false;
-
-      const originalIndex = meta.displayedToOriginal[optionIndex];
-      if (typeof originalIndex !== 'number') return false;
-
-      const selectedOption = pregunta.opciones[originalIndex] ?? '';
-      const expected = parseCorrectAnswers(pregunta.respuesta_correcta).map(normalizeForCompare);
-
-      return expected.includes(normalizeForCompare(selectedOption));
-    },
-    [preguntas, shuffledMetaByQuestion]
-  );
-
-  const finalizarExamen = useCallback(
-    async (trigger: 'manual' | 'timer' = 'manual') => {
-      if (isFinishing || estado !== 'playing') return;
-      if (!resolvedDemoMode && !userId) return;
-
-      setIsFinishing(true);
-
-      const correctas = computeCorrectAnswers();
-      const respondidas = Object.keys(selectedAnswers).length;
-      setAciertosFinales(correctas);
-      setRespondidasFinales(respondidas);
-      setShowResultsFace(false);
-      setEstado('finished');
-      setIsFinishing(false);
-      simulatorLifecycleRef.current.outcomeTracked = true;
-      if (!resolvedDemoMode) {
-        void emitSimulatorEvent('simulator_finished', {
-          questionIndex: Math.min(preguntasDisponibles, currentQuestionIndex + 1),
-          answered: respondidas,
-          progress: preguntasDisponibles > 0 ? Math.round((respondidas / preguntasDisponibles) * 100) : 0,
-          timeLeft: trigger === 'timer' ? 0 : timeLeft,
-        });
-      }
+    async function prepareBridge() {
       try {
-        window.localStorage.removeItem(storageKey);
-      } catch {
-        // ignore storage errors
-      }
+        const [authResult, materiaResult] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase.from('materias').select('nombre').eq('id', props.materiaId).maybeSingle(),
+        ]);
 
-      if (resolvedDemoMode || !userId) {
-        return;
-      }
+        if (!active) return;
 
-      const registros = Object.entries(selectedAnswers).map(([index, optionIndex]) => {
-        const questionIndex = Number(index);
-        const pregunta = preguntas[questionIndex];
-        const meta = shuffledMetaByQuestion[questionIndex];
-        if (!pregunta || !meta) return null;
-        const esCorrecta = isCorrectAnswer(questionIndex, optionIndex);
-
-        return registrarRespuestaUsuario({
-          usuario_id: userId,
-          pregunta_id: pregunta.id,
-          materia_id: pregunta.materia_id,
-          es_correcta: esCorrecta,
-        });
-      });
-
-      const wrongQuestionIds = Object.entries(selectedAnswers)
-        .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
-        .map(([index]) => preguntas[Number(index)]?.id)
-        .filter((id): id is string => Boolean(id));
-
-      void Promise.allSettled([
-        finalizarSimuladorAction({
-          usuario_id: userId,
-          materia_id: materiaId,
-          parcial,
-          total_preguntas: preguntasDisponibles,
-          respuestas_correctas: correctas,
-          answered_questions: respondidas,
-          tiempo_restante: trigger === 'timer' ? 0 : timeLeft,
-          premium_only: premiumOnly,
-          wrong_question_ids: wrongQuestionIds,
-        }),
-        ...registros.filter(Boolean),
-      ]).catch((error) => {
-        console.error('Error registrando resultado del simulador:', error);
-      });
-    },
-    [
-      computeCorrectAnswers,
-      resolvedDemoMode,
-      estado,
-      isFinishing,
-      materiaId,
-      parcial,
-      preguntas,
-      preguntasDisponibles,
-      selectedAnswers,
-      timeLeft,
-      userId,
-      shuffledMetaByQuestion,
-      storageKey,
-      currentQuestionIndex,
-      emitSimulatorEvent,
-    ]
-  );
-
-  const loadFreshQuestions = useCallback(async () => {
-    const data =
-      mode === 'errores'
-        ? await getPreguntasSimuladorErrores(materiaId)
-        : mode === 'ultimo_intento'
-        ? await getPreguntasSimuladorUltimoIntentoPremium(materiaId, parcial)
-        : premiumOnly
-        ? await getPreguntasSimuladorPremium(materiaId, parcial)
-        : resolvedDemoMode
-        ? await getPreguntasSimuladorDemo(materiaId, parcial, universidadId, carreraId)
-        : await getPreguntasSimulador(materiaId, parcial, universidadId, carreraId);
-
-    if (data && data.length > 0) {
-      simulatorLifecycleRef.current.outcomeTracked = false;
-      setPreguntas(data.slice(0, questionLimit));
-      setCurrentQuestionIndex(0);
-      setTimeLeft(examDurationSeconds);
-      setSelectedAnswers({});
-      setFlaggedQuestions([]);
-      setHasStarted(false);
-      setResumeSnapshot(null);
-      setEstado('playing');
-      try {
-        window.localStorage.removeItem(storageKey);
-      } catch {
-        // ignore storage errors
-      }
-      return true;
-    }
-
-    setEstado('error');
-    return false;
-  }, [carreraId, materiaId, mode, parcial, premiumOnly, questionLimit, resolvedDemoMode, storageKey, universidadId]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const media = window.matchMedia('(max-width: 767px)');
-    const syncViewport = () => setIsMobileResults(media.matches);
-    syncViewport();
-    media.addEventListener('change', syncViewport);
-    return () => media.removeEventListener('change', syncViewport);
-  }, []);
-
-  useEffect(() => {
-    async function inicializar() {
-      try {
-        setEstado('loading');
-
-        if (userLoading) return;
-        if (!user) {
-          if (!resolvedDemoMode) {
-            setEstado('error');
-            return;
-          }
-          setUserId(null);
-        } else {
-          setUserId(user.id);
-
-          if (!resolvedDemoMode) {
-            const status = await checkProfileStatus(user.id);
-            if (!status.isComplete) {
-              setEstado('profile_incomplete');
-              return;
-            }
-          }
+        if (materiaResult.data?.nombre) {
+          setMateriaNombre(materiaResult.data.nombre);
         }
 
-        const { data: materiaData } = await supabase
-          .from('materias')
-          .select('nombre')
-          .eq('id', materiaId)
-          .maybeSingle();
+        const userId = authResult.data.user?.id ?? null;
+        userIdRef.current = userId;
 
-        if (materiaData?.nombre) {
-          setMateriaNombre(materiaData.nombre);
+        if (!userId) {
+          setBaselineReady(true);
+          return;
         }
 
-        try {
-          const raw = window.localStorage.getItem(storageKey);
-          if (raw) {
-            const saved = JSON.parse(raw) as SimuladorPersistedState;
-            const valid =
-              saved.version === 2 &&
-              (resolvedDemoMode ? saved.userId === null : user && saved.userId === user.id) &&
-              saved.materiaId === materiaId &&
-              saved.parcial === parcial &&
-              saved.mode === mode &&
-              Array.isArray(saved.preguntas) &&
-              saved.preguntas.length > 0;
-
-            if (valid) {
-              hydrateSavedExam(saved);
-              setEstado('resume_choice');
-              return;
-            }
-          }
-        } catch {
-          // ignore localStorage parse errors
-        }
-
-        await loadFreshQuestions();
+        const latestAttempt = await fetchLatestAttempt(userId);
+        if (!active) return;
+        baselineAttemptIdRef.current = latestAttempt?.id ?? null;
       } catch (error) {
-        console.error('Error inicializando simulador:', error);
-        setEstado('error');
-      }
-    }
-
-    void inicializar();
-  }, [examDurationSeconds, resolvedDemoMode, hydrateSavedExam, loadFreshQuestions, materiaId, mode, parcial, storageKey, user, userLoading]);
-
-  useEffect(() => {
-    if (estado !== 'playing' || !hasStarted) return;
-    if (timeLeft <= 0) {
-      void finalizarExamen('timer');
-      return;
-    }
-
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearInterval(timer);
-  }, [estado, finalizarExamen, hasStarted, timeLeft]);
-
-  useEffect(() => {
-    if (estado === 'playing') {
-      try {
-        window.localStorage.setItem(
-          'evaluo_last_simulador_context',
-          JSON.stringify({ materiaId, parcial })
-        );
-      } catch {
-        // ignore storage errors
-      }
-    }
-  }, [estado, materiaId, parcial]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const emitAbandonIfNeeded = (source: 'pagehide' | 'beforeunload' | 'visibilitychange' | 'unmount') => {
-      const snapshot = simulatorLifecycleRef.current;
-      if (snapshot.outcomeTracked) return;
-      if (snapshot.estado !== 'playing' || !snapshot.hasStarted || !snapshot.userId) return;
-
-      simulatorLifecycleRef.current.outcomeTracked = true;
-      void trackSimulatorAnalytics('simulator_abandoned', {
-        session_key: getAnalyticsSessionKey(),
-        user_id: snapshot.userId,
-        path: window.location.pathname,
-        metadata: {
-          materia_id: materiaId,
-          parcial,
-          carrera_id: carreraId,
-          universidad_id: universidadId,
+        logError('simulador.resultBridge.prepare', error, {
+          materiaId: props.materiaId,
+          parcial: props.parcial,
           mode,
-          premium_only: premiumOnly,
-          question_index: snapshot.currentQuestionIndex + 1,
-          answered_count: snapshot.answeredCount,
-          progress_pct: snapshot.preguntasDisponibles
-            ? Math.round((snapshot.answeredCount / snapshot.preguntasDisponibles) * 100)
-            : 0,
-          time_left_sec: snapshot.timeLeft,
-          lifecycle_source: source,
-        },
-      });
-    };
-
-    const handlePageHide = () => emitAbandonIfNeeded('pagehide');
-    const handleBeforeUnload = () => emitAbandonIfNeeded('beforeunload');
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        emitAbandonIfNeeded('visibilitychange');
+        });
+        bridgeDisabledRef.current = true;
+      } finally {
+        if (active) setBaselineReady(true);
       }
-    };
+    }
 
-    window.addEventListener('pagehide', handlePageHide);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
+    void prepareBridge();
     return () => {
-      window.removeEventListener('pagehide', handlePageHide);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      emitAbandonIfNeeded('unmount');
+      active = false;
     };
-  }, [carreraId, materiaId, mode, parcial, premiumOnly, universidadId]);
+  }, [fetchLatestAttempt, mode, props.materiaId, props.parcial]);
 
-  useEffect(() => {
-    if (estado !== 'playing' || !userId) return;
-    const payload: SimuladorPersistedState = {
-      version: 2,
-      userId,
-      materiaId,
-      parcial,
-      mode,
-      preguntas,
-      currentQuestionIndex,
-      timeLeft,
-      selectedAnswers,
-      flaggedQuestions,
-      hasStarted,
-      savedAt: new Date().toISOString(),
-    };
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(payload));
-    } catch {
-      // ignore storage errors
-    }
-  }, [
-    currentQuestionIndex,
-    estado,
-    flaggedQuestions,
-    hasStarted,
-    materiaId,
-    mode,
-    parcial,
-    preguntas,
-    selectedAnswers,
-    storageKey,
-    timeLeft,
-    userId,
-  ]);
+  const resolveFinishedAttempt = useCallback(async () => {
+    if (resolvingAttemptRef.current || bridgeDisabledRef.current) return;
+    const userId = userIdRef.current;
+    if (!userId) return;
 
-  useEffect(() => {
-    async function loadExplanations() {
-      if (estado !== 'finished' || !userId) return;
-
-      const wrongQuestionIds = Object.entries(selectedAnswers)
-        .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
-        .map(([index]) => preguntas[Number(index)]?.id)
-        .filter((id): id is string => Boolean(id));
-      const limitedWrongQuestionIds = wrongQuestionIds.slice(0, 3);
-
-      if (limitedWrongQuestionIds.length === 0) {
-        setWrongExplanations([]);
-        return;
-      }
-
-      setLoadingExplanations(true);
-      const response = await getWrongAnswersExplanations({
-        materia_id: materiaId,
-        parcial,
-        wrong_question_ids: limitedWrongQuestionIds,
-      });
-
-      if (response.success) {
-        setWrongExplanations(response.explanations ?? []);
-        setExplanationsMetrics(response.metrics ?? null);
-      }
-      setLoadingExplanations(false);
-    }
-
-    void loadExplanations();
-  }, [estado, isCorrectAnswer, materiaId, parcial, preguntas, selectedAnswers, userId]);
-
-  const handleExplanationFeedback = async (preguntaId: string, voto: 1 | -1) => {
-    setFeedbackLoading((prev) => ({ ...prev, [preguntaId]: voto }));
+    resolvingAttemptRef.current = true;
+    setFinishDetected(true);
 
     try {
-      const response = await fetch('/api/explanations/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pregunta_id: preguntaId, voto }),
-      });
+      for (let attempt = 0; attempt < ATTEMPT_WAIT_RETRIES; attempt += 1) {
+        const latestAttempt = await fetchLatestAttempt(userId);
+        if (
+          latestAttempt &&
+          latestAttempt.id !== baselineAttemptIdRef.current
+        ) {
+          setFinishedAttempt(latestAttempt);
+          baselineAttemptIdRef.current = latestAttempt.id;
 
-      if (!response.ok) {
-        throw new Error('No se pudo guardar tu feedback.');
-      }
-
-      setFeedbackVotes((prev) => ({ ...prev, [preguntaId]: voto }));
-    } catch (error) {
-      console.error('Explanation feedback error:', error);
-    } finally {
-      setFeedbackLoading((prev) => {
-        const next = { ...prev };
-        delete next[preguntaId];
-        return next;
-      });
-    }
-  };
-
-  const handleSimulatorVote = async (voteType: 1 | -1) => {
-    if (!user) {
-      toast({
-        title: 'Inicia sesión para valorar el simulador',
-        description: 'Te llevamos al login para guardar tu opinión.',
-      });
-      window.location.assign('/login');
-      return;
-    }
-
-    setSimulatorVote(voteType);
-    setSimulatorVoteLoading(true);
-
-    try {
-      const response = await submitSimulatorRatingAction({
-        materia_id: materiaId,
-        parcial,
-        vote_type: voteType,
-      });
-
-      if (!response.success) {
-        throw new Error(response.message || 'No se pudo guardar tu valoración.');
-      }
-
-      toast({
-        title: voteType === 1 ? 'Gracias por tu like' : 'Gracias por tu feedback',
-        description: 'Tu valoración nos ayuda a mejorar este simulador.',
-      });
-    } catch (error) {
-      console.error('Simulator vote error:', error);
-      setSimulatorVote(null);
-      toast({
-        title: 'No pudimos guardar tu valoración',
-        description: 'Inténtalo nuevamente en unos segundos.',
-        variant: 'destructive',
-      });
-    } finally {
-      setSimulatorVoteLoading(false);
-    }
-  };
-
-  const continueSavedExam = () => {
-    if (!resumeSnapshot) return;
-    simulatorLifecycleRef.current.outcomeTracked = false;
-    hydrateSavedExam(resumeSnapshot);
-    setEstado('playing');
-    void emitSimulatorEvent('simulator_resumed', {
-      questionIndex: resumeSnapshot.currentQuestionIndex + 1,
-      answered: Object.keys(resumeSnapshot.selectedAnswers ?? {}).length,
-      progress: resumeSnapshot.preguntas.length
-        ? Math.round((Object.keys(resumeSnapshot.selectedAnswers ?? {}).length / resumeSnapshot.preguntas.length) * 100)
-        : 0,
-      timeLeft: resumeSnapshot.timeLeft,
-    });
-  };
-
-  const isQuestionAnswered = useCallback(
-    (questionIndex: number) => {
-      const answerValue = selectedAnswers[questionIndex];
-      if (answerValue === undefined) return false;
-
-      const pregunta = preguntas[questionIndex];
-      if (!pregunta || !isMultiAnswer(pregunta.respuesta_correcta)) {
-        return true;
-      }
-
-      return (
-        Array.isArray(answerValue) &&
-        answerValue.length === parseCorrectAnswers(pregunta.respuesta_correcta).length
-      );
-    },
-    [preguntas, selectedAnswers]
-  );
-
-  const startNewExam = async () => {
-    simulatorLifecycleRef.current.outcomeTracked = false;
-    setEstado('loading');
-    await loadFreshQuestions();
-  };
-
-  const handleSelectAnswer = (optionIndex: number) => {
-    if (!preguntaActual) return;
-    if (!isMultiAnswer(preguntaActual.respuesta_correcta)) {
-      if (selectedAnswers[currentQuestionIndex] !== undefined) return;
-      setSelectedAnswers((prev) => ({ ...prev, [currentQuestionIndex]: optionIndex }));
-      return;
-    }
-
-    const maxAllowed = parseCorrectAnswers(preguntaActual.respuesta_correcta).length;
-    setSelectedAnswers((prev) => {
-      const currentValue = prev[currentQuestionIndex];
-      const current = Array.isArray(currentValue) ? currentValue : [];
-      const exists = current.includes(optionIndex);
-      const next = exists
-        ? current.filter((idx) => idx !== optionIndex)
-        : current.length < maxAllowed
-        ? [...current, optionIndex]
-        : current;
-      return { ...prev, [currentQuestionIndex]: next };
-    });
-  };
-
-  const toggleFlag = (questionIndex = currentQuestionIndex) => {
-    setFlaggedQuestions((prev) =>
-      prev.includes(questionIndex)
-        ? prev.filter((idx) => idx !== questionIndex)
-        : [...prev, questionIndex]
-    );
-  };
-
-  const goToQuestion = (index: number) => {
-    if (index < 0 || index >= questionLimit || index >= preguntasDisponibles) return;
-    setCurrentQuestionIndex(index);
-  };
-
-  const goNext = () => {
-    if (resolvedDemoMode && currentQuestionIndex >= demoCheckpointIndex) {
-      if (isQuestionAnswered(demoCheckpointIndex)) {
-        setEstado('demo_gate');
-      }
-      return;
-    }
-
-    if (currentQuestionIndex < Math.min(questionLimit, preguntasDisponibles) - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    }
-  };
-
-  const goPrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
-    }
-  };
-
-  const reiniciarSimulador = () => {
-    setShowResultsFace(false);
-    simulatorLifecycleRef.current.outcomeTracked = false;
-    try {
-      window.localStorage.removeItem(storageKey);
-    } catch {
-      // ignore storage errors
-    }
-    window.location.reload();
-  };
-
-  useEffect(() => {
-    if (estado !== 'playing' || !resolvedDemoMode || !hasStarted) return;
-    if (currentQuestionIndex !== demoCheckpointIndex) return;
-    if (!isQuestionAnswered(demoCheckpointIndex)) return;
-
-    setEstado('demo_gate');
-  }, [currentQuestionIndex, demoCheckpointIndex, estado, hasStarted, isQuestionAnswered, resolvedDemoMode]);
-
-  if (estado === 'profile_incomplete') {
-    return (
-      <div className="flex min-h-[600px] items-center justify-center p-6">
-        <ProfileCompletionModal userId={userId!} isOpen={true} onComplete={reiniciarSimulador} />
-        <div className="text-center">
-          <Spinner size="lg" className="mx-auto mb-4 text-emerald-500" />
-          <p className="text-xl font-medium text-emerald-600">Completando tu perfil...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (estado === 'loading') {
-    return (
-      <div className="flex min-h-[600px] items-center justify-center">
-        <div className="loader-card w-full max-w-md">
-          <ElegantLoader variant="global" size="lg" text="Preparando simulador..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (estado === 'error') {
-    const isLastAttemptMode = mode === 'ultimo_intento';
-    return (
-      <div className="flex min-h-[600px] items-center justify-center p-6">
-        <Card className="max-w-md rounded-2xl border border-red-100 bg-white/90 p-8 text-center shadow-xl">
-          <AlertCircle className="mx-auto mb-4 h-16 w-16 text-red-500" />
-          <h2 className="mb-2 text-2xl font-bold text-gray-800">
-            {isLastAttemptMode
-              ? 'Todavía no tienes errores guardados de tu último intento'
-              : premiumOnly
-              ? 'Aún no hay set premium cargado'
-              : 'Estamos preparando este parcial'}
-          </h2>
-          <p className="mb-3 text-gray-600">
-            {isLastAttemptMode
-              ? 'Termina un simulador, guarda tus errores y luego podrás practicar solo esas preguntas en este modo premium.'
-              : premiumOnly
-              ? 'Estamos actualizando las últimas preguntas validadas para este parcial premium.'
-              : 'Estamos procesando el material oficial de esta materia para que Tutor Evaluo te enseñe con calidad.'}
-          </p>
-          <p className="mb-6 text-sm text-slate-500">
-            {isLastAttemptMode
-              ? 'Cuando falles preguntas en un intento, este acceso te armará un simulador con ese set exacto.'
-              : premiumOnly
-              ? 'Vuelve en unas horas o prueba el simulador regular mientras se actualiza este premium.'
-              : 'Vuelve en unas horas o prueba con Tecnología y Modelos Globales.'}
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
-              Reintentar
-            </Button>
-            <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl">
-              Volver a la materia
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (estado === 'demo_gate') {
-    return (
-      <div className="flex min-h-[680px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6">
-        <Card className="w-full max-w-4xl overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
-          <div className="grid gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-12">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF] ring-1 ring-[#D9DBFF]">
-                <Trophy className="h-4 w-4" />
-                Continúa el simulador
-              </div>
-              <h2 className="mt-6 text-[2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.7rem]">
-                Ya respondiste las primeras 10 preguntas
-              </h2>
-              <p className="mt-4 max-w-[460px] text-lg leading-8 text-slate-600">
-                Para seguir con el resto del simulador, guardar tu progreso y recibir la devolución completa, inicia sesión o crea tu cuenta.
-              </p>
-              <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-                <span className="text-[3rem] font-black leading-none tracking-[-0.07em] text-[#4F46E5]">
-                  10/30
-                </span>
-                <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  avance
-                </span>
-              </div>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-base font-semibold text-white shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95">
-                  Iniciar sesión
-                </Link>
-                <Link href="/login?mode=signup" className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 px-6 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF]">
-                  Crear cuenta
-                </Link>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Respondidas</p>
-                <p className="mt-2 text-2xl font-black text-slate-900">
-                  {answeredCount}
-                  <span className="text-sm font-semibold text-slate-500"> / {questionLimit}</span>
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Tiempo restante</p>
-                <p className="mt-2 text-2xl font-black text-slate-900">{formatTime(timeLeft)}</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Qué desbloqueas al continuar</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Acceso al simulador completo de {questionLimit} preguntas, guardado del intento, resultados finales y correcciones inteligentes de tus errores.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (estado === 'resume_choice') {
-    return (
-      <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
-        <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <h2 className="text-2xl font-extrabold text-slate-900">Tenés un simulador en curso</h2>
-          <p className="mt-3 text-slate-600">
-            Guardamos este intento con las mismas preguntas para que puedas retomarlo sin cambios.
-          </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Respondidas</p>
-              <p className="font-bold text-slate-900">{Object.keys(resumeSnapshot?.selectedAnswers ?? {}).length}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Tiempo restante</p>
-              <p className="font-bold text-slate-900">{formatTime(resumeSnapshot?.timeLeft ?? examDurationSeconds)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Preguntas</p>
-              <p className="font-bold text-slate-900">{resumeSnapshot?.preguntas?.length ?? 0}</p>
-            </div>
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Button onClick={continueSavedExam} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
-              Continuar simulador
-            </Button>
-            <Button variant="outline" onClick={() => void startNewExam()} className="rounded-xl">
-              Comenzar uno nuevo
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (estado === 'finished') {
-    const totalPreguntasExamen = Math.max(1, preguntasDisponibles || questionLimit);
-    const nota = (aciertosFinales / totalPreguntasExamen) * 10;
-    const aprobado = nota >= 7;
-    const porcentaje = Math.round((aciertosFinales / totalPreguntasExamen) * 100);
-    const needsMotivation = porcentaje < 60;
-    const wrongQuestions = Object.entries(selectedAnswers)
-      .filter(([index, optionIndex]) => !isCorrectAnswer(Number(index), optionIndex))
-      .map(([index]) => preguntas[Number(index)])
-      .filter((pregunta): pregunta is Pregunta => Boolean(pregunta));
-    const resolvedParcial = resolveExamParcial(parcial, preguntas);
-    const reviewSeed = `${materiaId}:${resolvedParcial}:${respondidasFinales}:${aciertosFinales}:${wrongExplanations.length}`;
-    const suggestedModule = getSuggestedModule(resolvedParcial, reviewSeed);
-    const errorFocus = inferErrorFocus(wrongQuestions, suggestedModule);
-    const patternMessage = errorFocus.title;
-    const recommendationMessage = errorFocus.recommendation;
-    const erroresPendientes = Math.max(0, respondidasFinales - aciertosFinales);
-    const frontTitle = porcentaje >= 85 ? '¡Excelente trabajo!' : porcentaje >= 60 ? 'Buen trabajo' : 'Seguí, vas a poder';
-    const frontMessage = `Completaste el simulacro de ${materiaNombre || `Materia ${materiaId}`} con un ${porcentaje}%`;
-    const shareSimulatorResult = async () => {
-      if (!userId || typeof window === 'undefined') return;
-
-      const shareUrl = buildShareReferralUrl(`/simulador/${materiaId}/${resolvedParcial}`, userId);
-      const shareText = `Hice mi simulador de ${materiaNombre || `Materia ${materiaId}`} en Evaluo. Probalo vos también.`;
-
-      await trackSimulatorAnalytics('simulator_result_shared', {
-        session_key: getAnalyticsSessionKey(),
-        user_id: userId,
-        path: window.location.pathname,
-        metadata: {
-          attribution: getAttributionSnapshot(),
-          materia_id: materiaId,
-          parcial: resolvedParcial,
-          carrera_id: carreraId,
-          universidad_id: universidadId,
-          result_pct: porcentaje,
-          share_url: shareUrl,
-        },
-      });
-
-      try {
-        if (navigator.share) {
-          await navigator.share({
-            title: 'Mi resultado en Evaluo',
-            text: shareText,
-            url: shareUrl,
-          });
-        } else {
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: 'Link copiado',
-            description: 'Ya puedes compartir tu resultado con un compañero.',
-          });
+          const onboarding = await getPendingStudyErrorOnboardingAction();
+          if (onboarding.errorId) {
+            setOnboardingErrorId(onboarding.errorId);
+          }
+          return;
         }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-        console.error('Error sharing simulator result:', error);
-        toast({
-          title: 'No pudimos compartir el resultado',
-          description: 'Intenta nuevamente en unos segundos.',
-          variant: 'destructive',
-        });
+        await wait(ATTEMPT_WAIT_MS);
+      }
+
+      bridgeDisabledRef.current = true;
+      setFinishDetected(false);
+      logError('simulador.resultBridge.timeout', new Error('No se encontró el intento recién finalizado.'), {
+        materiaId: props.materiaId,
+        parcial: props.parcial,
+        mode,
+      });
+    } catch (error) {
+      bridgeDisabledRef.current = true;
+      setFinishDetected(false);
+      logError('simulador.resultBridge.resolveAttempt', error, {
+        materiaId: props.materiaId,
+        parcial: props.parcial,
+        mode,
+      });
+    } finally {
+      resolvingAttemptRef.current = false;
+    }
+  }, [fetchLatestAttempt, mode, props.materiaId, props.parcial]);
+
+  useEffect(() => {
+    if (!baselineReady || bridgeDisabledRef.current || !userIdRef.current || finishedAttempt) return;
+
+    const root = rootRef.current;
+    if (!root) return;
+
+    const checkForFinishedScreen = () => {
+      if (root.querySelector(RESULT_MARKER_SELECTOR)) {
+        void resolveFinishedAttempt();
       }
     };
-    const examSummaryCards: ExamSummaryCard[] = [
-      {
-        label: 'Ahora',
-        title: `Repasa el Módulo ${suggestedModule}`,
-        description: recommendationMessage,
-        href: `/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`,
-        cta: 'Abrir resúmenes',
-      },
-      {
-        label: 'Después',
-        title: 'Practica tus errores',
-        description:
-          erroresPendientes > 0
-            ? `Tienes ${erroresPendientes} respuestas para revisar y convertir en puntos rápidos.`
-            : 'Aunque aprobaste, repasar tus errores te ayuda a fijar mejor el parcial.',
-        href: `/simulador/errores/${materiaId}`,
-        cta: 'Practicar errores',
-      },
-      ...(erroresPendientes > 0
-        ? [
-            {
-              label: 'Premium',
-              title: 'Simula solo este intento',
-              description: 'Genera un simulador premium únicamente con las preguntas que fallaste en este examen.',
-              href: `/simulador/ultimo-intento/${materiaId}/${resolvedParcial}`,
-              cta: 'Simular mis errores',
-            } satisfies ExamSummaryCard,
-          ]
-        : []),
-      {
-        label: 'Luego',
-        title: 'Vuelve a rendir desde cero',
-        description:
-          aprobado
-            ? 'Haz un nuevo intento cuando quieras medir si ya puedes sostener el resultado.'
-            : 'Después del repaso, toma un nuevo modelo y compara si subiste la nota.',
-        onClick: reiniciarSimulador,
-        cta: 'Intentar de nuevo',
-      },
-    ];
 
-    if (resolvedDemoMode) {
-      return (
-        <div className="flex min-h-[680px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6">
-          <Card className="w-full max-w-4xl overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]">
-            <div className="grid gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-12">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#EEF0FF] px-4 py-2 text-sm font-semibold text-[#5B5FEF] ring-1 ring-[#D9DBFF]">
-                  <Trophy className="h-4 w-4" />
-                  Simulador de muestra
-                </div>
-                <h2 className="mt-6 text-[2rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[2.7rem]">
-                  Terminaste tu prueba gratis
-                </h2>
-                <p className="mt-4 max-w-[420px] text-lg leading-8 text-slate-600">
-                  Respondiste {respondidasFinales} de {totalPreguntasExamen} preguntas y obtuviste un {porcentaje}% de aciertos en {materiaNombre || 'esta materia'}.
-                </p>
-                <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-                  <span className={cn('text-[3rem] font-black leading-none tracking-[-0.07em]', porcentaje >= 60 ? 'text-[#4F46E5]' : 'text-rose-600')}>
-                    {porcentaje}%
-                  </span>
-                  <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    aciertos
-                  </span>
-                </div>
-                <p className="mt-6 max-w-[460px] text-sm leading-7 text-slate-600">
-                  Crea tu cuenta o inicia sesión para desbloquear el simulador completo, guardar tu progreso y ver correcciones inteligentes de tus errores.
-                </p>
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                    <Link href="/login" className="inline-flex h-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-base font-semibold text-white shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95">
-                      Iniciar sesión
-                    </Link>
-                    <Link href="/login?mode=signup" className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 px-6 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF]">
-                      Crear cuenta
-                    </Link>
-                </div>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
-                  <p className="mt-2 text-2xl font-black text-slate-900">
-                    {aciertosFinales}
-                    <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota estimada</p>
-                  <p className={cn('mt-2 text-2xl font-black', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
-                    {nota.toFixed(1)}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm sm:col-span-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Siguiente paso</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Regístrate para continuar con el simulador completo de {questionLimit} preguntas, ver tus errores y practicar con más material de la materia.
-                    </p>
-                  </div>
-                </div>
-            </div>
-          </Card>
-        </div>
-      );
-    }
+    checkForFinishedScreen();
+    const observer = new MutationObserver(checkForFinishedScreen);
+    observer.observe(root, { childList: true, subtree: true });
 
+    return () => observer.disconnect();
+  }, [baselineReady, finishedAttempt, resolveFinishedAttempt]);
+
+  if (finishedAttempt) {
     return (
-      <div className="flex min-h-[700px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_28%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] p-4 sm:p-6">
-        <div className="w-full max-w-6xl [perspective:2200px]">
-          <div
-            className={cn(
-              'relative',
-              isMobileResults ? 'min-h-[1080px]' : 'transition-transform duration-700 [transform-style:preserve-3d]'
-            )}
-            style={isMobileResults ? undefined : { transform: showResultsFace ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
-          >
-            <Card className={cn(
-              'relative w-full overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]',
-              isMobileResults
-                ? showResultsFace
-                  ? 'pointer-events-none translate-y-6 opacity-0 transition-all duration-500'
-                  : 'translate-y-0 opacity-100 transition-all duration-500'
-                : 'min-h-[620px] [backface-visibility:hidden]'
-            )}>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.10),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.08),transparent_22%),linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#6366F1]/50 to-transparent" />
-              <div className="absolute inset-0 overflow-hidden">
-                {['left-12 top-24 bg-[#5B5FEF]', 'left-40 top-12 bg-[#F97316]', 'left-64 top-36 bg-[#FBBF24]', 'right-16 top-20 bg-[#7C3AED]', 'right-36 top-36 bg-[#60A5FA]', 'right-60 top-10 bg-[#F97316]', 'left-80 top-20 bg-[#93C5FD]'].map((item) => (
-                  <span
-                    key={item}
-                    className={cn('absolute h-4 w-1.5 rotate-12 rounded-full opacity-80', item)}
-                  />
-                ))}
-              </div>
-
-              <div className="relative grid min-h-[540px] gap-8 px-6 py-8 sm:px-10 sm:py-10 lg:min-h-[620px] lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-14 lg:py-12">
-                <div className="max-w-[430px]">
-                  <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm', needsMotivation ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'bg-[#EEF0FF] text-[#5B5FEF] ring-1 ring-[#D9DBFF]')}>
-                    {needsMotivation ? <Star className="h-4 w-4" /> : <Trophy className="h-4 w-4" />}
-                    {needsMotivation ? 'Todavía puedes levantarlo' : 'Resultado del simulador'}
-                  </div>
-                  <h2 className="mt-6 text-[2.1rem] font-bold leading-[1.02] tracking-[-0.05em] text-[#0F1B3D] sm:text-[3rem]">
-                    {frontTitle}
-                  </h2>
-                  <p className="mt-4 max-w-[360px] text-lg leading-8 text-slate-600 sm:text-[24px] sm:leading-9">
-                    {frontMessage}
-                  </p>
-                  <div className="mt-6 inline-flex items-end gap-3 rounded-[28px] border border-[#D9DBFF] bg-white/90 px-5 py-4 shadow-[0_18px_45px_rgba(99,102,241,0.12)]">
-                    <span className={cn('text-[3.1rem] font-black leading-none tracking-[-0.07em]', porcentaje >= 85 ? 'text-[#4F46E5]' : porcentaje >= 60 ? 'text-[#2563EB]' : 'text-rose-600')}>
-                      {porcentaje}%
-                    </span>
-                    <span className="pb-1 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      resultado
-                    </span>
-                  </div>
-                  <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <Button
-                      onClick={() => setShowResultsFace(true)}
-                      className="h-12 rounded-xl bg-gradient-to-r from-[#5D65F6] to-[#6366F1] px-6 text-base font-semibold shadow-[0_16px_35px_rgba(99,102,241,0.30)] hover:opacity-95"
-                    >
-                      Ver resultados
-                    </Button>
-                    {userId ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => void shareSimulatorResult()}
-                        className="h-12 rounded-xl border-slate-200 px-4 text-base font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        Compartir mi resultado
-                      </Button>
-                    ) : null}
-                    <Button variant="ghost" onClick={() => window.history.back()} className="h-12 rounded-xl px-4 text-base font-semibold text-[#5D65F6] hover:bg-[#EEF0FF] hover:text-[#4C55E6]">
-                      Volver a la materia
-                    </Button>
-                  </div>
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <p className="text-sm font-medium text-slate-600">¿Te sirvió este simulador?</p>
-                    <button
-                      type="button"
-                      onClick={() => void handleSimulatorVote(1)}
-                      disabled={simulatorVoteLoading}
-                      className={cn(
-                        'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
-                        simulatorVote === 1
-                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                      )}
-                    >
-                      <ThumbsUp className="h-4 w-4" />
-                      Me gustó
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleSimulatorVote(-1)}
-                      disabled={simulatorVoteLoading}
-                      className={cn(
-                        'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold transition',
-                        simulatorVote === -1
-                          ? 'border-rose-200 bg-rose-50 text-rose-700'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                      )}
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                      No me gustó
-                    </button>
-                  </div>
-                  <div className="mt-6 grid max-w-[360px] grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Aciertos</p>
-                      <p className="mt-2 text-2xl font-black text-slate-900">
-                        {aciertosFinales}
-                        <span className="text-sm font-semibold text-slate-500"> / {totalPreguntasExamen}</span>
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Nota</p>
-                      <p className={cn('mt-2 text-2xl font-black', aprobado ? 'text-emerald-600' : 'text-amber-600')}>
-                        {nota.toFixed(1)}
-                      </p>
-                    </div>
-                  </div>
-                  {needsMotivation ? (
-                    <p className="mt-6 max-w-[390px] text-sm leading-7 text-slate-600">
-                      No aprobaste esta vez, pero ya identificamos por dónde empezar. Con un repaso enfocado en el Módulo {suggestedModule} y otro intento, esta nota puede subir rápido.
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="relative flex justify-center lg:justify-end">
-                  <Image
-                    src={needsMotivation ? '/simulador-resultado-motivacional.webp' : '/simulador-resultado.webp'}
-                    alt={needsMotivation ? 'Resultado motivacional del simulador' : 'Resultado final del simulador'}
-                    width={1024}
-                    height={1536}
-                    priority
-                    className="h-auto w-full max-w-[560px] object-contain"
-                  />
-                </div>
-              </div>
-            </Card>
-
-            <Card className={cn(
-              'overflow-hidden rounded-[34px] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.10)]',
-              isMobileResults
-                ? showResultsFace
-                  ? 'relative mt-4 translate-y-0 opacity-100 transition-all duration-500'
-                  : 'pointer-events-none absolute inset-0 -translate-y-6 opacity-0 transition-all duration-500'
-                : 'absolute inset-0 min-h-[620px] w-full [backface-visibility:hidden] [transform:rotateY(180deg)]'
-            )}>
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)]" />
-              <div className="relative h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-                <div className="mx-auto max-w-5xl">
-                  <div className="rounded-[28px] border border-slate-200 bg-white/90 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)] sm:px-6">
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                      <div className="max-w-2xl">
-                        <p className="text-sm font-semibold text-[#5D65F6]">Resultados del simulador</p>
-                        <h3 className="mt-1 text-[2rem] font-bold tracking-[-0.04em] text-slate-900 sm:text-[2.35rem]">
-                          Tu revision completa
-                        </h3>
-                        <p className="mt-2 text-sm leading-6 text-slate-600 sm:text-[15px]">
-                          {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
-                        </p>
-                        <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                        Revisa dónde fallaste, qué tema te conviene reforzar y cómo encarar el próximo intento.
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:justify-end">
-                        <Button variant="outline" onClick={() => setShowResultsFace(false)} className="rounded-xl px-5">
-                          Volver a la tarjeta
-                        </Button>
-                        {userId ? (
-                          <Button variant="outline" onClick={() => void shareSimulatorResult()} className="rounded-xl px-5">
-                            Compartir mi resultado
-                          </Button>
-                        ) : null}
-                        <Button variant="outline" onClick={() => window.history.back()} className="rounded-xl px-5">
-                          Volver a la materia
-                        </Button>
-                        <Button onClick={reiniciarSimulador} className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700">
-                          <RefreshCcw className="mr-2 h-4 w-4" />
-                          Intentar de nuevo
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    {examSummaryCards.map((card) => (
-                      <div key={card.label} className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FAFF_100%)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                          {card.label}
-                        </p>
-                        <h3 className="mt-2 text-[17px] font-semibold text-slate-900">{card.title}</h3>
-                        <p className="mt-2 min-h-[72px] text-sm leading-6 text-slate-600">{card.description}</p>
-                        {'href' in card ? (
-                          <Link href={card.href} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
-                            {card.cta}
-                            <ChevronRight className="h-4 w-4" />
-                          </Link>
-                        ) : (
-                          <button type="button" onClick={card.onClick} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
-                            {card.cta}
-                            <ChevronRight className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className={cn('mt-6 rounded-[28px] p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]', needsMotivation ? 'border border-rose-200 bg-rose-50' : 'border border-indigo-200 bg-indigo-50/70')}>
-                    <p className={cn('text-xs font-semibold uppercase tracking-wide', needsMotivation ? 'text-rose-700' : 'text-indigo-700')}>
-                      Revisión rápida por tema
-                    </p>
-                    <h3 className="mt-2 text-xl font-bold text-slate-900">{patternMessage}</h3>
-                    <p className="mt-3 text-sm leading-6 text-slate-700">
-                      {needsMotivation
-                        ? `Todavía no alcanzaste el 60%, pero ya tienes una ruta clara: ${recommendationMessage}`
-                        : recommendationMessage}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-700">{errorFocus.description}</p>
-                    <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-                      <Button asChild className={cn('rounded-xl', needsMotivation ? 'bg-rose-600 hover:bg-rose-700' : 'bg-indigo-600 hover:bg-indigo-700')}>
-                        <Link href={`/explorar/materia/${materiaId}?tab=resumenes&modulo=${suggestedModule}`}>
-                          Repasar resúmenes
-                        </Link>
-                      </Button>
-                      <div className={cn('rounded-xl border bg-white px-4 py-3 text-sm', needsMotivation ? 'border-rose-200 text-rose-800' : 'border-indigo-200 text-indigo-800')}>
-                        Recomendación de este intento: enfócate en Módulo {suggestedModule}.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-6 text-left shadow-[0_14px_30px_rgba(15,23,42,0.04)]">
-                    <h3 className="text-lg font-bold text-slate-900">Tutor Evaluo: por qué fallaste y cómo mejorarlo</h3>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Con tu plan gratuito accedes a 3 explicaciones inteligentes por simulador.
-                    </p>
-                    {loadingExplanations ? (
-                      <p className="mt-3 text-sm text-slate-600">Generando explicaciones personalizadas...</p>
-                    ) : wrongExplanations.length === 0 ? (
-                      <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
-                        <p className="text-sm font-semibold text-emerald-900">No hubo errores para revisar.</p>
-                        <p className="mt-1 text-sm text-emerald-800">
-                          Excelente trabajo. Si quieres consolidarlo todavía más, intenta otro modelo o repasa el módulo sugerido.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="mt-4 space-y-4">
-                        {wrongExplanations.map((item) => (
-                          <div key={item.preguntaId} className="rounded-xl border border-slate-200 bg-white p-4">
-                            <p className="text-sm font-semibold text-slate-800">{item.enunciado}</p>
-                            <p className="mt-2 text-sm leading-6 text-slate-700">{item.explicacion}</p>
-                            <div className="mt-3 flex items-center gap-2">
-                              {(() => {
-                                const currentVote = feedbackVotes[item.preguntaId];
-                                const currentLoading = feedbackLoading[item.preguntaId];
-
-                                return (
-                                  <>
-                                    <button
-                                      onClick={() => void handleExplanationFeedback(item.preguntaId, 1)}
-                                      disabled={Boolean(currentLoading)}
-                                      className={cn(
-                                        'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
-                                        currentVote === 1
-                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                                          : 'border-slate-200 text-slate-600 hover:bg-slate-50',
-                                        currentLoading === 1 && 'opacity-70'
-                                      )}
-                                    >
-                                      <ThumbsUp className="h-3.5 w-3.5" />
-                                      Me ayudo
-                                    </button>
-                                    <button
-                                      onClick={() => void handleExplanationFeedback(item.preguntaId, -1)}
-                                      disabled={Boolean(currentLoading)}
-                                      className={cn(
-                                        'inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition',
-                                        currentVote === -1
-                                          ? 'border-rose-200 bg-rose-50 text-rose-700'
-                                          : 'border-slate-200 text-slate-600 hover:bg-slate-50',
-                                        currentLoading === -1 && 'opacity-70'
-                                      )}
-                                    >
-                                      <ThumbsDown className="h-3.5 w-3.5" />
-                                      No me ayudo
-                                    </button>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {wrongExplanations.length > 0 ? (
-                      <div className="mt-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3">
-                        <p className="text-sm font-semibold text-indigo-900">
-                          ¿Quieres ver explicaciones de todas tus respuestas incorrectas?
-                        </p>
-                        <p className="mt-1 text-xs text-indigo-800">
-                          Pásate a Premium y desbloquea la corrección completa de todas tus respuestas incorrectas, con recomendaciones personalizadas para subir tu nota más rápido.
-                        </p>
-                        <Button
-                          className="mt-3 h-8 rounded-lg bg-indigo-600 px-3 text-xs font-semibold hover:bg-indigo-700"
-                          onClick={() => window.location.assign('/pricing')}
-                        >
-                          Quiero pasarme a Premium
-                        </Button>
-                        {explanationsMetrics ? (
-                          <p className="mt-2 text-[11px] text-indigo-700">
-                            Ahorro inteligente: {explanationsMetrics.cacheHits} explicaciones reutilizadas y {explanationsMetrics.generatedCount} nuevas en este intento.
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
+      <>
+        <FirstStudyErrorOnboardingPrompt
+          errorId={onboardingErrorId}
+          location="simulator_result"
+          onClose={() => setOnboardingErrorId(null)}
+        />
+        <SimulatorFinishedResult
+          materiaId={props.materiaId}
+          materiaNombre={materiaNombre}
+          parcial={finishedAttempt.parcial}
+          carreraId={props.carreraId}
+          universidadId={props.universidadId}
+          userId={finishedAttempt.user_id}
+          attemptId={finishedAttempt.id}
+          mode={mode}
+          aciertos={finishedAttempt.correct_answers}
+          respondidas={finishedAttempt.answered_questions}
+          totalPreguntas={finishedAttempt.total_questions}
+          isFinishing={false}
+          onNewExam={() => window.location.reload()}
+        />
+      </>
     );
   }
 
-  const accessibleQuestionCount = resolvedDemoMode
-    ? Math.min(DEMO_TOTAL_QUESTIONS, preguntasDisponibles)
-    : Math.min(questionLimit, preguntasDisponibles);
-  const maxIndex = Math.max(0, accessibleQuestionCount - 1);
-  const isCurrentFlagged = flaggedQuestions.includes(currentQuestionIndex);
-  const isLastQuestion = currentQuestionIndex === Math.max(0, Math.min(questionLimit, preguntasDisponibles) - 1);
-  const isDemoCheckpointQuestion = resolvedDemoMode && currentQuestionIndex === demoCheckpointIndex;
-
-  if (estado === 'playing' && !hasStarted) {
+  if (finishDetected) {
     return (
-      <div className="flex min-h-[600px] items-center justify-center bg-[#F5F7FB] p-6">
-        <Card className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
-          <h2 className="text-2xl font-extrabold text-slate-900">
-            {`Antes de comenzar el Preguntero de ${materiaNombre || `Materia ${materiaId}`}`}
-          </h2>
-          <p className="mt-3 text-slate-600">
-            Contamos con múltiples modelos de examen para practicar. No todos son iguales:
-            cada intento mezcla los diferentes modelos que tiene la universidad para que puedas entender cada modelo de examen.
-          </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Preguntas</p>
-              <p className="font-bold text-slate-900">{preguntasDisponibles}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Tiempo</p>
-              <p className="font-bold text-slate-900">{formatTime(examDurationSeconds)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-              <p className="text-xs text-slate-500">Parcial</p>
-              <p className="font-bold text-slate-900">{getParcialLabel(parcial)}</p>
-            </div>
-          </div>
-            <Button
-              onClick={() => {
-                simulatorLifecycleRef.current.outcomeTracked = false;
-                setHasStarted(true);
-                if (!resolvedDemoMode) {
-                  void emitSimulatorEvent('simulator_started', {
-                    questionIndex: 1,
-                    answered: 0,
-                    progress: 0,
-                    timeLeft: examDurationSeconds,
-                  });
-                }
-              }}
-              className="mt-6 rounded-xl bg-indigo-600 hover:bg-indigo-700"
-            >
-              Comenzar simulador
-            </Button>
-          </Card>
+      <div className="flex min-h-[700px] items-center justify-center bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.10),transparent_26%),linear-gradient(180deg,#F8FAFF_0%,#F3F6FC_100%)] px-6">
+        <div className="text-center">
+          <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
+          <p className="mt-4 text-sm font-semibold text-slate-700">Guardando tu resultado...</p>
         </div>
-      );
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#F3F5F9] pb-36 lg:pb-8">
-      <header className="hidden border-b border-slate-200 bg-white lg:block">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-          <div className="flex items-center gap-10">
-            <Link href="/" className="text-[30px] font-black tracking-[-0.04em] text-[#0F1B3D]">
-              Evaluo
-            </Link>
-
-            <div>
-              <p className="text-2xl font-semibold text-slate-900">Simulador de Examen</p>
-              <p className="text-sm text-slate-500">
-                {materiaNombre || `Materia ${materiaId}`} · {getParcialLabel(parcial)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                const snapshot = simulatorLifecycleRef.current;
-                if (!resolvedDemoMode && !snapshot.outcomeTracked && snapshot.hasStarted) {
-                  simulatorLifecycleRef.current.outcomeTracked = true;
-                  void emitSimulatorEvent('simulator_abandoned', {
-                    questionIndex: snapshot.currentQuestionIndex + 1,
-                    answered: snapshot.answeredCount,
-                    progress: snapshot.preguntasDisponibles
-                      ? Math.round((snapshot.answeredCount / snapshot.preguntasDisponibles) * 100)
-                      : 0,
-                    timeLeft: snapshot.timeLeft,
-                  });
-                }
-                window.history.back();
-              }}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              <LogOut className="h-4 w-4" />
-              Abandonar examen
-            </button>
-
-            <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
-              <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">
-                {getUserInitials()}
-              </div>
-              <span className="max-w-[130px] truncate text-sm font-medium text-slate-700">
-                {getUserName()}
-              </span>
-              <ChevronDown className="h-4 w-4 text-slate-400" />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-            <Clock3 className="h-4 w-4 text-slate-500" />
-            <span className="font-mono text-sm font-bold text-slate-800">{formatTime(timeLeft)}</span>
-          </div>
-              <p className="text-sm font-semibold text-slate-700">
-            {currentQuestionIndex + 1}/{questionLimit}
-              </p>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-6xl px-3 py-3 lg:py-6">
-        <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)_14rem] lg:gap-4 xl:grid-cols-[15rem_minmax(0,1fr)_15.5rem] xl:gap-5">
-          <aside className="hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:block">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-xs font-semibold text-slate-600">Pregunta {currentQuestionIndex + 1} de {questionLimit}</p>
-              <div className="flex items-center gap-1 text-xs font-medium text-slate-500">
-                <Flag className="h-3.5 w-3.5" /> {flaggedQuestions.length}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-5 gap-1.5">
-              {Array.from({ length: questionLimit }, (_, index) => {
-                const isCurrent = currentQuestionIndex === index;
-                const isAnswered = selectedAnswers[index] !== undefined;
-                const isFlagged = flaggedQuestions.includes(index);
-                const isDisabled = index > maxIndex;
-
-                return (
-                  <button
-                    key={index}
-                    onClick={() => goToQuestion(index)}
-                    disabled={isDisabled}
-                    className={cn(
-                      'relative h-8 rounded-lg border text-[11px] font-semibold transition',
-                      isDisabled && 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300',
-                      !isDisabled && 'border-slate-200 bg-white text-slate-700 hover:border-slate-300',
-                      isAnswered && !isDisabled && 'bg-blue-50 text-blue-700',
-                      isCurrent && !isDisabled && 'border-blue-500 ring-2 ring-blue-100'
-                    )}
-                  >
-                    {index + 1}
-                    {isFlagged ? <Star className="absolute -right-1 -top-1 h-3 w-3 fill-orange-400 text-orange-500" /> : null}
-                  </button>
-                );
-              })}
-            </div>
-
-            <Button
-              onClick={() => void finalizarExamen('manual')}
-              disabled={isFinishing}
-              className="mt-4 w-full rounded-lg bg-slate-900 py-4 text-sm text-white hover:bg-slate-800"
-            >
-              Finalizar
-            </Button>
-          </aside>
-
-          <main className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 lg:p-6">
-            <div className="mb-6 hidden items-center justify-between lg:flex">
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5">
-                <Clock3 className="h-4 w-4 text-slate-500" />
-                <span className="font-mono text-sm font-bold text-slate-800">{formatTime(timeLeft)}</span>
-              </div>
-
-              <button
-                onClick={() => toggleFlag()}
-                className={cn(
-                  'inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition',
-                  isCurrentFlagged
-                    ? 'border-orange-200 bg-orange-50 text-orange-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                )}
-              >
-                <Star className={cn('h-4 w-4', isCurrentFlagged && 'fill-orange-400 text-orange-500')} />
-                Marcar
-              </button>
-            </div>
-
-            <div className="mb-5 rounded-xl border border-slate-100 bg-slate-50 p-4">
-              <p className="text-xs font-semibold text-slate-500">Pregunta {currentQuestionIndex + 1}</p>
-              <h2 className="mt-2 text-base font-semibold leading-relaxed text-slate-900 sm:text-lg">
-                {preguntaActual?.enunciado}
-              </h2>
-              {preguntaActual && isMultiAnswer(preguntaActual.respuesta_correcta) ? (
-                <p className="mt-2 text-xs font-semibold text-indigo-700">
-                  Selecciona {parseCorrectAnswers(preguntaActual.respuesta_correcta).length} opciones correctas.
-                </p>
-              ) : null}
-            </div>
-
-            <div className="space-y-3">
-              {preguntaActualShuffled?.options?.map((opcion, idx) => {
-                const answerValue = selectedAnswers[currentQuestionIndex];
-                const multi = Boolean(preguntaActual && isMultiAnswer(preguntaActual.respuesta_correcta));
-                const selected = Array.isArray(answerValue) ? answerValue.includes(idx) : answerValue === idx;
-                const questionAnswered = multi
-                  ? Array.isArray(answerValue) &&
-                    answerValue.length === parseCorrectAnswers(preguntaActual?.respuesta_correcta ?? '').length
-                  : answerValue !== undefined;
-                const optionIsCorrect = isCorrectChoice(currentQuestionIndex, idx);
-                const selectedIsWrong = selected && questionAnswered && !optionIsCorrect;
-
-                return (
-                  <button
-                    key={`${currentQuestionIndex}-${idx}`}
-                    onClick={() => handleSelectAnswer(idx)}
-                    disabled={questionAnswered}
-                    className={cn(
-                      'w-full rounded-lg border p-3.5 text-left transition',
-                      !questionAnswered && 'border-slate-200 bg-[#FBFCFF] hover:border-slate-300 hover:bg-white',
-                      questionAnswered && 'border-slate-200 bg-white',
-                      selected && !questionAnswered && 'border-blue-500 bg-blue-50 text-blue-900 ring-2 ring-blue-100',
-                      questionAnswered &&
-                        optionIsCorrect &&
-                        'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-100',
-                      selectedIsWrong && 'border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-100'
-                    )}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={cn(
-                          'mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold uppercase',
-                          selected
-                            ? 'border-blue-500 bg-white text-blue-600'
-                            : 'border-slate-300 bg-white text-slate-500'
-                        )}
-                      >
-                        {optionLabels[idx] ?? idx + 1}
-                      </span>
-                      <span className="text-sm leading-5 sm:text-[15px]">{opcion}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 hidden items-center justify-between lg:flex">
-              <Button
-                variant="outline"
-                onClick={goPrevious}
-                disabled={currentQuestionIndex === 0}
-                className="rounded-xl px-5"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Anterior
-              </Button>
-              <p className="text-sm text-slate-500">
-                Respondidas: <span className="font-semibold text-slate-800">{answeredCount}</span> / {preguntasDisponibles}
-              </p>
-              <Button
-                onClick={() => (isLastQuestion ? void finalizarExamen('manual') : goNext())}
-                disabled={isFinishing}
-                className="rounded-xl bg-indigo-600 px-5 hover:bg-indigo-700"
-              >
-                {isDemoCheckpointQuestion ? 'Continuar' : isLastQuestion ? 'Finalizar' : 'Siguiente'}
-                {!isLastQuestion || isDemoCheckpointQuestion ? <ChevronRight className="ml-1 h-4 w-4" /> : null}
-              </Button>
-            </div>
-          </main>
-
-          <aside className="mt-6 hidden space-y-3 lg:mt-0 lg:block">
-            <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-700">
-                <Clock3 className="h-3.5 w-3.5" />
-                <p className="text-xs font-semibold">Tiempo restante</p>
-              </div>
-              <p className="mt-2 font-mono text-3xl font-bold tracking-tight text-slate-900">
-                {formatTime(timeLeft)}
-              </p>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-blue-600 transition-all"
-                  style={{ width: `${Math.max(0, Math.min(100, (timeLeft / examDurationSeconds) * 100))}%` }}
-                />
-              </div>
-              <p className="mt-2 text-[11px] text-slate-500">de {formatTime(examDurationSeconds)}</p>
-            </Card>
-
-            <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold text-slate-800">Progreso del examen</p>
-
-              <div className="mt-3 flex justify-center">
-                <div className="relative grid h-24 w-24 place-items-center rounded-full" style={progressRingStyle}>
-                  <div className="grid h-16 w-16 place-items-center rounded-full bg-white">
-                    <span className="text-2xl font-black text-slate-800">{progressPercent}%</span>
-                  </div>
-                </div>
-              </div>
-
-              <p className="mt-3 text-center text-xs text-slate-500">
-                {answeredCount} de {preguntasDisponibles || questionLimit} preguntas
-              </p>
-
-              <div className="mt-3 space-y-2 text-xs">
-                <div className="flex items-center justify-between text-emerald-600">
-                  <span>Respondidas</span>
-                  <span className="font-semibold">{answeredCount}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-500">
-                  <span>Sin responder</span>
-                  <span className="font-semibold">{unansweredCount}</span>
-                </div>
-                <div className="flex items-center justify-between text-orange-500">
-                  <span>Marcadas</span>
-                  <span className="font-semibold">{flaggedQuestions.length}</span>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="rounded-xl border border-blue-100 bg-blue-50/70 p-4 shadow-sm">
-              <p className="text-xs font-semibold text-blue-700">Consejo</p>
-              <p className="mt-2 text-xs leading-5 text-blue-700">
-                Leé cada pregunta atentamente antes de seleccionar tu respuesta.
-              </p>
-            </Card>
-          </aside>
-        </div>
-      </div>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-3 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] lg:hidden">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <Button
-              variant="outline"
-              onClick={goPrevious}
-              disabled={currentQuestionIndex === 0}
-              className="h-10 flex-1 rounded-xl"
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Anterior
-            </Button>
-            <button
-              onClick={() => toggleFlag()}
-              className={cn(
-                'inline-flex h-10 w-10 items-center justify-center rounded-xl border transition',
-                isCurrentFlagged
-                  ? 'border-orange-200 bg-orange-50 text-orange-600'
-                  : 'border-slate-200 bg-white text-slate-600'
-              )}
-              aria-label="Marcar pregunta"
-            >
-              <Star className={cn('h-4 w-4', isCurrentFlagged && 'fill-orange-400 text-orange-500')} />
-            </button>
-            <Button
-              onClick={() => (isLastQuestion ? void finalizarExamen('manual') : goNext())}
-              disabled={isFinishing}
-              className="h-10 flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700"
-            >
-              {isDemoCheckpointQuestion ? 'Continuar' : isLastQuestion ? 'Finalizar' : 'Siguiente'}
-              {!isLastQuestion || isDemoCheckpointQuestion ? <ChevronRight className="ml-1 h-4 w-4" /> : null}
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-10 gap-1.5">
-            {Array.from({ length: questionLimit }, (_, index) => {
-              const isCurrent = currentQuestionIndex === index;
-              const isAnswered = selectedAnswers[index] !== undefined;
-              const isFlagged = flaggedQuestions.includes(index);
-              const isDisabled = index > maxIndex;
-
-              return (
-                <button
-                  key={`mobile-${index}`}
-                  onClick={() => goToQuestion(index)}
-                  disabled={isDisabled}
-                  className={cn(
-                    'relative h-7 rounded-md border text-[10px] font-semibold',
-                    isDisabled && 'border-slate-100 bg-slate-50 text-slate-300',
-                    !isDisabled && 'border-slate-200 bg-white text-slate-700',
-                    isAnswered && !isDisabled && 'bg-blue-50 text-blue-700',
-                    isCurrent && !isDisabled && 'border-blue-500 ring-1 ring-blue-200'
-                  )}
-                >
-                  {index + 1}
-                  {isFlagged ? (
-                    <Star className="absolute -right-1 -top-1 h-2.5 w-2.5 fill-orange-400 text-orange-500" />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={() => void finalizarExamen('manual')}
-            disabled={isFinishing}
-            className="mt-2 w-full rounded-xl bg-slate-900 py-2.5 text-sm font-semibold text-white"
-          >
-            Finalizar
-          </button>
-        </div>
-      </div>
+    <div ref={rootRef}>
+      <LegacySimuladorExamen {...props} />
     </div>
   );
 }

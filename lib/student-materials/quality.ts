@@ -1,0 +1,293 @@
+import type {
+  CanonicalPedagogicalModel,
+  StudyDocumentAnalysis,
+  StudyGlossaryItem,
+  StudentMaterialPedagogicalQualityReport,
+  StudentMaterialSummary,
+} from '@/lib/student-materials/types';
+import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
+
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 4;
+const MIN_CONTENT_CHARS_PER_PAGE = 80;
+
+function cleanLine(value: string) {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function collectModelPages(model: CanonicalPedagogicalModel | null) {
+  if (!model) return new Set<number>();
+
+  const pages = new Set<number>();
+  const add = (values?: number[]) => {
+    for (const page of values ?? []) {
+      if (Number.isInteger(page) && page > 0) pages.add(page);
+    }
+  };
+
+  model.topics.forEach((item) => add(item.pageReferences));
+  model.concepts.forEach((item) => add(item.pageReferences));
+  model.relationships.forEach((item) => add(item.pageReferences));
+  model.classifications.forEach((item) => add(item.pageReferences));
+  model.processes.forEach((item) => add(item.pageReferences));
+  model.formulas.forEach((item) => add(item.pageReferences));
+  model.sourceBindings?.forEach((binding) =>
+    binding.references.forEach((reference) => {
+      if (reference.pageStart) pages.add(reference.pageStart);
+      if (reference.pageEnd) pages.add(reference.pageEnd);
+    })
+  );
+
+  return pages;
+}
+
+function malformedAcademicLabel(value: string) {
+  const text = cleanLine(value);
+  if (!text) return true;
+  if (text.length > 150) return true;
+  if (/\|/.test(text)) return true;
+  if (/^[#*•|]/u.test(text)) return true;
+  if (/^¿|\?$/.test(text)) return true;
+  if (text.split(/\s+/).length > 18) return true;
+  return false;
+}
+
+function countMalformedUnits(model: CanonicalPedagogicalModel | null) {
+  if (!model) return 0;
+
+  const labels = [
+    ...model.topics.map((item) => item.title),
+    ...model.concepts.map((item) => item.term),
+    ...model.classifications.map((item) => item.title),
+    ...model.processes.map((item) => item.title),
+    ...model.formulas.map((item) => item.expression),
+  ];
+
+  return labels.filter(malformedAcademicLabel).length;
+}
+
+function countAcademicUnits(model: CanonicalPedagogicalModel | null) {
+  if (!model) return 0;
+  return (
+    model.topics.length +
+    model.concepts.length +
+    model.relationships.length +
+    model.classifications.length +
+    model.processes.length +
+    model.formulas.length
+  );
+}
+
+export function buildStudentMaterialPedagogicalQualityReport(input: {
+  pageCount: number | null;
+  pages: string[] | null;
+  documentAnalysis: StudyDocumentAnalysis;
+  model: CanonicalPedagogicalModel | null;
+  summary: StudentMaterialSummary;
+  glossary: StudyGlossaryItem[];
+  artifacts: PedagogicalArtifacts;
+  visionUsed: boolean;
+}): StudentMaterialPedagogicalQualityReport {
+  const contentPages = (input.pages ?? [])
+    .map((text, index) => ({ page: index + 1, chars: cleanLine(text).length }))
+    .filter((item) => item.chars >= MIN_CONTENT_CHARS_PER_PAGE)
+    .map((item) => item.page);
+  const contentPageSet = new Set(contentPages);
+  const representedPageSet = collectModelPages(input.model);
+  const representedContentPages = contentPages.filter((page) =>
+    representedPageSet.has(page)
+  );
+  const representedPageRatio =
+    contentPages.length > 0
+      ? representedContentPages.length / contentPages.length
+      : input.model
+        ? 1
+        : 0;
+
+  const academicUnitCount = countAcademicUnits(input.model);
+  const malformedAcademicUnits = countMalformedUnits(input.model);
+  const malformedRatio =
+    academicUnitCount > 0 ? malformedAcademicUnits / academicUnitCount : 0;
+
+  const cleanGlossaryCount = input.glossary.filter(
+    (item) => !malformedAcademicLabel(item.term)
+  ).length;
+  const glossaryCleanRatio =
+    input.glossary.length > 0 ? cleanGlossaryCount / input.glossary.length : 0;
+
+  const referencedArtifactCount = [
+    ...input.artifacts.flashcards,
+    ...input.artifacts.questions,
+  ].filter(
+    (item) =>
+      item.reference.pageStart !== null ||
+      cleanLine(item.reference.excerpt).length >= 20
+  ).length;
+  const artifactCount =
+    input.artifacts.flashcards.length + input.artifacts.questions.length;
+  const artifactReferenceRatio =
+    artifactCount > 0 ? referencedArtifactCount / artifactCount : 0;
+
+  const practiceCoverage = analyzeQuestionBankCoverage(
+    input.artifacts.questions,
+    input.summary.sections,
+    input.pageCount
+  );
+
+  // La cita literal se comprueba contra las páginas extraídas. No pretende
+  // demostrar que todas las inferencias del modelo sean semánticamente ciertas.
+  // Pero impide confundir una cita generada con texto realmente recuperado.
+  const quoteSourceAudit = input.pages ? (() => {
+    const normalizedPages = input.pages!.map((page) =>
+      cleanLine(page)
+        .toLocaleLowerCase('es')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    );
+    const referenced = input.artifacts.questions.filter((question) =>
+      question.reference.pageStart !== null &&
+      Number.isInteger(question.reference.pageStart) &&
+      question.reference.pageStart! >= 1 &&
+      question.reference.pageStart! <= normalizedPages.length
+    );
+    const matchingQuotes = referenced.filter((question) => {
+      const quote = cleanLine(question.reference.excerpt)
+        .toLocaleLowerCase('es')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        // Los extractos de más de 220 caracteres se acortan visualmente
+        // con puntos suspensivos, que no forman parte del texto fuente.
+        .replace(/\.\.\.$/, '');
+      if (quote.length < 30) return false;
+      const actualPage = normalizedPages[question.reference.pageStart! - 1] ?? '';
+      return actualPage.includes(quote);
+    });
+    return {
+      questionsWithPageReference: referenced.length,
+      questionsWithLiteralSourceExcerpt: matchingQuotes.length,
+      literalQuoteRatio: referenced.length > 0
+        ? Math.round((matchingQuotes.length / referenced.length) * 1000) / 1000
+        : null,
+    };
+  })() : null;
+
+  const questionLevelCounts = {
+    recordar: input.artifacts.questions.filter((item) => item.level === 'recordar').length,
+    comprender: input.artifacts.questions.filter((item) => item.level === 'comprender').length,
+    aplicar: input.artifacts.questions.filter((item) => item.level === 'aplicar').length,
+  };
+  const questionKinds = new Set(
+    input.artifacts.questions
+      .map((item) => item.kind)
+      .filter((kind): kind is NonNullable<typeof kind> => Boolean(kind))
+  );
+  const flashcardKinds = new Set(
+    input.artifacts.flashcards
+      .map((item) => item.kind)
+      .filter((kind): kind is NonNullable<typeof kind> => Boolean(kind))
+  );
+  const applicationQuestionRatio =
+    input.artifacts.questions.length > 0
+      ? questionLevelCounts.aplicar / input.artifacts.questions.length
+      : 0;
+
+  let pedagogicalDepthScore = 0;
+  pedagogicalDepthScore += questionLevelCounts.recordar > 0 ? 10 : 0;
+  pedagogicalDepthScore += questionLevelCounts.comprender > 0 ? 20 : 0;
+  pedagogicalDepthScore += questionLevelCounts.aplicar > 0 ? 25 : 0;
+  pedagogicalDepthScore += clamp(questionKinds.size / 5, 0, 1) * 20;
+  pedagogicalDepthScore += clamp(flashcardKinds.size / 4, 0, 1) * 15;
+  pedagogicalDepthScore += clamp(applicationQuestionRatio / 0.2, 0, 1) * 10;
+  pedagogicalDepthScore = Math.round(clamp(pedagogicalDepthScore, 0, 100));
+
+  let score = 0;
+  score += representedPageRatio * 35;
+  score += clamp(academicUnitCount / Math.max(12, contentPages.length * 2), 0, 1) * 20;
+  score += artifactReferenceRatio * 15;
+  score +=
+    input.summary.sections.length >= 2 && input.summary.sections.length <= 10
+      ? 15
+      : input.summary.sections.length > 0
+        ? 7
+        : 0;
+  score += glossaryCleanRatio * 10;
+  score += input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5;
+  score = Math.round(clamp(score, 0, 100));
+
+  // El score principal mide confiabilidad del procesamiento. La profundidad
+  // pedagógica se informa por separado para no ocultar problemas de cobertura
+  // detrás de un buen mix de preguntas.
+  if (pedagogicalDepthScore < 55) {
+    score = Math.min(score, 79);
+  }
+
+  const issues: string[] = [];
+  if (!input.model) issues.push('canonical_model_missing');
+  if (representedPageRatio < 0.75) issues.push('canonical_page_coverage_low');
+  if (malformedRatio > 0.08) issues.push('malformed_academic_units');
+  if (glossaryCleanRatio < 0.95) issues.push('glossary_noise');
+  if (artifactReferenceRatio < 0.9) issues.push('artifact_traceability_low');
+  if (input.summary.sections.length < 2 || input.summary.sections.length > 10) {
+    issues.push('summary_hierarchy_out_of_range');
+  }
+  if (input.documentAnalysis.requiresOcr && !input.visionUsed) {
+    issues.push('visual_recovery_pending');
+  }
+  if (pedagogicalDepthScore < 55) {
+    issues.push('pedagogical_depth_low');
+  }
+  if (
+    quoteSourceAudit?.literalQuoteRatio !== null &&
+    quoteSourceAudit?.literalQuoteRatio !== undefined &&
+    quoteSourceAudit.questionsWithPageReference >= 8 &&
+    quoteSourceAudit.literalQuoteRatio < 0.5
+  ) {
+    issues.push('practice_source_quotes_not_verifiable');
+  }
+
+  const status: StudentMaterialPedagogicalQualityReport['status'] =
+    !input.summary.hasContent ||
+    artifactCount === 0 ||
+    !input.model ||
+    representedPageRatio < 0.5
+      ? 'fail'
+      : issues.length > 0 || score < 80
+        ? 'degraded'
+        : 'pass';
+
+  const uncoveredContentPages = contentPages.filter(
+    (page) => !representedPageSet.has(page)
+  );
+
+  return {
+    version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
+    status,
+    score,
+    pedagogicalDepthScore,
+    pageCount: input.pageCount,
+    sourcePagesWithContent: contentPageSet.size,
+    representedPages: representedContentPages.length,
+    representedPageRatio: Math.round(representedPageRatio * 1000) / 1000,
+    uncoveredContentPages,
+    academicUnitCount,
+    malformedAcademicUnits,
+    summarySectionCount: input.summary.sections.length,
+    glossaryItemCount: input.glossary.length,
+    flashcardCount: input.artifacts.flashcards.length,
+    flashcardKindCount: flashcardKinds.size,
+    questionCount: input.artifacts.questions.length,
+    questionKindCount: questionKinds.size,
+    questionLevelCounts,
+    applicationQuestionRatio:
+      Math.round(applicationQuestionRatio * 1000) / 1000,
+    miniExamQuestionCount: input.artifacts.miniExamQuestionIds.length,
+    practiceCoverage,
+    practiceSourceAudit: quoteSourceAudit,
+    artifactReferenceRatio: Math.round(artifactReferenceRatio * 1000) / 1000,
+    issues,
+  };
+}

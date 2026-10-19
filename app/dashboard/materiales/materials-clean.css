@@ -3,7 +3,6 @@
   background: var(--background);
 }
 
-/* El hero y la biblioteca son secciones, no tarjetas. */
 .materials-editorial .min-w-0.space-y-4 > section:first-child,
 .materials-editorial .min-w-0.space-y-4 > section:nth-child(2) {
   border-right: 0 !important;
@@ -19,7 +18,6 @@
   padding-top: 0.25rem !important;
 }
 
-/* Los dos bloques introductorios se leen como partes de una misma sección. */
 .materials-editorial .min-w-0.space-y-4 > section:first-child > .mt-6.grid > div {
   border-right: 0 !important;
   border-left: 0 !important;
@@ -29,17 +27,12 @@
   box-shadow: none !important;
 }
 
-.materials-editorial .min-w-0.space-y-4 > section:first-child > .mt-6.grid > div:first-child {
-  border-top: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
-  border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
-}
-
+.materials-editorial .min-w-0.space-y-4 > section:first-child > .mt-6.grid > div:first-child,
 .materials-editorial .min-w-0.space-y-4 > section:first-child > .mt-6.grid > div:last-child {
   border-top: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
   border-bottom: 1px solid color-mix(in oklch, var(--border) 88%, transparent) !important;
 }
 
-/* Iconos y acciones sin elevación; los PDFs de la biblioteca conservan sus propias tarjetas. */
 .materials-editorial button,
 .materials-editorial a,
 .materials-editorial [class*='shadow-[0_10px_24px'] {

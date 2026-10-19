@@ -12,9 +12,21 @@ next.user-config.*
 
 # Common ignores
 node_modules
-.next/
+.next*/
 .DS_Store
 tsconfig.tsbuildinfo
 supabase/.temp/
 backups/
 audit-report-*.md
+
+# Local diagnostics / generated artifacts
+dev-server.log
+test-data/
+tests/probe-results.json
+tmp/
+output/
+out/
+.lighthouseci/
+*.log
+
+.vercel

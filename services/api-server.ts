@@ -1,103 +1,57 @@
-import { createClientServer } from '@/lib/supabase-server';
+import { cache } from 'react';
+import { unstable_cache } from 'next/cache';
+import { createPublicClient } from '@/lib/supabase-public';
+import { withTransientDataRetry } from '@/lib/data/transient-retry';
+import {
+  fetchCarreraById,
+  fetchCarrerasByUniversidad,
+  fetchMateriaById,
+  fetchMateriasByCarrera,
+  fetchUniversidadById,
+  fetchUniversidades,
+  type CatalogCarrera as Carrera,
+  type CatalogMateria as Materia,
+  type CatalogUniversidad as Universidad,
+} from '@/lib/data/catalog';
 
-export interface Carrera {
-  id: string;
-  nombre: string;
-  universidad_id?: string | null;
-}
+export type { Carrera, Materia, Universidad };
 
-export interface Materia {
-  id: string;
-  nombre: string;
-  carrera_id?: string | null;
-}
+const getPublicCatalogClient = cache(() => createPublicClient());
 
-export interface Universidad {
-  id: string;
-  nombre: string;
-}
+const loadCarreraByIdCached = unstable_cache(
+  async (carreraId: string): Promise<Carrera | null> =>
+    withTransientDataRetry(() => fetchCarreraById(createPublicClient(), carreraId)),
+  ['catalog-carrera-by-id-v1'],
+  { revalidate: 600 }
+);
 
-export async function getCarrerasByUni(uniId: string): Promise<Carrera[]> {
-  const supabase = await createClientServer();
-  const { data, error } = await supabase
-    .from('carreras')
-    .select('id, nombre')
-    .eq('universidad_id', uniId)
-    .order('nombre');
+const loadUniversidadByIdCached = unstable_cache(
+  async (uniId: string): Promise<Universidad | null> =>
+    withTransientDataRetry(() => fetchUniversidadById(createPublicClient(), uniId)),
+  ['catalog-universidad-by-id-v1'],
+  { revalidate: 600 }
+);
 
-  if (error) throw new Error(error.message);
-  return data || [];
-}
+export const getCarrerasByUni = cache(async (uniId: string): Promise<Carrera[]> => {
+  return withTransientDataRetry(() => fetchCarrerasByUniversidad(getPublicCatalogClient(), uniId));
+});
 
-export async function getMateriasByCarrera(carreraId: string): Promise<Materia[]> {
-  const supabase = await createClientServer();
-  const { data, error } = await supabase
-    .from('materias')
-    .select('*, carrera_materias!inner(prioridad)')
-    .eq('carrera_materias.carrera_id', carreraId);
+export const getMateriasByCarrera = cache(async (carreraId: string): Promise<Materia[]> => {
+  return withTransientDataRetry(() => fetchMateriasByCarrera(getPublicCatalogClient(), carreraId));
+});
 
-  if (error) {
-    console.error('Error fetching materias:', error);
-    return [];
-  }
+export const getMateriaById = cache(async (materiaId: string): Promise<Materia | null> => {
+  return withTransientDataRetry(() => fetchMateriaById(getPublicCatalogClient(), materiaId));
+});
 
-  if (!data) return [];
+export const getCarreraById = cache(async (carreraId: string): Promise<Carrera | null> => {
+  return loadCarreraByIdCached(carreraId);
+});
 
-  const typedData = data as Array<
-    Materia & { carrera_materias?: Array<{ prioridad: number | null }> }
-  >;
+export const getUniversidadById = cache(async (uniId: string): Promise<Universidad | null> => {
+  return loadUniversidadByIdCached(uniId);
+});
 
-  return typedData.sort((a, b) => {
-    const prioA = a.carrera_materias?.[0]?.prioridad ?? 2;
-    const prioB = b.carrera_materias?.[0]?.prioridad ?? 2;
-    if (prioA !== prioB) return prioA - prioB;
-    return a.nombre.localeCompare(b.nombre);
-  });
-}
-
-export async function getMateriaById(materiaId: string): Promise<Materia> {
-  const supabase = await createClientServer();
-  const { data, error } = await supabase
-    .from('materias')
-    .select('id, nombre, carrera_id')
-    .eq('id', materiaId)
-    .single();
-
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Materia no encontrada');
-  return data;
-}
-
-export async function getCarreraById(carreraId: string): Promise<Carrera> {
-  const supabase = await createClientServer();
-  const { data, error } = await supabase
-    .from('carreras')
-    .select('id, nombre, universidad_id')
-    .eq('id', carreraId)
-    .single();
-
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Carrera no encontrada');
-  return data;
-}
-
-export async function getUniversidadById(uniId: string): Promise<Universidad> {
-  const supabase = await createClientServer();
-  const { data, error } = await supabase
-    .from('universidades')
-    .select('id, nombre')
-    .eq('id', uniId)
-    .single();
-
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error('Universidad no encontrada');
-  return data;
-}
-
-export async function getUniversidades() {
-  const supabase = await createClientServer();
-  const { data, error } = await supabase.from('universidades').select('id, nombre').order('nombre');
-
-  if (error) throw new Error(error.message);
-  return data || [];
-}
+export const getUniversidades = cache(async () => {
+  return withTransientDataRetry(() => fetchUniversidades(getPublicCatalogClient()));
+});

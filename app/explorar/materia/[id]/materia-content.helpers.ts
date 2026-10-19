@@ -40,14 +40,29 @@ export interface PreviewDocument {
 }
 
 export const unidades: Unidad[] = [
-  { id: 1, nombre: 'Modulo 1', descripcion: 'Conceptos base y mapa general de la materia.', resumenesCount: 3 },
-  { id: 2, nombre: 'Modulo 2', descripcion: 'Desarrollo teorico y criterios de resolucion.', resumenesCount: 2 },
-  { id: 3, nombre: 'Modulo 3', descripcion: 'Aplicaciones practicas y casos tipicos.', resumenesCount: 4 },
-  { id: 4, nombre: 'Modulo 4', descripcion: 'Integracion y ejercitacion de examen.', resumenesCount: 2 },
+  { id: 1, nombre: 'Módulo 1', descripcion: 'Conceptos base y mapa general de la materia.', resumenesCount: 3 },
+  { id: 2, nombre: 'Módulo 2', descripcion: 'Desarrollo teórico y criterios de resolución.', resumenesCount: 2 },
+  { id: 3, nombre: 'Módulo 3', descripcion: 'Aplicaciones prácticas y casos típicos.', resumenesCount: 4 },
+  { id: 4, nombre: 'Módulo 4', descripcion: 'Integración y ejercitación de examen.', resumenesCount: 2 },
 ];
 
-export function getResumenRating(score: number | null | undefined) {
-  const normalized = Math.max(0, Math.min(5, Math.round((score ?? 0) / 20)));
+function getSeededResumenValue(seed: string) {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+
+  return 3 + (hash % 3);
+}
+
+export function getResumenRating(
+  score: number | null | undefined,
+  seed?: string
+) {
+  const normalized =
+    typeof score === 'number' && score > 0
+      ? Math.max(0, Math.min(5, Math.round(score / 20)))
+      : getSeededResumenValue(seed ?? 'evaluo-resumen');
   return Array.from({ length: 5 }, (_, index) => index < normalized);
 }
 
@@ -67,6 +82,21 @@ export function getModuleNumber(value: string) {
   const normalized = normalizeLabel(value);
   const match = normalized.match(/modulo\s*(\d+)/);
   return match ? Number(match[1]) : null;
+}
+
+export function formatResumenModulesLabel(modules: number[]) {
+  const uniqueModules = Array.from(new Set(modules)).sort((a, b) => a - b);
+  if (uniqueModules.length === 0) {
+    return 'Resumen disponible en este módulo.';
+  }
+
+  if (uniqueModules.length === 1) {
+    return `Corresponde al módulo ${uniqueModules[0]}.`;
+  }
+
+  const lastModule = uniqueModules[uniqueModules.length - 1];
+  const leadingModules = uniqueModules.slice(0, -1).join(', ');
+  return `Corresponde a los módulos ${leadingModules} y ${lastModule}.`;
 }
 
 export function buildResumenKey(resumen: Resumen) {

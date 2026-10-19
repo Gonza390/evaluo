@@ -1,397 +1,190 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  ArrowRight,
-  BookOpen,
-  Building2,
-  GraduationCap,
-  Search,
-  Sparkles,
-} from 'lucide-react';
-import { supabase } from '@/lib/supabase-client';
-import { getUniversityRoute } from '@/lib/routes';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowRight, Building2, ChevronDown, GraduationCap, PlusCircle, Search } from 'lucide-react';
+import { getCareerRoute, getUniversityRoute } from '@/lib/routes';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { ElegantLoader } from '@/components/ui/elegant-loader';
-import type { ExplorarUniversidad } from './data';
+import type { ExplorarData } from './data';
 
-function getUniversityBadge(
-  universidad: ExplorarUniversidad,
-  topCarreras: number,
-  topMaterias: number
-) {
-  if (universidad.carrerasCount === topCarreras && topCarreras > 0) {
-    return 'Mas completa';
-  }
+type ExploreMode = 'todo' | 'universidades' | 'carreras';
 
-  if (universidad.materiasCount === topMaterias && topMaterias > 0) {
-    return 'Mas contenido';
-  }
+const FILTERS: Array<{ id: ExploreMode; label: string }> = [
+  { id: 'todo', label: 'Todo' },
+  { id: 'universidades', label: 'Universidades' },
+  { id: 'carreras', label: 'Carreras' },
+];
 
-  if (universidad.carrerasCount >= 8 || universidad.materiasCount >= 80) {
-    return 'Destacada';
-  }
-
-  return 'Activa';
-}
-
-function getActivityLabel(universidad: ExplorarUniversidad) {
-  if (universidad.materiasCount >= 100) return 'Actividad alta';
-  if (universidad.materiasCount >= 50) return 'Actividad constante';
-  if (universidad.materiasCount >= 20) return 'Actividad en crecimiento';
-  return 'Nueva en biblioteca';
-}
-
-async function fetchUniversidadesClient() {
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error('REQUEST_TIMEOUT')), 10000);
-  });
-
-  const queryPromise = Promise.all([
-    supabase.from('universidades').select('id, nombre').order('nombre'),
-    supabase.from('carreras').select('id, universidad_id'),
-    supabase.from('carrera_materias').select('carrera_id, materia_id'),
-  ]);
-
-  const [universidadesResult, carrerasResult, carreraMateriasResult] = await Promise.race([
-    queryPromise,
-    timeoutPromise,
-  ]);
-
-  if (universidadesResult.error) {
-    throw universidadesResult.error;
-  }
-
-  if (carrerasResult.error) {
-    throw carrerasResult.error;
-  }
-
-  if (carreraMateriasResult.error) {
-    throw carreraMateriasResult.error;
-  }
-
-  const carrerasPorUniversidad = new Map<string, string[]>();
-  const materiasPorUniversidad = new Map<string, Set<string>>();
-  const carreraToUniversity = new Map<string, string>();
-
-  for (const carrera of carrerasResult.data ?? []) {
-    const universityId = carrera.universidad_id;
-    if (!universityId) continue;
-    carreraToUniversity.set(carrera.id, universityId);
-    const current = carrerasPorUniversidad.get(universityId) ?? [];
-    current.push(carrera.id);
-    carrerasPorUniversidad.set(universityId, current);
-  }
-
-  for (const relation of carreraMateriasResult.data ?? []) {
-    const carreraId = relation.carrera_id;
-    const materiaId = relation.materia_id;
-    if (!carreraId || !materiaId) continue;
-    const universityId = carreraToUniversity.get(carreraId);
-    if (!universityId) continue;
-    const current = materiasPorUniversidad.get(universityId) ?? new Set<string>();
-    current.add(materiaId);
-    materiasPorUniversidad.set(universityId, current);
-  }
-
-  return (universidadesResult.data ?? []).map((universidad) => ({
-    id: universidad.id,
-    nombre: universidad.nombre,
-    carrerasCount: carrerasPorUniversidad.get(universidad.id)?.length ?? 0,
-    materiasCount: materiasPorUniversidad.get(universidad.id)?.size ?? 0,
-  }));
-}
-
-export function ExplorarClient({
-  initialUniversidades,
-}: {
-  initialUniversidades: ExplorarUniversidad[];
-}) {
-  const [universidades, setUniversidades] = useState<ExplorarUniversidad[]>(initialUniversidades);
+export function ExplorarClient({ initialData }: { initialData: ExplorarData }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(initialUniversidades.length === 0);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  const legacyUniversityId =
-    searchParams.get('universidadId') || searchParams.get('unild') || searchParams.get('uniId');
-  const presetUniversityName = searchParams.get('universidad');
-
-  useEffect(() => {
-    if (legacyUniversityId) {
-      router.replace(getUniversityRoute(legacyUniversityId));
-      return;
-    }
-
-    let isMounted = true;
-
-    async function hydrateUniversidades() {
-      if (reloadToken === 0 && initialUniversidades.length > 0) {
-        if (presetUniversityName) {
-          const normalizedPreset = presetUniversityName.trim().toLowerCase();
-          const matchedUniversity = initialUniversidades.find(
-            (universidad) => universidad.nombre.trim().toLowerCase() === normalizedPreset
-          );
-
-          if (matchedUniversity) {
-            router.replace(getUniversityRoute(matchedUniversity.id));
-            return;
-          }
-        }
-
-        setUniversidades(initialUniversidades);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const enrichedUniversidades = await fetchUniversidadesClient();
-
-        if (presetUniversityName) {
-          const normalizedPreset = presetUniversityName.trim().toLowerCase();
-          const matchedUniversity = enrichedUniversidades.find(
-            (universidad) => universidad.nombre.trim().toLowerCase() === normalizedPreset
-          );
-
-          if (matchedUniversity) {
-            router.replace(getUniversityRoute(matchedUniversity.id));
-            return;
-          }
-        }
-
-        if (isMounted) {
-          setUniversidades(enrichedUniversidades);
-        }
-      } catch (fetchError) {
-        console.error('Error fetching universities:', fetchError);
-        if (isMounted) {
-          const isTimeout =
-            fetchError instanceof Error && fetchError.message === 'REQUEST_TIMEOUT';
-          setError(
-            isTimeout
-              ? 'La carga esta demorando demasiado. Revisa tu conexion e intenta de nuevo.'
-              : 'No pudimos cargar las universidades.'
-          );
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    void hydrateUniversidades();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [initialUniversidades, legacyUniversityId, presetUniversityName, reloadToken, router]);
+  const [activeFilter, setActiveFilter] = useState<ExploreMode>('todo');
+  const [showAllCareers, setShowAllCareers] = useState(false);
+  const { universidades, carreras } = initialData;
+  const normalizedSearch = searchTerm.trim().toLowerCase();
 
   const filteredUniversidades = useMemo(
-    () =>
-      universidades.filter((universidad) =>
-        universidad.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [searchTerm, universidades]
+    () => universidades.filter((universidad) => !normalizedSearch || universidad.nombre.toLowerCase().includes(normalizedSearch)),
+    [normalizedSearch, universidades]
   );
 
-  const totalCarreras = useMemo(
-    () => universidades.reduce((acc, universidad) => acc + universidad.carrerasCount, 0),
-    [universidades]
+  const filteredCarreras = useMemo(
+    () => carreras.filter((carrera) => !normalizedSearch || carrera.nombre.toLowerCase().includes(normalizedSearch) || carrera.universidadNombre.toLowerCase().includes(normalizedSearch)),
+    [carreras, normalizedSearch]
   );
 
-  const totalMaterias = useMemo(
-    () => universidades.reduce((acc, universidad) => acc + universidad.materiasCount, 0),
-    [universidades]
+  const sortedCarreras = useMemo(
+    () => [...filteredCarreras].sort((a, b) => a.universidadNombre.localeCompare(b.universidadNombre, 'es') || a.nombre.localeCompare(b.nombre, 'es')),
+    [filteredCarreras]
+  );
+  const sortedUniversidades = useMemo(
+    () => [...filteredUniversidades].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
+    [filteredUniversidades]
   );
 
-  const topCarreras = useMemo(
-    () => Math.max(...universidades.map((universidad) => universidad.carrerasCount), 0),
-    [universidades]
-  );
-
-  const topMaterias = useMemo(
-    () => Math.max(...universidades.map((universidad) => universidad.materiasCount), 0),
-    [universidades]
-  );
-
-  if (loading) {
-    return (
-      <div className="component-loader">
-        <ElegantLoader variant="component" size="md" text="Explorando universidades..." />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <Card className="surface-panel rounded-[var(--radius-panel)]">
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
-          </CardHeader>
-          <CardContent className="py-8 text-center text-slate-600">
-            <p>{error}</p>
-            <button
-              type="button"
-              onClick={() => setReloadToken((current) => current + 1)}
-              className="mt-4 inline-flex items-center rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              Reintentar
-            </button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const visibleCarreras = normalizedSearch || activeFilter === 'carreras' || showAllCareers ? sortedCarreras : sortedCarreras.slice(0, 8);
+  const visibleUniversidades = activeFilter === 'universidades' || normalizedSearch ? sortedUniversidades : sortedUniversidades.slice(0, 6);
+  const showUniversidades = activeFilter !== 'carreras';
+  const showCarreras = activeFilter !== 'universidades';
 
   return (
-    <div className="animate-page-enter mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-      <section className="surface-panel animate-surface-reveal overflow-hidden px-4 py-4 sm:px-6 sm:py-7">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-600">
-              <Sparkles className="h-3.5 w-3.5" />
-              Explorar
-            </div>
-            <h1 className="mt-3 text-[1.72rem] font-black tracking-[-0.05em] text-slate-950 sm:mt-4 sm:text-[2.6rem]">
-              Elige tu universidad y entra a una ruta de estudio clara.
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:mt-3 sm:text-base sm:leading-7">
-              Desde aca puedes descubrir universidades, revisar cuantas carreras y materias ya
-              tienen contenido cargado y entrar directo al recorrido academico que te corresponde.
-            </p>
-          </div>
-
-          <div className="hidden grid-cols-3 gap-3 sm:grid sm:min-w-[360px]">
-            <div className="surface-card rounded-[var(--radius-card)] bg-slate-50/90 px-3 py-3 shadow-none">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                Universidades
-              </p>
-              <p className="mt-2 text-xl font-black text-slate-950">{universidades.length}</p>
-            </div>
-            <div className="surface-card rounded-[var(--radius-card)] bg-slate-50/90 px-3 py-3 shadow-none">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                Carreras
-              </p>
-              <p className="mt-2 text-xl font-black text-slate-950">{totalCarreras}</p>
-            </div>
-            <div className="surface-card rounded-[var(--radius-card)] bg-slate-50/90 px-3 py-3 shadow-none">
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                Materias
-              </p>
-              <p className="mt-2 text-xl font-black text-slate-950">{totalMaterias}</p>
-            </div>
-          </div>
+    <>
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div className="relative">
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            aria-label="Buscar universidad o carrera"
+            placeholder="Buscar universidad o carrera..."
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            className="h-11 rounded-2xl border-slate-200 bg-white pl-10 text-base shadow-sm sm:text-sm"
+          />
         </div>
 
-        <div className="mt-4 max-w-xl sm:mt-5">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              placeholder="Buscar universidad..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              className="h-11 rounded-2xl border-slate-200 bg-white pl-10 text-sm shadow-sm"
-            />
-          </div>
-        </div>
-      </section>
-
-      {filteredUniversidades.length === 0 ? (
-        <Card className="surface-panel mt-6 rounded-[var(--radius-panel)]">
-          <CardContent className="py-14 text-center">
-            <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-            <h2 className="text-xl font-semibold text-slate-900">No encontramos universidades</h2>
-            <p className="mt-2 text-slate-500">Prueba con otro termino de busqueda.</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredUniversidades.map((universidad, index) => {
-            const badge = getUniversityBadge(universidad, topCarreras, topMaterias);
-            const activityLabel = getActivityLabel(universidad);
-
+        <div className="grid grid-cols-3 gap-1.5 rounded-2xl border border-slate-200 bg-white p-1 sm:w-fit sm:gap-2">
+          {FILTERS.map((filter) => {
+            const isActive = activeFilter === filter.id;
             return (
-              <Link
-                key={universidad.id}
-                href={getUniversityRoute(universidad.id)}
-                className="block"
+              <button
+                key={filter.id}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setActiveFilter(filter.id)}
+                className={`rounded-xl px-2.5 py-2 text-[12px] font-semibold transition sm:px-3 sm:text-sm ${isActive ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-white'}`}
               >
-                <Card
-                  className="surface-card animate-surface-reveal h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[var(--shadow-panel)]"
-                  style={{ animationDelay: `${index * 80}ms` }}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                        <Building2 className="h-6 w-6" />
-                      </div>
-                      <span className="inline-flex items-center rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-indigo-600">
-                        {badge}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-0">
-                    <div>
-                      <CardTitle className="text-[1.35rem] font-black leading-tight tracking-[-0.04em] text-slate-950">
-                        {universidad.nombre}
-                      </CardTitle>
-                      <p className="mt-2 text-sm leading-6 text-slate-500">
-                        {activityLabel}. Entra para explorar sus carreras, materias y materiales
-                        publicados.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50/90 px-3 py-3">
-                        <div className="flex items-center gap-2 text-slate-500">
-                          <GraduationCap className="h-4 w-4" />
-                          <span className="text-[11px] font-bold uppercase tracking-[0.16em]">
-                            Carreras
-                          </span>
-                        </div>
-                        <p className="mt-2 text-xl font-black text-slate-950">
-                          {universidad.carrerasCount}
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-slate-100 bg-slate-50/90 px-3 py-3">
-                        <div className="flex items-center gap-2 text-slate-500">
-                          <BookOpen className="h-4 w-4" />
-                          <span className="text-[11px] font-bold uppercase tracking-[0.16em]">
-                            Materias
-                          </span>
-                        </div>
-                        <p className="mt-2 text-xl font-black text-slate-950">
-                          {universidad.materiasCount}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-1">
-                      <div className="text-xs text-slate-500">
-                        Biblioteca disponible y rutas de estudio por carrera.
-                      </div>
-                      <div className="inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 transition group-hover:border-indigo-200 group-hover:text-indigo-600">
-                        Ver carreras
-                        <ArrowRight className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                {filter.label}
+              </button>
             );
           })}
         </div>
-      )}
-    </div>
+      </div>
+
+      {showUniversidades ? (
+        <section className="mt-7 [content-visibility:auto] [contain-intrinsic-size:720px]">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[12px] font-bold tracking-[0.18em] text-blue-600 uppercase">Universidades</p>
+              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">Elegí tu universidad</h2>
+            </div>
+            <p className="shrink-0 text-sm font-semibold text-slate-500">{visibleUniversidades.length} resultados</p>
+          </div>
+
+          {visibleUniversidades.length === 0 ? (
+            <Card className="surface-panel rounded-[var(--radius-panel)]">
+              <CardContent className="py-14 text-center">
+                <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+                <h3 className="text-xl font-semibold text-slate-900">No encontramos universidades</h3>
+                <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
+                <Link href="/solicitar-universidad" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700">
+                  Solicitar que la sumemos
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {visibleUniversidades.map((universidad) => (
+                <Link key={universidad.id} href={getUniversityRoute(universidad.id)} className="block">
+                  <Card className="surface-card h-full rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[var(--shadow-panel)]">
+                    <CardContent className="flex h-full items-center justify-between gap-4 p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><Building2 className="h-5 w-5" /></div>
+                        <CardTitle className="min-w-0 text-[1.05rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">{universidad.nombre}</CardTitle>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {showCarreras ? (
+        <section className="mt-7 [content-visibility:auto] [contain-intrinsic-size:1100px]">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[12px] font-bold tracking-[0.18em] text-blue-600 uppercase">Carreras</p>
+              <h2 className="mt-1 text-[1.45rem] font-bold tracking-[-0.04em] text-slate-950 sm:text-2xl">Elegí tu carrera</h2>
+            </div>
+            <p className="shrink-0 text-sm font-semibold text-slate-500">{filteredCarreras.length} resultados</p>
+          </div>
+
+          {filteredCarreras.length === 0 ? (
+            <Card className="surface-panel rounded-[var(--radius-panel)]">
+              <CardContent className="py-14 text-center">
+                <GraduationCap className="mx-auto mb-4 h-12 w-12 text-slate-300" />
+                <h3 className="text-xl font-semibold text-slate-900">No encontramos carreras</h3>
+                <p className="mt-2 text-slate-500">Probá con otro término de búsqueda.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+              {visibleCarreras.map((carrera) => (
+                <Link key={carrera.id} href={getCareerRoute(carrera.id)} className="block">
+                  <Card className="surface-card h-full overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white/96 transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[var(--shadow-panel)]">
+                    <CardContent className="flex h-full items-center justify-between gap-4 p-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><GraduationCap className="h-5 w-5" /></div>
+                        <div className="min-w-0">
+                          <CardTitle className="text-[1.1rem] leading-tight font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.15rem]">{carrera.nombre}</CardTitle>
+                          <p className="mt-1 text-[13px] font-medium text-slate-500 sm:text-sm">{carrera.universidadNombre}</p>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {!normalizedSearch && activeFilter === 'todo' && sortedCarreras.length > 8 ? (
+            <div className="mt-5 flex justify-center">
+              <button type="button" onClick={() => setShowAllCareers((value) => !value)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700" aria-expanded={showAllCareers}>
+                {showAllCareers ? 'Ver menos carreras' : `Ver las ${sortedCarreras.length} carreras`}
+                <ChevronDown className={`h-4 w-4 transition ${showAllCareers ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      <div className="mt-8 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-800">¿No encontrás tu universidad?</p>
+          <p className="mt-0.5 text-xs leading-5 text-slate-500">Pedinos que la sumemos. Para enviar la solicitud necesitás crear una cuenta.</p>
+        </div>
+        <Link href="/solicitar-universidad" className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700">
+          <PlusCircle className="h-4 w-4" />
+          Solicitar universidad
+        </Link>
+      </div>
+
+      <p className="mt-8 text-center text-[11px] leading-5 text-slate-400">
+        Los nombres de universidades se utilizan únicamente para identificar las instituciones. Evaluo es una plataforma independiente y no representa ni está afiliada a las instituciones listadas.
+      </p>
+    </>
   );
 }

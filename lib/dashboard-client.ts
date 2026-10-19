@@ -1,3 +1,5 @@
+import { logError } from '@/lib/observability';
+
 export type DashboardRecentResourceType = 'Resumen' | 'TP' | 'Preguntero' | 'Recurso';
 
 export interface DashboardRecentResource {
@@ -27,7 +29,7 @@ function safeParse<T>(value: string | null, fallback: T): T {
   try {
     return JSON.parse(value) as T;
   } catch (error) {
-    console.error('Invalid dashboard client storage payload:', error);
+    logError('dashboardClient.safeParse', error);
     return fallback;
   }
 }

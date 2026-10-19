@@ -1,0 +1,216 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { CalendarDays, Check, ChevronDown, ChevronUp, Search, Sparkles, X } from 'lucide-react';
+import type { ExplanationHistoryItem } from '@/lib/explanations-history';
+import { StudyRichText } from '@/components/study-rich-text';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { Input } from '@/components/ui/input';
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat('es-AR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
+
+function normalize(value: string) {
+  return value.trim().toLocaleLowerCase('es');
+}
+
+export function ExplanationsHistoryClient({
+  initialHistory,
+}: {
+  initialHistory: ExplanationHistoryItem[];
+}) {
+  const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    trackMarketingEvent('explanation_history_viewed', {
+      explanation_count: initialHistory.length,
+    });
+  }, [initialHistory]);
+
+  const groups = useMemo(() => {
+    const query = normalize(search);
+    const filtered = initialHistory.filter((item) => {
+      if (!query) return true;
+      return (
+        normalize(item.enunciado).includes(query) ||
+        normalize(item.explicacion).includes(query) ||
+        normalize(item.materiaNombre ?? '').includes(query)
+      );
+    });
+
+    const map = new Map<string, ExplanationHistoryItem[]>();
+    for (const item of filtered) {
+      const key = item.materiaNombre ?? 'Otras materias';
+      const list = map.get(key) ?? [];
+      list.push(item);
+      map.set(key, list);
+    }
+    return Array.from(map.entries());
+  }, [initialHistory, search]);
+
+  const toggle = (id: string) => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div className="animate-page-enter min-h-screen bg-gradient-to-br from-background/95 via-white/80 to-indigo-50/20 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+            <Sparkles className="h-3.5 w-3.5" />
+            Premium
+          </div>
+          <h1 className="mt-3 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+            Historial de explicaciones
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500">
+            Volvé a revisar las explicaciones de tus errores para fijar cada concepto.
+          </p>
+        </div>
+
+        <div className="mb-5">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por materia o contenido..."
+              className="h-11 rounded-xl border-slate-200 bg-white pl-10 text-sm"
+            />
+          </div>
+        </div>
+
+        {groups.length === 0 ? (
+          <div className="surface-panel flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
+            <Sparkles className="h-10 w-10 text-slate-300" />
+            <h3 className="text-lg font-semibold text-slate-900">
+              {initialHistory.length === 0
+                ? 'Todavía no tenés explicaciones guardadas'
+                : 'No encontramos explicaciones con ese criterio'}
+            </h3>
+            <p className="max-w-md text-sm text-slate-500">
+              {initialHistory.length === 0
+                ? 'Completá un simulador y corregí tus respuestas incorrectas: acá vas a poder repasarlas todas juntas.'
+                : 'Probá con otra palabra o materia.'}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {groups.map(([materiaNombre, items]) => (
+              <section
+                key={materiaNombre}
+                className="surface-panel overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90"
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-blue-500" />
+                    <h2 className="text-sm font-bold text-slate-900">{materiaNombre}</h2>
+                  </div>
+                  <span className="text-xs font-medium text-slate-500">
+                    {items.length} {items.length === 1 ? 'explicación' : 'explicaciones'}
+                  </span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {items.map((item) => {
+                    const isExpanded = expanded.has(item.id);
+                    return (
+                      <div key={item.id} className="px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => toggle(item.id)}
+                          className="flex w-full items-start justify-between gap-3 text-left"
+                        >
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 text-sm font-medium text-slate-800">
+                              {item.enunciado}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {formatDate(item.createdAt)}
+                              {item.parcial ? ` · Parcial ${item.parcial}` : ''}
+                              {item.vecesFallada > 1 ? ` · fallada ${item.vecesFallada} veces` : ''}
+                            </p>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                          ) : (
+                            <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                          )}
+                        </button>
+                        {isExpanded ? (
+                          <div className="mt-3 space-y-3">
+                            {item.opciones && item.opciones.length > 0 ? (
+                              <div className="space-y-1.5">
+                                {item.opciones.map((option, index) => {
+                                  const isCorrect =
+                                    item.respuestaCorrecta != null &&
+                                    normalize(option) === normalize(item.respuestaCorrecta);
+                                  const isChosen = item.opcionElegida === index;
+                                  return (
+                                    <div
+                                      key={`${option}-${index}`}
+                                      className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-[13px] leading-5 ${
+                                        isCorrect
+                                          ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                                          : isChosen
+                                            ? 'border-rose-200 bg-rose-50 text-rose-800'
+                                            : 'border-slate-200 bg-white text-slate-600'
+                                      }`}
+                                    >
+                                      <span className="shrink-0 font-semibold">
+                                        {String.fromCharCode(65 + index)}.
+                                      </span>
+                                      <span className="flex-1">{option}</span>
+                                      {isCorrect ? <Check className="h-4 w-4 shrink-0 text-emerald-600" /> : null}
+                                      {isChosen ? <X className="h-4 w-4 shrink-0 text-rose-600" /> : null}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : item.respuestaCorrecta ? (
+                              <p className="text-[13px] text-slate-600">
+                                <span className="font-semibold text-emerald-700">Respuesta correcta:</span>{' '}
+                                {item.respuestaCorrecta}
+                              </p>
+                            ) : null}
+                            <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+                              <StudyRichText body={item.explicacion} />
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 text-center">
+          <Link
+            href="/dashboard"
+            className="text-sm font-semibold text-blue-600 transition hover:text-blue-700"
+          >
+            Volver a Mi espacio
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

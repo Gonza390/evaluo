@@ -1,61 +1,313 @@
-type RateLimitRecord = {
-  count: number;
-  resetAt: number;
-};
+import { headers } from 'next/headers';
+import { createAdminClient } from '@/lib/supabase-admin';
 
-const rateLimitStore = new Map<string, RateLimitRecord>();
+const MAX_MEMORY_ENTRIES = 5_000;
+const MEMORY_CLEANUP_THRESHOLD = 250;
 
-function pruneExpiredEntries(now: number) {
-  for (const [key, value] of rateLimitStore.entries()) {
-    if (value.resetAt <= now) {
-      rateLimitStore.delete(key);
-    }
-  }
+const memoryBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function pickClientIp(headersSource: Headers): string {
+  // x-real-ip / x-vercel-forwarded-for son fijados por el proxy de Vercel y no
+  // son spoofeables por el cliente; x-forwarded-for puede forjarse (primer valor).
+  const realIp = headersSource.get('x-real-ip') ?? '';
+  if (realIp.trim()) return realIp.trim();
+
+  const vercelForwarded = headersSource.get('x-vercel-forwarded-for') ?? '';
+  if (vercelForwarded.trim()) return vercelForwarded.split(',')[0]?.trim() || 'unknown';
+
+  const forwardedFor = headersSource.get('x-forwarded-for') ?? '';
+  const fallback = forwardedFor.split(',').pop()?.trim() || forwardedFor.trim();
+  return fallback || 'unknown';
 }
 
 export function getRequestClientKey(request: Request) {
-  const forwardedFor = request.headers.get('x-forwarded-for') ?? '';
-  const realIp = request.headers.get('x-real-ip') ?? '';
-  const fallbackIp = forwardedFor.split(',')[0]?.trim() || realIp.trim() || 'unknown';
-  return fallbackIp || 'unknown';
+  return pickClientIp(request.headers);
 }
 
-export function enforceRateLimit(options: {
+/**
+ * Clave de cliente para server actions (no reciben `Request`).
+ * `headers()` de next/headers expone los encabezados de la petición entrante.
+ */
+export async function getServerActionClientKey(): Promise<string> {
+  try {
+    const headersStore = await headers();
+    return pickClientIp(headersStore);
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
+ * Aplica rate limit dentro de una server action. Falla abierto: si el store de
+ * rate limit no responde, la petición sigue adelante (mismo criterio que /api).
+ */
+export async function enforceServerActionRateLimit(options: {
   key: string;
   limit: number;
   windowMs: number;
-}) {
-  const now = Date.now();
-  pruneExpiredEntries(now);
-
-  const existing = rateLimitStore.get(options.key);
-  if (!existing || existing.resetAt <= now) {
-    rateLimitStore.set(options.key, {
-      count: 1,
-      resetAt: now + options.windowMs,
-    });
-
+}): Promise<RateLimitResult> {
+  try {
+    return await enforceRateLimit(options);
+  } catch {
     return {
       allowed: true,
-      remaining: Math.max(0, options.limit - 1),
+      limit: options.limit,
+      remaining: options.limit,
+      resetAt: Date.now() + options.windowMs,
+    };
+  }
+}
+
+/**
+ * Variante estricta: falla CERRADO. Si el store de rate limit no responde (RPC
+ * con error, tabla no disponible o cliente admin sin configurar), la petición
+ * se DENIEGA. Se usa en endpoints sin login que disparan gasto (p. ej.
+ * inferencia IA del demo), donde permitir ante una falla implicaría coste
+ * arbitrario.
+ */
+export async function enforceStrictRateLimit(options: {
+  key: string;
+  limit: number;
+  windowMs: number;
+}): Promise<RateLimitResult> {
+  try {
+    return await enforceRateLimit({ ...options, failClosed: true });
+  } catch (error) {
+    console.warn(
+      'rate-limit strict: store unavailable, denying request',
+      error instanceof Error ? error.message : String(error)
+    );
+    return {
+      allowed: false,
+      limit: options.limit,
+      remaining: 0,
+      resetAt: Date.now() + options.windowMs,
+    };
+  }
+}
+
+function pruneMemoryBuckets(now: number) {
+  if (memoryBuckets.size < MEMORY_CLEANUP_THRESHOLD) return;
+
+  let oldestKey: string | null = null;
+  let oldestResetAt = Infinity;
+
+  for (const [key, bucket] of memoryBuckets) {
+    if (bucket.resetAt <= now) {
+      memoryBuckets.delete(key);
+    } else if (bucket.resetAt < oldestResetAt) {
+      oldestResetAt = bucket.resetAt;
+      oldestKey = key;
+    }
+  }
+
+  if (oldestKey && memoryBuckets.size >= MAX_MEMORY_ENTRIES) {
+    memoryBuckets.delete(oldestKey);
+  }
+}
+
+function deleteExpiredRateLimitRows(supabase: ReturnType<typeof createAdminClient>) {
+  void supabase
+    .from('rate_limits')
+    .delete()
+    .lt('reset_at', new Date().toISOString())
+    .then(
+      () => undefined,
+      () => undefined
+    );
+}
+
+export type RateLimitResult = {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: number;
+};
+
+export function rateLimitHeaders(result: RateLimitResult) {
+  const headers = new Headers();
+  headers.set('X-RateLimit-Limit', String(result.limit));
+  headers.set('X-RateLimit-Remaining', String(result.remaining));
+  headers.set('X-RateLimit-Reset', String(Math.max(0, Math.ceil((result.resetAt - Date.now()) / 1000))));
+  if (!result.allowed) {
+    headers.set('Retry-After', String(Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000))));
+  }
+  return headers;
+}
+
+type RateLimitRpcClient = ReturnType<typeof createAdminClient> & {
+  rpc: (
+    functionName: string,
+    parameters: { p_key: string; p_limit: number; p_window_seconds: number }
+  ) => Promise<{ data: Array<{ allowed: boolean; remaining: number; reset_at: string }> | null; error: Error | null }>;
+};
+
+function isMissingSchemaError(error: Error | null) {
+  const errorCode = error && 'code' in error ? String(error.code ?? '') : '';
+  return errorCode === 'PGRST202' || errorCode === '42883';
+}
+
+async function enforceDirectTableRateLimit(
+  supabase: ReturnType<typeof createAdminClient>,
+  options: { key: string; limit: number; windowMs: number; failClosed?: boolean }
+): Promise<RateLimitResult> {
+  const now = Date.now();
+
+  const { data: existing, error: readError } = await supabase
+    .from('rate_limits')
+    .select('count, reset_at')
+    .eq('key', options.key)
+    .gte('reset_at', new Date(now).toISOString())
+    .limit(1)
+    .maybeSingle<{ count: number; reset_at: string }>();
+
+  if (readError) {
+    if (options.failClosed) {
+      console.warn('rate-limit read failed, denying request (strict)', readError.message);
+      return {
+        allowed: false,
+        limit: options.limit,
+        remaining: 0,
+        resetAt: now + options.windowMs,
+      };
+    }
+    console.warn('rate-limit read failed, allowing request', readError.message);
+    return {
+      allowed: true,
+      limit: options.limit,
+      remaining: options.limit,
       resetAt: now + options.windowMs,
     };
   }
 
-  if (existing.count >= options.limit) {
+  if (!existing) {
+    const resetAt = now + options.windowMs;
+    if (Math.random() < 0.02) {
+      deleteExpiredRateLimitRows(supabase);
+    }
+    const { error: insertError } = await supabase.from('rate_limits').insert({
+      key: options.key,
+      count: 1,
+      reset_at: new Date(resetAt).toISOString(),
+    });
+    if (insertError) {
+      if (options.failClosed) {
+        console.warn('rate-limit insert failed, denying request (strict)', insertError.message);
+        return {
+          allowed: false,
+          limit: options.limit,
+          remaining: 0,
+          resetAt,
+        };
+      }
+      console.warn('rate-limit insert failed', insertError.message);
+    }
+    memoryBuckets.set(options.key, { count: 1, resetAt });
     return {
-      allowed: false,
-      remaining: 0,
-      resetAt: existing.resetAt,
+      allowed: true,
+      limit: options.limit,
+      remaining: Math.max(0, options.limit - 1),
+      resetAt,
     };
   }
 
-  existing.count += 1;
-  rateLimitStore.set(options.key, existing);
+  const existingResetAt = new Date(existing.reset_at).getTime();
+  if (existing.count >= options.limit) {
+    memoryBuckets.set(options.key, { count: existing.count, resetAt: existingResetAt });
+    return {
+      allowed: false,
+      limit: options.limit,
+      remaining: 0,
+      resetAt: existingResetAt,
+    };
+  }
+
+  const newCount = existing.count + 1;
+  const { error: updateError } = await supabase
+    .from('rate_limits')
+    .update({ count: newCount })
+    .eq('key', options.key)
+    .eq('reset_at', existing.reset_at);
+  if (updateError) {
+    if (options.failClosed) {
+      console.warn('rate-limit update failed, denying request (strict)', updateError.message);
+      return {
+        allowed: false,
+        limit: options.limit,
+        remaining: 0,
+        resetAt: existingResetAt,
+      };
+    }
+    console.warn('rate-limit update failed', updateError.message);
+  }
+  memoryBuckets.set(options.key, { count: newCount, resetAt: existingResetAt });
 
   return {
     allowed: true,
-    remaining: Math.max(0, options.limit - existing.count),
-    resetAt: existing.resetAt,
+    limit: options.limit,
+    remaining: Math.max(0, options.limit - newCount),
+    resetAt: existingResetAt,
+  };
+}
+
+export async function enforceRateLimit(options: {
+  key: string;
+  limit: number;
+  windowMs: number;
+  failClosed?: boolean;
+}): Promise<RateLimitResult> {
+  const now = Date.now();
+  pruneMemoryBuckets(now);
+
+  const memory = memoryBuckets.get(options.key);
+  if (memory && memory.resetAt > now && memory.count >= options.limit) {
+    return {
+      allowed: false,
+      limit: options.limit,
+      remaining: 0,
+      resetAt: memory.resetAt,
+    };
+  }
+
+  const supabase = createAdminClient();
+  const rpcClient = supabase as unknown as RateLimitRpcClient;
+
+  const { data, error } = await rpcClient.rpc('consume_rate_limit', {
+    p_key: options.key,
+    p_limit: options.limit,
+    p_window_seconds: Math.ceil(options.windowMs / 1_000),
+  });
+
+  if (error || !data?.[0]) {
+    if (!isMissingSchemaError(error)) {
+      if (options.failClosed) {
+        console.warn('rate-limit rpc failed, denying request (strict)', error?.message);
+        return {
+          allowed: false,
+          limit: options.limit,
+          remaining: 0,
+          resetAt: now + options.windowMs,
+        };
+      }
+      console.warn('rate-limit rpc failed, allowing request', error?.message);
+      return {
+        allowed: true,
+        limit: options.limit,
+        remaining: options.limit,
+        resetAt: now + options.windowMs,
+      };
+    }
+    return enforceDirectTableRateLimit(supabase, options);
+  }
+
+  const result = data[0];
+  const resetAt = new Date(result.reset_at).getTime();
+  memoryBuckets.set(options.key, { count: options.limit - result.remaining, resetAt });
+
+  return {
+    allowed: result.allowed,
+    limit: options.limit,
+    remaining: result.remaining,
+    resetAt,
   };
 }

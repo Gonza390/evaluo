@@ -1,0 +1,63 @@
+'use client';
+
+import type { ReactNode, RefObject } from 'react';
+import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { MaeveStudyHero } from '@/components/dashboard/maeve-study-hero';
+import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
+
+type Props = {
+  children: ReactNode;
+  materialsCount: number;
+  primaryMaterialHref: string | null;
+  primaryMaterialReady: boolean;
+  pendingReinforcementCount: number;
+  nextStudyAction: DashboardNextStudyAction | null;
+};
+
+/**
+ * Study-first dashboard chrome. Upload triggers are delegated to PdfFirstUploadShell
+ * through the shared ?openUpload=1 entry point.
+ */
+export function MaeveDashboardChrome({
+  children,
+  materialsCount,
+  primaryMaterialHref,
+  primaryMaterialReady,
+  pendingReinforcementCount,
+  nextStudyAction,
+}: Props) {
+  const heroRef = useRef<HTMLElement | null>(null);
+  const router = useRouter();
+
+  const openUpload = () => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('openUpload') === '1') {
+      url.searchParams.delete('openUpload');
+      router.replace(`${url.pathname}${url.search}` || url.pathname);
+      window.setTimeout(() => {
+        const next = new URL(window.location.href);
+        next.searchParams.set('openUpload', '1');
+        router.replace(`${next.pathname}?${next.searchParams.toString()}`);
+      }, 0);
+      return;
+    }
+    url.searchParams.set('openUpload', '1');
+    router.replace(`${url.pathname}?${url.searchParams.toString()}`);
+  };
+
+  return (
+    <div className="min-w-0 space-y-4 overflow-x-clip">
+      <MaeveStudyHero
+        heroRef={heroRef as RefObject<HTMLElement | null>}
+        materialsCount={materialsCount}
+        primaryMaterialHref={primaryMaterialHref}
+        primaryMaterialReady={primaryMaterialReady}
+        pendingReinforcementCount={pendingReinforcementCount}
+        nextStudyAction={nextStudyAction}
+        onUploadClick={openUpload}
+      />
+      {materialsCount > 0 ? <div className="[&_button]:shadow-none">{children}</div> : null}
+    </div>
+  );
+}

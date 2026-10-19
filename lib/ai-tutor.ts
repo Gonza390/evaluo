@@ -1,3 +1,24 @@
+import { buildStudyErrorReviewPrompt } from '@/lib/study-error-review-prompt';
+import { logError } from '@/lib/observability';
+import {
+  requestGeminiText,
+  requestGroqText,
+  requestGroqJson,
+  requestGeminiJson,
+} from '@/lib/ai/providers';
+import { extractJsonObject } from '@/lib/ai/json';
+import {
+  getNextInteractiveProviderOrder,
+  type InteractiveAiProvider,
+} from '@/lib/ai/interactive-provider-routing';
+import { validateReviewQuestion, isCompleteReviewHelp } from '@/lib/study-error-review-contract';
+import {
+  isolateUntrustedContent,
+  MAX_AI_EXPLANATION_CHARS,
+  PROMPT_INJECTION_GUARD,
+  truncateUtf8Text,
+} from '@/lib/ai/safety';
+
 type ExplainInput = {
   question: string;
   options: string[];
@@ -5,30 +26,26 @@ type ExplainInput = {
   context: string[];
 };
 
-const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
-const AI_REQUEST_TIMEOUT_MS = 15_000;
+export type TutorQuickHelpKind = 'why_wrong' | 'simpler' | 'example';
 
-async function fetchWithTimeout(
-  input: RequestInfo | URL,
-  init: RequestInit,
-  timeoutMs = AI_REQUEST_TIMEOUT_MS
-) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+type QuickHelpInput = {
+  kind: TutorQuickHelpKind;
+  question: string;
+  selectedAnswer?: string | null;
+  correctAnswer?: string | null;
+  explanation?: string | null;
+  context?: string[];
+  compact?: boolean;
+};
 
-  try {
-    return await fetch(input, {
-      ...init,
-      signal: controller.signal,
-    });
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
+type TutorProvider = InteractiveAiProvider;
+type ProviderTextResult = { content: string; model: string; finishReason?: string } | null;
+
+const unhealthyProviderUntil = new Map<TutorProvider, number>();
 
 function buildPrompt(input: ExplainInput) {
   const contextText = input.context.length
-    ? input.context.map((c, i) => `Fuente ${i + 1}:\n${c}`).join('\n\n')
+    ? input.context.map((c, i) => `Fuente ${i + 1}:\n${isolateUntrustedContent(c)}`).join('\n\n')
     : 'Sin fuente interna disponible.';
 
   return [
@@ -36,107 +53,251 @@ function buildPrompt(input: ExplainInput) {
     'Explicá por qué la respuesta correcta es correcta y por qué suelen confundirse las opciones incorrectas.',
     'Si hay fuentes, basate primero en ellas. Si no hay fuentes, da una explicación académica general y acláralo brevemente.',
     'Respuesta breve: 120 a 220 palabras.',
+    PROMPT_INJECTION_GUARD,
     '',
-    `Pregunta: ${input.question}`,
-    `Opciones: ${input.options.join(' | ')}`,
-    `Respuesta correcta: ${input.correctAnswer}`,
+    `Pregunta: ${isolateUntrustedContent(input.question)}`,
+    `Opciones: ${input.options.map(isolateUntrustedContent).join(' | ')}`,
+    `Respuesta correcta: ${isolateUntrustedContent(input.correctAnswer)}`,
     '',
     `Fuentes:\n${contextText}`,
   ].join('\n');
 }
 
-async function callGemini(prompt: string) {
-  const apiKey =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_AI_KEY ||
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) return null;
+function buildQuickHelpPrompt(input: QuickHelpInput) {
+  const instruction =
+    input.kind === 'why_wrong'
+      ? 'Explicá específicamente por qué la respuesta elegida estaba mal o era incompleta y contrastala con la respuesta correcta.'
+      : input.kind === 'simpler'
+        ? 'Volvé a explicar el concepto con palabras más simples, frases cortas y sin agregar complejidad innecesaria.'
+        : 'Dá un ejemplo concreto y breve que ayude a entender el mismo concepto. No uses exactamente el mismo caso de la pregunta.';
 
-  const url =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-  const response = await fetchWithTimeout(`${url}?key=${encodeURIComponent(apiKey)}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 420,
-      },
-    }),
-  });
+  const context = (input.context ?? []).filter(Boolean);
+  const contextText = context.length
+    ? context
+        .map((item, index) => `Fuente ${index + 1}:\n${isolateUntrustedContent(item)}`)
+        .join('\n\n')
+    : 'Sin fragmento de fuente adicional.';
 
-  if (!response.ok) {
-    throw new Error(`Gemini devolvio ${response.status}`);
-  }
-
-  const json = (await response.json()) as {
-    candidates?: Array<{
-      content?: { parts?: Array<{ text?: string }> };
-    }>;
-  };
-
-  const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('').trim();
-  return text || null;
+  return [
+    'Sos un tutor universitario claro y preciso.',
+    'Hablale directamente al estudiante con voseo argentino: "Elegiste", "podés", "pensá". No lo llames "el alumno" ni juzgues su capacidad.',
+    instruction,
+    'Ordená la ayuda en párrafos cortos. Primero aclarás la confusión, después mostrás cómo pensar el concepto. No repitas literalmente las dos respuestas sin explicarlas.',
+    'Basate en la pregunta, la respuesta del alumno, la respuesta correcta y la explicación disponible.',
+    'Si hay una fuente, explicá sólo lo que se pueda sostener con ella. Si contradice la respuesta de la actividad, señalá esa diferencia sin justificar una respuesta falsa. No inventes citas, páginas ni información.',
+    'No atribuyas procesos o consecuencias que el fragmento no describa. Usá texto sin Markdown y cerrá todas las frases.',
+    input.compact
+      ? 'No hagas preguntas de seguimiento. Explicá la confusión en 35 a 65 palabras, máximo 3 frases cortas, para que el estudiante pueda volver a intentarlo enseguida.'
+      : 'No hagas preguntas de seguimiento y no abras una conversación. Entregá una sola respuesta útil de 60 a 140 palabras.',
+    PROMPT_INJECTION_GUARD,
+    '',
+    `Pregunta: ${isolateUntrustedContent(input.question)}`,
+    `Respuesta del alumno: ${isolateUntrustedContent(input.selectedAnswer ?? 'No disponible')}`,
+    `Respuesta correcta: ${isolateUntrustedContent(input.correctAnswer ?? 'No disponible')}`,
+    `Explicación disponible: ${isolateUntrustedContent(input.explanation ?? 'No disponible')}`,
+    '',
+    `Fuente:\n${contextText}`,
+  ].join('\n');
 }
 
-async function callGroq(prompt: string) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return null;
+function providerCooldownMs(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  const status = Number(message.match(/\b(401|403|404|429|500|502|503|504)\b/)?.[1] ?? 0);
 
-  const response = await fetchWithTimeout(GROQ_ENDPOINT, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.2,
-      messages: [
-        {
-          role: 'system',
-          content: 'Sos un tutor académico que explica de forma clara y accionable.',
-        },
-        { role: 'user', content: prompt },
-      ],
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Groq devolvio ${response.status}`);
-  }
-
-  const json = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-
-  return json.choices?.[0]?.message?.content?.trim() ?? null;
+  if (status === 401 || status === 403) return 30 * 60 * 1000;
+  if (status === 404) return 6 * 60 * 60 * 1000;
+  if (status === 429) return 2 * 60 * 1000;
+  if (status >= 500) return 60 * 1000;
+  return 60 * 1000;
 }
 
-export async function generateTutorExplanation(input: ExplainInput) {
+function providerIsHealthy(provider: TutorProvider) {
+  const until = unhealthyProviderUntil.get(provider) ?? 0;
+  if (until <= Date.now()) {
+    unhealthyProviderUntil.delete(provider);
+    return true;
+  }
+  return false;
+}
+
+async function tryProvider(
+  provider: TutorProvider,
+  request: () => Promise<ProviderTextResult>
+): Promise<ProviderTextResult> {
+  if (!providerIsHealthy(provider)) return null;
+
+  try {
+    const result = await request();
+    if (result) unhealthyProviderUntil.delete(provider);
+    return result;
+  } catch (error) {
+    unhealthyProviderUntil.set(provider, Date.now() + providerCooldownMs(error));
+    logError(`aiTutor.${provider}`, error);
+    return null;
+  }
+}
+
+export async function generateTutorExplanation(input: ExplainInput): Promise<{
+  text: string;
+  provider: string;
+}> {
   const prompt = buildPrompt(input);
+  const common = {
+    prompt,
+    temperature: 0.2,
+  };
+  const providerOrder = await getNextInteractiveProviderOrder();
 
-  try {
-    const geminiText = await callGemini(prompt);
-    if (geminiText) {
-      return { text: geminiText, provider: 'gemini-1.5-flash' as const };
-    }
-  } catch (error) {
-    console.error('Error con Gemini:', error);
-  }
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqText({
+              ...common,
+              system: 'Sos un tutor académico que explica de forma clara y accionable.',
+              maxTokens: 420,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiText({
+              ...common,
+              maxOutputTokens: 420,
+            })
+          );
 
-  try {
-    const groqText = await callGroq(prompt);
-    if (groqText) {
-      return { text: groqText, provider: 'groq-llama-3.3-70b' as const };
+    if (result) {
+      return {
+        text: truncateUtf8Text(result.content, MAX_AI_EXPLANATION_CHARS),
+        provider: result.model,
+      };
     }
-  } catch (error) {
-    console.error('Error con Groq:', error);
   }
 
   return {
-    provider: 'fallback-local' as const,
-    text: 'No se pudo generar la explicación automática en este momento. Intenta nuevamente en unos segundos.',
+    provider: 'fallback-local',
+    text: 'No pudimos generar la explicación en este momento. Intentá nuevamente en unos segundos.',
+  };
+}
+
+export async function generateTutorQuickHelp(input: QuickHelpInput): Promise<{
+  text: string;
+  provider: string;
+}> {
+  const prompt = buildQuickHelpPrompt(input);
+  const common = {
+    prompt,
+    temperature: 0.2,
+  };
+  const outputBudget = input.compact ? 260 : input.kind === 'why_wrong' ? 600 : 400;
+  const providerOrder = await getNextInteractiveProviderOrder();
+
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqText({
+              ...common,
+              system: 'Sos un tutor académico que responde de forma breve, clara y accionable.',
+              maxTokens: outputBudget,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiText({
+              ...common,
+              maxOutputTokens: outputBudget,
+            })
+          );
+
+    if (result && isCompleteReviewHelp(result.content, result.finishReason)) {
+      return {
+        text: truncateUtf8Text(result.content, MAX_AI_EXPLANATION_CHARS),
+        provider: result.model,
+      };
+    }
+  }
+
+  return {
+    provider: 'fallback-local',
+    text: 'No se pudo generar esta ayuda en este momento. Intentá nuevamente en unos segundos.',
+  };
+}
+
+export type ReviewQuestionGenerationFailure =
+  | 'provider_unavailable'
+  | 'unsupported_by_source'
+  | 'invalid_response';
+
+export async function generateStudyErrorReviewQuestion(
+  input: Parameters<typeof buildStudyErrorReviewPrompt>[0]
+): Promise<
+  | { question: NonNullable<ReturnType<typeof validateReviewQuestion>>; failureReason: null; providerOutcomes: string[] }
+  | { question: null; failureReason: ReviewQuestionGenerationFailure; providerOutcomes: string[] }
+> {
+  const prompt = buildStudyErrorReviewPrompt(input);
+  const providerOrder = await getNextInteractiveProviderOrder();
+  const providerOutcomes: string[] = [];
+  let receivedResponse = false;
+  let abstained = false;
+  let invalid = false;
+  for (const provider of providerOrder) {
+    const result =
+      provider === 'groq'
+        ? await tryProvider('groq', () =>
+            requestGroqJson({
+              prompt,
+              system: 'Sos un docente. Respondé sólo JSON verificable con la fuente.',
+              temperature: 0.2,
+              maxTokens: 650,
+            })
+          )
+        : await tryProvider('gemini', () =>
+            requestGeminiJson({
+              prompt,
+              temperature: 0.2,
+              maxOutputTokens: 650,
+            })
+          );
+    if (!result) {
+      providerOutcomes.push(`${provider}:unavailable`);
+      continue;
+    }
+    receivedResponse = true;
+    try {
+      const payload = extractJsonObject(result.content);
+      // Una abstención del primer proveedor no descarta otra interpretación
+      // válida del PDF. Consultamos el fallback sin relajar la cita obligatoria.
+      if (
+        payload &&
+        typeof payload === 'object' &&
+        'supported' in payload &&
+        payload.supported === false
+      ) {
+        abstained = true;
+        providerOutcomes.push(`${provider}:abstained`);
+        continue;
+      }
+      const question = validateReviewQuestion(payload, input.source, input.question);
+      if (
+        question &&
+        (!input.previousQuestion ||
+          validateReviewQuestion(payload, input.source, input.previousQuestion))
+      ) {
+        providerOutcomes.push(`${provider}:accepted`);
+        return { question, failureReason: null, providerOutcomes };
+      }
+    } catch {
+      // Rechazo del formato o de la evidencia: probar el proveedor alternativo.
+    }
+    invalid = true;
+    providerOutcomes.push(`${provider}:invalid`);
+  }
+  return {
+    question: null,
+    failureReason: !receivedResponse
+      ? 'provider_unavailable'
+      : abstained && !invalid
+        ? 'unsupported_by_source'
+        : 'invalid_response',
+    providerOutcomes,
   };
 }

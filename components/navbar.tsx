@@ -1,192 +1,274 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BookOpen,
-  Building2,
-  ChevronDown,
+  CalendarDays,
+  CircleAlert,
+  CircleHelp,
   Crown,
-  Heart,
-  House,
-  LayoutDashboard,
+  Home,
+  LogIn,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Settings,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { FeedbackDialog } from '@/components/FeedbackDialog';
+import { ReferralPortalNavLink } from '@/components/referrals/ReferralPortalNavLink';
+import { logError } from '@/lib/observability';
 import { useUser } from '@/hooks/useUser';
-import { isAdminUserSession } from '@/lib/roles';
 import { supabase } from '@/lib/supabase-client';
 
-const mainNavItems = [
-  { label: 'Inicio', href: '/', icon: House, exact: true },
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Materias favoritas', href: '/dashboard#materias-favoritas', icon: Heart },
+type NavbarProps = {
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+};
+
+type NavConfigItem = {
+  label: string;
+  href: string;
+  icon: typeof Home;
+  disabled?: boolean;
+};
+
+function isNavItemActive(pathname: string, href: string) {
+  if (href === '/dashboard/explicaciones' && pathname === '/dashboard/progreso') return true;
+  if (href === '/dashboard') {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+const navItems: NavConfigItem[] = [
+  { label: 'Mi espacio', href: '/dashboard', icon: Home },
+  { label: 'Calendario', href: '/calendario', icon: CalendarDays },
+  { label: 'Progreso', href: '/dashboard/explicaciones', icon: CircleAlert },
 ];
 
-const exploreNavItems = [
-  { label: 'Universidades', href: '/explorar', icon: Building2 },
-];
+function NavItem({
+  href,
+  label,
+  active,
+  collapsed,
+  disabled,
+  icon: Icon,
+  dataTourAttr,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  collapsed: boolean;
+  disabled?: boolean;
+  icon: typeof Home;
+  dataTourAttr?: string;
+}) {
+  const baseClass = `group flex items-center rounded-lg text-[13px] font-medium transition-colors duration-150 ${
+    active
+      ? 'bg-primary/5 text-primary'
+      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+  } ${collapsed ? 'mx-auto h-10 w-10 justify-center px-0 py-0' : 'gap-2.5 px-3 py-2.5'}`;
 
-export function Navbar() {
-  const { user, getUserInitials, getUserName } = useUser();
-  const pathname = usePathname();
-  const isAdmin = isAdminUserSession(user);
-
-  const sidebarContent = (
-    <div className="flex h-full flex-col px-3 py-3">
-      <Link href="/" className="px-2 py-1.5">
-        <div className="text-lg font-black tracking-tight text-slate-900">Evaluo</div>
-        <p className="mt-0.5 text-[10px] text-slate-500">Tu espacio academico</p>
-      </Link>
-
-      <nav className="mt-4 flex flex-1 flex-col gap-0.5">
-        {mainNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
-                isActive
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-
-        <div className="mb-1.5 mt-3 px-3">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
-            Explorar
-          </span>
-        </div>
-
-        {exploreNavItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`group flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
-                isActive
-                  ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-
-        {isAdmin ? (
-          <Link
-            href="/administrador"
-            className={`group mt-2 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-all duration-300 ${
-              pathname.startsWith('/administrador')
-                ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_10px_24px_rgba(79,93,255,0.12)]'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <BookOpen className="h-3.5 w-3.5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5" />
-            <span>Admin</span>
-          </Link>
-        ) : null}
-      </nav>
-
-      <div className="mb-3 rounded-2xl bg-[#F3F4FF] p-3">
-        <div className="flex flex-col items-center text-center">
-          <Crown className="h-4 w-4 text-[#5D5FEF]" />
-          <h4 className="mt-1.5 text-[10px] font-bold text-slate-900">Potencia tu estudio</h4>
-          <p className="mt-0.5 text-[9px] leading-tight text-slate-500">
-            Obten respuestas ilimitadas, explicaciones avanzadas y mas.
-          </p>
-          <Button
-            asChild
-            className="mt-2 w-full rounded-xl bg-[#5D5FEF] py-1 text-[10px] font-semibold text-white hover:bg-[#4F4FDF]"
-          >
-            <Link href={user ? '/pricing' : '/login'}>{user ? 'Mejorar plan' : 'Ver planes'}</Link>
-          </Button>
-          {!user ? (
-            <Button
-              asChild
-              variant="outline"
-              className="mt-2 h-auto w-full rounded-xl border-[#5D5FEF]/30 bg-white py-1 text-[10px] font-semibold text-[#4F5DFF] hover:bg-[#EEF2FF] hover:text-[#4F5DFF]"
-            >
-              <Link href="/login">Iniciar sesión</Link>
-            </Button>
-          ) : null}
-        </div>
-      </div>
-
-      {user ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex w-full items-center gap-2 rounded-xl bg-slate-50 px-2 py-2 text-left transition hover:bg-slate-100">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-emerald-100 text-xs font-bold text-emerald-800">
-                {getUserInitials()}
-              </AvatarFallback>
-              {user.user_metadata?.avatar_url ? (
-                <AvatarImage src={user.user_metadata.avatar_url} />
-              ) : null}
-            </Avatar>
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <p className="truncate text-xs font-semibold text-slate-900">{getUserName()}</p>
-              <p className="truncate text-[10px] text-slate-500">Plan estudiante</p>
-            </div>
-            <ChevronDown className="h-3 w-3 shrink-0 text-slate-400" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard" className="w-full text-sm">
-                <BookOpen className="mr-2 h-4 w-4" />
-                Mi dashboard
-              </Link>
-            </DropdownMenuItem>
-            {isAdmin ? (
-              <DropdownMenuItem asChild>
-                <Link href="/administrador" className="w-full text-sm">
-                  Panel de administracion
-                </Link>
-              </DropdownMenuItem>
-            ) : null}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
-              onClick={async () => {
-                const { error } = await supabase.auth.signOut();
-                if (error) {
-                  console.error('Error signing out:', error);
-                }
-              }}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Cerrar sesión
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : null}
-    </div>
-  );
+  if (disabled) {
+    return (
+      <button
+        type="button"
+        title={collapsed ? label : undefined}
+        className={`${baseClass} cursor-default opacity-75`}
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        {!collapsed ? <span>{label}</span> : null}
+      </button>
+    );
+  }
 
   return (
-    <aside className="hidden h-screen w-52 border-r border-slate-100 bg-white lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex">
-      <div className="w-full">{sidebarContent}</div>
+    <Link
+      href={href}
+      title={collapsed ? label : undefined}
+      className={baseClass}
+      {...(dataTourAttr ? { [dataTourAttr]: 'true' } : {})}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {!collapsed ? <span>{label}</span> : null}
+    </Link>
+  );
+}
+
+export function Navbar({ collapsed, onToggleCollapsed }: NavbarProps) {
+  const pathname = usePathname();
+  const { user, getUserInitials, getUserName } = useUser();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose;
+  return (
+    <aside
+      className={`hidden border-r border-slate-200/80 bg-white transition-[width] duration-200 md:fixed md:top-[81px] md:bottom-0 md:left-0 md:z-20 md:block ${
+        collapsed ? 'w-[76px]' : 'w-[248px]'
+      }`}
+      onClick={collapsed ? onToggleCollapsed : undefined}
+    >
+      <div className="flex h-full min-h-0 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4">
+          <nav className="space-y-1 pt-2">
+            <div
+              className={`grid items-center gap-2 ${
+                collapsed ? 'grid-cols-1 justify-items-center' : 'grid-cols-[minmax(0,1fr)_40px]'
+              }`}
+            >
+              <NavItem
+                href={navItems[0].href}
+                label={navItems[0].label}
+                icon={navItems[0].icon}
+                disabled={navItems[0].disabled}
+                collapsed={collapsed}
+                active={isNavItemActive(pathname, navItems[0].href)}
+              />
+              {!collapsed ? (
+                <button
+                  type="button"
+                  onClick={onToggleCollapsed}
+                  aria-label="Ocultar barra lateral"
+                  title="Ocultar barra lateral"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-800"
+                >
+                  <ToggleIcon className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
+
+            {navItems.slice(1).map((item) => (
+              <NavItem
+                key={item.label}
+                href={item.href}
+                label={item.label}
+                icon={item.icon}
+                disabled={item.disabled}
+                collapsed={collapsed}
+                active={!item.disabled && isNavItemActive(pathname, item.href)}
+                dataTourAttr={
+                  item.href === '/dashboard/explicaciones' ? 'data-recommended-errors' : undefined
+                }
+              />
+            ))}
+
+            {user ? <ReferralPortalNavLink collapsed={collapsed} pathname={pathname} /> : null}
+          </nav>
+
+          <div className="mt-auto border-t border-slate-200/80 pt-3">
+            {user ? (
+              <div className="space-y-1">
+                <Link
+                  href="/pricing"
+                  title={collapsed ? 'Planes y suscripción' : undefined}
+                  className={`text-brand flex items-center rounded-lg transition-colors hover:bg-blue-50/70 ${
+                    collapsed
+                      ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
+                      : 'w-full gap-2.5 px-3 py-2.5'
+                  }`}
+                >
+                  <Crown className="h-4 w-4 shrink-0" />
+                  {!collapsed ? (
+                    <p className="text-sm font-semibold">Planes y suscripción</p>
+                  ) : null}
+                </Link>
+
+                <button
+                  type="button"
+                  title={collapsed ? 'Ayuda' : undefined}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setFeedbackOpen(true);
+                  }}
+                  className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
+                    collapsed
+                      ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
+                      : 'w-full gap-2.5 px-3 py-2.5'
+                  }`}
+                >
+                  <CircleHelp className="h-4 w-4 shrink-0" />
+                  {!collapsed ? <p className="text-sm font-medium">Ayuda</p> : null}
+                </button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={`flex items-center rounded-lg text-left text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
+                      collapsed
+                        ? 'mx-auto h-11 w-11 justify-center px-0 py-0'
+                        : 'w-full gap-2.5 px-3 py-2.5'
+                    }`}
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="from-brand to-brand-2 bg-gradient-to-br text-xs font-bold text-white">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                      {user.user_metadata?.avatar_url ? (
+                        <AvatarImage src={user.user_metadata.avatar_url} />
+                      ) : null}
+                    </Avatar>
+                    {!collapsed ? (
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <p className="truncate text-sm font-semibold text-slate-900">
+                          {getUserName()}
+                        </p>
+                        <p className="truncate text-[11px] text-slate-400">Tu perfil</p>
+                      </div>
+                    ) : null}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link href="/configuracion" className="w-full text-sm">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Configuración
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-sm text-red-600 focus:bg-red-600 focus:text-white"
+                      onClick={async () => {
+                        const { error } = await supabase.auth.signOut();
+                        if (error) {
+                          logError('navbar.signOut', error, { userId: user.id });
+                        }
+                        window.location.assign('/login');
+                      }}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Cerrar sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                title={collapsed ? 'Iniciar sesión' : undefined}
+                className={`flex items-center rounded-lg text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${
+                  collapsed
+                    ? 'mx-auto h-10 w-10 justify-center px-0 py-0'
+                    : 'w-full gap-2.5 px-3 py-2.5'
+                }`}
+              >
+                <LogIn className="h-4 w-4 shrink-0" />
+                {!collapsed ? (
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">Iniciar sesión</p>
+                    <p className="text-[12px] text-slate-500">Guardá tu progreso y tus materias</p>
+                  </div>
+                ) : null}
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} sourcePath={pathname} />
     </aside>
   );
 }

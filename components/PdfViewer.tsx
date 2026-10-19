@@ -3,43 +3,20 @@
 import 'react-pdf/dist/Page/TextLayer.css';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Expand,
-  Minimize,
-  Search,
-  X,
-  ZoomIn,
-  ZoomOut,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Expand, Minimize, ZoomIn, ZoomOut } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { logError } from '@/lib/observability';
+import {
+  PDF_ESTIMATED_PAGE_HEIGHT,
+  PDF_PREVIEW_PAGE_LIMIT,
+  PDF_VIRTUALIZATION_WINDOW,
+  PDF_VIRTUALIZATION_WINDOW_MOBILE,
+} from '@/lib/pdf-preview';
 import { cn } from '@/lib/utils';
-
-interface PdfViewerProps {
-  url: string;
-  title?: string;
-  className?: string;
-  heightClassName?: string;
-  forcePreviewLock?: boolean;
-}
-
-interface SearchResult {
-  pageNumber: number;
-  preview: string;
-}
-
-interface PdfTextContentItem {
-  str?: string;
-}
-
-interface PdfPageLike {
-  getTextContent: () => Promise<{ items: PdfTextContentItem[] }>;
-}
 
 interface LoadedPdfDocument {
   numPages: number;
-  getPage: (pageNumber: number) => Promise<PdfPageLike>;
 }
 
 interface ReactPdfModule {
@@ -53,24 +30,77 @@ interface ReactPdfModule {
   };
 }
 
-interface PdfFileData {
-  data: Uint8Array;
+interface PdfViewerProps {
+  url: string;
+  title?: string;
+  subtitle?: string | null;
+  className?: string;
+  heightClassName?: string;
+  pageMaxWidthClassName?: string;
+  forcePreviewLock?: boolean;
+  showSidebarThumbnails?: boolean;
+  theme?: 'default' | 'study';
+  initialPage?: number | null;
+  persistView?: boolean;
+  /** Los ejemplos locales pueden cargar por URL para soportar remontajes del lector. */
+  sourceMode?: 'blob' | 'url';
 }
 
 const ZOOM_LEVELS = [0.75, 0.9, 1, 1.15, 1.3, 1.5, 1.75] as const;
-const PREVIEW_PAGE_LIMIT = 3;
 const MOBILE_VIEWER_HEIGHT = 'h-[72vh] sm:h-[78vh] lg:h-[84vh]';
+
+function getPdfViewerStorageKey(url: string) {
+  return `evaluo_pdf_viewer:${url}`;
+}
+
+function readPersistedPdfView(url: string) {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getPdfViewerStorageKey(url));
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as {
+      pageNumber?: number;
+      zoomIndex?: number;
+    };
+
+    return {
+      pageNumber:
+        typeof parsed.pageNumber === 'number' && Number.isFinite(parsed.pageNumber)
+          ? parsed.pageNumber
+          : 1,
+      zoomIndex:
+        typeof parsed.zoomIndex === 'number' && Number.isFinite(parsed.zoomIndex)
+          ? parsed.zoomIndex
+          : 2,
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default function PdfViewer({
   url,
   title = 'Vista de PDF',
+  subtitle = null,
   className,
   heightClassName = MOBILE_VIEWER_HEIGHT,
+  pageMaxWidthClassName,
   forcePreviewLock = false,
+  showSidebarThumbnails = true,
+  theme = 'default',
+  initialPage = null,
+  persistView = true,
+  sourceMode = 'blob',
 }: PdfViewerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const pageViewportRef = useRef<HTMLDivElement | null>(null);
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const previewGateTrackedRef = useRef(false);
+  const shouldRestoreSavedPageRef = useRef(false);
 
   const [reactPdf, setReactPdf] = useState<ReactPdfModule | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -78,18 +108,27 @@ export default function PdfViewer({
   const [currentPage, setCurrentPage] = useState(1);
   const [zoomIndex, setZoomIndex] = useState(2);
   const [viewerWidth, setViewerWidth] = useState(960);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [loadingSearch, setLoadingSearch] = useState(false);
-  const [pdfDocument, setPdfDocument] = useState<LoadedPdfDocument | null>(null);
-  const [documentBytes, setDocumentBytes] = useState<Uint8Array | null>(null);
+  const [documentSourceBlob, setDocumentSourceBlob] = useState<Blob | null>(null);
   const [documentError, setDocumentError] = useState<string | null>(null);
   const [documentLoading, setDocumentLoading] = useState(true);
   const [viewerRuntimeError, setViewerRuntimeError] = useState<string | null>(null);
   const [showPreviewGate, setShowPreviewGate] = useState(false);
+  const [isCompactViewport, setIsCompactViewport] = useState(false);
   const { isAuthenticated, loading: userLoading } = useUser();
+  const isStudyTheme = theme === 'study';
 
   const zoom = ZOOM_LEVELS[zoomIndex];
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const syncViewport = () => setIsCompactViewport(mediaQuery.matches);
+
+    syncViewport();
+    mediaQuery.addEventListener('change', syncViewport);
+    return () => mediaQuery.removeEventListener('change', syncViewport);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -103,7 +142,7 @@ export default function PdfViewer({
           setReactPdf(mod);
         }
       } catch (error) {
-        console.error('React PDF runtime load error:', error);
+        logError('pdfViewer.loadReactPdf', error, { url });
         if (active) {
           setViewerRuntimeError('No pudimos inicializar el lector avanzado.');
         }
@@ -115,7 +154,7 @@ export default function PdfViewer({
     return () => {
       active = false;
     };
-  }, []);
+  }, [url]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -142,14 +181,16 @@ export default function PdfViewer({
   }, []);
 
   useEffect(() => {
-    setCurrentPage(1);
-    setSearchQuery('');
-    setSearchResults([]);
-    setPdfDocument(null);
-    setDocumentBytes(null);
+    const persistedView = persistView ? readPersistedPdfView(url) : null;
+    const requestedPage = initialPage ?? persistedView?.pageNumber ?? 1;
+
+    setCurrentPage(requestedPage);
+    setZoomIndex(persistedView?.zoomIndex ?? 2);
+    setDocumentSourceBlob(null);
     setShowPreviewGate(false);
+    shouldRestoreSavedPageRef.current = requestedPage > 1;
     pageRefs.current = {};
-  }, [url]);
+  }, [initialPage, persistView, url]);
 
   useEffect(() => {
     let active = true;
@@ -169,13 +210,12 @@ export default function PdfViewer({
           throw new Error('El archivo no tiene formato PDF.');
         }
 
-        const arrayBuffer = await blob.arrayBuffer();
         if (!active) return;
-        setDocumentBytes(new Uint8Array(arrayBuffer));
+        setDocumentSourceBlob(blob);
       } catch (error) {
-        console.error('PdfViewer load error:', error);
+        logError('pdfViewer.loadBinary', error, { url });
         if (!active) return;
-        setDocumentBytes(null);
+        setDocumentSourceBlob(null);
         setDocumentError('No pudimos preparar el archivo PDF para mostrarlo.');
       } finally {
         if (active) {
@@ -223,36 +263,31 @@ export default function PdfViewer({
     return () => observer.disconnect();
   }, [numPages, zoom]);
 
-  const canGoPrev = currentPage > 1;
   const previewPageLimit = useMemo(() => {
-    if (numPages <= PREVIEW_PAGE_LIMIT) return numPages;
-    return PREVIEW_PAGE_LIMIT;
+    if (numPages <= PDF_PREVIEW_PAGE_LIMIT) return numPages;
+    return PDF_PREVIEW_PAGE_LIMIT;
   }, [numPages]);
-  const visiblePageLimit = forcePreviewLock ? numPages : isAuthenticated ? numPages : previewPageLimit;
+
+  const visiblePageLimit = forcePreviewLock
+    ? numPages
+    : isAuthenticated
+      ? numPages
+      : previewPageLimit;
   const isPreviewLocked =
     forcePreviewLock || (!userLoading && !isAuthenticated && numPages > previewPageLimit);
+  const canGoPrev = currentPage > 1;
   const canGoNext = currentPage < visiblePageLimit;
-
-  const currentSearchResult = useMemo(
-    () => searchResults.find((result) => result.pageNumber === currentPage) ?? null,
-    [currentPage, searchResults]
-  );
-
-  const mainDocumentFile = useMemo<PdfFileData | null>(() => {
-    if (!documentBytes) return null;
-    return { data: documentBytes.slice() };
-  }, [documentBytes]);
-
-  const sidebarDocumentFile = useMemo<PdfFileData | null>(() => {
-    if (!documentBytes) return null;
-    return { data: documentBytes.slice() };
-  }, [documentBytes]);
+  const documentFile = sourceMode === 'url' && documentSourceBlob ? url : documentSourceBlob;
 
   const handleDocumentLoad = (documentProxy: unknown) => {
     const doc = documentProxy as LoadedPdfDocument;
-    setPdfDocument(doc);
+    const persistedView = persistView ? readPersistedPdfView(url) : null;
+
     setNumPages(doc.numPages);
-    setCurrentPage((page) => Math.min(Math.max(1, page), doc.numPages));
+    setCurrentPage(() => {
+      const requestedPage = initialPage ?? persistedView?.pageNumber ?? 1;
+      return Math.min(Math.max(1, requestedPage), doc.numPages);
+    });
   };
 
   const scrollToPage = (pageNumber: number) => {
@@ -272,10 +307,27 @@ export default function PdfViewer({
   }, [currentPage, isAuthenticated, visiblePageLimit]);
 
   useEffect(() => {
+    if (numPages <= 0 || currentPage <= 1 || !shouldRestoreSavedPageRef.current) {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      scrollToPage(currentPage);
+      shouldRestoreSavedPageRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [currentPage, numPages]);
+
+  useEffect(() => {
     const viewport = pageViewportRef.current;
     if (!viewport) return;
 
-    if ((isAuthenticated && !forcePreviewLock) || userLoading || (!forcePreviewLock && numPages <= previewPageLimit)) {
+    if (
+      (isAuthenticated && !forcePreviewLock) ||
+      userLoading ||
+      (!forcePreviewLock && numPages <= previewPageLimit)
+    ) {
       setShowPreviewGate(false);
       return;
     }
@@ -292,52 +344,42 @@ export default function PdfViewer({
     return () => viewport.removeEventListener('scroll', handleScroll);
   }, [forcePreviewLock, isAuthenticated, numPages, previewPageLimit, userLoading, zoom]);
 
-  const runSearch = async () => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!pdfDocument || !query) {
-      setSearchResults([]);
+  useEffect(() => {
+    if (!isPreviewLocked || !showPreviewGate || previewGateTrackedRef.current) {
       return;
     }
 
-    setLoadingSearch(true);
-    try {
-      const results: SearchResult[] = [];
+    previewGateTrackedRef.current = true;
+    trackMarketingEvent('pdf_gate_viewed', {
+      location: 'pdf_preview_gate',
+      resource_title: title,
+      preview_pages: previewPageLimit,
+    });
+  }, [isPreviewLocked, previewPageLimit, showPreviewGate, title]);
 
-      for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
-        const page = await pdfDocument.getPage(pageNumber);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items
-          .map((item) => item.str ?? '')
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        const normalized = pageText.toLowerCase();
-        const matchIndex = normalized.indexOf(query);
-        if (matchIndex >= 0) {
-          const previewStart = Math.max(0, matchIndex - 45);
-          const previewEnd = Math.min(pageText.length, matchIndex + query.length + 70);
-          results.push({
-            pageNumber,
-            preview: pageText.slice(previewStart, previewEnd),
-          });
-        }
-      }
-
-      setSearchResults(results);
-      if (results[0]) {
-        setCurrentPage(results[0].pageNumber);
-        requestAnimationFrame(() => scrollToPage(results[0].pageNumber));
-      }
-    } finally {
-      setLoadingSearch(false);
+  useEffect(() => {
+    if (!showPreviewGate) {
+      previewGateTrackedRef.current = false;
     }
-  };
+  }, [showPreviewGate]);
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults([]);
-  };
+  useEffect(() => {
+    if (!persistView || typeof window === 'undefined' || numPages <= 0) {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        getPdfViewerStorageKey(url),
+        JSON.stringify({
+          pageNumber: currentPage,
+          zoomIndex,
+        })
+      );
+    } catch {
+      // Ignore persistence failures in restricted environments.
+    }
+  }, [currentPage, numPages, persistView, url, zoomIndex]);
 
   const toggleFullscreen = async () => {
     if (!containerRef.current) return;
@@ -356,58 +398,86 @@ export default function PdfViewer({
   const DocumentComponent = reactPdf?.Document ?? null;
   const PageComponent = reactPdf?.Page ?? null;
 
+  const estimatedPageHeight = useMemo(
+    () => Math.max(480, Math.round((viewerWidth * zoom || PDF_ESTIMATED_PAGE_HEIGHT) * 1.42)),
+    [viewerWidth, zoom]
+  );
+
+  const virtualizationWindow = isCompactViewport
+    ? PDF_VIRTUALIZATION_WINDOW_MOBILE
+    : PDF_VIRTUALIZATION_WINDOW;
+
+  const renderedPageNumbers = useMemo(() => {
+    const pages = new Set<number>();
+    const start = Math.max(1, currentPage - virtualizationWindow);
+    const end = Math.min(visiblePageLimit, currentPage + virtualizationWindow);
+
+    for (let pageNumber = start; pageNumber <= end; pageNumber += 1) {
+      pages.add(pageNumber);
+    }
+
+    if (visiblePageLimit > 0) {
+      pages.add(1);
+      pages.add(visiblePageLimit);
+    }
+
+    return pages;
+  }, [currentPage, visiblePageLimit, virtualizationWindow]);
+
+  const renderedSidebarPages = useMemo(() => {
+    const pages = new Set<number>();
+    const start = Math.max(1, currentPage - 1);
+    const end = Math.min(visiblePageLimit, currentPage + 1);
+
+    for (let pageNumber = start; pageNumber <= end; pageNumber += 1) {
+      pages.add(pageNumber);
+    }
+
+    if (visiblePageLimit > 0) {
+      pages.add(1);
+      pages.add(visiblePageLimit);
+    }
+
+    return pages;
+  }, [currentPage, visiblePageLimit]);
+
   return (
     <div
       ref={containerRef}
-      className={cn('surface-panel overflow-hidden', className)}
+      className={cn(
+        'surface-panel flex w-full max-w-full min-w-0 flex-col overflow-hidden',
+        isStudyTheme && 'border-white/8 bg-[#111214] text-slate-100',
+        className
+      )}
     >
-      <div className="border-b border-slate-200 bg-white px-3 py-3 md:px-4">
+      <div
+        className={cn(
+          'shrink-0 border-b border-slate-200 bg-white px-3 py-3 md:px-4',
+          isStudyTheme && 'border-white/8 bg-[#111214]'
+        )}
+      >
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-slate-900">{title}</p>
-              <p className="mt-1 text-xs text-slate-500">Lector avanzado de Evaluo</p>
-            </div>
-
-            <div className="flex min-w-0 items-center gap-2 rounded-[1rem] border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-              <Search className="h-4 w-4 shrink-0" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    void runSearch();
-                  }
-                }}
-                placeholder="Buscar en el documento"
-                className="w-full min-w-0 bg-transparent outline-none placeholder:text-slate-400"
-              />
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
-                  aria-label="Limpiar búsqueda"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => void runSearch()}
-                className="inline-flex h-9 shrink-0 rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
-              >
-                {loadingSearch ? 'Buscando...' : 'Buscar'}
-              </button>
-            </div>
+          <div className="min-w-0">
+            <p
+              className={cn(
+                'truncate text-sm font-semibold text-slate-900',
+                isStudyTheme && 'text-slate-100'
+              )}
+            >
+              {title}
+            </p>
+            {subtitle ? <p className="mt-1 text-xs text-slate-500">{subtitle}</p> : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 xl:justify-end">
             <button
               type="button"
               onClick={zoomOut}
               disabled={zoomIndex === 0}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
+              className={cn(
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
+              )}
               aria-label="Alejar zoom"
             >
               <ZoomOut className="h-4 w-4" />
@@ -416,13 +486,21 @@ export default function PdfViewer({
               type="button"
               onClick={zoomIn}
               disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
+              className={cn(
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
+              )}
               aria-label="Acercar zoom"
             >
               <ZoomIn className="h-4 w-4" />
             </button>
 
-            <div className="min-h-9 rounded-[1rem] border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 sm:min-h-10">
+            <div
+              className={cn(
+                'min-h-8 rounded-[0.9rem] border border-slate-200 bg-white px-2.5 py-1.5 text-[12px] font-semibold text-slate-700 sm:min-h-10 sm:rounded-[1rem] sm:px-3 sm:py-2 sm:text-xs',
+                isStudyTheme && 'border-white/8 bg-white/3 text-slate-100'
+              )}
+            >
               {currentPage} / {numPages || '...'}
             </div>
 
@@ -434,8 +512,11 @@ export default function PdfViewer({
                 scrollToPage(nextPage);
               }}
               disabled={!canGoPrev}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
-              aria-label="Página anterior"
+              className={cn(
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
+              )}
+              aria-label="Pagina anterior"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -447,110 +528,165 @@ export default function PdfViewer({
                 scrollToPage(nextPage);
               }}
               disabled={!canGoNext}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10"
-              aria-label="Página siguiente"
+              className={cn(
+                'inline-flex h-8 w-8 items-center justify-center rounded-[0.9rem] border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-10 sm:w-10 sm:rounded-[1rem]',
+                isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
+              )}
+              aria-label="Pagina siguiente"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => void toggleFullscreen()}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-slate-50 sm:h-10 sm:w-10"
-              aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            >
-              {isFullscreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
-            </button>
+            {!isCompactViewport ? (
+              <button
+                type="button"
+                onClick={() => void toggleFullscreen()}
+                className={cn(
+                  'inline-flex h-9 w-9 items-center justify-center rounded-[1rem] border border-slate-200 text-slate-600 transition hover:bg-white sm:h-10 sm:w-10',
+                  isStudyTheme && 'border-white/8 text-slate-300 hover:bg-white/6'
+                )}
+                aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+              >
+                {isFullscreen ? <Minimize className="h-4 w-4" /> : <Expand className="h-4 w-4" />}
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <div className="grid gap-0 lg:grid-cols-[170px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-slate-200 bg-[#f8fafc] lg:block">
-          <div className="max-h-[84vh] space-y-3 overflow-y-auto p-3">
-            {DocumentComponent && PageComponent && sidebarDocumentFile && numPages > 0 ? (
-              <DocumentComponent file={sidebarDocumentFile}>
-                {Array.from({ length: visiblePageLimit }, (_, index) => {
-                  const pageNumber = index + 1;
-                  const active = pageNumber === currentPage;
+      <div
+        className={cn(
+          'grid min-h-0 flex-1 gap-0',
+          showSidebarThumbnails ? 'lg:grid-cols-[170px_minmax(0,1fr)]' : 'grid-cols-1'
+        )}
+      >
+        {showSidebarThumbnails ? (
+          <aside
+            className={cn(
+              'hidden border-r border-slate-200 bg-white lg:block',
+              isStudyTheme && 'border-white/8 bg-[#111214]'
+            )}
+          >
+            <div className="max-h-[84vh] space-y-3 overflow-y-auto p-3">
+              {DocumentComponent && PageComponent && documentFile && numPages > 0 ? (
+                <DocumentComponent file={documentFile}>
+                  {Array.from({ length: visiblePageLimit }, (_, index) => {
+                    const pageNumber = index + 1;
+                    const active = pageNumber === currentPage;
+                    const shouldRenderThumbnail = renderedSidebarPages.has(pageNumber);
 
-                  return (
-                    <button
-                      key={pageNumber}
-                      type="button"
-                      onClick={() => {
-                        setCurrentPage(pageNumber);
-                        scrollToPage(pageNumber);
-                      }}
-                      className={`w-full rounded-2xl border p-2 text-left transition ${
-                        active
-                          ? 'border-indigo-300 bg-indigo-50'
-                          : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="overflow-hidden rounded-xl border border-slate-100 bg-white">
-                        <PageComponent
-                          pageNumber={pageNumber}
-                          width={120}
-                          renderAnnotationLayer={false}
-                          renderTextLayer={false}
-                        />
-                      </div>
-                      <p className="mt-2 text-center text-[11px] font-semibold text-slate-600">
-                        Página {pageNumber}
-                      </p>
-                    </button>
-                  );
-                })}
-              </DocumentComponent>
-            ) : null}
-          </div>
-        </aside>
-
-        <div className="bg-[#eef2f7] p-2 sm:p-3">
-          {searchResults.length > 0 ? (
-            <div className="mb-3 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
-              <p className="font-semibold">
-                {searchResults.length} resultado{searchResults.length === 1 ? '' : 's'} para "{searchQuery}"
-              </p>
-              {currentSearchResult ? (
-                <p className="mt-1 text-xs text-indigo-700">
-                  Página {currentSearchResult.pageNumber}: {currentSearchResult.preview}
-                </p>
+                    return (
+                      <button
+                        key={pageNumber}
+                        type="button"
+                        onClick={() => {
+                          setCurrentPage(pageNumber);
+                          scrollToPage(pageNumber);
+                        }}
+                        className={cn(
+                          'w-full rounded-2xl border p-2 text-left transition',
+                          active
+                            ? 'border-blue-300 bg-blue-50'
+                            : 'border-slate-200 bg-white hover:bg-white',
+                          isStudyTheme &&
+                            (active
+                              ? 'border-amber-500/30 bg-[#2A2118]'
+                              : 'border-white/8 bg-white/4 hover:bg-white/8')
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'overflow-hidden rounded-xl border border-slate-100 bg-white',
+                            isStudyTheme && 'border-white/8 bg-[#18191C]'
+                          )}
+                        >
+                          {shouldRenderThumbnail ? (
+                            <PageComponent
+                              pageNumber={pageNumber}
+                              width={120}
+                              renderAnnotationLayer={false}
+                              renderTextLayer={false}
+                            />
+                          ) : (
+                            <div
+                              className={cn(
+                                'flex h-[170px] items-center justify-center bg-white text-[12px] font-medium text-slate-500',
+                                isStudyTheme && 'bg-[#18191C] text-slate-500'
+                              )}
+                            >
+                              Pagina {pageNumber}
+                            </div>
+                          )}
+                        </div>
+                        <p
+                          className={cn(
+                            'mt-2 text-center text-[12px] font-semibold text-slate-600',
+                            isStudyTheme && 'text-slate-500'
+                          )}
+                        >
+                          Pagina {pageNumber}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </DocumentComponent>
               ) : null}
             </div>
-          ) : null}
+          </aside>
+        ) : null}
 
+        <div className={cn('h-full min-h-0 bg-white p-2 sm:p-3', isStudyTheme && 'bg-[#17181C]')}>
           <div
             ref={pageViewportRef}
             className={cn(
-              'overflow-auto rounded-[1rem] bg-white p-2 sm:rounded-[1.15rem] sm:p-3',
+              'max-w-full min-w-0 overflow-auto rounded-[1rem] bg-white p-2 sm:rounded-[1.15rem] sm:p-3',
+              isStudyTheme && 'bg-[#0F1012]',
               heightClassName
             )}
           >
             {viewerRuntimeError ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
+              <div
+                className={cn(
+                  'flex h-full w-full items-center justify-center text-sm text-slate-500',
+                  isStudyTheme && 'text-slate-500'
+                )}
+              >
                 {viewerRuntimeError}
               </div>
             ) : documentLoading ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
+              <div
+                className={cn(
+                  'flex h-full w-full items-center justify-center text-sm text-slate-500',
+                  isStudyTheme && 'text-slate-500'
+                )}
+              >
                 Cargando documento...
               </div>
-            ) : documentError || !mainDocumentFile ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
+            ) : documentError || !documentFile ? (
+              <div
+                className={cn(
+                  'flex h-full w-full items-center justify-center text-sm text-slate-500',
+                  isStudyTheme && 'text-slate-500'
+                )}
+              >
                 {documentError || 'No pudimos preparar el PDF.'}
               </div>
             ) : !DocumentComponent || !PageComponent ? (
-              <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
+              <div
+                className={cn(
+                  'flex h-full w-full items-center justify-center text-sm text-slate-500',
+                  isStudyTheme && 'text-slate-500'
+                )}
+              >
                 Inicializando lector...
               </div>
             ) : (
               <DocumentComponent
-                file={mainDocumentFile}
+                file={documentFile}
                 onLoadSuccess={handleDocumentLoad}
                 loading={
                   <div className="flex h-full w-full items-center justify-center text-sm text-slate-500">
-                    Cargando páginas...
+                    Cargando paginas...
                   </div>
                 }
                 error={
@@ -562,6 +698,7 @@ export default function PdfViewer({
                 <div className="space-y-6">
                   {Array.from({ length: visiblePageLimit || 0 }, (_, index) => {
                     const pageNumber = index + 1;
+                    const shouldRenderPage = renderedPageNumbers.has(pageNumber);
 
                     return (
                       <div
@@ -570,14 +707,32 @@ export default function PdfViewer({
                           pageRefs.current[pageNumber] = node;
                         }}
                         data-page={pageNumber}
-                        className="mx-auto w-fit max-w-full rounded-[0.95rem] border border-slate-100 bg-white shadow-sm"
+                        className={cn(
+                          'mx-auto w-full max-w-full rounded-[0.95rem] border border-slate-100 bg-white shadow-sm',
+                          pageMaxWidthClassName,
+                          isStudyTheme &&
+                            'border-white/8 bg-white shadow-[0_10px_34px_rgba(0,0,0,0.28)]'
+                        )}
+                        style={{ minHeight: `${estimatedPageHeight}px` }}
                       >
-                        <PageComponent
-                          pageNumber={pageNumber}
-                          width={Math.round(viewerWidth * zoom)}
-                          renderAnnotationLayer={false}
-                          renderTextLayer
-                        />
+                        {shouldRenderPage ? (
+                          <PageComponent
+                            pageNumber={pageNumber}
+                            width={Math.round(viewerWidth * zoom)}
+                            renderAnnotationLayer={false}
+                            renderTextLayer={!isCompactViewport}
+                          />
+                        ) : (
+                          <div
+                            className={cn(
+                              'flex h-full min-h-[inherit] items-center justify-center rounded-[0.95rem] bg-[linear-gradient(180deg,#fafcff_0%,#f3f6fb_100%)] text-sm font-medium text-slate-500',
+                              isStudyTheme &&
+                                'bg-[linear-gradient(180deg,#1B1C21_0%,#131418_100%)] text-slate-500'
+                            )}
+                          >
+                            Preparando pagina {pageNumber}...
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -585,29 +740,49 @@ export default function PdfViewer({
                   {isPreviewLocked && showPreviewGate ? (
                     <div className="sticky bottom-3 z-10 mx-auto mt-6 flex w-full max-w-2xl justify-center px-1 sm:bottom-4 sm:px-3">
                       <div className="absolute inset-x-5 -top-10 h-14 rounded-full bg-gradient-to-t from-white via-white/80 to-transparent blur-2xl" />
-                      <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-indigo-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
-                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-indigo-700">
+                      <div className="surface-panel relative w-full overflow-hidden rounded-[var(--radius-panel)] border-blue-200/80 bg-white/96 p-6 text-center backdrop-blur xl:p-7">
+                        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-[12px] font-bold tracking-[0.18em] text-blue-700 uppercase">
                           Preview disponible
-                          <span className="rounded-full bg-white px-2 py-0.5 text-[10px] text-indigo-600">
+                          <span className="rounded-full bg-white px-2 py-0.5 text-[12px] text-blue-600">
                             {previewPageLimit} paginas
                           </span>
                         </div>
-                        <p className="mt-4 text-2xl font-black tracking-[-0.04em] text-slate-950 sm:text-3xl">
-                          Accede al material completo
+                        <p className="mt-4 text-2xl font-bold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+                          Accedé al material completo
                         </p>
                         <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-slate-500">
-                          Ya viste una parte del documento. Inicia sesión para desbloquear la lectura completa, guardar tu progreso y seguir estudiando dentro de Evaluo.
+                          Ya viste una parte del documento. Iniciá sesión para desbloquear la
+                          lectura completa, guardar tu progreso y seguir estudiando dentro de
+                          Evaluo.
                         </p>
                         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
                           <Link
-                            href="/login"
+                            href="/login?mode=signup"
+                            onClick={() =>
+                              trackMarketingEvent('pdf_gate_cta_clicked', {
+                                location: 'pdf_preview_gate',
+                                resource_title: title,
+                                preview_pages: previewPageLimit,
+                                cta_name: 'crear_cuenta_para_leer',
+                                destination: '/login?mode=signup',
+                              })
+                            }
                             className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-[#2563EB] to-[#4F46E5] px-6 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(37,99,235,0.2)] transition hover:opacity-95"
                           >
-                            Continuar para leer completo
+                            Crear cuenta y seguir leyendo
                           </Link>
                           <Link
                             href="/login"
-                            className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                            onClick={() =>
+                              trackMarketingEvent('pdf_gate_cta_clicked', {
+                                location: 'pdf_preview_gate',
+                                resource_title: title,
+                                preview_pages: previewPageLimit,
+                                cta_name: 'iniciar_sesion_para_leer',
+                                destination: '/login',
+                              })
+                            }
+                            className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white"
                           >
                             Iniciar sesión
                           </Link>

@@ -1,0 +1,15 @@
+/* El indicador de desarrollo tapaba acciones del recorrido en celulares pequeños.
+   Se oculta únicamente dentro de esta muestra; los errores siguen en la consola. */
+body:has([data-first-pdf-preview]) nextjs-portal {
+  display: none;
+}
+
+/* Cambiar o voltear contenido no debe desplazar el comienzo del apartado. */
+[data-first-pdf-preview] [data-demo-focus] {
+  overflow-anchor: none;
+}
+
+/* El destacado debe medir la sección definitiva, sin recortes durante su entrada. */
+[data-first-pdf-preview][data-demo-guided] .animate-tab-panel {
+  animation: none;
+}

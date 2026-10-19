@@ -1,20 +1,22 @@
 import type { Metadata } from 'next';
+import ClientLayout from '@/components/ClientLayout';
+
+const explorarDescription =
+  'Encontrá tu materia por universidad o carrera y accedé a materiales, Pregunteros y Simuladores en Evaluo.';
 
 export const metadata: Metadata = {
-  title: 'Explorar universidades y materias',
-  description:
-    'Descubre universidades, carreras y materias disponibles en Evaluo para estudiar con resúmenes, preguntas y simuladores.',
+  title: 'Encontrá tu materia',
+  description: explorarDescription,
   alternates: {
     canonical: '/explorar',
   },
   openGraph: {
-    title: 'Explorar universidades y materias',
-    description:
-      'Encuentra tu universidad, carrera y materia para estudiar con recursos, preguntas y simuladores en Evaluo.',
-    url: 'https://evaluo.com.ar/explorar',
+    title: 'Encontrá tu materia',
+    description: explorarDescription,
+    url: '/explorar',
   },
 };
 
 export default function ExplorarLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return <ClientLayout>{children}</ClientLayout>;
 }

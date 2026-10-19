@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { SITE_URL } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -6,10 +7,19 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin', '/dashboard', '/login', '/auth/callback'],
+        disallow: [
+          '/admin',
+          '/administrador',
+          '/auth/callback',
+          '/calendario',
+          '/completar-perfil',
+          '/configuracion',
+          '/dashboard',
+          '/login',
+        ],
       },
     ],
-    sitemap: 'https://evaluo.com.ar/sitemap.xml',
-    host: 'https://evaluo.com.ar',
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

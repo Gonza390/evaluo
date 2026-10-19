@@ -1,13 +1,15 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_cache as nextCache } from 'next/cache';
 import { listAdminUserIds } from '@/lib/admin-users';
+import { requireAdminAccess } from '@/lib/auth';
+import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface AdministradorResumenStats {
   usersActive: number;
   usersActiveTrendPct: number;
-  anonymousToday: number;
   loginToday: number;
   loginTopSources: Array<{ label: string; value: number }>;
   loginDevices: Array<{ name: string; value: number }>;
@@ -19,10 +21,14 @@ export interface AdministradorResumenStats {
   simulatorAttemptsTrendPct: number;
   topMaterias: Array<{ id: string; name: string; views: number }>;
   devices: Array<{ name: string; value: number; color: string }>;
-  dailyUsage: Array<{ label: string; sesiones: number; usuarios: number }>;
   visitorLoginSeries: Array<{ label: string; visitantes: number; logins: number }>;
   topPages: Array<{ path: string; views: number }>;
   funnel: Array<{ step: string; value: number }>;
+  simulatorLoginGate: {
+    reached: number;
+    converted: number;
+    abandoned: number;
+  };
   recentActivity: Array<{
     action: string;
     details: string;
@@ -30,24 +36,6 @@ export interface AdministradorResumenStats {
     date: string | null;
     tone: 'green' | 'blue' | 'orange' | 'violet';
   }>;
-}
-
-export interface AdministradorMarketingVariantRow {
-  source: string;
-  medium: string;
-  campaign: string;
-  content: string;
-  visits: number;
-  logins: number;
-  registrations: number;
-  conversionPct: number;
-}
-
-export interface AdministradorMarketingStats {
-  totalVisits: number;
-  totalLogins: number;
-  totalRegistrations: number;
-  rows: AdministradorMarketingVariantRow[];
 }
 
 export interface AdministradorUsuarioRow {
@@ -93,15 +81,24 @@ export interface BibliotecaOverviewStats {
   preguntasTotal: number;
 }
 
+export interface AdministradorMetricPeriods {
+  newRegistrations: 1 | 7 | 30;
+  answered: 1 | 7 | 30;
+  simulatorAttempts: 1 | 7 | 30;
+  anonymous: 1 | 7 | 30;
+}
+
 export interface AdministradorMateriaAnalyticsDetail {
   materiaId: string;
   materiaNombre: string;
   totalVisitas: number;
+  directLinkEntries: number;
   careerSources: Array<{ label: string; value: number; pct: number }>;
   mobilePct: number;
   loggedPct: number;
   anonymousPct: number;
   actions: Array<{ label: string; value: number; pct: number }>;
+  sharedLinkActions: Array<{ label: string; value: number; pct: number }>;
   partials: Array<{
     parcial: number;
     answeredQuestions: number;
@@ -153,7 +150,12 @@ export interface AdministradorLogsData {
     normalized_name: string;
     materia_id: string | null;
     count: number;
-    recursos: Array<{ id: string; nombre: string; url_archivo: string | null; paginas: number | null }>;
+    recursos: Array<{
+      id: string;
+      nombre: string;
+      url_archivo: string | null;
+      paginas: number | null;
+    }>;
   }>;
   orphanSample: string[];
   recentEvents: AdministradorLogsEvent[];
@@ -179,21 +181,72 @@ function formatAdminError(error: unknown) {
   return error;
 }
 
+const ANALYTICS_UTC_OFFSET_HOURS = -3;
+const HOUR_IN_MS = 60 * 60 * 1000;
+const ANALYTICS_TIME_ZONE = 'America/Argentina/Buenos_Aires';
+
 function startOfDay(date: Date) {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
+  // Normalize every admin metric to Argentina time so localhost and production
+  // always query the same "day" boundary regardless of server timezone.
+  const utcTimestamp = date.getTime() + date.getTimezoneOffset() * 60 * 1000;
+  const analyticsLocalTimestamp = utcTimestamp + ANALYTICS_UTC_OFFSET_HOURS * HOUR_IN_MS;
+  const analyticsDate = new Date(analyticsLocalTimestamp);
+  analyticsDate.setUTCHours(0, 0, 0, 0);
+
+  return new Date(analyticsDate.getTime() - ANALYTICS_UTC_OFFSET_HOURS * HOUR_IN_MS);
 }
 
 function uniqueUsersFromEvents(
   events: Array<{ user_id: string | null; session_key: string | null }>
 ) {
-  return new Set(events.map((event) => event.user_id ?? `anon:${event.session_key ?? 'unknown'}`)).size;
+  return new Set(events.map((event) => event.user_id ?? `anon:${event.session_key ?? 'unknown'}`))
+    .size;
 }
 
 function calculateTrend(current: number, previous: number) {
   if (previous === 0) return current > 0 ? 100 : 0;
   return Number((((current - previous) / previous) * 100).toFixed(1));
+}
+
+function rollingPeriodStart(days: number, now = new Date()) {
+  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+}
+
+function calendarPeriodStart(days: number, now = new Date()) {
+  if (days === 1) {
+    return startOfDay(now);
+  }
+
+  return startOfDay(new Date(now.getTime() - days * 24 * 60 * 60 * 1000));
+}
+
+function formatAnalyticsDayLabel(dateLike: string | Date) {
+  return new Date(dateLike).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: ANALYTICS_TIME_ZONE,
+  });
+}
+
+function buildAnalyticsDayLabels(days: 1 | 7 | 30, now = new Date()) {
+  const labels: string[] = [];
+  const start = calendarPeriodStart(days, now);
+
+  for (let index = 0; index < days; index += 1) {
+    const day = new Date(start.getTime() + index * 24 * 60 * 60 * 1000);
+    labels.push(formatAnalyticsDayLabel(day));
+  }
+
+  return labels;
+}
+
+function normalizeMetricPeriod(
+  value: number | string | undefined,
+  fallback: 1 | 7 | 30
+): 1 | 7 | 30 {
+  const parsed = Number(value);
+  if (parsed === 1 || parsed === 7 || parsed === 30) return parsed;
+  return fallback;
 }
 
 function excludeUserIds<T>(query: T, userIds: string[], column = 'user_id') {
@@ -210,7 +263,10 @@ function excludeUserIds<T>(query: T, userIds: string[], column = 'user_id') {
 }
 
 async function fetchAllAdminRows<T>(
-  queryFactory: (from: number, to: number) => Promise<{ data: T[] | null; error: { message: string } | null }>,
+  queryFactory: (
+    from: number,
+    to: number
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
   pageSize = 1000
 ): Promise<T[]> {
   const rows: T[] = [];
@@ -244,6 +300,13 @@ function chunkArray<T>(items: T[], size: number) {
   }
 
   return chunks;
+}
+
+function isNonAdminAnalyticsEvent<T extends { user_id: string | null }>(
+  event: T,
+  adminUserIdSet: Set<string>
+) {
+  return !event.user_id || !adminUserIdSet.has(event.user_id);
 }
 
 async function listStoragePathsRecursively(
@@ -286,68 +349,116 @@ async function listStoragePathsRecursively(
   return paths;
 }
 
-export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
+async function fetchUserEmailsByIds(
+  admin: ReturnType<typeof createAdminClient>,
+  userIds: string[]
+): Promise<Map<string, string>> {
+  const emails = new Map<string, string>();
+  if (userIds.length === 0) return emails;
+
+  const wanted = new Set(userIds);
+  let page = 1;
+  const perPage = 1000;
+
+  while (wanted.size > 0) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      logError('admin.fetchUserEmailsByIds.listUsers', error);
+      break;
+    }
+
+    for (const user of data?.users ?? []) {
+      if (!user.email || !wanted.has(user.id)) continue;
+      emails.set(user.id, user.email);
+      wanted.delete(user.id);
+    }
+
+    if ((data?.users?.length ?? 0) < perPage) break;
+    page += 1;
+  }
+
+  return emails;
+}
+
+export async function obtenerResumenAdministrador(
+  rangeDays = 30,
+  metricPeriods?: Partial<AdministradorMetricPeriods>
+): Promise<{
   success: boolean;
   stats?: AdministradorResumenStats;
   message?: string;
 }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
     const adminUserIds = await listAdminUserIds();
+    const adminUserIdSet = new Set(adminUserIds);
 
-    const normalizedRangeDays = rangeDays === 7 || rangeDays === 60 ? rangeDays : 30;
+    const normalizedRangeDays =
+      rangeDays === 1 || rangeDays === 7 || rangeDays === 30 ? rangeDays : 1;
+    const newRegistrationsPeriod = normalizeMetricPeriod(
+      metricPeriods?.newRegistrations,
+      normalizedRangeDays === 7 ? 7 : normalizedRangeDays === 30 ? 30 : 1
+    );
+    const answeredPeriod = normalizeMetricPeriod(metricPeriods?.answered, 1);
+    const simulatorAttemptsPeriod = normalizeMetricPeriod(
+      metricPeriods?.simulatorAttempts,
+      normalizedRangeDays === 7 ? 7 : 30
+    );
     const now = new Date();
     const todayStart = startOfDay(now);
     const yesterdayStart = startOfDay(new Date(todayStart.getTime() - 24 * 60 * 60 * 1000));
-    const currentStart = startOfDay(new Date(now.getTime() - normalizedRangeDays * 24 * 60 * 60 * 1000));
-    const previousStart = startOfDay(new Date(currentStart.getTime() - normalizedRangeDays * 24 * 60 * 60 * 1000));
-    const previousEnd = currentStart.toISOString();
+    const currentStart = calendarPeriodStart(normalizedRangeDays, now);
+    const newRegistrationsCurrentStart = calendarPeriodStart(newRegistrationsPeriod, now);
+    const newRegistrationsPreviousStart = calendarPeriodStart(newRegistrationsPeriod * 2, now);
+    const answeredCurrentStart = calendarPeriodStart(answeredPeriod, now);
+    const answeredPreviousStart = calendarPeriodStart(answeredPeriod * 2, now);
+    const simulatorAttemptsCurrentStart = calendarPeriodStart(simulatorAttemptsPeriod, now);
+    const simulatorAttemptsPreviousStart = calendarPeriodStart(simulatorAttemptsPeriod * 2, now);
 
     const [
-      currentEventsRes,
-      previousEventsRes,
-      todayEventsRes,
-      yesterdayEventsRes,
-      todayAnswersRes,
-      yesterdayAnswersRes,
+      currentEvents,
+      todayEvents,
+      yesterdayEvents,
+      answeredCurrentRes,
+      answeredPreviousRes,
       recentAuthUsersRes,
-      recentSimulatorEventsRes,
-      currentProfilesRes,
-      previousProfilesRes,
-      currentSimulatorRes,
-      previousSimulatorRes,
+      recentSimulatorEventsRaw,
+      newRegistrationsCurrentRes,
+      newRegistrationsPreviousRes,
+      simulatorAttemptsCurrentRes,
+      simulatorAttemptsPreviousRes,
     ] = await Promise.all([
-      admin
-        .from('analytics_events')
-        .select('user_id, session_key, event_name, created_at, path, device_type')
-        .gte('created_at', currentStart.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(20000),
-      admin
-        .from('analytics_events')
-        .select('user_id, session_key, created_at, path, device_type')
-        .gte('created_at', previousStart.toISOString())
-        .lt('created_at', previousEnd)
-        .order('created_at', { ascending: false })
-        .limit(20000),
-      admin
-        .from('analytics_events')
-        .select('user_id, session_key, event_name, path, device_type, metadata')
-        .gte('created_at', todayStart.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(20000),
-      admin
-        .from('analytics_events')
-        .select('user_id, session_key')
-        .gte('created_at', yesterdayStart.toISOString())
-        .lt('created_at', todayStart.toISOString())
-        .order('created_at', { ascending: false })
-        .limit(20000),
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('analytics_events')
+          .select('user_id, session_key, event_name, created_at, path, device_type')
+          .gte('created_at', currentStart.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('analytics_events')
+          .select('user_id, session_key, event_name, path, device_type, metadata')
+          .gte('created_at', todayStart.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('analytics_events')
+          .select('user_id, session_key')
+          .gte('created_at', yesterdayStart.toISOString())
+          .lt('created_at', todayStart.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ),
       excludeUserIds(
         admin
           .from('historial_respuestas')
           .select('id', { count: 'exact', head: true })
-          .gte('fecha_respuesta', todayStart.toISOString()),
+          .gte('fecha_respuesta', answeredCurrentStart.toISOString()),
         adminUserIds,
         'usuario_id'
       ),
@@ -355,8 +466,8 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
         admin
           .from('historial_respuestas')
           .select('id', { count: 'exact', head: true })
-          .gte('fecha_respuesta', yesterdayStart.toISOString())
-          .lt('fecha_respuesta', todayStart.toISOString()),
+          .gte('fecha_respuesta', answeredPreviousStart.toISOString())
+          .lt('fecha_respuesta', answeredCurrentStart.toISOString()),
         adminUserIds,
         'usuario_id'
       ),
@@ -369,46 +480,57 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
       })(),
       (async () => {
         try {
-          return await admin
-            .from('analytics_events')
-            .select('event_name, user_id, path, created_at, metadata')
-            .in('event_name', ['simulator_started', 'simulator_finished', 'simulator_abandoned'])
-            .order('created_at', { ascending: false })
-            .limit(24);
+          const data = await fetchAllAdminRows(
+            (from, to) =>
+              admin
+                .from('analytics_events')
+                .select('event_name, user_id, path, created_at, metadata')
+                .in('event_name', [
+                  'simulator_started',
+                  'simulator_finished',
+                  'simulator_abandoned',
+                ])
+                .order('created_at', { ascending: false })
+                .range(from, to),
+            200
+          );
+          return { data, error: null };
         } catch (error) {
           return { data: [], error };
         }
       })(),
-      admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', currentStart.toISOString()),
       admin
         .from('profiles')
         .select('id', { count: 'exact', head: true })
-        .gte('creado_at', previousStart.toISOString())
-        .lt('creado_at', previousEnd),
+        .gte('creado_at', newRegistrationsCurrentStart.toISOString()),
+      admin
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .gte('creado_at', newRegistrationsPreviousStart.toISOString())
+        .lt('creado_at', newRegistrationsCurrentStart.toISOString()),
       excludeUserIds(
-        admin.from('simulator_attempts').select('id', { count: 'exact', head: true }).gte('created_at', currentStart.toISOString()),
+        admin
+          .from('simulator_attempts')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', simulatorAttemptsCurrentStart.toISOString()),
         adminUserIds
       ),
       excludeUserIds(
         admin
           .from('simulator_attempts')
           .select('id', { count: 'exact', head: true })
-          .gte('created_at', previousStart.toISOString())
-          .lt('created_at', previousEnd),
+          .gte('created_at', simulatorAttemptsPreviousStart.toISOString())
+          .lt('created_at', simulatorAttemptsCurrentStart.toISOString()),
         adminUserIds
       ),
     ]);
 
-    if (currentEventsRes.error) throw currentEventsRes.error;
-    if (previousEventsRes.error) throw previousEventsRes.error;
-    if (todayEventsRes.error) throw todayEventsRes.error;
-    if (yesterdayEventsRes.error) throw yesterdayEventsRes.error;
-    if (todayAnswersRes.error) throw todayAnswersRes.error;
-    if (yesterdayAnswersRes.error) throw yesterdayAnswersRes.error;
-    if (currentProfilesRes.error) throw currentProfilesRes.error;
-    if (previousProfilesRes.error) throw previousProfilesRes.error;
-    if (currentSimulatorRes.error) throw currentSimulatorRes.error;
-    if (previousSimulatorRes.error) throw previousSimulatorRes.error;
+    if (answeredCurrentRes.error) throw answeredCurrentRes.error;
+    if (answeredPreviousRes.error) throw answeredPreviousRes.error;
+    if (newRegistrationsCurrentRes.error) throw newRegistrationsCurrentRes.error;
+    if (newRegistrationsPreviousRes.error) throw newRegistrationsPreviousRes.error;
+    if (simulatorAttemptsCurrentRes.error) throw simulatorAttemptsCurrentRes.error;
+    if (simulatorAttemptsPreviousRes.error) throw simulatorAttemptsPreviousRes.error;
 
     if (recentAuthUsersRes.error) {
       console.warn(
@@ -416,29 +538,41 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
         formatAdminError(recentAuthUsersRes.error)
       );
     }
-    if (recentSimulatorEventsRes.error) {
+    if (recentSimulatorEventsRaw.error) {
       console.warn(
         'No pudimos cargar eventos recientes de simulador para administrador:',
-        formatAdminError(recentSimulatorEventsRes.error)
+        formatAdminError(recentSimulatorEventsRaw.error)
       );
     }
 
-    const currentEvents = currentEventsRes.data ?? [];
-    const todayEvents = todayEventsRes.data ?? [];
-    const yesterdayEvents = yesterdayEventsRes.data ?? [];
     const recentAuthUsers = recentAuthUsersRes.data?.users ?? [];
-    const recentSimulatorEvents = recentSimulatorEventsRes.data ?? [];
+    const recentSimulatorEvents = (recentSimulatorEventsRaw.data ?? [])
+      .filter((event) => isNonAdminAnalyticsEvent(event, adminUserIdSet))
+      .slice(0, 24);
+    const currentEventsFiltered = currentEvents.filter((event) =>
+      isNonAdminAnalyticsEvent(event, adminUserIdSet)
+    );
+    const todayEventsFiltered = todayEvents.filter((event) =>
+      isNonAdminAnalyticsEvent(event, adminUserIdSet)
+    );
+    const yesterdayEventsFiltered = yesterdayEvents.filter((event) =>
+      isNonAdminAnalyticsEvent(event, adminUserIdSet)
+    );
 
     const topMateriaViews = new Map<string, number>();
     const topPageViews = new Map<string, number>();
-    const dailyUsageMap = new Map<string, { sesiones: Set<string>; usuarios: Set<string> }>();
-    const visitorLoginSeriesMap = new Map<string, { visitantes: Set<string>; logins: Set<string> }>();
+    const visitorLoginSeriesMap = new Map<
+      string,
+      { visitantes: Set<string>; logins: Set<string> }
+    >();
     const deviceCounters = { Desktop: 0, Mobile: 0, Tablet: 0 };
     const sessionStages = new Map<string, Set<string>>();
     const loginSourceCounts = new Map<string, number>();
     const loginDeviceCounts = { Desktop: 0, Mobile: 0, Tablet: 0 };
+    const simulatorLoginGateReachedSessions = new Set<string>();
+    const simulatorLoginGateConvertedSessions = new Set<string>();
 
-    for (const event of currentEvents) {
+    for (const event of currentEventsFiltered) {
       const path = event.path ?? '';
       const deviceType = event.device_type ?? '';
       const createdAt = event.created_at ?? '';
@@ -456,18 +590,19 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
         topMateriaViews.set(materiaMatch[1], (topMateriaViews.get(materiaMatch[1]) ?? 0) + 1);
       }
 
+      if (event.event_name === 'simulator_login_gate_viewed') {
+        simulatorLoginGateReachedSessions.add(sessionKey);
+      }
+      if (
+        event.event_name === 'login_success' &&
+        simulatorLoginGateReachedSessions.has(sessionKey) &&
+        event.user_id
+      ) {
+        simulatorLoginGateConvertedSessions.add(sessionKey);
+      }
+
       if (createdAt) {
-        const dayLabel = new Date(createdAt).toLocaleDateString('es-AR', {
-          day: '2-digit',
-          month: '2-digit',
-        });
-        const dayUsage = dailyUsageMap.get(dayLabel) ?? {
-          sesiones: new Set<string>(),
-          usuarios: new Set<string>(),
-        };
-        dayUsage.sesiones.add(sessionKey);
-        dayUsage.usuarios.add(actorId);
-        dailyUsageMap.set(dayLabel, dayUsage);
+        const dayLabel = formatAnalyticsDayLabel(createdAt);
 
         const dayVisitors = visitorLoginSeriesMap.get(dayLabel) ?? {
           visitantes: new Set<string>(),
@@ -486,20 +621,17 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
       else if (deviceType === 'tablet') deviceCounters.Tablet += 1;
       else deviceCounters.Desktop += 1;
 
-      stageSet.add('landing');
+      stageSet.add('session');
       if (path.startsWith('/explorar')) stageSet.add('explorar');
-      if (path.startsWith('/universidad/')) stageSet.add('carrera');
+      if (path.startsWith('/universidad/') || path.startsWith('/materias')) stageSet.add('carrera');
       if (path.includes('/materia/')) stageSet.add('materia');
       if (path.startsWith('/simulador')) stageSet.add('simulador');
       sessionStages.set(sessionKey, stageSet);
     }
 
-    const anonymousTodaySessions = new Set(
-      todayEvents.filter((event) => !event.user_id).map((event) => event.session_key ?? 'unknown')
-    );
     const loginTodayUsers = new Set<string>();
 
-    for (const event of todayEvents) {
+    for (const event of todayEventsFiltered) {
       const metadata =
         'metadata' in event && typeof event.metadata === 'object' && event.metadata
           ? (event.metadata as Record<string, unknown>)
@@ -535,7 +667,9 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
           .filter((value): value is string => Boolean(value))
       )
     );
-    const materiaIds = Array.from(new Set([...topMateriaViews.keys(), ...recentActivityMateriaIds]));
+    const materiaIds = Array.from(
+      new Set([...topMateriaViews.keys(), ...recentActivityMateriaIds])
+    );
     const materiaNameById = new Map<string, string>();
     const userEmailById = new Map<string, string>();
     if (materiaIds.length > 0) {
@@ -545,7 +679,7 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
         .in('id', materiaIds);
 
       if (materiasError) {
-        console.error('Error cargando materias para resumen administrador:', materiasError);
+        logError('admin.obtenerResumen.materias', materiasError);
       } else {
         for (const row of materiasRows ?? []) {
           materiaNameById.set(row.id, row.nombre);
@@ -553,45 +687,32 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
       }
     }
 
-
     if (recentActivityUserIds.length > 0) {
-      const recentUsersLookup = await Promise.all(
-        recentActivityUserIds.map(async (userId) => {
-          try {
-            const response = await admin.auth.admin.getUserById(userId);
-            return {
-              userId,
-              email: response.data.user?.email ?? null,
-            };
-          } catch {
-            return {
-              userId,
-              email: null,
-            };
-          }
-        })
-      );
-
-      for (const row of recentUsersLookup) {
-        if (row.email) {
-          userEmailById.set(row.userId, row.email);
-        }
+      const recentEmails = await fetchUserEmailsByIds(admin, recentActivityUserIds);
+      for (const [userId, email] of recentEmails) {
+        userEmailById.set(userId, email);
       }
     }
-    const usersActive = uniqueUsersFromEvents(todayEvents);
-    const previousUsersActive = uniqueUsersFromEvents(yesterdayEvents);
-    const newRegistrations = currentProfilesRes.count ?? 0;
-    const previousNewRegistrations = previousProfilesRes.count ?? 0;
-    const answeredToday = todayAnswersRes.count ?? 0;
-    const answeredYesterday = yesterdayAnswersRes.count ?? 0;
-    const simulatorAttempts = currentSimulatorRes.count ?? 0;
-    const previousSimulatorAttempts = previousSimulatorRes.count ?? 0;
+    const usersActive = uniqueUsersFromEvents(todayEventsFiltered);
+    const previousUsersActive = uniqueUsersFromEvents(yesterdayEventsFiltered);
+    const newRegistrations = newRegistrationsCurrentRes.count ?? 0;
+    const previousNewRegistrations = newRegistrationsPreviousRes.count ?? 0;
+    const answeredToday = answeredCurrentRes.count ?? 0;
+    const answeredYesterday = answeredPreviousRes.count ?? 0;
+    const simulatorAttempts = simulatorAttemptsCurrentRes.count ?? 0;
+    const previousSimulatorAttempts = simulatorAttemptsPreviousRes.count ?? 0;
     const funnelStages = Array.from(sessionStages.values());
     const sessionsTotal = funnelStages.length;
     const reachedExplorar = funnelStages.filter((item) => item.has('explorar')).length;
     const reachedCarrera = funnelStages.filter((item) => item.has('carrera')).length;
     const reachedMateria = funnelStages.filter((item) => item.has('materia')).length;
     const reachedSimulador = funnelStages.filter((item) => item.has('simulador')).length;
+    const simulatorLoginGateReached = simulatorLoginGateReachedSessions.size;
+    const simulatorLoginGateConverted = simulatorLoginGateConvertedSessions.size;
+    const simulatorLoginGateAbandoned = Math.max(
+      0,
+      simulatorLoginGateReached - simulatorLoginGateConverted
+    );
     const recentActivity = [
       ...recentAuthUsers.map((user) => ({
         action: 'Nuevo usuario',
@@ -639,7 +760,6 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
       stats: {
         usersActive,
         usersActiveTrendPct: calculateTrend(usersActive, previousUsersActive),
-        anonymousToday: anonymousTodaySessions.size,
         loginToday: loginTodayUsers.size,
         loginTopSources: Array.from(loginSourceCounts.entries())
           .map(([label, value]) => ({ label, value }))
@@ -671,222 +791,895 @@ export async function obtenerResumenAdministrador(rangeDays = 30): Promise<{
         ].filter((item) => item.value > 0),
         topPages: Array.from(topPageViews.entries())
           .map(([path, views]) => ({ path, views }))
-          .filter((item) => item.path !== '/admin' && item.path !== '/administrador' && !item.path.startsWith('/administrador?'))
+          .filter(
+            (item) =>
+              item.path !== '/admin' &&
+              item.path !== '/administrador' &&
+              !item.path.startsWith('/administrador?')
+          )
           .sort((a, b) => b.views - a.views)
           .slice(0, 5),
         funnel: [
-          { step: 'Landing', value: sessionsTotal },
+          { step: 'Sesiones', value: sessionsTotal },
           { step: 'Explorar', value: reachedExplorar },
           { step: 'Carrera', value: reachedCarrera },
           { step: 'Materia', value: reachedMateria },
           { step: 'Simulador', value: reachedSimulador },
         ],
-        dailyUsage: Array.from(dailyUsageMap.entries())
-          .map(([label, value]) => ({
+        simulatorLoginGate: {
+          reached: simulatorLoginGateReached,
+          converted: simulatorLoginGateConverted,
+          abandoned: simulatorLoginGateAbandoned,
+        },
+        visitorLoginSeries: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => {
+          const value = visitorLoginSeriesMap.get(label);
+          return {
             label,
-            sesiones: value.sesiones.size,
-            usuarios: value.usuarios.size,
-          }))
-          .slice(-Math.min(normalizedRangeDays, 10)),
-        visitorLoginSeries: Array.from(visitorLoginSeriesMap.entries())
-          .map(([label, value]) => ({
-            label,
-            visitantes: value.visitantes.size,
-            logins: value.logins.size,
-          }))
-          .slice(-Math.min(normalizedRangeDays, 10)),
+            visitantes: value?.visitantes.size ?? 0,
+            logins: value?.logins.size ?? 0,
+          };
+        }),
         recentActivity,
       },
     };
   } catch (error) {
-    console.error('Error en obtenerResumenAdministrador:', formatAdminError(error));
+    logError('admin.obtenerResumen', error, { formattedError: formatAdminError(error) });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos cargar el resumen del administrador.',
+      message:
+        error instanceof Error ? error.message : 'No pudimos cargar el resumen del administrador.',
     };
   }
 }
 
+export interface AdministradorConversionStats {
+  premium: {
+    pricingViews: number;
+    intentClicks: number;
+    checkoutClicks: number;
+    checkoutUsers: number;
+    activatedUsers: number;
+    activeSubscriptions: number;
+    pricingToCheckoutPct: number;
+    checkoutToPaidPct: number;
+    sources: Array<{ source: string; clicks: number }>;
+  };
+  funnel: Array<{ step: string; value: number; conversionPct: number | null }>;
+  gate: { reached: number; converted: number; abandoned: number; conversionRatePct: number };
+  postSignup: {
+    landed: number;
+    continued: number;
+    dismissed: number;
+    resumed: number;
+    finished: number;
+    resumeRatePct: number;
+  };
+  demoToSignup: {
+    demoReached: number;
+    signedUp: number;
+    convertedPct: number;
+  };
+  retention: {
+    newUsers: number;
+    day2Cohort: number;
+    activeDay2: number;
+    day2RetentionPct: number;
+    day7Cohort: number;
+    activeDay7: number;
+    day7RetentionPct: number;
+    usersWithSimulator: number;
+    usersWith2PlusSimulators: number;
+    twoPlusPct: number;
+  };
+  signupSources: Array<{ label: string; value: number }>;
+  dailyConversion: Array<{
+    label: string;
+    demo: number;
+    gate: number;
+    registros: number;
+    landings: number;
+    retomas: number;
+    terminados: number;
+  }>;
+  focusSubjects: Array<{
+    id: string;
+    name: string;
+    parcial: number;
+    ready: number;
+    started: number;
+    answered1: number;
+    answered5: number;
+    activated: number;
+    registered: number;
+    finished: number;
+  }>;
+  acquisitionChannels: Array<{
+    channel: string;
+    ready: number;
+    activated: number;
+    activationPct: number;
+  }>;
+  needsFeedback: Array<{ reason: string; value: number }>;
+  sharing: {
+    shares: number;
+    authenticatedShares: number;
+    anonymousShares: number;
+    referredVisits: number;
+    started: number;
+    finished: number;
+    registered: number;
+    topSharers: Array<{
+      userId: string;
+      email: string;
+      shares: number;
+      referredVisits: number;
+      started: number;
+      finished: number;
+      registered: number;
+    }>;
+    links: Array<{
+      shareId: string;
+      email: string;
+      materia: string;
+      parcial: number;
+      kind: string;
+      method: string;
+      createdAt: string;
+      visits: number;
+      started: number;
+      finished: number;
+      registered: number;
+    }>;
+  };
+}
 
-export async function obtenerMarketingAdministrador(rangeDays = 30): Promise<{
+function labelSignupSource(location: string, provider: string) {
+  const labels: Record<string, string> = {
+    login: 'Página de login',
+    login_premium_intent: 'Intento premium',
+    auth_callback: provider === 'google' ? 'Google (signup)' : 'Email (confirmado)',
+  };
+  const value = labels[location] ?? location;
+  return value.trim() || 'desconocido';
+}
+
+const CONVERSION_EVENT_NAMES = [
+  'page_view',
+  'preguntero_shared',
+  'simulator_result_shared',
+  'simulator_ready',
+  'simulator_started',
+  'simulator_progress_checkpoint',
+  'simulator_needs_feedback',
+  'demo_checkpoint_reached',
+  'simulator_login_gate_viewed',
+  'simulator_login_gate_cta_clicked',
+  'signup_completed',
+  'post_signup_landing',
+  'post_signup_landing_cta_clicked',
+  'simulator_resumed',
+  'simulator_finished',
+  'login_success',
+  'pricing_view',
+  'premium_gate_viewed',
+  'premium_cta_clicked',
+  'premium_preview_viewed',
+  'premium_preview_interacted',
+  'premium_checkout_clicked',
+  'premium_checkout_created',
+  'premium_checkout_failed',
+  'premium_subscription_activated',
+];
+
+const ADMIN_FOCUS_SUBJECTS = [
+  {
+    id: '374e4043-a0ac-4803-b313-d8b600178492',
+    name: 'Tecnología, Humanidades y Modelos Globales',
+  },
+  {
+    id: 'eb923481-2207-4895-9ae4-2a0b984d9b99',
+    name: 'Aprender en el Siglo 21',
+  },
+] as const;
+
+function analyticsChannel(metadata: Record<string, unknown>) {
+  const attribution =
+    metadata.attribution && typeof metadata.attribution === 'object'
+      ? (metadata.attribution as Record<string, unknown>)
+      : {};
+  const source = String(attribution.latest_utm_source ?? attribution.utm_source ?? '')
+    .trim()
+    .toLowerCase();
+  if (!source) return 'Directo / sin etiqueta';
+  if (source.includes('whatsapp')) return 'WhatsApp';
+  if (source.includes('instagram')) return 'Instagram';
+  if (source.includes('google')) return 'Google';
+  return source;
+}
+
+async function obtenerConversionAdministradorRaw(rangeDays = 30): Promise<{
   success: boolean;
-  stats?: AdministradorMarketingStats;
+  stats?: AdministradorConversionStats;
   message?: string;
 }> {
   try {
     const admin = createAdminClient();
+    const paymentsAdmin = admin as unknown as SupabaseClient;
     const adminUserIds = await listAdminUserIds();
     const adminUserIdSet = new Set(adminUserIds);
-    const normalizedRangeDays = rangeDays === 7 || rangeDays === 60 ? rangeDays : 30;
-    const currentStart = startOfDay(
-      new Date(Date.now() - normalizedRangeDays * 24 * 60 * 60 * 1000)
-    );
 
-    const [events, profiles] = await Promise.all([
-      fetchAllAdminRows<{
-        user_id: string | null;
-        session_key: string | null;
-        event_name: string | null;
-        metadata: unknown;
-      }>(async (from, to) => {
-        const { data, error } = await admin
+    const normalizedRangeDays =
+      rangeDays === 1 || rangeDays === 7 || rangeDays === 30 ? rangeDays : 7;
+    const now = new Date();
+    const currentStart = calendarPeriodStart(normalizedRangeDays, now);
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    const [
+      conversionEvents,
+      profilesRes,
+      simulatorAttemptUserRows,
+      activityRows,
+      checkoutAttemptRows,
+      activatedSubscriptionRows,
+      activeSubscriptionRows,
+    ] = await Promise.all([
+      fetchAllAdminRows((from, to) =>
+        admin
           .from('analytics_events')
-          .select('user_id, session_key, event_name, metadata')
+          .select('event_name, user_id, session_key, created_at, metadata')
+          .in('event_name', CONVERSION_EVENT_NAMES)
           .gte('created_at', currentStart.toISOString())
-          .in('event_name', ['page_view', 'login_success'])
           .order('created_at', { ascending: false })
-          .range(from, to);
-
-        return {
-          data: (data ?? []) as Array<{
-            user_id: string | null;
-            session_key: string | null;
-            event_name: string | null;
-            metadata: unknown;
-          }>,
-          error: error ? { message: error.message } : null,
-        };
-      }),
-      fetchAllAdminRows<{ id: string }>(async (from, to) => {
-        const { data, error } = await admin
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        admin
           .from('profiles')
-          .select('id')
+          .select('id, creado_at')
           .gte('creado_at', currentStart.toISOString())
-          .range(from, to);
-
-        return {
-          data: (data ?? []) as Array<{ id: string }>,
-          error: error ? { message: error.message } : null,
-        };
-      }),
+          .order('creado_at', { ascending: false })
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        excludeUserIds(
+          admin
+            .from('simulator_attempts')
+            .select('user_id')
+            .gte('created_at', currentStart.toISOString())
+            .range(from, to),
+          adminUserIds
+        )
+      ),
+      fetchAllAdminRows((from, to) =>
+        admin
+          .from('analytics_events')
+          .select('user_id, created_at')
+          .not('user_id', 'is', null)
+          .gte('created_at', currentStart.toISOString())
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        paymentsAdmin
+          .from('payment_checkout_attempts')
+          .select('user_id, status, created_at')
+          .gte('created_at', currentStart.toISOString())
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        paymentsAdmin
+          .from('user_subscriptions')
+          .select('user_id, status, created_at')
+          .in('status', ['active', 'approved', 'authorized', 'trialing'])
+          .gte('created_at', currentStart.toISOString())
+          .range(from, to)
+      ),
+      fetchAllAdminRows((from, to) =>
+        paymentsAdmin
+          .from('user_subscriptions')
+          .select('user_id, status')
+          .in('status', ['active', 'approved', 'authorized', 'trialing'])
+          .range(from, to)
+      ),
     ]);
 
-    const newlyRegisteredIds = new Set(profiles.map((profile) => profile.id));
-    const grouped = new Map<
+    const events = conversionEvents.filter((event) =>
+      isNonAdminAnalyticsEvent(event, adminUserIdSet)
+    );
+    const newUserRows = profilesRes.filter((row) => !adminUserIdSet.has(row.id));
+    const newUserIds = new Set(newUserRows.map((row) => row.id));
+
+    const demoCheckpointSessions = new Set<string>();
+    const gateViewedSessions = new Set<string>();
+    const gateCtaSessions = new Set<string>();
+    const signupIdentities = new Set<string>();
+    const signupSources = new Map<string, number>();
+    const landingUsers = new Set<string>();
+    const continueUsers = new Set<string>();
+    const dismissUsers = new Set<string>();
+    const allResumedUsers = new Set<string>();
+    const allFinishedUsers = new Set<string>();
+    const resumedAtByUser = new Map<string, string>();
+    const demoAnonymousIds = new Set<string>();
+    const signupAnonymousIds = new Set<string>();
+    const dailySignup = new Map<string, number>();
+    const dailyLanding = new Map<string, number>();
+    const dailyDemo = new Map<string, number>();
+    const dailyGate = new Map<string, number>();
+    const dailyFinished = new Map<string, number>();
+    const registeredSessions = new Set<string>();
+    const premiumPricingSessions = new Set<string>();
+    const premiumIntentSessions = new Set<string>();
+    const premiumCheckoutClickIdentities = new Set<string>();
+    const premiumSources = new Map<string, number>();
+    const acquisitionStages = new Map<string, { ready: Set<string>; activated: Set<string> }>();
+    const needsFeedback = new Map<string, number>();
+    type ShareLinkAccumulator = {
+      shareId: string;
+      userId: string | null;
+      materiaId: string;
+      parcial: number;
+      kind: string;
+      method: string;
+      createdAt: string;
+      visits: Set<string>;
+      started: Set<string>;
+      finished: Set<string>;
+      registered: Set<string>;
+    };
+    const sharedLinks = new Map<string, ShareLinkAccumulator>();
+    const getSharedLink = (shareId: string) => {
+      const current = sharedLinks.get(shareId);
+      if (current) return current;
+      const created: ShareLinkAccumulator = {
+        shareId,
+        userId: null,
+        materiaId: '',
+        parcial: 0,
+        kind: 'preguntero',
+        method: 'desconocido',
+        createdAt: '',
+        visits: new Set<string>(),
+        started: new Set<string>(),
+        finished: new Set<string>(),
+        registered: new Set<string>(),
+      };
+      sharedLinks.set(shareId, created);
+      return created;
+    };
+    const focusStages = new Map<
       string,
       {
-        source: string;
-        medium: string;
-        campaign: string;
-        content: string;
-        visits: Set<string>;
-        logins: Set<string>;
-        registrations: Set<string>;
+        ready: Set<string>;
+        started: Set<string>;
+        answered1: Set<string>;
+        answered5: Set<string>;
+        activated: Set<string>;
+        finished: Set<string>;
       }
-    >();
-    const attributedVisitSessions = new Set<string>();
-    const attributedLoginUsers = new Set<string>();
-
-    const readAttribution = (metadata: unknown) => {
-      if (!metadata || typeof metadata !== 'object') return null;
-      const rawAttribution = (metadata as Record<string, unknown>).attribution;
-      if (!rawAttribution || typeof rawAttribution !== 'object') return null;
-
-      const attribution = rawAttribution as Record<string, unknown>;
-      const read = (latestKey: string, firstKey: string) => {
-        const latest = String(attribution[latestKey] ?? '').trim();
-        if (latest) return latest;
-        return String(attribution[firstKey] ?? '').trim();
-      };
-
-      const source = read('latest_utm_source', 'utm_source');
-      if (!source) return null;
-
-      return {
-        source,
-        medium: read('latest_utm_medium', 'utm_medium') || '(sin medium)',
-        campaign: read('latest_utm_campaign', 'utm_campaign') || '(sin campaign)',
-        content: read('latest_utm_content', 'utm_content') || '(sin content)',
-      };
-    };
+    >(
+      ADMIN_FOCUS_SUBJECTS.flatMap((subject) =>
+        [1, 2].map(
+          (parcial) =>
+            [
+              `${subject.id}:${parcial}`,
+              {
+                ready: new Set<string>(),
+                started: new Set<string>(),
+                answered1: new Set<string>(),
+                answered5: new Set<string>(),
+                activated: new Set<string>(),
+                finished: new Set<string>(),
+              },
+            ] as const
+        )
+      )
+    );
 
     for (const event of events) {
-      if (event.user_id && adminUserIdSet.has(event.user_id)) continue;
+      if (!['preguntero_shared', 'simulator_result_shared'].includes(event.event_name)) continue;
+      const metadata =
+        typeof event.metadata === 'object' && event.metadata
+          ? (event.metadata as Record<string, unknown>)
+          : {};
+      const shareId = String(metadata.share_id ?? '').trim();
+      if (!shareId) continue;
+      const link = getSharedLink(shareId);
+      link.userId = event.user_id ?? null;
+      link.materiaId = String(metadata.materia_id ?? '').trim();
+      link.parcial = Number(metadata.parcial ?? 0);
+      link.kind = String(
+        metadata.share_kind ??
+          (event.event_name === 'simulator_result_shared' ? 'resultado' : 'preguntero')
+      );
+      link.method = String(metadata.share_method ?? 'desconocido');
+      link.createdAt = event.created_at ?? '';
+    }
 
-      const attribution = readAttribution(event.metadata);
-      if (!attribution) continue;
-
-      const key = [
-        attribution.source,
-        attribution.medium,
-        attribution.campaign,
-        attribution.content,
-      ].join('||');
-
-      const bucket = grouped.get(key) ?? {
-        ...attribution,
-        visits: new Set<string>(),
-        logins: new Set<string>(),
-        registrations: new Set<string>(),
+    for (const event of events) {
+      const sessionKey = event.session_key ?? 'unknown';
+      const userId = event.user_id ?? '';
+      const metadata =
+        typeof event.metadata === 'object' && event.metadata
+          ? (event.metadata as Record<string, unknown>)
+          : {};
+      const anonymousId = String(metadata.anonymous_id ?? '').trim();
+      const materiaId = String(metadata.materia_id ?? '').trim();
+      const parcial = Number(metadata.parcial ?? 0);
+      const subjectStages = focusStages.get(`${materiaId}:${parcial}`);
+      const channel = analyticsChannel(metadata);
+      const attribution =
+        metadata.attribution && typeof metadata.attribution === 'object'
+          ? (metadata.attribution as Record<string, unknown>)
+          : {};
+      const attributedShareId = String(
+        attribution.latest_share_id ?? attribution.share_id ?? ''
+      ).trim();
+      if (attributedShareId && sharedLinks.has(attributedShareId)) {
+        const sharedLink = sharedLinks.get(attributedShareId)!;
+        if (event.event_name === 'page_view') sharedLink.visits.add(sessionKey);
+        if (event.event_name === 'simulator_started') sharedLink.started.add(sessionKey);
+        if (event.event_name === 'simulator_finished') sharedLink.finished.add(sessionKey);
+        if (event.event_name === 'signup_completed') sharedLink.registered.add(sessionKey);
+      }
+      const channelStages = acquisitionStages.get(channel) ?? {
+        ready: new Set<string>(),
+        activated: new Set<string>(),
       };
 
-      if (event.event_name === 'page_view') {
-        const visitKey = event.session_key ?? (event.user_id ? `user:${event.user_id}` : '');
-        if (visitKey && !attributedVisitSessions.has(visitKey)) {
-          bucket.visits.add(visitKey);
-          attributedVisitSessions.add(visitKey);
+      if (subjectStages) {
+        if (event.event_name === 'simulator_ready') {
+          subjectStages.ready.add(sessionKey);
+          channelStages.ready.add(sessionKey);
         }
+        if (event.event_name === 'simulator_started') subjectStages.started.add(sessionKey);
+        if (event.event_name === 'simulator_finished') subjectStages.finished.add(sessionKey);
+        if (event.event_name === 'simulator_progress_checkpoint') {
+          const checkpoint = Number(metadata.checkpoint ?? 0);
+          if (checkpoint >= 1) subjectStages.answered1.add(sessionKey);
+          if (checkpoint >= 5) subjectStages.answered5.add(sessionKey);
+          if (checkpoint >= 10) {
+            subjectStages.activated.add(sessionKey);
+            channelStages.activated.add(sessionKey);
+          }
+        }
+        acquisitionStages.set(channel, channelStages);
+      }
+      if (event.event_name === 'simulator_needs_feedback') {
+        const reason = String(metadata.reason ?? '').trim();
+        if (reason) needsFeedback.set(reason, (needsFeedback.get(reason) ?? 0) + 1);
       }
 
+      switch (event.event_name) {
+        case 'pricing_view':
+          premiumPricingSessions.add(sessionKey);
+          break;
+        case 'premium_cta_clicked': {
+          premiumIntentSessions.add(sessionKey);
+          const premiumSource = String(metadata.source ?? 'desconocido').trim() || 'desconocido';
+          premiumSources.set(premiumSource, (premiumSources.get(premiumSource) ?? 0) + 1);
+          break;
+        }
+        case 'premium_checkout_clicked':
+          premiumCheckoutClickIdentities.add(userId || `session:${sessionKey}`);
+          break;
+        case 'demo_checkpoint_reached':
+          demoCheckpointSessions.add(sessionKey);
+          if (anonymousId) demoAnonymousIds.add(anonymousId);
+          if (event.created_at) {
+            const label = formatAnalyticsDayLabel(event.created_at);
+            dailyDemo.set(label, (dailyDemo.get(label) ?? 0) + 1);
+          }
+          break;
+        case 'simulator_login_gate_viewed':
+          gateViewedSessions.add(sessionKey);
+          if (event.created_at) {
+            const label = formatAnalyticsDayLabel(event.created_at);
+            dailyGate.set(label, (dailyGate.get(label) ?? 0) + 1);
+          }
+          break;
+        case 'simulator_login_gate_cta_clicked':
+          gateCtaSessions.add(sessionKey);
+          break;
+        case 'signup_completed': {
+          registeredSessions.add(sessionKey);
+          const identity =
+            userId || (anonymousId ? `anon:${anonymousId}` : `session:${sessionKey}`);
+          signupIdentities.add(identity);
+          if (anonymousId) signupAnonymousIds.add(anonymousId);
+          const provider = String(metadata.provider ?? '').trim();
+          const source = labelSignupSource(String(metadata.location ?? '').trim(), provider);
+          signupSources.set(source, (signupSources.get(source) ?? 0) + 1);
+          if (event.created_at) {
+            const label = formatAnalyticsDayLabel(event.created_at);
+            dailySignup.set(label, (dailySignup.get(label) ?? 0) + 1);
+          }
+          break;
+        }
+        case 'login_success':
+          if (userId) registeredSessions.add(sessionKey);
+          break;
+        case 'post_signup_landing':
+          if (userId) {
+            landingUsers.add(userId);
+            if (event.created_at) {
+              const label = formatAnalyticsDayLabel(event.created_at);
+              dailyLanding.set(label, (dailyLanding.get(label) ?? 0) + 1);
+            }
+          }
+          break;
+        case 'post_signup_landing_cta_clicked':
+          if (!userId) break;
+          if (metadata.cta === 'continue') continueUsers.add(userId);
+          else if (metadata.cta === 'dismiss') dismissUsers.add(userId);
+          break;
+        case 'simulator_resumed':
+          if (userId) {
+            allResumedUsers.add(userId);
+            if (event.created_at) {
+              const previous = resumedAtByUser.get(userId);
+              if (!previous || previous < event.created_at) {
+                resumedAtByUser.set(userId, event.created_at);
+              }
+            }
+          }
+          break;
+        case 'simulator_finished':
+          if (userId) {
+            allFinishedUsers.add(userId);
+            if (event.created_at) {
+              const label = formatAnalyticsDayLabel(event.created_at);
+              dailyFinished.set(label, (dailyFinished.get(label) ?? 0) + 1);
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    const gateConvertedSessions = new Set<string>();
+    for (const event of events) {
       if (
         event.event_name === 'login_success' &&
         event.user_id &&
-        !attributedLoginUsers.has(event.user_id)
+        gateViewedSessions.has(event.session_key ?? 'unknown')
       ) {
-        bucket.logins.add(event.user_id);
-        attributedLoginUsers.add(event.user_id);
-
-        if (newlyRegisteredIds.has(event.user_id)) {
-          bucket.registrations.add(event.user_id);
-        }
+        gateConvertedSessions.add(event.session_key ?? 'unknown');
       }
-
-      grouped.set(key, bucket);
     }
 
-    const rows = Array.from(grouped.values())
-      .map((bucket) => {
-        const visits = bucket.visits.size;
-        const logins = bucket.logins.size;
-        const registrations = bucket.registrations.size;
+    const resumedByNewUser = new Set([...allResumedUsers].filter((id) => newUserIds.has(id)));
+    const finishedByNewUser = new Set([...allFinishedUsers].filter((id) => newUserIds.has(id)));
 
-        return {
-          source: bucket.source,
-          medium: bucket.medium,
-          campaign: bucket.campaign,
-          content: bucket.content,
-          visits,
-          logins,
-          registrations,
-          conversionPct: visits > 0 ? Number(((registrations / visits) * 100).toFixed(1)) : 0,
-        };
-      })
-      .sort(
-        (a, b) =>
-          b.registrations - a.registrations ||
-          b.logins - a.logins ||
-          b.visits - a.visits
-      );
+    const dailyResume = new Map<string, number>();
+    for (const userId of resumedByNewUser) {
+      const createdAt = resumedAtByUser.get(userId);
+      if (!createdAt) continue;
+      const label = formatAnalyticsDayLabel(createdAt);
+      dailyResume.set(label, (dailyResume.get(label) ?? 0) + 1);
+    }
+
+    const demoToSignup = new Set([...demoAnonymousIds].filter((id) => signupAnonymousIds.has(id)))
+      .size;
+    const checkoutUsers = new Set(
+      checkoutAttemptRows
+        .filter((row) => row.user_id && !adminUserIdSet.has(String(row.user_id)))
+        .map((row) => String(row.user_id))
+    );
+    const activatedUsers = new Set(
+      activatedSubscriptionRows
+        .filter((row) => row.user_id && !adminUserIdSet.has(String(row.user_id)))
+        .map((row) => String(row.user_id))
+    );
+    const activeSubscriptions = new Set(
+      activeSubscriptionRows
+        .filter((row) => row.user_id && !adminUserIdSet.has(String(row.user_id)))
+        .map((row) => String(row.user_id))
+    );
+
+    const activityByUser = new Map<string, string[]>();
+    for (const row of activityRows) {
+      if (!row.user_id || adminUserIdSet.has(row.user_id) || !row.created_at) continue;
+      const list = activityByUser.get(row.user_id) ?? [];
+      list.push(row.created_at);
+      activityByUser.set(row.user_id, list);
+    }
+    let activeDay2 = 0;
+    let day2Cohort = 0;
+    let activeDay7 = 0;
+    let day7Cohort = 0;
+    for (const profile of newUserRows) {
+      const createdMs = new Date(profile.creado_at ?? '').getTime();
+      if (Number.isNaN(createdMs)) continue;
+      const activity = activityByUser.get(profile.id) ?? [];
+      const hasActivityBetween = (fromMs: number, toMs: number) =>
+        activity.some((createdAt) => {
+          const ms = new Date(createdAt).getTime();
+          return ms >= fromMs && ms < toMs;
+        });
+
+      if (now.getTime() - createdMs >= 2 * DAY_MS) {
+        day2Cohort += 1;
+        if (hasActivityBetween(createdMs + DAY_MS, createdMs + 2 * DAY_MS)) activeDay2 += 1;
+      }
+      if (now.getTime() - createdMs >= 7 * DAY_MS) {
+        day7Cohort += 1;
+        if (hasActivityBetween(createdMs + 6 * DAY_MS, createdMs + 7 * DAY_MS)) activeDay7 += 1;
+      }
+    }
+
+    const simulatorCountByUser = new Map<string, number>();
+    for (const row of simulatorAttemptUserRows) {
+      if (!row.user_id || adminUserIdSet.has(row.user_id)) continue;
+      simulatorCountByUser.set(row.user_id, (simulatorCountByUser.get(row.user_id) ?? 0) + 1);
+    }
+    const usersWithSimulator = simulatorCountByUser.size;
+    const usersWith2PlusSimulators = [...simulatorCountByUser.values()].filter(
+      (count) => count >= 2
+    ).length;
+
+    const funnelSteps = [
+      { step: 'Llegaron al checkpoint demo', value: demoCheckpointSessions.size },
+      { step: 'Vieron el gate de login', value: gateViewedSessions.size },
+      { step: 'Clickearon el CTA del gate', value: gateCtaSessions.size },
+      { step: 'Completaron el registro', value: signupIdentities.size },
+      { step: 'Aterrizaron en el dashboard', value: landingUsers.size },
+      { step: 'Retomaron el simulador', value: resumedByNewUser.size },
+      { step: 'Terminaron el simulador', value: finishedByNewUser.size },
+    ];
+
+    const gateReached = gateViewedSessions.size;
+    const gateConverted = gateConvertedSessions.size;
+    const postSignupResumed = resumedByNewUser.size;
+    const postSignupLanded = landingUsers.size;
+    const shareLinkValues = [...sharedLinks.values()].filter((link) => link.createdAt);
+    const sharerEmails = await fetchUserEmailsByIds(admin, [
+      ...new Set(shareLinkValues.flatMap((link) => (link.userId ? [link.userId] : []))),
+    ]);
+    const sharerStats = new Map<
+      string,
+      {
+        shares: number;
+        referredVisits: Set<string>;
+        started: Set<string>;
+        finished: Set<string>;
+        registered: Set<string>;
+      }
+    >();
+    for (const link of shareLinkValues) {
+      if (!link.userId) continue;
+      const current = sharerStats.get(link.userId) ?? {
+        shares: 0,
+        referredVisits: new Set<string>(),
+        started: new Set<string>(),
+        finished: new Set<string>(),
+        registered: new Set<string>(),
+      };
+      current.shares += 1;
+      link.visits.forEach((session) => current.referredVisits.add(session));
+      link.started.forEach((session) => current.started.add(session));
+      link.finished.forEach((session) => current.finished.add(session));
+      link.registered.forEach((session) => current.registered.add(session));
+      sharerStats.set(link.userId, current);
+    }
+    const allReferredVisits = new Set(
+      shareLinkValues.flatMap((link) =>
+        [...link.visits].map((session) => `${link.shareId}:${session}`)
+      )
+    );
+    const allReferredStarts = new Set(
+      shareLinkValues.flatMap((link) =>
+        [...link.started].map((session) => `${link.shareId}:${session}`)
+      )
+    );
+    const allReferredFinished = new Set(
+      shareLinkValues.flatMap((link) =>
+        [...link.finished].map((session) => `${link.shareId}:${session}`)
+      )
+    );
+    const allReferredRegistered = new Set(
+      shareLinkValues.flatMap((link) =>
+        [...link.registered].map((session) => `${link.shareId}:${session}`)
+      )
+    );
 
     return {
       success: true,
       stats: {
-        totalVisits: rows.reduce((sum, row) => sum + row.visits, 0),
-        totalLogins: rows.reduce((sum, row) => sum + row.logins, 0),
-        totalRegistrations: rows.reduce((sum, row) => sum + row.registrations, 0),
-        rows,
+        premium: {
+          pricingViews: premiumPricingSessions.size,
+          intentClicks: premiumIntentSessions.size,
+          checkoutClicks: premiumCheckoutClickIdentities.size,
+          checkoutUsers: checkoutUsers.size,
+          activatedUsers: activatedUsers.size,
+          activeSubscriptions: activeSubscriptions.size,
+          pricingToCheckoutPct:
+            premiumPricingSessions.size > 0
+              ? Number(((checkoutUsers.size / premiumPricingSessions.size) * 100).toFixed(1))
+              : 0,
+          checkoutToPaidPct:
+            checkoutUsers.size > 0
+              ? Number(((activatedUsers.size / checkoutUsers.size) * 100).toFixed(1))
+              : 0,
+          sources: Array.from(premiumSources.entries())
+            .map(([source, clicks]) => ({ source, clicks }))
+            .sort((a, b) => b.clicks - a.clicks),
+        },
+        funnel: funnelSteps.map((item, index) => {
+          const base = index === 0 ? null : funnelSteps[index - 1].value;
+          return {
+            ...item,
+            conversionPct: base && base > 0 ? Number(((item.value / base) * 100).toFixed(1)) : null,
+          };
+        }),
+        gate: {
+          reached: gateReached,
+          converted: gateConverted,
+          abandoned: Math.max(0, gateReached - gateConverted),
+          conversionRatePct:
+            gateReached > 0 ? Number(((gateConverted / gateReached) * 100).toFixed(1)) : 0,
+        },
+        postSignup: {
+          landed: postSignupLanded,
+          continued: continueUsers.size,
+          dismissed: dismissUsers.size,
+          resumed: postSignupResumed,
+          finished: finishedByNewUser.size,
+          resumeRatePct:
+            postSignupLanded > 0
+              ? Number(((postSignupResumed / postSignupLanded) * 100).toFixed(1))
+              : 0,
+        },
+        demoToSignup: {
+          demoReached: demoAnonymousIds.size,
+          signedUp: demoToSignup,
+          convertedPct:
+            demoAnonymousIds.size > 0
+              ? Number(((demoToSignup / demoAnonymousIds.size) * 100).toFixed(1))
+              : 0,
+        },
+        retention: {
+          newUsers: newUserRows.length,
+          day2Cohort,
+          activeDay2,
+          day2RetentionPct:
+            day2Cohort > 0 ? Number(((activeDay2 / day2Cohort) * 100).toFixed(1)) : 0,
+          day7Cohort,
+          activeDay7,
+          day7RetentionPct:
+            day7Cohort > 0 ? Number(((activeDay7 / day7Cohort) * 100).toFixed(1)) : 0,
+          usersWithSimulator,
+          usersWith2PlusSimulators,
+          twoPlusPct:
+            usersWithSimulator > 0
+              ? Number(((usersWith2PlusSimulators / usersWithSimulator) * 100).toFixed(1))
+              : 0,
+        },
+        signupSources: Array.from(signupSources.entries())
+          .map(([label, value]) => ({ label, value }))
+          .sort((a, b) => b.value - a.value),
+        dailyConversion: buildAnalyticsDayLabels(normalizedRangeDays, now).map((label) => ({
+          label,
+          demo: dailyDemo.get(label) ?? 0,
+          gate: dailyGate.get(label) ?? 0,
+          registros: dailySignup.get(label) ?? 0,
+          landings: dailyLanding.get(label) ?? 0,
+          retomas: dailyResume.get(label) ?? 0,
+          terminados: dailyFinished.get(label) ?? 0,
+        })),
+        focusSubjects: ADMIN_FOCUS_SUBJECTS.flatMap((subject) =>
+          [1, 2].map((parcial) => {
+            const stages = focusStages.get(`${subject.id}:${parcial}`)!;
+            const subjectSessions = new Set([
+              ...stages.ready,
+              ...stages.started,
+              ...stages.answered1,
+              ...stages.answered5,
+              ...stages.activated,
+            ]);
+            return {
+              id: subject.id,
+              name: subject.name,
+              parcial,
+              ready: stages.ready.size,
+              started: stages.started.size,
+              answered1: stages.answered1.size,
+              answered5: stages.answered5.size,
+              activated: stages.activated.size,
+              registered: [...registeredSessions].filter((session) => subjectSessions.has(session))
+                .length,
+              finished: stages.finished.size,
+            };
+          })
+        ),
+        acquisitionChannels: Array.from(acquisitionStages.entries())
+          .map(([channel, stages]) => ({
+            channel,
+            ready: stages.ready.size,
+            activated: stages.activated.size,
+            activationPct:
+              stages.ready.size > 0
+                ? Number(((stages.activated.size / stages.ready.size) * 100).toFixed(1))
+                : 0,
+          }))
+          .sort((a, b) => b.activated - a.activated || b.ready - a.ready),
+        needsFeedback: Array.from(needsFeedback.entries())
+          .map(([reason, value]) => ({ reason, value }))
+          .sort((a, b) => b.value - a.value),
+        sharing: {
+          shares: shareLinkValues.length,
+          authenticatedShares: shareLinkValues.filter((link) => link.userId).length,
+          anonymousShares: shareLinkValues.filter((link) => !link.userId).length,
+          referredVisits: allReferredVisits.size,
+          started: allReferredStarts.size,
+          finished: allReferredFinished.size,
+          registered: allReferredRegistered.size,
+          topSharers: [...sharerStats.entries()]
+            .map(([userId, value]) => ({
+              userId,
+              email: sharerEmails.get(userId) ?? `Usuario ${userId.slice(0, 8)}`,
+              shares: value.shares,
+              referredVisits: value.referredVisits.size,
+              started: value.started.size,
+              finished: value.finished.size,
+              registered: value.registered.size,
+            }))
+            .sort(
+              (a, b) =>
+                b.registered - a.registered ||
+                b.started - a.started ||
+                b.referredVisits - a.referredVisits ||
+                b.shares - a.shares
+            )
+            .slice(0, 10),
+          links: shareLinkValues
+            .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+            .slice(0, 20)
+            .map((link) => ({
+              shareId: link.shareId,
+              email: link.userId
+                ? (sharerEmails.get(link.userId) ?? `Usuario ${link.userId.slice(0, 8)}`)
+                : 'Anónimo',
+              materia:
+                ADMIN_FOCUS_SUBJECTS.find((subject) => subject.id === link.materiaId)?.name ??
+                (link.materiaId ? `Materia ${link.materiaId.slice(0, 8)}` : 'Materia desconocida'),
+              parcial: link.parcial,
+              kind: link.kind,
+              method: link.method,
+              createdAt: link.createdAt,
+              visits: link.visits.size,
+              started: link.started.size,
+              finished: link.finished.size,
+              registered: link.registered.size,
+            })),
+        },
       },
     };
   } catch (error) {
-    console.error('Error en obtenerMarketingAdministrador:', formatAdminError(error));
+    logError('admin.obtenerConversion', error, { formattedError: formatAdminError(error) });
     return {
       success: false,
       message:
         error instanceof Error
           ? error.message
-          : 'No pudimos cargar las métricas de marketing.',
+          : 'No pudimos cargar la conversión del administrador.',
     };
   }
+}
+
+const obtenerConversionAdministradorCached = nextCache(
+  obtenerConversionAdministradorRaw,
+  ['admin-conversion-v2'],
+  {
+    revalidate: 60,
+    tags: ['admin-conversion', 'admin-analytics'],
+  }
+);
+
+export async function obtenerConversionAdministrador(rangeDays = 30) {
+  await requireAdminAccess();
+  return obtenerConversionAdministradorCached(rangeDays);
 }
 
 export async function obtenerDetalleMateriaAnaliticaAdministrador(
@@ -898,6 +1691,7 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
   message?: string;
 }> {
   try {
+    await requireAdminAccess();
     if (!materiaId) {
       return {
         success: false,
@@ -908,11 +1702,15 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
     const admin = createAdminClient();
     const adminUserIds = await listAdminUserIds();
     const adminUserIdSet = new Set(adminUserIds);
-    const normalizedRangeDays = rangeDays === 7 || rangeDays === 60 ? rangeDays : 30;
-    const currentStart = startOfDay(new Date(Date.now() - normalizedRangeDays * 24 * 60 * 60 * 1000));
+    const normalizedRangeDays =
+      rangeDays === 1 || rangeDays === 7 || rangeDays === 30 ? rangeDays : 1;
+    const currentStart = rollingPeriodStart(normalizedRangeDays, new Date());
     const matterPath = `/explorar/materia/${materiaId}`;
 
-    const [{ data: materiaRow, error: materiaError }, { data: relationRows, error: relationError }] = await Promise.all([
+    const [
+      { data: materiaRow, error: materiaError },
+      { data: relationRows, error: relationError },
+    ] = await Promise.all([
       admin.from('materias').select('id, nombre').eq('id', materiaId).maybeSingle(),
       admin.from('carrera_materias').select('carrera_id').eq('materia_id', materiaId),
     ]);
@@ -939,10 +1737,20 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         .range(from, to)
     );
 
-    const visitRows = visitRowsRaw.filter((row) => !row.user_id || !adminUserIdSet.has(row.user_id));
-    const sessionKeys = Array.from(new Set(visitRows.map((row) => row.session_key).filter((value): value is string => Boolean(value))));
+    const visitRows = visitRowsRaw.filter(
+      (row) => !row.user_id || !adminUserIdSet.has(row.user_id)
+    );
+    const sessionKeys = Array.from(
+      new Set(
+        visitRows.map((row) => row.session_key).filter((value): value is string => Boolean(value))
+      )
+    );
     const relatedCareerIds = Array.from(
-      new Set((relationRows ?? []).map((row) => row.carrera_id).filter((value): value is string => Boolean(value)))
+      new Set(
+        (relationRows ?? [])
+          .map((row) => row.carrera_id)
+          .filter((value): value is string => Boolean(value))
+      )
     );
 
     const careerNameById = new Map<string, string>();
@@ -966,11 +1774,13 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
           materiaId,
           materiaNombre: materiaRow?.nombre ?? `Materia ${materiaId.slice(0, 8)}`,
           totalVisitas: 0,
+          directLinkEntries: 0,
           careerSources: [],
           mobilePct: 0,
           loggedPct: 0,
           anonymousPct: 0,
           actions: [],
+          sharedLinkActions: [],
           partials: [1, 2].map((parcial) => ({
             parcial,
             answeredQuestions: 0,
@@ -1008,9 +1818,7 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
       .filter((row) => !row.user_id || !adminUserIdSet.has(row.user_id));
     const loggedUserIds = Array.from(
       new Set(
-        sessionEvents
-          .map((row) => row.user_id)
-          .filter((value): value is string => Boolean(value))
+        sessionEvents.map((row) => row.user_id).filter((value): value is string => Boolean(value))
       )
     );
 
@@ -1053,10 +1861,12 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
 
     const careerCounts = new Map<string, number>();
     const actionCounts = new Map<string, number>();
+    const sharedLinkActionCounts = new Map<string, number>();
     let mobileSessions = 0;
     let loggedSessions = 0;
     let anonymousSessions = 0;
     let totalVisitas = 0;
+    let directLinkEntries = 0;
 
     for (const [sessionKey, rawEvents] of eventsBySession.entries()) {
       const events = [...rawEvents].sort(
@@ -1070,6 +1880,8 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
 
       totalVisitas += 1;
       const firstVisit = events[firstVisitIndex];
+      const firstSessionPageView = events.find((event) => event.event_name === 'page_view');
+      const isDirectMatterEntry = firstSessionPageView?.path === matterPath;
       const metadata =
         typeof firstVisit.metadata === 'object' && firstVisit.metadata
           ? (firstVisit.metadata as Record<string, unknown>)
@@ -1078,8 +1890,8 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         typeof metadata.carrera_id === 'string'
           ? metadata.carrera_id
           : typeof metadata.carreraId === 'string'
-          ? metadata.carreraId
-          : null;
+            ? metadata.carreraId
+            : null;
       const previousCareerId =
         events
           .slice(0, firstVisitIndex)
@@ -1094,11 +1906,17 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
           })
           .reverse()
           .find((value): value is string => Boolean(value)) ?? null;
-      const profileCareerId = firstVisit.user_id ? userCareerById.get(firstVisit.user_id) ?? null : null;
-      const fallbackCareerId = !explicitCareerId && !profileCareerId && relatedCareerIds.length === 1 ? relatedCareerIds[0] : null;
-      const resolvedCareerId = explicitCareerId || previousCareerId || profileCareerId || fallbackCareerId;
+      const profileCareerId = firstVisit.user_id
+        ? (userCareerById.get(firstVisit.user_id) ?? null)
+        : null;
+      const fallbackCareerId =
+        !explicitCareerId && !profileCareerId && relatedCareerIds.length === 1
+          ? relatedCareerIds[0]
+          : null;
+      const resolvedCareerId =
+        explicitCareerId || previousCareerId || profileCareerId || fallbackCareerId;
       const careerLabel = resolvedCareerId
-        ? careerNameById.get(resolvedCareerId) ?? `Carrera ${resolvedCareerId.slice(0, 8)}`
+        ? (careerNameById.get(resolvedCareerId) ?? `Carrera ${resolvedCareerId.slice(0, 8)}`)
         : 'Ingreso directo / sin carrera detectada';
       careerCounts.set(careerLabel, (careerCounts.get(careerLabel) ?? 0) + 1);
 
@@ -1113,6 +1931,9 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
       }
 
       const nextEvents = events.slice(firstVisitIndex + 1);
+      if (isDirectMatterEntry) {
+        directLinkEntries += 1;
+      }
       const exploredMatterSection = nextEvents.some((event) => {
         if (event.event_name !== 'page_view' || event.path !== matterPath) return false;
         const eventMetadata =
@@ -1122,7 +1943,14 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         return ['resumenes', 'trabajos', 'pregunteros'].includes(String(eventMetadata.tab ?? ''));
       });
       const startedSimulator = nextEvents.some((event) => {
-        if (!['simulator_started', 'simulator_resumed', 'simulator_finished', 'simulator_abandoned'].includes(event.event_name)) {
+        if (
+          ![
+            'simulator_started',
+            'simulator_resumed',
+            'simulator_finished',
+            'simulator_abandoned',
+          ].includes(event.event_name)
+        ) {
           return false;
         }
 
@@ -1147,20 +1975,80 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         );
       });
       const viewedResources = nextEvents.some(
-        (event) => event.event_name === 'page_view' && event.path?.startsWith(`/recursos/${materiaId}`)
+        (event) =>
+          event.event_name === 'page_view' && event.path?.startsWith(`/recursos/${materiaId}`)
       );
+      const viewedResumenes = nextEvents.some((event) => {
+        if (!['materia_tab_viewed', 'materia_resumen_opened'].includes(event.event_name))
+          return false;
+        const eventMetadata =
+          typeof event.metadata === 'object' && event.metadata
+            ? (event.metadata as Record<string, unknown>)
+            : {};
+        return (
+          String(eventMetadata.materia_id ?? '') === materiaId &&
+          (event.event_name === 'materia_resumen_opened' ||
+            String(eventMetadata.tab ?? '').toLowerCase() === 'resumenes')
+        );
+      });
+      const openedTrabajos = nextEvents.some((event) => {
+        if (!['materia_tab_viewed', 'materia_resource_opened'].includes(event.event_name))
+          return false;
+        const eventMetadata =
+          typeof event.metadata === 'object' && event.metadata
+            ? (event.metadata as Record<string, unknown>)
+            : {};
+        return (
+          String(eventMetadata.materia_id ?? '') === materiaId &&
+          String(eventMetadata.tab ?? '').toLowerCase() === 'trabajos'
+        );
+      });
+      const openedPregunteros = nextEvents.some((event) => {
+        if (
+          ![
+            'materia_tab_viewed',
+            'materia_resource_opened',
+            'materia_simulator_cta_clicked',
+          ].includes(event.event_name)
+        ) {
+          return false;
+        }
+        const eventMetadata =
+          typeof event.metadata === 'object' && event.metadata
+            ? (event.metadata as Record<string, unknown>)
+            : {};
+        return (
+          String(eventMetadata.materia_id ?? '') === materiaId &&
+          String(eventMetadata.tab ?? '').toLowerCase() === 'pregunteros'
+        );
+      });
 
       const actionLabel = finishedSimulator
         ? 'Terminaron simulador'
         : startedSimulator
-        ? 'Iniciaron simulador'
-        : viewedResources
-        ? 'Vieron recursos'
-        : exploredMatterSection
-        ? 'Abrieron una sección y no avanzaron'
-        : 'Solo miraron la materia';
+          ? 'Iniciaron simulador'
+          : viewedResources
+            ? 'Vieron recursos'
+            : exploredMatterSection
+              ? 'Abrieron una sección y no avanzaron'
+              : 'Solo miraron la materia';
 
       actionCounts.set(actionLabel, (actionCounts.get(actionLabel) ?? 0) + 1);
+      if (isDirectMatterEntry) {
+        const sharedActionLabels: string[] = [];
+
+        if (openedTrabajos) sharedActionLabels.push('Abrieron trabajos practicos');
+        if (openedPregunteros) sharedActionLabels.push('Abrieron simuladores');
+        if (startedSimulator) sharedActionLabels.push('Iniciaron simulador');
+        if (viewedResumenes || viewedResources) sharedActionLabels.push('Vieron resumenes');
+        if (sharedActionLabels.length === 0) {
+          sharedActionLabels.push('No hicieron nada');
+        }
+
+        for (const label of sharedActionLabels) {
+          sharedLinkActionCounts.set(label, (sharedLinkActionCounts.get(label) ?? 0) + 1);
+        }
+      }
       eventsBySession.set(sessionKey, events);
     }
 
@@ -1175,9 +2063,13 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         .gte('fecha_respuesta', currentStart.toISOString())
         .range(from, to)
     );
-    const answerRows = answerRowsRaw.filter((row) => !row.usuario_id || !adminUserIdSet.has(row.usuario_id));
+    const answerRows = answerRowsRaw.filter(
+      (row) => !row.usuario_id || !adminUserIdSet.has(row.usuario_id)
+    );
     const answeredQuestionIds = Array.from(
-      new Set(answerRows.map((row) => row.pregunta_id).filter((value): value is string => Boolean(value)))
+      new Set(
+        answerRows.map((row) => row.pregunta_id).filter((value): value is string => Boolean(value))
+      )
     );
 
     const partialByQuestionId = new Map<string, number>();
@@ -1209,7 +2101,11 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
 
         for (const response of premiumQuestionChunks) {
           if (response.error) throw response.error;
-          premiumQuestionRows.push(...(response.data ?? []).filter((row): row is { id: string; set_id: string } => Boolean(row.id && row.set_id)));
+          premiumQuestionRows.push(
+            ...(response.data ?? []).filter((row): row is { id: string; set_id: string } =>
+              Boolean(row.id && row.set_id)
+            )
+          );
         }
 
         const premiumSetIds = Array.from(new Set(premiumQuestionRows.map((row) => row.set_id)));
@@ -1262,7 +2158,9 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         .gte('created_at', currentStart.toISOString())
         .range(from, to)
     );
-    const attemptRows = attemptRowsRaw.filter((row) => !row.user_id || !adminUserIdSet.has(row.user_id));
+    const attemptRows = attemptRowsRaw.filter(
+      (row) => !row.user_id || !adminUserIdSet.has(row.user_id)
+    );
 
     const partialAttemptTotals = new Map<number, { attempts: number; scoreSum: number }>();
     for (const row of attemptRows) {
@@ -1290,6 +2188,7 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
         materiaId,
         materiaNombre: materiaRow?.nombre ?? `Materia ${materiaId.slice(0, 8)}`,
         totalVisitas,
+        directLinkEntries,
         careerSources: Array.from(careerCounts.entries())
           .map(([label, value]) => ({
             label,
@@ -1297,14 +2196,24 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
             pct: totalVisitas > 0 ? Number(((value / totalVisitas) * 100).toFixed(1)) : 0,
           }))
           .sort((a, b) => b.value - a.value),
-        mobilePct: totalVisitas > 0 ? Number(((mobileSessions / totalVisitas) * 100).toFixed(1)) : 0,
-        loggedPct: totalVisitas > 0 ? Number(((loggedSessions / totalVisitas) * 100).toFixed(1)) : 0,
-        anonymousPct: totalVisitas > 0 ? Number(((anonymousSessions / totalVisitas) * 100).toFixed(1)) : 0,
+        mobilePct:
+          totalVisitas > 0 ? Number(((mobileSessions / totalVisitas) * 100).toFixed(1)) : 0,
+        loggedPct:
+          totalVisitas > 0 ? Number(((loggedSessions / totalVisitas) * 100).toFixed(1)) : 0,
+        anonymousPct:
+          totalVisitas > 0 ? Number(((anonymousSessions / totalVisitas) * 100).toFixed(1)) : 0,
         actions: Array.from(actionCounts.entries())
           .map(([label, value]) => ({
             label,
             value,
             pct: totalVisitas > 0 ? Number(((value / totalVisitas) * 100).toFixed(1)) : 0,
+          }))
+          .sort((a, b) => b.value - a.value),
+        sharedLinkActions: Array.from(sharedLinkActionCounts.entries())
+          .map(([label, value]) => ({
+            label,
+            value,
+            pct: directLinkEntries > 0 ? Number(((value / directLinkEntries) * 100).toFixed(1)) : 0,
           }))
           .sort((a, b) => b.value - a.value),
         partials: partialKeys.map((parcial) => {
@@ -1322,10 +2231,13 @@ export async function obtenerDetalleMateriaAnaliticaAdministrador(
       },
     };
   } catch (error) {
-    console.error('Error en obtenerDetalleMateriaAnaliticaAdministrador:', formatAdminError(error));
+    logError('admin.obtenerDetalleMateriaAnalitica', error, {
+      formattedError: formatAdminError(error),
+    });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos cargar el detalle de la materia.',
+      message:
+        error instanceof Error ? error.message : 'No pudimos cargar el detalle de la materia.',
     };
   }
 }
@@ -1337,6 +2249,7 @@ export async function obtenerUsuariosAdministrador(limit = 250): Promise<{
   message?: string;
 }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
     const adminUserIds = await listAdminUserIds();
     const todayStart = startOfDay(new Date());
@@ -1359,7 +2272,10 @@ export async function obtenerUsuariosAdministrador(limit = 250): Promise<{
       admin.from('subscription_plans').select('id, code'),
       admin.from('profiles').select('id, role').limit(limit),
       admin.from('profiles').select('id', { count: 'exact', head: true }),
-      admin.from('profiles').select('id', { count: 'exact', head: true }).gte('creado_at', todayStart.toISOString()),
+      admin
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .gte('creado_at', todayStart.toISOString()),
       excludeUserIds(
         admin
           .from('analytics_events')
@@ -1402,26 +2318,40 @@ export async function obtenerUsuariosAdministrador(limit = 250): Promise<{
       latestPlanByUser.set(row.user_id, code === 'premium' ? 'premium' : 'free');
     }
 
-    const rows: AdministradorUsuarioRow[] = (authUsersData?.users ?? []).map((user) => {
-      const lastSignIn = user.last_sign_in_at ?? null;
-      const isActive =
-        !!lastSignIn &&
-        Date.now() - new Date(lastSignIn).getTime() < 30 * 24 * 60 * 60 * 1000;
-      const resolvedRole =
-        ((user.app_metadata?.role === 'admin' ? 'admin' : null) ??
+    const rows: AdministradorUsuarioRow[] = (authUsersData?.users ?? [])
+      .map((user) => {
+        const lastSignIn = user.last_sign_in_at ?? null;
+        const isActive =
+          !!lastSignIn && Date.now() - new Date(lastSignIn).getTime() < 30 * 24 * 60 * 60 * 1000;
+        const resolvedRole = ((user.app_metadata?.role === 'admin' ? 'admin' : null) ??
           profileRoleByUser.get(user.id) ??
           'student') as 'admin' | 'student';
 
-      return {
-        id: user.id,
-        email: user.email ?? '(sin email)',
-        estado: isActive ? 'activo' : 'inactivo',
-        plan: latestPlanByUser.get(user.id) ?? 'free',
-        role: resolvedRole,
-        last_sign_in_at: lastSignIn,
-        created_at: user.created_at ?? null,
-      };
-    });
+        return {
+          id: user.id,
+          email: user.email ?? '(sin email)',
+          estado: isActive ? ('activo' as const) : ('inactivo' as const),
+          plan: latestPlanByUser.get(user.id) ?? 'free',
+          role: resolvedRole,
+          last_sign_in_at: lastSignIn,
+          created_at: user.created_at ?? null,
+        };
+      })
+      .sort((left, right) => {
+        const leftLastSignIn = left.last_sign_in_at ? new Date(left.last_sign_in_at).getTime() : 0;
+        const rightLastSignIn = right.last_sign_in_at
+          ? new Date(right.last_sign_in_at).getTime()
+          : 0;
+
+        if (leftLastSignIn !== rightLastSignIn) {
+          return rightLastSignIn - leftLastSignIn;
+        }
+
+        const leftCreatedAt = left.created_at ? new Date(left.created_at).getTime() : 0;
+        const rightCreatedAt = right.created_at ? new Date(right.created_at).getTime() : 0;
+
+        return rightCreatedAt - leftCreatedAt;
+      });
 
     const activeToday = new Set(
       (todayActiveUsersRes.data ?? [])
@@ -1439,10 +2369,164 @@ export async function obtenerUsuariosAdministrador(limit = 250): Promise<{
       rows,
     };
   } catch (error) {
-    console.error('Error en obtenerUsuariosAdministrador:', formatAdminError(error));
+    logError('admin.obtenerUsuarios', error, { formattedError: formatAdminError(error) });
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos cargar el panel de usuarios.',
+    };
+  }
+}
+
+export interface AdministradorSegmentacionRow {
+  email: string;
+  segmento: 'B_activo' | 'C_probo_una_vez' | 'D_solo_cuenta';
+  perfil: 'completo' | 'incompleto';
+  intentos: number;
+  preguntas: number;
+  correctas: number;
+  suscripcion: string | null;
+  material: string | null;
+  registro: string | null;
+  ultimo_login: string | null;
+}
+
+export interface AdministradorSegmentacionStats {
+  totalDormidos: number;
+  porSegmento: Array<{ segmento: string; cantidad: number }>;
+  activosConPerfil: number;
+}
+
+export async function obtenerSegmentacionUsuariosAdministrador(): Promise<{
+  success: boolean;
+  stats?: AdministradorSegmentacionStats;
+  rows?: AdministradorSegmentacionRow[];
+  message?: string;
+}> {
+  try {
+    await requireAdminAccess();
+    const admin = createAdminClient();
+    const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [
+      { data: authUsersData, error: authError },
+      { data: profileRows, error: profilesError },
+      { data: attempts, error: attemptsError },
+      { data: subs, error: subsError },
+    ] = await Promise.all([
+      admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+      admin.from('profiles').select('id, universidad_id, carrera_id'),
+      admin.from('simulator_attempts').select('user_id, answered_questions, correct_answers'),
+      admin.from('user_subscriptions').select('user_id, status'),
+    ]);
+
+    if (authError) throw authError;
+    if (profilesError) throw profilesError;
+    if (attemptsError) throw attemptsError;
+    if (subsError) throw subsError;
+
+    const profileById = new Map(
+      (profileRows ?? []).map((p) => [
+        p.id,
+        p as { universidad_id: string | null; carrera_id: string | null },
+      ])
+    );
+    const simByUser = new Map<string, { intentos: number; preguntas: number; correctas: number }>();
+    for (const a of attempts ?? []) {
+      const cur = simByUser.get(a.user_id) ?? { intentos: 0, preguntas: 0, correctas: 0 };
+      cur.intentos += 1;
+      cur.preguntas += a.answered_questions ?? 0;
+      cur.correctas += a.correct_answers ?? 0;
+      simByUser.set(a.user_id, cur);
+    }
+    const subByUser = new Map<string, string>();
+    for (const s of subs ?? []) {
+      if (!subByUser.has(s.user_id)) subByUser.set(s.user_id, s.status ?? '');
+    }
+
+    // student_materials puede no existir aún en la BD remota; no debe romper el panel.
+    const matByUser = new Map<string, string>();
+    try {
+      const { data: mats, error: matErr } = await admin
+        .from('student_materials')
+        .select('user_id, processing_status');
+      if (!matErr) {
+        for (const m of mats ?? []) {
+          if (!matByUser.has(m.user_id)) matByUser.set(m.user_id, m.processing_status ?? '');
+        }
+      }
+    } catch {
+      // tabla ausente: ignorar
+    }
+
+    const rows: AdministradorSegmentacionRow[] = [];
+    for (const u of authUsersData?.users ?? []) {
+      const lastSignIn = u.last_sign_in_at;
+      if (!lastSignIn || lastSignIn >= cutoff) continue;
+      if (u.email && /@evaluo\.|@test\.|@example\./.test(u.email)) continue;
+
+      const prof = profileById.get(u.id);
+      const sim = simByUser.get(u.id);
+      const sub = subByUser.get(u.id);
+      const mat = matByUser.get(u.id);
+      const perfilCompleto = Boolean(prof?.universidad_id && prof?.carrera_id);
+      const preguntas = sim?.preguntas ?? 0;
+
+      let segmento: AdministradorSegmentacionRow['segmento'];
+      if (preguntas >= 10) segmento = 'B_activo';
+      else if (preguntas > 0) segmento = 'C_probo_una_vez';
+      else segmento = 'D_solo_cuenta';
+
+      rows.push({
+        email: u.email ?? '(sin email)',
+        segmento,
+        perfil: perfilCompleto ? 'completo' : 'incompleto',
+        intentos: sim?.intentos ?? 0,
+        preguntas,
+        correctas: sim?.correctas ?? 0,
+        suscripcion: sub ?? null,
+        material: mat ?? null,
+        registro: u.created_at ?? null,
+        ultimo_login: lastSignIn,
+      });
+    }
+
+    const prio: Record<AdministradorSegmentacionRow['segmento'], number> = {
+      B_activo: 1,
+      C_probo_una_vez: 2,
+      D_solo_cuenta: 3,
+    };
+    rows.sort(
+      (a, b) =>
+        prio[a.segmento] - prio[b.segmento] ||
+        (b.ultimo_login && a.ultimo_login ? (b.ultimo_login > a.ultimo_login ? 1 : -1) : 0)
+    );
+
+    const porSegmento = new Map<string, number>();
+    let activosConPerfil = 0;
+    for (const r of rows) {
+      porSegmento.set(r.segmento, (porSegmento.get(r.segmento) ?? 0) + 1);
+      if (r.segmento === 'B_activo' && r.perfil === 'completo') activosConPerfil += 1;
+    }
+
+    return {
+      success: true,
+      stats: {
+        totalDormidos: rows.length,
+        porSegmento: Array.from(porSegmento.entries()).map(([segmento, cantidad]) => ({
+          segmento,
+          cantidad,
+        })),
+        activosConPerfil,
+      },
+      rows,
+    };
+  } catch (error) {
+    logError('admin.obtenerSegmentacionUsuarios', error, {
+      formattedError: formatAdminError(error),
+    });
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No pudimos cargar la segmentación.',
     };
   }
 }
@@ -1456,6 +2540,7 @@ export async function obtenerBibliotecaFormularioAdministrador(): Promise<{
   message?: string;
 }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
     const globalSlugs = new Set(['aprender-21', 'tecnologia-humanidades']);
 
@@ -1471,14 +2556,29 @@ export async function obtenerBibliotecaFormularioAdministrador(): Promise<{
       fetchAllAdminRows<{ id: string; nombre: string }>(async (from, to) =>
         admin.from('universidades').select('id, nombre').order('nombre').range(from, to)
       ),
-      fetchAllAdminRows<{ id: string; nombre: string | null; universidad_id: string | null }>(async (from, to) =>
-        admin.from('carreras').select('id, nombre, universidad_id').order('nombre').range(from, to)
+      fetchAllAdminRows<{ id: string; nombre: string | null; universidad_id: string | null }>(
+        async (from, to) =>
+          admin
+            .from('carreras')
+            .select('id, nombre, universidad_id')
+            .order('nombre')
+            .range(from, to)
       ),
-      fetchAllAdminRows<{ id: string; nombre: string; slug: string | null; carrera_id: string | null }>(async (from, to) =>
-        admin.from('materias').select('id, nombre, slug, carrera_id').order('nombre').range(from, to)
+      fetchAllAdminRows<{
+        id: string;
+        nombre: string;
+        slug: string | null;
+        carrera_id: string | null;
+      }>(async (from, to) =>
+        admin
+          .from('materias')
+          .select('id, nombre, slug, carrera_id')
+          .order('nombre')
+          .range(from, to)
       ),
-      fetchAllAdminRows<{ carrera_id: string | null; materia_id: string | null }>(async (from, to) =>
-        admin.from('carrera_materias').select('carrera_id, materia_id').range(from, to)
+      fetchAllAdminRows<{ carrera_id: string | null; materia_id: string | null }>(
+        async (from, to) =>
+          admin.from('carrera_materias').select('carrera_id, materia_id').range(from, to)
       ),
       fetchAllAdminRows<{ materia_id: string | null; parcial: number | null }>(async (from, to) =>
         admin.from('preguntas_banco').select('materia_id, parcial').range(from, to)
@@ -1504,12 +2604,7 @@ export async function obtenerBibliotecaFormularioAdministrador(): Promise<{
     const universidades = universidadesRows;
     const universidadIds = universidades.map((row) => row.id);
     const universidadNombreById = new Map(universidades.map((row) => [row.id, row.nombre]));
-    const carreraToUniversidad = new Map(
-      carrerasRows.map((row) => [
-        row.id,
-        row.universidad_id,
-      ])
-    );
+    const carreraToUniversidad = new Map(carrerasRows.map((row) => [row.id, row.universidad_id]));
     const carrerasByMateria = new Map<string, Set<string>>();
 
     for (const relation of carreraMateriasRows) {
@@ -1607,7 +2702,10 @@ export async function obtenerBibliotecaFormularioAdministrador(): Promise<{
     for (const setRow of latestPremiumSetByMateriaAndParcial.values()) {
       const premiumCount = premiumCountsBySetId.get(setRow.id) ?? 0;
       if (!premiumCount) continue;
-      const current = questionCountsByMateria.get(setRow.materia_id) ?? { parcial1: 0, parcial2: 0 };
+      const current = questionCountsByMateria.get(setRow.materia_id) ?? {
+        parcial1: 0,
+        parcial2: 0,
+      };
       if (setRow.parcial === 2) {
         current.parcial2 += premiumCount;
       } else {
@@ -1616,11 +2714,13 @@ export async function obtenerBibliotecaFormularioAdministrador(): Promise<{
       questionCountsByMateria.set(setRow.materia_id, current);
     }
 
-    const carrerasSimuladores = ((carrerasRows ?? []) as Array<{
-      id: string;
-      nombre?: string | null;
-      universidad_id: string | null;
-    }>)
+    const carrerasSimuladores = (
+      (carrerasRows ?? []) as Array<{
+        id: string;
+        nombre?: string | null;
+        universidad_id: string | null;
+      }>
+    )
       .map((carrera) => ({
         carreraId: carrera.id,
         carreraNombre: String(carrera.nombre ?? ''),
@@ -1650,21 +2750,24 @@ export async function obtenerBibliotecaFormularioAdministrador(): Promise<{
     return {
       success: true,
       universidades: universidades.map((row) => ({ id: row.id, nombre: row.nombre })),
-      carreras: carrerasRows.map(
-        (row) => ({
-          id: row.id,
-          nombre: String(row.nombre ?? ''),
-          universidadId: row.universidad_id,
-        })
-      ),
+      carreras: carrerasRows.map((row) => ({
+        id: row.id,
+        nombre: String(row.nombre ?? ''),
+        universidadId: row.universidad_id,
+      })),
       materias,
       carrerasSimuladores,
     };
   } catch (error) {
-    console.error('Error en obtenerBibliotecaFormularioAdministrador:', formatAdminError(error));
+    logError('admin.obtenerBibliotecaFormulario', error, {
+      formattedError: formatAdminError(error),
+    });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos cargar la configuracion de biblioteca.',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'No pudimos cargar la configuracion de biblioteca.',
     };
   }
 }
@@ -1675,6 +2778,7 @@ export async function obtenerBibliotecaResumenAdministrador(): Promise<{
   message?: string;
 }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
     const [carrerasRes, materiasRes, preguntasRes] = await Promise.all([
       admin.from('carreras').select('id', { count: 'exact', head: true }),
@@ -1695,10 +2799,13 @@ export async function obtenerBibliotecaResumenAdministrador(): Promise<{
       },
     };
   } catch (error) {
-    console.error('Error en obtenerBibliotecaResumenAdministrador:', formatAdminError(error));
+    logError('admin.obtenerBibliotecaResumen', error, {
+      formattedError: formatAdminError(error),
+    });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos cargar el resumen de biblioteca.',
+      message:
+        error instanceof Error ? error.message : 'No pudimos cargar el resumen de biblioteca.',
     };
   }
 }
@@ -1709,6 +2816,7 @@ export async function obtenerLogsAdministrador(): Promise<{
   message?: string;
 }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
     const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -1770,7 +2878,12 @@ export async function obtenerLogsAdministrador(): Promise<{
         normalized_name: string;
         materia_id: string | null;
         count: number;
-        recursos: Array<{ id: string; nombre: string; url_archivo: string | null; paginas: number | null }>;
+        recursos: Array<{
+          id: string;
+          nombre: string;
+          url_archivo: string | null;
+          paginas: number | null;
+        }>;
       }
     >();
 
@@ -1813,9 +2926,13 @@ export async function obtenerLogsAdministrador(): Promise<{
     }
 
     const totalSessions = sessionStages.size;
-    const reachedMateria = Array.from(sessionStages.values()).filter((set) => set.has('materia')).length;
+    const reachedMateria = Array.from(sessionStages.values()).filter((set) =>
+      set.has('materia')
+    ).length;
     const abandonoRate =
-      totalSessions > 0 ? Number((((totalSessions - reachedMateria) / totalSessions) * 100).toFixed(2)) : 0;
+      totalSessions > 0
+        ? Number((((totalSessions - reachedMateria) / totalSessions) * 100).toFixed(2))
+        : 0;
 
     const alerts: AdministradorLogsAlert[] = [];
     if (abandonoRate > 70) {
@@ -1848,29 +2965,21 @@ export async function obtenerLogsAdministrador(): Promise<{
     }
 
     const eventRows = events.filter((event) =>
-      ['login_success', 'client_error', 'simulator_started', 'simulator_finished'].includes(event.event_name)
+      ['login_success', 'client_error', 'simulator_started', 'simulator_finished'].includes(
+        event.event_name
+      )
     );
     const recentUserIds = Array.from(
-      new Set(eventRows.map((row) => row.user_id).filter((value): value is string => Boolean(value)))
+      new Set(
+        eventRows.map((row) => row.user_id).filter((value): value is string => Boolean(value))
+      )
     );
     const userEmailById = new Map<string, string>();
 
     if (recentUserIds.length > 0) {
-      const users = await Promise.all(
-        recentUserIds.map(async (userId) => {
-          try {
-            const response = await admin.auth.admin.getUserById(userId);
-            return { userId, email: response.data.user?.email ?? null };
-          } catch {
-            return { userId, email: null };
-          }
-        })
-      );
-
-      for (const row of users) {
-        if (row.email) {
-          userEmailById.set(row.userId, row.email);
-        }
+      const recentEmails = await fetchUserEmailsByIds(admin, recentUserIds);
+      for (const [userId, email] of recentEmails) {
+        userEmailById.set(userId, email);
       }
     }
 
@@ -1881,7 +2990,7 @@ export async function obtenerLogsAdministrador(): Promise<{
           : {};
       const rawDetail =
         event.event_name === 'client_error'
-          ? metadata.message ?? metadata.error ?? metadata.reason ?? 'Error de cliente'
+          ? (metadata.message ?? metadata.error ?? metadata.reason ?? 'Error de cliente')
           : event.event_name === 'login_success'
             ? 'Login correcto'
             : event.event_name === 'simulator_started'
@@ -1893,7 +3002,7 @@ export async function obtenerLogsAdministrador(): Promise<{
         eventName: event.event_name,
         path: event.path ?? '/',
         actor: event.user_id
-          ? userEmailById.get(event.user_id) ?? `Usuario ${event.user_id.slice(0, 8)}`
+          ? (userEmailById.get(event.user_id) ?? `Usuario ${event.user_id.slice(0, 8)}`)
           : 'Sesión anónima',
         detail: String(rawDetail).slice(0, 180),
         createdAt: event.created_at ?? null,
@@ -1918,7 +3027,11 @@ export async function obtenerLogsAdministrador(): Promise<{
               ? (row.metadata as Record<string, unknown>)
               : {};
           const rawMessage =
-            metadata.message ?? metadata.error ?? metadata.reason ?? metadata.description ?? 'Sin detalle adicional';
+            metadata.message ??
+            metadata.error ??
+            metadata.reason ??
+            metadata.description ??
+            'Sin detalle adicional';
 
           return {
             path: row.path ?? 'unknown',
@@ -1932,7 +3045,7 @@ export async function obtenerLogsAdministrador(): Promise<{
       },
     };
   } catch (error) {
-    console.error('Error en obtenerLogsAdministrador:', formatAdminError(error));
+    logError('admin.obtenerLogs', error, { formattedError: formatAdminError(error) });
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos cargar los logs del sistema.',
@@ -1946,13 +3059,13 @@ export async function eliminarArchivosHuerfanosAdministrador(): Promise<{
   message: string;
 }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
-    const [{ data: dbResources, error: dbResourcesError }, { data: dbMateriales, error: dbMaterialesError }] = await Promise.all([
-      admin
-      .from('recursos')
-      .select('url_archivo')
-      .not('url_archivo', 'is', null)
-      .limit(10000),
+    const [
+      { data: dbResources, error: dbResourcesError },
+      { data: dbMateriales, error: dbMaterialesError },
+    ] = await Promise.all([
+      admin.from('recursos').select('url_archivo').not('url_archivo', 'is', null).limit(10000),
       admin.from('materiales').select('archivo_url').limit(10000),
     ]);
 
@@ -1986,12 +3099,13 @@ export async function eliminarArchivosHuerfanosAdministrador(): Promise<{
           : 'No había archivos huérfanos para eliminar.',
     };
   } catch (error) {
-    console.error('Error en eliminarArchivosHuerfanosAdministrador:', formatAdminError(error));
+    logError('admin.eliminarArchivosHuerfanos', error, {
+      formattedError: formatAdminError(error),
+    });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'No pudimos limpiar los archivos huérfanos.',
+      message:
+        error instanceof Error ? error.message : 'No pudimos limpiar los archivos huérfanos.',
     };
   }
 }
-
-

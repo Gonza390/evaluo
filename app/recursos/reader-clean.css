@@ -1,0 +1,74 @@
+.resource-reader-clean {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  background: #fff;
+}
+
+.resource-reader-clean > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.resource-reader-clean [class*='bg-[#f3f6fb]'] {
+  background: #fff !important;
+}
+
+.resource-reader-clean .surface-panel,
+.resource-reader-clean .surface-card {
+  box-shadow: none !important;
+}
+
+.resource-reader-clean .surface-panel {
+  border-radius: 0 !important;
+  border-color: rgb(226 232 240) !important;
+  background: #fff !important;
+}
+
+.resource-reader-clean .surface-card {
+  border-color: rgb(226 232 240) !important;
+  background: #fff !important;
+}
+
+.resource-reader-clean [class*='shadow-['],
+.resource-reader-clean .shadow-sm,
+.resource-reader-clean .shadow-lg,
+.resource-reader-clean .shadow-xl,
+.resource-reader-clean .shadow-2xl {
+  box-shadow: none !important;
+}
+
+.resource-reader-clean .animate-saas-lift-in {
+  animation: none !important;
+}
+
+.resource-reader-clean button,
+.resource-reader-clean a {
+  max-width: 100%;
+}
+
+.resource-reader-clean button[class*='rounded-2xl'],
+.resource-reader-clean a[class*='rounded-2xl'] {
+  border-radius: 0.75rem !important;
+}
+
+.resource-reader-clean section[class*='surface-panel'] > div:first-child {
+  background: #fff;
+}
+
+.resource-reader-clean [class*='bg-[linear-gradient'] {
+  background-image: none !important;
+  background-color: #fff !important;
+}
+
+.resource-reader-clean [class*='rounded-[1.15rem]'],
+.resource-reader-clean [class*='rounded-[1.5rem]'],
+.resource-reader-clean [class*='rounded-[28px]'] {
+  border-radius: 0.875rem !important;
+}
+
+@media (max-width: 639px) {
+  .resource-reader-clean .surface-panel {
+    border-inline: 0 !important;
+  }
+}

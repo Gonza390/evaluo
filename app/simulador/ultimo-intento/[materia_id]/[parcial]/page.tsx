@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import SimuladorExamen from '@/components/simulador/SimuladorExamen';
 import { requirePremiumUser } from '@/lib/premium';
+import SimuladorExamen from '@/components/simulador/LazySimuladorExamen';
 
 type Params = Promise<{ materia_id: string; parcial: string }>;
 
@@ -9,7 +9,13 @@ async function UltimoIntentoSimuladorContent({ params }: { params: Params }) {
   const { materia_id, parcial } = await params;
   const premium = await requirePremiumUser();
   if (!premium.ok) {
-    redirect('/pricing');
+    const returnTo = `/simulador/ultimo-intento/${materia_id}/${Number(parcial) || 1}`;
+    const query = new URLSearchParams({
+      materia: materia_id,
+      parcial: String(Number(parcial) || 1),
+      returnTo,
+    });
+    redirect(`/premium/simulador?${query.toString()}`);
   }
 
   return (
@@ -24,7 +30,16 @@ async function UltimoIntentoSimuladorContent({ params }: { params: Params }) {
 
 export default async function UltimoIntentoSimuladorPage({ params }: { params: Params }) {
   return (
-    <Suspense fallback={<div className="p-8 text-center font-bold text-indigo-600">Cargando simulador de tus errores...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-white px-6">
+          <div className="text-center">
+            <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
+            <p className="mt-4 text-sm font-semibold text-slate-700">Preparando tu último intento...</p>
+          </div>
+        </div>
+      }
+    >
       <UltimoIntentoSimuladorContent params={params} />
     </Suspense>
   );

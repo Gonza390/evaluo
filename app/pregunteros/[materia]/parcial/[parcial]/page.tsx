@@ -1,0 +1,316 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { notFound, redirect } from 'next/navigation';
+import { BookOpen, ListChecks, Target } from 'lucide-react';
+import { PregunteroPersonasJuridicasExperiment } from '@/components/marketing/preguntero-personas-juridicas-experiment';
+import { PregunteroSucesorioStudyPlan } from '@/components/marketing/preguntero-sucesorio-study-plan';
+import { PregunteroPracticeHero } from '@/components/marketing/preguntero-practice-hero';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildPregunteroParcialSearchTitle } from '@/lib/seo-search-copy';
+import { appendPregunteroAttribution } from '@/lib/preguntero-attribution';
+import {
+  buildParcialHref,
+  getPregunteroParcialData,
+  parsePregunteroParcial,
+  parcialToPreguntaFilter,
+} from '@/lib/data/preguntero';
+
+export const revalidate = 600;
+
+const PERSONAS_JURIDICAS_MATERIA_ID = '5a10b059-546d-41a1-8ed8-d9fb1dd7581d';
+const DERECHO_SUCESORIO_MATERIA_ID = '555d3d0a-206e-42e2-adf8-08f1063448e6';
+const PREGUNTERO_ACQUISITION_VARIANT = 'preguntero_landing_v1';
+
+type PageProps = {
+  params: Promise<{
+    materia: string;
+    parcial: string;
+  }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function buildParcialTitle(materiaNombre: string, parcial: '1' | '2' | 'integrador') {
+  return parcial === 'integrador'
+    ? `Preguntero integrador de ${materiaNombre}`
+    : `Preguntero parcial ${parcial} de ${materiaNombre}`;
+}
+
+function buildParcialDescription(input: {
+  materiaNombre: string;
+  parcial: '1' | '2' | 'integrador';
+  carreraNombre?: string;
+  universidadNombre?: string;
+  totalPreguntas: number;
+}) {
+  const context = [input.carreraNombre, input.universidadNombre].filter(Boolean).join(' en ');
+  const parcialLabel = input.parcial === 'integrador' ? 'integrador' : `parcial ${input.parcial}`;
+  const base =
+    input.totalPreguntas > 0
+      ? `${input.totalPreguntas.toLocaleString('es-AR')} preguntas para practicar el ${parcialLabel} de ${input.materiaNombre}`
+      : `Practicá el ${parcialLabel} de ${input.materiaNombre}`;
+
+  return context
+    ? `${base} para ${context}. Practicá el examen y revisá tus errores en Evaluo.`
+    : `${base}. Practicá el examen y revisá tus errores en Evaluo.`;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const materiaId = parseSeoEntitySlug(resolvedParams.materia).id;
+  const parcial = parsePregunteroParcial(resolvedParams.parcial);
+
+  if (!materiaId || !parcial) {
+    return { title: 'Preguntero', robots: { index: false, follow: false } };
+  }
+
+  const data = await getPregunteroParcialData(materiaId, parcial);
+  if (!data) {
+    return { title: 'Preguntero', robots: { index: false, follow: false } };
+  }
+
+  const canonicalHref = buildParcialHref(data.materiaNombre, data.materiaId, data.parcial);
+  const description = buildParcialDescription({
+    materiaNombre: data.materiaNombre,
+    parcial: data.parcial,
+    carreraNombre: data.carreraNombre,
+    universidadNombre: data.universidadNombre,
+    totalPreguntas: data.totalPreguntas,
+  });
+  const seoTitle = buildPregunteroParcialSearchTitle({
+    materiaNombre: data.materiaNombre,
+    parcial: data.parcial,
+    universityName: data.universidadNombre,
+  });
+
+  return {
+    title: seoTitle,
+    description,
+    alternates: { canonical: canonicalHref },
+    robots: {
+      index: data.totalPreguntas > 0,
+      follow: true,
+    },
+    openGraph: {
+      title: `${seoTitle} | Evaluo`,
+      description,
+      url: canonicalHref,
+      images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${seoTitle} | Evaluo`,
+      description,
+      images: ['/opengraph-image.png'],
+    },
+  };
+}
+
+export default async function PregunteroParcialPage({ params, searchParams }: PageProps) {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const materiaId = parseSeoEntitySlug(resolvedParams.materia).id;
+  const parcial = parsePregunteroParcial(resolvedParams.parcial);
+
+  if (!materiaId || !parcial) {
+    notFound();
+  }
+
+  const data = await getPregunteroParcialData(materiaId, parcial);
+  if (!data) {
+    notFound();
+  }
+
+  const canonicalHref = buildParcialHref(data.materiaNombre, data.materiaId, data.parcial);
+  const expectedMateriaSlug = buildSeoEntitySlug(data.materiaNombre, data.materiaId);
+  const pregunteroHref = `/pregunteros/${expectedMateriaSlug}`;
+  if (resolvedParams.materia !== expectedMateriaSlug) {
+    redirect(appendPregunteroAttribution(canonicalHref, resolvedSearchParams));
+  }
+
+  const { label } = parcialToPreguntaFilter(data.parcial);
+  const simulatorSearchParams = {
+    ...resolvedSearchParams,
+    acq: PREGUNTERO_ACQUISITION_VARIANT,
+  };
+  const simuladorHref = appendPregunteroAttribution(
+    `/simulador/${data.materiaId}/${data.parcialNumero}`,
+    simulatorSearchParams
+  );
+  const materiaHref = `/explorar/materia/${expectedMateriaSlug}`;
+  const resumenHref = `/resumenes/${expectedMateriaSlug}`;
+  const breadcrumbData = buildBreadcrumbJsonLd([
+    { name: 'Inicio', path: '/' },
+    { name: 'Pregunteros', path: '/pregunteros' },
+    {
+      name: `Preguntero de ${data.materiaNombre}`,
+      path: pregunteroHref,
+    },
+    { name: buildParcialTitle(data.materiaNombre, data.parcial), path: canonicalHref },
+  ]);
+
+  if (data.materiaId === PERSONAS_JURIDICAS_MATERIA_ID && data.parcial === '1') {
+    return (
+      <main className="min-h-screen bg-white">
+        <JsonLd data={breadcrumbData} />
+        <PregunteroPersonasJuridicasExperiment
+          title={buildParcialTitle(data.materiaNombre, data.parcial)}
+          materiaNombre={data.materiaNombre}
+          universidadNombre={data.universidadNombre}
+          carreraNombre={data.carreraNombre}
+          label={label}
+          previewQuestion={data.previewQuestion}
+          totalPreguntas={data.totalPreguntas}
+          samplePreguntas={data.samplePreguntas}
+          simuladorHref={simuladorHref}
+          pregunteroHref={pregunteroHref}
+          materiaHref={materiaHref}
+          resumenHref={resumenHref}
+          parcial1Href={`/pregunteros/${expectedMateriaSlug}/parcial/1`}
+          parcial2Href={`/pregunteros/${expectedMateriaSlug}/parcial/2`}
+          integradorHref={`/pregunteros/${expectedMateriaSlug}/parcial/integrador`}
+        />
+      </main>
+    );
+  }
+
+  return (
+    <main className="bg-background min-h-screen">
+      <JsonLd data={breadcrumbData} />
+
+      <PregunteroPracticeHero
+        title={buildParcialTitle(data.materiaNombre, data.parcial)}
+        materiaNombre={data.materiaNombre}
+        universidadNombre={data.universidadNombre}
+        totalPreguntas={data.totalPreguntas}
+        pregunteroHref={pregunteroHref}
+        simuladorHref={simuladorHref}
+        label={label}
+        parcial={data.parcial}
+        previewQuestion={data.previewQuestion}
+      />
+
+      <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+            <h2 className="text-foreground text-2xl font-bold tracking-[-0.04em]">
+              Preguntas de muestra del {label.toLowerCase()}
+            </h2>
+            {data.samplePreguntas.length === 0 ? (
+              <p className="text-muted-foreground mt-5 text-sm leading-7">
+                Todavía estamos cargando el banco de preguntas de este parcial. Entrá al Preguntero
+                para ver las preguntas disponibles.
+              </p>
+            ) : (
+              <ul className="mt-5 space-y-4">
+                {data.samplePreguntas.map((question, index) => (
+                  <li
+                    key={question.id}
+                    className="border-border bg-card rounded-2xl border px-4 py-4"
+                  >
+                    <p className="text-primary mb-2 text-xs font-bold tracking-widest uppercase">
+                      Pregunta de muestra {index + 1}
+                    </p>
+                    <p className="text-foreground text-sm leading-6">{question.enunciado}</p>
+                    <p className="text-muted-foreground mt-2 text-xs font-semibold">
+                      {question.opcionesCount} opciones
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {data.materiaId === DERECHO_SUCESORIO_MATERIA_ID && data.parcial === '2' ? (
+              <PregunteroSucesorioStudyPlan materiaId={data.materiaId} />
+            ) : null}
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Link
+                href={`/pregunteros/${expectedMateriaSlug}/parcial/1`}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+                  data.parcial === '1'
+                    ? 'border-brand bg-brand/10 text-brand'
+                    : 'border-border bg-card text-muted-foreground hover:border-brand hover:text-brand'
+                }`}
+              >
+                Parcial 1
+              </Link>
+              <Link
+                href={`/pregunteros/${expectedMateriaSlug}/parcial/2`}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+                  data.parcial === '2'
+                    ? 'border-brand bg-brand/10 text-brand'
+                    : 'border-border bg-card text-muted-foreground hover:border-brand hover:text-brand'
+                }`}
+              >
+                Parcial 2
+              </Link>
+              <Link
+                href={`/pregunteros/${expectedMateriaSlug}/parcial/integrador`}
+                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
+                  data.parcial === 'integrador'
+                    ? 'border-brand bg-brand/10 text-brand'
+                    : 'border-border bg-card text-muted-foreground hover:border-brand hover:text-brand'
+                }`}
+              >
+                Integrador
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+              <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
+                Conocé cómo venís
+              </h2>
+              <p className="text-muted-foreground mt-3 text-sm leading-7">
+                Practicá en condiciones similares al parcial, recibí una corrección clara y entendé
+                cada error antes de volver a intentarlo.
+              </p>
+              <Link
+                href={simuladorHref}
+                className="from-brand to-brand-2 mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition hover:translate-y-[-1px]"
+              >
+                <Target className="h-5 w-5" />
+                Probar 5 preguntas
+              </Link>
+            </div>
+
+            <div className="border-border bg-card rounded-[28px] border p-6 shadow-sm">
+              <h2 className="text-foreground text-xl font-bold tracking-[-0.04em]">
+                Seguir con {data.materiaNombre}
+              </h2>
+              <p className="text-muted-foreground mt-3 text-sm leading-7">
+                Volvé al preguntero completo, revisá resúmenes o entrá a la materia para seguir
+                estudiando.
+              </p>
+              <div className="mt-5 flex flex-col gap-3">
+                <Link
+                  href={pregunteroHref}
+                  className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+                >
+                  <ListChecks className="h-5 w-5" />
+                  Ver preguntero completo
+                </Link>
+                <Link
+                  href={materiaHref}
+                  className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  Entrar a la materia
+                </Link>
+                <Link
+                  href={resumenHref}
+                  className="text-brand inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+                >
+                  <BookOpen className="h-5 w-5" />
+                  Ver resúmenes
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}

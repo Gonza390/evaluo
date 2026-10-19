@@ -1,0 +1,66 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "gru1"
+  ],
+  "git": {
+    "deploymentEnabled": false
+  },
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.evaluo.com.ar"
+        }
+      ],
+      "destination": "https://evaluo.com.ar/:path*",
+      "permanent": true
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/internal/explanations/warm?batch_size=30&candidate_pool=4000&max_tokens=65000&lookback_days=120",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/internal/student-material-jobs",
+      "schedule": "30 8 * * *"
+    },
+    {
+      "path": "/api/internal/analytics-retention?retention_days=180&batch_size=1000&max_batches=100",
+      "schedule": "45 8 * * *"
+    },
+    {
+      "path": "/api/internal/seo-funnel-snapshot",
+      "schedule": "15 9 * * *"
+    },
+    {
+      "path": "/api/internal/exam-reminders",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/internal/reactivation-next-subject",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/internal/flashcard-review-reminders",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/internal/study-return-d1",
+      "schedule": "30 14 * * *"
+    },
+    {
+      "path": "/api/internal/study-return-48h",
+      "schedule": "0 15 * * *"
+    }
+  ],
+  "env": {
+    "REACTIVATION_NEXT_SUBJECT_ENABLED": "1",
+    "STUDY_RETURN_48H_ENABLED": "1",
+    "STUDENT_MATERIAL_READY_EMAIL_ENABLED": "1",
+    "STUDY_RETURN_D1_ENABLED": "1"
+  }
+}

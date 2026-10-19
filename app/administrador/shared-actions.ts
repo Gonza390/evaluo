@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { generateTutorExplanation } from '@/lib/ai-tutor';
 import { requireAdminAccess } from '@/lib/auth';
+import { runSimulatorExplanationWarmup } from '@/lib/simulator-explanation-warmup';
 import { createAdminClient } from '@/lib/supabase-admin';
 import type { MateriaImportEntryInput } from './import-helpers';
 
@@ -25,6 +26,12 @@ export interface FeedbackReviewItem {
   created_at: string;
   explicacion: string | null;
   provider: string | null;
+}
+
+export interface IAWarmupAdminResult {
+  success: boolean;
+  message: string;
+  result?: Awaited<ReturnType<typeof runSimulatorExplanationWarmup>>;
 }
 
 export interface MateriaImportResult {
@@ -53,6 +60,28 @@ function normalizeAdminText(value: string) {
 
 function revalidateAdministrador() {
   revalidatePath('/administrador');
+}
+
+async function contarFilasTabla(
+  tableName: 'rag_explanations_cache',
+  pageSize = 1000
+): Promise<number> {
+  const admin = createAdminClient();
+  let total = 0;
+  let from = 0;
+
+  while (true) {
+    const to = from + pageSize - 1;
+    const { data, error } = await admin.from(tableName).select('id').range(from, to);
+    if (error) throw error;
+
+    const rows = data ?? [];
+    total += rows.length;
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return total;
 }
 
 export async function obtenerPromptSistema(): Promise<{
@@ -440,47 +469,80 @@ export async function obtenerRankingErroresIA(
     await requireAdminAccess();
     const admin = createAdminClient();
 
-    const { data: stats, error: statsError } = await admin
+    const statsRes = await admin
       .from('rag_question_stats')
       .select('pregunta_id, materia_id, veces_fallada, updated_at')
       .order('veces_fallada', { ascending: false })
-      .limit(limit);
-    if (statsError) throw statsError;
-    if (!stats || stats.length === 0) return { success: true, rows: [] };
+      .limit(limit * 3);
 
-    const questionIds = stats.map((item) => item.pregunta_id);
-    const materiaIds = Array.from(new Set(stats.map((item) => item.materia_id).filter(Boolean))) as string[];
+    if (statsRes.error) throw statsRes.error;
 
-    const [{ data: questions }, { data: cache }, { data: materias }] = await Promise.all([
+    const stats = statsRes.data ?? [];
+    const statQuestionIds = stats.map((item) => item.pregunta_id);
+
+    const recentCacheRes =
+      statQuestionIds.length === 0
+        ? await admin
+            .from('rag_explanations_cache')
+            .select('pregunta_id, materia_id, parcial, explicacion, provider, updated_at')
+            .order('updated_at', { ascending: false })
+            .limit(limit * 3)
+        : { data: [], error: null };
+
+    if (recentCacheRes.error) throw recentCacheRes.error;
+
+    const cacheByQuestionIdRes =
+      statQuestionIds.length > 0
+        ? await admin
+            .from('rag_explanations_cache')
+            .select('pregunta_id, materia_id, parcial, explicacion, provider, updated_at')
+            .in('pregunta_id', statQuestionIds)
+        : { data: [], error: null };
+
+    if (cacheByQuestionIdRes.error) throw cacheByQuestionIdRes.error;
+
+    const cache = [
+      ...(cacheByQuestionIdRes.data ?? []),
+      ...(recentCacheRes.data ?? []),
+    ];
+    if (stats.length === 0 && cache.length === 0) return { success: true, rows: [] };
+
+    const statMap = new Map(stats.map((item) => [item.pregunta_id, item]));
+    const cacheMap = new Map(cache.map((item) => [item.pregunta_id, item]));
+    const questionIds = Array.from(new Set([...statMap.keys(), ...cacheMap.keys()]));
+
+    const [{ data: questions }, { data: materias }] = await Promise.all([
       admin.from('preguntas_banco').select('id, enunciado, parcial, materia_id').in('id', questionIds),
-      admin
-        .from('rag_explanations_cache')
-        .select('pregunta_id, explicacion, provider, updated_at')
-        .in('pregunta_id', questionIds),
-      materiaIds.length > 0
-        ? admin.from('materias').select('id, nombre').in('id', materiaIds)
-        : Promise.resolve({ data: [], error: null }),
+      admin.from('materias').select('id, nombre'),
     ]);
 
     const qMap = new Map((questions ?? []).map((q) => [q.id, q]));
-    const cMap = new Map((cache ?? []).map((c) => [c.pregunta_id, c]));
     const materiaMap = new Map((materias ?? []).map((m) => [m.id, m.nombre]));
 
-    const rows: IARankingRow[] = stats.map((stat) => {
-      const q = qMap.get(stat.pregunta_id);
-      const c = cMap.get(stat.pregunta_id);
-      return {
-        pregunta_id: stat.pregunta_id,
-        materia_id: stat.materia_id ?? q?.materia_id ?? null,
-        materia_nombre: materiaMap.get(q?.materia_id ?? '') ?? materiaMap.get(stat.materia_id ?? '') ?? null,
-        parcial: q?.parcial ?? null,
-        enunciado: q?.enunciado ?? '(Pregunta no encontrada)',
-        veces_fallada: stat.veces_fallada ?? 0,
-        explicacion: c?.explicacion ?? null,
-        provider: c?.provider ?? null,
-        updated_at: c?.updated_at ?? stat.updated_at ?? null,
-      };
-    });
+    const rows: IARankingRow[] = questionIds
+      .map((preguntaId) => {
+        const stat = statMap.get(preguntaId);
+        const cached = cacheMap.get(preguntaId);
+        const q = qMap.get(preguntaId);
+        const materiaId = stat?.materia_id ?? cached?.materia_id ?? q?.materia_id ?? null;
+
+        return {
+          pregunta_id: preguntaId,
+          materia_id: materiaId,
+          materia_nombre: materiaId ? materiaMap.get(materiaId) ?? null : null,
+          parcial: q?.parcial ?? cached?.parcial ?? null,
+          enunciado: q?.enunciado ?? '(Pregunta no encontrada)',
+          veces_fallada: stat?.veces_fallada ?? 0,
+          explicacion: cached?.explicacion ?? null,
+          provider: cached?.provider ?? null,
+          updated_at: cached?.updated_at ?? stat?.updated_at ?? null,
+        };
+      })
+      .sort((a, b) => {
+        if (b.veces_fallada !== a.veces_fallada) return b.veces_fallada - a.veces_fallada;
+        return (b.updated_at ?? '').localeCompare(a.updated_at ?? '');
+      })
+      .slice(0, limit);
 
     return { success: true, rows };
   } catch (error) {
@@ -578,20 +640,70 @@ export async function obtenerFeedbackExplicacionesAdmin() {
   try {
     await requireAdminAccess();
     const admin = createAdminClient();
-    const { data, error } = await admin
-      .from('rag_explanation_feedback')
-      .select('voto, pregunta_id, created_at')
-      .order('created_at', { ascending: false })
-      .limit(10000);
+    const [{ data, error }, cacheCountRes] = await Promise.all([
+      admin
+        .from('rag_explanation_feedback')
+        .select('voto, pregunta_id, created_at')
+        .order('created_at', { ascending: false })
+        .limit(10000),
+      admin.from('rag_explanations_cache').select('id', { count: 'exact', head: true }),
+    ]);
     if (error) throw error;
+    if (cacheCountRes.error) throw cacheCountRes.error;
+
+    const generatedCount =
+      typeof cacheCountRes.count === 'number' ? cacheCountRes.count : await contarFilasTabla('rag_explanations_cache');
 
     const positive = (data ?? []).filter((row) => row.voto === 1).length;
     const negative = (data ?? []).filter((row) => row.voto === -1).length;
-    return { success: true, stats: { total: (data ?? []).length, positive, negative } };
+    return {
+      success: true,
+      stats: {
+        total: (data ?? []).length,
+        positive,
+        negative,
+        generatedCount,
+      },
+    };
   } catch (error) {
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No se pudo obtener feedback.',
+    };
+  }
+}
+
+export async function ejecutarWarmupExplicacionesIA(input?: {
+  dryRun?: boolean;
+  batchSize?: number;
+  candidatePoolSize?: number;
+  maxEstimatedTokens?: number;
+  lookbackDays?: number;
+}): Promise<IAWarmupAdminResult> {
+  try {
+    await requireAdminAccess();
+
+    const result = await runSimulatorExplanationWarmup({
+      dryRun: input?.dryRun,
+      batchSize: input?.batchSize,
+      candidatePoolSize: input?.candidatePoolSize,
+      maxEstimatedTokens: input?.maxEstimatedTokens,
+      lookbackDays: input?.lookbackDays,
+    });
+
+    revalidateAdministrador();
+
+    return {
+      success: true,
+      message: result.dryRun
+        ? `Simulacion lista: ${result.selectedCount} preguntas candidatas y ${result.totalEstimatedTokens.toLocaleString('es-AR')} tokens estimados.`
+        : `Warmup ejecutado: ${result.generatedCount} explicaciones generadas y ${result.skippedCount} omitidas.`,
+      result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'No se pudo ejecutar el warmup de explicaciones.',
     };
   }
 }

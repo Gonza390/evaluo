@@ -1,333 +1,550 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import {
   ArrowLeft,
-  Calendar,
+  BookOpen,
+  Building2,
+  ChevronRight,
   GraduationCap,
-  MapPin,
-  Users,
 } from 'lucide-react';
-import { createClientServer } from '@/lib/supabase-server';
-import { NotificationBell } from '@/components/NotificationBell';
-import CareerListClient from './career-list-client';
+import { createPublicClient } from '@/lib/supabase-public';
+import { unstable_cache } from 'next/cache';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { StudyStatePanel } from '@/components/study-state-panel';
+import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { getUniversityProfile } from '@/lib/university-profiles';
+import { getFacultyProfile } from '@/lib/faculty-profiles';
+import { withTransientDataRetry } from '@/lib/data/transient-retry';
+
+const CareerListClient = dynamic(() => import('./career-list-client'), {
+  loading: () => (
+    <div className="pt-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-48 animate-pulse rounded-[28px] border border-slate-200 bg-slate-50"
+          />
+        ))}
+      </div>
+    </div>
+  ),
+});
 
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ tab?: string }>;
+  searchParams?: Promise<{ tab?: string; facultadId?: string }>;
 };
 
 type CarreraRow = {
   id: string;
   nombre: string;
+  facultad_id: string | null;
 };
 
-const UNIVERSITY_SUBTITLE = 'Excelencia academica, compromiso social e innovacion.';
+type FacultadRow = {
+  id: string;
+  nombre: string;
+};
+
+const UNIVERSITY_SUBTITLE = 'Excelencia académica, compromiso social e innovación.';
 const RELATIONS_PAGE_SIZE = 1000;
 
 async function fetchAllCarreraMateriaRelations(
-  supabase: Awaited<ReturnType<typeof createClientServer>>,
+  supabase: ReturnType<typeof createPublicClient>,
   carreraIds: string[]
 ) {
-  const allRows: Array<{ carrera_id: string | null }> = [];
+  const allRows: Array<{ carrera_id: string | null; materia_id: string | null }> = [];
 
   for (let from = 0; ; from += RELATIONS_PAGE_SIZE) {
     const to = from + RELATIONS_PAGE_SIZE - 1;
     const { data, error } = await supabase
       .from('carrera_materias')
-      .select('carrera_id')
+      .select('carrera_id, materia_id')
       .in('carrera_id', carreraIds)
       .range(from, to);
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw new Error(error.message);
 
     const rows = data ?? [];
     allRows.push(...rows);
-
-    if (rows.length < RELATIONS_PAGE_SIZE) {
-      break;
-    }
+    if (rows.length < RELATIONS_PAGE_SIZE) break;
   }
 
   return allRows;
 }
 
-function getUniversityInitials(name: string) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 3)
-    .map((chunk) => chunk[0]?.toUpperCase() ?? '')
-    .join('');
+type UniversidadPageData = {
+  universidad: { id: string; nombre: string };
+  facultades: FacultadRow[];
+  allCarreras: CarreraRow[];
+  materiaCountByCarrera: Record<string, number>;
+  totalUniqueMaterias: number;
+} | null;
+
+const loadUniversidadPageData = unstable_cache(
+  async (id: string): Promise<UniversidadPageData> =>
+    withTransientDataRetry(async () => {
+      const supabase = createPublicClient();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CI unblock for PDF-first merge
+      const catalog = supabase as any;
+
+      const { data: universidad, error: universidadError } = await supabase
+        .from('universidades')
+        .select('id, nombre')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (universidadError) throw new Error(universidadError.message);
+      if (!universidad) return null;
+
+      const [facultadesResult, carrerasResult] = await Promise.all([
+        catalog
+          .from('facultades')
+          .select('id, nombre')
+          .eq('universidad_id', id)
+          .order('nombre'),
+        catalog
+          .from('carreras')
+          .select('id, nombre, facultad_id')
+          .eq('universidad_id', id)
+          .order('nombre'),
+      ]);
+
+      if (facultadesResult.error) throw new Error(facultadesResult.error.message);
+      if (carrerasResult.error) throw new Error(carrerasResult.error.message);
+
+      const facultades = (facultadesResult.data ?? []) as FacultadRow[];
+      const allCarreras = (carrerasResult.data ?? []) as CarreraRow[];
+      const carreraIds = allCarreras.map((carrera) => carrera.id);
+      const materiaCountByCarrera: Record<string, number> = {};
+      const uniqueMateriaIds = new Set<string>();
+
+      if (carreraIds.length > 0) {
+        const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
+        const materiaIdsByCarrera = new Map<string, Set<string>>();
+
+        for (const item of carreraMaterias) {
+          if (!item.carrera_id || !item.materia_id) continue;
+          uniqueMateriaIds.add(item.materia_id);
+          const materiaIds = materiaIdsByCarrera.get(item.carrera_id) ?? new Set<string>();
+          materiaIds.add(item.materia_id);
+          materiaIdsByCarrera.set(item.carrera_id, materiaIds);
+        }
+
+        for (const [carreraId, materiaIds] of materiaIdsByCarrera.entries()) {
+          materiaCountByCarrera[carreraId] = materiaIds.size;
+        }
+      }
+
+      return {
+        universidad,
+        facultades,
+        allCarreras,
+        materiaCountByCarrera,
+        totalUniqueMaterias: uniqueMateriaIds.size,
+      };
+    }),
+  ['universidad-data-v2'],
+  { revalidate: 600, tags: ['universidad-data'] }
+);
+
+export async function generateMetadata({ params }: Pick<Props, 'params'>): Promise<Metadata> {
+  const { id } = await params;
+
+  try {
+    const data = await loadUniversidadPageData(id);
+
+    if (!data) {
+      return {
+        title: 'Universidad',
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const { universidad, allCarreras, totalUniqueMaterias } = data;
+    const profile = getUniversityProfile(universidad.nombre);
+    const hasAcademicCatalog = allCarreras.length > 0 && totalUniqueMaterias > 0;
+
+    return {
+      title: `${universidad.nombre} | Universidad`,
+      description:
+        profile?.description ??
+        `Explorá la estructura académica, carreras y materias de ${universidad.nombre} para estudiar con Evaluo.`,
+      alternates: { canonical: `/universidad/${universidad.id}` },
+      robots: { index: hasAcademicCatalog, follow: true },
+      openGraph: {
+        title: `${universidad.nombre} | Evaluo`,
+        description:
+          profile?.subtitle ?? `Facultades, carreras y materias disponibles de ${universidad.nombre}.`,
+        url: `/universidad/${universidad.id}`,
+      },
+    };
+  } catch {
+    return {
+      title: 'Universidad | Evaluo',
+      robots: { index: false, follow: true },
+    };
+  }
+}
+
+function FacultyGrid({ universidadId, facultades }: { universidadId: string; facultades: FacultadRow[] }) {
+  return (
+    <div className="pt-6 sm:pt-7">
+      <div>
+        <h2 className="section-title leading-none text-[#10214C]">Facultades</h2>
+        <p className="section-copy mt-2 text-slate-600">
+          Elegí una facultad para ver sus carreras.
+        </p>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {facultades.map((facultad, index) => (
+          <Link
+            key={facultad.id}
+            href={`/universidad/${universidadId}?tab=carreras&facultadId=${facultad.id}`}
+            className="surface-card group animate-surface-reveal p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-[var(--shadow-panel)] sm:p-6"
+            style={{ animationDelay: `${index * 80}ms` }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#EEF4FF] text-[#2563EB]">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[1.02rem] font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
+                  {facultad.nombre}
+                </h3>
+                <p className="mt-1 text-sm text-slate-600">Ver carreras</p>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default async function UniversidadPage({ params, searchParams }: Props) {
-  const [{ id }, resolvedSearchParams, supabase] = await Promise.all([
-    params,
-    searchParams ?? Promise.resolve<{ tab?: string }>({}),
-    createClientServer(),
+  const [id, resolvedSearchParams] = await Promise.all([
+    (await params).id,
+    searchParams ?? Promise.resolve<{ tab?: string; facultadId?: string }>({}),
   ]);
+
   const activeTab = resolvedSearchParams?.tab === 'informacion' ? 'informacion' : 'carreras';
+  let data: UniversidadPageData;
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const user = sessionData?.session?.user;
-
-  const { data: universidad } = await supabase
-    .from('universidades')
-    .select('nombre')
-    .eq('id', id)
-    .single();
-
-  if (!universidad) {
-    notFound();
+  try {
+    data = await loadUniversidadPageData(id);
+  } catch {
+    return (
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center px-4 py-12">
+        <StudyStatePanel
+          iconName="building"
+          tone="warning"
+          className="w-full"
+          title="No pudimos cargar esta universidad"
+          description="El catálogo no está respondiendo correctamente en este momento."
+          secondaryText="Probá nuevamente en unos segundos. Si el problema continúa, podés volver a explorar otras universidades."
+          primaryActionLabel="Volver a intentar"
+          primaryActionHref={`/universidad/${id}`}
+          secondaryActionLabel="Volver a explorar"
+          secondaryActionHref="/explorar"
+        />
+      </div>
+    );
   }
 
-  const { data: carrerasData } = await supabase
-    .from('carreras')
-    .select('id, nombre')
-    .eq('universidad_id', id)
-    .order('nombre');
+  if (!data) notFound();
 
-  const allCarreras = (carrerasData ?? []) as CarreraRow[];
-  const carreraIds = allCarreras.map((carrera) => carrera.id);
-  let materiaCountByCarrera = new Map<string, number>();
-
-  if (carreraIds.length > 0) {
-    const carreraMaterias = await fetchAllCarreraMateriaRelations(supabase, carreraIds);
-
-    materiaCountByCarrera = carreraMaterias.reduce((acc, item) => {
-      if (!item.carrera_id) return acc;
-      acc.set(item.carrera_id, (acc.get(item.carrera_id) ?? 0) + 1);
-      return acc;
-    }, new Map<string, number>());
-  }
+  const { universidad, facultades, allCarreras, totalUniqueMaterias } = data;
+  const universityProfile = getUniversityProfile(universidad.nombre);
+  const selectedFacultad =
+    facultades.find((facultad) => facultad.id === resolvedSearchParams?.facultadId) ?? null;
+  const facultyProfile = selectedFacultad
+    ? getFacultyProfile(universidad.nombre, selectedFacultad.nombre)
+    : null;
+  const selectedFacultyName = facultyProfile?.displayName ?? selectedFacultad?.nombre ?? null;
+  const carrerasDirectas = allCarreras.filter((carrera) => !carrera.facultad_id);
+  const carrerasSeleccionadas = selectedFacultad
+    ? allCarreras.filter((carrera) => carrera.facultad_id === selectedFacultad.id)
+    : [];
+  const usesFaculties = facultades.length > 0;
 
   return (
-    <main className="animate-page-enter min-h-screen bg-[#F8FAFC]">
-      <div className="w-full border-b border-[#E8EDF5] bg-[#F8FAFC]">
-        <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 lg:px-8">
+    <div className="animate-page-enter min-h-full bg-white">
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Inicio', path: '/' },
+          { name: 'Explorar', path: '/explorar' },
+          { name: universidad.nombre, path: `/universidad/${id}` },
+          ...(selectedFacultad
+            ? [
+                {
+                  name: selectedFacultyName ?? selectedFacultad.nombre,
+                  path: `/universidad/${id}?facultadId=${selectedFacultad.id}`,
+                },
+              ]
+            : []),
+        ])}
+      />
+
+      <div className="mx-auto w-full max-w-[1240px] px-4 py-7 sm:px-6 sm:py-9 lg:px-10">
+        <Link
+          href="/explorar"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-950"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Universidades
+        </Link>
+
+        <header className="mt-7 border-b border-slate-200 pb-7 sm:pb-9">
+          <p className="text-xs font-bold tracking-[0.16em] text-blue-600 uppercase">Universidad</p>
+          <h1 className="mt-3 max-w-4xl text-3xl font-bold tracking-[-0.055em] text-slate-950 sm:text-4xl lg:text-[44px] lg:leading-[1.03]">
+            {universidad.nombre}
+          </h1>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+            {universityProfile?.subtitle ?? UNIVERSITY_SUBTITLE}
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
+            {universityProfile?.highlightStats?.length ? (
+              universityProfile.highlightStats.slice(0, 4).map((stat) => (
+                <span key={stat.label} className="inline-flex items-baseline gap-1.5">
+                  <strong className="font-semibold text-slate-950">{stat.value}</strong>
+                  <span>{stat.label}</span>
+                </span>
+              ))
+            ) : (
+              <>
+                {usesFaculties ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600" />
+                    <strong className="font-semibold text-slate-950">{facultades.length}</strong>{' '}
+                    facultades en Evaluo
+                  </span>
+                ) : null}
+                <span className="inline-flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-blue-600" />
+                  <strong className="font-semibold text-slate-950">{allCarreras.length}</strong>{' '}
+                  carreras en Evaluo
+                </span>
+                <span className="inline-flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  <strong className="font-semibold text-slate-950">{totalUniqueMaterias}</strong>{' '}
+                  materias en Evaluo
+                </span>
+              </>
+            )}
+          </div>
+        </header>
+
+        <nav className="flex gap-6 overflow-x-auto border-b border-slate-200 pt-5 text-sm font-semibold [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
-            href="/dashboard"
-            className="flex items-center gap-2 text-sm font-medium text-[#64748B] transition hover:text-[#0F172A]"
+            href={`/universidad/${id}?tab=carreras`}
+            className={`relative shrink-0 pb-3 transition ${
+              activeTab === 'carreras' ? 'text-slate-950' : 'text-slate-500 hover:text-slate-800'
+            }`}
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="font-poppins">Universidades</span>
+            Oferta académica
+            {activeTab === 'carreras' ? (
+              <span className="absolute inset-x-0 bottom-[-1px] h-0.5 bg-blue-600" />
+            ) : null}
           </Link>
+          <Link
+            href={`/universidad/${id}?tab=informacion`}
+            className={`relative shrink-0 pb-3 transition ${
+              activeTab === 'informacion' ? 'text-slate-950' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Información
+            {activeTab === 'informacion' ? (
+              <span className="absolute inset-x-0 bottom-[-1px] h-0.5 bg-blue-600" />
+            ) : null}
+          </Link>
+        </nav>
 
-          
+        {activeTab === 'informacion' ? (
+          <section className="animate-tab-panel py-8 sm:py-10">
+            <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
+              <div className="min-w-0">
+                <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">Información</p>
+                <h2 className="mt-3 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
+                  Sobre {universidad.nombre}
+                </h2>
+                <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                  {universityProfile?.description ??
+                    (usesFaculties
+                      ? `${universidad.nombre} organiza su oferta académica en facultades, carreras y materias.`
+                      : `${universidad.nombre} reúne una propuesta académica organizada por carreras y materias.`)}
+                </p>
 
-          {user ? (
-            <div className="flex items-center gap-4">
-              <NotificationBell />
+                <div className="mt-8 border-t border-slate-200">
+                  {universityProfile?.facts?.length ? (
+                    universityProfile.facts.map((fact) => (
+                      <div
+                        key={fact.label}
+                        className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-center"
+                      >
+                        <span className="text-sm text-slate-500">{fact.label}</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                          {fact.value}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <>
+                      {usesFaculties ? (
+                        <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                          <span className="text-sm text-slate-500">Facultades en Evaluo</span>
+                          <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                            {facultades.length}
+                          </span>
+                        </div>
+                      ) : null}
+                      <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                        <span className="text-sm text-slate-500">Carreras en Evaluo</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                          {allCarreras.length}
+                        </span>
+                      </div>
+                      <div className="grid gap-2 border-b border-slate-200 py-4 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
+                        <span className="text-sm text-slate-500">Materias en Evaluo</span>
+                        <span className="text-sm font-semibold text-slate-950 sm:text-right">
+                          {totalUniqueMaterias}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <aside className="border-t border-slate-200 pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+                {universityProfile ? (
+                  <>
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">
+                      Fuente institucional
+                    </p>
+                    <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
+                      Información verificada con la universidad.
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Los datos institucionales de esta ficha se basan en información publicada por{' '}
+                      {universityProfile.sourceName}.
+                    </p>
+                    <a
+                      href={universityProfile.officialUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:underline"
+                    >
+                      Ver fuente oficial
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">
+                      En Evaluo
+                    </p>
+                    <h3 className="mt-3 text-lg font-bold tracking-[-0.035em] text-slate-950">
+                      El contenido se conecta por materia.
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Cuando una materia corresponde a más de una carrera, el material puede compartirse
+                      sin duplicar contenido.
+                    </p>
+                  </>
+                )}
+              </aside>
             </div>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-full border border-[#CBD5E1] px-4 py-2 text-sm font-medium text-[#475569] transition hover:border-[#4F5DFF] hover:text-[#4F5DFF]"
-            >
-              Iniciar sesión
-            </Link>
-          )}
-        </div>
+          </section>
+        ) : (
+          <section className="animate-tab-panel">
+            {usesFaculties ? (
+              selectedFacultad ? (
+                <div className="pt-6 sm:pt-7">
+                  <Link
+                    href={`/universidad/${id}?tab=carreras`}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-blue-600"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Facultades
+                  </Link>
+
+                  <div className="mt-5 border-b border-slate-200 pb-6">
+                    <p className="text-xs font-bold tracking-[0.14em] text-blue-600 uppercase">Facultad</p>
+                    <h2 className="mt-2 text-2xl font-bold tracking-[-0.045em] text-slate-950 sm:text-3xl">
+                      {selectedFacultyName}
+                    </h2>
+                    {facultyProfile ? (
+                      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                        {facultyProfile.subtitle}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {facultyProfile ? (
+                    <div className="grid gap-8 border-b border-slate-200 py-7 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
+                      <div>
+                        <h3 className="text-lg font-bold tracking-[-0.035em] text-slate-950">
+                          Sobre la facultad
+                        </h3>
+                        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                          {facultyProfile.description}
+                        </p>
+                        <a
+                          href={facultyProfile.officialUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-5 inline-flex text-sm font-semibold text-blue-600 hover:underline"
+                        >
+                          Ver fuente oficial
+                        </a>
+                      </div>
+                      <div className="border-t border-slate-200 pt-5 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+                        {facultyProfile.facts.map((fact) => (
+                          <div key={fact.label} className="border-b border-slate-200 py-3 first:pt-0">
+                            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-400">
+                              {fact.label}
+                            </p>
+                            <p className="mt-1 text-sm font-semibold leading-6 text-slate-950">
+                              {fact.value}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <CareerListClient
+                    initialCarreras={carrerasSeleccionadas}
+                    universityName={universidad.nombre}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <FacultyGrid universidadId={id} facultades={facultades} />
+                  {carrerasDirectas.length > 0 ? (
+                    <div className="mt-12 border-t border-slate-200 pt-8">
+                      <p className="text-xs font-bold tracking-[0.14em] text-slate-400 uppercase">
+                        Carreras directas
+                      </p>
+                      <CareerListClient
+                        initialCarreras={carrerasDirectas}
+                        universityName={universidad.nombre}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              )
+            ) : (
+              <CareerListClient initialCarreras={allCarreras} universityName={universidad.nombre} />
+            )}
+          </section>
+        )}
       </div>
-
-      <section className="relative w-full overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#334155] shadow-2xl min-h-[280px] sm:min-h-[280px]">
-        <div 
-          className="absolute inset-0 h-full w-full bg-cover bg-center"
-          style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80)' }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#0F172A_0%,#0F172A_28%,rgba(15,23,42,0.94)_42%,rgba(15,23,42,0.76)_56%,rgba(15,23,42,0.42)_70%,rgba(15,23,42,0.16)_84%,rgba(15,23,42,0.04)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_36%,rgba(99,102,241,0.18),transparent_24%)]" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/32 via-transparent to-[#0F172A]/10" />
-
-        <div className="relative mx-auto max-w-7xl px-4 py-5 sm:py-8 lg:px-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
-            <div className="hidden lg:flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/5 sm:h-24 sm:w-24">
-              <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border border-white/20 text-center text-[24px] font-bold tracking-[-0.08em] text-white sm:h-[80px] sm:w-[80px] sm:text-[28px]">
-                {getUniversityInitials(universidad.nombre)}
-              </div>
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[20px] font-bold leading-tight tracking-[-0.05em] text-white drop-shadow-lg sm:text-[32px]">
-                  {universidad.nombre}
-                </h1>
-              </div>
-
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-white/80 drop-shadow sm:text-[15px]">
-                {UNIVERSITY_SUBTITLE}
-              </p>
-
-              <div className="mt-5 grid grid-cols-1 gap-3 text-white sm:mt-6 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="flex items-start gap-3">
-                  <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-white/90" />
-                  <div>
-                    <p className="text-sm font-semibold text-white drop-shadow">1995 - Ano de fundacion</p>
-                    <p className="mt-0.5 text-xs text-white/60">Fundacion</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-white/90" />
-                  <div>
-                    <p className="text-sm font-semibold text-white drop-shadow">Cordoba, Argentina</p>
-                    <p className="mt-0.5 text-xs text-white/60">Ubicacion</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <GraduationCap className="mt-0.5 h-4 w-4 shrink-0 text-white/90" />
-                  <div>
-                    <p className="text-sm font-semibold text-white drop-shadow">{allCarreras.length} Carreras</p>
-                    <p className="mt-0.5 text-xs text-white/60">Carreras</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-white/90" />
-                  <div>
-                    <p className="text-sm font-semibold text-white drop-shadow">+50K Estudiantes</p>
-                    <p className="mt-0.5 text-xs text-white/60">Estudiantes</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-4 px-4 py-5 sm:gap-5 sm:px-6 sm:py-6 lg:px-10">
-        <section className="surface-panel animate-saas-lift-in px-4 py-4 sm:px-6 sm:py-6">
-          <div className="flex items-center justify-between border-b border-[#E8EDF5] pb-3">
-            <div className="grid w-full grid-cols-2 gap-2 text-xs font-medium text-[#7C879C] sm:flex sm:gap-6 sm:text-sm">
-              <Link
-                href={`/universidad/${id}?tab=informacion`}
-                className={`relative rounded-xl px-3 py-2.5 text-center transition-all duration-300 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 ${
-                  activeTab === 'informacion'
-                    ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none'
-                    : 'bg-slate-50 text-[#7C879C] hover:bg-slate-100 hover:text-[#475569] sm:bg-transparent'
-                }`}
-              >
-                Informacion
-                {activeTab === 'informacion' ? (
-                  <span className="absolute inset-x-0 bottom-[-10px] hidden h-0.5 rounded-full bg-[#4F5DFF] sm:block" />
-                ) : null}
-              </Link>
-              <Link
-                href={`/universidad/${id}?tab=carreras`}
-                className={`relative rounded-xl px-3 py-2.5 text-center transition-all duration-300 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-0 ${
-                  activeTab === 'carreras'
-                    ? 'bg-[#EEF2FF] text-[#4F5DFF] shadow-[0_12px_30px_rgba(79,93,255,0.12)] sm:bg-transparent sm:shadow-none'
-                    : 'bg-slate-50 text-[#7C879C] hover:bg-slate-100 hover:text-[#475569] sm:bg-transparent'
-                }`}
-              >
-                Carreras
-                {activeTab === 'carreras' ? (
-                  <span className="absolute inset-x-0 bottom-[-10px] hidden h-0.5 rounded-full bg-[#4F5DFF] sm:block" />
-                ) : null}
-              </Link>
-            </div>
-          </div>
-
-          {activeTab === 'informacion' ? (
-            <div className="animate-tab-panel space-y-5 pt-6">
-              <div className="surface-panel overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(79,93,255,0.18),transparent_32%),linear-gradient(135deg,#FFFFFF_0%,#F8FAFF_56%,#F3F6FD_100%)]">
-                <div className="grid gap-6 p-6 lg:grid-cols-[1.3fr_0.9fr] lg:p-8">
-                  <div className="space-y-5">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="rounded-full border border-[#C7D2FE] bg-white/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-[#4F5DFF]">
-                        Universidad
-                      </span>
-                      <span className="rounded-full border border-[#E2E8F0] bg-white/90 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#64748B]">
-                        {allCarreras.length} carreras activas
-                      </span>
-                    </div>
-
-                    <div>
-                      <h2 className="section-title text-[#0F172A] sm:text-[34px]">
-                        Sobre {universidad.nombre}
-                      </h2>
-                      <p className="section-copy mt-3 max-w-3xl text-[#475569] sm:text-[15px]">
-                        {universidad.nombre} reune una propuesta academica pensada para avanzar
-                        con orden, criterio practico y una experiencia de estudio mas simple.
-                        En Evaluo puedes entrar directo a cada carrera, encontrar sus materias y
-                        estudiar desde un mismo lugar sin perder continuidad.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
-                          Ubicacion
-                        </p>
-                        <p className="mt-2 text-base font-semibold text-[#0F172A]">
-                          Cordoba, Argentina
-                        </p>
-                      </div>
-                      <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
-                          Fundacion
-                        </p>
-                        <p className="mt-2 text-base font-semibold text-[#0F172A]">1995</p>
-                      </div>
-                      <div className="surface-card rounded-[var(--radius-card)] border-white/80 bg-white/80 p-4 backdrop-blur">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
-                          Experiencia
-                        </p>
-                        <p className="mt-2 text-base font-semibold text-[#0F172A]">
-                          Modalidad flexible
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="surface-card rounded-[var(--radius-panel)] border-white/80 bg-white/88 p-5 backdrop-blur">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#94A3B8]">
-                        Datos rapidos
-                      </p>
-                      <div className="mt-4 space-y-3">
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
-                          <span className="text-[#64748B]">Carreras visibles</span>
-                          <span className="font-semibold text-[#0F172A]">{allCarreras.length}</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
-                          <span className="text-[#64748B]">Modelo academico</span>
-                          <span className="font-semibold text-[#0F172A]">Organizado por carreras</span>
-                        </div>
-                        <div className="flex items-center justify-between gap-3 rounded-2xl bg-[#F8FAFC] px-4 py-3 text-sm">
-                          <span className="text-[#64748B]">Estudio en Evaluo</span>
-                          <span className="font-semibold text-[#0F172A]">Materias compartidas</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-[28px] border border-[#D9E2FF] bg-[linear-gradient(135deg,#EEF2FF_0%,#FFFFFF_100%)] p-5">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#4F5DFF]">
-                        En Evaluo
-                      </p>
-                      <p className="mt-3 text-sm leading-7 text-[#475569]">
-                        El contenido se organiza por materia y se comparte entre carreras cuando
-                        corresponde. Eso evita duplicaciones y te deja una experiencia mas clara,
-                        rapida y consistente al estudiar.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="animate-tab-panel pt-6">
-              <CareerListClient
-                initialCarreras={allCarreras}
-                materiaCountEntries={Array.from(materiaCountByCarrera.entries())}
-              />
-            </div>
-          )}
-        </section>
-      </div>
-    </main>
+    </div>
   );
 }

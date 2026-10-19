@@ -3,7 +3,6 @@
   background: var(--background);
 }
 
-/* El modal vive en un portal: :has mantiene el alcance solo en esta ruta. */
 html:has(.profile-completion-editorial) [data-slot='dialog-overlay'] {
   background: color-mix(in oklch, var(--foreground) 12%, transparent) !important;
   backdrop-filter: none !important;
@@ -17,7 +16,6 @@ html:has(.profile-completion-editorial) [data-slot='dialog-content'] {
   backdrop-filter: none !important;
 }
 
-/* Los íconos acompañan al título; no necesitan otra tarjeta. */
 html:has(.profile-completion-editorial)
   [data-slot='dialog-content']
   [class*='bg-gradient-to-br'][class*='rounded-2xl'] {

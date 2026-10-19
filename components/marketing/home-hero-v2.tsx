@@ -1,0 +1,188 @@
+import {
+  ArrowRight,
+  Brain,
+  BookOpen,
+  CheckCircle2,
+  FileText,
+  ListChecks,
+  Sparkles,
+  UploadCloud,
+} from 'lucide-react';
+import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { TrackedLink } from '@/components/marketing/tracked-link';
+import { HomeStudyPreview } from '@/components/marketing/home-study-preview';
+import { HomePdfPickerButton } from '@/components/marketing/home-pdf-picker-button';
+import { HomeProductVideo } from '@/components/marketing/home-product-video';
+
+const studyCapabilities = [
+  {
+    icon: FileText,
+    title: 'Estudiá tu material',
+    description: 'Evaluo organiza lo importante de lo que realmente tenés que preparar.',
+  },
+  {
+    icon: Brain,
+    title: 'Descubrí qué te falta',
+    description: 'Probate sobre tu PDF y detectá qué temas necesitás reforzar.',
+  },
+  {
+    icon: BookOpen,
+    title: 'Reforzá lo que te cuesta',
+    description: 'Volvé directamente a los conceptos donde tuviste más dificultad.',
+  },
+  {
+    icon: ListChecks,
+    title: 'Practicá para el parcial',
+    description: 'Respondé preguntas y volvé a probarte hasta llegar preparado.',
+  },
+];
+
+export function HomeHeroV2({ primaryHref }: { primaryHref: string }) {
+  return (
+    <>
+      <div className="sticky top-0 z-50 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+          <div className="animate-surface-reveal">
+            <PublicSiteHeader primaryHref={primaryHref} trackingLocation="home_header" />
+          </div>
+        </div>
+      </div>
+
+      <section className="relative overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_78%_18%,rgba(99,102,241,0.16),transparent_28%),radial-gradient(circle_at_12%_35%,rgba(37,99,235,0.08),transparent_24%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/70 to-transparent" />
+
+        <div className="mx-auto w-full max-w-[1240px] px-4 pb-14 sm:px-8 lg:px-10 lg:pb-24">
+          <div className="grid items-center gap-10 pt-10 sm:pt-16 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:pt-18">
+            <div className="flex min-w-0 flex-col items-start text-left">
+              <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3.5 py-1.5 text-[11px] font-bold text-blue-700 shadow-sm sm:text-xs">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0">Estudiá con tu propio PDF</span>
+              </span>
+
+              <h1 className="text-foreground mt-5 max-w-[680px] break-words text-[2.1rem] leading-[1.03] font-bold tracking-[-0.05em] min-[360px]:text-[2.35rem] sm:text-5xl lg:text-[60px] lg:leading-[1.02]">
+                Subí tu PDF y en minutos estudiás.
+              </h1>
+
+              <p className="mt-5 max-w-[560px] text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
+                Convertí tus apuntes en resúmenes, mapas mentales, flashcards y práctica. Ponete a prueba y descubrí qué temas necesitás reforzar antes del examen.
+              </p>
+
+              <div className="mt-7 flex w-full flex-col gap-2.5 sm:mt-9 sm:flex-row sm:items-center sm:gap-3">
+                <HomePdfPickerButton
+                  location="home_hero"
+                  ctaName="probar_con_mi_pdf"
+                  className="from-brand to-brand-2 inline-flex h-13 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:w-auto sm:px-8"
+                >
+                  <UploadCloud className="h-4.5 w-4.5 shrink-0" />
+                  Probar con mi PDF
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </HomePdfPickerButton>
+                <TrackedLink
+                  href="/preview/primer-pdf?source=home_hero"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'home_hero',
+                    cta_name: 'ver_pdf_ejemplo',
+                    destination: '/preview/primer-pdf',
+                  }}
+                  className="inline-flex h-13 w-full items-center justify-center rounded-2xl border border-slate-300 bg-white px-6 text-sm font-bold text-slate-800 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:w-auto"
+                >
+                  Ver ejemplo con un PDF
+                </TrackedLink>
+              </div>
+              <p className="mt-3 text-[11px] font-semibold text-slate-500 sm:text-xs">Empezá gratis · Sin tarjeta</p>
+
+              <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-200/70 pt-5 text-[11px] font-semibold text-slate-600 sm:text-xs">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  Entendé los temas
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  Practicá con preguntas
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  Repasá tus errores
+                </span>
+              </div>
+            </div>
+
+            <HomeStudyPreview />
+          </div>
+        </div>
+      </section>
+
+      <HomeProductVideo />
+
+      <section id="producto" className="scroll-mt-20 border-b border-slate-100 bg-white py-14 sm:scroll-mt-24 sm:py-16 lg:py-18">
+        <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
+          <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end lg:gap-16">
+            <div>
+              <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">
+                <span className="h-px w-8 shrink-0 bg-blue-500" />
+                Una sola fuente para estudiar
+              </div>
+              <h2 className="mt-4 max-w-[620px] text-3xl font-bold tracking-[-0.045em] text-slate-950 sm:text-4xl lg:text-[42px] lg:leading-[1.05]">
+                Un solo PDF. Distintas formas de aprenderlo.
+              </h2>
+            </div>
+            <p className="max-w-[620px] text-sm leading-7 text-slate-600 sm:text-base">
+              Subís una vez tu material y cambiás de forma de estudio sin cambiar de fuente.
+            </p>
+          </div>
+
+          <div className="mt-9 grid border-y border-slate-200 sm:grid-cols-2 lg:grid-cols-4">
+            {studyCapabilities.map(({ icon: Icon, title, description }, index) => (
+              <article
+                key={title}
+                className={`group relative min-w-0 transition hover:bg-slate-50 ${
+                  index > 0 ? 'border-t border-slate-200 sm:border-t-0 sm:border-l' : ''
+                } ${index === 2 ? 'sm:border-l-0 lg:border-l' : ''}`}
+              >
+                <div className="h-full py-5 sm:min-h-[190px] sm:px-5 sm:py-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-700 transition group-hover:bg-blue-600 group-hover:text-white">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-400 transition group-hover:text-blue-700">
+                      0{index + 1}
+                    </span>
+                  </div>
+                  <h3 className="mt-4 text-sm font-bold tracking-tight text-slate-950 transition group-hover:text-blue-800">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{description}</p>
+                </div>
+                <span
+                  className="absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-blue-600 transition-transform duration-200 group-hover:scale-x-100"
+                  aria-hidden="true"
+                />
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-7 flex min-w-0 flex-col gap-5 overflow-hidden rounded-2xl bg-slate-50 px-3 py-4 min-[360px]:px-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2 text-[10px] font-bold text-slate-600">
+              {['Resumen', 'Glosario', 'Mapa mental', 'Flashcards', 'Práctica', 'Diagnóstico'].map((label) => (
+                <span key={label} className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5">
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            <HomePdfPickerButton
+                  location="home_product_overview"
+                  ctaName="probar_con_mi_pdf_producto"
+                  className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-blue-700 transition hover:text-blue-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+              Probar con mi PDF
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </HomePdfPickerButton>
+          </div>
+        </div>
+      </section>
+
+    </>
+  );
+}

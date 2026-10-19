@@ -1,0 +1,143 @@
+import type { Database, Json } from '@/types/supabase';
+import type { StudyDocumentAnalysis } from '@/lib/student-materials/types';
+import type { AdminClient } from '@/lib/student-materials/types';
+
+export type StudentMaterialProcessingUpdate = {
+  processingStatus: 'uploaded' | 'processing' | 'ready' | 'failed';
+  processingStage: string;
+  processingProgress: number;
+  processingMessage: string;
+  processingError?: string | null;
+  pageCount?: number | null;
+  pagesProcessed?: number | null;
+  coverageRatio?: number | null;
+  processingStrategy?: string | null;
+  documentAnalysis?: StudyDocumentAnalysis | null;
+};
+
+export type ProcessableStudentMaterial = {
+  id: string;
+  user_id: string;
+  universidad_id: string | null;
+  carrera_id: string | null;
+  materia_id: string | null;
+  title: string;
+  file_name: string;
+  file_path: string;
+};
+
+type StudentMaterialUpdate = Database['public']['Tables']['student_materials']['Update'];
+
+function isMissingAnalysisColumns(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const message = 'message' in error ? String(error.message ?? '').toLowerCase() : '';
+  return message.includes('processing_strategy') || message.includes('document_analysis');
+}
+
+export async function findStudentMaterialForProcessing(
+  admin: AdminClient,
+  materialId: string,
+  ownerUserId?: string
+) {
+  const query = admin
+    .from('student_materials')
+    .select('id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path')
+    .eq('id', materialId);
+
+  if (ownerUserId) query.eq('user_id', ownerUserId);
+
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as ProcessableStudentMaterial | null;
+}
+
+export async function loadStudentMaterialProcessingContext(
+  admin: AdminClient,
+  material: ProcessableStudentMaterial
+) {
+  const [fileResult, profileResult, materiaResult] = await Promise.all([
+    admin.storage.from('biblioteca').download(material.file_path),
+    admin
+      .from('profiles')
+      .select('universidad_id, carrera_id')
+      .eq('id', material.user_id)
+      .maybeSingle(),
+    material.materia_id
+      ? admin.from('materias').select('nombre').eq('id', material.materia_id).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  if (fileResult.error || !fileResult.data) {
+    throw new Error('No pudimos volver a leer el PDF desde almacenamiento.');
+  }
+  if (profileResult.error) throw profileResult.error;
+  if (materiaResult.error) throw materiaResult.error;
+
+  const profile = profileResult.data as {
+    universidad_id?: string | null;
+    carrera_id?: string | null;
+  } | null;
+  const universidadId = profile?.universidad_id ?? material.universidad_id;
+  const carreraId = profile?.carrera_id ?? material.carrera_id;
+
+  const [carreraResult, universidadResult] = await Promise.all([
+    carreraId
+      ? admin.from('carreras').select('nombre').eq('id', carreraId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    universidadId
+      ? admin.from('universidades').select('nombre').eq('id', universidadId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  if (carreraResult.error) throw carreraResult.error;
+  if (universidadResult.error) throw universidadResult.error;
+
+  return {
+    file: fileResult.data,
+    carreraName: carreraResult.data?.nombre ?? undefined,
+    universidadName: universidadResult.data?.nombre ?? undefined,
+    materiaName: materiaResult.data?.nombre ?? undefined,
+  };
+}
+
+export async function updateStudentMaterialProcessing(
+  admin: AdminClient,
+  materialId: string,
+  input: StudentMaterialProcessingUpdate
+) {
+  const payload: StudentMaterialUpdate = {
+    processing_status: input.processingStatus,
+    processing_stage: input.processingStage,
+    processing_progress: input.processingProgress,
+    processing_message: input.processingMessage,
+    processing_error: input.processingError ?? null,
+  };
+
+  if (typeof input.pageCount !== 'undefined') payload.page_count = input.pageCount;
+  if (typeof input.processingStrategy !== 'undefined') {
+    payload.processing_strategy = input.processingStrategy;
+  }
+  if (typeof input.documentAnalysis !== 'undefined') {
+    payload.document_analysis =
+      input.documentAnalysis === null ? null : (input.documentAnalysis as unknown as Json);
+  }
+  if (typeof input.pagesProcessed !== 'undefined') {
+    payload.pages_processed = input.pagesProcessed;
+  }
+  if (typeof input.coverageRatio !== 'undefined') {
+    payload.coverage_ratio = input.coverageRatio;
+  }
+
+  let { error } = await admin.from('student_materials').update(payload).eq('id', materialId);
+
+  if (error && (isMissingAnalysisColumns(error) || error.code === 'PGRST204')) {
+    delete payload.processing_strategy;
+    delete payload.document_analysis;
+    delete payload.pages_processed;
+    delete payload.coverage_ratio;
+
+    ({ error } = await admin.from('student_materials').update(payload).eq('id', materialId));
+  }
+
+  if (error) throw error;
+}

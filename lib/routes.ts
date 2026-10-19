@@ -1,3 +1,6 @@
+import { buildSeoEntitySlug, parseSeoEntitySlug } from '@/lib/seo-intents';
+import { buildMateriaSharePath } from '@/lib/materia-share-path';
+
 export function getUniversityRoute(universityId: string) {
   return `/universidad/${universityId}`;
 }
@@ -6,15 +9,69 @@ export function getCareerRoute(careerId: string) {
   return `/materias?carreraId=${careerId}`;
 }
 
+function getClientMateriaRouteSegment(materiaId: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return materiaId;
+  }
+
+  const prefix = '/explorar/materia/';
+  if (!window.location.pathname.startsWith(prefix)) {
+    return materiaId;
+  }
+
+  const currentSegment = decodeURIComponent(
+    window.location.pathname.slice(prefix.length).split('/')[0] ?? ''
+  );
+  const currentMateriaId = parseSeoEntitySlug(currentSegment).id;
+
+  if (currentMateriaId !== materiaId) {
+    return materiaId;
+  }
+
+  if (currentSegment.includes('--')) {
+    return currentSegment;
+  }
+
+  const materiaNombre = document.querySelector('h1')?.textContent?.trim();
+  return materiaNombre ? buildSeoEntitySlug(materiaNombre, materiaId) : materiaId;
+}
+
+function getClientShortMateriaRoute(materiaId: string) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return null;
+
+  const prefix = '/explorar/materia/';
+  if (!window.location.pathname.startsWith(prefix)) return null;
+
+  const currentSegment = decodeURIComponent(
+    window.location.pathname.slice(prefix.length).split('/')[0] ?? ''
+  );
+  const currentMateriaId = parseSeoEntitySlug(currentSegment).id;
+  if (currentMateriaId !== materiaId) return null;
+
+  const materiaNombre = document.querySelector('h1')?.textContent?.trim();
+  const universidadNombre = document
+    .querySelector<HTMLAnchorElement>('a[href^="/universidad/"]')
+    ?.textContent?.trim();
+
+  if (!materiaNombre || !universidadNombre) return null;
+  return buildMateriaSharePath(materiaNombre, universidadNombre);
+}
+
 export function getMateriaRoute(materiaId: string, carreraId?: string | null) {
+  const shortRoute = getClientShortMateriaRoute(materiaId);
+  if (shortRoute) return shortRoute;
+
   const params = new URLSearchParams();
 
   if (carreraId) {
     params.set('carreraId', carreraId);
   }
 
+  const routeSegment = getClientMateriaRouteSegment(materiaId);
   const query = params.toString();
-  return query ? `/explorar/materia/${materiaId}?${query}` : `/explorar/materia/${materiaId}`;
+  return query
+    ? `/explorar/materia/${routeSegment}?${query}`
+    : `/explorar/materia/${routeSegment}`;
 }
 
 export function getDashboardMateriaRoute(materiaId: string) {
@@ -33,6 +90,10 @@ export function getResourceRoute(materiaId: string, tipo: string, nombre?: strin
   }
 
   return `/recursos/${materiaId}?${params.toString()}`;
+}
+
+export function getStudentMaterialRoute(materialId: string) {
+  return `/materiales/${materialId}`;
 }
 
 export function getSimulatorRoute(

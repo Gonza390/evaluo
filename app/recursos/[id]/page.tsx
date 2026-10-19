@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
   ArrowLeft,
@@ -17,12 +18,13 @@ import {
   ThumbsDown,
   ThumbsUp,
 } from 'lucide-react';
-import PdfViewer from '@/components/PdfViewer';
 import { supabase } from '@/lib/supabase';
 import { pushActivityHit, pushRecentResource } from '@/lib/dashboard-client';
 import { useUser } from '@/hooks/useUser';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
+import { logError } from '@/lib/observability';
 import { getSimulatorRoute } from '@/lib/routes';
+import { StudyStatePanel } from '@/components/study-state-panel';
 import {
   fetchMateriaRecursos,
   fetchResourceViewCounts,
@@ -34,6 +36,15 @@ import {
   type ResourceViewCountMap,
   type ResourceVoteSummaryMap,
 } from '@/lib/data/resources';
+
+const PdfViewer = dynamic(() => import('@/components/PdfViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[72vh] items-center justify-center rounded-[28px] border border-slate-200 bg-white text-sm font-medium text-slate-500 shadow-sm">
+      Cargando visor del recurso...
+    </div>
+  ),
+});
 
 interface Recurso {
   id: string;
@@ -132,7 +143,7 @@ function RecursoContent() {
 
         setSelectedResourceId(preferredResource?.id ?? null);
       } catch (error) {
-        console.error('Error in fetchRecursos:', error);
+        logError('recursos.fetchRecursos', error, { materiaId, tipo, moduloQuery });
         setReaderError('No pudimos cargar esta colección de documentos.');
       } finally {
         setLoading(false);
@@ -160,7 +171,12 @@ function RecursoContent() {
         setResourceVotes(summaries);
         setResourceViews(views);
       })
-      .catch((error) => console.error('Error fetching resource vote summaries:', error));
+      .catch((error) =>
+        logError('recursos.fetchVoteSummaries', error, {
+          resourceIds,
+          userId: authUser?.id ?? null,
+        })
+      );
   }, [authUser?.id, recursos]);
 
   const sortedRecursos = useMemo(
@@ -194,7 +210,7 @@ function RecursoContent() {
         if (!response.ok) {
           if (response.status === 401) {
             setViewerUrl(null);
-            setReaderError('Inicia sesión para acceder al documento completo.');
+            setReaderError('Iniciá sesión para acceder al documento completo.');
             return;
           }
 
@@ -231,7 +247,10 @@ function RecursoContent() {
               }));
             }
           } catch (error) {
-            console.error('Error registering resource view:', error);
+            logError('recursos.registerView', error, {
+              resourceId: selectedResource.id,
+              userId: authUser?.id ?? null,
+            });
           }
 
           pushRecentResource({
@@ -240,13 +259,16 @@ function RecursoContent() {
             subjectId: materiaId,
             subjectName: nombreMateria,
             type: getReaderLabel(tipo),
-            href: signedViewerUrl,
+            href: `/recursos/${selectedResource.id}`,
             openedAt: new Date().toISOString(),
           });
           pushActivityHit();
         }
       } catch (error) {
-        console.error('Error hydrating viewer:', error);
+        logError('recursos.hydrateViewer', error, {
+          resourceId: selectedResource?.id ?? null,
+          materiaId,
+        });
         setViewerUrl(null);
         setViewerIsPreview(false);
         setReaderError('No pudimos abrir la vista del documento.');
@@ -262,19 +284,6 @@ function RecursoContent() {
   const canGoPrev = selectedIndex > 0;
   const canGoNext = selectedIndex >= 0 && selectedIndex < sortedRecursos.length - 1;
   const parcial = tipo.includes('p2') || tipo === 'segundo-parcial' ? 2 : 1;
-  const topViewedResource = useMemo(
-    () => [...sortedRecursos].sort((a, b) => (resourceViews[b.id] ?? 0) - (resourceViews[a.id] ?? 0))[0] ?? null,
-    [resourceViews, sortedRecursos]
-  );
-  const topRatedResource = useMemo(
-    () =>
-      [...sortedRecursos].sort(
-        (a, b) =>
-          ((resourceVotes[b.id]?.likes ?? 0) - (resourceVotes[b.id]?.dislikes ?? 0)) -
-          ((resourceVotes[a.id]?.likes ?? 0) - (resourceVotes[a.id]?.dislikes ?? 0))
-      )[0] ?? null,
-    [resourceVotes, sortedRecursos]
-  );
 
   const voteResource = async (resourceId: string, voteType: 1 | -1) => {
     const userId = authUser?.id;
@@ -283,7 +292,7 @@ function RecursoContent() {
       toast({
         variant: 'destructive',
         title: 'Necesitás iniciar sesión para votar',
-        description: 'Entrá con tu cuenta para guardar tu feedback.',
+        description: 'Entrá con tu cuenta para guardar tu opinión.',
         duration: 2800,
       });
       router.push('/login');
@@ -300,7 +309,7 @@ function RecursoContent() {
       );
       setResourceVotes(refreshed);
     } catch (error) {
-      console.error('Error voting resource:', error);
+      logError('recursos.voteResource', error, { resourceId, userId, voteType });
       toast({
         variant: 'destructive',
         title: 'No pudimos guardar tu voto',
@@ -316,7 +325,7 @@ function RecursoContent() {
     if (authLoading) {
       toast({
         title: 'Validando sesión',
-        description: 'Espera un segundo e intenta nuevamente.',
+        description: 'Esperá un segundo e intentá nuevamente.',
         duration: 2200,
       });
       return null;
@@ -367,7 +376,7 @@ function RecursoContent() {
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
-        description: 'Intenta nuevamente en unos segundos.',
+        description: 'Intentá nuevamente en unos segundos.',
         duration: 3000,
       });
       return;
@@ -378,7 +387,7 @@ function RecursoContent() {
       toast({
         variant: 'destructive',
         title: 'No pudimos generar la descarga segura',
-        description: 'Intenta nuevamente en unos segundos.',
+        description: 'Intentá nuevamente en unos segundos.',
         duration: 3000,
       });
       return;
@@ -420,13 +429,13 @@ function RecursoContent() {
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Volver
           </button>
 
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
             Lector Evaluo
           </div>
@@ -435,8 +444,8 @@ function RecursoContent() {
         <section className="surface-panel animate-saas-lift-in mb-4 px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="max-w-3xl">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{nombreMateria}</p>
-              <h1 className="mt-2 text-[1.7rem] font-black tracking-tight text-slate-950 sm:text-3xl md:text-4xl">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">{nombreMateria}</p>
+              <h1 className="mt-2 text-[1.7rem] font-bold tracking-tight text-slate-950 sm:text-3xl md:text-4xl">
                 {selectedResource?.nombre || getSectionTitle(tipo)}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
@@ -444,41 +453,21 @@ function RecursoContent() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 xl:min-w-[520px] xl:grid-cols-4">
-              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Colección</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">{getSectionTitle(tipo)}</p>
-              </div>
-              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Documentos</p>
-                <p className="mt-2 text-2xl font-black text-slate-900">{sortedRecursos.length}</p>
-              </div>
-              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Vistas</p>
-                <p className="mt-2 text-2xl font-black text-slate-900">
-                  {selectedResource ? (resourceViews[selectedResource.id] ?? 0) : 0}
-                </p>
-              </div>
-              <div className="surface-card rounded-[var(--radius-card)] bg-slate-50 px-4 py-3 shadow-none">
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Señal social</p>
-                <p className="mt-2 text-sm font-semibold text-slate-900">
-                  {topRatedResource?.id === selectedResource?.id
-                    ? 'Mejor valorado'
-                    : topViewedResource?.id === selectedResource?.id
-                    ? 'Mas visto'
-                    : 'En biblioteca'}
-                </p>
+            <div className="flex items-center justify-start xl:min-w-[120px]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                <Eye className="h-4 w-4 text-sky-600" />
+                <span>{selectedResource ? (resourceViews[selectedResource.id] ?? 0) : 0}</span>
               </div>
             </div>
           </div>
         </section>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="grid gap-4">
           <section className="surface-panel overflow-hidden">
             <div className="flex flex-col gap-4 border-b border-slate-200 px-4 py-3 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  <span className="rounded-full bg-white px-3 py-1 text-[12px] font-bold uppercase tracking-[0.18em] text-slate-500">
                     {getReaderLabel(tipo)}
                   </span>
                   {selectedResource?.creado_at ? (
@@ -487,7 +476,7 @@ function RecursoContent() {
                     </span>
                   ) : null}
                 </div>
-                <h2 className="mt-3 text-xl font-black text-slate-900 lg:text-2xl">
+                <h2 className="mt-3 text-xl font-bold text-slate-900 lg:text-2xl">
                   {selectedResource?.nombre || 'Seleccioná un documento'}
                 </h2>
               </div>
@@ -497,7 +486,7 @@ function RecursoContent() {
                   type="button"
                   onClick={() => goToResource('prev')}
                   disabled={!canGoPrev}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Documento anterior"
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -506,7 +495,7 @@ function RecursoContent() {
                   type="button"
                   onClick={() => goToResource('next')}
                   disabled={!canGoNext}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Documento siguiente"
                 >
                   <ChevronRight className="h-5 w-5" />
@@ -522,7 +511,7 @@ function RecursoContent() {
                 </button>
                 <Link
                   href={getSimulatorRoute(materiaId, parcial)}
-                  className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  className="inline-flex h-11 items-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-white"
                 >
                   <GraduationCap className="h-4 w-4" />
                   Ir al simulador
@@ -544,7 +533,7 @@ function RecursoContent() {
                       className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border transition disabled:opacity-60 ${
                         (resourceVotes[selectedResource.id] ?? getDefaultResourceVoteSummary()).userVote === 1
                           ? 'border-emerald-300 bg-emerald-50 text-emerald-600'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                          : 'border-slate-200 text-slate-600 hover:bg-white'
                       }`}
                     >
                       <ThumbsUp className="h-4 w-4" />
@@ -556,7 +545,7 @@ function RecursoContent() {
                       className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl border transition disabled:opacity-60 ${
                         (resourceVotes[selectedResource.id] ?? getDefaultResourceVoteSummary()).userVote === -1
                           ? 'border-rose-300 bg-rose-50 text-rose-600'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                          : 'border-slate-200 text-slate-600 hover:bg-white'
                       }`}
                     >
                       <ThumbsDown className="h-4 w-4" />
@@ -568,49 +557,72 @@ function RecursoContent() {
 
             <div className="bg-[#f3f6fb] p-2">
               {loading || viewerLoading ? (
-                <div className="flex h-[74vh] sm:h-[80vh] lg:h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white text-slate-500">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                  <div className="text-center">
+                <div className="flex min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh] flex-col rounded-[1.15rem] bg-white p-5 text-slate-500">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-3">
+                      <div className="h-4 w-24 animate-pulse rounded-full bg-white" />
+                      <div className="h-8 w-56 animate-pulse rounded-2xl bg-white" />
+                    </div>
+                    <Loader2 className="h-7 w-7 animate-spin text-slate-400" />
+                  </div>
+                  <div className="mt-6 grid flex-1 gap-3 sm:grid-cols-[220px_1fr]">
+                    <div className="space-y-3 rounded-[1.15rem] border border-slate-200 bg-white p-4">
+                      <div className="h-4 w-28 animate-pulse rounded-full bg-white" />
+                      <div className="h-16 animate-pulse rounded-2xl bg-white" />
+                      <div className="h-16 animate-pulse rounded-2xl bg-white" />
+                      <div className="h-16 animate-pulse rounded-2xl bg-white" />
+                    </div>
+                    <div className="rounded-[1.15rem] border border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_100%)] p-4">
+                      <div className="h-full min-h-[44vh] animate-pulse rounded-[1rem] bg-white" />
+                    </div>
+                  </div>
+                  <div className="mt-5 text-center">
                     <p className="text-sm font-semibold text-slate-700">Estamos preparando el visor</p>
-                    <p className="mt-1 text-xs text-slate-500">Cargando el documento y sus accesos seguros.</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Generamos el acceso seguro y dejamos el documento listo para leer.
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      La primera carga puede tardar unos segundos. Si se extiende demasiado, recarga la página.
+                    </p>
                   </div>
                 </div>
               ) : readerError ? (
-                <div className="flex h-[74vh] sm:h-[80vh] lg:h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white px-6 text-center">
-                  <FileText className="h-10 w-10 text-slate-300" />
-                  <div>
-                    <p className="text-base font-semibold text-slate-900">No pudimos abrir este documento</p>
-                    <p className="mt-2 text-sm text-slate-500">{readerError}</p>
-                  </div>
-                </div>
+                <StudyStatePanel
+                  icon={FileText}
+                  tone="warning"
+                  className="min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh]"
+                  title="No pudimos abrir este documento"
+                  description={readerError}
+                  secondaryText="Podés volver a intentarlo o elegir otro material desde la columna lateral."
+                />
               ) : viewerUrl ? (
                 <PdfViewer
                   url={viewerUrl}
                   title={selectedResource?.nombre || 'Documento Evaluo'}
                   className="animate-saas-lift-in border-0 shadow-none"
-                  heightClassName="h-[74vh] sm:h-[80vh] lg:h-[86vh]"
+                  heightClassName="min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh]"
                   forcePreviewLock={viewerIsPreview}
                 />
-                ) : (
-                <div className="flex h-[74vh] sm:h-[80vh] lg:h-[86vh] flex-col items-center justify-center gap-4 rounded-[1.15rem] bg-white px-6 text-center">
-                  <FileText className="h-10 w-10 text-slate-300" />
-                  <div>
-                    <p className="text-base font-semibold text-slate-900">Todavía no hay documento listo para leer</p>
-                    <p className="mt-2 text-sm text-slate-500">Elegí otro material desde la columna lateral.</p>
-                  </div>
-                </div>
+              ) : (
+                <StudyStatePanel
+                  icon={FileText}
+                  className="min-h-[62vh] h-[68svh] sm:h-[80vh] lg:h-[86vh]"
+                  title="Todavía no hay un documento listo para leer"
+                  description="Elegí otro material desde la columna lateral para abrirlo en el visor."
+                  secondaryText="Cuando el documento esté disponible, aparecerá aquí automáticamente."
+                />
               )}
             </div>
           </section>
 
-          <aside className="space-y-5">
+          <aside className="hidden space-y-5">
             <section className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_14px_50px_rgba(15,23,42,0.06)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Biblioteca</p>
-                  <h3 className="mt-1 text-lg font-black text-slate-900">Más documentos de esta sección</h3>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-slate-500">Biblioteca</p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">Más documentos de esta sección</h3>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">
                   <BookOpen className="h-3.5 w-3.5" />
                   {sortedRecursos.length}
                 </div>
@@ -620,9 +632,9 @@ function RecursoContent() {
                 {loading ? (
                   Array.from({ length: 5 }, (_, index) => (
                     <div key={index} className="animate-pulse rounded-2xl border border-slate-100 p-4">
-                      <div className="h-28 rounded-xl bg-slate-100"></div>
-                      <div className="mt-3 h-4 w-3/4 rounded bg-slate-100"></div>
-                      <div className="mt-2 h-3 w-1/2 rounded bg-slate-50"></div>
+                      <div className="h-28 rounded-xl bg-white"></div>
+                      <div className="mt-3 h-4 w-3/4 rounded bg-white"></div>
+                      <div className="mt-2 h-3 w-1/2 rounded bg-white"></div>
                     </div>
                   ))
                 ) : sortedRecursos.length > 0 ? (
@@ -637,13 +649,13 @@ function RecursoContent() {
                         onClick={() => setSelectedResourceId(recurso.id)}
                         className={`animate-saas-lift-in w-full rounded-2xl border p-4 text-left transition ${
                           active
-                            ? 'border-indigo-300 bg-indigo-50 shadow-[0_10px_30px_rgba(79,93,255,0.12)]'
-                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-blue-300 bg-blue-50 shadow-[0_10px_30px_rgba(79,93,255,0.12)]'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-500">
                               <Eye className="h-5 w-5" />
                             </div>
                             <div className="min-w-0">
@@ -651,7 +663,7 @@ function RecursoContent() {
                               <p className="mt-1 text-xs text-slate-500">
                                 {recurso.creado_at ? new Date(recurso.creado_at).toLocaleDateString('es-AR') : 'Sin fecha'}
                               </p>
-                              <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                              <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-white/80 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                                 <Eye className="h-3 w-3 text-sky-600" />
                                 <span>{resourceViews[recurso.id] ?? 0}</span>
                                 <ThumbsUp className="h-3 w-3 text-emerald-600" />
@@ -661,7 +673,7 @@ function RecursoContent() {
                               </div>
                             </div>
                           </div>
-                          <span className="text-[11px] font-bold text-slate-400">{String(index + 1).padStart(2, '0')}</span>
+                          <span className="text-[12px] font-bold text-slate-500">{String(index + 1).padStart(2, '0')}</span>
                         </div>
 
                         <div className="mt-4 rounded-[1.25rem] bg-gradient-to-b from-slate-50 to-slate-100 p-4">
@@ -671,7 +683,7 @@ function RecursoContent() {
                     );
                   })
                 ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center">
                     <FileText className="mx-auto h-8 w-8 text-slate-300" />
                     <p className="mt-3 text-sm font-semibold text-slate-700">No encontramos materiales publicados</p>
                     <p className="mt-2 text-xs leading-6 text-slate-500">
@@ -692,9 +704,9 @@ export default function Page() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex min-h-screen items-center justify-center bg-white">
           <div className="text-center">
-            <Loader2 className="mx-auto h-8 w-8 animate-spin text-indigo-600" />
+            <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
             <p className="mt-3 text-sm font-semibold text-slate-700">Cargando lector...</p>
           </div>
         </div>

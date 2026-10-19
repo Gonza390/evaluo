@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import pdf from 'pdf-parse-fork';
 import {
   analizarMaterialConIA,
 } from './material-analysis';
@@ -9,7 +10,152 @@ import {
   desasignarMateriaDeCarreraAdministrador,
 } from './shared-actions';
 import { requireAdminAccess } from '@/lib/auth';
+import { logError } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
+
+function normalizePdfPreviewText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .trim();
+}
+
+async function extractFirstPdfPagesFingerprint(buffer: ArrayBuffer) {
+  const parsed = await pdf(Buffer.from(buffer), { max: 2 });
+  return normalizePdfPreviewText(parsed.text ?? '');
+}
+
+async function extractPdfPageCount(buffer: ArrayBuffer) {
+  const parsed = (await pdf(Buffer.from(buffer))) as { numpages?: number; numrender?: number };
+  const pageCount = parsed.numpages ?? parsed.numrender ?? null;
+  return typeof pageCount === 'number' && Number.isFinite(pageCount) ? pageCount : null;
+}
+
+async function getPdfPageCountForStoragePath(
+  admin: ReturnType<typeof createAdminClient>,
+  filePath: string
+) {
+  if (!filePath.toLowerCase().endsWith('.pdf')) {
+    return null;
+  }
+
+  const { data: fileData, error } = await admin.storage.from('biblioteca').download(filePath);
+  if (error || !fileData) {
+    throw error ?? new Error('No pudimos leer el PDF para calcular la cantidad de páginas.');
+  }
+
+  return extractPdfPageCount(await fileData.arrayBuffer());
+}
+
+async function findDuplicatePdfForMateria(input: {
+  materiaId: string;
+  recursoType: 'Preguntero' | 'Resumen' | 'Trabajo Práctico';
+  filePath: string;
+}) {
+  if (!input.filePath.toLowerCase().endsWith('.pdf')) {
+    return null;
+  }
+
+  const admin = createAdminClient();
+  const { data: uploadedFile, error: uploadedFileError } = await admin.storage
+    .from('biblioteca')
+    .download(input.filePath);
+
+  if (uploadedFileError || !uploadedFile) {
+    throw uploadedFileError ?? new Error('No pudimos leer el PDF cargado para verificar duplicados.');
+  }
+
+  const uploadedFingerprint = await extractFirstPdfPagesFingerprint(await uploadedFile.arrayBuffer());
+  if (!uploadedFingerprint) {
+    return null;
+  }
+
+  const existingPaths = new Set<string>();
+
+  if (input.recursoType === 'Resumen') {
+    const [recursosResult, resumenesResult] = await Promise.all([
+      admin
+        .from('recursos')
+        .select('url_archivo, nombre, etiqueta')
+        .eq('materia_id', input.materiaId)
+        .in('tipo', ['resumen-modulo', 'primer-parcial', 'segundo-parcial']),
+      admin.from('resumenes').select('file_url, title').eq('materia_id', input.materiaId),
+    ]);
+
+    if (recursosResult.error) throw recursosResult.error;
+    if (resumenesResult.error) throw resumenesResult.error;
+
+    for (const row of recursosResult.data ?? []) {
+      if (row.url_archivo && row.url_archivo !== input.filePath) {
+        existingPaths.add(row.url_archivo);
+      }
+    }
+
+    for (const row of resumenesResult.data ?? []) {
+      if (row.file_url && row.file_url !== input.filePath) {
+        existingPaths.add(row.file_url);
+      }
+    }
+  } else if (input.recursoType === 'Trabajo Práctico') {
+    const [recursosResult, materialesResult] = await Promise.all([
+      admin
+        .from('recursos')
+        .select('url_archivo, nombre, etiqueta')
+        .eq('materia_id', input.materiaId)
+        .in('tipo', ['tp-p1', 'tp-p2']),
+      admin
+        .from('materiales')
+        .select('archivo_url, titulo')
+        .eq('materia_id', input.materiaId)
+        .eq('tipo', input.recursoType),
+    ]);
+
+    if (recursosResult.error) throw recursosResult.error;
+    if (materialesResult.error) throw materialesResult.error;
+
+    for (const row of recursosResult.data ?? []) {
+      if (row.url_archivo && row.url_archivo !== input.filePath) {
+        existingPaths.add(row.url_archivo);
+      }
+    }
+
+    for (const row of materialesResult.data ?? []) {
+      if (row.archivo_url && row.archivo_url !== input.filePath) {
+        existingPaths.add(row.archivo_url);
+      }
+    }
+  } else {
+    return null;
+  }
+
+  for (const existingPath of existingPaths) {
+    if (!existingPath.toLowerCase().endsWith('.pdf')) {
+      continue;
+    }
+
+    const { data: existingFile, error: existingFileError } = await admin.storage
+      .from('biblioteca')
+      .download(existingPath);
+
+    if (existingFileError || !existingFile) {
+      continue;
+    }
+
+    const existingFingerprint = await extractFirstPdfPagesFingerprint(await existingFile.arrayBuffer());
+    if (!existingFingerprint) {
+      continue;
+    }
+
+    if (existingFingerprint === uploadedFingerprint) {
+      return existingPath;
+    }
+  }
+
+  return null;
+}
 
 function revalidateBibliotecaPanels() {
   revalidatePath('/administrador');
@@ -30,6 +176,7 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
   usarIAEnCarga?: boolean;
 }): Promise<{ success: boolean; message: string }> {
   try {
+    await requireAdminAccess();
     const admin = createAdminClient();
     const isResumen = input.recursoType === 'Resumen';
     const isPreguntero = input.recursoType === 'Preguntero';
@@ -50,6 +197,23 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
       return { success: false, message: 'Completa la clasificacion del material antes de continuar.' };
     }
 
+    if (isResumen || input.recursoType === 'Trabajo Práctico') {
+      const duplicatePath = await findDuplicatePdfForMateria({
+        materiaId: input.materiaId,
+        recursoType: input.recursoType === 'Trabajo Práctico' ? 'Trabajo Práctico' : 'Resumen',
+        filePath: input.filePath,
+      });
+
+      if (duplicatePath) {
+        await admin.storage.from('biblioteca').remove([input.filePath]).catch(() => undefined);
+        return {
+          success: false,
+          message:
+            'Detectamos que este PDF ya estaba cargado para esta materia. Comparamos las primeras 2 páginas y coincide con un archivo existente.',
+        };
+      }
+    }
+
     const materiaSeleccionada = await admin
       .from('materias')
       .select('slug, nombre')
@@ -66,6 +230,10 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
       String(materiaSeleccionada.data?.slug ?? '').includes('tecnologia-humanidades') ||
       normalizedName.includes('aprender en el siglo 21');
     const finalCarreraId = isGeneral ? null : input.carreraId;
+    const paginas = await getPdfPageCountForStoragePath(admin, input.filePath).catch((error) => {
+      logError('admin.procesarCargaMaterial.paginasPdf', error, { filePath: input.filePath });
+      return null;
+    });
     let parcialNum = 1;
     if (input.subTipo.includes('2') || input.subTipo.includes('4') || input.resumenParcial.includes('2')) {
       parcialNum = 2;
@@ -101,6 +269,7 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
         carrera_id: finalCarreraId,
         universidad_id: input.universidadId,
         etiqueta: `Modulo ${module}`,
+        paginas,
       }));
 
       if (input.resumenParcial) {
@@ -112,13 +281,14 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
           carrera_id: finalCarreraId,
           universidad_id: input.universidadId,
           etiqueta: input.resumenParcial,
+          paginas,
         });
       }
 
       if (resumenRecursos.length > 0) {
         const { error: recursoError } = await admin.from('recursos').insert(resumenRecursos);
         if (recursoError) {
-          console.error('Error al insertar recursos resumen:', recursoError);
+          logError('admin.procesarCargaMaterial.insertRecursosResumen', recursoError);
         }
       }
 
@@ -133,7 +303,7 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
 
         const { error: resumenError } = await admin.from('resumenes').insert(resumenRows);
         if (resumenError) {
-          console.error('Error al insertar en resumenes:', resumenError);
+          logError('admin.procesarCargaMaterial.insertResumenes', resumenError);
         }
       }
     } else if (shouldPublishAsResource) {
@@ -152,10 +322,11 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
         carrera_id: finalCarreraId,
         universidad_id: input.universidadId,
         etiqueta: input.subTipo,
+        paginas,
       });
 
       if (recursoError) {
-        console.error('Error al insertar en recursos:', recursoError);
+        logError('admin.procesarCargaMaterial.insertRecursos', recursoError);
       }
     }
 
@@ -179,7 +350,9 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
       if (shouldDeleteAfterExtract) {
         const { error: removeError } = await admin.storage.from('biblioteca').remove([input.filePath]);
         if (removeError) {
-          console.error('No pudimos borrar el archivo temporal del preguntero:', removeError);
+          logError('admin.procesarCargaMaterial.removeTemporal', removeError, {
+            filePath: input.filePath,
+          });
           return {
             success: false,
             message:
@@ -205,7 +378,12 @@ export async function procesarCargaMaterialBibliotecaAdministrador(input: {
               : 'Material cargado correctamente.',
     };
   } catch (error) {
-    console.error('Error en procesarCargaMaterialBibliotecaAdministrador:', error);
+    logError('admin.procesarCargaMaterial', error, {
+      materiaId: input.materiaId,
+      universidadId: input.universidadId,
+      recursoType: input.recursoType,
+      filePath: input.filePath,
+    });
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos procesar la carga del material.',

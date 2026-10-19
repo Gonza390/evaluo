@@ -1,14 +1,6 @@
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
-
-const ACTIVE_STATUSES = new Set(['active', 'trialing', 'approved']);
-
-function isSubscriptionCurrentlyValid(expiresAt: string | null) {
-  if (!expiresAt) return true;
-  const expiresAtMs = new Date(expiresAt).getTime();
-  if (Number.isNaN(expiresAtMs)) return false;
-  return expiresAtMs > Date.now();
-}
+import { hasPremiumSubscriptionAccess } from '@/lib/payments/status';
 
 export async function hasPremiumAccess(userId: string): Promise<boolean> {
   if (!userId) return false;
@@ -30,11 +22,10 @@ export async function hasPremiumAccess(userId: string): Promise<boolean> {
       .map((p) => p.id)
   );
 
-  return ((subs ?? []) as Array<{ plan_id: string; status: string | null; expires_at: string | null }>).some(
-    (s) =>
-      premiumPlanIds.has(s.plan_id) &&
-      ACTIVE_STATUSES.has((s.status ?? '').toLowerCase()) &&
-      isSubscriptionCurrentlyValid(s.expires_at)
+  return (
+    (subs ?? []) as Array<{ plan_id: string; status: string | null; expires_at: string | null }>
+  ).some(
+    (s) => premiumPlanIds.has(s.plan_id) && hasPremiumSubscriptionAccess(s.status, s.expires_at)
   );
 }
 
@@ -43,12 +34,37 @@ export async function requirePremiumUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { ok: false as const, user: null, message: 'Debes iniciar sesión.' };
+  if (!user) return { ok: false as const, user: null, message: 'Entrá con tu cuenta para continuar.' };
 
   const premium = await hasPremiumAccess(user.id);
   if (!premium) {
-    return { ok: false as const, user, message: 'Esta funcion es exclusiva para usuarios premium.' };
+    return {
+      ok: false as const,
+      user,
+      message: 'Esta función está disponible con Evaluo Premium.',
+    };
   }
 
   return { ok: true as const, user, message: '' };
+}
+
+export const FREE_ERRORS_REVIEWS_PER_WEEK = 1;
+
+export async function countErroresAttemptsThisWeek(userId: string): Promise<number> {
+  const admin = createAdminClient();
+  const weekStart = new Date();
+  weekStart.setUTCHours(0, 0, 0, 0);
+  weekStart.setUTCDate(weekStart.getUTCDate() - 6);
+
+  const { count, error } = await admin
+    .from('simulator_attempts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('mode', 'errores')
+    .gte('created_at', weekStart.toISOString());
+
+  if (error) {
+    return 0;
+  }
+  return count ?? 0;
 }

@@ -2,7 +2,18 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Building2, BookText, BriefcaseBusiness, GraduationCap, HeartPulse, Landmark, Microscope, Search, Stethoscope } from 'lucide-react';
+import {
+  BookText,
+  BriefcaseBusiness,
+  Building2,
+  GraduationCap,
+  HeartPulse,
+  Landmark,
+  Microscope,
+  Search,
+  Stethoscope,
+} from 'lucide-react';
+import { getSiglo21CareerProfile } from '@/lib/siglo21-career-profiles';
 
 type CarreraRow = {
   id: string;
@@ -11,7 +22,7 @@ type CarreraRow = {
 
 type CareerListClientProps = {
   initialCarreras: CarreraRow[];
-  materiaCountEntries: Array<[string, number]>;
+  universityName?: string;
 };
 
 const CAREER_PRESETS = [
@@ -20,28 +31,28 @@ const CAREER_PRESETS = [
     icon: Building2,
     iconColor: 'text-[#5B5CF6]',
     iconBg: 'bg-[#F1F0FF]',
-    description: 'Forma parte del futuro, disena soluciones reales.',
+    description: 'Forma parte del futuro, diseña soluciones reales.',
   },
   {
     matchers: ['medicina', 'medic'],
     icon: Stethoscope,
     iconColor: 'text-[#22C55E]',
     iconBg: 'bg-[#ECFDF3]',
-    description: 'Vocacion, ciencia y compromiso con la vida.',
+    description: 'Vocación, ciencia y compromiso con la vida.',
   },
   {
     matchers: ['derecho', 'abog'],
     icon: Landmark,
     iconColor: 'text-[#6D5EF8]',
     iconBg: 'bg-[#F3F0FF]',
-    description: 'Defende la justicia, construi un mejor manana.',
+    description: 'Defiende la justicia, construye un mejor mañana.',
   },
   {
     matchers: ['econom', 'admin', 'cont', 'negoc'],
     icon: BriefcaseBusiness,
     iconColor: 'text-[#F59E0B]',
     iconBg: 'bg-[#FFF7E8]',
-    description: 'Entende el mundo, lidera decisiones.',
+    description: 'Entiende el mundo, lidera decisiones.',
   },
   {
     matchers: ['psic'],
@@ -55,14 +66,14 @@ const CAREER_PRESETS = [
     icon: Building2,
     iconColor: 'text-[#3B82F6]',
     iconBg: 'bg-[#EEF5FF]',
-    description: 'Disena espacios, transforma realidades.',
+    description: 'Diseña espacios, transforma realidades.',
   },
   {
     matchers: ['exact', 'matemat', 'fisic', 'quim', 'biolog'],
     icon: Microscope,
     iconColor: 'text-[#2563EB]',
     iconBg: 'bg-[#EFF6FF]',
-    description: 'Descubri, analiza y comprende.',
+    description: 'Descubre, analiza y comprende.',
   },
   {
     matchers: ['social', 'comunic', 'period'],
@@ -83,17 +94,17 @@ function getCareerPreset(name: string) {
       icon: GraduationCap,
       iconColor: 'text-[#5B5CF6]',
       iconBg: 'bg-[#F1F0FF]',
-      description: 'Explora una formacion pensada para tu futuro profesional.',
+      description: 'Explorá una formación pensada para tu futuro profesional.',
     }
   );
 }
 
 export default function CareerListClient({
   initialCarreras,
-  materiaCountEntries,
+  universityName,
 }: CareerListClientProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const materiaCountByCarrera = useMemo(() => new Map(materiaCountEntries), [materiaCountEntries]);
+  const isSiglo21 = universityName?.toLowerCase().includes('siglo 21') ?? false;
 
   const visibleCarreras = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -109,8 +120,8 @@ export default function CareerListClient({
           <h2 className="section-title leading-none text-[#10214C]">
             Todas las carreras
           </h2>
-          <p className="section-copy mt-2 text-[#7C879C]">
-            Explora las carreras que ofrece esta universidad.
+          <p className="section-copy mt-2 text-slate-600">
+            Explorá las carreras que ofrece esta universidad.
           </p>
         </div>
         <div className="relative w-full lg:w-64">
@@ -120,7 +131,7 @@ export default function CareerListClient({
             placeholder="Buscar carrera..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-[#F8FAFC] pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#4F5DFF] focus:outline-none focus:ring-2 focus:ring-[#4F5DFF]/20 sm:h-10"
+            className="h-11 w-full rounded-full border border-[#E2E8F0] bg-white pl-10 pr-4 text-sm text-[#1E293B] placeholder:text-[#94A3B8] focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 sm:h-10"
           />
         </div>
       </div>
@@ -130,7 +141,8 @@ export default function CareerListClient({
           visibleCarreras.map((carrera, index) => {
             const preset = getCareerPreset(carrera.nombre);
             const Icon = preset.icon;
-            const materiasCount = materiaCountByCarrera.get(carrera.id) ?? 0;
+            const officialProfile = isSiglo21 ? getSiglo21CareerProfile(carrera.nombre) : null;
+            const cardDescription = officialProfile?.description ?? preset.description;
 
             return (
               <Link
@@ -150,24 +162,22 @@ export default function CareerListClient({
                     <h3 className="text-[1.02rem] leading-6 font-semibold tracking-[-0.035em] text-[#152A63] sm:text-[1.1rem]">
                       {carrera.nombre}
                     </h3>
-                    <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-[#7C879C]">
-                      {preset.description}
+                    <p className="mx-auto mt-3 max-w-[220px] text-sm leading-6 text-slate-600">
+                      {cardDescription}
                     </p>
-                    <span className="mt-4 inline-flex rounded-full bg-[#EEF2FF] px-2.5 py-1 text-xs font-semibold text-[#5867FF]">
-                      {materiasCount} materias
-                    </span>
                   </div>
                 </div>
               </Link>
             );
           })
         ) : (
-          <div className="surface-card col-span-full border-dashed bg-[#FAFBFE] px-6 py-14 text-center shadow-none">
-            <p className="text-base font-semibold tracking-[-0.03em] text-[#10214C]">
+          <div className="col-span-full border-y border-slate-200 py-12 text-center">
+            <Search className="mx-auto h-6 w-6 text-slate-400" />
+            <p className="mt-4 text-base font-semibold tracking-[-0.03em] text-slate-950">
               No encontramos carreras para mostrar.
             </p>
-            <p className="mt-2 text-sm text-[#7C879C]">
-              Prueba con otra busqueda para ver mas resultados.
+            <p className="mt-2 text-sm text-slate-500">
+              Probá con otra búsqueda para ver más resultados.
             </p>
           </div>
         )}

@@ -1,19 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClientServer } from '@/lib/supabase-server';
 import { createAdminClient } from '@/lib/supabase-admin';
-import { enforceRateLimit, getRequestClientKey } from '@/lib/rate-limit';
+import { enforceRateLimit, getRequestClientKey, rateLimitHeaders } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
     const clientKey = getRequestClientKey(request);
-    const rateLimit = enforceRateLimit({
+    const rateLimit = await enforceRateLimit({
       key: `rag-feedback:${clientKey}`,
       limit: 20,
       windowMs: 60_000,
     });
 
     if (!rateLimit.allowed) {
-      return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+      return NextResponse.json(
+        { error: 'rate_limited' },
+        { status: 429, headers: rateLimitHeaders(rateLimit) }
+      );
     }
 
     const body = (await request.json()) as { pregunta_id?: string; voto?: number };

@@ -1,6 +1,18 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase';
+import {
+  checkProxyRateLimit,
+  getClientIpFromRequest,
+  isLikelyBotUserAgent,
+  proxyRateLimitHeaders,
+} from '@/lib/proxy-security';
+import {
+  normalizeReferralCode,
+  REFERRAL_COOKIE_MAX_AGE_SECONDS,
+  REFERRAL_COOKIE_NAME,
+} from '@/lib/referrals';
 
 function createClient(request: NextRequest, response: NextResponse) {
   return createServerClient<Database>(
@@ -22,9 +34,86 @@ function createClient(request: NextRequest, response: NextResponse) {
   );
 }
 
+function hasSessionCookie(request: NextRequest) {
+  // @supabase/ssr usa sb-<proyecto>-auth-token y puede dividirlo en .0, .1, etc.
+  // Esto solo evita inicializar Auth sin sesión; la identidad se valida con getUser.
+  return request.cookies
+    .getAll()
+    .some(
+      ({ name, value }) => /^sb-[a-zA-Z0-9_-]+-auth-token(?:\.\d+)?$/.test(name) && value.length > 0
+    );
+}
+
+function persistReferralCookie(request: NextRequest, response: NextResponse) {
+  const code = normalizeReferralCode(request.nextUrl.searchParams.get('ref'));
+  if (!code) return response;
+
+  response.cookies.set(REFERRAL_COOKIE_NAME, code, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
+  });
+  return response;
+}
+
+function enforceProxyApiProtection(request: NextRequest, pathname: string): NextResponse | null {
+  if (!pathname.startsWith('/api/')) return null;
+
+  const isInternalApi = pathname.startsWith('/api/internal');
+  if (isInternalApi) return null;
+
+  // Mercado Pago autentica este endpoint mediante x-signature. No debe pasar
+  // por el filtro de user-agent destinado a navegadores y bots publicos.
+  if (pathname === '/api/webhooks/mercadopago') return null;
+
+  const userAgent = request.headers.get('user-agent') ?? '';
+  if (isLikelyBotUserAgent(userAgent)) {
+    return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
+  }
+
+  const clientKey = getClientIpFromRequest(request);
+  const rateLimit = checkProxyRateLimit(`proxy:${clientKey}`, 600, 60_000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'rate_limited' },
+      { status: 429, headers: proxyRateLimitHeaders(rateLimit) }
+    );
+  }
+
+  return null;
+}
+
+function canonicalizeLegacyMiEspacioPath(value: string | null) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null;
+
+  try {
+    const target = new URL(value, 'https://evaluo.local');
+    const isLegacyMaterialsRoot =
+      target.pathname === '/dashboard/materiales' || target.pathname === '/dashboard/materiales/';
+    const isLegacyUploadEntry =
+      target.pathname === '/dashboard/materiales/nuevo' ||
+      target.pathname === '/dashboard/materiales/subir';
+
+    if (!isLegacyMaterialsRoot && !isLegacyUploadEntry) return null;
+    if (isLegacyUploadEntry) target.searchParams.set('openUpload', '1');
+
+    const query = target.searchParams.toString();
+    return query ? `/dashboard?${query}` : '/dashboard';
+  } catch {
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const pathname = request.nextUrl.pathname;
+
+  const apiProtectionBlock = enforceProxyApiProtection(request, pathname);
+  if (apiProtectionBlock) {
+    return persistReferralCookie(request, apiProtectionBlock);
+  }
 
   const isRegularSimulatorRoute =
     pathname === '/simulador' || /^\/simulador\/[^/]+\/\d+$/.test(pathname);
@@ -35,13 +124,54 @@ export async function proxy(request: NextRequest) {
 
   const isProtectedRoute =
     pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/calendario') ||
+    pathname.startsWith('/configuracion') ||
+    pathname.startsWith('/completar-perfil') ||
     isProtectedSimulatorRoute ||
     pathname.startsWith('/administrador');
 
   const isLoginRoute = pathname.startsWith('/login');
+  const isHomeRoute = pathname === '/';
 
-  if (!isProtectedRoute && !isLoginRoute) {
-    return response;
+  if (isLoginRoute) {
+    const requestedNext =
+      request.nextUrl.searchParams.get('next') ?? request.nextUrl.searchParams.get('redirectTo');
+    const canonicalNext = canonicalizeLegacyMiEspacioPath(requestedNext);
+
+    if (canonicalNext && canonicalNext !== requestedNext) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.searchParams.set('next', canonicalNext);
+      loginUrl.searchParams.delete('redirectTo');
+      if (canonicalNext.includes('openUpload=1')) {
+        loginUrl.searchParams.set('reason', 'prepare-material');
+      }
+      return persistReferralCookie(request, NextResponse.redirect(loginUrl));
+    }
+  }
+
+  if (
+    isLoginRoute &&
+    request.nextUrl.searchParams.get('mode') === 'signup' &&
+    !request.nextUrl.searchParams.get('next') &&
+    !request.nextUrl.searchParams.get('redirectTo')
+  ) {
+    const signupUrl = request.nextUrl.clone();
+    signupUrl.searchParams.set('next', '/dashboard?openUpload=1');
+    signupUrl.searchParams.set('reason', 'prepare-material');
+    return persistReferralCookie(request, NextResponse.redirect(signupUrl));
+  }
+
+  if (!isProtectedRoute && !isLoginRoute && !isHomeRoute) {
+    return persistReferralCookie(request, response);
+  }
+
+  if (isHomeRoute && !hasSessionCookie(request)) {
+    return persistReferralCookie(request, response);
+  }
+
+  if (isHomeRoute) {
+    // Una respuesta que valida o limpia una sesión no debe compartirse en caché.
+    response.headers.set('Cache-Control', 'private, no-store');
   }
 
   const supabase = createClient(request, response);
@@ -49,25 +179,52 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (isHomeRoute && user) {
+    const homeResponse = NextResponse.redirect(new URL('/dashboard', request.url));
+    // La validación puede renovar la sesión: conservar esas cookies al redirigir.
+    response.cookies.getAll().forEach((cookie) => homeResponse.cookies.set(cookie));
+    homeResponse.headers.set('Cache-Control', 'private, no-store');
+    return persistReferralCookie(request, homeResponse);
+  }
+
+  if (user) {
+    const referralCode =
+      normalizeReferralCode(request.nextUrl.searchParams.get('ref')) ??
+      normalizeReferralCode(request.cookies.get(REFERRAL_COOKIE_NAME)?.value);
+
+    if (referralCode) {
+      const rpcClient = supabase as unknown as SupabaseClient;
+      try {
+        await rpcClient.rpc('claim_my_referral_attribution', {
+          p_code: referralCode,
+          p_source: 'link',
+        });
+      } catch {
+        // La atribución es best effort y nunca debe bloquear navegación o auth.
+      }
+    }
+  }
+
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirectTo', pathname);
-    return NextResponse.redirect(loginUrl);
+    loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
+    return persistReferralCookie(request, NextResponse.redirect(loginUrl));
   }
 
   if (isRegularSimulatorRoute && !user) {
-    return response;
+    return persistReferralCookie(request, response);
   }
 
   if (isLoginRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return persistReferralCookie(
+      request,
+      NextResponse.redirect(new URL('/dashboard', request.url))
+    );
   }
 
-  return response;
+  return persistReferralCookie(request, response);
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 };

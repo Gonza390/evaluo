@@ -1,0 +1,232 @@
+html.evaluo-exam-scroll-lock,
+html.evaluo-exam-scroll-lock body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+#evaluo-simulator-shell {
+  min-height: 100dvh;
+  background: var(--background);
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 {
+  background: var(--background);
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 > header {
+  border-color: color-mix(in oklch, var(--border) 88%, transparent);
+  box-shadow: none;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 > .sticky {
+  background: color-mix(in oklch, var(--background) 98%, transparent);
+  box-shadow: none;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 > .relative.mx-auto.max-w-6xl {
+  max-width: 1180px;
+}
+
+/* La pregunta es la superficie principal; el contenedor no necesita elevación. */
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main.rounded-2xl {
+  min-height: 560px;
+  border-radius: 16px;
+  border-color: color-mix(in oklch, var(--border) 90%, transparent);
+  background: var(--card);
+  box-shadow: none;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main > .mb-5.rounded-xl {
+  border: 0;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 82%, transparent);
+  border-radius: 0;
+  background: var(--background);
+  padding: 0.35rem 0 1.35rem;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main > .mb-5.rounded-xl h2 {
+  max-width: 780px;
+  font-size: clamp(1.08rem, 1.5vw, 1.35rem);
+  line-height: 1.58;
+  letter-spacing: -0.018em;
+}
+
+/* Las respuestas siguen siendo objetos interactivos: conservan borde, no sombra. */
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main [role='group'] button {
+  min-height: 60px;
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: none;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main [role='group'] button:not(:disabled):hover {
+  transform: none;
+  border-color: color-mix(in oklch, var(--primary) 38%, var(--border));
+  background: color-mix(in oklch, var(--primary) 3%, var(--card));
+  box-shadow: none;
+}
+
+/* El aviso institucional queda como cierre secundario, separado del feedback pedagógico. */
+#evaluo-simulator-shell
+  .min-h-screen.bg-white.pb-36
+  main
+  > div[class*='border-slate-100'][class*='p-3.5']:last-child {
+  margin-top: 3.5rem !important;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 aside {
+  border-radius: 14px;
+  border-color: color-mix(in oklch, var(--border) 88%, transparent);
+  background: var(--background);
+  box-shadow: none;
+}
+
+#evaluo-simulator-shell .min-h-screen.bg-white.pb-36 .fixed.inset-x-0.bottom-0 {
+  border-top: 1px solid color-mix(in oklch, var(--border) 88%, transparent);
+  background: color-mix(in oklch, var(--background) 98%, transparent);
+  box-shadow: none;
+}
+
+/* Estados previos y posteriores al examen comparten la misma jerarquía limpia. */
+#evaluo-simulator-shell .shadow-xl,
+#evaluo-simulator-shell .shadow-sm {
+  box-shadow: none !important;
+}
+
+#evaluo-simulator-shell .rounded-3xl {
+  border-radius: 16px !important;
+}
+
+#evaluo-simulator-shell [class*='shadow-[0_30px_90px'],
+#evaluo-simulator-shell [class*='shadow-[0_18px_45px'],
+#evaluo-simulator-shell [class*='shadow-[0_16px_35px'] {
+  box-shadow: none !important;
+}
+
+#evaluo-simulator-shell [class*='rounded-[34px]'] {
+  border-radius: 18px !important;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true'] {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--background);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 {
+  min-height: 100dvh;
+  padding-bottom: 7rem !important;
+  background: transparent !important;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 > header {
+  display: none !important;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 > .sticky {
+  display: block !important;
+  position: sticky;
+  top: 0;
+  z-index: 105;
+  padding-right: 4.5rem;
+  border-color: color-mix(in oklch, var(--border) 88%, transparent);
+  background: color-mix(in oklch, var(--background) 98%, transparent);
+  backdrop-filter: blur(var(--ui-backdrop-blur, 1.5px));
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true']
+  .min-h-screen.bg-white.pb-36
+  > .relative.mx-auto.max-w-6xl {
+  max-width: 1040px;
+  padding: 1.25rem 1rem 8rem;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true']
+  .min-h-screen.bg-white.pb-36
+  > .relative.mx-auto.max-w-6xl
+  > div[class*='lg:grid-cols'] {
+  display: block !important;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 aside {
+  display: none !important;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 main.rounded-2xl {
+  width: 100%;
+  max-width: 900px;
+  min-height: calc(100dvh - 12rem);
+  margin-inline: auto;
+  padding: clamp(1.1rem, 3vw, 2.2rem);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+#evaluo-simulator-shell[data-exam-immersive='true']
+  .min-h-screen.bg-white.pb-36
+  main
+  > .mb-5.rounded-xl {
+  padding: 0.25rem 0 1.35rem;
+  background: var(--background);
+}
+
+/* Pantalla completa conserva el mismo feedback pedagógico que la vista normal:
+   opción elegida incorrecta en rojo, correcta en verde y sus etiquetas visibles. */
+
+@media (max-width: 1023px) {
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main.rounded-2xl {
+    min-height: auto;
+    border-radius: 14px;
+    box-shadow: none;
+  }
+
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main > .mb-5.rounded-xl {
+    padding: 0.25rem 0 1.1rem;
+  }
+
+  #evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 main.rounded-2xl {
+    min-height: calc(100dvh - 10.5rem);
+  }
+}
+
+@media (max-width: 639px) {
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 {
+    padding-bottom: 10.5rem !important;
+  }
+
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 > .relative.mx-auto.max-w-6xl {
+    padding-inline: 0.6rem;
+  }
+
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main.rounded-2xl {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    padding: 0.85rem;
+  }
+
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main > .mb-5.rounded-xl {
+    padding: 0.15rem 0 1rem;
+  }
+
+  #evaluo-simulator-shell .min-h-screen.bg-white.pb-36 main [role='group'] button {
+    min-height: 58px;
+  }
+
+  #evaluo-simulator-shell[data-exam-immersive='true']
+    .min-h-screen.bg-white.pb-36
+    > .relative.mx-auto.max-w-6xl {
+    padding: 0.75rem 0.6rem 10.5rem;
+  }
+
+  #evaluo-simulator-shell[data-exam-immersive='true'] .min-h-screen.bg-white.pb-36 main.rounded-2xl {
+    min-height: auto;
+    border-radius: 0;
+    padding: 0.9rem;
+  }
+}
