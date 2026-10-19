@@ -498,7 +498,7 @@ export function PdfProgressPanel({
               </div>
             )}
             {summaryBody ? (
-              <div className="mt-5 min-w-0 max-w-[78ch] [&_p]:text-[15px]! [&_p]:leading-7!">
+              <div className="mt-5 min-w-0 max-w-[78ch] [&_p]:text-base! [&_p]:leading-7!">
                 <StudyRichText body={summaryBody} />
               </div>
             ) : (
