@@ -292,12 +292,6 @@ export function PdfProgressPanel({
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
-      {currentTopic && (
-        <p className={`text-muted-foreground text-xs ${reviewOpen ? 'mb-1' : 'mb-3'}`}>
-          {reviewOpen ? 'Refuerzo · ' : ''}Tema {topics.findIndex((topic) => topic.id === currentTopic.id) + 1} de {topics.length}
-          {!reviewOpen && <> · {topicStatus(currentTopic).label}</>}
-        </p>
-      )}
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 id={`real-detail-title-${panelId}`} className="text-xl font-semibold break-words">
           {currentTopic?.title ?? 'Otros conceptos'}
