@@ -38,7 +38,7 @@ jobs:
           npm run dev -- --port 3100 > /tmp/evaluo-qa-next.log 2>&1 &
           echo $! > /tmp/evaluo-qa-next.pid
           for i in $(seq 1 90); do
-            if curl --silent --fail 'http://127.0.0.1:3100/preview/progreso-pdf?tab=progreso&nuevo=1' -o /dev/null; then
+            if curl --silent --fail 'http://localhost:3100/preview/progreso-pdf?tab=progreso&nuevo=1' -o /dev/null; then
               exit 0
             fi
             sleep 2
