@@ -181,7 +181,11 @@ for (const width of [355, 433]) {
     try {
       await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
       await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+      // Evitar clicar antes de que React haya hidratado la vista de Next.js.
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(400);
       await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
+      await page.getByRole('button', { name: 'Volver a los temas' }).waitFor(wait);
       await page.getByRole('button', { name: 'Volver a los temas' }).click();
       await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
       await page.getByRole('button', { name: 'Practicar este tema', exact: true }).click();
@@ -203,6 +207,9 @@ for (const width of [355, 433]) {
     try {
       await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
       await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+      // Evitar clicar antes de que React haya hidratado la vista de Next.js.
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(400);
       await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
       await page.getByRole('button', { name: /Reforzar (?:las )?dificultades/i }).first().click();
       const review = page.locator('[data-topic-reinforcement]:visible').first();
