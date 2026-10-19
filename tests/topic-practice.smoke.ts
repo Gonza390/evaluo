@@ -96,6 +96,53 @@ assert.equal(
   'No repetir lo respondido cuando hay otra pregunta disponible.'
 );
 
+// Un tema con 35 preguntas debe dar 20 en la primera tanda y 15 en la segunda.
+const largeTopicBank = Array.from({ length: 35 }, (_, index) =>
+  question(`large-topic-${index + 1}`, 0)
+);
+const firstTopicBatch = selectTopicPracticeQuestions({
+  questions: largeTopicBank,
+  targetCount: 20,
+  sections: [sections[0]],
+  unansweredOnly: true,
+});
+assert.equal(firstTopicBatch.length, 20);
+const secondTopicBatch = selectTopicPracticeQuestions({
+  questions: largeTopicBank,
+  targetCount: 20,
+  sections: [sections[0]],
+  unansweredOnly: true,
+  context: {
+    ...emptyTopicPracticeContext,
+    answeredItemKeys: firstTopicBatch.map((item) => `exercise:${item.id}`),
+  },
+});
+assert.equal(secondTopicBatch.length, 15, 'La segunda tanda no debe rellenarse con preguntas repetidas.');
+assert.equal(
+  secondTopicBatch.filter((item) => firstTopicBatch.some((previous) => previous.id === item.id)).length,
+  0,
+  'No mostrar ninguna pregunta ya respondida mientras haya nuevas.'
+);
+const completedBank = selectTopicPracticeQuestions({
+  questions: largeTopicBank,
+  targetCount: 20,
+  sections: [sections[0]],
+  unansweredOnly: true,
+  context: {
+    ...emptyTopicPracticeContext,
+    answeredItemKeys: largeTopicBank.map((item) => `exercise:${item.id}`),
+  },
+});
+assert.equal(completedBank.length, 20, 'Cuando se completa el banco se puede comenzar una nueva vuelta.');
+const missingHistory = selectTopicPracticeQuestions({
+  questions: largeTopicBank,
+  targetCount: 20,
+  sections: [sections[0]],
+  unansweredOnly: true,
+  context: { ...emptyTopicPracticeContext, loadError: true },
+});
+assert.equal(missingHistory.length, 20, 'Sin historial disponible, la práctica debe seguir funcionando.');
+
 const pending = selectTopicPracticeQuestions({
   questions,
   targetCount: 2,
