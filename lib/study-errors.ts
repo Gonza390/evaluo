@@ -156,13 +156,13 @@ async function claimFirstStudyErrorOnboarding(
 
   if (demoExposure?.id) {
     const now = new Date().toISOString();
-    const { error: legacyError } = await db.from('study_error_onboarding_state').insert({
+    const { error: legacyError } = await db.from('study_error_onboarding_state').upsert({
       user_id: userId,
       pending_error_id: null,
       seen_at: now,
       outcome: 'legacy',
       updated_at: now,
-    });
+    }, { onConflict: 'user_id', ignoreDuplicates: true });
 
     if (legacyError && String(legacyError.code ?? '') !== '23505') {
       logError('studyErrors.onboarding.demoLegacy', legacyError, { userId, errorId });
@@ -172,11 +172,14 @@ async function claimFirstStudyErrorOnboarding(
 
   const { data, error } = await db
     .from('study_error_onboarding_state')
-    .insert({
+    // ON CONFLICT DO NOTHING: un usuario no debe generar una violación 23505
+    // cada vez que vuelve a responder o abre el onboarding en otra pestaña.
+    // Sin actualizar filas previas, se preserva el resultado del primer intento.
+    .upsert({
       user_id: userId,
       pending_error_id: errorId,
       updated_at: new Date().toISOString(),
-    })
+    }, { onConflict: 'user_id', ignoreDuplicates: true })
     .select('pending_error_id')
     .maybeSingle();
 
