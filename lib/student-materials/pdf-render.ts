@@ -257,7 +257,9 @@ export async function renderPdfPagesToPngs(
     };
   } finally {
     if (documentHandle) {
-      void documentHandle.destroy().catch(() => undefined);
+      // Esperar la liberación real del PDF.js anterior antes de abrir el
+      // siguiente lote de páginas escaneadas.
+      await documentHandle.destroy().catch(() => undefined);
     }
   }
 }
