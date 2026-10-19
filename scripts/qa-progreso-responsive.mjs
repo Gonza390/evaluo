@@ -124,7 +124,7 @@ await check('topic practice -> result -> return to same topic', async () => {
     await back.click();
     await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
     assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Back to same topic');
-    await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"] h4').waitFor(wait);
+    await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]:visible h4').first().waitFor(wait);
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
   } catch (error) {
     await page.screenshot({ path: folder + '/failed-practice.png', animations: 'disabled' }).catch(() => {});
