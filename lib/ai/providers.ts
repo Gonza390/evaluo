@@ -645,9 +645,14 @@ async function runGeminiInlineJson(input: {
   if (apiKeys.length === 0 || models.length === 0) return null;
 
   let lastErrorMessage = '';
+  // Respetar el presupuesto de la función: no gastar 90 s por cada clave.
+  const providerBudgetMs = input.logScope === 'vision' ? 35_000
+    : input.logScope === 'pdf' ? 65_000 : 90_000;
+  const deadline = Date.now() + providerBudgetMs;
 
   for (const apiKey of apiKeys) {
     for (const model of models) {
+      if (Date.now() >= deadline) break;
       const url = `${GEMINI_ENDPOINT}/${model}:generateContent`;
       const generationConfig: Record<string, unknown> = {
         temperature: input.temperature,
@@ -680,7 +685,10 @@ async function runGeminiInlineJson(input: {
               generationConfig,
             }),
           },
-          90_000
+          Math.min(
+            input.logScope === 'vision' ? 25_000 : 65_000,
+            Math.max(1_000, deadline - Date.now())
+          )
         );
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
