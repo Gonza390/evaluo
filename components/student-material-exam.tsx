@@ -806,6 +806,11 @@ export function StudentMaterialExam({
             <p className="text-muted-foreground text-[12px] font-bold tracking-[0.14em] uppercase">
               Pregunta {currentIndex + 1} de {questions.length}
             </p>
+            {topicSectionIndex !== undefined && eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS && (
+              <p className="text-muted-foreground mt-1 text-xs">
+                Hay {eligibleQuestions.length} preguntas en este tema; las restantes podrán aparecer en otra tanda.
+              </p>
+            )}
             <p className="text-muted-foreground mt-1 text-xs md:hidden">
               Basado únicamente en este PDF
             </p>
