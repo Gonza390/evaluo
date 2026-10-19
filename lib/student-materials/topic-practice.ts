@@ -84,6 +84,7 @@ export function selectTopicPracticeQuestions({
   sections,
   context = emptyTopicPracticeContext,
   complete = false,
+  unansweredOnly = false,
   random = Math.random,
   now = Date.now(),
 }: {
@@ -93,6 +94,8 @@ export function selectTopicPracticeQuestions({
   sections: StudySummarySection[];
   context?: TopicPracticeContext;
   complete?: boolean;
+  /** En prácticas por tema, no rellenar la tanda con preguntas ya respondidas. */
+  unansweredOnly?: boolean;
   random?: () => number;
   now?: number;
 }) {
@@ -108,18 +111,24 @@ export function selectTopicPracticeQuestions({
     }
     return shuffled;
   }
-  if (!sections.length) return resolveExamQuestions(eligible, preferredQuestionIds, targetCount);
-  const progress = buildPdfProgress(sections, [], context.loadError ? [] : context.evidence);
   const answered = new Set(
     context.answeredItemKeys.map((key) =>
       key.replace(/^(?:exercise|diagnostic):/, '').replace(/^summary-check:\d+:artifact:/, '')
     )
   );
+  const remaining = unansweredOnly && !context.loadError
+    ? eligible.filter((question) => !answered.has(question.id))
+    : eligible;
+  // Si ya se recorrió todo el banco, habilitar una nueva vuelta de repaso.
+  // Si restan menos de 20 preguntas, devolver solo las pendientes de esta vuelta.
+  const available = unansweredOnly && remaining.length === 0 ? eligible : remaining;
+  if (!sections.length) return resolveExamQuestions(available, preferredQuestionIds, targetCount);
+  const progress = buildPdfProgress(sections, [], context.loadError ? [] : context.evidence);
   const pending = new Set(context.pendingTopics.map(normalizeAnswer));
   const groups = sections.map(() => [] as StudyQuestion[]);
   const extra: StudyQuestion[] = [];
   const identities = new Set<string>();
-  for (const question of eligible) {
+  for (const question of available) {
     const identity = `${normalizeAnswer(question.prompt)}|${normalizeAnswer(question.answer)}`;
     if (identities.has(identity)) continue;
     identities.add(identity);
