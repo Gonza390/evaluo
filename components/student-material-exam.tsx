@@ -54,6 +54,10 @@ type StudentMaterialExamProps = {
 
 type OpenAssessment = 'got_it' | 'review';
 
+// En una práctica de tema no se le pide elegir tamaño al estudiante.
+// Si el banco es amplio, una tanda de hasta 20 preguntas mantiene la práctica abordable.
+const MAX_TOPIC_PRACTICE_QUESTIONS = 20;
+
 export function StudentMaterialExam({
   artifacts,
   materialId,
@@ -100,6 +104,8 @@ export function StudentMaterialExam({
     sizeOptions[Math.floor(sizeOptions.length / 2)]?.count ??
     0;
   const [selectedSize, setSelectedSize] = useState(defaultSize);
+  const topicPracticeCount = Math.min(eligibleQuestions.length, MAX_TOPIC_PRACTICE_QUESTIONS);
+  const topicAutoStartRequested = useRef(false);
   const [started, setStarted] = useState(false);
   // Congelar la tanda: los nuevos resultados no deben cambiar preguntas en pleno intento.
   const [questions, setQuestions] = useState<StudyQuestion[]>([]);
@@ -284,10 +290,11 @@ export function StudentMaterialExam({
     const nextQuestions = selectTopicPracticeQuestions({
       questions: eligibleQuestions,
       preferredQuestionIds,
-      targetCount: selectedSize || defaultSize,
+      targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize : topicPracticeCount,
       complete:
+        topicSectionIndex === undefined &&
         sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode ===
-        'complete',
+          'complete',
       sections,
       context,
     });
@@ -311,8 +318,25 @@ export function StudentMaterialExam({
   const resetExam = () => {
     discardSavedDraft();
     clearAttempt();
+    topicAutoStartRequested.current = false;
     setStarted(false);
   };
+
+  // Para un tema se empieza directamente: no hay pantalla para elegir cantidad.
+  // Un borrador previo se ofrece para retomar antes de crear una tanda nueva.
+  useEffect(() => {
+    if (
+      topicSectionIndex === undefined ||
+      !draftLoaded ||
+      savedDraft ||
+      started ||
+      preparing ||
+      topicAutoStartRequested.current ||
+      eligibleQuestions.length === 0
+    ) return;
+    topicAutoStartRequested.current = true;
+    void startExam();
+  }, [topicSectionIndex, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
 
   if (eligibleQuestions.length === 0 || sizeOptions.length === 0) {
     return (
@@ -325,6 +349,53 @@ export function StudentMaterialExam({
             ? 'El PDF necesita más contenido estructurado para armar una práctica útil.'
             : 'Podés estudiar este tema con tu resumen. Todavía no hay preguntas fiables asociadas para practicarlo.'}
         </p>
+      </div>
+    );
+  }
+
+  if (!started && topicSectionIndex !== undefined) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-5 px-1 py-4 sm:px-2">
+        {onReturnToTopic && (
+          <button
+            type="button"
+            onClick={() => onReturnToTopic(false)}
+            className="text-primary min-h-11 text-sm font-semibold"
+          >
+            Volver al tema
+          </button>
+        )}
+        <div className="border-border border-b pb-4">
+          <p className="text-primary text-[11px] font-bold tracking-[0.14em] uppercase">
+            Práctica de este tema
+          </p>
+          <h2 className="text-foreground mt-2 text-xl font-semibold">
+            {topicTitle}
+          </h2>
+          <p className="text-muted-foreground mt-2 text-sm leading-6">
+            {eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS
+              ? `Una tanda de hasta ${MAX_TOPIC_PRACTICE_QUESTIONS} preguntas de este tema. Priorizamos las que todavía no respondiste.`
+              : `${topicPracticeCount} ${topicPracticeCount === 1 ? 'pregunta disponible' : 'preguntas disponibles'} de este tema.`}
+          </p>
+        </div>
+        {savedDraft && !isSimulation ? (
+          <div className="border-primary/30 bg-primary/5 rounded-xl border p-4">
+            <p className="text-sm font-semibold">Tenés una práctica sin terminar</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Retomá desde la pregunta {savedDraft.currentIndex + 1} de {savedDraft.questionIds.length}.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Button type="button" onClick={resumeExam}>Continuar donde quedé <ArrowRight className="h-4 w-4" /></Button>
+              <button type="button" onClick={discardSavedDraft} className="text-muted-foreground min-h-11 text-xs font-medium underline">
+                Empezar una práctica nueva
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p role="status" className="text-muted-foreground text-sm">
+            {preparing ? 'Preparando tus preguntas…' : 'Abriendo la práctica…'}
+          </p>
+        )}
       </div>
     );
   }
