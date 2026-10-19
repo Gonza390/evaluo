@@ -49,7 +49,7 @@ export default function ExamDatePlanPreview() {
         <div className="rounded-[28px] border border-[#E7EBF4] bg-white shadow-[0_28px_90px_rgba(15,27,61,0.08)]">
           <header className="flex items-center justify-between border-b border-[#E7EBF4] px-5 py-4 sm:px-7">
             <div className="flex items-center gap-2.5">
-              <img src="/icon.png" alt="" className="h-9 w-9 object-contain" />
+              <img src="/evaluo-logo-icono.svg" alt="" className="h-9 w-9 object-contain" />
               <span className="text-xl font-black tracking-[-0.04em]">Evaluo</span>
             </div>
             <div className="h-9 w-24 rounded-xl bg-slate-100" />
