@@ -795,15 +795,17 @@ export function PdfProgressPanel({
       <h2
         id={`${panelId}-heading`}
         tabIndex={-1}
-        className={`${embedded ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} mt-2 font-semibold tracking-tight`}
+        className={`${embedded ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} mt-2 font-semibold tracking-tight ${reviewOpen ? 'sr-only' : ''}`}
       >
         Tu progreso
       </h2>
-      <p className="text-muted-foreground mt-1 text-[13px]!">
-        {simulation
-          ? 'Elegí qué estudiar y avanzá tema por tema. Resultados de ejemplo.'
-          : 'Elegí qué estudiar y avanzá tema por tema.'}
-      </p>
+      {!reviewOpen && (
+        <p className="text-muted-foreground mt-1 text-[13px]!">
+          {simulation
+            ? 'Elegí qué estudiar y avanzá tema por tema. Resultados de ejemplo.'
+            : 'Elegí qué estudiar y avanzá tema por tema.'}
+        </p>
+      )}
       {summaryUnavailable && (
         <p role="status" className="text-muted-foreground mt-3 text-sm!">
           El resumen todavía no está disponible. Podés repasar las preguntas guardadas.
