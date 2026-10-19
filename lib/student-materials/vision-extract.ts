@@ -199,7 +199,7 @@ function normalizeConfidence(value: unknown): VisionPage['confidence'] {
   return value === 'alta' || value === 'media' || value === 'baja' ? value : 'media';
 }
 
-function parseVisionPayload(raw: string, expectedPageNumbers: number[]): VisionPage[] {
+function parseVisionPayload(raw: string, expectedPageNumbers: number[], allowIndexFallback = true): VisionPage[] {
   let payload: VisionPayload;
   try {
     payload = extractJsonObject(raw) as VisionPayload;
@@ -213,7 +213,7 @@ function parseVisionPayload(raw: string, expectedPageNumbers: number[]): VisionP
 
   rows.forEach((row, index) => {
     const rawPageNumber = Number(row.page_number);
-    const fallbackPageNumber = expectedPageNumbers[index];
+    const fallbackPageNumber = allowIndexFallback ? expectedPageNumbers[index] : undefined;
     const pageNumber =
       Number.isInteger(rawPageNumber) && expected.has(rawPageNumber)
         ? rawPageNumber
@@ -481,7 +481,7 @@ export async function enhancePdfExtractionWithVision(input: {
       });
       await recordResult(result);
       if (result?.content) {
-        for (const page of parseVisionPayload(result.content, missingAfterImages)) {
+        for (const page of parseVisionPayload(result.content, missingAfterImages, false)) {
           if (isUsableVisionPage(page, false)) visionPages.set(page.pageNumber, page);
         }
       }
