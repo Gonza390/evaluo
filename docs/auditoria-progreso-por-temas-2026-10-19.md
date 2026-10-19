@@ -16,7 +16,7 @@ Se consultaron PDFs con procesamiento `ready`, resumen `ready` y artefactos peda
 | v5 | 67 | 1930 | 243 | 1687 |
 | v2 | 1 | 31 | 4 | 27 |
 
-En los nueve PDFs **v11** hay **48 capítulos**: 12 tienen una sola pregunta con etiqueta de capítulo coincidente y 36 tienen al menos dos; ninguno quedó sin una coincidencia explícita. Todas las 77 secciones-documento recientes inspeccionadas contienen Markdown con encabezados (al menos un `###` por PDF), que el panel de Progreso antes exponía literalmente.
+En los nueve PDFs **v11** hay **48 capítulos**: 12 tienen una sola pregunta con etiqueta de capítulo coincidente y 36 tienen al menos dos; ninguno quedó sin una coincidencia explícita. Los 77 PDFs recientes inspeccionados contienen Markdown con encabezados (al menos un `###` por PDF), que el panel de Progreso antes exponía literalmente.
 
 **Límite fundamental:** esta métrica compara etiquetas normalizadas con el título del resumen; **no** ejecuta `findSummarySectionForQuestion` ni analiza semánticamente el PDF. Los 183 ítems sin coincidencia explícita pueden asociarse conservadoramente mediante `topic`, pregunta, respuesta y fragmentos de referencia. Los 12 temas con solo una coincidencia pueden tener preguntas adicionales asociadas por ese mecanismo. No debe interpretarse la métrica como número de preguntas realmente disponibles, ni como errores pedagógicos. Para el conteo mostrado al estudiante, el producto mantiene `getTopicQuestionCounts`, que llama al algoritmo real de asociación y descarta ítems ambiguos.
 
