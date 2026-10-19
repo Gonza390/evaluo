@@ -136,7 +136,6 @@ assert.doesNotMatch(
   'El resumen de Progreso no puede volver al texto plano.'
 );
 
-
 assert.match(
   materialPageSource,
   /initialRecommendedStudy=\{\s*isFirstReadyMaterial && query\.recorrido === '1' && !firstPdfGuideAlreadySeen\s*\}/,
