@@ -295,6 +295,7 @@ export function StudentMaterialExam({
           'complete',
       sections,
       context,
+      unansweredOnly: topicSectionIndex !== undefined,
     });
     setQuestions(nextQuestions);
     setContextUnavailable(Boolean(context.loadError));
@@ -806,7 +807,7 @@ export function StudentMaterialExam({
             </p>
             {topicSectionIndex !== undefined && eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS && (
               <p className="text-muted-foreground mt-1 text-xs">
-                Hay {eligibleQuestions.length} preguntas en este tema; las restantes podrán aparecer en otra tanda.
+                Este tema tiene {eligibleQuestions.length} preguntas en total. En cada tanda priorizamos las que te faltan.
               </p>
             )}
             <p className="text-muted-foreground mt-1 text-xs md:hidden">
