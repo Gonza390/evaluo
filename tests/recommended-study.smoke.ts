@@ -110,6 +110,32 @@ assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
 const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
 
+// El lector de Progreso tiene que respetar el formato académico real,
+// sin mostrar las marcas Markdown como texto plano ni crear objetivos con IA.
+const topicReaderSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+const richTextSource = readFileSync('components/study-rich-text.tsx', 'utf8');
+assert.match(
+  topicReaderSource,
+  /<StudyRichText body=\{summaryBody\} \/>/,
+  'Progreso debe interpretar títulos, listas y negritas con el mismo lector del resumen.'
+);
+assert.match(
+  topicReaderSource,
+  /focusConcepts\.map\(/,
+  'La guía debe utilizar conceptos del glosario asociados al tema.'
+);
+assert.match(
+  topicReaderSource,
+  /getTopicStudyResources\(/,
+  'No inventar asociaciones de conceptos ni repartir por posición.'
+);
+assert.match(richTextSource, /<em key=/, 'Las cursivas del PDF deben mostrarse como énfasis.');
+assert.doesNotMatch(
+  topicReaderSource,
+  /<div className="mt-4 max-w-prose text-base leading-7 whitespace-pre-line">/,
+  'El resumen de Progreso no puede volver al texto plano.'
+);
+
 assert.match(
   materialPageSource,
   /initialRecommendedStudy=\{\s*isFirstReadyMaterial && query\.recorrido === '1' && !firstPdfGuideAlreadySeen\s*\}/,
