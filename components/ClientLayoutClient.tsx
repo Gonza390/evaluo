@@ -241,7 +241,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
                 className="group flex min-w-0 items-center gap-2.5 transition hover:opacity-90"
               >
                 <Image
-                  src="/icon.png"
+                  src="/evaluo-logo-icono.svg"
                   alt=""
                   width={40}
                   height={40}
