@@ -84,7 +84,7 @@ export function PdfProcessingPreview({
     <main data-pdf-processing-preview className="bg-background text-foreground min-h-screen">
       <header className="journey-page-header">
         <div className="journey-brand">
-          <Image src="/icon.png" alt="" width={32} height={32} />
+          <Image src="/evaluo-logo-icono.svg" alt="" width={32} height={32} />
           <strong>Evaluo</strong>
         </div>
       </header>
