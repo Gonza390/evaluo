@@ -134,6 +134,42 @@ await check('topic practice -> result -> return to same topic', async () => {
   }
 });
 
+
+await check('topic reinforcement: saved explanation -> optional help -> independent check', async () => {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  try {
+    await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+    await page.getByRole('button', { name: /Continuar estudiando|Comenzar a estudiar/ }).first().click();
+    await page.getByRole('button', { name: 'Reforzar dificultades', exact: true }).first().click();
+    const review = page.locator('[data-topic-reinforcement]:visible').first();
+    await review.waitFor(wait);
+    await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
+    await review.getByRole('heading', { name: 'Entendamos por qué' }).waitFor(wait);
+    await review.getByText('Tu respuesta anterior').waitFor(wait);
+    await review.getByText('Respuesta correcta').waitFor(wait);
+    await review.getByRole('button', { name: 'Comprobar lo aprendido' }).waitFor(wait);
+    const initialExtra = await review.getByText('Explicación adicional', { exact: true }).count();
+    assert.equal(initialExtra, 0, 'Opening a topic review must not generate AI explanations automatically');
+    await page.screenshot({ path: folder + '/refuerzo-1440.png', animations: 'disabled' });
+    await review.getByRole('button', { name: 'Dame un ejemplo' }).click();
+    await review.getByText('Un ejemplo para entenderlo').waitFor(wait);
+    await review.getByRole('button', { name: 'Comprobar lo aprendido' }).click();
+    await page.getByRole('heading', { name: 'Comprobá lo aprendido' }).waitFor(wait);
+    const answers = page.locator('fieldset input[type=radio]');
+    assert.ok((await answers.count()) >= 2, 'Independent check needs at least two answers');
+    await answers.first().check();
+    await page.getByRole('button', { name: 'Confirmar respuesta' }).click();
+    await page.getByRole('heading', { name: /Resolviste el refuerzo|Todavía queda por reforzar/ }).waitFor(wait);
+    await page.screenshot({ path: folder + '/refuerzo-comprobacion-1440.png', animations: 'disabled' });
+  } catch (error) {
+    await page.screenshot({ path: folder + '/failed-refuerzo.png', animations: 'disabled' }).catch(() => {});
+    throw error;
+  } finally {
+    await page.close();
+  }
+});
+
 await browser.close();
 if (failures.length) {
   console.error('\nQA failures:\n' + failures.join('\n\n'));
