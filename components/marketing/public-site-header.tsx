@@ -14,7 +14,7 @@ export function PublicBrandLink() {
       className="group flex min-w-0 items-center gap-2 text-lg font-black tracking-[-0.045em] text-slate-950 sm:gap-2.5 sm:text-2xl"
     >
       <Image
-        src="/icon.png"
+        src="/evaluo-logo-icono.svg"
         alt=""
         width={40}
         height={40}
