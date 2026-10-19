@@ -933,7 +933,7 @@ export function PdfProgressPanel({
           >
             <div className="border-border bg-card space-y-4 rounded-xl border p-4">
               <div>
-                <h3 className="text-sm font-semibold">Tu aprendizaje</h3>
+                <h3 className="text-sm font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
                 <p className="text-muted-foreground mt-1 text-xs">
                   {currentTopic?.title ?? 'Conceptos pendientes'}
                 </p>
@@ -972,6 +972,28 @@ export function PdfProgressPanel({
                   {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
                 </p>
               )}
+              {reviewOpen ? (
+                <div className="border-border space-y-3 border-t pt-4">
+                  <h4 className="text-sm font-semibold">La dificultad que estás repasando</h4>
+                  {selected && (
+                    <p className="text-muted-foreground text-[13px] leading-5 break-words">
+                      {selected.prompt}
+                    </p>
+                  )}
+                  <p className="text-muted-foreground text-xs leading-5">
+                    {topicPending.length > 0
+                      ? `${topicPending.length} ${topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'} en este tema.`
+                      : 'No hay dificultades pendientes en este tema.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setReviewOpen(false)}
+                    className={actionClass + ' border-border w-full border'}
+                  >
+                    Volver al contenido del tema
+                  </button>
+                </div>
+              ) : (
               <div className="border-border border-t pt-4">
                 <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
                 <p className="text-muted-foreground mt-2 text-[13px] leading-5">
@@ -1006,7 +1028,8 @@ export function PdfProgressPanel({
                   </p>
                 )}
               </div>
-              {nextStudyTopic && (
+              )}
+              {!reviewOpen && nextStudyTopic && (
                 <button
                   type="button"
                   onClick={() => openTopic(nextStudyTopic.id)}
