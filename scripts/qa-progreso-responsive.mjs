@@ -185,7 +185,7 @@ for (const width of [355, 433]) {
       await page.getByRole('button', { name: 'Volver a los temas' }).click();
       await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
       await page.getByRole('button', { name: 'Practicar este tema', exact: true }).click();
-      await page.locator('article').first().waitFor(wait);
+      await page.locator('article:visible').first().waitFor(wait);
       assert.equal(await page.getByRole('button', { name: 'Empezar práctica' }).count(), 0);
       const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(horizontal <= 1, 'Mobile practice must not overflow horizontally: ' + horizontal);
@@ -204,7 +204,7 @@ for (const width of [355, 433]) {
       await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
       await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
       await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
-      await page.getByRole('button', { name: 'Reforzar dificultades', exact: true }).first().click();
+      await page.getByRole('button', { name: /Reforzar (?:las )?dificultades/i }).first().click();
       const review = page.locator('[data-topic-reinforcement]:visible').first();
       await review.waitFor(wait);
       await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
