@@ -894,9 +894,6 @@ export function PdfProgressPanel({
                           onClick={() => openTopic(topic.id)}
                           className={`focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition focus-visible:outline-2 ${isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/70'}`}
                         >
-                          <span className="text-muted-foreground mt-0.5 shrink-0 text-xs tabular-nums">
-                            {topics.indexOf(topic) + 1}.
-                          </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px] leading-5 font-medium break-words">
                               {topic.title}
