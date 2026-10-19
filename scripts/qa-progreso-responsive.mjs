@@ -175,6 +175,40 @@ await check('topic reinforcement: saved explanation -> optional help -> independ
 });
 
 
+
+for (const width of [355, 1440]) {
+  await check('Mis errores uses same guided reinforcement ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 900 } });
+    try {
+      await page.goto(baseUrl + '/preview/mis-errores/explicacion', { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(400);
+      const material = page.getByText('Cambiar material', { exact: true });
+      await material.first().waitFor(wait);
+      const review = page.locator('[data-topic-reinforcement]:visible').first();
+      await review.waitFor(wait);
+      await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
+      await review.getByRole('heading', { name: 'Entendamos por qué' }).waitFor(wait);
+      await review.getByRole('button', { name: 'Comprobar lo aprendido' }).waitFor(wait);
+      assert.equal(await review.getByRole('button', { name: 'Generar explicación' }).count(), 0, 'Saved explanation must load without an extra action.');
+      const widthUsed = await page.evaluate(() => document.documentElement.scrollWidth);
+      assert.ok(widthUsed <= width + 1, 'Mis errores horizontal overflow: ' + widthUsed + '>' + width);
+      await page.screenshot({ path: folder + '/mis-errores-unificado-' + width + '.png', animations: 'disabled' });
+      await review.getByRole('button', { name: 'Comprobar lo aprendido' }).click();
+      await page.getByRole('heading', { name: 'Comprobá lo aprendido' }).waitFor(wait);
+      const choice = page.locator('fieldset input[type=radio]');
+      await choice.first().check();
+      await page.getByRole('button', { name: 'Confirmar respuesta' }).click();
+      await page.getByRole('heading', { name: /Resolviste el refuerzo|Todavía queda por reforzar/ }).waitFor(wait);
+    } catch (error) {
+      await page.screenshot({ path: folder + '/failed-mis-errores-' + width + '.png', animations: 'disabled' }).catch(() => {});
+      throw error;
+    } finally {
+      await page.close();
+    }
+  });
+}
+
 for (const width of [355, 433]) {
   await check('mobile topic practice without picker ' + width, async () => {
     const page = await browser.newPage({ viewport: { width, height: 840 } });
