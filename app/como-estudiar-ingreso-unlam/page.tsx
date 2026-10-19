@@ -6,7 +6,7 @@ import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/como-estudiar-ingreso-unlam';
 const publishedAt = '2026-09-17';
-const modifiedAt = '2026-09-18';
+const modifiedAt = '2026-10-19';
 
 export const metadata: Metadata = {
   title: 'Cómo estudiar para el ingreso UNLaM 2027',
