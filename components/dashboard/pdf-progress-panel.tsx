@@ -292,11 +292,6 @@ export function PdfProgressPanel({
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
-      {!reviewOpen && (
-        <p className="text-muted-foreground mb-2 truncate text-xs" title={material.title}>
-          {material.title}
-        </p>
-      )}
       {currentTopic && (
         <p className={`text-muted-foreground text-xs ${reviewOpen ? 'mb-1' : 'mb-3'}`}>
           {reviewOpen ? 'Refuerzo · ' : ''}Tema {topics.findIndex((topic) => topic.id === currentTopic.id) + 1} de {topics.length}
@@ -843,12 +838,6 @@ export function PdfProgressPanel({
         <p role="alert" className="border-border bg-muted mt-3 rounded-xl border p-3 text-[13px]!">
           No pudimos cargar las respuestas. La cobertura no está disponible; no significa que no
           hayas practicado.
-        </p>
-      )}
-      {unmatchedEvidence.length > 0 && (
-        <p role="status" className="text-muted-foreground mt-3 text-xs!">
-          Hay respuestas sin una asociación única con los temas actuales. Las conservamos, pero no
-          las sumamos a la cobertura.
         </p>
       )}
       {data.truncated && (
