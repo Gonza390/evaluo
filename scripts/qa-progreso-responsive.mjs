@@ -147,7 +147,7 @@ await check('topic reinforcement: saved explanation -> optional help -> independ
     await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
     await review.getByRole('heading', { name: 'Entendamos por qué' }).waitFor(wait);
     await review.getByText('Tu respuesta anterior').waitFor(wait);
-    await review.getByText('Respuesta correcta').waitFor(wait);
+    await review.getByText('Respuesta correcta', { exact: true }).first().waitFor(wait);
     await review.getByRole('button', { name: 'Comprobar lo aprendido' }).waitFor(wait);
     const initialExtra = await review.getByText('Explicación adicional', { exact: true }).count();
     assert.equal(initialExtra, 0, 'Opening a topic review must not generate AI explanations automatically');
