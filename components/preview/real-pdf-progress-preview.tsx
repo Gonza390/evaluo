@@ -1,5 +1,7 @@
 'use client';
 
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
+
 import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { MaterialStudyWorkspace, type StudyTabId } from '@/components/material-study-workspace';
@@ -18,11 +20,10 @@ import {
   type IndependentPracticeAnswer,
 } from '@/lib/student-materials/delayed-review';
 
-const material = { id: 'preview-ia-tecnologias', title: 'IA y nuevas tecnologías.pdf' };
-const pdfHref = '/material-general-prueba.pdf';
+const defaultMaterial = { id: 'preview-ia-tecnologias', title: 'IA y nuevas tecnologías.pdf' };
 
 // Preguntas y resultados preparados para esta simulación; las citas provienen del PDF público.
-const examples = [
+const defaultExamples = [
   {
     section: 1,
     page: 3,
@@ -145,20 +146,35 @@ export function RealPdfProgressPreview({
   glossary,
   artifacts,
   initialErrorId,
+  initialProgressOpen = false,
+  initialFirstVisit = false,
+  sampleDocument,
 }: {
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
   artifacts: PedagogicalArtifacts;
   initialErrorId?: string;
+  initialProgressOpen?: boolean;
+  initialFirstVisit?: boolean;
+  sampleDocument?: { id: string; title: string; pageCount: number; pdfHref: string };
 }) {
+  const material = sampleDocument ?? defaultMaterial;
+  const pdfHref = sampleDocument?.pdfHref ?? '/material-general-prueba.pdf';
+  const examples = sampleDocument ? [] : defaultExamples;
   const [version, setVersion] = useState(0);
   const [practiceEvidence, setPracticeEvidence] = useState<PdfTopicEvidence[]>([]);
   const [answeredItemKeys, setAnsweredItemKeys] = useState<string[]>([]);
   const [independentAnswers, setIndependentAnswers] = useState<IndependentPracticeAnswer[]>([]);
   const [nextDay, setNextDay] = useState(false);
-  const [firstVisit, setFirstVisit] = useState(false);
+  const [firstVisit, setFirstVisit] = useState(initialFirstVisit);
   const [tab, setTab] = useState<StudyTabId>('resumen');
-  const [progressOpen, setProgressOpen] = useState(Boolean(initialErrorId));
+  const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>();
+  const [topicReturn, setTopicReturn] = useState<{
+    index: number;
+    reinforce: boolean;
+    outcome?: TopicPracticeOutcome;
+  } | null>(null);
+  const [progressOpen, setProgressOpen] = useState(initialProgressOpen || Boolean(initialErrorId));
   const [viewerVisible, setViewerVisible] = useState(false);
   const initialViews: StudyErrorView[] = examples.map((example, index) => ({
     id: `preview-pdf-error-${index}`,
@@ -189,40 +205,97 @@ export function RealPdfProgressPreview({
     },
     alternatives: [],
   }));
-  const [views, setViews] = useState(initialViews);
+  const [views, setViews] = useState(initialFirstVisit ? [] : initialViews);
   // Caso adicional preparado, exclusivo del preview: permite probar recuperación posterior.
   const previewArtifacts: PedagogicalArtifacts = {
     ...artifacts,
-    questions: [
-      ...artifacts.questions,
-      {
-        id: 'preview-delayed-overfitting',
-        type: 'multiple_choice',
-        level: 'aplicar',
-        kind: 'concept',
-        topic: summary.sections[1].title,
-        prompt:
-          'Un modelo predice perfectamente las ventas del conjunto con el que aprendió, pero se equivoca con registros nuevos. ¿Qué problema muestra?',
-        answer: 'Sobreajuste',
-        options: [
-          'Sobreajuste',
-          'Generalización correcta',
-          'Falta de aprendizaje de los ejemplos originales',
+    questions: sampleDocument
+      ? artifacts.questions
+      : [
+          ...artifacts.questions,
+          {
+            id: 'preview-delayed-overfitting',
+            type: 'multiple_choice',
+            level: 'aplicar',
+            kind: 'concept',
+            topic: summary.sections[1].title,
+            prompt:
+              'Un modelo predice perfectamente las ventas del conjunto con el que aprendió, pero se equivoca con registros nuevos. ¿Qué problema muestra?',
+            answer: 'Sobreajuste',
+            options: [
+              'Sobreajuste',
+              'Generalización correcta',
+              'Falta de aprendizaje de los ejemplos originales',
+            ],
+            explanation: examples[0].explanation,
+            reference: {
+              sectionTitle: summary.sections[1].title,
+              pageStart: 3,
+              pageEnd: 3,
+              excerpt: examples[0].quote,
+            },
+          },
         ],
-        explanation: examples[0].explanation,
-        reference: {
-          sectionTitle: summary.sections[1].title,
-          pageStart: 3,
-          pageEnd: 3,
-          excerpt: examples[0].quote,
-        },
-      },
-    ],
   };
   const byId = (id: string) => {
     const index = examples.findIndex((_, index) => id === `preview-pdf-error-${index}`);
     const error = views.find((item) => item.id === id);
-    return index >= 0 && error ? { error, example: examples[index] } : null;
+    if (index >= 0 && error) return { error, example: examples[index] };
+    if (!error || !id.startsWith('preview-practice:')) return null;
+    const question = previewArtifacts.questions.find(
+      (item) => `preview-practice:${item.id}` === id && item.type === 'multiple_choice'
+    );
+    if (!question?.options) return null;
+    const correct = question.options.indexOf(question.answer);
+    if (correct < 0) return null;
+    const preparedCheck =
+      question.id === 'mc-5'
+        ? {
+            simple:
+              'El deep learning es aprendizaje automático que usa redes neuronales con muchas capas.',
+            example:
+              'Si un sistema aprende representaciones usando una red neuronal de múltiples capas, utiliza deep learning. Esa estructura es la característica que destaca tu PDF.',
+            check:
+              '¿Qué característica distingue al deep learning dentro del aprendizaje automático?',
+            options: [
+              'Usa redes neuronales con múltiples capas.',
+              'No necesita aprender a partir de datos.',
+              'Siempre consiste en reglas escritas una a una.',
+            ],
+            correct: 0,
+          }
+        : question.id === 'mc-3'
+          ? {
+              simple:
+                'La ciberseguridad protege sistemas, cuentas y datos frente a accesos no autorizados y daños.',
+              example:
+                'Proteger una cuenta para impedir que otra persona acceda sin permiso es una medida de ciberseguridad: busca evitar un acceso no autorizado.',
+              check:
+                'Una medida busca impedir el acceso no autorizado a una cuenta. ¿A qué concepto del material corresponde?',
+              options: ['Computación cuántica.', 'Ciberseguridad.', 'Deep learning.'],
+              correct: 1,
+            }
+          : null;
+    // El preview reutiliza contenido fijo; no simula una segunda pregunta generada por IA.
+    return {
+      error,
+      example: {
+        section: findSummarySectionForQuestion(question, summary.sections),
+        page: question.reference.pageStart ?? 1,
+        resolved: false,
+        prompt: question.prompt,
+        selected: error.selectedAnswer ?? '',
+        answer: question.answer,
+        quote: question.reference.excerpt,
+        explanation: `${question.explanation}\n\n${question.reference.excerpt}`,
+        simple: question.answer,
+        example: `En este preview podés consultar el fragmento del material:\n\n${question.reference.excerpt}`,
+        check: `Repaso de la pregunta original (comprobación de muestra): ${question.prompt}`,
+        options: question.options,
+        correct,
+        ...preparedCheck,
+      },
+    };
   };
   const reviewActions: StudyErrorReviewActions = {
     markReviewed: async () => ({ success: true }),
@@ -297,7 +370,7 @@ export function RealPdfProgressPreview({
             lastAnsweredAt: '2026-10-09T11:05:00.000Z',
           }))),
       // Un acierto desde el primer intento también debe aparecer, sin crear un error ficticio.
-      ...(firstVisit
+      ...(firstVisit || sampleDocument
         ? []
         : [
             {
@@ -323,54 +396,65 @@ export function RealPdfProgressPreview({
             <strong className="text-foreground">PDF real · Resultados simulados</strong> · Sin login
             · No se guarda progreso ni se llama a IA
           </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setFirstVisit(true);
-                setPracticeEvidence([]);
-                setAnsweredItemKeys([]);
-                setIndependentAnswers([]);
-                setNextDay(false);
-                setViews([]);
-                setVersion((current) => current + 1);
-                setProgressOpen(false);
-                setTab('resumen');
-              }}
-              className="text-primary focus-visible:outline-ring min-h-10 rounded-lg px-3 text-xs font-medium focus-visible:outline-2"
-            >
-              Simular primera visita
-            </button>
-            <button
-              type="button"
-              disabled={!data.resolved.length}
-              onClick={() => {
-                setNextDay(true);
-                setVersion((current) => current + 1);
-                setProgressOpen(false);
-                setTab('ejercicios');
-              }}
-              className="text-primary focus-visible:outline-ring min-h-10 rounded-lg px-3 text-xs font-medium focus-visible:outline-2 disabled:opacity-50"
-            >
-              Simular repaso al día siguiente
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setVersion((current) => current + 1);
-                setPracticeEvidence([]);
-                setAnsweredItemKeys([]);
-                setIndependentAnswers([]);
-                setNextDay(false);
-                setViews(initialViews);
-                setFirstVisit(false);
-              }}
-              className="text-muted-foreground hover:bg-muted focus-visible:outline-ring inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs focus-visible:outline-2"
-            >
-              <RotateCcw size={14} />
-              Reiniciar simulación
-            </button>
-          </div>
+          {sampleDocument && (
+            <p className="text-muted-foreground text-xs">
+              {sampleDocument.pageCount} páginas · {summary.sections.length} lecturas · Contenido
+              extraído del resumen original para esta prueba local.
+            </p>
+          )}
+          <details>
+            <summary className="text-muted-foreground min-h-10 cursor-pointer py-2 text-xs">
+              Opciones de prueba
+            </summary>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFirstVisit(true);
+                  setPracticeEvidence([]);
+                  setAnsweredItemKeys([]);
+                  setIndependentAnswers([]);
+                  setNextDay(false);
+                  setViews([]);
+                  setVersion((current) => current + 1);
+                  setProgressOpen(false);
+                  setTab('resumen');
+                }}
+                className="text-primary focus-visible:outline-ring min-h-10 rounded-lg px-3 text-xs font-medium focus-visible:outline-2"
+              >
+                Simular primera visita
+              </button>
+              <button
+                type="button"
+                disabled={!data.resolved.length}
+                onClick={() => {
+                  setNextDay(true);
+                  setVersion((current) => current + 1);
+                  setProgressOpen(false);
+                  setTab('ejercicios');
+                }}
+                className="text-primary focus-visible:outline-ring min-h-10 rounded-lg px-3 text-xs font-medium focus-visible:outline-2 disabled:opacity-50"
+              >
+                Simular repaso al día siguiente
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVersion((current) => current + 1);
+                  setPracticeEvidence([]);
+                  setAnsweredItemKeys([]);
+                  setIndependentAnswers([]);
+                  setNextDay(false);
+                  setViews(initialViews);
+                  setFirstVisit(false);
+                }}
+                className="text-muted-foreground hover:bg-muted focus-visible:outline-ring inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs focus-visible:outline-2"
+              >
+                <RotateCcw size={14} />
+                Reiniciar simulación
+              </button>
+            </div>
+          </details>
           {nextDay && (
             <p className="text-muted-foreground text-xs">
               Tiempo simulado: pasaron 24 horas desde el refuerzo. Se usa un caso adicional
@@ -385,9 +469,13 @@ export function RealPdfProgressPreview({
             key={version}
             backHref="/preview/progreso-pdf"
             materialId={material.id}
-            title="IA y nuevas tecnologías"
+            title={
+              sampleDocument
+                ? sampleDocument.title.replace(/\.pdf$/i, '')
+                : 'IA y nuevas tecnologías'
+            }
             fileName={material.title}
-            pageCount={15}
+            pageCount={sampleDocument?.pageCount ?? 15}
             viewerUrl={pdfHref}
             visibility="private"
             isOwner={false}
@@ -398,7 +486,10 @@ export function RealPdfProgressPreview({
             pedagogicalArtifacts={artifacts}
             demo={{
               activeTab: tab,
-              onTabChange: setTab,
+              onTabChange: (next) => {
+                setPracticeSectionIndex(undefined);
+                setTab(next);
+              },
               viewerVisible,
               onViewerChange: setViewerVisible,
               progressOpen,
@@ -406,7 +497,13 @@ export function RealPdfProgressPreview({
               onProgressChange: setProgressOpen,
               progress: (
                 <PdfProgressPanel
+                  glossary={glossary}
+                  flashcards={previewArtifacts.flashcards}
+                  sourcePdfHref={pdfHref}
                   embedded
+                  initialTopicSectionIndex={topicReturn?.index}
+                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  lastPracticeOutcome={topicReturn?.outcome}
                   initialErrorId={initialErrorId}
                   material={material}
                   sections={summary.sections}
@@ -417,6 +514,17 @@ export function RealPdfProgressPreview({
                     previewArtifacts.questions
                   )}
                   onPractice={() => {
+                    setPracticeSectionIndex(undefined);
+                    setProgressOpen(false);
+                    setTab('ejercicios');
+                  }}
+                  onPracticeTopic={(index) => {
+                    setTopicReturn((previous) => ({
+                      index,
+                      reinforce: false,
+                      outcome: previous?.index === index ? previous.outcome : undefined,
+                    }));
+                    setPracticeSectionIndex(index);
                     setProgressOpen(false);
                     setTab('ejercicios');
                   }}
@@ -450,6 +558,19 @@ export function RealPdfProgressPreview({
               ),
               practice: (
                 <StudentMaterialExam
+                  key={practiceSectionIndex ?? 'all'}
+                  topicSectionIndex={practiceSectionIndex}
+                  onReturnToTopic={(reinforce, outcome) => {
+                    if (practiceSectionIndex === undefined) return;
+                    setTopicReturn((previous) => ({
+                      index: practiceSectionIndex,
+                      reinforce,
+                      outcome:
+                        outcome ??
+                        (previous?.index === practiceSectionIndex ? previous.outcome : undefined),
+                    }));
+                    setProgressOpen(true);
+                  }}
                   artifacts={previewArtifacts}
                   sections={summary.sections}
                   materialId={material.id}

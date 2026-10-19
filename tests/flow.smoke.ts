@@ -13,6 +13,12 @@ import {
   isCompleteReviewHelp,
 } from '../lib/study-error-review-contract.ts';
 import { readFileSync } from 'node:fs';
+import {
+  MAX_TOPIC_PRACTICE_QUESTIONS,
+  topicPracticeQuestionCount,
+  selectTopicPracticeQuestions,
+} from '../lib/student-materials/topic-practice.ts';
+import type { StudyQuestion } from '../lib/student-materials/pedagogy.ts';
 
 assert.ok(
   isCompleteReviewHelp(
@@ -650,4 +656,42 @@ assert.deepEqual(preferSimulatorQuestion([entryPool[1]], [entryPool[1]], entryId
   entryPool[1],
 ]);
 assert.deepEqual(preferSimulatorQuestion(entryPool, entryPool, entryId, 2), entryPool);
+// Práctica por tema: sin selector, se muestran todas las preguntas verificables hasta 20.
+assert.equal(MAX_TOPIC_PRACTICE_QUESTIONS, 20);
+assert.equal(topicPracticeQuestionCount(0), 0);
+assert.equal(topicPracticeQuestionCount(7), 7);
+assert.equal(topicPracticeQuestionCount(31), 20);
+const syntheticTopic = 'Tema sintético de evaluación';
+const topicQuestionBank: StudyQuestion[] = Array.from({ length: 31 }, (_, index) => ({
+  id: `topic-qa-${index}`,
+  type: 'multiple_choice',
+  kind: 'concept',
+  level: 'comprender',
+  chapterTitle: syntheticTopic,
+  topic: syntheticTopic,
+  prompt: `¿Qué respuesta describe el caso ${index + 1} en esta unidad de estudio?`,
+  answer: `Interpretación correcta del caso ${index + 1}`,
+  options: [
+    `Interpretación correcta del caso ${index + 1}`,
+    'Una alternativa incorrecta',
+    'Otra alternativa incorrecta',
+  ],
+  explanation: 'Explicación sustentada en el contenido de esta sección.',
+  reference: {
+    sectionTitle: syntheticTopic,
+    pageStart: 1,
+    pageEnd: 1,
+    excerpt: 'Explicación sustentada en el contenido de esta sección.',
+  },
+}));
+for (const count of [7, 31]) {
+  const selected = selectTopicPracticeQuestions({
+    questions: topicQuestionBank.slice(0, count),
+    targetCount: topicPracticeQuestionCount(count),
+    sections: [{ title: syntheticTopic, body: 'Material de estudio para la evaluación.' }],
+  });
+  assert.equal(selected.length, Math.min(count, 20), 'La tanda debe respetar el máximo.');
+  assert.equal(new Set(selected.map((item) => item.id)).size, selected.length, 'Sin repetidos.');
+}
+
 console.log('Flow smoke tests passed.');

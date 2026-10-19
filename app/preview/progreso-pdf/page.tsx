@@ -13,12 +13,14 @@ export const metadata: Metadata = {
 export default async function PdfProgressPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; tab?: string; nuevo?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, tab, nuevo } = await searchParams;
   return (
     <RealPdfProgressPreview
       initialErrorId={error?.slice(0, 80)}
+      initialProgressOpen={tab === 'progreso'}
+      initialFirstVisit={nuevo === '1'}
       summary={fixture.summary as StudentMaterialSummary}
       glossary={fixture.glossary as StudyGlossaryItem[]}
       artifacts={fixture.pedagogicalArtifacts as PedagogicalArtifacts}

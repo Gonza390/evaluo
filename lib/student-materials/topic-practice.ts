@@ -27,6 +27,13 @@ export type TopicPracticeContext = {
   loadError?: boolean;
 };
 
+/** Las prácticas por tema usan el banco único válido, con un tope manejable por tanda. */
+export const MAX_TOPIC_PRACTICE_QUESTIONS = 20;
+
+export function topicPracticeQuestionCount(available: number) {
+  return Math.min(MAX_TOPIC_PRACTICE_QUESTIONS, Math.max(0, Math.floor(available)));
+}
+
 export const emptyTopicPracticeContext: TopicPracticeContext = {
   evidence: [],
   answeredItemKeys: [],

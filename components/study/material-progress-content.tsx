@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
+import type { StudyGlossaryItem } from '@/lib/student-materials/types';
+import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import {
   getMaterialProgressDataAction,
   type MaterialProgressDataResult,
@@ -12,15 +15,29 @@ export function MaterialProgressContent({
   sections,
   questionCounts,
   requestedError,
+  initialTopicSectionIndex,
+  initialReinforce,
+  lastPracticeOutcome,
   tour,
   returnToErrors = false,
+  onPracticeTopic,
+  glossary,
+  flashcards,
+  sourcePdfHref,
 }: {
   material: { id: string; title: string };
   sections: unknown;
   questionCounts: number[];
   requestedError?: string;
+  initialTopicSectionIndex?: number;
+  initialReinforce?: boolean;
+  lastPracticeOutcome?: TopicPracticeOutcome;
   tour?: string;
   returnToErrors?: boolean;
+  onPracticeTopic?: (sectionIndex: number) => void;
+  glossary?: StudyGlossaryItem[];
+  flashcards?: StudyFlashcard[];
+  sourcePdfHref?: string;
 }) {
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<MaterialProgressDataResult | null>(null);
@@ -76,11 +93,18 @@ export function MaterialProgressContent({
         .map((item) => item.lastAnsweredAt)
         .join(':')}:${result.data.resolved.map((item) => item.id).join(':')}`}
       embedded
+      initialTopicSectionIndex={initialTopicSectionIndex}
+      initialReinforce={initialReinforce}
+      lastPracticeOutcome={lastPracticeOutcome}
       material={material}
       sections={sections}
       data={result.data}
       assessmentData={result.assessmentData}
       questionCounts={questionCounts}
+      onPracticeTopic={onPracticeTopic}
+      glossary={glossary}
+      flashcards={flashcards}
+      sourcePdfHref={sourcePdfHref}
       summaryUnavailable={false}
       initialErrorId={result.initialErrorId ?? undefined}
       onboardingErrorId={result.onboardingErrorId}
