@@ -32,26 +32,45 @@ for (const width of widths) {
       await page.waitForTimeout(500);
       const firstAction = page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first();
       await firstAction.click();
-      await page.locator('[id^="real-detail-title"]').waitFor(wait);
+      await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
       const docWidth = await page.evaluate(() => ({
         root: document.documentElement.scrollWidth,
         body: document.body.scrollWidth,
         viewport: window.innerWidth,
       }));
       assert.ok(docWidth.root <= docWidth.viewport + 1, 'Document overflows horizontally: ' + JSON.stringify(docWidth));
-      assert.ok(docWidth.body <= docWidth.viewport + 1, 'Body overflows horizontally: ' + JSON.stringify(docWidth));
+      if (docWidth.body > docWidth.viewport + 1) {
+        const offenders = await page.evaluate(() =>
+          [...document.querySelectorAll('body *')]
+            .map((element) => {
+              const box = element.getBoundingClientRect();
+              return {
+                tag: element.tagName.toLowerCase(),
+                className: String(element.className).slice(0, 140),
+                left: Math.round(box.left),
+                right: Math.round(box.right),
+                width: Math.round(box.width),
+              };
+            })
+            .filter((element) => element.right > window.innerWidth + 2 && element.width > 2)
+            .sort((a, b) => b.right - a.right)
+            .slice(0, 8)
+        );
+        throw new Error('Body overflows horizontally: ' + JSON.stringify({ ...docWidth, offenders }));
+      }
       const nav = page.getByRole('navigation', { name: 'Índice de temas' });
       const learning = page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]');
       assert.equal(await nav.isVisible(), width >= 1024, 'Topic index responsive breakpoint');
       assert.equal(await learning.isVisible(), width >= 1280, 'Learning rail responsive breakpoint');
       if (width >= 1024) {
         await nav.getByRole('button').nth(1).click();
-        await page.locator('[id^="real-detail-title"]').waitFor(wait);
-        assert.match((await page.locator('[id^="real-detail-title"]').textContent()) ?? '', /machine learning|deep learning/i, 'Second topic navigation');
+        await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
+        assert.match((await page.locator('[id^="real-detail-title"]:visible').first().textContent()) ?? '', /machine learning|deep learning/i, 'Second topic navigation');
       } else {
         await page.getByRole('button', { name: 'Volver a los temas' }).click();
         await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
       }
+      await page.waitForTimeout(350);
       await page.screenshot({ path: folder + '/progreso-' + width + '.png', fullPage: false, animations: 'disabled' });
     } catch (error) {
       await page.screenshot({ path: folder + '/failed-' + width + '.png', animations: 'disabled' }).catch(() => {});
@@ -67,10 +86,12 @@ await check('topic practice -> result -> return to same topic', async () => {
   try {
     await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(500);
     await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
     const nav = page.getByRole('navigation', { name: 'Índice de temas' });
     await nav.getByRole('button').nth(1).click();
-    const titleBefore = (await page.locator('[id^="real-detail-title"]').textContent())?.trim();
+    const titleBefore = (await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim();
     await page.getByRole('button', { name: 'Practicar el tema', exact: true }).click();
     await page.getByRole('button', { name: 'Empezar práctica' }).click();
     let finished = false;
@@ -96,8 +117,8 @@ await check('topic practice -> result -> return to same topic', async () => {
     assert.ok(finished, 'Practice should finish within thirty questions');
     const back = page.getByRole('button', { name: /Reforzar este tema|Volver al tema/ }).first();
     await back.click();
-    await page.locator('[id^="real-detail-title"]').waitFor(wait);
-    assert.equal((await page.locator('[id^="real-detail-title"]').textContent())?.trim(), titleBefore, 'Back to same topic');
+    await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
+    assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Back to same topic');
     await page.getByText('Tu próxima actividad').first().waitFor(wait);
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
   } catch (error) {
