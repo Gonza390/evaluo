@@ -292,26 +292,38 @@ export function PdfProgressPanel({
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
-      <p className="text-muted-foreground mb-2 truncate text-xs" title={material.title}>
-        {material.title}
-      </p>
+      {!reviewOpen && (
+        <p className="text-muted-foreground mb-2 truncate text-xs" title={material.title}>
+          {material.title}
+        </p>
+      )}
       {currentTopic && (
-        <p className="text-muted-foreground mb-3 text-xs">
-          Tema {topics.findIndex((topic) => topic.id === currentTopic.id) + 1} de {topics.length} ·{' '}
-          {topicStatus(currentTopic).label}
+        <p className={`text-muted-foreground text-xs ${reviewOpen ? 'mb-1' : 'mb-3'}`}>
+          {reviewOpen ? 'Refuerzo · ' : ''}Tema {topics.findIndex((topic) => topic.id === currentTopic.id) + 1} de {topics.length}
+          {!reviewOpen && <> · {topicStatus(currentTopic).label}</>}
         </p>
       )}
       <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 id={`real-detail-title-${panelId}`} className="text-xl font-semibold break-words">
           {currentTopic?.title ?? 'Otros conceptos'}
         </h2>
-        <button
-          type="button"
-          onClick={closeTopic}
-          className="text-muted-foreground hover:bg-muted min-h-10 rounded-lg px-3 text-xs"
-        >
-          Volver a los temas
-        </button>
+        {!reviewOpen ? (
+          <button
+            type="button"
+            onClick={closeTopic}
+            className="text-muted-foreground hover:bg-muted min-h-10 rounded-lg px-3 text-xs"
+          >
+            Volver a los temas
+          </button>
+        ) : selected?.status !== 'resolved' ? (
+          <button
+            type="button"
+            onClick={() => setReviewOpen(false)}
+            className="text-primary min-h-10 rounded-lg px-2 text-xs font-semibold"
+          >
+            Volver al tema
+          </button>
+        ) : null}
       </div>
       {!reviewOpen && (
         <div className="mt-5">
@@ -607,15 +619,6 @@ export function PdfProgressPanel({
             ) : null}
           </details>
         </div>
-      )}
-      {reviewOpen && (
-        <button
-          type="button"
-          onClick={() => setReviewOpen(false)}
-          className="text-primary my-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold"
-        >
-          <ArrowLeft size={16} /> Volver al contenido del tema
-        </button>
       )}
       {reviewOpen && currentErrors.length > 1 && (
         <details className="my-4">
@@ -945,7 +948,7 @@ export function PdfProgressPanel({
                   {currentTopic?.title ?? 'Conceptos pendientes'}
                 </p>
               </div>
-              {lastOutcome && (
+              {!reviewOpen && lastOutcome && (
                 <div className="border-border border-b pb-4">
                   <p className="text-muted-foreground text-xs">Última práctica</p>
                   <p className="mt-1 text-2xl font-semibold tabular-nums">
@@ -957,7 +960,7 @@ export function PdfProgressPanel({
                   </p>
                 </div>
               )}
-              {!lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
+              {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
                 <div className="border-border border-b pb-4">
                   <p className="text-muted-foreground text-xs">Respuestas registradas</p>
                   <p className="mt-1 text-2xl font-semibold tabular-nums">
@@ -968,7 +971,7 @@ export function PdfProgressPanel({
                   </p>
                 </div>
               )}
-              {assessmentData?.loadError && (
+              {!reviewOpen && assessmentData?.loadError && (
                 <p role="status" className="text-muted-foreground text-xs">
                   No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.
                 </p>
@@ -980,24 +983,9 @@ export function PdfProgressPanel({
                 </p>
               )}
               {reviewOpen ? (
-                <div className="border-border space-y-3 border-t pt-4">
-                  <h4 className="text-sm font-semibold">La dificultad que estás repasando</h4>
-                  {selected && (
-                    <p className="text-muted-foreground text-[13px] leading-5 break-words">
-                      {selected.prompt}
-                    </p>
-                  )}
-                  <p className="text-muted-foreground text-xs leading-5">
-                    Revisá la explicación y comprobá el aprendizaje con una situación diferente.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setReviewOpen(false)}
-                    className={actionClass + ' border-border w-full border'}
-                  >
-                    Volver al contenido del tema
-                  </button>
-                </div>
+                <p className="border-border text-muted-foreground border-t pt-3 text-xs leading-5">
+                  Revisá la explicación y comprobá lo aprendido con una pregunta diferente.
+                </p>
               ) : (
               <div className="border-border border-t pt-4">
                 <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
