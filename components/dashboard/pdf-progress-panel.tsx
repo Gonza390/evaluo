@@ -561,15 +561,7 @@ export function PdfProgressPanel({
                   >
                     Seguir con el tema {topics.indexOf(nextStudyTopic) + 1} <ArrowRight size={16} />
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={closeTopic}
-                    className={actionClass + ' border-border border'}
-                  >
-                    Volver a todos los temas
-                  </button>
-                )}
+                ) : null}
               </div>
               {canPracticeTopic && (
                 <p className="text-muted-foreground mt-2 text-xs!">
@@ -1039,15 +1031,6 @@ export function PdfProgressPanel({
                   </p>
                 )}
               </div>
-              )}
-              {!reviewOpen && nextStudyTopic && (
-                <button
-                  type="button"
-                  onClick={() => openTopic(nextStudyTopic.id)}
-                  className="text-primary focus-visible:outline-ring flex min-h-11 w-full items-center justify-between gap-2 border-t pt-3 text-left text-xs font-semibold focus-visible:outline-2"
-                >
-                  Siguiente tema <ArrowRight size={15} />
-                </button>
               )}
             </div>
           </aside>
