@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PdfMobileNavigation } from '@/components/study/pdf-mobile-navigation';
@@ -8,13 +8,11 @@ import dynamic from 'next/dynamic';
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   ChevronDown,
   Circle,
   FileText,
   Flag,
-  Target,
 } from 'lucide-react';
 import type { StudyErrorsPageData, StudyErrorView } from '@/lib/study-errors';
 import {
@@ -26,6 +24,17 @@ import {
 import type { StudyErrorConversation, StudyErrorReviewActions } from './study-error-detail';
 import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
 import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
+import { getTopicStudyResources } from '@/lib/student-materials/topic-study-resources';
+import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
+import type { StudyGlossaryItem } from '@/lib/student-materials/types';
+import { TopicStudySupport } from '@/components/study/topic-study-support';
+import {
+  topicPracticeFeedback,
+  type TopicPracticeOutcome,
+} from '@/lib/student-materials/topic-practice-feedback';
+
+const emptyGlossary: StudyGlossaryItem[] = [];
+const emptyCards: StudyFlashcard[] = [];
 
 const StudyErrorDetail = dynamic(
   () => import('./study-error-detail').then((module) => module.StudyErrorDetail),
@@ -46,13 +55,13 @@ function topicStatus(topic: PdfProgressTopic) {
   if (topic.errors.some((error) => error.status === 'resolved'))
     return {
       label: topic.evidence.some((item) => item.correct > 0)
-        ? 'Refuerzo comprobado'
-        : 'Sin errores pendientes',
+        ? 'Repaso comprobado'
+        : 'Seguir practicando',
       Icon: CheckCircle2,
       style: 'bg-primary/10 text-primary',
     };
   if (topicAssessmentCount(topic) > 0)
-    return { label: 'En evaluación', Icon: CheckCircle2, style: 'bg-primary/10 text-primary' };
+    return { label: 'Seguir practicando', Icon: CheckCircle2, style: 'bg-primary/10 text-primary' };
   if (topic.evidence.some((item) => item.selfReported > 0))
     return { label: 'Autoevaluado', Icon: Circle, style: 'bg-muted text-muted-foreground' };
   return {
@@ -73,8 +82,15 @@ export function PdfProgressPanel({
   assessmentData,
   questionCounts,
   onPractice,
+  onPracticeTopic,
+  glossary = emptyGlossary,
+  flashcards = emptyCards,
+  sourcePdfHref,
   onErrorProgress,
   initialErrorId,
+  initialTopicSectionIndex,
+  initialReinforce = false,
+  lastPracticeOutcome,
   onboardingErrorId,
   returnToErrors = false,
 }: {
@@ -83,12 +99,19 @@ export function PdfProgressPanel({
   data: StudyErrorsPageData;
   summaryUnavailable: boolean;
   initialErrorId?: string;
+  initialTopicSectionIndex?: number;
+  initialReinforce?: boolean;
+  lastPracticeOutcome?: TopicPracticeOutcome;
   onboardingErrorId?: string | null;
   returnToErrors?: boolean;
   embedded?: boolean;
   assessmentData?: { items: PdfTopicEvidence[]; loadError?: boolean };
   questionCounts?: number[];
   onPractice?: () => void;
+  onPracticeTopic?: (sectionIndex: number) => void;
+  glossary?: StudyGlossaryItem[];
+  flashcards?: StudyFlashcard[];
+  sourcePdfHref?: string;
   onErrorProgress?: (id: string, changes: Partial<StudyErrorsPageData['pending'][number]>) => void;
 } & (
   | { simulation?: undefined; reviewActions?: never }
@@ -101,6 +124,14 @@ export function PdfProgressPanel({
     ...viewOverrides[item.id],
   }));
   const [filter, setFilter] = useState('Todos');
+  const [search, setSearch] = useState('');
+  const initialTopic = buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find(
+    (topic) => topic.id === `section-${initialTopicSectionIndex}`
+  );
+  const initialTopicError = initialReinforce
+    ? initialTopic?.errors.find((error) => error.status === 'pending')
+    : undefined;
+  const [reviewOpen, setReviewOpen] = useState(Boolean(initialErrorId || initialTopicError));
   const initialError = [...data.pending, ...data.resolved].find(
     (item) => item.id === initialErrorId
   );
@@ -109,9 +140,14 @@ export function PdfProgressPanel({
       ? (buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find((topic) =>
           topic.errors.some((error) => error.id === initialError.id)
         )?.id ?? 'unmatched')
-      : null
+      : (initialTopic?.id ?? null)
   );
-  const [errorId, setErrorId] = useState<string | null>(initialError?.id ?? null);
+  const [errorId, setErrorId] = useState<string | null>(
+    initialError?.id ??
+      initialTopicError?.id ??
+      initialTopic?.errors.find((error) => error.status === 'pending')?.id ??
+      null
+  );
   const [tourStep, setTourStep] = useState(
     onboardingErrorId && initialError?.status === 'pending' ? 0 : -1
   );
@@ -124,26 +160,70 @@ export function PdfProgressPanel({
     ...evidence,
   ]);
   const pending = views.filter((error) => error.status === 'pending');
-  const resolved = views.filter((error) => error.status === 'resolved');
-  const pendingTopics = topics.filter((topic) =>
-    topic.errors.some((error) => error.status === 'pending')
-  );
   const next = pending[0];
+  const recommendedTopic =
+    topics.find((topic) => topic.errors.some((error) => error.id === next?.id)) ??
+    topics.find((topic) => topicAssessmentCount(topic) === 0) ??
+    topics[0];
   const selected = views.find((error) => error.id === errorId);
   const currentTopic = topics.find((topic) => topic.id === topicId);
   const currentSectionIndex = currentTopic ? Number(currentTopic.id.replace('section-', '')) : -1;
+  const nextStudyTopic = currentTopic ? topics[topics.indexOf(currentTopic) + 1] : undefined;
   const currentSection = Array.isArray(sections) ? sections[currentSectionIndex] : null;
+  const resources = useMemo(
+    () =>
+      getTopicStudyResources(
+        Array.isArray(sections)
+          ? sections.map((section) => ({
+              title: typeof section?.title === 'string' ? section.title : '',
+              body: typeof section?.body === 'string' ? section.body : '',
+            }))
+          : [],
+        glossary,
+        flashcards,
+        currentSectionIndex
+      ),
+    [sections, glossary, flashcards, currentSectionIndex]
+  );
+  const currentAnswered = currentTopic ? topicAssessmentCount(currentTopic) : 0;
+  const currentCorrect =
+    currentTopic?.evidence.reduce((total, item) => total + item.correct, 0) ?? 0;
+  const currentQuestionCount = questionCounts?.[currentSectionIndex];
+  const canPracticeTopic = Boolean(
+    onPracticeTopic && currentTopic && currentQuestionCount && currentQuestionCount > 0
+  );
   const summaryBody =
     currentSection && typeof currentSection.body === 'string' ? currentSection.body.trim() : '';
   const currentErrors = [
     ...(topicId === 'unmatched' ? unmatched : (currentTopic?.errors ?? [])),
   ].sort((first, second) => first.id.localeCompare(second.id));
+  const lastOutcome =
+    lastPracticeOutcome?.sectionIndex === currentSectionIndex ? lastPracticeOutcome : undefined;
+  const topicPending = currentErrors.filter((error) => error.status === 'pending');
+  const hasReinforced = currentErrors.some((error) => error.status === 'resolved');
+  const lastWasReinforced = lastOutcome
+    ? lastOutcome.incorrect > 0 &&
+      lastOutcome.incorrectPrompts.every((prompt) =>
+        currentErrors.some((error) => error.prompt === prompt && error.status === 'resolved')
+      )
+    : hasReinforced;
   const visibleTopics = topics.filter(
     (topic) =>
-      filter === 'Todos' ||
-      (filter === 'Por reforzar'
-        ? topic.errors.some((error) => error.status === 'pending')
-        : topicAssessmentCount(topic) === 0)
+      topic.title
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .includes(
+          search
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .trim()
+        ) &&
+      (filter === 'Todos' ||
+        (filter === 'Por reforzar'
+          ? topic.errors.some((error) => error.status === 'pending')
+          : topicAssessmentCount(topic) === 0))
   );
   const router = useRouter();
   const materialHref = simulation ? simulation.pdfHref : `/materiales/${material.id}`;
@@ -154,13 +234,20 @@ export function PdfProgressPanel({
     reviewed: Boolean(selected?.lastReviewedAt && selected.lastReviewedAt >= selected.lastFailedAt),
   };
   useEffect(() => {
-    if (!initialErrorId) return;
+    if (!initialErrorId && initialTopicSectionIndex === undefined) return;
     const frame = requestAnimationFrame(() => {
       detailRef.current?.scrollIntoView({ block: 'start' });
       detailRef.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [initialErrorId]);
+  }, [initialErrorId, initialTopicSectionIndex]);
+  useEffect(() => {
+    if (!reviewOpen || !errorId) return;
+    const frame = requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [reviewOpen, errorId]);
   async function closeTour(outcome: 'completed' | 'skipped') {
     if (tourClosing.current || !onboardingErrorId) return;
     tourClosing.current = true;
@@ -175,6 +262,7 @@ export function PdfProgressPanel({
   function openTopic(id: string, preferredErrorId?: string) {
     const errors =
       id === 'unmatched' ? unmatched : (topics.find((topic) => topic.id === id)?.errors ?? []);
+    setReviewOpen(Boolean(preferredErrorId));
     setTopicId(id);
     setErrorId(
       preferredErrorId ??
@@ -187,23 +275,12 @@ export function PdfProgressPanel({
       detailRef.current?.focus({ preventScroll: true });
     });
   }
-  function reinforce() {
-    if (!next) return;
-    const topic = topics.find((item) => item.errors.some((error) => error.id === next.id));
-    openTopic(topic?.id ?? 'unmatched', next.id);
-  }
 
   function closeTopic() {
-    const trigger = topicId
-      ? document.getElementById(`${panelId}-topic-detail-${topicId}`)?.previousElementSibling
-      : null;
     setTopicId(null);
     setErrorId(null);
     requestAnimationFrame(() => {
-      if (trigger instanceof HTMLElement) {
-        trigger.focus({ preventScroll: true });
-        trigger.scrollIntoView({ block: 'nearest' });
-      }
+      document.getElementById(`${panelId}-heading`)?.focus();
     });
   }
 
@@ -213,44 +290,364 @@ export function PdfProgressPanel({
       ref={detailRef}
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
-      className="border-primary/20 bg-primary/5 focus-visible:outline-ring border-t px-4 py-3 text-[13px] focus-visible:outline-2 [&_a]:text-[13px]! [&_blockquote]:text-[13px]! [&_blockquote]:leading-5! [&_button]:text-[13px]! [&_h2]:text-sm! [&_h2]:leading-5! [&_h3]:text-sm! [&_h3]:leading-5! [&_p]:text-[13px]! [&_p]:leading-5!"
+      className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
-      <div className="flex items-center justify-end">
-        <h2 id={`real-detail-title-${panelId}`} className="sr-only">
+      {!reviewOpen && (
+        <p className="text-muted-foreground mb-2 truncate text-xs" title={material.title}>
+          {material.title}
+        </p>
+      )}
+      {currentTopic && (
+        <p className={`text-muted-foreground text-xs ${reviewOpen ? 'mb-1' : 'mb-3'}`}>
+          {reviewOpen ? 'Refuerzo · ' : ''}Tema {topics.findIndex((topic) => topic.id === currentTopic.id) + 1} de {topics.length}
+          {!reviewOpen && <> · {topicStatus(currentTopic).label}</>}
+        </p>
+      )}
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 id={`real-detail-title-${panelId}`} className="text-xl font-semibold break-words">
           {currentTopic?.title ?? 'Otros conceptos'}
         </h2>
-        <button
-          type="button"
-          onClick={closeTopic}
-          className="text-muted-foreground hover:bg-muted min-h-10 rounded-lg px-3 text-xs"
-        >
-          Cerrar detalle
-        </button>
+        {!reviewOpen ? (
+          <button
+            type="button"
+            onClick={closeTopic}
+            className="text-muted-foreground hover:bg-muted min-h-10 rounded-lg px-3 text-xs"
+          >
+            Volver a los temas
+          </button>
+        ) : selected?.status !== 'resolved' ? (
+          <button
+            type="button"
+            onClick={() => setReviewOpen(false)}
+            className="text-primary min-h-10 rounded-lg px-2 text-xs font-semibold"
+          >
+            Volver al tema
+          </button>
+        ) : null}
       </div>
-      {currentErrors.length > 1 && (
-        <div className="my-2 flex flex-wrap gap-1.5" aria-label="Errores del tema">
-          {currentErrors.map((error, index) => (
-            <button
-              type="button"
-              key={error.id}
-              aria-pressed={errorId === error.id}
-              onClick={() => setErrorId(error.id)}
-              className={`focus-visible:outline-ring min-h-9 rounded-lg border px-2.5 py-1 focus-visible:outline-2 sm:min-h-8 ${errorId === error.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'}`}
+      {!reviewOpen && (
+        <div className="mt-5">
+          {(lastOutcome || topicPending.length > 0 || hasReinforced) && (
+            <section
+              className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
+              aria-label="Tu próxima actividad"
             >
-              <span className="text-[11px] leading-4">
-                Concepto {index + 1} · {error.status === 'pending' ? 'Pendiente' : 'Resuelto'}
-              </span>
-            </button>
-          ))}
+              <h3 className="text-base font-semibold">Tu próxima actividad</h3>
+              {lastOutcome && (
+                <p className="text-foreground mt-2 text-sm!">
+                  Última tanda: {lastOutcome.total}{' '}
+                  {lastOutcome.total === 1 ? 'pregunta' : 'preguntas'} · {lastOutcome.correct}{' '}
+                  {lastOutcome.correct === 1 ? 'correcta' : 'correctas'} · {lastOutcome.incorrect}{' '}
+                  {lastOutcome.incorrect === 1 ? 'incorrecta' : 'incorrectas'}.
+                </p>
+              )}
+              <p className="text-muted-foreground mt-2 text-sm!">
+                {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
+              </p>
+              {topicPending.length > 0 && (
+                <>
+                  <p className="text-muted-foreground mt-2 text-xs!">
+                    Pendientes del tema: {topicPending.length}{' '}
+                    {topicPending.length === 1 ? 'pregunta' : 'preguntas'} de tus prácticas. Pueden
+                    incluir intentos anteriores.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextError =
+                        topicPending.find((error) =>
+                          lastOutcome?.incorrectPrompts.includes(error.prompt)
+                        ) ?? topicPending[0];
+                      setErrorId(nextError.id);
+                      setReviewOpen(true);
+                    }}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4'}
+                  >
+                    Reforzar las dificultades <ArrowRight size={16} />
+                  </button>
+                </>
+              )}
+            </section>
+          )}
+          {!lastOutcome && topicPending.length === 0 && !hasReinforced && (
+            <p className="text-muted-foreground text-sm!">
+              {currentTopic?.errors.some((error) => error.status === 'pending')
+                ? 'Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.'
+                : currentTopic && topicAssessmentCount(currentTopic) > 0
+                  ? 'Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.'
+                  : currentQuestionCount === 0
+                    ? 'Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.'
+                    : 'Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.'}
+            </p>
+          )}
+          {!lastOutcome && topicPending.length === 0 && !hasReinforced && currentAnswered > 0 && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {selected?.status === 'pending' ? (
+                <button
+                  type="button"
+                  onClick={() => setReviewOpen(true)}
+                  className={actionClass + ' bg-primary text-primary-foreground'}
+                >
+                  Reforzar dificultades <ArrowRight size={16} />
+                </button>
+              ) : summaryBody ? (
+                <a
+                  href={`#${panelId}-topic-summary`}
+                  className={
+                    actionClass +
+                    (currentTopic && topicAssessmentCount(currentTopic) > 0
+                      ? ' border-border border'
+                      : ' bg-primary text-primary-foreground')
+                  }
+                >
+                  Estudiar este tema <ArrowRight size={16} />
+                </a>
+              ) : null}
+              {canPracticeTopic ? (
+                <button
+                  type="button"
+                  onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                  className={
+                    actionClass +
+                    (selected?.status === 'pending' ||
+                    !currentTopic ||
+                    topicAssessmentCount(currentTopic) === 0
+                      ? ' border-border border'
+                      : ' bg-primary text-primary-foreground')
+                  }
+                >
+                  {currentTopic?.errors.some((error) => error.status === 'resolved')
+                    ? 'Volver a comprobar'
+                    : currentTopic && topicAssessmentCount(currentTopic) > 0
+                      ? 'Comprobar lo aprendido'
+                      : 'Practicar este tema'}
+                </button>
+              ) : onPractice ? (
+                <button
+                  type="button"
+                  onClick={onPractice}
+                  className={
+                    actionClass +
+                    (currentTopic &&
+                    topicAssessmentCount(currentTopic) > 0 &&
+                    selected?.status !== 'pending'
+                      ? ' bg-primary text-primary-foreground'
+                      : ' border-border border')
+                  }
+                >
+                  Practicar el PDF
+                </button>
+              ) : (
+                <Link
+                  href={simulation ? materialHref : materialHref + '?tab=ejercicios'}
+                  className={
+                    actionClass +
+                    (currentTopic &&
+                    topicAssessmentCount(currentTopic) > 0 &&
+                    selected?.status !== 'pending'
+                      ? ' bg-primary text-primary-foreground'
+                      : ' border-border border')
+                  }
+                >
+                  Practicar el PDF
+                </Link>
+              )}
+            </div>
+          )}
+          {(currentQuestionCount !== 0 ||
+            selected?.status === 'pending' ||
+            currentAnswered > 0) && (
+            <p className="text-muted-foreground mt-2 text-xs!">
+              {canPracticeTopic
+                ? `${currentQuestionCount} ${currentQuestionCount === 1 ? 'pregunta disponible para este tema. Una respuesta no alcanza para evaluar todo el capítulo.' : 'preguntas disponibles para este tema. El resultado muestra tu desempeño en la tanda.'}`
+                : 'La práctica general incluye distintos temas del PDF.'}
+            </p>
+          )}
+          {currentQuestionCount === 0 && (
+            <p role="status" className="border-border mt-4 rounded-lg border p-3 text-sm!">
+              Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su
+              comprensión.
+            </p>
+          )}
+          <section
+            id={panelId + '-topic-summary'}
+            className="border-border mt-6 scroll-mt-4 border-t pt-5"
+            aria-label="Contenido de este tema"
+          >
+            <h3 className="text-base font-semibold">1 · Leé el resumen del tema</h3>
+            {summaryBody ? (
+              <div className="mt-4 max-w-prose text-base leading-7 whitespace-pre-line">
+                {summaryBody}
+              </div>
+            ) : (
+              <p className="text-muted-foreground mt-3">
+                El contenido de este tema todavía no está disponible.
+              </p>
+            )}
+          </section>
+          {(sourcePdfHref ?? simulation?.pdfHref) && (
+            <a
+              href={sourcePdfHref ?? simulation?.pdfHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary inline-flex min-h-11 items-center gap-2 text-sm underline underline-offset-4"
+            >
+              <FileText size={16} /> Consultar el PDF original
+            </a>
+          )}
+          <TopicStudySupport
+            key={currentTopic?.id ?? 'unmatched'}
+            concepts={resources.concepts}
+            flashcards={resources.flashcards}
+            pdfHref={sourcePdfHref ?? simulation?.pdfHref}
+          />
+          {currentTopic && (
+            <section
+              className="border-border border-t py-5"
+              aria-label="Cómo continuar con tu estudio"
+            >
+              <h3 className="text-base font-semibold">3 · Elegí cómo continuar</h3>
+              <p className="text-muted-foreground mt-2 text-sm!">
+                {canPracticeTopic
+                  ? nextStudyTopic
+                    ? 'Podés comprobar lo que entendiste o seguir estudiando el siguiente tema. Vos elegís.'
+                    : 'Podés comprobar lo que entendiste o volver a elegir otro tema del PDF.'
+                  : nextStudyTopic
+                    ? 'Podés seguir estudiando sin hacer una práctica. Este tema todavía no tiene preguntas disponibles.'
+                    : 'Podés volver al contenido de cualquier tema. Este tema todavía no tiene preguntas disponibles.'}
+              </p>
+              <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                {canPracticeTopic && (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                    className={actionClass + ' bg-primary text-primary-foreground'}
+                  >
+                    Practicar este tema <ArrowRight size={16} />
+                  </button>
+                )}
+                {nextStudyTopic ? (
+                  <button
+                    type="button"
+                    onClick={() => openTopic(nextStudyTopic.id)}
+                    className={
+                      actionClass +
+                      (canPracticeTopic
+                        ? ' border-border border'
+                        : ' bg-primary text-primary-foreground')
+                    }
+                  >
+                    Seguir con el tema {topics.indexOf(nextStudyTopic) + 1} <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={closeTopic}
+                    className={actionClass + ' border-border border'}
+                  >
+                    Volver a todos los temas
+                  </button>
+                )}
+              </div>
+              {canPracticeTopic && (
+                <p className="text-muted-foreground mt-2 text-xs!">
+                  {currentQuestionCount}{' '}
+                  {currentQuestionCount === 1 ? 'pregunta disponible' : 'preguntas disponibles'} de
+                  este tema
+                </p>
+              )}
+              {nextStudyTopic ? (
+                <p className="text-muted-foreground mt-3 text-sm! break-words">
+                  Siguiente: {nextStudyTopic.title}
+                </p>
+              ) : (
+                <p className="text-muted-foreground mt-3 text-sm!">
+                  Llegaste al último tema del PDF. Podés volver a cualquiera para estudiar o
+                  practicar.
+                </p>
+              )}
+            </section>
+          )}
+          <details className="border-border border-t py-3 xl:hidden">
+            <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
+              Tu aprendizaje
+            </summary>
+            {assessmentData?.loadError && (
+              <p role="status" className="text-muted-foreground py-2 text-sm">
+                No pudimos cargar todas tus respuestas. Esto no significa que no hayas practicado.
+              </p>
+            )}
+            {currentAnswered > 0 && !assessmentData?.loadError && (
+              <p className="text-foreground py-2 text-sm">
+                {currentCorrect} de {currentAnswered} respuestas correctas registradas en prácticas
+                y refuerzos.
+              </p>
+            )}
+            {currentErrors.length > 0 ? (
+              <div className="space-y-3 py-2">
+                <p className="text-muted-foreground text-sm">
+                  {currentErrors.filter((item) => item.status === 'pending').length} preguntas para
+                  repasar · {currentErrors.filter((item) => item.status === 'resolved').length}{' '}
+                  refuerzos comprobados.
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Una comprobación después de una explicación no demuestra por sí sola el dominio de
+                  todo el tema.
+                </p>
+                {currentErrors
+                  .filter((item) => item.status === 'pending')
+                  .slice(0, 4)
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setErrorId(item.id);
+                        setReviewOpen(true);
+                      }}
+                      className="text-primary focus-visible:outline-ring block min-h-11 w-full py-3 text-left text-sm underline underline-offset-4 focus-visible:outline-2"
+                    >
+                      {item.prompt}
+                    </button>
+                  ))}
+              </div>
+            ) : currentAnswered === 0 && !assessmentData?.loadError ? (
+              <p className="text-muted-foreground py-2 text-sm">
+                Acá aparecerán tus resultados cuando practiques. Podés empezar por el contenido sin
+                tener historial.
+              </p>
+            ) : null}
+          </details>
         </div>
       )}
-      {selected ? (
+      {reviewOpen && currentErrors.length > 1 && (
+        <details className="my-4">
+          <summary className="text-muted-foreground min-h-11 cursor-pointer py-3 text-sm">
+            Cambiar pregunta de repaso
+          </summary>
+          <div className="space-y-2">
+            {currentErrors.map((error) => (
+              <button
+                type="button"
+                key={error.id}
+                aria-pressed={errorId === error.id}
+                onClick={() => setErrorId(error.id)}
+                className={actionClass + ' border-border w-full justify-start border text-left'}
+              >
+                {error.prompt}
+              </button>
+            ))}
+          </div>
+        </details>
+      )}
+      {reviewOpen && selected ? (
         <StudyErrorDetail
           embedded
+          topicContext
           key={conversationKey}
           item={selected}
           materials={[{ ...material, materiaNombre: null }]}
-          pendingCount={pending.length}
+          pendingCount={currentErrors.filter((error) => error.status === 'pending').length}
           conversation={conversations[conversationKey] ?? initialConversation}
           reviewActions={reviewActions}
           documentHref={simulation?.pdfHref}
@@ -292,72 +689,21 @@ export function PdfProgressPanel({
             window.location.assign(`/dashboard/progreso?material=${material.id}`);
           }}
           onNext={() => {
-            const other = pending.find((error) => error.id !== selected.id);
+            const other = currentErrors.find(
+              (error) => error.id !== selected.id && error.status === 'pending'
+            );
             if (other) {
               const topic = topics.find((item) =>
                 item.errors.some((error) => error.id === other.id)
               );
               openTopic(topic?.id ?? 'unmatched', other.id);
             } else {
-              closeTopic();
+              setReviewOpen(false);
             }
           }}
-          onFinish={closeTopic}
+          onFinish={() => setReviewOpen(false)}
         />
-      ) : (
-        <div className="mt-3">
-          {summaryBody && (
-            <div className="border-border mb-3 rounded-lg border p-3">
-              <p className="text-foreground mb-2 font-medium">Repasá este tema con tu resumen</p>
-              <p className="text-foreground whitespace-pre-line">{summaryBody.slice(0, 700)}</p>
-              {summaryBody.length > 700 && (
-                <details className="mt-2">
-                  <summary className="text-primary min-h-9 cursor-pointer py-2 text-xs">
-                    Seguir leyendo
-                  </summary>
-                  <p className="text-foreground whitespace-pre-line">{summaryBody.slice(700)}</p>
-                </details>
-              )}
-            </div>
-          )}
-          <p className="text-muted-foreground text-[13px]">
-            {currentTopic && topicAssessmentCount(currentTopic) > 0
-              ? 'Seguí practicando este tema.'
-              : currentTopic &&
-                  questionCounts?.[topics.findIndex((topic) => topic.id === currentTopic.id)] === 0
-                ? 'Aún no hay preguntas para este tema.'
-                : 'Este tema sigue sin evaluar. La próxima práctica prioriza los temas que faltan.'}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {onPractice ? (
-              <button
-                type="button"
-                onClick={onPractice}
-                className={`${actionClass} bg-primary text-primary-foreground`}
-              >
-                Ir a la práctica del PDF <ArrowRight size={16} />
-              </button>
-            ) : (
-              <Link
-                href={`${materialHref}?tab=ejercicios`}
-                className={`${actionClass} bg-primary text-primary-foreground`}
-              >
-                Ir a la práctica del PDF <ArrowRight size={16} />
-              </Link>
-            )}
-            <Link
-              href={simulation ? materialHref : `${materialHref}?tab=resumen`}
-              className={`${actionClass} border-border text-foreground border`}
-            >
-              <BookOpen size={17} />
-              {simulation ? 'Ver PDF original' : 'Volver al resumen'}
-            </Link>
-          </div>
-          <p className="text-muted-foreground mt-2 text-xs!">
-            La práctica incluye distintos temas de este PDF.
-          </p>
-        </div>
-      )}
+      ) : null}
     </section>
   ) : null;
 
@@ -379,7 +725,7 @@ export function PdfProgressPanel({
 
   return (
     <div
-      className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto max-w-6xl px-1 py-3 sm:px-3 sm:py-4'} [&_p]:leading-5!`}
+      className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto w-full max-w-none px-1 py-3 sm:px-3 sm:py-4'} min-w-0 [&_p]:leading-5!`}
     >
       {tourStep >= 0 && selected && (
         <PdfTourSpotlight
@@ -447,15 +793,24 @@ export function PdfProgressPanel({
         </div>
       )}
       <h2
-        className={`${embedded ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} mt-2 font-semibold tracking-tight`}
+        id={`${panelId}-heading`}
+        tabIndex={-1}
+        className={`${embedded ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'} mt-2 font-semibold tracking-tight ${reviewOpen ? 'sr-only' : ''}`}
       >
-        Tu progreso en este PDF
+        Tu progreso
       </h2>
-      <p className="text-muted-foreground mt-1 text-[13px]!">
-        {simulation
-          ? 'Temas y contenido del PDF real · Errores y resoluciones simulados.'
-          : 'Los temas de tu resumen y lo que registraste al practicar.'}
-      </p>
+      {!reviewOpen && (
+        <p className="text-muted-foreground mt-1 text-[13px]!">
+          {simulation
+            ? 'Elegí qué estudiar y avanzá tema por tema. Resultados de ejemplo.'
+            : 'Elegí qué estudiar y avanzá tema por tema.'}
+        </p>
+      )}
+      {summaryUnavailable && (
+        <p role="status" className="text-muted-foreground mt-3 text-sm!">
+          El resumen todavía no está disponible. Podés repasar las preguntas guardadas.
+        </p>
+      )}
       {!embedded && (
         <nav
           aria-label="Herramientas del PDF"
@@ -502,304 +857,377 @@ export function PdfProgressPanel({
           registros y pueden ser parciales.
         </p>
       )}
-      <div
-        className={`mt-4 grid items-start gap-4 ${topicId ? '' : 'lg:grid-cols-[minmax(0,1fr)_280px]'}`}
-      >
-        <div className="space-y-4">
-          <section
-            className="border-border bg-card rounded-2xl border p-4 sm:p-5"
-            aria-labelledby={`real-coverage-title-${panelId}`}
+      {topicId ? (
+        <div className="mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_260px] 2xl:grid-cols-[248px_minmax(0,1fr)_288px] 2xl:gap-7">
+          <aside
+            className="border-border bg-card hidden min-w-0 rounded-xl border p-3 lg:sticky lg:top-2 lg:block lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto"
+            aria-label="Navegación entre temas del PDF"
           >
-            <div className="flex items-center justify-between gap-3">
-              <h2 id={`real-coverage-title-${panelId}`} className="text-base font-semibold">
-                Tu recorrido hasta ahora
-              </h2>
-              <Target className="text-primary" size={18} />
+            <div className="border-border mb-3 flex items-center justify-between gap-2 border-b pb-3">
+              <h3 className="text-sm font-semibold">Temas del PDF</h3>
+              <span className="text-muted-foreground text-xs">{topics.length}</span>
             </div>
-            {summaryUnavailable ? (
-              <p className="text-muted-foreground mt-4 text-sm">
-                El resumen todavía no está disponible. Podés repasar los errores guardados mientras
-                tanto.
-              </p>
-            ) : topics.length ? (
-              <>
-                <div className="mt-3 flex flex-wrap items-baseline gap-2">
-                  <strong className="text-3xl font-semibold">
-                    {assessmentData?.loadError ? '—' : evaluated}
-                    <span className="text-muted-foreground text-xl font-normal">
-                      {' '}
-                      / {topics.length}
-                    </span>
-                  </strong>
-                  <span className="text-muted-foreground text-[13px]">temas evaluados</span>
-                </div>
-                <div
-                  role="progressbar"
-                  aria-label="Temas con al menos una pregunta corregida; no mide dominio"
-                  aria-valuenow={assessmentData?.loadError ? undefined : evaluated}
-                  aria-valuetext={assessmentData?.loadError ? 'Cobertura no disponible' : undefined}
-                  aria-valuemin={0}
-                  aria-valuemax={topics.length}
-                  className="bg-muted mt-3 h-2 overflow-hidden rounded-full"
-                >
-                  <div
-                    className="bg-primary h-full rounded-full transition-all"
-                    style={{
-                      width: `${(assessmentData?.loadError ? 0 : evaluated / topics.length) * 100}%`,
-                    }}
-                  />
-                </div>
-                <p className="text-muted-foreground mt-2 text-[13px]!">
-                  {pendingTopics.length} {pendingTopics.length === 1 ? 'tema' : 'temas'} para
-                  reforzar
-                  {!assessmentData?.loadError && <> · {topics.length - evaluated} por evaluar</>}
-                </p>
-              </>
-            ) : (
-              <p className="text-muted-foreground mt-4 text-sm">
-                No encontramos temas en el resumen guardado. Tus errores siguen disponibles abajo.
-              </p>
-            )}
-            {resolved.length > 0 && (
-              <p className="text-muted-foreground mt-2 text-xs!">
-                <CheckCircle2
-                  className="text-primary mr-1.5 inline-block"
-                  size={14}
-                  aria-hidden="true"
+            {topics.length >= 8 && (
+              <label className="mb-3 block">
+                <span className="sr-only">Buscar tema</span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar tema"
+                  className="border-border bg-background focus-visible:outline-ring min-h-10 w-full rounded-lg border px-3 text-xs"
                 />
-                {resolved.length} {resolved.length === 1 ? 'error resuelto' : 'errores resueltos'}{' '}
-                después del repaso
-              </p>
+              </label>
             )}
-            <details className="text-muted-foreground mt-2 text-xs">
-              <summary className="focus-visible:outline-ring min-h-9 w-fit cursor-pointer py-2 focus-visible:outline-2">
-                ¿Cómo se mide el progreso?
-              </summary>
-              <p className="mt-1 text-xs!">
-                Un tema se cuenta como evaluado cuando respondiste al menos una pregunta con
-                corrección, bien o mal. Leer, autoevaluarte o resolver un refuerzo no demuestra
-                dominio de todo el tema.
-              </p>
-            </details>
-            {topics.some(
-              (topic) => topic.errors.length > 0 && topicAssessmentCount(topic) === 0
-            ) && (
-              <p className="text-muted-foreground mt-2 text-xs!">
-                Conservamos tus errores anteriores. La cobertura solo cuenta respuestas corregidas
-                que quedaron registradas.
-              </p>
-            )}
-          </section>
-          <section
-            className="border-border bg-card overflow-hidden rounded-2xl border"
-            aria-labelledby={`real-topics-title-${panelId}`}
+            <nav aria-label="Índice de temas">
+              <ul className="space-y-1">
+                {topics
+                  .filter((topic) =>
+                    topic.title
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')
+                      .toLowerCase()
+                      .includes(
+                        search
+                          .normalize('NFD')
+                          .replace(/[\u0300-\u036f]/g, '')
+                          .toLowerCase()
+                          .trim()
+                      )
+                  )
+                  .map((topic) => {
+                    const state = topicStatus(topic);
+                    const isActive = topic.id === topicId;
+                    return (
+                      <li key={topic.id}>
+                        <button
+                          type="button"
+                          aria-current={isActive ? 'page' : undefined}
+                          onClick={() => openTopic(topic.id)}
+                          className={`focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition focus-visible:outline-2 ${isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/70'}`}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13px] leading-5 font-medium break-words">
+                              {topic.title}
+                            </span>
+                            <span className="text-muted-foreground mt-1 block text-[11px]">
+                              {state.label}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+              {!topics.some((topic) =>
+                topic.title
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .toLowerCase()
+                  .includes(
+                    search
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')
+                      .toLowerCase()
+                      .trim()
+                  )
+              ) && (
+                <p className="text-muted-foreground px-2 py-3 text-xs">
+                  No encontramos temas con ese nombre.
+                </p>
+              )}
+            </nav>
+          </aside>
+          <div className="min-w-0">{topicDetail}</div>
+          <aside
+            className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
+            aria-label="Aprendizaje y próxima actividad del tema"
           >
-            <div className="p-4 pb-2">
-              <h2 id={`real-topics-title-${panelId}`} className="text-base font-semibold">
-                Tus temas, uno por uno
-              </h2>
-              <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtrar temas">
-                {['Todos', 'Por reforzar', 'Sin evaluar'].map((label) => (
+            <div className="border-border bg-card space-y-4 rounded-xl border p-4">
+              <div>
+                <h3 className="text-sm font-semibold">{reviewOpen ? 'Refuerzo en curso' : 'Tu aprendizaje'}</h3>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {currentTopic?.title ?? 'Conceptos pendientes'}
+                </p>
+              </div>
+              {!reviewOpen && lastOutcome && (
+                <div className="border-border border-b pb-4">
+                  <p className="text-muted-foreground text-xs">Última práctica</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {lastOutcome.correct}/{lastOutcome.total}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {lastOutcome.incorrect}{' '}
+                    {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
+                  </p>
+                </div>
+              )}
+              {!reviewOpen && !lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
+                <div className="border-border border-b pb-4">
+                  <p className="text-muted-foreground text-xs">Respuestas registradas</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {currentCorrect}/{currentAnswered}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Acumuladas, no una medición de dominio.
+                  </p>
+                </div>
+              )}
+              {!reviewOpen && assessmentData?.loadError && (
+                <p role="status" className="text-muted-foreground text-xs">
+                  No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.
+                </p>
+              )}
+              {topicPending.length > 0 && (
+                <p className="text-sm font-medium">
+                  {topicPending.length}{' '}
+                  {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
+                </p>
+              )}
+              {reviewOpen ? (
+                <p className="border-border text-muted-foreground border-t pt-3 text-xs leading-5">
+                  Revisá la explicación y comprobá lo aprendido con una pregunta diferente.
+                </p>
+              ) : (
+              <div className="border-border border-t pt-4">
+                <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
+                <p className="text-muted-foreground mt-2 text-[13px] leading-5">
+                  {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
+                </p>
+                {topicPending.length > 0 ? (
                   <button
                     type="button"
-                    key={label}
-                    aria-pressed={filter === label}
-                    disabled={label === 'Sin evaluar' && assessmentData?.loadError}
                     onClick={() => {
-                      setFilter(label);
-                      setTopicId(null);
-                      setErrorId(null);
+                      const nextError =
+                        topicPending.find((error) =>
+                          lastOutcome?.incorrectPrompts.includes(error.prompt)
+                        ) ?? topicPending[0];
+                      setErrorId(nextError.id);
+                      setReviewOpen(true);
                     }}
-                    className={`focus-visible:outline-ring min-h-10 rounded-full px-4 text-xs font-medium focus-visible:outline-2 ${filter === label ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
                   >
-                    {label}
+                    Reforzar dificultades <ArrowRight size={16} />
                   </button>
-                ))}
+                ) : canPracticeTopic ? (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                  >
+                    Practicar el tema <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <p className="text-muted-foreground mt-3 text-xs">
+                    Podés continuar leyendo aunque no haya preguntas de este tema.
+                  </p>
+                )}
               </div>
+              )}
+              {!reviewOpen && nextStudyTopic && (
+                <button
+                  type="button"
+                  onClick={() => openTopic(nextStudyTopic.id)}
+                  className="text-primary focus-visible:outline-ring flex min-h-11 w-full items-center justify-between gap-2 border-t pt-3 text-left text-xs font-semibold focus-visible:outline-2"
+                >
+                  Siguiente tema <ArrowRight size={15} />
+                </button>
+              )}
             </div>
-            <ul className="divide-border divide-y">
-              {visibleTopics.map((topic) => {
-                const questionIndex = topics.findIndex((item) => item.id === topic.id);
-                const unavailable =
-                  questionCounts?.[questionIndex] === 0 &&
-                  topicAssessmentCount(topic) === 0 &&
-                  !topic.errors.length;
-                const status = topicStatus(topic);
-                const { Icon, style } = status;
-                const label = unavailable
-                  ? 'Evaluación no disponible'
-                  : assessmentData?.loadError && !topic.errors.length
-                    ? 'Evaluación no disponible'
-                    : status.label;
-                const pendingCount = topic.errors.filter(
-                  (error) => error.status === 'pending'
-                ).length;
-                const correctCount = topic.evidence.reduce(
-                  (total, item) => total + item.correct,
-                  0
-                );
-                const incorrectCount = topic.evidence.reduce(
-                  (total, item) => total + item.incorrect,
-                  0
-                );
-                const selfReportedCount = topic.evidence.reduce(
-                  (total, item) => total + item.selfReported,
-                  0
-                );
-                return (
-                  <li key={topic.id}>
+          </aside>
+        </div>
+      ) : (
+        <div className="mt-5">
+          <div className={
+              recommendedTopic
+                ? 'grid gap-5 lg:grid-cols-[minmax(270px,0.75fr)_minmax(0,1.25fr)] lg:items-start'
+                : 'space-y-4'
+            }>
+            {recommendedTopic && (
+              <section
+                className="border-primary/20 bg-primary/5 rounded-2xl border p-5 sm:p-6 lg:sticky lg:top-2"
+                aria-label="Actividad recomendada"
+              >
+                <p className="text-primary text-xs font-semibold">
+                  {next
+                    ? 'Para seguir avanzando'
+                    : evaluated === 0
+                      ? 'Empezá por este tema'
+                      : 'Tu próxima actividad'}
+                </p>
+                <h2 className="mt-2 text-lg font-semibold break-words">{recommendedTopic.title}</h2>
+                <p className="text-muted-foreground mt-2 text-sm!">
+                  {next
+                    ? 'Retomá una dificultad con tu material y comprobá lo aprendido.'
+                    : 'Conocé los conceptos principales y después comprobá cuánto entendiste.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => openTopic(recommendedTopic.id)}
+                  className={actionClass + ' bg-primary text-primary-foreground mt-4'}
+                >
+                  {next ? 'Continuar estudiando' : 'Comenzar a estudiar'} <ArrowRight size={16} />
+                </button>
+              </section>
+            )}
+            <section
+              className="border-border bg-card overflow-hidden rounded-2xl border"
+              aria-labelledby={`real-topics-title-${panelId}`}
+            >
+              <div className="p-4 pb-2">
+                <h2 id={`real-topics-title-${panelId}`} className="text-base font-semibold">
+                  Contenido de tu PDF
+                </h2>
+                {topics.length >= 8 && (
+                  <label className="mt-4 block text-sm">
+                    <span className="text-muted-foreground">Buscar tema</span>
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Nombre del tema o capítulo"
+                      className="border-border bg-background focus-visible:outline-ring mt-2 min-h-11 w-full rounded-lg border px-3"
+                    />
+                  </label>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtrar temas">
+                  {['Todos', 'Por reforzar', 'Sin evaluar'].map((label) => (
                     <button
                       type="button"
+                      key={label}
+                      aria-pressed={filter === label}
+                      disabled={label === 'Sin evaluar' && assessmentData?.loadError}
                       onClick={() => {
-                        if (topicId === topic.id) {
-                          setTopicId(null);
-                          setErrorId(null);
-                        } else openTopic(topic.id);
+                        setFilter(label);
+                        setTopicId(null);
+                        setErrorId(null);
                       }}
-                      aria-expanded={topicId === topic.id}
-                      aria-controls={`${panelId}-topic-detail-${topic.id}`}
-                      className={`hover:bg-muted/50 focus-visible:outline-ring flex w-full items-center gap-2.5 px-4 py-2.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 ${topicId === topic.id ? 'bg-primary/5' : ''}`}
+                      className={`focus-visible:outline-ring min-h-10 rounded-full px-4 text-xs font-medium focus-visible:outline-2 ${filter === label ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
                     >
-                      <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${style}`}
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <ul className="divide-border divide-y">
+                {visibleTopics.map((topic) => {
+                  const questionIndex = topics.findIndex((item) => item.id === topic.id);
+                  const unavailable =
+                    questionCounts?.[questionIndex] === 0 &&
+                    topicAssessmentCount(topic) === 0 &&
+                    !topic.errors.length;
+                  const status = topicStatus(topic);
+                  const { Icon, style } = status;
+                  const label = unavailable
+                    ? 'Sin evaluar'
+                    : assessmentData?.loadError && !topic.errors.length
+                      ? 'Evaluación no disponible'
+                      : status.label;
+                  const pendingCount = topic.errors.filter(
+                    (error) => error.status === 'pending'
+                  ).length;
+                  const correctCount = topic.evidence.reduce(
+                    (total, item) => total + item.correct,
+                    0
+                  );
+                  const incorrectCount = topic.evidence.reduce(
+                    (total, item) => total + item.incorrect,
+                    0
+                  );
+                  const selfReportedCount = topic.evidence.reduce(
+                    (total, item) => total + item.selfReported,
+                    0
+                  );
+                  return (
+                    <li key={topic.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (topicId === topic.id) {
+                            setTopicId(null);
+                            setErrorId(null);
+                          } else openTopic(topic.id);
+                        }}
+                        aria-expanded={topicId === topic.id}
+                        aria-controls={`${panelId}-topic-detail-${topic.id}`}
+                        className={`hover:bg-muted/50 focus-visible:outline-ring flex w-full items-center gap-2.5 px-4 py-2.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 ${topicId === topic.id ? 'bg-primary/5' : ''}`}
                       >
-                        <Icon size={16} />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-medium break-words">
-                          {topic.title}
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${style}`}
+                        >
+                          <Icon size={16} />
                         </span>
-                        <span className="text-muted-foreground mt-0.5 block text-xs">
-                          {assessmentData?.loadError
-                            ? 'Evaluación no disponible'
-                            : unavailable
-                              ? 'Aún no hay preguntas para este tema'
-                              : topicAssessmentCount(topic) > 0
-                                ? `${correctCount} ${correctCount === 1 ? 'acierto' : 'aciertos'} · ${incorrectCount} ${incorrectCount === 1 ? 'error' : 'errores'}`
-                                : selfReportedCount > 0
-                                  ? `${selfReportedCount} autoevaluaciones · falta comprobar con una pregunta`
-                                  : pendingCount
-                                    ? `${pendingCount} ${pendingCount === 1 ? 'error pendiente' : 'errores pendientes'}`
-                                    : topic.errors.length
-                                      ? `${topic.errors.length} ${topic.errors.length === 1 ? 'error resuelto' : 'errores resueltos'}`
-                                      : 'Todavía sin preguntas corregidas'}
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-[13px] font-medium break-words">
+                            {topic.title}
+                          </span>
+                          <span className="text-muted-foreground mt-0.5 block text-xs">
+                            {assessmentData?.loadError
+                              ? 'Evaluación no disponible'
+                              : unavailable
+                                ? 'Aún no hay preguntas para este tema'
+                                : topicAssessmentCount(topic) > 0
+                                  ? `${correctCount} de ${correctCount + incorrectCount} ${correctCount + incorrectCount === 1 ? 'respuesta correcta' : 'respuestas correctas'}`
+                                  : selfReportedCount > 0
+                                    ? `${selfReportedCount} autoevaluaciones · falta comprobar con una pregunta`
+                                    : pendingCount
+                                      ? `${pendingCount} ${pendingCount === 1 ? 'pregunta para repasar' : 'preguntas para repasar'}`
+                                      : topic.errors.length
+                                        ? `${topic.errors.length} ${topic.errors.length === 1 ? 'error resuelto' : 'errores resueltos'}`
+                                        : 'Todavía sin preguntas corregidas'}
+                          </span>
+                          <span
+                            className={`mt-2 inline-block rounded-full px-2 py-1 text-[11px] sm:hidden ${style}`}
+                          >
+                            {label}
+                          </span>
                         </span>
                         <span
-                          className={`mt-2 inline-block rounded-full px-2 py-1 text-[11px] sm:hidden ${style}`}
+                          className={`hidden shrink-0 rounded-full px-2 py-1 text-[11px] font-medium sm:block ${style}`}
                         >
                           {label}
                         </span>
-                      </span>
-                      <span
-                        className={`hidden shrink-0 rounded-full px-2 py-1 text-[11px] font-medium sm:block ${style}`}
-                      >
-                        {label}
-                      </span>
-                      <ChevronDown
-                        size={16}
-                        className={`text-muted-foreground shrink-0 transition-transform ${topicId === topic.id ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                    <div id={`${panelId}-topic-detail-${topic.id}`} hidden={topicId !== topic.id}>
-                      {topicId === topic.id ? topicDetail : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-            {!visibleTopics.length && (
-              <p className="text-muted-foreground px-6 pb-6 text-sm">
-                {topics.length
-                  ? 'No hay temas en este filtro.'
-                  : 'Todavía no hay temas disponibles para mostrar.'}
-              </p>
-            )}
-          </section>
-          {unmatched.length > 0 && (
-            <section className="border-border bg-card rounded-3xl border p-6">
-              <h2 className="font-semibold">Otros conceptos con errores</h2>
-              <p className="text-muted-foreground mt-2 text-sm">
-                {unmatched.length} registros de este PDF no tienen una coincidencia única con los
-                temas del resumen. No los sumamos al indicador por tema.
-              </p>
-              <button
-                type="button"
-                onClick={() => openTopic('unmatched')}
-                className={`${actionClass} border-border text-foreground mt-4 border`}
-              >
-                Ver estos conceptos
-                <ArrowRight size={16} />
-              </button>
-              {topicId === 'unmatched' ? topicDetail : null}
-            </section>
-          )}
-        </div>
-        {!topicId && (
-          <aside className="order-first space-y-3 lg:order-none">
-            <section
-              className="border-primary/20 bg-primary/5 rounded-2xl border p-4"
-              aria-labelledby={`real-next-title-${panelId}`}
-            >
-              <div className="bg-primary/10 text-primary mb-2 flex h-8 w-8 items-center justify-center rounded-xl">
-                <Target size={18} />
-              </div>
-              <span className="text-primary text-xs font-semibold tracking-wider uppercase">
-                Tu próximo paso
-              </span>
-              <h2
-                id={`real-next-title-${panelId}`}
-                className="mt-2 text-base font-semibold break-words"
-              >
-                {next
-                  ? `Retomá ${next.topic}`
-                  : evaluated === 0
-                    ? 'Empezá tu primera práctica'
-                    : 'Continuá tu práctica'}
-              </h2>
-              <p className="text-muted-foreground mt-2 text-[13px]!">
-                {next
-                  ? 'Repasá el concepto y probá otra situación.'
-                  : evaluated === 0
-                    ? 'Recibí tu nota y descubrí qué reforzar.'
-                    : 'Retomá tu práctica o empezá otra tanda.'}
-              </p>
-              {next ? (
-                <button
-                  type="button"
-                  onClick={reinforce}
-                  className={`${actionClass} bg-primary text-primary-foreground hover:bg-primary/90 mt-3 w-full`}
-                >
-                  Reforzar ahora
-                  <ArrowRight size={16} />
-                </button>
-              ) : onPractice ? (
-                <button
-                  type="button"
-                  onClick={onPractice}
-                  className={`${actionClass} bg-primary text-primary-foreground mt-3 w-full`}
-                >
-                  {evaluated === 0 ? 'Empezar práctica' : 'Ir a la práctica'}{' '}
-                  <ArrowRight size={16} />
-                </button>
-              ) : (
-                <Link
-                  href={simulation ? materialHref : `${materialHref}?tab=ejercicios`}
-                  className={`${actionClass} bg-primary text-primary-foreground mt-3 w-full`}
-                >
-                  {evaluated === 0 ? 'Empezar práctica' : 'Ir a la práctica'}
-                  <ArrowRight size={16} />
-                </Link>
-              )}
-              {pending.length > 0 && (
-                <p className="text-muted-foreground mt-2 text-xs!">
-                  {pending.length} {pending.length === 1 ? 'error pendiente' : 'errores pendientes'}{' '}
-                  en este PDF
+                        <ChevronDown
+                          size={16}
+                          className={`text-muted-foreground shrink-0 transition-transform ${topicId === topic.id ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                      <div id={`${panelId}-topic-detail-${topic.id}`} hidden={topicId !== topic.id}>
+                        {topicId === topic.id ? topicDetail : null}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {!visibleTopics.length && (
+                <p className="text-muted-foreground px-6 pb-6 text-sm">
+                  {topics.length
+                    ? 'No hay temas en este filtro.'
+                    : 'Todavía no hay temas disponibles para mostrar.'}
                 </p>
               )}
             </section>
-          </aside>
-        )}
-      </div>
+            {unmatched.length > 0 && (
+              <section className="border-border bg-card rounded-3xl border p-6 lg:col-span-2">
+                <h2 className="font-semibold">Otros conceptos con errores</h2>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {unmatched.length} registros de este PDF no tienen una coincidencia única con los
+                  temas del resumen. No los sumamos al indicador por tema.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => openTopic('unmatched')}
+                  className={`${actionClass} border-border text-foreground mt-4 border`}
+                >
+                  Ver estos conceptos
+                  <ArrowRight size={16} />
+                </button>
+                {topicId === 'unmatched' ? topicDetail : null}
+              </section>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

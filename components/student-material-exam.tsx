@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
-import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
+import {
+  recordStudentMaterialStudyResultAction,
+  finishStudyErrorOnboardingAction,
+} from '@/lib/actions/study-errors';
 import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
@@ -22,6 +26,8 @@ import {
   selectTopicPracticeQuestions,
   getTopicQuestionCounts,
   emptyTopicPracticeContext,
+  MAX_TOPIC_PRACTICE_QUESTIONS,
+  topicPracticeQuestionCount,
   type TopicPracticeContext,
 } from '@/lib/student-materials/topic-practice';
 import { getStudentMaterialPracticeContextAction } from '@/lib/actions/student-material-practice';
@@ -38,7 +44,9 @@ type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
+  onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
   sections?: StudySummarySection[];
+  topicSectionIndex?: number;
   simulation?: {
     context: TopicPracticeContext;
     onAnswer: (question: StudyQuestion, wasCorrect: boolean) => void;
@@ -52,12 +60,25 @@ export function StudentMaterialExam({
   artifacts,
   materialId,
   onComplete,
+  onReturnToTopic,
   sections = [],
   simulation,
+  topicSectionIndex,
 }: StudentMaterialExamProps) {
+  const topicTitle =
+    topicSectionIndex === undefined ? undefined : sections[topicSectionIndex]?.title;
+  const draftStorageKey =
+    practiceDraftKey(materialId) +
+    (topicSectionIndex === undefined ? '' : `:topic:${topicSectionIndex}`);
   const eligibleQuestions = useMemo(
-    () => getDistinctEligibleExamQuestions(artifacts.questions),
-    [artifacts.questions]
+    () =>
+      getDistinctEligibleExamQuestions(artifacts.questions).filter(
+        (question) =>
+          topicSectionIndex === undefined ||
+          (question.type === 'multiple_choice' &&
+            findSummarySectionForQuestion(question, sections) === topicSectionIndex)
+      ),
+    [artifacts.questions, sections, topicSectionIndex]
   );
   const eligibleIds = useMemo(
     () => new Set(eligibleQuestions.map((question) => question.id)),
@@ -76,10 +97,13 @@ export function StudentMaterialExam({
     () => resolveExamSizeOptions(eligibleQuestions.length, assessedSections),
     [eligibleQuestions.length, assessedSections]
   );
-  const defaultSize = sizeOptions.find((option) => option.mode === 'coverage')?.count
-    ?? sizeOptions[Math.floor(sizeOptions.length / 2)]?.count
-    ?? 0;
+  const defaultSize =
+    sizeOptions.find((option) => option.mode === 'coverage')?.count ??
+    sizeOptions[Math.floor(sizeOptions.length / 2)]?.count ??
+    0;
   const [selectedSize, setSelectedSize] = useState(defaultSize);
+  const topicPracticeCount = topicPracticeQuestionCount(eligibleQuestions.length);
+  const topicAutoStartRequested = useRef(false);
   const [started, setStarted] = useState(false);
   // Congelar la tanda: los nuevos resultados no deben cambiar preguntas en pleno intento.
   const [questions, setQuestions] = useState<StudyQuestion[]>([]);
@@ -110,7 +134,7 @@ export function StudentMaterialExam({
       return;
     }
     try {
-      const key = practiceDraftKey(materialId);
+      const key = draftStorageKey;
       const raw = window.localStorage.getItem(key);
       const restored = readPracticeDraft(raw, materialId, eligibleQuestions);
       if (raw && !restored) window.localStorage.removeItem(key);
@@ -119,7 +143,7 @@ export function StudentMaterialExam({
       setSavedDraft(null);
     }
     setDraftLoaded(true);
-  }, [materialId, bankSignature, eligibleQuestions, isSimulation]);
+  }, [materialId, bankSignature, eligibleQuestions, isSimulation, draftStorageKey]);
 
   // Guardado automático en este dispositivo. No persistir contenidos del PDF
   // ni hacer una llamada al servidor por cada tecla del estudiante.
@@ -141,29 +165,41 @@ export function StudentMaterialExam({
       savedAt: Date.now(),
     };
     try {
-      window.localStorage.setItem(practiceDraftKey(materialId), JSON.stringify(draft));
+      window.localStorage.setItem(draftStorageKey, JSON.stringify(draft));
     } catch {
       // Cuota de navegador o almacenamiento bloqueado: la práctica sigue funcionando.
     }
   }, [
-    bankSignature, contextUnavailable, currentIndex, draftLoaded, finished,
-    isRecordingError, isSimulation, materialId, openAssessments, openDrafts,
-    questions, revealed, selectedAnswers, started,
+    bankSignature,
+    contextUnavailable,
+    currentIndex,
+    draftLoaded,
+    finished,
+    isRecordingError,
+    isSimulation,
+    materialId,
+    openAssessments,
+    openDrafts,
+    questions,
+    revealed,
+    selectedAnswers,
+    started,
+    draftStorageKey,
   ]);
 
   useEffect(() => {
     if (isSimulation || !finished) return;
     try {
-      window.localStorage.removeItem(practiceDraftKey(materialId));
+      window.localStorage.removeItem(draftStorageKey);
     } catch {
       // No bloquear la finalización por permisos de almacenamiento.
     }
     setSavedDraft(null);
-  }, [finished, isSimulation, materialId]);
+  }, [finished, isSimulation, draftStorageKey]);
 
   const discardSavedDraft = () => {
     try {
-      window.localStorage.removeItem(practiceDraftKey(materialId));
+      window.localStorage.removeItem(draftStorageKey);
     } catch {
       // Ignorar almacenamiento deshabilitado.
     }
@@ -252,8 +288,11 @@ export function StudentMaterialExam({
     const nextQuestions = selectTopicPracticeQuestions({
       questions: eligibleQuestions,
       preferredQuestionIds,
-      targetCount: selectedSize || defaultSize,
-      complete: sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode === 'complete',
+      targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize : topicPracticeCount,
+      complete:
+        topicSectionIndex === undefined &&
+        sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode ===
+          'complete',
       sections,
       context,
     });
@@ -277,8 +316,28 @@ export function StudentMaterialExam({
   const resetExam = () => {
     discardSavedDraft();
     clearAttempt();
+    topicAutoStartRequested.current = false;
     setStarted(false);
   };
+
+  const startTopicPractice = useEffectEvent(() => {
+    void startExam();
+  });
+  // Para un tema se empieza directamente: no hay pantalla para elegir cantidad.
+  // Un borrador previo se ofrece para retomar antes de crear una tanda nueva.
+  useEffect(() => {
+    if (
+      topicSectionIndex === undefined ||
+      !draftLoaded ||
+      savedDraft ||
+      started ||
+      preparing ||
+      topicAutoStartRequested.current ||
+      eligibleQuestions.length === 0
+    ) return;
+    topicAutoStartRequested.current = true;
+    startTopicPractice();
+  }, [topicSectionIndex, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
 
   if (eligibleQuestions.length === 0 || sizeOptions.length === 0) {
     return (
@@ -287,8 +346,57 @@ export function StudentMaterialExam({
           Todavía no hay preguntas suficientes
         </p>
         <p className="text-muted-foreground mt-1 text-[13px] leading-5">
-          El PDF necesita más contenido estructurado para armar una práctica útil.
+          {topicSectionIndex === undefined
+            ? 'El PDF necesita más contenido estructurado para armar una práctica útil.'
+            : 'Podés estudiar este tema con tu resumen. Todavía no hay preguntas fiables asociadas para practicarlo.'}
         </p>
+      </div>
+    );
+  }
+
+  if (!started && topicSectionIndex !== undefined) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-5 px-1 py-4 sm:px-2">
+        {onReturnToTopic && (
+          <button
+            type="button"
+            onClick={() => onReturnToTopic(false)}
+            className="text-primary min-h-11 text-sm font-semibold"
+          >
+            Volver al tema
+          </button>
+        )}
+        <div className="border-border border-b pb-4">
+          <p className="text-primary text-[11px] font-bold tracking-[0.14em] uppercase">
+            Práctica de este tema
+          </p>
+          <h2 className="text-foreground mt-2 text-xl font-semibold">
+            {topicTitle}
+          </h2>
+          <p className="text-muted-foreground mt-2 text-sm leading-6">
+            {eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS
+              ? `Una tanda de hasta ${MAX_TOPIC_PRACTICE_QUESTIONS} preguntas de este tema. Priorizamos las que todavía no respondiste.`
+              : `${topicPracticeCount} ${topicPracticeCount === 1 ? 'pregunta disponible' : 'preguntas disponibles'} de este tema.`}
+          </p>
+        </div>
+        {savedDraft && !isSimulation ? (
+          <div className="border-primary/30 bg-primary/5 rounded-xl border p-4">
+            <p className="text-sm font-semibold">Tenés una práctica sin terminar</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Retomá desde la pregunta {savedDraft.currentIndex + 1} de {savedDraft.questionIds.length}.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Button type="button" onClick={resumeExam}>Continuar donde quedé <ArrowRight className="h-4 w-4" /></Button>
+              <button type="button" onClick={discardSavedDraft} className="text-muted-foreground min-h-11 text-xs font-medium underline">
+                Empezar una práctica nueva
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p role="status" className="text-muted-foreground text-sm">
+            {preparing ? 'Preparando tus preguntas…' : 'Abriendo la práctica…'}
+          </p>
+        )}
       </div>
     );
   }
@@ -296,36 +404,48 @@ export function StudentMaterialExam({
   if (!started) {
     return (
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+        {topicSectionIndex !== undefined && onReturnToTopic && (
+          <button
+            type="button"
+            onClick={() => onReturnToTopic(false)}
+            className="text-primary mb-3 min-h-11 text-sm font-semibold"
+          >
+            Volver al contenido del tema
+          </button>
+        )}
         <header className="border-border border-b pb-5">
           <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
-            Práctica basada en este PDF
+            {topicSectionIndex === undefined
+              ? 'Práctica basada en este PDF'
+              : 'Práctica de este tema'}
           </p>
           <h2 className="text-foreground mt-2 text-[20px] font-bold tracking-[-0.05em] sm:text-[22px]">
-            Elegí cuánto querés practicar
+            {topicTitle ?? 'Elegí cuánto querés practicar'}
           </h2>
           <p className="text-muted-foreground mt-2 max-w-2xl text-[13.5px] leading-6">
-            Priorizamos los temas del resumen que faltan evaluar y después los que necesitan más
-            práctica. En Completo respondés todas las preguntas disponibles. Al terminar, recibís tu resultado.
+            {topicSectionIndex === undefined
+              ? 'Priorizamos los temas del resumen que faltan evaluar y después los que necesitan más práctica. En Completo respondés todas las preguntas disponibles. Al terminar, recibís tu resultado.'
+              : 'Esta práctica incluye únicamente preguntas asociadas a este tema. El resultado corresponde a esta tanda, no al dominio de todo el capítulo.'}
           </p>
         </header>
 
-        {sections.length > 0 && assessedSections < sections.length && (
-          <p className="text-muted-foreground mt-4 text-xs leading-5" role="status">
-            El banco tiene preguntas autocorregibles asociadas a {assessedSections} de{' '}
-            {sections.length} capítulos del resumen. Los demás no se consideran
-            evaluados, incluso en el modo Completo.
-          </p>
-        )}
+        {topicSectionIndex === undefined &&
+          sections.length > 0 &&
+          assessedSections < sections.length && (
+            <p className="text-muted-foreground mt-4 text-xs leading-5" role="status">
+              El banco tiene preguntas autocorregibles asociadas a {assessedSections} de{' '}
+              {sections.length} capítulos del resumen. Los demás no se consideran evaluados, incluso
+              en el modo Completo.
+            </p>
+          )}
 
         {savedDraft && !isSimulation && (
           <div className="border-primary/30 bg-primary/5 mt-5 rounded-xl border px-4 py-4">
-            <p className="text-foreground text-sm font-semibold">
-              Tenés una práctica sin terminar
-            </p>
+            <p className="text-foreground text-sm font-semibold">Tenés una práctica sin terminar</p>
             <p className="text-muted-foreground mt-1 text-[13px]">
               Retomá desde la pregunta {savedDraft.currentIndex + 1} de{' '}
-              {savedDraft.questionIds.length}. Tus respuestas anteriores siguen guardadas
-              en este navegador.
+              {savedDraft.questionIds.length}. Tus respuestas anteriores siguen guardadas en este
+              navegador.
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <Button type="button" onClick={resumeExam} className="h-10 rounded-lg">
@@ -379,7 +499,11 @@ export function StudentMaterialExam({
                   {option.count === 1 ? 'pregunta' : 'preguntas'}
                 </p>
                 <p className="text-muted-foreground mt-2 text-[12px] leading-5">
-                  {option.description}
+                  {topicSectionIndex === undefined
+                    ? option.description
+                    : option.mode === 'complete'
+                      ? 'Respondé todas las preguntas disponibles de este tema.'
+                      : 'Respondé una selección de preguntas de este tema.'}
                 </p>
               </button>
             );
@@ -419,33 +543,52 @@ export function StudentMaterialExam({
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
         <header className="border-border border-b pb-6">
           <p className="text-primary text-[11px] font-bold tracking-[0.15em] uppercase">
-            Práctica completada
+            Práctica completada{topicTitle ? ` · ${topicTitle}` : ''}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-1">
             <h2 className="text-foreground text-3xl font-bold tracking-[-0.07em]">
-              {result.percentage}%
+              {topicSectionIndex === undefined
+                ? `${result.percentage}%`
+                : `${result.correct} de ${result.total}`}
             </h2>
             <p className="text-muted-foreground pb-1 text-sm">
-              {result.correct} de {result.total} respuestas consolidadas
+              {topicSectionIndex === undefined
+                ? `${result.correct} de ${result.total} respuestas consolidadas`
+                : 'Respuestas correctas en esta tanda'}
             </p>
           </div>
         </header>
 
         <div className="border-border grid border-b py-5 sm:grid-cols-3 sm:divide-x sm:divide-slate-200">
-          {(['recordar', 'comprender', 'aplicar'] as const).map((level) => (
-            <div key={level} className="py-2 sm:px-5 first:sm:pl-0 last:sm:pr-0">
-              <p className="text-muted-foreground text-[11px] font-bold tracking-[0.14em] uppercase">
-                {levelLabel(level)}
-              </p>
-              <p className="text-foreground mt-1 text-lg font-bold">
-                {result.levels[level].correct}/{result.levels[level].total}
-              </p>
-            </div>
-          ))}
+          {(['recordar', 'comprender', 'aplicar'] as const)
+            .filter((level) => topicSectionIndex === undefined || result.levels[level].total > 0)
+            .map((level) => (
+              <div key={level} className="py-2 sm:px-5 first:sm:pl-0 last:sm:pr-0">
+                <p className="text-muted-foreground text-[11px] font-bold tracking-[0.14em] uppercase">
+                  {levelLabel(level)}
+                </p>
+                <p className="text-foreground mt-1 text-lg font-bold">
+                  {result.levels[level].correct}/{result.levels[level].total}
+                </p>
+              </div>
+            ))}
         </div>
 
         <section className="border-border border-b py-5">
-          {reviewTopics.length > 0 ? (
+          {topicSectionIndex !== undefined ? (
+            <div>
+              <h3 className="text-foreground font-semibold">
+                {result.wrong.length > 0
+                  ? `${result.wrong.length} ${result.wrong.length === 1 ? 'pregunta para revisar' : 'preguntas para revisar'}`
+                  : 'Respondiste toda la tanda correctamente'}
+              </h3>
+              <p className="text-muted-foreground mt-2 text-sm">
+                {result.wrong.length > 0
+                  ? 'Antes de continuar, te recomendamos revisar estas dificultades con el contenido del tema.'
+                  : 'Podés volver al tema y continuar estudiando. Más adelante conviene comprobarlo otra vez.'}
+              </p>
+            </div>
+          ) : reviewTopics.length > 0 ? (
             <div className="flex items-start gap-3">
               <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div>
@@ -464,7 +607,14 @@ export function StudentMaterialExam({
           )}
         </section>
 
-        {sections.length > 0 && (
+        {topicSectionIndex !== undefined && (
+          <p className="text-muted-foreground mt-4 text-sm!">
+            Resultado de esta tanda de {topicTitle}. Incluye {result.total}{' '}
+            {result.total === 1 ? 'pregunta' : 'preguntas'}; no representa el dominio de todo el
+            tema.
+          </p>
+        )}
+        {topicSectionIndex === undefined && sections.length > 0 && (
           <p className="text-muted-foreground mt-4 text-[13px]!">
             Esta práctica incluyó preguntas corregidas de{' '}
             {
@@ -480,7 +630,23 @@ export function StudentMaterialExam({
           </p>
         )}
         <div className="flex flex-wrap gap-3 pt-5">
-          {simulation ? (
+          {topicSectionIndex !== undefined && onReturnToTopic ? (
+            <Button
+              onClick={() =>
+                onReturnToTopic(result.wrong.length > 0, {
+                  sectionIndex: topicSectionIndex,
+                  total: result.total,
+                  correct: result.correct,
+                  incorrect: result.wrong.length,
+                  incorrectPrompts: result.wrong.map((question) => question.prompt),
+                })
+              }
+              className="h-auto min-h-11 whitespace-normal"
+            >
+              {result.wrong.length > 0 ? 'Reforzar este tema' : 'Volver al tema'}
+              <ArrowRight className="h-4 w-4 shrink-0" />
+            </Button>
+          ) : simulation ? (
             <Button variant="outline" onClick={simulation.onProgress}>
               Ver mi progreso
             </Button>
@@ -492,7 +658,11 @@ export function StudentMaterialExam({
               Ver mi progreso
             </Link>
           )}
-          <Button onClick={resetExam} className="h-11 w-full rounded-lg sm:w-auto">
+          <Button
+            variant={topicSectionIndex !== undefined ? 'outline' : 'default'}
+            onClick={resetExam}
+            className="h-11 w-full rounded-lg sm:w-auto"
+          >
             <RotateCcw className="h-4 w-4" />
             Continuar mi práctica
           </Button>
@@ -576,6 +746,13 @@ export function StudentMaterialExam({
     delete answerIds.current[current.id];
 
     if (result.onboardingErrorId) {
+      if (topicSectionIndex !== undefined && onReturnToTopic) {
+        // Este recorrido ya conduce al refuerzo del tema al terminar la tanda.
+        // Evitar que el tutorial general saque al alumno de su material.
+        void finishStudyErrorOnboardingAction(result.onboardingErrorId, 'legacy').catch(() => {});
+        advanceExam();
+        return;
+      }
       setOnboardingErrorId(result.onboardingErrorId);
       return;
     }
@@ -594,13 +771,28 @@ export function StudentMaterialExam({
         }}
       />
       <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
+        {topicSectionIndex !== undefined && (
+          <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-3">
+            <p className="text-muted-foreground text-sm!">{topicTitle}</p>
+            {onReturnToTopic && (
+              <button
+                type="button"
+                onClick={() => onReturnToTopic(false)}
+                className="text-primary min-h-11 text-sm font-semibold"
+              >
+                Volver al tema
+              </button>
+            )}
+          </div>
+        )}
         {contextUnavailable && (
           <p role="status" className="text-muted-foreground text-xs!">
-            No pudimos cargar tu historial. Esta tanda reparte preguntas entre los temas
-            disponibles.
+            {topicSectionIndex === undefined
+              ? 'No pudimos cargar tu historial. Esta tanda reparte preguntas entre los temas disponibles.'
+              : 'No pudimos cargar tu historial. Esta tanda usa las preguntas disponibles de este tema.'}
           </p>
         )}
-        {unavailableTopics > 0 && (
+        {topicSectionIndex === undefined && unavailableTopics > 0 && (
           <p className="text-muted-foreground text-xs!">
             {unavailableTopics}{' '}
             {unavailableTopics === 1 ? 'tema todavía no tiene' : 'temas todavía no tienen'}{' '}
@@ -612,6 +804,11 @@ export function StudentMaterialExam({
             <p className="text-muted-foreground text-[12px] font-bold tracking-[0.14em] uppercase">
               Pregunta {currentIndex + 1} de {questions.length}
             </p>
+            {topicSectionIndex !== undefined && eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS && (
+              <p className="text-muted-foreground mt-1 text-xs">
+                Hay {eligibleQuestions.length} preguntas en este tema; las restantes podrán aparecer en otra tanda.
+              </p>
+            )}
             <p className="text-muted-foreground mt-1 text-xs md:hidden">
               Basado únicamente en este PDF
             </p>
@@ -623,7 +820,8 @@ export function StudentMaterialExam({
 
         {!isSimulation && questions.length >= 20 && (
           <p className="text-muted-foreground text-[11px]">
-            Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y continuar.
+            Tu avance se guarda automáticamente en este navegador. Podés volver a este PDF y
+            continuar.
           </p>
         )}
 

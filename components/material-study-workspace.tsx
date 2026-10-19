@@ -1,5 +1,7 @@
 'use client';
 
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
+
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -303,6 +305,12 @@ export function MaterialStudyWorkspace({
     initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen')
   );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
+  const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(undefined);
+  const [topicReturn, setTopicReturn] = useState<{
+    index: number;
+    reinforce: boolean;
+    outcome?: TopicPracticeOutcome;
+  } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   // Una sesión compartida por las vistas móvil y escritorio evita perder respuestas al redimensionar.
@@ -907,6 +915,7 @@ export function MaterialStudyWorkspace({
   const handleStudyTabChange = (value: string, entry: 'tab' | 'summary_chapter' = 'tab') => {
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
+    if (nextTab === 'ejercicios' && entry === 'tab') setPracticeSectionIndex(undefined);
     if (
       nextTab === 'ejercicios' &&
       isOwner &&
@@ -1486,10 +1495,29 @@ export function MaterialStudyWorkspace({
               />
             ) : (
               <StudentMaterialExam
+                key={practiceSectionIndex ?? 'all'}
+                topicSectionIndex={practiceSectionIndex}
+                onReturnToTopic={
+                  hasProgress
+                    ? (reinforce, outcome) => {
+                        if (practiceSectionIndex === undefined) return;
+                        setTopicReturn((previous) => ({
+                          index: practiceSectionIndex,
+                          reinforce,
+                          outcome:
+                            outcome ??
+                            (previous?.index === practiceSectionIndex
+                              ? previous.outcome
+                              : undefined),
+                        }));
+                        setProgressOpen(true);
+                      }
+                    : undefined
+                }
                 artifacts={studyArtifacts}
                 sections={studySummary.sections}
                 materialId={materialId}
-                onComplete={requestExamDatePrompt}
+                onComplete={practiceSectionIndex === undefined ? requestExamDatePrompt : undefined}
               />
             )}
           </div>
@@ -1624,20 +1652,35 @@ export function MaterialStudyWorkspace({
           forceMount
           className="animate-tab-panel data-[state=inactive]:hidden"
         >
-          {progressOpen ? (
-            progressContent ?? (
-              progressConfig ? (
+          {progressOpen
+            ? (progressContent ??
+              (progressConfig ? (
                 <MaterialProgressContent
+                  glossary={studyGlossary}
+                  flashcards={studyArtifacts.flashcards}
+                  sourcePdfHref={viewerUrl}
                   material={{ id: materialId, title }}
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
-                  requestedError={progressConfig.requestedError}
+                  initialTopicSectionIndex={topicReturn?.index}
+                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  lastPracticeOutcome={topicReturn?.outcome}
+                  onPracticeTopic={(index) => {
+                    setTopicReturn((previous) => ({
+                      index,
+                      reinforce: false,
+                      outcome: previous?.index === index ? previous.outcome : undefined,
+                    }));
+                    setPracticeSectionIndex(index);
+                    setDiagnosticMode(false);
+                    handleStudyTabChange('ejercicios', 'summary_chapter');
+                  }}
+                  requestedError={topicReturn ? undefined : progressConfig.requestedError}
                   tour={progressConfig.tour}
                   returnToErrors={progressConfig.returnToErrors}
                 />
-              ) : null
-            )
-          ) : null}
+              ) : null))
+            : null}
         </TabsContent>
       ) : null}
       {children}
@@ -1804,7 +1847,7 @@ export function MaterialStudyWorkspace({
         />
       ) : null}
       <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
-        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 px-4 py-2 sm:px-6 lg:px-4">
+        <div className={`mx-auto flex w-full items-center gap-4 px-4 py-2 sm:px-6 ${progressOpen ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
@@ -1835,7 +1878,7 @@ export function MaterialStudyWorkspace({
         </div>
       </section>
 
-      <section className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col px-2 py-2 sm:px-4 xl:px-4 xl:pb-3">
+      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
           <div className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
