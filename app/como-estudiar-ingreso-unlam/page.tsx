@@ -63,7 +63,7 @@ export default function ComoEstudiarIngresoUnlamPage() {
       url: toAbsoluteUrl('/'),
       logo: {
         '@type': 'ImageObject',
-        url: toAbsoluteUrl('/icon.png'),
+        url: toAbsoluteUrl('/evaluo-logo-icono.svg'),
       },
     },
     mainEntityOfPage: {
