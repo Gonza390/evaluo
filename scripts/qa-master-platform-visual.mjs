@@ -8,12 +8,12 @@ await mkdir(dir, { recursive: true });
 
 const cases = [
   { id: 'home', path: '/', core: true },
-  { id: 'login', path: '/login', core: true },
-  { id: 'empezar', path: '/empezar', core: true },
+  { id: 'login', path: '/login', core: true, allowLogin: true },
+  { id: 'empezar', path: '/empezar', core: true, allowLogin: true },
   { id: 'precios', path: '/pricing', core: true },
   { id: 'explorar', path: '/explorar' },
   { id: 'pregunteros', path: '/pregunteros' },
-  { id: 'recursos', path: '/recursos' },
+  { id: 'recursos', path: '/recursos', knownNoIndex: true },
   { id: 'simulador', path: '/simulador' },
   { id: 'demo-estudio', path: '/demo/material-estudio', core: true },
   { id: 'primer-pdf', path: '/preview/primer-pdf', core: true },
@@ -65,9 +65,13 @@ for (const size of sizes) {
         const primary=[...document.querySelectorAll('button,a')].filter(el=>{const s=getComputedStyle(el);const r=el.getBoundingClientRect();return r.width>20&&r.height>20&&r.top>=0&&r.top<innerHeight&&(/rgb\(37, 99, 235\)|rgb\(79, 93, 255\)/.test(s.backgroundColor)||el.className?.toString()?.includes('bg-primary'));}).slice(0,5).map(el=>(el.textContent||el.getAttribute('aria-label')||'').trim().slice(0,70));
         return {documentWidth:root.scrollWidth,viewportWidth:w,bodyScrollWidth:document.body.scrollWidth,mainWidth:main?.getBoundingClientRect().width,background:bodyStyle.backgroundColor,fontFamily:bodyStyle.fontFamily,fontSize:bodyStyle.fontSize,headings:h1,sectionHeadings:headings,primaryActions:primary,tinyControls:tiny,visibleOverflow:offscreen,clickableCount:controls.length};
       });
-      const routeOk = target.protected || target.id==='perfil-configuracion'
-        ? [200,302,307,308,404].includes(status) || location !== target.path
-        : status===200 && !['/login','/not-found'].includes(location);
+      // /login es una pantalla real; /empezar redirige a login si no hay sesión.
+      // /recursos solo tiene ruta dinámica /recursos/[id], no un índice público.
+      const routeOk = target.knownNoIndex
+        ? status === 404
+        : target.protected || target.allowLogin || target.id==='perfil-configuracion'
+          ? [200,302,307,308,404].includes(status)
+          : status === 200 && location !== '/login';
       const record = {route:target.id,requested:target.path,location,status,viewport:size.width,ok:routeOk,errors, ...measured};
       observations.push(record);
       const filename = dir+'/'+target.id+'-'+size.name+'.png';
