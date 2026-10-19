@@ -174,6 +174,54 @@ await check('topic reinforcement: saved explanation -> optional help -> independ
   }
 });
 
+
+for (const width of [355, 433]) {
+  await check('mobile topic practice without picker ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 840 } });
+    try {
+      await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+      await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
+      await page.getByRole('button', { name: 'Volver a los temas' }).click();
+      await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
+      await page.getByRole('button', { name: 'Practicar este tema', exact: true }).click();
+      await page.locator('article').first().waitFor(wait);
+      assert.equal(await page.getByRole('button', { name: 'Empezar práctica' }).count(), 0);
+      const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(horizontal <= 1, 'Mobile practice must not overflow horizontally: ' + horizontal);
+      await page.screenshot({ path: folder + '/practica-' + width + '.png', animations: 'disabled' });
+    } catch (error) {
+      await page.screenshot({ path: folder + '/failed-mobile-practica-' + width + '.png', animations: 'disabled' }).catch(() => {});
+      throw error;
+    } finally {
+      await page.close();
+    }
+  });
+
+  await check('mobile reinforcement ' + width, async () => {
+    const page = await browser.newPage({ viewport: { width, height: 840 } });
+    try {
+      await page.goto(baseUrl + '/preview/progreso-pdf?tab=progreso', { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+      await page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first().click();
+      await page.getByRole('button', { name: 'Reforzar dificultades', exact: true }).first().click();
+      const review = page.locator('[data-topic-reinforcement]:visible').first();
+      await review.waitFor(wait);
+      await review.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
+      await review.getByRole('button', { name: 'Comprobar lo aprendido' }).waitFor(wait);
+      assert.equal(await page.getByRole('button', { name: 'Volver al tema', exact: true }).count(), 1);
+      const horizontal = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      assert.ok(horizontal <= 1, 'Mobile reinforcement must not overflow horizontally: ' + horizontal);
+      await page.screenshot({ path: folder + '/refuerzo-' + width + '.png', animations: 'disabled' });
+    } catch (error) {
+      await page.screenshot({ path: folder + '/failed-mobile-refuerzo-' + width + '.png', animations: 'disabled' }).catch(() => {});
+      throw error;
+    } finally {
+      await page.close();
+    }
+  });
+}
+
 await browser.close();
 if (failures.length) {
   console.error('\nQA failures:\n' + failures.join('\n\n'));
