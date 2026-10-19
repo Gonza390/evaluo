@@ -28,6 +28,7 @@ import { getTopicStudyResources } from '@/lib/student-materials/topic-study-reso
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { TopicStudySupport } from '@/components/study/topic-study-support';
+import { StudyRichText } from '@/components/study-rich-text';
 import {
   topicPracticeFeedback,
   type TopicPracticeOutcome,
@@ -185,6 +186,10 @@ export function PdfProgressPanel({
       ),
     [sections, glossary, flashcards, currentSectionIndex]
   );
+  // No inventar objetivos académicos: usar sólo conceptos asociados de forma inequívoca.
+  const focusConcepts = [...resources.concepts]
+    .sort((first, second) => (first.importance === 'alta' ? 0 : 1) - (second.importance === 'alta' ? 0 : 1))
+    .slice(0, 3);
   const currentAnswered = currentTopic ? topicAssessmentCount(currentTopic) : 0;
   const currentCorrect =
     currentTopic?.evidence.reduce((total, item) => total + item.correct, 0) ?? 0;
@@ -464,9 +469,24 @@ export function PdfProgressPanel({
             aria-label="Contenido de este tema"
           >
             <h3 className="text-base font-semibold">1 · Leé el resumen del tema</h3>
+            {summaryBody && focusConcepts.length > 0 && (
+              <div className="border-border bg-muted/30 mt-4 rounded-xl border p-4" aria-label="Guía de lectura del tema">
+                <h4 className="text-sm font-semibold">Antes de leer: en qué enfocarte</h4>
+                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                  Buscá cómo se explican estos conceptos en tu material. Después, intentá explicarlos con tus palabras y sin mirar.
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-2" aria-label="Conceptos para orientar la lectura">
+                  {focusConcepts.map((concept, index) => (
+                    <li key={`${concept.term}-${index}`} className="border-border bg-card rounded-full border px-3 py-1.5 text-xs font-medium break-words">
+                      {concept.term}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {summaryBody ? (
-              <div className="mt-4 max-w-prose text-base leading-7 whitespace-pre-line">
-                {summaryBody}
+              <div className="mt-5 min-w-0 max-w-[78ch] [&_p]:text-[15px]! [&_p]:leading-7!">
+                <StudyRichText body={summaryBody} />
               </div>
             ) : (
               <p className="text-muted-foreground mt-3">
