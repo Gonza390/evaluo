@@ -123,6 +123,8 @@ export function StudyErrorDetail({
   const materialId = source?.materialId ?? item.recommendation?.materialId ?? null;
   const resolved = item.status === 'resolved';
   const savedExplanation = resolved && !messages.length ? item.explanation : null;
+  const topicReinforcement = topicContext && embedded;
+  const originalExplanation = item.explanation?.trim() ?? '';
   const pendingHelp =
     busy === 'why_wrong' || busy === 'simpler' || busy === 'example' ? busy : null;
   const helpNotice = ['why_wrong', 'simpler', 'example', 'review'].includes(noticeAction ?? '');
@@ -157,10 +159,10 @@ export function StudyErrorDetail({
 
   const startAutomaticHelp = useEffectEvent(() => help('why_wrong'));
   useEffect(() => {
-    if (!embedded || resolved || messages.length || automaticHelpStarted.current) return;
+    if (!embedded || topicReinforcement || resolved || messages.length || automaticHelpStarted.current) return;
     automaticHelpStarted.current = true;
     startAutomaticHelp();
-  }, [embedded, resolved, messages.length]);
+  }, [embedded, topicReinforcement, resolved, messages.length]);
 
   async function run(name: string, task: () => Promise<void>) {
     if (operation.current) return;
@@ -235,6 +237,16 @@ export function StudyErrorDetail({
   function checkUnderstanding() {
     if (!materialId) return;
     void run('check', async () => {
+      // En el recorrido por tema, leer la explicación guardada no genera IA.
+      // Registrar el repaso al comprobar, sin omitir la validación del servidor.
+      if (topicReinforcement && !reviewed) {
+        const marked = await reviewActions.markReviewed(item.id);
+        if (!marked.success) {
+          setNotice('No pudimos guardar el repaso. Reintentá antes de comprobarlo.');
+          return;
+        }
+        setReviewed(true);
+      }
       const generated = await reviewActions.generateCheck(item.id, materialId);
       if (!generated.success || !generated.question) {
         setNotice(generated.message ?? 'No pudimos preparar la pregunta.');
@@ -288,7 +300,164 @@ export function StudyErrorDetail({
   }
   return (
     <div className="w-full min-w-0">
-      {question ? (
+      {topicReinforcement && (
+        <nav aria-label="Pasos para reforzar una dificultad" className="border-border mb-6 flex flex-wrap items-center gap-2 border-b pb-4 text-xs font-medium">
+          <span className={question ? 'text-muted-foreground' : 'text-primary'}>
+            1 · Tu dificultad
+          </span>
+          <ArrowRight className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
+          <span className={question ? 'text-muted-foreground' : 'text-primary'}>
+            2 · Entender
+          </span>
+          <ArrowRight className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
+          <span className={question ? 'text-primary' : 'text-muted-foreground'}>
+            3 · Comprobar
+          </span>
+        </nav>
+      )}
+      {topicReinforcement && !question ? (
+        <div className="space-y-6" data-topic-reinforcement>
+          <section className="border-border bg-card rounded-2xl border p-4 sm:p-6" aria-labelledby="reinforcement-difficulty-heading">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 id="reinforcement-difficulty-heading" className="text-primary text-xs font-bold tracking-wide uppercase">
+                La pregunta que te costó
+              </h3>
+              <span className="text-muted-foreground text-xs">
+                {resolved
+                  ? 'Refuerzo completado'
+                  : `${item.failureCount} ${item.failureCount === 1 ? 'intento con dificultad' : 'intentos con dificultad'}`}
+              </span>
+            </div>
+            <h2 ref={heading} tabIndex={-1} className="text-foreground mt-4 text-lg font-semibold leading-7 break-words outline-none">
+              {item.prompt}
+            </h2>
+            {(item.selectedAnswer || item.correctAnswer) && (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {item.selectedAnswer && (
+                  <div className="border-destructive/20 bg-destructive/5 rounded-xl border p-4">
+                    <p className="text-destructive text-xs font-semibold">Tu respuesta anterior</p>
+                    <p className="text-foreground mt-2 text-sm leading-6 break-words">{item.selectedAnswer}</p>
+                  </div>
+                )}
+                {item.correctAnswer && (
+                  <div className="border-primary/20 bg-primary/5 rounded-xl border p-4">
+                    <p className="text-primary text-xs font-semibold">Respuesta correcta</p>
+                    <p className="text-foreground mt-2 text-sm leading-6 break-words">{item.correctAnswer}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+          <section ref={response} tabIndex={-1} className="min-w-0 scroll-mt-24 space-y-4 outline-none" aria-labelledby="reinforcement-explanation-heading" data-study-error-tour="understand">
+            <div>
+              <h3 id="reinforcement-explanation-heading" className="text-lg font-semibold">
+                Entendamos por qué
+              </h3>
+              <p className="text-muted-foreground mt-1 text-sm leading-6">
+                Revisá la explicación de tu actividad antes de probar con otra pregunta.
+              </p>
+            </div>
+            {originalExplanation ? (
+              <div className="border-border bg-muted/30 rounded-xl border p-4 sm:p-5">
+                <p className="text-foreground max-w-[72ch] text-base leading-7 break-words whitespace-pre-line">
+                  {originalExplanation}
+                </p>
+              </div>
+            ) : (
+              <p className="text-muted-foreground rounded-xl border p-4 text-sm leading-6">
+                Esta respuesta no tiene una explicación guardada. Podés pedir una explicación basada en tu material.
+              </p>
+            )}
+            {messages.map((message) => (
+              <div key={message.kind} className="border-border rounded-xl border p-4 sm:p-5">
+                <p className="text-primary mb-2 text-xs font-semibold">
+                  {message.kind === 'simpler' ? 'Explicación más simple' : message.kind === 'example' ? 'Un ejemplo para entenderlo' : 'Explicación adicional'}
+                </p>
+                <p className="text-foreground max-w-[72ch] text-base leading-7 break-words whitespace-pre-line">{message.text}</p>
+              </div>
+            ))}
+            {pendingHelp && (
+              <p role="status" className="text-muted-foreground text-sm">
+                {materialId ? 'Revisando tus apuntes…' : 'Preparando explicación…'}
+              </p>
+            )}
+            {!resolved && (
+              <div className="flex flex-wrap gap-2" aria-label="Otras formas de entender la dificultad">
+                {!originalExplanation && (
+                  <button type="button" className={reviewSecondaryButton} onClick={() => help('why_wrong')} disabled={Boolean(busy)}>
+                    Generar explicación
+                  </button>
+                )}
+                <button type="button" className={reviewSecondaryButton} onClick={() => help('simpler')} disabled={Boolean(busy)}>
+                  Explicámelo más simple
+                </button>
+                <button type="button" className={reviewSecondaryButton} onClick={() => help('example')} disabled={Boolean(busy)}>
+                  Dame un ejemplo
+                </button>
+              </div>
+            )}
+            {source && (
+              <div className="border-border border-t pt-2" data-study-error-tour="source">
+                <button type="button" onClick={openSource} disabled={Boolean(busy)} aria-expanded={sourceOpen} aria-controls={`topic-source-${item.id}`} className="text-primary inline-flex min-h-11 items-center gap-2 text-left text-sm font-medium">
+                  <BookOpen className="h-4 w-4" aria-hidden="true" />
+                  Fuente: {source.sectionTitle ?? source.materialTitle}
+                  {pageLabel(source.pageStart, source.pageEnd) ? ` · ${pageLabel(source.pageStart, source.pageEnd)}` : ''}
+                  <ChevronDown className={`h-4 w-4 transition-transform ${sourceOpen ? 'rotate-180' : ''}`} aria-hidden="true"/>
+                </button>
+                {sourceOpen && (
+                  <div id={`topic-source-${item.id}`} className="border-primary/30 mt-2 space-y-3 border-l-2 pl-4">
+                    <blockquote className="text-foreground text-sm leading-7 break-words whitespace-pre-line">
+                      {source.excerpt}
+                    </blockquote>
+                    {source.materialId && (
+                      <Link
+                        href={documentHref ? `${documentHref}${source.pageStart ? `#page=${source.pageStart}` : ''}` : `/materiales/${source.materialId}${source.pageStart ? `?page=${source.pageStart}` : ''}`}
+                        className="text-primary inline-flex min-h-11 items-center text-sm font-semibold underline"
+                      >
+                        Consultar PDF original
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {helpNotice && inlineNotice}
+            {sourceNotice && inlineNotice}
+          </section>
+          {resolved ? (
+            <section className="border-primary/20 bg-primary/5 rounded-xl border p-5">
+              <h3 className="text-lg font-semibold">Esta dificultad ya fue reforzada</h3>
+              <p className="text-muted-foreground mt-2 text-sm leading-6">
+                Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button className={reviewPrimaryButton} onClick={onFinish}>Volver al tema</button>
+                {pendingCount > 0 && (
+                  <button className={reviewSecondaryButton} onClick={onNext}>Reforzar otra dificultad <ArrowRight className="h-4 w-4" /></button>
+                )}
+              </div>
+            </section>
+          ) : (
+            <section className="border-border border-t pt-5" data-study-error-tour="practice">
+              <h3 className="text-lg font-semibold">¿Lo entendiste? Comprobémoslo.</h3>
+              <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-6">
+                Respondé una situación distinta, sin consultar la explicación. Una respuesta correcta resuelve esta dificultad, no todo el tema.
+              </p>
+              {materialId ? (
+                <button type="button" className={reviewPrimaryButton + ' mt-4'} disabled={Boolean(busy)} onClick={checkUnderstanding}>
+                  {busy === 'check' && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Comprobar lo aprendido <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <p className="text-muted-foreground mt-3 text-sm">
+                  Necesitás asociar un PDF para comprobar esta dificultad con una nueva pregunta.
+                </p>
+              )}
+              {noticeAction === 'check' && inlineNotice}
+            </section>
+          )}
+        </div>
+      ) : question ? (
         <>
           <h2
             ref={heading}
