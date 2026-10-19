@@ -1,0 +1,56 @@
+name: Master visual platform audit
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/qa-master-platform-visual.mjs'
+      - '.github/workflows/master-visual-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local application
+        run: |
+          npm run dev -- --port 3100 > /tmp/evaluo-master-visual.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --silent --fail 'http://localhost:3100/' -o /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          tail -120 /tmp/evaluo-master-visual.log
+          exit 1
+      - name: Cross-screen responsive audit
+        run: node scripts/qa-master-platform-visual.mjs
+      - name: Upload screenshots and JSON findings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: master-visual-platform-audit
+          path: qa-artifacts/master-visual
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Print server logs if audit fails
+        if: failure()
+        run: tail -200 /tmp/evaluo-master-visual.log || true
