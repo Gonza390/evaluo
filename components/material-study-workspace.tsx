@@ -1739,6 +1739,7 @@ export function MaterialStudyWorkspace({
 
   return (
     <div
+      data-progress-open={progressOpen ? 'true' : undefined}
       className={cn(
         'bg-card text-foreground flex flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0',
         pdfStudyControlsClassName,
