@@ -108,7 +108,7 @@ export function UnlamEditorialGuide() {
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">
                     La primera instancia regular se cursa del 20 de julio al 9 de diciembre de
-                    2026. Si estás preparando sus evaluaciones, podés usar los apuntes y el
+                    2026. Si estás preparando las evaluaciones, podés usar los apuntes y el
                     material de tu materia para organizar el repaso y practicar antes de rendir.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs">
