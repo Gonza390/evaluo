@@ -883,7 +883,7 @@ export function PdfProgressPanel({
                           .trim()
                       )
                   )
-                  .map((topic, index) => {
+                  .map((topic) => {
                     const state = topicStatus(topic);
                     const isActive = topic.id === topicId;
                     return (
@@ -898,8 +898,12 @@ export function PdfProgressPanel({
                             {topics.indexOf(topic) + 1}.
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] leading-5 font-medium break-words">{topic.title}</span>
-                            <span className="text-muted-foreground mt-1 block text-[11px]">{state.label}</span>
+                            <span className="block text-[13px] leading-5 font-medium break-words">
+                              {topic.title}
+                            </span>
+                            <span className="text-muted-foreground mt-1 block text-[11px]">
+                              {state.label}
+                            </span>
                           </span>
                         </button>
                       </li>
@@ -944,7 +948,8 @@ export function PdfProgressPanel({
                     {lastOutcome.correct}/{lastOutcome.total}
                   </p>
                   <p className="text-muted-foreground mt-1 text-xs">
-                    {lastOutcome.incorrect} {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
+                    {lastOutcome.incorrect}{' '}
+                    {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
                   </p>
                 </div>
               )}
@@ -966,7 +971,8 @@ export function PdfProgressPanel({
               )}
               {topicPending.length > 0 && (
                 <p className="text-sm font-medium">
-                  {topicPending.length} {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
+                  {topicPending.length}{' '}
+                  {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
                 </p>
               )}
               <div className="border-border border-t pt-4">
@@ -1017,7 +1023,11 @@ export function PdfProgressPanel({
         </div>
       ) : (
         <div className="mt-5">
-          <div className={recommendedTopic ? 'grid gap-5 lg:grid-cols-[minmax(270px,0.75fr)_minmax(0,1.25fr)] lg:items-start' : 'space-y-4'}>
+          <div className={
+              recommendedTopic
+                ? 'grid gap-5 lg:grid-cols-[minmax(270px,0.75fr)_minmax(0,1.25fr)] lg:items-start'
+                : 'space-y-4'
+            }>
             {recommendedTopic && (
               <section
                 className="border-primary/20 bg-primary/5 rounded-2xl border p-5 sm:p-6 lg:sticky lg:top-2"
