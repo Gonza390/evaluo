@@ -92,6 +92,7 @@ async function checkNvidia(name) {
 const checks = [
   ['GEMINI_API_KEY', checkGemini],
   ['GEMINI_PDF_API_KEY_2', checkGemini],
+  ['GEMINI_PDF_API_KEY_3', checkGemini],
   ['GEMINI_APP_API_KEY_1', checkGemini],
   ['GEMINI_APP_API_KEY_2', checkGemini],
   ['GEMINI_APP_API_KEY_3', checkGemini],
@@ -105,6 +106,7 @@ const checks = [
 const required = [
   'GEMINI_API_KEY',
   'GEMINI_PDF_API_KEY_2',
+  'GEMINI_PDF_API_KEY_3',
   'GEMINI_APP_API_KEY_1',
   'GEMINI_APP_API_KEY_2',
   'GEMINI_APP_API_KEY_3',
