@@ -283,7 +283,7 @@ export function PdfProgressPanel({
       ref={detailRef}
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
-      className="bg-card focus-visible:outline-ring mx-auto w-full max-w-4xl py-4 focus-visible:outline-2"
+      className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
     >
       <p className="text-muted-foreground mb-2 truncate text-xs" title={material.title}>
         {material.title}
@@ -310,7 +310,7 @@ export function PdfProgressPanel({
         <div className="mt-5">
           {(lastOutcome || topicPending.length > 0 || hasReinforced) && (
             <section
-              className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5"
+              className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5 xl:hidden"
               aria-label="Tu próxima actividad"
             >
               <h3 className="text-base font-semibold">Tu próxima actividad</h3>
@@ -549,7 +549,7 @@ export function PdfProgressPanel({
               )}
             </section>
           )}
-          <details className="border-border border-t py-3">
+          <details className="border-border border-t py-3 xl:hidden">
             <summary className="focus-visible:outline-ring min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-2">
               Tu aprendizaje
             </summary>
@@ -715,7 +715,7 @@ export function PdfProgressPanel({
 
   return (
     <div
-      className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto max-w-6xl px-1 py-3 sm:px-3 sm:py-4'} [&_p]:leading-5!`}
+      className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto w-full max-w-none px-1 py-3 sm:px-3 sm:py-4'} min-w-0 [&_p]:leading-5!`}
     >
       {tourStep >= 0 && selected && (
         <PdfTourSpotlight
@@ -846,13 +846,181 @@ export function PdfProgressPanel({
         </p>
       )}
       {topicId ? (
-        <div className="mt-5">{topicDetail}</div>
+        <div className="mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_260px] 2xl:grid-cols-[248px_minmax(0,1fr)_288px] 2xl:gap-7">
+          <aside
+            className="border-border bg-card hidden min-w-0 rounded-xl border p-3 lg:sticky lg:top-2 lg:block lg:max-h-[calc(100dvh-11rem)] lg:overflow-y-auto"
+            aria-label="Navegación entre temas del PDF"
+          >
+            <div className="border-border mb-3 flex items-center justify-between gap-2 border-b pb-3">
+              <h3 className="text-sm font-semibold">Temas del PDF</h3>
+              <span className="text-muted-foreground text-xs">{topics.length}</span>
+            </div>
+            {topics.length >= 8 && (
+              <label className="mb-3 block">
+                <span className="sr-only">Buscar tema</span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar tema"
+                  className="border-border bg-background focus-visible:outline-ring min-h-10 w-full rounded-lg border px-3 text-xs"
+                />
+              </label>
+            )}
+            <nav aria-label="Índice de temas">
+              <ul className="space-y-1">
+                {topics
+                  .filter((topic) =>
+                    topic.title
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')
+                      .toLowerCase()
+                      .includes(
+                        search
+                          .normalize('NFD')
+                          .replace(/[\u0300-\u036f]/g, '')
+                          .toLowerCase()
+                          .trim()
+                      )
+                  )
+                  .map((topic, index) => {
+                    const state = topicStatus(topic);
+                    const isActive = topic.id === topicId;
+                    return (
+                      <li key={topic.id}>
+                        <button
+                          type="button"
+                          aria-current={isActive ? 'page' : undefined}
+                          onClick={() => openTopic(topic.id)}
+                          className={`focus-visible:outline-ring flex min-h-11 w-full items-start gap-2 rounded-lg px-2.5 py-2.5 text-left transition focus-visible:outline-2 ${isActive ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted/70'}`}
+                        >
+                          <span className="text-muted-foreground mt-0.5 shrink-0 text-xs tabular-nums">
+                            {topics.indexOf(topic) + 1}.
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13px] leading-5 font-medium break-words">{topic.title}</span>
+                            <span className="text-muted-foreground mt-1 block text-[11px]">{state.label}</span>
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+              </ul>
+              {!topics.some((topic) =>
+                topic.title
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .toLowerCase()
+                  .includes(
+                    search
+                      .normalize('NFD')
+                      .replace(/[\u0300-\u036f]/g, '')
+                      .toLowerCase()
+                      .trim()
+                  )
+              ) && (
+                <p className="text-muted-foreground px-2 py-3 text-xs">
+                  No encontramos temas con ese nombre.
+                </p>
+              )}
+            </nav>
+          </aside>
+          <div className="min-w-0">{topicDetail}</div>
+          <aside
+            className="hidden min-w-0 xl:sticky xl:top-2 xl:block xl:max-h-[calc(100dvh-11rem)] xl:overflow-y-auto"
+            aria-label="Aprendizaje y próxima actividad del tema"
+          >
+            <div className="border-border bg-card space-y-4 rounded-xl border p-4">
+              <div>
+                <h3 className="text-sm font-semibold">Tu aprendizaje</h3>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {currentTopic?.title ?? 'Conceptos pendientes'}
+                </p>
+              </div>
+              {lastOutcome && (
+                <div className="border-border border-b pb-4">
+                  <p className="text-muted-foreground text-xs">Última práctica</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {lastOutcome.correct}/{lastOutcome.total}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {lastOutcome.incorrect} {lastOutcome.incorrect === 1 ? 'respuesta incorrecta' : 'respuestas incorrectas'}
+                  </p>
+                </div>
+              )}
+              {!lastOutcome && currentAnswered > 0 && !assessmentData?.loadError && (
+                <div className="border-border border-b pb-4">
+                  <p className="text-muted-foreground text-xs">Respuestas registradas</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {currentCorrect}/{currentAnswered}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Acumuladas, no una medición de dominio.
+                  </p>
+                </div>
+              )}
+              {assessmentData?.loadError && (
+                <p role="status" className="text-muted-foreground text-xs">
+                  No pudimos cargar tus respuestas. Esto no significa que no hayas practicado.
+                </p>
+              )}
+              {topicPending.length > 0 && (
+                <p className="text-sm font-medium">
+                  {topicPending.length} {topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'}
+                </p>
+              )}
+              <div className="border-border border-t pt-4">
+                <h4 className="text-sm font-semibold">Tu próxima actividad</h4>
+                <p className="text-muted-foreground mt-2 text-[13px] leading-5">
+                  {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
+                </p>
+                {topicPending.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextError =
+                        topicPending.find((error) =>
+                          lastOutcome?.incorrectPrompts.includes(error.prompt)
+                        ) ?? topicPending[0];
+                      setErrorId(nextError.id);
+                      setReviewOpen(true);
+                    }}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                  >
+                    Reforzar dificultades <ArrowRight size={16} />
+                  </button>
+                ) : canPracticeTopic ? (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                  >
+                    Practicar el tema <ArrowRight size={16} />
+                  </button>
+                ) : (
+                  <p className="text-muted-foreground mt-3 text-xs">
+                    Podés continuar leyendo aunque no haya preguntas de este tema.
+                  </p>
+                )}
+              </div>
+              {nextStudyTopic && (
+                <button
+                  type="button"
+                  onClick={() => openTopic(nextStudyTopic.id)}
+                  className="text-primary focus-visible:outline-ring flex min-h-11 w-full items-center justify-between gap-2 border-t pt-3 text-left text-xs font-semibold focus-visible:outline-2"
+                >
+                  Siguiente tema <ArrowRight size={15} />
+                </button>
+              )}
+            </div>
+          </aside>
+        </div>
       ) : (
         <div className="mt-5">
-          <div className="space-y-4">
+          <div className={recommendedTopic ? 'grid gap-5 lg:grid-cols-[minmax(270px,0.75fr)_minmax(0,1.25fr)] lg:items-start' : 'space-y-4'}>
             {recommendedTopic && (
               <section
-                className="border-primary/20 bg-primary/5 rounded-2xl border p-5 sm:p-6"
+                className="border-primary/20 bg-primary/5 rounded-2xl border p-5 sm:p-6 lg:sticky lg:top-2"
                 aria-label="Actividad recomendada"
               >
                 <p className="text-primary text-xs font-semibold">
@@ -1015,7 +1183,7 @@ export function PdfProgressPanel({
               )}
             </section>
             {unmatched.length > 0 && (
-              <section className="border-border bg-card rounded-3xl border p-6">
+              <section className="border-border bg-card rounded-3xl border p-6 lg:col-span-2">
                 <h2 className="font-semibold">Otros conceptos con errores</h2>
                 <p className="text-muted-foreground mt-2 text-sm">
                   {unmatched.length} registros de este PDF no tienen una coincidencia única con los
