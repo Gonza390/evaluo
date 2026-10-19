@@ -241,6 +241,13 @@ export function PdfProgressPanel({
     });
     return () => cancelAnimationFrame(frame);
   }, [initialErrorId, initialTopicSectionIndex]);
+  useEffect(() => {
+    if (!reviewOpen || !errorId) return;
+    const frame = requestAnimationFrame(() => {
+      detailRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [reviewOpen, errorId]);
   async function closeTour(outcome: 'completed' | 'skipped') {
     if (tourClosing.current || !onboardingErrorId) return;
     tourClosing.current = true;
@@ -981,9 +988,7 @@ export function PdfProgressPanel({
                     </p>
                   )}
                   <p className="text-muted-foreground text-xs leading-5">
-                    {topicPending.length > 0
-                      ? `${topicPending.length} ${topicPending.length === 1 ? 'dificultad pendiente' : 'dificultades pendientes'} en este tema.`
-                      : 'No hay dificultades pendientes en este tema.'}
+                    Revisá la explicación y comprobá el aprendizaje con una situación diferente.
                   </p>
                   <button
                     type="button"
