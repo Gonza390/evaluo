@@ -26,6 +26,8 @@ import {
   selectTopicPracticeQuestions,
   getTopicQuestionCounts,
   emptyTopicPracticeContext,
+  MAX_TOPIC_PRACTICE_QUESTIONS,
+  topicPracticeQuestionCount,
   type TopicPracticeContext,
 } from '@/lib/student-materials/topic-practice';
 import { getStudentMaterialPracticeContextAction } from '@/lib/actions/student-material-practice';
@@ -53,10 +55,6 @@ type StudentMaterialExamProps = {
 };
 
 type OpenAssessment = 'got_it' | 'review';
-
-// En una práctica de tema no se le pide elegir tamaño al estudiante.
-// Si el banco es amplio, una tanda de hasta 20 preguntas mantiene la práctica abordable.
-const MAX_TOPIC_PRACTICE_QUESTIONS = 20;
 
 export function StudentMaterialExam({
   artifacts,
@@ -104,7 +102,7 @@ export function StudentMaterialExam({
     sizeOptions[Math.floor(sizeOptions.length / 2)]?.count ??
     0;
   const [selectedSize, setSelectedSize] = useState(defaultSize);
-  const topicPracticeCount = Math.min(eligibleQuestions.length, MAX_TOPIC_PRACTICE_QUESTIONS);
+  const topicPracticeCount = topicPracticeQuestionCount(eligibleQuestions.length);
   const topicAutoStartRequested = useRef(false);
   const [started, setStarted] = useState(false);
   // Congelar la tanda: los nuevos resultados no deben cambiar preguntas en pleno intento.
