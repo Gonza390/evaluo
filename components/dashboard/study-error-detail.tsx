@@ -123,7 +123,10 @@ export function StudyErrorDetail({
   const materialId = source?.materialId ?? item.recommendation?.materialId ?? null;
   const resolved = item.status === 'resolved';
   const savedExplanation = resolved && !messages.length ? item.explanation : null;
-  const topicReinforcement = topicContext && embedded;
+  // El mismo modo guiado se usa desde Progreso y desde Mis errores
+  // cuando la dificultad tiene un PDF asociado. Sin PDF mantenemos la
+  // pantalla que permite asociarlo; no prometemos comprobación sin fuente.
+  const topicReinforcement = Boolean(materialId) && (topicContext || !embedded);
   const originalExplanation = item.explanation?.trim() ?? '';
   const pendingHelp =
     busy === 'why_wrong' || busy === 'simpler' || busy === 'example' ? busy : null;
@@ -317,7 +320,7 @@ export function StudyErrorDetail({
       )}
       {topicReinforcement && !question ? (
         <div className="space-y-6" data-topic-reinforcement>
-          <section className="border-border bg-card rounded-2xl border p-4 sm:p-6" aria-labelledby="reinforcement-difficulty-heading">
+          <section data-study-error-tour="error" className="border-border bg-card rounded-2xl border p-4 sm:p-6" aria-labelledby="reinforcement-difficulty-heading">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 id="reinforcement-difficulty-heading" className="text-primary text-xs font-bold tracking-wide uppercase">
                 La pregunta que te costó
@@ -431,9 +434,13 @@ export function StudyErrorDetail({
                 Haber resuelto esta pregunta no significa dominar todo el tema. Podés continuar estudiando.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <button className={reviewPrimaryButton} onClick={onFinish}>Volver al tema</button>
+                <button className={reviewPrimaryButton} onClick={onFinish}>
+                  {topicContext ? 'Volver al tema' : 'Terminar por hoy'}
+                </button>
                 {pendingCount > 0 && (
-                  <button className={reviewSecondaryButton} onClick={onNext}>Reforzar otra dificultad <ArrowRight className="h-4 w-4" /></button>
+                  <button className={reviewSecondaryButton} onClick={onNext}>
+                    {topicContext ? 'Reforzar otra dificultad' : 'Seguir con otro error'} <ArrowRight className="h-4 w-4" />
+                  </button>
                 )}
               </div>
             </section>
@@ -441,7 +448,7 @@ export function StudyErrorDetail({
             <section className="border-border border-t pt-5" data-study-error-tour="practice">
               <h3 className="text-lg font-semibold">¿Lo entendiste? Comprobémoslo.</h3>
               <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-6">
-                Respondé una situación distinta, sin consultar la explicación. Una respuesta correcta resuelve esta dificultad, no todo el tema.
+                Respondé una situación distinta, sin consultar la explicación. Un acierto resuelve esta dificultad, pero no demuestra dominio de todo el tema.
               </p>
               {materialId ? (
                 <button type="button" className={reviewPrimaryButton + ' mt-4'} disabled={Boolean(busy)} onClick={checkUnderstanding}>
