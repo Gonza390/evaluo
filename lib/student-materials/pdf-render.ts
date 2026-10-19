@@ -50,13 +50,15 @@ function isCanvasNearlyBlank(
   if (width <= 0 || height <= 0) return false;
 
   try {
-    const imageData = context.getImageData(0, 0, width, height);
-    const data = imageData.data;
+    // No crear un ImageData de página completa: una página A4 a escala 2.2
+    // puede reservar decenas de MB adicionales en cada iteración del OCR.
+    // Muestreamos franjas de un píxel, manteniendo el criterio conservador.
     let nonWhiteSamples = 0;
 
     for (let y = 0; y < height; y += BLANK_PAGE_SAMPLE_STEP) {
+      const data = context.getImageData(0, y, width, 1).data;
       for (let x = 0; x < width; x += BLANK_PAGE_SAMPLE_STEP) {
-        const offset = (y * width + x) * 4;
+        const offset = x * 4;
         const red = data[offset] ?? 255;
         const green = data[offset + 1] ?? 255;
         const blue = data[offset + 2] ?? 255;
