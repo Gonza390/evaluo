@@ -1,4 +1,4 @@
-import { requestGeminiImagesJson } from '@/lib/ai/providers';
+import { requestGeminiImagesJson, requestGeminiPdfJson } from '@/lib/ai/providers';
 import type { GeminiPdfKeySlot } from '@/lib/ai/providers';
 import { extractJsonObject } from '@/lib/ai/json';
 import { logError, logInfo } from '@/lib/observability';
@@ -341,36 +341,17 @@ export async function enhancePdfExtractionWithVision(input: {
     };
   }
 
-  const renderResult = await renderPdfPagesToPngs(input.pdfBuffer, {
-    pageNumbers: selectedPageNumbers,
-    batchSize: VISION_BATCH_SIZE,
-    scale: VISION_RENDER_SCALE,
-  });
-
-  if (renderResult.images.length === 0 || renderResult.renderedPageNumbers.length === 0) {
-    return {
-      text: input.nativeText,
-      pages: input.nativePages,
-      visionUsed: false,
-      visionPageNumbers: [],
-      visionModel: null,
-    };
-  }
-
-  const deterministicBlankPages = new Set(renderResult.blankPageNumbers);
-  const rendered = renderResult.images
-    .map((image, index) => ({
-      image,
-      pageNumber: renderResult.renderedPageNumbers[index],
-    }))
-    .filter((entry): entry is { image: Buffer; pageNumber: number } => Boolean(entry.pageNumber));
-  const visionCandidates = rendered.filter(
-    (entry) => !deterministicBlankPages.has(entry.pageNumber)
-  );
-
-  const batches = chunk(visionCandidates, VISION_BATCH_SIZE);
+  // Una lectura de 46 páginas escaneadas no debe retener 46 PNGs y canvases
+  // en una sola invocación. Renderizar y leer de a cuatro limita el pico de RAM.
+  const deterministicBlankPages = new Set<number>();
   const visionPages = new Map<number, VisionPage>();
   let visionModel: string | null = null;
+  let renderedPageCount = 0;
+  let retriedPageCount = 0;
+  const visionStartedAt = Date.now();
+  const requiredOcr = input.forceRequiredOcr === true || input.analysis.requiresOcr;
+  const OCR_EXTRACTION_BUDGET_MS = 145_000;
+  const allBatches = chunk(selectedPageNumbers, VISION_BATCH_SIZE);
 
   const recordResult = async (result: Awaited<ReturnType<typeof requestGeminiImagesJson>>) => {
     if (!result) return;
@@ -385,54 +366,73 @@ export async function enhancePdfExtractionWithVision(input: {
     });
   };
 
-  await mapWithConcurrency(batches, VISION_CONCURRENCY, async (batch, batchIndex) => {
-    const pageNumbers = batch.map((entry) => entry.pageNumber);
+  for (const [batchIndex, pageNumbers] of allBatches.entries()) {
+    // Reservamos margen para generar y guardar el modelo pedagógico. Si se
+    // agota el presupuesto, el resultado final exigirá cobertura completa:
+    // nunca se crea un resumen basado en un escaneo recortado silenciosamente.
+    if (requiredOcr && Date.now() - visionStartedAt > OCR_EXTRACTION_BUDGET_MS) {
+      logInfo('studentMaterialVisionExtract.ocrBudgetReached', {
+        materialId: input.materialId,
+        totalPages: selectedPageNumbers.length,
+        batchIndex,
+        elapsedMs: Date.now() - visionStartedAt,
+      });
+      break;
+    }
+
+    const renderResult = await renderPdfPagesToPngs(input.pdfBuffer, {
+      pageNumbers,
+      batchSize: VISION_BATCH_SIZE,
+      scale: VISION_RENDER_SCALE,
+    });
+    renderedPageCount += renderResult.renderedPageNumbers.length;
+    for (const pageNumber of renderResult.blankPageNumbers) {
+      deterministicBlankPages.add(pageNumber);
+    }
+
+    const rendered = renderResult.images
+      .map((image, index) => ({
+        image,
+        pageNumber: renderResult.renderedPageNumbers[index],
+      }))
+      .filter((entry): entry is { image: Buffer; pageNumber: number } => Boolean(entry.pageNumber));
+    const candidates = rendered.filter(
+      (entry) => !deterministicBlankPages.has(entry.pageNumber)
+    );
+    if (candidates.length === 0) continue;
+
+    const expectedPages = candidates.map((entry) => entry.pageNumber);
     try {
       const result = await requestGeminiImagesJson({
-        prompt: buildVisionPrompt(pageNumbers),
-        images: batch.map((entry) => entry.image),
+        prompt: buildVisionPrompt(expectedPages),
+        images: candidates.map((entry) => entry.image),
         temperature: 0.05,
         maxOutputTokens: INITIAL_VISION_MAX_OUTPUT_TOKENS,
         responseSchema: VISION_PAGE_SCHEMA,
         geminiKeySlot: input.geminiPdfKeySlot,
       });
-
-      if (!result) return;
       await recordResult(result);
-
-      for (const page of parseVisionPayload(result.content, pageNumbers)) {
-        // Las páginas blancas ya fueron detectadas sobre píxeles. Si el modelo
-        // declara blanco un canvas con contenido, no lo aceptamos silenciosamente.
-        if (isUsableVisionPage(page, false)) {
-          visionPages.set(page.pageNumber, page);
+      if (result?.content) {
+        for (const page of parseVisionPayload(result.content, expectedPages)) {
+          if (isUsableVisionPage(page, false)) {
+            visionPages.set(page.pageNumber, page);
+          }
         }
       }
     } catch (error) {
       logError('studentMaterialVisionExtract.batch', error, {
         materialId: input.materialId,
         batch: batchIndex + 1,
-        pageNumbers,
+        pageNumbers: expectedPages,
       });
     }
-  });
 
-  const renderedByPage = new Map(
-    visionCandidates.map((entry) => [entry.pageNumber, entry.image] as const)
-  );
-  const retryPageNumbers = visionCandidates
-    .map((entry) => entry.pageNumber)
-    .filter((pageNumber) => !visionPages.has(pageNumber));
-
-  // Una respuesta truncada, una página omitida o una reconstrucción de baja
-  // confianza se reintenta sola. Esto elimina el efecto cascada de un lote de
-  // varias páginas y da más presupuesto de salida a la notación compleja.
-  await mapWithConcurrency(
-    retryPageNumbers,
-    VISION_CONCURRENCY,
-    async (pageNumber) => {
-      const image = renderedByPage.get(pageNumber);
-      if (!image) return;
-
+    const retryEntries = candidates.filter((candidate) => !visionPages.has(candidate.pageNumber));
+    // Sólo reintentar las páginas incompletas, sin mantener todas las
+    // imágenes del documento en memoria mientras llegan respuestas de IA.
+    await mapWithConcurrency(retryEntries, VISION_CONCURRENCY, async ({ image, pageNumber }) => {
+      if (requiredOcr && Date.now() - visionStartedAt > OCR_EXTRACTION_BUDGET_MS) return;
+      retriedPageCount += 1;
       try {
         const result = await requestGeminiImagesJson({
           prompt: buildVisionPrompt([pageNumber], true),
@@ -442,23 +442,56 @@ export async function enhancePdfExtractionWithVision(input: {
           responseSchema: VISION_PAGE_SCHEMA,
           geminiKeySlot: input.geminiPdfKeySlot,
         });
-        if (!result) return;
         await recordResult(result);
-
-        const page = parseVisionPayload(result.content, [pageNumber]).find(
-          (candidate) => candidate.pageNumber === pageNumber
-        );
-        if (page && isUsableVisionPage(page, false)) {
-          visionPages.set(pageNumber, page);
-        }
+        const page = result?.content
+          ? parseVisionPayload(result.content, [pageNumber]).find(
+            (candidate) => candidate.pageNumber === pageNumber
+          )
+          : null;
+        if (page && isUsableVisionPage(page, false)) visionPages.set(pageNumber, page);
       } catch (error) {
         logError('studentMaterialVisionExtract.retryPage', error, {
           materialId: input.materialId,
           pageNumber,
         });
       }
-    }
+    });
+  }
+
+  // El contexto PDF se usa sólo como rescate de páginas que quedaron sin OCR
+  // en escaneos cortos. Se comprueba cada página antes de considerarla cubierta.
+  const missingAfterImages = selectedPageNumbers.filter(
+    (pageNumber) => !deterministicBlankPages.has(pageNumber) && !visionPages.has(pageNumber)
   );
+  if (
+    requiredOcr &&
+    missingAfterImages.length > 0 &&
+    selectedPageNumbers.length <= 20 &&
+    Date.now() - visionStartedAt < OCR_EXTRACTION_BUDGET_MS
+  ) {
+    try {
+      const result = await requestGeminiPdfJson({
+        prompt: buildVisionPrompt(missingAfterImages, true) +
+          '\nLeé el PDF adjunto y devolvé únicamente las páginas solicitadas; no resumas las demás.',
+        pdfBuffer: input.pdfBuffer,
+        temperature: 0.02,
+        maxOutputTokens: 16_000,
+        responseSchema: VISION_PAGE_SCHEMA,
+        geminiKeySlot: input.geminiPdfKeySlot,
+      });
+      await recordResult(result);
+      if (result?.content) {
+        for (const page of parseVisionPayload(result.content, missingAfterImages)) {
+          if (isUsableVisionPage(page, false)) visionPages.set(page.pageNumber, page);
+        }
+      }
+    } catch (error) {
+      logError('studentMaterialVisionExtract.pdfOcrFallback', error, {
+        materialId: input.materialId,
+        missingPageCount: missingAfterImages.length,
+      });
+    }
+  }
 
   const totalPages = getDocumentPageCount(input.pageCount, input.nativePages);
   const resolvedPages = buildResolvedPages(input.nativePages, totalPages);
@@ -504,7 +537,7 @@ export async function enhancePdfExtractionWithVision(input: {
       selectedPages: selectedPageNumbers.length,
       coveredPages: coveragePageNumbers.size,
       blankPages: deterministicBlankPages.size,
-      retriedPages: retryPageNumbers.length,
+      retriedPages: retriedPageCount,
       missingPages,
     });
     return {
@@ -523,10 +556,10 @@ export async function enhancePdfExtractionWithVision(input: {
     materialId: input.materialId,
     forcedRequiredOcr: input.forceRequiredOcr === true,
     selectedPages: selectedPageNumbers.length,
-    renderedPages: renderResult.renderedPageNumbers.length,
+    renderedPages: renderedPageCount,
     blankPages: deterministicBlankPages.size,
     extractedPages: visionPages.size,
-    retriedPages: retryPageNumbers.length,
+    retriedPages: retriedPageCount,
     contentVisionPages: contentVisionPageNumbers.length,
     model: visionModel,
   });
