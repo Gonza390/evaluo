@@ -8,6 +8,8 @@ import {
   obtenerRankingErroresIA,
 } from './shared-actions';
 import { obtenerConsumoPdfIAAdministrador } from './ai-cost-data';
+import { obtenerUltimaComprobacionClaves } from './ai-key-health-actions';
+import { AIKeyHealthPanel } from './ai-key-health-panel';
 import { obtenerUsuariosAdministradorPaginadoCacheado } from './cached-performance-actions';
 import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
@@ -163,6 +165,7 @@ export default async function AdministradorPage({
     iaFeedbackStatsResult,
     iaFeedbackReviewResult,
     iaCostResult,
+    aiKeyHealthResult,
   ] = await Promise.all([
     needsProduct
       ? obtenerProductoDiarioAdministrador(requestedProductDate)
@@ -181,6 +184,7 @@ export default async function AdministradorPage({
     needsIA ? obtenerFeedbackExplicacionesAdmin() : Promise.resolve(null),
     needsIA ? obtenerFeedbackRevisionAdmin(40) : Promise.resolve(null),
     needsIA ? obtenerConsumoPdfIAAdministrador() : Promise.resolve(null),
+    needsIA ? obtenerUltimaComprobacionClaves() : Promise.resolve(null),
   ]);
 
   let panelContent: React.ReactNode;
@@ -258,6 +262,7 @@ export default async function AdministradorPage({
   ) {
     panelContent = (
       <>
+        <AIKeyHealthPanel initialReport={aiKeyHealthResult?.report ?? null} />
         <AICostPanel
           stats={iaCostResult?.success ? (iaCostResult.stats ?? null) : null}
           error={iaCostResult?.success ? null : iaCostResult?.message}
