@@ -28,6 +28,26 @@ function exactTopics(label: string, sections: StudySummarySection[]) {
   );
 }
 
+/** Resuelve por título explícito o mención inequívoca; nunca por posición. */
+export function findConceptTopic(
+  concept: Pick<StudyGlossaryItem, 'term' | 'context' | 'englishTerm'>,
+  sections: StudySummarySection[]
+) {
+  const explicit = exactTopics(concept.context, sections);
+  // Un título repetido no es una identidad de tema válida.
+  if (explicit.length > 1) return -1;
+  const mentions = sections.flatMap((section, index) =>
+    [concept.term, concept.englishTerm ?? ''].some((term) =>
+      containsPhrase(`${section.title} ${section.body}`, term)
+    )
+      ? [index]
+      : []
+  );
+  if (explicit.length === 1 && mentions.length === 1 && explicit[0] !== mentions[0]) return -1;
+  if (explicit.length === 1) return explicit[0];
+  return mentions.length === 1 ? mentions[0] : -1;
+}
+
 /** No repartir conceptos por posición ni usar similitud vaga como asociación académica. */
 export function getTopicStudyResources(
   sections: StudySummarySection[],
@@ -37,20 +57,7 @@ export function getTopicStudyResources(
 ) {
   if (!Number.isInteger(sectionIndex) || !sections[sectionIndex])
     return { concepts: [], flashcards: [] };
-  const conceptTopics = glossary.map((concept) => {
-    const explicit = exactTopics(concept.context, sections);
-    const mentions = sections.flatMap((section, index) =>
-      [concept.term, concept.englishTerm ?? ''].some((term) =>
-        containsPhrase(`${section.title} ${section.body}`, term)
-      )
-        ? [index]
-        : []
-    );
-    // Una referencia explícita que contradice la mención única requiere revisión.
-    if (explicit.length === 1 && mentions.length === 1 && explicit[0] !== mentions[0]) return -1;
-    if (explicit.length === 1) return explicit[0];
-    return mentions.length === 1 ? mentions[0] : -1;
-  });
+  const conceptTopics = glossary.map((concept) => findConceptTopic(concept, sections));
   const concepts = glossary.filter((_, index) => conceptTopics[index] === sectionIndex);
   const seenCards = new Set<string>();
   const cards = flashcards.filter((card) => {
@@ -68,6 +75,7 @@ export function getTopicStudyResources(
       card.reference.pageStart && card.reference.excerpt.trim()
         ? exactTopics(card.reference.sectionTitle ?? '', sections)
         : [];
+    if (explicit.length > 1) return false;
     if (explicit.length === 1 && subjectTopics.size === 1 && !subjectTopics.has(explicit[0]))
       return false;
     const target =

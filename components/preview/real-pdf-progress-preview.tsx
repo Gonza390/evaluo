@@ -1,5 +1,7 @@
 'use client';
 
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
+
 import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { MaterialStudyWorkspace, type StudyTabId } from '@/components/material-study-workspace';
@@ -167,9 +169,11 @@ export function RealPdfProgressPreview({
   const [firstVisit, setFirstVisit] = useState(initialFirstVisit);
   const [tab, setTab] = useState<StudyTabId>('resumen');
   const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>();
-  const [topicReturn, setTopicReturn] = useState<{ index: number; reinforce: boolean } | null>(
-    null
-  );
+  const [topicReturn, setTopicReturn] = useState<{
+    index: number;
+    reinforce: boolean;
+    outcome?: TopicPracticeOutcome;
+  } | null>(null);
   const [progressOpen, setProgressOpen] = useState(initialProgressOpen || Boolean(initialErrorId));
   const [viewerVisible, setViewerVisible] = useState(false);
   const initialViews: StudyErrorView[] = examples.map((example, index) => ({
@@ -498,7 +502,8 @@ export function RealPdfProgressPreview({
                   sourcePdfHref={pdfHref}
                   embedded
                   initialTopicSectionIndex={topicReturn?.index}
-                  initialReinforce={topicReturn?.reinforce}
+                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  lastPracticeOutcome={topicReturn?.outcome}
                   initialErrorId={initialErrorId}
                   material={material}
                   sections={summary.sections}
@@ -514,7 +519,11 @@ export function RealPdfProgressPreview({
                     setTab('ejercicios');
                   }}
                   onPracticeTopic={(index) => {
-                    setTopicReturn({ index, reinforce: false });
+                    setTopicReturn((previous) => ({
+                      index,
+                      reinforce: false,
+                      outcome: previous?.index === index ? previous.outcome : undefined,
+                    }));
                     setPracticeSectionIndex(index);
                     setProgressOpen(false);
                     setTab('ejercicios');
@@ -551,9 +560,15 @@ export function RealPdfProgressPreview({
                 <StudentMaterialExam
                   key={practiceSectionIndex ?? 'all'}
                   topicSectionIndex={practiceSectionIndex}
-                  onReturnToTopic={(reinforce) => {
+                  onReturnToTopic={(reinforce, outcome) => {
                     if (practiceSectionIndex === undefined) return;
-                    setTopicReturn({ index: practiceSectionIndex, reinforce });
+                    setTopicReturn((previous) => ({
+                      index: practiceSectionIndex,
+                      reinforce,
+                      outcome:
+                        outcome ??
+                        (previous?.index === practiceSectionIndex ? previous.outcome : undefined),
+                    }));
                     setProgressOpen(true);
                   }}
                   artifacts={previewArtifacts}

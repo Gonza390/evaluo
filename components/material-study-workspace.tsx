@@ -1,5 +1,7 @@
 'use client';
 
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
+
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
@@ -304,9 +306,11 @@ export function MaterialStudyWorkspace({
   );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
   const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(undefined);
-  const [topicReturn, setTopicReturn] = useState<{ index: number; reinforce: boolean } | null>(
-    null
-  );
+  const [topicReturn, setTopicReturn] = useState<{
+    index: number;
+    reinforce: boolean;
+    outcome?: TopicPracticeOutcome;
+  } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   // Una sesión compartida por las vistas móvil y escritorio evita perder respuestas al redimensionar.
@@ -1495,9 +1499,17 @@ export function MaterialStudyWorkspace({
                 topicSectionIndex={practiceSectionIndex}
                 onReturnToTopic={
                   hasProgress
-                    ? (reinforce) => {
+                    ? (reinforce, outcome) => {
                         if (practiceSectionIndex === undefined) return;
-                        setTopicReturn({ index: practiceSectionIndex, reinforce });
+                        setTopicReturn((previous) => ({
+                          index: practiceSectionIndex,
+                          reinforce,
+                          outcome:
+                            outcome ??
+                            (previous?.index === practiceSectionIndex
+                              ? previous.outcome
+                              : undefined),
+                        }));
                         setProgressOpen(true);
                       }
                     : undefined
@@ -1651,9 +1663,14 @@ export function MaterialStudyWorkspace({
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
                   initialTopicSectionIndex={topicReturn?.index}
-                  initialReinforce={topicReturn?.reinforce}
+                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  lastPracticeOutcome={topicReturn?.outcome}
                   onPracticeTopic={(index) => {
-                    setTopicReturn({ index, reinforce: false });
+                    setTopicReturn((previous) => ({
+                      index,
+                      reinforce: false,
+                      outcome: previous?.index === index ? previous.outcome : undefined,
+                    }));
                     setPracticeSectionIndex(index);
                     setDiagnosticMode(false);
                     handleStudyTabChange('ejercicios', 'summary_chapter');

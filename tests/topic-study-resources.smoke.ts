@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { getTopicStudyResources } from '../lib/student-materials/topic-study-resources.ts';
+import {
+  getTopicStudyResources,
+  findConceptTopic,
+} from '../lib/student-materials/topic-study-resources.ts';
 import type { StudyGlossaryItem } from '../lib/student-materials/types.ts';
 import type { StudyFlashcard } from '../lib/student-materials/pedagogy.ts';
 
@@ -80,3 +83,22 @@ assert.equal(
   'No asociar por subcadenas.'
 );
 console.log('topic-study-resources.smoke: OK');
+const reordered = [sections[1], sections[0]];
+assert.equal(
+  reordered[findConceptTopic(concept('Sobreajuste'), reordered)]?.title,
+  sections[0].title,
+  'Cambiar el orden no debe trasladar el concepto a otro tema.'
+);
+assert.equal(
+  findConceptTopic(concept('Ausente'), sections),
+  -1,
+  'Un concepto ausente no se reparte por posición.'
+);
+assert.equal(
+  findConceptTopic(concept('Sobreajuste', 'Repetido'), [
+    { title: 'Repetido', body: 'Sobreajuste' },
+    { title: 'Repetido', body: 'Otro contenido' },
+  ]),
+  -1,
+  'Un título duplicado no identifica un capítulo inequívocamente.'
+);

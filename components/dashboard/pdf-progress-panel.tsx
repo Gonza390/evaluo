@@ -28,6 +28,10 @@ import { getTopicStudyResources } from '@/lib/student-materials/topic-study-reso
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import { TopicStudySupport } from '@/components/study/topic-study-support';
+import {
+  topicPracticeFeedback,
+  type TopicPracticeOutcome,
+} from '@/lib/student-materials/topic-practice-feedback';
 
 const emptyGlossary: StudyGlossaryItem[] = [];
 const emptyCards: StudyFlashcard[] = [];
@@ -86,6 +90,7 @@ export function PdfProgressPanel({
   initialErrorId,
   initialTopicSectionIndex,
   initialReinforce = false,
+  lastPracticeOutcome,
   onboardingErrorId,
   returnToErrors = false,
 }: {
@@ -96,6 +101,7 @@ export function PdfProgressPanel({
   initialErrorId?: string;
   initialTopicSectionIndex?: number;
   initialReinforce?: boolean;
+  lastPracticeOutcome?: TopicPracticeOutcome;
   onboardingErrorId?: string | null;
   returnToErrors?: boolean;
   embedded?: boolean;
@@ -191,6 +197,16 @@ export function PdfProgressPanel({
   const currentErrors = [
     ...(topicId === 'unmatched' ? unmatched : (currentTopic?.errors ?? [])),
   ].sort((first, second) => first.id.localeCompare(second.id));
+  const lastOutcome =
+    lastPracticeOutcome?.sectionIndex === currentSectionIndex ? lastPracticeOutcome : undefined;
+  const topicPending = currentErrors.filter((error) => error.status === 'pending');
+  const hasReinforced = currentErrors.some((error) => error.status === 'resolved');
+  const lastWasReinforced = lastOutcome
+    ? lastOutcome.incorrect > 0 &&
+      lastOutcome.incorrectPrompts.every((prompt) =>
+        currentErrors.some((error) => error.prompt === prompt && error.status === 'resolved')
+      )
+    : hasReinforced;
   const visibleTopics = topics.filter(
     (topic) =>
       topic.title
@@ -292,16 +308,60 @@ export function PdfProgressPanel({
       </div>
       {!reviewOpen && (
         <div className="mt-5">
-          <p className="text-muted-foreground text-sm!">
-            {currentTopic?.errors.some((error) => error.status === 'pending')
-              ? 'Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.'
-              : currentTopic && topicAssessmentCount(currentTopic) > 0
-                ? 'Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.'
-                : currentQuestionCount === 0
-                  ? 'Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.'
-                  : 'Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.'}
-          </p>
-          {(selected?.status === 'pending' || currentAnswered > 0) && (
+          {(lastOutcome || topicPending.length > 0 || hasReinforced) && (
+            <section
+              className="border-primary/20 bg-primary/5 mb-6 rounded-xl border p-4 sm:p-5"
+              aria-label="Tu próxima actividad"
+            >
+              <h3 className="text-base font-semibold">Tu próxima actividad</h3>
+              {lastOutcome && (
+                <p className="text-foreground mt-2 text-sm!">
+                  Última tanda: {lastOutcome.total}{' '}
+                  {lastOutcome.total === 1 ? 'pregunta' : 'preguntas'} · {lastOutcome.correct}{' '}
+                  {lastOutcome.correct === 1 ? 'correcta' : 'correctas'} · {lastOutcome.incorrect}{' '}
+                  {lastOutcome.incorrect === 1 ? 'incorrecta' : 'incorrectas'}.
+                </p>
+              )}
+              <p className="text-muted-foreground mt-2 text-sm!">
+                {topicPracticeFeedback(lastOutcome, topicPending.length, lastWasReinforced)}
+              </p>
+              {topicPending.length > 0 && (
+                <>
+                  <p className="text-muted-foreground mt-2 text-xs!">
+                    Pendientes del tema: {topicPending.length}{' '}
+                    {topicPending.length === 1 ? 'pregunta' : 'preguntas'} de tus prácticas. Pueden
+                    incluir intentos anteriores.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextError =
+                        topicPending.find((error) =>
+                          lastOutcome?.incorrectPrompts.includes(error.prompt)
+                        ) ?? topicPending[0];
+                      setErrorId(nextError.id);
+                      setReviewOpen(true);
+                    }}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4'}
+                  >
+                    Reforzar las dificultades <ArrowRight size={16} />
+                  </button>
+                </>
+              )}
+            </section>
+          )}
+          {!lastOutcome && topicPending.length === 0 && !hasReinforced && (
+            <p className="text-muted-foreground text-sm!">
+              {currentTopic?.errors.some((error) => error.status === 'pending')
+                ? 'Tus respuestas muestran una dificultad para repasar. Podés reforzarla con tu PDF o volver al contenido del tema.'
+                : currentTopic && topicAssessmentCount(currentTopic) > 0
+                  ? 'Ya practicaste este tema. Podés volver al contenido y seguir comprobando lo aprendido.'
+                  : currentQuestionCount === 0
+                    ? 'Empezá por el contenido y usá los conceptos y las tarjetas como apoyo.'
+                    : 'Empezá por los conceptos principales. Después ponete a prueba con preguntas de tu PDF.'}
+            </p>
+          )}
+          {!lastOutcome && topicPending.length === 0 && !hasReinforced && currentAnswered > 0 && (
             <div className="mt-4 flex flex-wrap gap-3">
               {selected?.status === 'pending' ? (
                 <button

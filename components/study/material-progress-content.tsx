@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
+import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import {
@@ -16,6 +17,7 @@ export function MaterialProgressContent({
   requestedError,
   initialTopicSectionIndex,
   initialReinforce,
+  lastPracticeOutcome,
   tour,
   returnToErrors = false,
   onPracticeTopic,
@@ -29,6 +31,7 @@ export function MaterialProgressContent({
   requestedError?: string;
   initialTopicSectionIndex?: number;
   initialReinforce?: boolean;
+  lastPracticeOutcome?: TopicPracticeOutcome;
   tour?: string;
   returnToErrors?: boolean;
   onPracticeTopic?: (sectionIndex: number) => void;
@@ -92,6 +95,7 @@ export function MaterialProgressContent({
       embedded
       initialTopicSectionIndex={initialTopicSectionIndex}
       initialReinforce={initialReinforce}
+      lastPracticeOutcome={lastPracticeOutcome}
       material={material}
       sections={sections}
       data={result.data}
