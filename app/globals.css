@@ -490,3 +490,8 @@
     padding-bottom: 0.75rem;
   }
 }
+
+/* Keep the PDF progress workspace focused on study, without the floating share action. */
+body:has([data-progress-open='true']) [data-student-material-share-control] {
+  display: none;
+}
