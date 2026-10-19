@@ -117,7 +117,7 @@ function extractPageReference(value: string) {
 }
 
 const INLINE_MARKUP_PATTERN =
-  /(\*\*[^*]+\*\*|\x60[^\x60]+\x60|\$\$[^$]+\$\$|\$[^$\n]+\$|\\\([^)]*\\\)|\\\[[^\]]*\\\])/gu;
+  /(\*\*[^*\n]+\*\*|\*[^*\n]+\*|_[^_\n]+_|\x60[^\x60]+\x60|\$\$[^$]+\$\$|\$[^$\n]+\$|\\\([^)]*\\\)|\\\[[^\]]*\\\])/gu;
 
 function normalizeMathExpression(value: string) {
   let output = value.trim();
@@ -167,6 +167,14 @@ function renderInlineMarkdown(value: string): ReactNode {
         <strong key={token + '-' + index} className="font-semibold text-slate-950">
           {token.slice(2, -2)}
         </strong>
+      );
+    }
+
+    if (/^(?:\*[^*\n]+\*|_[^_\n]+_)$/u.test(token)) {
+      return (
+        <em key={token + '-' + index} className="italic">
+          {token.slice(1, -1)}
+        </em>
       );
     }
 
@@ -303,7 +311,7 @@ function StudyCallout({
  *
  * La generación sigue siendo responsabilidad del pipeline canónico.
  * Este componente sólo interpreta la presentación: headings Markdown,
- * negritas, listas, tablas, bloques pedagógicos y referencias físicas al PDF.
+ * negritas, cursivas, listas, tablas, bloques pedagógicos y referencias físicas al PDF.
  */
 export function StudyRichText({ body, compact = false }: { body: string; compact?: boolean }) {
   const lines = body
@@ -407,8 +415,8 @@ export function StudyRichText({ body, compact = false }: { body: string; compact
       const headingText = markdownHeading[2]?.trim() ?? '';
 
       content.push(
-        <div key={itemKey} className={level <= 2 ? 'pt-2' : 'pt-1'}>
-          {level <= 2 ? (
+        <div key={itemKey} className={level <= 3 ? 'pt-2' : 'pt-1'}>
+          {level <= 3 ? (
             <h4 className="text-[1.03rem] font-bold tracking-[-0.03em] text-slate-950 sm:text-[1.08rem]">
               {renderInlineMarkdown(headingText)}
             </h4>
