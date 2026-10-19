@@ -44,6 +44,15 @@ function hasSessionCookie(request: NextRequest) {
     );
 }
 
+// Supabase puede renovar o borrar cookies durante getUser(). Las redirecciones
+// deben copiar esas cookies al nuevo response para evitar sesiones atascadas.
+function redirectPreservingSessionCookies(source: NextResponse, url: URL) {
+  const redirect = NextResponse.redirect(url);
+  source.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  redirect.headers.set('Cache-Control', 'private, no-store');
+  return redirect;
+}
+
 function persistReferralCookie(request: NextRequest, response: NextResponse) {
   const code = normalizeReferralCode(request.nextUrl.searchParams.get('ref'));
   if (!code) return response;
@@ -180,10 +189,10 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (isHomeRoute && user) {
-    const homeResponse = NextResponse.redirect(new URL('/dashboard', request.url));
-    // La validación puede renovar la sesión: conservar esas cookies al redirigir.
-    response.cookies.getAll().forEach((cookie) => homeResponse.cookies.set(cookie));
-    homeResponse.headers.set('Cache-Control', 'private, no-store');
+    const homeResponse = redirectPreservingSessionCookies(
+      response,
+      new URL('/dashboard', request.url)
+    );
     return persistReferralCookie(request, homeResponse);
   }
 
@@ -208,7 +217,7 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
-    return persistReferralCookie(request, NextResponse.redirect(loginUrl));
+    return persistReferralCookie(request, redirectPreservingSessionCookies(response, loginUrl));
   }
 
   if (isRegularSimulatorRoute && !user) {
@@ -218,7 +227,7 @@ export async function proxy(request: NextRequest) {
   if (isLoginRoute && user) {
     return persistReferralCookie(
       request,
-      NextResponse.redirect(new URL('/dashboard', request.url))
+      redirectPreservingSessionCookies(response, new URL('/dashboard', request.url))
     );
   }
 
