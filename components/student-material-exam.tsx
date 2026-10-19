@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
-import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import {
   recordStudentMaterialStudyResultAction,
   finishStudyErrorOnboardingAction,
@@ -42,7 +41,7 @@ type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
-  onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
+  onReturnToTopic?: (reinforce: boolean) => void;
   sections?: StudySummarySection[];
   topicSectionIndex?: number;
   simulation?: {
@@ -503,20 +502,7 @@ export function StudentMaterialExam({
         </div>
 
         <section className="border-border border-b py-5">
-          {topicSectionIndex !== undefined ? (
-            <div>
-              <h3 className="text-foreground font-semibold">
-                {result.wrong.length > 0
-                  ? `${result.wrong.length} ${result.wrong.length === 1 ? 'pregunta para revisar' : 'preguntas para revisar'}`
-                  : 'Respondiste toda la tanda correctamente'}
-              </h3>
-              <p className="text-muted-foreground mt-2 text-sm">
-                {result.wrong.length > 0
-                  ? 'Antes de continuar, te recomendamos revisar estas dificultades con el contenido del tema.'
-                  : 'Podés volver al tema y continuar estudiando. Más adelante conviene comprobarlo otra vez.'}
-              </p>
-            </div>
-          ) : reviewTopics.length > 0 ? (
+          {reviewTopics.length > 0 ? (
             <div className="flex items-start gap-3">
               <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div>
@@ -560,15 +546,7 @@ export function StudentMaterialExam({
         <div className="flex flex-wrap gap-3 pt-5">
           {topicSectionIndex !== undefined && onReturnToTopic ? (
             <Button
-              onClick={() =>
-                onReturnToTopic(result.wrong.length > 0, {
-                  sectionIndex: topicSectionIndex,
-                  total: result.total,
-                  correct: result.correct,
-                  incorrect: result.wrong.length,
-                  incorrectPrompts: result.wrong.map((question) => question.prompt),
-                })
-              }
+              onClick={() => onReturnToTopic(result.wrong.length > 0)}
               className="h-auto min-h-11 whitespace-normal"
             >
               {result.wrong.length > 0 ? 'Reforzar este tema' : 'Volver al tema'}

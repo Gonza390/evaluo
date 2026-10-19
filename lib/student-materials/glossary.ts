@@ -27,7 +27,6 @@ import {
 } from '@/lib/student-materials/text';
 import { generateStudentMaterialSummary } from '@/lib/student-materials/summary';
 import { recordAiUsage } from '@/lib/student-materials/ai-usage';
-import { findConceptTopic } from '@/lib/student-materials/topic-study-resources';
 import type {
   GenerateSummaryInput,
   StudyGlossaryItem,
@@ -95,9 +94,12 @@ function sentenceCase(value: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-function buildGlossaryContext(term: string, sections: StudySummarySection[], context = '') {
-  const index = findConceptTopic({ term, context }, sections);
-  return index >= 0 ? sections[index].title : '';
+function buildGlossaryContext(sectionTitles: string[], index: number) {
+  if (sectionTitles.length === 0) {
+    return `Tema ${index + 1}`;
+  }
+
+  return sectionTitles[index % sectionTitles.length] ?? sectionTitles[0];
 }
 
 function isGoodGlossaryTerm(term: string) {
@@ -363,12 +365,13 @@ export function buildStudentMaterialGlossary(
 ): StudyGlossaryItem[] {
   const normalizedText = prepareTextForSummary(text);
   const model = buildStudyDocumentModel(normalizedText, summary.sections[0]?.title ?? 'Documento');
+  const sectionTitles = summary.sections.map((section) => section.title).filter(Boolean);
   const glossaryFromText = [
     ...extractGlossaryCandidatesFromText(normalizedText),
-    ...model.conceptIndex.map((concept) => ({
+    ...model.conceptIndex.map((concept, index) => ({
       term: normalizeGlossaryTerm(concept.term),
       definition: truncateAtWord(cleanLine(concept.detail), 320),
-      context: buildGlossaryContext(concept.term, summary.sections),
+      context: buildGlossaryContext(model.sectionTitles, index),
       importance:
         concept.kind === 'definicion' || concept.kind === 'clasificacion'
           ? ('alta' as const)
@@ -384,7 +387,7 @@ export function buildStudentMaterialGlossary(
         return {
           term: normalizeGlossaryTerm(colonMatch[1] ?? ''),
           definition: truncateAtWord(cleanLine(colonMatch[2] ?? ''), 320),
-          context: buildGlossaryContext(colonMatch[1] ?? '', summary.sections),
+          context: buildGlossaryContext(sectionTitles, index),
           importance: index < 4 ? ('alta' as const) : ('media' as const),
         };
       }
@@ -423,11 +426,11 @@ export function buildStudentMaterialGlossary(
       return {
         term,
         definition,
-        context: buildGlossaryContext(
-          term,
-          summary.sections,
-          fromSection?.context || fromText?.context || fromSummary?.context || ''
-        ),
+        context:
+          fromText?.context ??
+          fromSection?.context ??
+          fromSummary?.context ??
+          buildGlossaryContext(sectionTitles, index),
         importance:
           fromText?.importance ??
           fromSection?.importance ??

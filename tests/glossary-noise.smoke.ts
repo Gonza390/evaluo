@@ -51,24 +51,3 @@ assert.ok(
 );
 
 console.log('Glossary noise diacritic smoke tests passed.');
-const topicSummary: StudentMaterialSummary = {
-  ...summary,
-  keyPoints: [
-    'Sobreajuste: Un modelo memoriza ejemplos y pierde capacidad de generalizar a datos nuevos.',
-    'Concepto externo: Esta definición no pertenece a ninguna sección disponible del resumen.',
-  ],
-  sections: [
-    { title: 'Seguridad', body: 'El cifrado protege la confidencialidad de la información.' },
-    {
-      title: 'Aprendizaje',
-      body: 'El sobreajuste aparece cuando se memorizan ejemplos y no se generaliza.',
-    },
-  ],
-};
-const linked = buildStudentMaterialGlossary(topicSummary.keyPoints.join('\n\n'), topicSummary);
-assert.equal(linked.find((item) => item.term === 'Sobreajuste')?.context, 'Aprendizaje');
-assert.equal(
-  linked.find((item) => item.term === 'Concepto externo')?.context,
-  '',
-  'Un término sin evidencia no debe recibir un capítulo por orden de lista.'
-);
