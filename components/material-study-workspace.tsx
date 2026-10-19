@@ -1847,7 +1847,7 @@ export function MaterialStudyWorkspace({
         />
       ) : null}
       <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
-        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-4 px-4 py-2 sm:px-6 lg:px-4">
+        <div className="mx-auto flex w-full max-w-none items-center gap-4 px-4 py-2 sm:px-6 lg:px-5">
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
@@ -1878,7 +1878,7 @@ export function MaterialStudyWorkspace({
         </div>
       </section>
 
-      <section className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col px-2 py-2 sm:px-4 xl:px-4 xl:pb-3">
+      <section className="mx-auto flex min-h-0 w-full max-w-none flex-1 flex-col px-2 py-2 sm:px-4 xl:px-5 xl:pb-3">
         <div className="hidden min-h-0 flex-1 xl:flex">
           <div className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
