@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '@/types/supabase';
 import { logError } from '@/lib/observability';
@@ -689,7 +690,11 @@ async function updateStudentTopicPerformanceBatch(input: {
     const wrongCount = (current?.wrong_count ?? 0) + scope.wrong;
     const masteryScore = attemptsCount > 0 ? Math.round((correctCount / attemptsCount) * 10000) / 100 : 0;
 
+    // En upserts por lote se combinan filas existentes (con id) y nuevas.
+    // PostgREST puede serializar como null los ids omitidos en el mismo lote.
+    // Asignar siempre un UUID evita el error 23502 sin alterar el score.
     const payload: PerformanceInsert = {
+      id: current?.id ?? randomUUID(),
       user_id: input.userId,
       materia_id: scope.materiaId,
       parcial: scope.parcial,
@@ -703,10 +708,6 @@ async function updateStudentTopicPerformanceBatch(input: {
       last_wrong_at: scope.wrong > 0 ? now : (current ? undefined : null),
       updated_at: now,
     };
-
-    if (current?.id) {
-      payload.id = current.id;
-    }
 
     upserts.push(payload);
   }

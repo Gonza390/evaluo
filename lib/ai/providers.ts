@@ -136,6 +136,11 @@ function isJsonModeRejectedError(errorText: string) {
   return /json|response_format|structured output|schema/i.test(errorText);
 }
 
+function isTransientAiTransportError(error: unknown): boolean {
+  const description = error instanceof Error ? `${error.name}: ${error.message}` : String(error ?? '');
+  return /aborterror|timeout|timed out|fetch failed|etimedout|econnreset|econnrefused|eai_again|und_err_socket|socket hang up/i.test(description);
+}
+
 type OpenAiCompatibleRequest = {
   prompt: string;
   system: string;
@@ -166,86 +171,93 @@ async function requestOpenAiCompatibleJson(
 
   for (const apiKey of apiKeys) {
     for (const model of models) {
-      const body: Record<string, unknown> = {
-        model,
-        temperature: input.temperature,
-        max_tokens: input.maxTokens,
-        messages: [
-          { role: 'system', content: input.system },
-          { role: 'user', content: input.prompt },
-        ],
-        response_format: { type: 'json_object' },
-      };
+      try {
+        const body: Record<string, unknown> = {
+          model,
+          temperature: input.temperature,
+          max_tokens: input.maxTokens,
+          messages: [
+            { role: 'system', content: input.system },
+            { role: 'user', content: input.prompt },
+          ],
+          response_format: { type: 'json_object' },
+        };
 
-      let response = await fetchWithTimeout(cfg.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...cfg.headers(apiKey),
-        },
-        body: JSON.stringify(body),
-      });
+        let response = await fetchWithTimeout(cfg.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...cfg.headers(apiKey),
+          },
+          body: JSON.stringify(body),
+        });
 
-      if (response.status === 400) {
-        const errorText = await response.text().catch(() => '');
-        if (isJsonModeRejectedError(errorText)) {
-          delete body.response_format;
-          response = await fetchWithTimeout(cfg.endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...cfg.headers(apiKey),
-            },
-            body: JSON.stringify(body),
-          });
-        } else {
-          throw new Error(`${cfg.provider} ${model} devolvio 400: ${errorText.slice(0, 200)}`);
+        if (response.status === 400) {
+          const errorText = await response.text().catch(() => '');
+          if (isJsonModeRejectedError(errorText)) {
+            delete body.response_format;
+            response = await fetchWithTimeout(cfg.endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...cfg.headers(apiKey),
+              },
+              body: JSON.stringify(body),
+            });
+          } else {
+            throw new Error(`${cfg.provider} ${model} devolvio 400: ${errorText.slice(0, 200)}`);
+          }
         }
-      }
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        if (cfg.transientStatuses.includes(response.status)) {
-          lastErrorMessage = `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => '');
+          if (cfg.transientStatuses.includes(response.status)) {
+            lastErrorMessage = `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
+            continue;
+          }
+
+          throw new Error(
+            `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
+          );
+        }
+
+        const rawResponse = await response.text().catch(() => '');
+        let json: Record<string, unknown>;
+        try {
+          json = JSON.parse(rawResponse) as Record<string, unknown>;
+        } catch {
+          lastErrorMessage =
+            `${cfg.provider} ${model} devolvio una respuesta no JSON: ${rawResponse.slice(0, 120)}`;
           continue;
         }
 
-        throw new Error(
-          `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
-        );
+        const choices = json?.choices;
+        const content = Array.isArray(choices)
+          ? (
+              (choices[0] as Record<string, unknown> | undefined)?.message as
+                | Record<string, unknown>
+                | undefined
+            )?.content
+          : undefined;
+
+        const normalized = typeof content === 'string' ? content.trim() : '';
+        if (!normalized) continue;
+
+        return {
+          provider: cfg.provider,
+          model,
+          content: normalized,
+          finishReason: Array.isArray(choices)
+            ? String((choices[0] as Record<string, unknown>)?.finish_reason ?? '')
+            : undefined,
+          usage: parseOpenAiUsage(json),
+        };
+      } catch (error) {
+        // Una caída de red/timeout de un modelo no debe impedir probar el siguiente.
+        // Los errores no transitorios conservan el comportamiento anterior.
+        if (!isTransientAiTransportError(error)) throw error;
+        lastErrorMessage = `${cfg.provider} ${model}: no respondió a tiempo o falló la conexión`;
       }
-
-      const rawResponse = await response.text().catch(() => '');
-      let json: Record<string, unknown>;
-      try {
-        json = JSON.parse(rawResponse) as Record<string, unknown>;
-      } catch {
-        lastErrorMessage =
-          `${cfg.provider} ${model} devolvio una respuesta no JSON: ${rawResponse.slice(0, 120)}`;
-        continue;
-      }
-
-      const choices = json?.choices;
-      const content = Array.isArray(choices)
-        ? (
-            (choices[0] as Record<string, unknown> | undefined)?.message as
-              | Record<string, unknown>
-              | undefined
-          )?.content
-        : undefined;
-
-      const normalized = typeof content === 'string' ? content.trim() : '';
-      if (!normalized) continue;
-
-      return {
-        provider: cfg.provider,
-        model,
-        content: normalized,
-        finishReason: Array.isArray(choices)
-          ? String((choices[0] as Record<string, unknown>)?.finish_reason ?? '')
-          : undefined,
-        usage: parseOpenAiUsage(json),
-      };
     }
   }
 
@@ -268,59 +280,66 @@ async function requestOpenAiCompatibleText(
 
   for (const apiKey of apiKeys) {
     for (const model of models) {
-      const body = {
-        model,
-        temperature: input.temperature,
-        max_tokens: input.maxTokens,
-        messages: [
-          { role: 'system', content: input.system },
-          { role: 'user', content: input.prompt },
-        ],
-      };
+      try {
+        const body = {
+          model,
+          temperature: input.temperature,
+          max_tokens: input.maxTokens,
+          messages: [
+            { role: 'system', content: input.system },
+            { role: 'user', content: input.prompt },
+          ],
+        };
 
-      const response = await fetchWithTimeout(cfg.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...cfg.headers(apiKey),
-        },
-        body: JSON.stringify(body),
-      });
+        const response = await fetchWithTimeout(cfg.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...cfg.headers(apiKey),
+          },
+          body: JSON.stringify(body),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        if (cfg.transientStatuses.includes(response.status)) {
-          lastErrorMessage = `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
-          continue;
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => '');
+          if (cfg.transientStatuses.includes(response.status)) {
+            lastErrorMessage = `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`;
+            continue;
+          }
+
+          throw new Error(
+            `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
+          );
         }
 
-        throw new Error(
-          `${cfg.provider} ${model} devolvio ${response.status}: ${errorText.slice(0, 200)}`
-        );
+        const json = (await response.json()) as Record<string, unknown>;
+        const choices = json?.choices;
+        const content = Array.isArray(choices)
+          ? (
+              (choices[0] as Record<string, unknown> | undefined)?.message as
+                | Record<string, unknown>
+                | undefined
+            )?.content
+          : undefined;
+
+        const normalized = typeof content === 'string' ? content.trim() : '';
+        if (!normalized) continue;
+
+        return {
+          provider: cfg.provider,
+          model,
+          content: normalized,
+          usage: parseOpenAiUsage(json),
+          finishReason: Array.isArray(choices)
+            ? String((choices[0] as Record<string, unknown>)?.finish_reason ?? '')
+            : undefined,
+        };
+      } catch (error) {
+        // Una caída de red/timeout de un modelo no debe impedir probar el siguiente.
+        // Los errores no transitorios conservan el comportamiento anterior.
+        if (!isTransientAiTransportError(error)) throw error;
+        lastErrorMessage = `${cfg.provider} ${model}: no respondió a tiempo o falló la conexión`;
       }
-
-      const json = (await response.json()) as Record<string, unknown>;
-      const choices = json?.choices;
-      const content = Array.isArray(choices)
-        ? (
-            (choices[0] as Record<string, unknown> | undefined)?.message as
-              | Record<string, unknown>
-              | undefined
-          )?.content
-        : undefined;
-
-      const normalized = typeof content === 'string' ? content.trim() : '';
-      if (!normalized) continue;
-
-      return {
-        provider: cfg.provider,
-        model,
-        content: normalized,
-        usage: parseOpenAiUsage(json),
-        finishReason: Array.isArray(choices)
-          ? String((choices[0] as Record<string, unknown>)?.finish_reason ?? '')
-          : undefined,
-      };
     }
   }
 

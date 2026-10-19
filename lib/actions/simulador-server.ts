@@ -1005,7 +1005,9 @@ export async function submitSimulatorRatingAction(data: {
   }
 }
 
-const SIMULATOR_RATINGS_ATTEMPT_TIMEOUT_MS = 850;
+// Las llamadas RPC suelen tardar milisegundos, pero 850 ms era insuficiente
+// ante arranques fríos o latencia temporal de PostgREST.
+const SIMULATOR_RATINGS_ATTEMPT_TIMEOUT_MS = 2_000;
 const SIMULATOR_RATINGS_RETRY_DELAY_MS = 150;
 
 function emptySimulatorRatingsSummary(): SimulatorRatingSummary[] {
@@ -1109,9 +1111,39 @@ async function fetchSimulatorRatingsByMateria(
   throw lastError ?? new Error('No se pudieron cargar los ratings del simulador.');
 }
 
+// Una materia sin votos no necesita una RPC individual en cada landing.
+// El inventario global se consulta una vez por ventana de caché y se invalida
+// junto con las valoraciones al registrar un voto. Si supera el límite,
+// degradamos al flujo anterior en lugar de ocultar valoraciones antiguas.
+const loadRatedSimulatorMateriaIds = unstable_cache(
+  async (): Promise<string[] | null> => {
+    const admin = createAdminClient();
+    const { data, count, error } = await admin
+      .from('analytics_events')
+      .select('metadata', { count: 'exact' })
+      .eq('event_name', 'simulator_rating')
+      .not('user_id', 'is', null)
+      .limit(1_000);
+
+    if (error) throw error;
+    if (count === null || count > 1_000) return null;
+
+    const ids = new Set<string>();
+    for (const row of data ?? []) {
+      const metadata = row.metadata;
+      if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) continue;
+      const id = (metadata as Record<string, unknown>).materia_id;
+      if (typeof id === 'string' && id) ids.add(id);
+    }
+    return [...ids];
+  },
+  ['simulator-rated-materias-v1'],
+  { revalidate: 600, tags: ['simulator-ratings'] }
+);
+
 const loadSimulatorRatingsByMateria = unstable_cache(
   fetchSimulatorRatingsByMateria,
-  ['simulator-ratings-v2'],
+  ['simulator-ratings-v3'],
   { revalidate: 600, tags: ['simulator-ratings'] }
 );
 
@@ -1119,6 +1151,16 @@ export async function getSimulatorRatingsSummaryByMateria(
   materiaId: string
 ): Promise<SimulatorRatingSummary[]> {
   try {
+    try {
+      const ratedMateriaIds = await loadRatedSimulatorMateriaIds();
+      if (ratedMateriaIds && !ratedMateriaIds.includes(materiaId)) {
+        return emptySimulatorRatingsSummary();
+      }
+    } catch (error) {
+      // Si el inventario no está disponible, seguimos consultando la materia
+      // puntual y nunca devolvemos ceros falsos por un fallo del inventario.
+      logError('actions.getSimulatorRatingsMateriaIndex', error);
+    }
     return await loadSimulatorRatingsByMateria(materiaId);
   } catch (error) {
     // El fallback ocurre fuera del caché: un corte transitorio nunca guarda
