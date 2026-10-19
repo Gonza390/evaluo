@@ -98,7 +98,11 @@ await check('topic practice -> result -> return to same topic', async () => {
     await nav.getByRole('button').nth(1).click();
     const titleBefore = (await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim();
     await page.getByRole('button', { name: 'Practicar el tema', exact: true }).click();
-    await page.getByRole('button', { name: 'Empezar práctica' }).click();
+    await page.locator('article').first().waitFor(wait);
+    assert.equal(await page.getByRole('button', { name: 'Empezar práctica' }).count(), 0, 'Topic practice must start without a size picker or extra start step');
+    const counter = (await page.getByText(/Pregunta 1 de \d+/).first().textContent()) ?? '';
+    const total = Number(counter.match(/de (\d+)/)?.[1]);
+    assert.ok(total >= 1 && total <= 20, 'Topic practice must include 1–20 distinct questions, got: ' + counter);
     let finished = false;
     for (let count = 0; count < 30; count++) {
       const question = page.locator('article').first();
