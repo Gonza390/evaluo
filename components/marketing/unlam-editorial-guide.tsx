@@ -18,7 +18,7 @@ import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 
-const uploadHref = '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1';
+const uploadHref = '/estudiar-pdf-con-ia?source=ingreso-unlam-2027';
 const demoHref = '/demo/material-estudio?source=seo_ingreso_unlam_2027';
 
 const officialSources = {
@@ -102,9 +102,38 @@ export function UnlamEditorialGuide() {
                 <p className="mt-5 max-w-3xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
                   Si buscás cómo estudiar para el ingreso UNLaM 2027, empezá por organizar las materias y el manual oficial. Después alterná comprensión, práctica y repaso de errores en lugar de limitarte a releer.
                 </p>
+                <div className="mt-6 rounded-2xl border border-blue-200 bg-blue-50/75 p-4 sm:p-5">
+                  <p className="text-sm font-bold text-blue-900">
+                    ¿Ya estás cursando el ingreso 2027?
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    La primera instancia regular se cursa del 20 de julio al 9 de diciembre de
+                    2026. Si estás preparando sus evaluaciones, podés usar los apuntes y el
+                    material de tu materia para organizar el repaso y practicar antes de rendir.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs">
+                    <OfficialLink href={officialSources.calendario}>
+                      Consultar fechas oficiales
+                    </OfficialLink>
+                    <TrackedLink
+                      href={uploadHref}
+                      eventName="cta_click"
+                      payload={{
+                        location: 'seo_ingreso_unlam_primera_instancia',
+                        cta_name: 'elegir_pdf_para_estudiar',
+                        destination: uploadHref,
+                      }}
+                      className="inline-flex items-center gap-1.5 font-semibold text-blue-700 underline decoration-blue-200 underline-offset-4 hover:decoration-blue-500"
+                    >
+                      Elegir mi PDF para estudiar
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                    </TrackedLink>
+                  </div>
+                </div>
+
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> 12 min de lectura</span>
-                  <span>Revisado el 18 de septiembre de 2026</span>
+                  <span>Revisado el 19 de octubre de 2026</span>
                   <span>Equipo Evaluo</span>
                 </div>
               </div>
