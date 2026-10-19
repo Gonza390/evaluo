@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const baseUrl = process.env.QA_BASE_URL || 'http://127.0.0.1:3100';
+const baseUrl = process.env.QA_BASE_URL || 'http://localhost:3100';
 const folder = process.env.QA_ARTIFACTS_DIR || 'qa-artifacts/progreso';
 const widths = [355, 433, 853, 1024, 1280, 1440, 1920];
 await mkdir(folder, { recursive: true });
@@ -28,6 +28,8 @@ for (const width of widths) {
       const response = await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 60000 });
       assert.equal(response?.status(), 200, 'Preview should load');
       await page.getByRole('heading', { name: 'Tu progreso', exact: true }).waitFor(wait);
+      await page.waitForLoadState('load');
+      await page.waitForTimeout(500);
       const firstAction = page.getByRole('button', { name: /Comenzar a estudiar|Continuar estudiando/ }).first();
       await firstAction.click();
       await page.locator('[id^="real-detail-title"]').waitFor(wait);
@@ -51,6 +53,9 @@ for (const width of widths) {
         await page.getByRole('button', { name: /2\. Machine learning y deep learning/i }).click();
       }
       await page.screenshot({ path: folder + '/progreso-' + width + '.png', fullPage: false, animations: 'disabled' });
+    } catch (error) {
+      await page.screenshot({ path: folder + '/failed-' + width + '.png', animations: 'disabled' }).catch(() => {});
+      throw error;
     } finally {
       await page.close();
     }
@@ -95,6 +100,9 @@ await check('topic practice -> result -> return to same topic', async () => {
     assert.equal((await page.locator('[id^="real-detail-title"]').textContent())?.trim(), titleBefore, 'Back to same topic');
     await page.getByText('Tu próxima actividad').first().waitFor(wait);
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
+  } catch (error) {
+    await page.screenshot({ path: folder + '/failed-practice.png', animations: 'disabled' }).catch(() => {});
+    throw error;
   } finally {
     await page.close();
   }
