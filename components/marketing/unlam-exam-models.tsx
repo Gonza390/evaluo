@@ -1,5 +1,5 @@
 import { ArrowRight, ExternalLink, FileQuestion, UploadCloud } from 'lucide-react';
-import { UnlamExamFormatSample } from '@/components/marketing/unlam-exam-format-sample';
+
 import { TrackedLink } from '@/components/marketing/tracked-link';
 
 const PDF_HREF = '/estudiar-pdf-con-ia?source=ingreso-unlam-2027';
@@ -148,9 +148,7 @@ export function UnlamExamModels() {
           </div>
         </div>
 
-        <div className="mt-8">
-          <UnlamExamFormatSample />
-        </div>
+
 
         <div className="mt-8 grid gap-5 rounded-2xl border border-blue-100 bg-white p-5 sm:p-7 lg:grid-cols-[0.78fr_1.22fr] lg:items-center">
           <div>
