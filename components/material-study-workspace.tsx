@@ -588,7 +588,8 @@ export function MaterialStudyWorkspace({
       navigate();
       return;
     }
-    // Crossfade liviano sobre el contenido. La guía conserva su lugar y altura.
+    // Fade corto al salir, cambio real de pestaña y entrada suave.
+    // El recorte y la tarjeta interpolan su posición en paralelo.
     setOnboardingFading(true);
     onboardingTransitionRef.current = window.setTimeout(() => {
       onboardingTransitionRef.current = null;
@@ -596,7 +597,7 @@ export function MaterialStudyWorkspace({
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => setOnboardingFading(false));
       });
-    }, 170);
+    }, 150);
   };
 
   useEffect(() => {
@@ -1279,8 +1280,8 @@ export function MaterialStudyWorkspace({
       className={cn(
         'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
         demo && 'h-full min-h-0 overflow-y-auto',
-        recommendedActive && 'transition-[opacity,transform] duration-[170ms] ease-out motion-reduce:transition-none',
-        recommendedActive && onboardingFading && 'pointer-events-none translate-y-1 opacity-[0.08]'
+        recommendedActive && 'transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+        recommendedActive && onboardingFading && 'pointer-events-none translate-y-1 opacity-40'
       )}
     >
       {commentsOpen && activeTab === 'resumen' ? (

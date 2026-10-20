@@ -70,15 +70,16 @@ function findTarget(step: RecommendedStudyStep): HTMLElement | null {
   return null;
 }
 
-function getSpotlight(node: HTMLElement): Spotlight {
+function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
   const rect = node.getBoundingClientRect();
   const width = window.innerWidth;
   const height = window.innerHeight;
-  const margin = 8;
+  const margin = 10;
   const left = Math.max(margin, rect.left - margin);
   const top = Math.max(margin, rect.top - margin);
   const right = Math.min(width - margin, rect.right + margin);
-  const maxFocusHeight = width < 640 ? 184 : 232;
+  // Un foco compacto deja ver mejor el resto de la plataforma.
+  const maxFocusHeight = width < 640 ? 156 : 196;
   const focusWidth = Math.max(0, right - left);
   const focusHeight = Math.max(
     0,
@@ -86,7 +87,6 @@ function getSpotlight(node: HTMLElement): Spotlight {
   );
   const cardWidth = Math.min(360, width - 24);
   const cardLeft = Math.max(12, Math.min(width - cardWidth - 12, left + focusWidth / 2 - cardWidth / 2));
-  const cardHeight = 188;
   const cardTop =
     top + focusHeight + 12 + cardHeight < height - 8
       ? top + focusHeight + 12
@@ -141,6 +141,7 @@ export function RecommendedStudyGuide({
     let didScroll = false;
     let observer: ResizeObserver | null = null;
     let observed: HTMLElement | null = null;
+    let cardObserver: ResizeObserver | null = null;
 
     const update = () => {
       const node = findTarget(step);
@@ -167,7 +168,7 @@ export function RecommendedStudyGuide({
         observed = node;
       }
 
-      const next = getSpotlight(node);
+      const next = getSpotlight(node, cardRef.current?.getBoundingClientRect().height ?? 214);
       setSpotlight((previous) =>
         previous &&
         Object.keys(next).every(
@@ -185,11 +186,16 @@ export function RecommendedStudyGuide({
     };
 
     scheduleUpdate();
+    if (cardRef.current) {
+      cardObserver = new ResizeObserver(scheduleUpdate);
+      cardObserver.observe(cardRef.current);
+    }
     window.addEventListener('resize', scheduleUpdate);
     document.addEventListener('scroll', scheduleUpdate, true);
     return () => {
       window.cancelAnimationFrame(frame);
       observer?.disconnect();
+      cardObserver?.disconnect();
       window.removeEventListener('resize', scheduleUpdate);
       document.removeEventListener('scroll', scheduleUpdate, true);
     };
@@ -230,8 +236,17 @@ export function RecommendedStudyGuide({
 
   if (!mounted) return null;
 
+  // Luz suave: la plataforma sigue siendo legible mientras enseñamos cada área.
   const overlayClass =
-    'pointer-events-auto fixed z-[80] bg-slate-950/30 backdrop-blur-[3px] motion-reduce:transition-none transition-[top,left,width,height] duration-200';
+    'pointer-events-auto fixed z-[80] bg-slate-950/12 backdrop-blur-[1px] ' +
+    'transition-[top,left,width,height,opacity] duration-[300ms] ' +
+    'ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
+  const cornerClass =
+    'pointer-events-auto fixed z-[80] backdrop-blur-[1px] ' +
+    'transition-[top,left,width,height,opacity] duration-[300ms] ' +
+    'ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none';
+  const cornerRadius = spotlight ? Math.min(28, spotlight.width / 2, spotlight.height / 2) : 28;
+  const cornerShade = 'rgba(2,6,23,0.12)';
 
   return createPortal(
     <>
@@ -241,14 +256,46 @@ export function RecommendedStudyGuide({
           <div aria-hidden="true" className={overlayClass} style={{ top: spotlight.top + spotlight.height, left: 0, right: 0, bottom: 0 }} />
           <div aria-hidden="true" className={overlayClass} style={{ top: spotlight.top, left: 0, width: spotlight.left, height: spotlight.height }} />
           <div aria-hidden="true" className={overlayClass} style={{ top: spotlight.top, left: spotlight.left + spotlight.width, right: 0, height: spotlight.height }} />
+          {/*
+            Las cuatro esquinas cierran el recorte rectangular con arcos reales:
+            fondo y desenfoque también respetan el radio del foco iluminado.
+          */}
+          <div aria-hidden="true" className={cornerClass} style={{
+            top: spotlight.top,
+            left: spotlight.left,
+            width: cornerRadius,
+            height: cornerRadius,
+            background: `radial-gradient(circle at 100% 100%, transparent ${cornerRadius - 1}px, ${cornerShade} ${cornerRadius}px)`,
+          }} />
+          <div aria-hidden="true" className={cornerClass} style={{
+            top: spotlight.top,
+            left: spotlight.left + spotlight.width - cornerRadius,
+            width: cornerRadius,
+            height: cornerRadius,
+            background: `radial-gradient(circle at 0% 100%, transparent ${cornerRadius - 1}px, ${cornerShade} ${cornerRadius}px)`,
+          }} />
+          <div aria-hidden="true" className={cornerClass} style={{
+            top: spotlight.top + spotlight.height - cornerRadius,
+            left: spotlight.left,
+            width: cornerRadius,
+            height: cornerRadius,
+            background: `radial-gradient(circle at 100% 0%, transparent ${cornerRadius - 1}px, ${cornerShade} ${cornerRadius}px)`,
+          }} />
+          <div aria-hidden="true" className={cornerClass} style={{
+            top: spotlight.top + spotlight.height - cornerRadius,
+            left: spotlight.left + spotlight.width - cornerRadius,
+            width: cornerRadius,
+            height: cornerRadius,
+            background: `radial-gradient(circle at 0% 0%, transparent ${cornerRadius - 1}px, ${cornerShade} ${cornerRadius}px)`,
+          }} />
           <div
             aria-hidden="true"
-            className="pointer-events-none fixed z-[81] rounded-xl border-2 border-primary shadow-[0_0_0_5px_rgba(37,99,235,0.17)] transition-[top,left,width,height] duration-200 motion-reduce:transition-none"
+            className="pointer-events-none fixed z-[81] rounded-[28px] border-[1.5px] border-primary/80 shadow-[0_0_0_4px_rgba(37,99,235,0.10)] transition-[top,left,width,height,opacity] duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
             style={{ top: spotlight.top, left: spotlight.left, width: spotlight.width, height: spotlight.height }}
           />
         </>
       ) : (
-        <div aria-hidden="true" className="pointer-events-auto fixed inset-0 z-[80] bg-slate-950/30 backdrop-blur-[3px]" />
+        <div aria-hidden="true" className="pointer-events-auto fixed inset-0 z-[80] bg-slate-950/12 backdrop-blur-[1px]" />
       )}
 
       <section
@@ -259,11 +306,11 @@ export function RecommendedStudyGuide({
         tabIndex={-1}
         data-first-pdf-guide
         aria-busy={transitioning}
-        className="bg-card border-border fixed z-[90] w-[calc(100vw-24px)] max-w-[360px] rounded-2xl border p-4 shadow-[0_20px_75px_rgba(15,23,42,0.25)] outline-none motion-reduce:transition-none sm:p-5"
+        className="bg-card border-border fixed z-[90] w-[calc(100vw-24px)] max-w-[360px] rounded-[28px] border p-4 shadow-[0_18px_45px_rgba(15,23,42,0.14)] outline-none transition-[top,left,opacity] duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-5"
         style={
           spotlight
-            ? { top: spotlight.cardTop, left: spotlight.cardLeft }
-            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+            ? { top: spotlight.cardTop, left: spotlight.cardLeft, opacity: 1 }
+            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', opacity: 0 }
         }
       >
         <div className="flex items-start gap-3">
@@ -286,7 +333,7 @@ export function RecommendedStudyGuide({
             onClick={onExit}
             aria-label="Saltar guía e ir a estudiar"
             title="Saltar guía"
-            className="text-muted-foreground hover:bg-muted focus-visible:outline-ring -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2"
+            className="text-muted-foreground hover:bg-muted focus-visible:outline-ring -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-full focus-visible:outline-2"
           >
             <X className="size-4" />
           </button>
@@ -310,11 +357,11 @@ export function RecommendedStudyGuide({
           </div>
           <div className="flex items-center gap-1.5">
             {onBack ? (
-              <Button type="button" variant="ghost" size="sm" onClick={onBack} disabled={transitioning} className="min-h-9 gap-1 px-2">
+              <Button type="button" variant="ghost" size="sm" onClick={onBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
-            <Button type="button" size="sm" onClick={onNext} disabled={transitioning} className="min-h-9 gap-1.5 px-3">
+            <Button type="button" size="sm" onClick={onNext} disabled={transitioning} className="min-h-9 gap-1.5 rounded-full px-4">
               {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
             </Button>
           </div>

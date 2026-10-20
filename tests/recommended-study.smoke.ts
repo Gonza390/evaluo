@@ -119,7 +119,13 @@ const diagnosticSource = readFileSync('components/student-material-diagnostic.ts
 assert.ok(firstGuideSource.includes('Revisá tu progreso'), 'La guía debe destacar el estudio por temas.');
 assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe enseñar la interfaz real.');
 assert.match(firstGuideSource, /createPortal/, 'El foco debe renderizarse fuera de los contenedores con overflow.');
-assert.match(firstGuideSource, /backdrop-blur/, 'El resto de la pantalla debe tener un desenfoque leve.');
+assert.match(firstGuideSource, /bg-slate-950\/12 backdrop-blur-\[1px\]/, 'El fondo del tutorial debe ser suave.');
+assert.match(firstGuideSource, /radial-gradient\(circle at/, 'Las esquinas internas del foco deben ser realmente redondeadas.');
+assert.match(firstGuideSource, /rounded-\[28px\]/, 'El foco y la tarjeta deben usar radios amplios.');
+assert.match(firstGuideSource, /getBoundingClientRect\(\)\.height/, 'La posición de la tarjeta debe usar su altura real.');
+assert.match(firstGuideSource, /transition-\[top,left,opacity\]/, 'La tarjeta debe deslizarse entre secciones.');
+assert.match(materialWorkspaceSource, /duration-\[260ms\]/, 'El panel debe usar transiciones suaves.');
+assert.match(materialWorkspaceSource, /opacity-40/, 'El contenido no debe desaparecer bruscamente.');
 assert.match(firstGuideSource, /data-recommended-practice/, 'La guía debe enfocar la pantalla real de práctica.');
 assert.match(materialWorkspaceSource, /data-recommended-practice/, 'La práctica debe exponer un foco real.');
 assert.match(firstGuideSource, /aria-modal="true"/, 'La guía debe tener semántica accesible.');
@@ -131,6 +137,7 @@ assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La anim
 assert.match(materialWorkspaceSource, /data-onboarding-transitioning/, 'El contenido debe suavizar el cambio de etapa.');
 const materialStudyCss = readFileSync('app/materiales/[id]/material-study.css', 'utf8');
 assert.match(materialStudyCss, /evaluo-onboarding-copy-appear/, 'El cambio de texto debe ser suave.');
+assert.match(materialStudyCss, /260ms cubic-bezier/, 'La copia debe aparecer con una transición suave.');
 assert.match(materialStudyCss, /prefers-reduced-motion: reduce/, 'La animación de la guía debe desactivarse cuando corresponda.');
 assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
