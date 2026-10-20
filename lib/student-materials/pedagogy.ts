@@ -1732,7 +1732,10 @@ export function buildPedagogicalArtifacts(input: {
           concept.term,
           chunks,
           emptyReference(
-            sectionTitles[index % Math.max(1, sectionTitles.length)] ?? null,
+            sectionTitles.find((title) =>
+              concept.chapterTitle &&
+              normalizeForDedupe(title) === normalizeForDedupe(concept.chapterTitle)
+            ) ?? null,
             concept.context || concept.definition
           )
         ),
