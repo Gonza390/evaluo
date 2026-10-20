@@ -114,8 +114,26 @@ export function UnlamEditorialGuide() {
                 <p className="mt-5 max-w-3xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
                   Consultá las materias según tu carrera, las fechas oficiales de 2027 y una guía para preparar el manual. Además, podés resolver ejercicios gratuitos y continuar practicando con tus propios apuntes en Evaluo.
                 </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <TrackedLink
+                    href="#materias-unlam"
+                    eventName="cta_click"
+                    payload={{ location: 'seo_ingreso_unlam_2027_hero', cta_name: 'ver_materias_por_carrera', destination: '#materias-unlam' }}
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_25px_rgba(29,78,216,0.16)] hover:bg-blue-800"
+                  >
+                    Ver materias de mi carrera <ArrowRight className="h-4 w-4" aria-hidden="true"/>
+                  </TrackedLink>
+                  <TrackedLink
+                    href="#practica-ingreso"
+                    eventName="cta_click"
+                    payload={{ location: 'seo_ingreso_unlam_2027_hero', cta_name: 'practicar_sin_registro', destination: '#practica-ingreso' }}
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-3 text-sm font-bold text-blue-800 hover:bg-blue-50"
+                  >
+                    <ListChecks className="h-4 w-4" aria-hidden="true"/> Practicar gratis
+                  </TrackedLink>
+                </div>
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
-                  <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> 12 min de lectura</span>
+                  <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> Guía y práctica interactiva</span>
                   <span>Revisado el 20 de octubre de 2026</span>
                   <span>Equipo Evaluo</span>
                 </div>
@@ -141,6 +159,14 @@ export function UnlamEditorialGuide() {
                   </div>
                 ))}
               </dl>
+              <div className="mt-5 rounded-xl border border-blue-100 bg-white p-3">
+                <p className="text-xs font-bold text-slate-900">Primera instancia regular 2027</p>
+                <p className="mt-1 text-xs leading-6 text-slate-600">
+                  Cursada presencial: 20 de julio al 9 de diciembre de 2026.
+                  Se desarrolla antes de la segunda instancia y la UNLaM la recomienda
+                  para quienes ingresan por primera vez.
+                </p>
+              </div>
               <p className="mt-5 text-xs leading-6 text-slate-600">
                 La segunda instancia es intensiva y semipresencial, recomendada para recursantes o aspirantes con experiencia universitaria. Medicina, Arquitectura y Odontología no se ofertan en esta instancia; si es tu primera vez, revisá la modalidad regular.
               </p>
