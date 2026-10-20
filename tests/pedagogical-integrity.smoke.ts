@@ -40,6 +40,14 @@ const repeatedDefinition = open({
   answer: 'La distinción clave es esta: “validez deductiva” Premisas verdaderas y conclusión falsa no son compatibles. En cambio, “validez inductiva” Premisas verdaderas y conclusión falsa no son compatibles.',
 });
 assert.equal(unsafeModelAnswerReason(repeatedDefinition, sections), 'contrast_repeats_same_definition');
+const wrongComparison = open({
+  id: 'level-comparison',
+  kind: 'relationship',
+  topic: 'niveles de enunciados',
+  prompt: 'Compará el nivel 1 con el nivel 3 de enunciados.',
+  answer: '“nivel 1” se caracteriza en el material por: Observaciones empíricas particulares. En cambio, “nivel 3” se caracteriza por: Es un acto de habla con entonación propia.',
+});
+assert.equal(unsafeModelAnswerReason(wrongComparison, sections), 'comparison_not_supported_by_source');
 const foreignSection = open({
   id: 'foreign',
   type: 'open',
