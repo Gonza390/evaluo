@@ -62,6 +62,7 @@ export function getAnalyticsPageType(pathname: string) {
   if (pathname.startsWith('/explorar/materia/')) return 'materia';
   if (pathname === '/explorar') return 'explorar';
   if (pathname === '/uba-xxi/parciales') return 'seo-uba-xxi-parciales';
+  if (pathname === '/como-estudiar-ingreso-unlam') return 'seo-unlam-ingreso-2027';
   if (pathname.startsWith('/universidad/')) return 'universidad';
   if (pathname.startsWith('/materias')) return 'materias';
   if (pathname.startsWith('/recursos/')) return 'recursos';
