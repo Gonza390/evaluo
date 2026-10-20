@@ -24,6 +24,7 @@ const ANALYTICS_EVENT_NAMES = [
   'seo_unlam_practice_started',
   'seo_unlam_practice_answered',
   'seo_unlam_practice_completed',
+  'seo_unlam_practice_mode_selected',
   'pdf_picker_opened',
   'pdf_selected',
   'pdf_uploaded',
