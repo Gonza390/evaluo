@@ -499,8 +499,9 @@ export function RealPdfProgressPreview({
               progressOpen,
               pendingStudyErrorCount: data.pending.length,
               onProgressChange: setProgressOpen,
-              progress: (
+              progress: ({ showOnboardingExample }) => (
                 <PdfProgressPanel
+                  showOnboardingExample={showOnboardingExample}
                   glossary={glossary}
                   flashcards={previewArtifacts.flashcards}
                   sourcePdfHref={pdfHref}

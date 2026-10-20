@@ -131,30 +131,42 @@ assert.match(firstGuideSource, /setProgressExplained\(false\)/,
   'Atrás debe volver al primer mensaje de Progreso.');
 assert.match(firstGuideSource, /data-guide-progress-detail/,
   'El detalle debe explicar el ciclo de aprendizaje en la tarjeta existente.');
-assert.match(firstGuideSource, /data-guide-example-topics/,
-  'La última pantalla debe tener una muestra visual de temas.');
-assert.match(firstGuideSource, /Dominado.*Reforzar|Reforzar.*Dominado/s,
+assert.match(progressPanelSource, /data-tour-example-topic/,
+  'La muestra visual debe aparecer directamente en la lista de temas de Progreso.');
+assert.match(progressPanelSource, /Dominado.*Reforzar|Reforzar.*Dominado/s,
   'El ejemplo debe distinguir temas dominados y por reforzar.');
-assert.match(firstGuideSource, /Ejemplo ilustrativo: no refleja tu progreso real/,
+assert.match(progressPanelSource, /no representan tus resultados/,
   'Nunca se deben atribuir resultados ficticios a un estudiante.');
 assert.match(firstGuideSource, /step === 'errors'.*flex flex-col items-stretch/s,
   'Progreso debe colocar la navegación en filas para evitar el desborde.');
 assert.match(firstGuideSource, /cardRef\.current\?\.getBoundingClientRect\(\)\.width/,
   'El cálculo de centrado debe medir el ancho real de la tarjeta.');
-assert.match(materialWorkspaceSource, /exampleTopics=\{summaryChapters\.map/,
-  'La muestra debe usar nombres de capítulos reales del PDF.');
+assert.match(progressPanelSource, /topics\.slice\(0, 3\)/,
+  'La muestra debe usar nombres de los temas reales del PDF.');
 assert.match(firstGuideSource, /Ver cómo funciona/,
   'El primer CTA de Progreso debe mostrar la explicación.');
 assert.match(firstGuideSource, /Empezar a estudiar/,
   'El segundo CTA debe mantener el cierre hacia el resumen.');
-assert.match(firstGuideSource, /Vista previa\./,
-  'La vista previa debe quedar claramente identificada.');
-assert.match(firstGuideSource, /no refleja tu progreso real/,
+assert.match(progressPanelSource, /Ejemplo visual con temas de tu PDF/,
+  'El ejemplo debe explicar que los estados son simulados.');
+assert.match(progressPanelSource, /no representan tus resultados/,
   'Los estados de ejemplo deben estar identificados como ilustrativos.');
-assert.match(firstGuideSource, /Tus resultados aparecerán después de practicar/,
-  'Los resultados reales deben depender de prácticas completadas.');
-assert.match(materialWorkspaceSource, /demoMode=\{Boolean\(demo\)\}/,
-  'La guía debe diferenciar la vista previa de un PDF real.');
+assert.match(progressPanelSource, /!showOnboardingExample && visibleTopics\.map/,
+  'La vista real debe restaurarse cuando termina el ejemplo.');
+assert.match(materialWorkspaceSource, /setProgressExampleActive\(false\)/,
+  'El ejemplo debe desactivarse al cerrar el onboarding o volver atrás.');
+assert.match(materialWorkspaceSource, /onProgressDetailChange=\{setProgressExampleActive\}/,
+  'Solo Ver cómo funciona debe habilitar el ejemplo.');
+assert.match(firstGuideSource, /onProgressDetailChange\?\.\(true\)/,
+  'Ver cómo funciona habilita el ejemplo.');
+assert.match(firstGuideSource, /onProgressDetailChange\?\.\(false\)/,
+  'Atrás restaura los estados reales.');
+assert.match(firstGuideSource, /Mirá los temas de tu PDF en el panel de abajo/,
+  'La tarjeta explica dónde mirar sin duplicar la lista.');
+assert.match(previewSource, /progress: \(\{ showOnboardingExample \}\) =>/,
+  'La preview debe admitir el ejemplo temporal.');
+assert.match(materialWorkspaceSource, /showOnboardingExample=\{progressExampleActive/,
+  'La vista real solo presenta el ejemplo durante el tutorial.');
 assert.match(firstGuideSource, /onBack\?\.\(\)/,
   'El retorno de Progreso debe conservar la navegación original.');
 assert.match(firstGuideSource, /createPortal/, 'El foco debe renderizarse fuera de los contenedores con overflow.');

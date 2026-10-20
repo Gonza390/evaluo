@@ -182,7 +182,7 @@ type MaterialStudyWorkspaceProps = {
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
     practice: ReactNode;
-    progress?: ReactNode;
+    progress?: ReactNode | ((args: { showOnboardingExample: boolean }) => ReactNode);
     progressOpen?: boolean;
     pendingStudyErrorCount?: number;
     onProgressChange?: (open: boolean) => void;
@@ -368,6 +368,10 @@ export function MaterialStudyWorkspace({
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   const [onboardingFading, setOnboardingFading] = useState(false);
+  const [progressExampleActive, setProgressExampleActive] = useState(false);
+  const displayedProgressContent = typeof progressContent === 'function'
+    ? progressContent({ showOnboardingExample: progressExampleActive })
+    : progressContent;
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
 
@@ -610,6 +614,7 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
+      setProgressExampleActive(false);
       // Solo el cierre completo dirige al primer capítulo; Saltar conserva una salida rápida.
       setFocusFirstChapterOnExit(outcome === 'completed');
       setLocalProgressOpen(false);
@@ -1793,12 +1798,13 @@ export function MaterialStudyWorkspace({
           className="animate-tab-panel data-[state=inactive]:hidden"
         >
           {progressOpen
-            ? (progressContent ??
+            ? (displayedProgressContent ??
               (progressConfig ? (
                 <MaterialProgressContent
                   glossary={studyGlossary}
                   flashcards={studyArtifacts.flashcards}
                   sourcePdfHref={viewerUrl}
+                  showOnboardingExample={progressExampleActive && recommendedActive && recommendedTourStep === 'errors'}
                   material={{ id: materialId, title }}
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
@@ -1999,8 +2005,7 @@ export function MaterialStudyWorkspace({
         <RecommendedStudyGuide
             step={recommendedTourStep}
             transitioning={onboardingFading}
-            demoMode={Boolean(demo)}
-            exampleTopics={summaryChapters.map((chapter) => chapter.displayTitle).slice(0, 3)}
+            onProgressDetailChange={setProgressExampleActive}
             onExit={() => closeRecommendedTour('skipped')}
             onBack={
               recommendedTourStep === 'practice'
@@ -2011,6 +2016,7 @@ export function MaterialStudyWorkspace({
                   })
                 : recommendedTourStep === 'errors'
                   ? () => transitionRecommendedTour(() => {
+                      setProgressExampleActive(false);
                       setProgressOpen(false);
                       changeRecommendedTab('ejercicios');
                       setRecommendedTourStep('practice');

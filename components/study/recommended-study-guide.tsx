@@ -124,16 +124,14 @@ function getSpotlight(node: HTMLElement, cardHeight: number, cardWidth: number):
 export function RecommendedStudyGuide({
   step,
   transitioning = false,
-  demoMode = false,
-  exampleTopics = [],
+  onProgressDetailChange,
   onNext,
   onBack,
   onExit,
 }: {
   step: RecommendedStudyStep;
   transitioning?: boolean;
-  demoMode?: boolean;
-  exampleTopics?: string[];
+  onProgressDetailChange?: (show: boolean) => void;
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
@@ -149,12 +147,12 @@ export function RecommendedStudyGuide({
   const showingProgressDetail = step === 'errors' && progressExplained;
   const title = showingProgressDetail ? 'Cada práctica te ayuda a mejorar' : current.title;
   const description = showingProgressDetail
-    ? 'Identificá lo que entendiste y qué temas conviene reforzar.'
+    ? 'Mirá en tus temas qué dominás y qué conviene reforzar.'
     : current.description;
-  const illustratedTopics = exampleTopics.map((topic) => topic.trim()).filter(Boolean).slice(0, 3);
   const handleNext = () => {
     if (step === 'errors' && !progressExplained) {
       setProgressExplained(true);
+      onProgressDetailChange?.(true);
       return;
     }
     onNext();
@@ -162,6 +160,7 @@ export function RecommendedStudyGuide({
   const handleBack = () => {
     if (showingProgressDetail) {
       setProgressExplained(false);
+      onProgressDetailChange?.(false);
       return;
     }
     onBack?.();
@@ -373,38 +372,10 @@ export function RecommendedStudyGuide({
         </div>
 
         {showingProgressDetail && (
-          <div data-guide-progress-detail className="mt-2.5 min-w-0">
-            <p className="text-primary text-[10px] font-bold tracking-wide uppercase">
-              Ejemplo con temas de tu PDF
-            </p>
-            <div
-              data-guide-example-topics
-              aria-label="Estados ilustrativos, no son resultados reales"
-              className="border-border mt-1.5 overflow-hidden rounded-xl border"
-            >
-              {illustratedTopics.length > 0 ? illustratedTopics.map((topic, index) => {
-                const mastered = index === 0;
-                return (
-                  <div key={`${index}:${topic}`} className="border-border flex min-w-0 items-center justify-between gap-2 border-b px-2.5 py-2 last:border-b-0">
-                    <span className="text-foreground min-w-0 flex-1 truncate text-[11px] font-medium" title={topic}>{topic}</span>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${mastered
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'bg-amber-50 text-amber-800'}`}>
-                      {mastered ? 'Dominado' : 'Reforzar'}
-                    </span>
-                  </div>
-                );
-              }) : (
-                <p className="text-muted-foreground px-2.5 py-2 text-[11px]">
-                  Cuando tengas temas procesados, vas a poder seguir tu avance acá.
-                </p>
-              )}
-            </div>
-            <p className="text-muted-foreground mt-1.5 text-[10.5px] leading-4">
-              {demoMode ? 'Vista previa. ' : ''}Ejemplo ilustrativo: no refleja tu progreso real.
-              Tus resultados aparecerán después de practicar.
-            </p>
-          </div>
+          <p data-guide-progress-detail className="text-muted-foreground mt-2 text-[11px] leading-4">
+            Mirá los temas de tu PDF en el panel de abajo. Los estados de colores son un ejemplo,
+            no son resultados reales.
+          </p>
         )}
 
         <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${step === 'errors'
