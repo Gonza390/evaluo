@@ -43,6 +43,7 @@ import {
 } from '@/components/study/recommended-study-guide';
 import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
+import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
@@ -341,6 +342,25 @@ export function MaterialStudyWorkspace({
 }: MaterialStudyWorkspaceProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const guideRunIdRef = useRef<string | null>(null);
+  const guideStartedTrackedRef = useRef(false);
+  const guideCompletedRef = useRef(false);
+  const firstPostGuideActionTrackedRef = useRef(false);
+  const getGuideMetadata = () => {
+    if (!guideRunIdRef.current) {
+      guideRunIdRef.current = window.crypto?.randomUUID?.() ?? `guide-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+    return { material_id: materialId, guide_version: FIRST_PDF_GUIDE_VERSION,
+      guide_run_id: guideRunIdRef.current };
+  };
+  const trackPostGuideAction = (action: string) => {
+    if (!guideCompletedRef.current || firstPostGuideActionTrackedRef.current ||
+        !isOwner || demo || !recommendedStudyAvailable) return;
+    firstPostGuideActionTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_guide_post_action', {
+      ...getGuideMetadata(), action,
+    });
+  };
   const [localProgressOpen, setLocalProgressOpen] = useState(initialProgressOpen);
   const progressContent = demo?.progress ?? progress;
   const hasProgress = Boolean(progressContent || (progressConfig && isOwner && !demo));
@@ -352,6 +372,7 @@ export function MaterialStudyWorkspace({
         cta_name: 'progress_this_pdf',
         material_id: materialId,
       });
+      trackPostGuideAction('progreso');
     }
     setLocalProgressOpen(open);
     demo?.onProgressChange?.(open);
@@ -564,6 +585,14 @@ export function MaterialStudyWorkspace({
   }, [demo, initialRecommendedStudy, isOwner, materialId, recommendedStudyAvailable]);
 
   useEffect(() => {
+    if (!recommendedActive || !recommendedTourStep ||
+        !isOwner || !recommendedStudyAvailable || demo ||
+        guideStartedTrackedRef.current) return;
+    guideStartedTrackedRef.current = true;
+    trackMarketingEvent('first_pdf_guide_started', getGuideMetadata());
+  }, [demo, isOwner, materialId, recommendedActive, recommendedStudyAvailable, recommendedTourStep]);
+
+  useEffect(() => {
     if (
       !recommendedActive ||
       !recommendedTourStep ||
@@ -576,7 +605,7 @@ export function MaterialStudyWorkspace({
     }
     trackedGuideStepsRef.current.add(recommendedTourStep);
     trackMarketingEvent('first_pdf_guide_step_viewed', {
-      material_id: materialId,
+      ...getGuideMetadata(),
       step: recommendedTourStep,
     });
   }, [
@@ -606,10 +635,11 @@ export function MaterialStudyWorkspace({
         trackMarketingEvent(
           outcome === 'completed' ? 'first_pdf_guide_completed' : 'first_pdf_guide_skipped',
           {
-            material_id: materialId,
+            ...getGuideMetadata(),
             ...(outcome === 'skipped' && recommendedTourStep ? { step: recommendedTourStep } : {}),
           }
         );
+        if (outcome === 'completed') guideCompletedRef.current = true;
       }
       clearRecommendedStudyQuery();
       if (onboardingTransitionRef.current !== null) {
@@ -1059,6 +1089,8 @@ export function MaterialStudyWorkspace({
   const handleStudyTabChange = (value: string, entry: 'tab' | 'summary_chapter' = 'tab') => {
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
+    trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
+      entry === 'summary_chapter' ? 'tema' : nextTab);
     if (nextTab === 'ejercicios' && entry === 'tab') setPracticeSectionIndex(undefined);
     if (
       nextTab === 'ejercicios' &&
