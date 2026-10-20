@@ -151,7 +151,7 @@ assert.match(materialWorkspaceSource, /md:h-10/,
   'El tutorial no debe robar altura excesiva al lector de escritorio.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
   'La guía no debe reiniciar todos los pasos a la introducción.');
-assert.equal((materialWorkspaceSource.match(/data-onboarding-study-panel/g) ?? []).length, 2,
+assert.equal((materialWorkspaceSource.match(/<div data-onboarding-study-panel/g) ?? []).length, 2,
   'Escritorio y móvil deben ofrecer el panel completo como objetivo.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');
 assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegación guiada debe transicionar entre las pantallas reales.');
