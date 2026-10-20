@@ -1042,7 +1042,7 @@ function extractConfusionPair(confusion: string): ComparisonPair | null {
 function buildExpectedConfusionAnswer(
   model: CanonicalPedagogicalModel,
   confusion: string,
-  reference: PedagogicalReference
+  _reference: PedagogicalReference
 ) {
   const pair = extractConfusionPair(confusion);
   if (pair) {
