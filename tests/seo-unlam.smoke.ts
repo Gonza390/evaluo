@@ -49,6 +49,38 @@ for (const unsupportedClaim of [
 }
 
 assert.ok(
+  component.includes('UnlamExamModels'),
+  'UNLaM guide must show the verified historical formats and source references',
+);
+assert.ok(
+  component.indexOf('<UnlamExamModels />') < component.indexOf('<UnlamIngresoToolkit />'),
+  'Documented examination formats should be shown before general exercises',
+);
+for (const token of [
+  'Modelos de examen de ingreso UNLaM',
+  'Manual del Curso de Ingreso UNLaM 2022',
+  'mielingreso.unlam.edu.ar/data4/data/ingreso/contenido/',
+  'Modelo de examen de Matemática, ingreso 2026',
+  'Modelo de examen de Contabilidad del ingreso',
+  'UnlamExamFormatSample',
+  'No representa una filtración',
+]) {
+  assert.ok(source('components/marketing/unlam-exam-models.tsx').includes(token), 'Documentary exam section missing ' + token);
+}
+for (const token of [
+  'Tus respuestas escritas',
+  'no las envía ni las califica automáticamente',
+  'Comparar con los criterios de revisión',
+  'seo_unlam_practice_completed',
+]) {
+  assert.ok(source('components/marketing/unlam-exam-format-sample.tsx').includes(token), 'Exam sample missing ' + token);
+}
+assert.ok(
+  source('components/marketing/unlam-ingreso-practice.tsx').includes('Dominio de expresiones logarítmicas'),
+  'Math quick practice should reflect the kinds of documented examination problems',
+);
+
+assert.ok(
   source('components/marketing/unlam-ingreso-toolkit.tsx').includes('UnlamIngresoPractice'),
   'UNLaM page must offer free study practice',
 );
