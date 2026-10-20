@@ -114,6 +114,7 @@ export function StudentMaterialExam({
   const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
   const [isRecordingError, setIsRecordingError] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [canRestoreAfterRefresh, setCanRestoreAfterRefresh] = useState(false);
   const answerIds = useRef<Record<string, string>>({});
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
@@ -268,6 +269,7 @@ export function StudentMaterialExam({
   const clearAttempt = () => {
     answerIds.current = {};
     setSaveError('');
+    setCanRestoreAfterRefresh(false);
     setCurrentIndex(0);
     setSelectedAnswers({});
     setOpenDrafts({});
@@ -644,7 +646,7 @@ export function StudentMaterialExam({
               }
               className="h-auto min-h-11 whitespace-normal"
             >
-              {result.wrong.length > 0 ? 'Reforzar este tema' : 'Volver al tema'}
+              {result.wrong.length > 0 ? 'Entender mis errores' : 'Volver al tema'}
               <ArrowRight className="h-4 w-4 shrink-0" />
             </Button>
           ) : simulation ? (
@@ -665,7 +667,7 @@ export function StudentMaterialExam({
             className="h-11 w-full rounded-lg sm:w-auto"
           >
             <RotateCcw className="h-4 w-4" />
-            Continuar mi práctica
+            {topicSectionIndex !== undefined ? 'Practicar de nuevo' : 'Nueva práctica'}
           </Button>
         </div>
       </div>
@@ -731,16 +733,51 @@ export function StudentMaterialExam({
       reference: current.reference,
     };
 
+    // Persistir SINCRÓNICAMENTE antes de enviar: un redeploy puede invalidar
+    // la Server Action incluso antes de que nuestro código del servidor se ejecute.
+    // El borrador preserva la tanda y el mismo resultId para reintentos idempotentes.
+    let protectedLocally = false;
+    try {
+      const draft: PracticeDraft = {
+        version: 1,
+        materialId,
+        bankSignature,
+        questionIds: questions.map((question) => question.id),
+        selectedSize: questions.length,
+        currentIndex,
+        selectedAnswers,
+        openDrafts,
+        revealed,
+        openAssessments,
+        answerIds: { ...answerIds.current },
+        contextUnavailable,
+        savedAt: Date.now(),
+      };
+      window.localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+      protectedLocally = true;
+    } catch {
+      // En navegación privada o con almacenamiento bloqueado no prometer recuperación.
+    }
+    setCanRestoreAfterRefresh(protectedLocally);
     setIsRecordingError(true);
     setSaveError('');
-    const result = await recordStudentMaterialStudyResultAction(payload).catch(() => ({
-      success: false,
-      onboardingErrorId: null,
-    }));
+    let serverActionMismatch = false;
+    const result = await recordStudentMaterialStudyResultAction(payload).catch((error: unknown) => {
+      serverActionMismatch = /Failed to find Server Action|older or newer deployment/i.test(
+        String(error)
+      );
+      return { success: false, onboardingErrorId: null };
+    });
     setIsRecordingError(false);
     if (!result.success) {
       setSaveError(
-        'No pudimos guardar tu respuesta. Volvé a intentarlo para conservar tu progreso.'
+        serverActionMismatch
+          ? protectedLocally
+            ? 'Evaluo se actualizó mientras estudiabas. Tu respuesta está guardada en este navegador. Actualizá para retomarla y volver a enviarla.'
+            : 'Evaluo se actualizó. No pudimos guardar una copia local: mantené esta pestaña abierta e intentá de nuevo antes de actualizar.'
+          : protectedLocally
+            ? 'No se pudo guardar la respuesta en tu progreso. Sigue disponible en este navegador: reintentá o actualizá la página para retomarla.'
+            : 'No se pudo guardar la respuesta ni crear una copia local. Mantené esta pestaña abierta y reintentá.'
       );
       return;
     }
@@ -971,9 +1008,27 @@ export function StudentMaterialExam({
               ) : null}
 
               {saveError && (
-                <p role="alert" className="text-destructive text-sm">
-                  {saveError}
-                </p>
+                <div role="alert" className="border-destructive/30 bg-destructive/5 space-y-3 rounded-xl border p-4">
+                  <p className="text-destructive text-sm">{saveError}</p>
+                  {canRestoreAfterRefresh && (
+                    <button
+                      type="button"
+                      className="text-primary min-h-10 text-sm font-semibold underline underline-offset-4"
+                      onClick={() => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('tab', 'ejercicios');
+                        if (topicSectionIndex !== undefined) {
+                          url.searchParams.set('studyTopic', String(topicSectionIndex));
+                        } else {
+                          url.searchParams.delete('studyTopic');
+                        }
+                        window.location.assign(url.toString());
+                      }}
+                    >
+                      Actualizar y retomar mi respuesta
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ) : null}
