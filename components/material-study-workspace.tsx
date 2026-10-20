@@ -72,6 +72,7 @@ import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 const tourStudySelectors: Record<RecommendedStudyStep, string> = {
   summary: '[data-summary-reading-section="0"]',
   practice: '[data-onboarding-practice-options]',
+  topic: '[data-onboarding-topic-detail]',
   errors: '[data-recommended-topics]',
 };
 
@@ -182,7 +183,10 @@ type MaterialStudyWorkspaceProps = {
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
     practice: ReactNode;
-    progress?: ReactNode | ((args: { showOnboardingExample: boolean }) => ReactNode);
+    progress?: ReactNode | ((args: {
+      showOnboardingExample: boolean;
+      showOnboardingTopic: boolean;
+    }) => ReactNode);
     progressOpen?: boolean;
     pendingStudyErrorCount?: number;
     onProgressChange?: (open: boolean) => void;
@@ -368,10 +372,6 @@ export function MaterialStudyWorkspace({
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   const [onboardingFading, setOnboardingFading] = useState(false);
-  const [progressExampleActive, setProgressExampleActive] = useState(false);
-  const displayedProgressContent = typeof progressContent === 'function'
-    ? progressContent({ showOnboardingExample: progressExampleActive })
-    : progressContent;
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
 
@@ -387,6 +387,11 @@ export function MaterialStudyWorkspace({
   const [recommendedTourStep, setRecommendedTourStep] = useState<RecommendedStudyStep | null>(
     initialRecommendedStudy && !initialDiagnostic ? 'summary' : null
   );
+  const showOnboardingTopic = recommendedActive && recommendedTourStep === 'topic';
+  const showOnboardingExample = recommendedActive && recommendedTourStep === 'errors';
+  const displayedProgressContent = typeof progressContent === 'function'
+    ? progressContent({ showOnboardingExample, showOnboardingTopic })
+    : progressContent;
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
   const [summaryEndPendingCount, setSummaryEndPendingCount] = useState<number | null>(null);
@@ -614,7 +619,6 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      setProgressExampleActive(false);
       // Solo el cierre completo dirige al primer capítulo; Saltar conserva una salida rápida.
       setFocusFirstChapterOnExit(outcome === 'completed');
       setLocalProgressOpen(false);
@@ -1804,7 +1808,8 @@ export function MaterialStudyWorkspace({
                   glossary={studyGlossary}
                   flashcards={studyArtifacts.flashcards}
                   sourcePdfHref={viewerUrl}
-                  showOnboardingExample={progressExampleActive && recommendedActive && recommendedTourStep === 'errors'}
+                  showOnboardingExample={showOnboardingExample}
+                  showOnboardingTopic={showOnboardingTopic}
                   material={{ id: materialId, title }}
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
@@ -2005,7 +2010,6 @@ export function MaterialStudyWorkspace({
         <RecommendedStudyGuide
             step={recommendedTourStep}
             transitioning={onboardingFading}
-            onProgressDetailChange={setProgressExampleActive}
             onExit={() => closeRecommendedTour('skipped')}
             onBack={
               recommendedTourStep === 'practice'
@@ -2014,14 +2018,17 @@ export function MaterialStudyWorkspace({
                     changeRecommendedTab('resumen');
                     setRecommendedTourStep('summary');
                   })
-                : recommendedTourStep === 'errors'
+                : recommendedTourStep === 'topic'
                   ? () => transitionRecommendedTour(() => {
-                      setProgressExampleActive(false);
                       setProgressOpen(false);
                       changeRecommendedTab('ejercicios');
                       setRecommendedTourStep('practice');
                     })
-                  : undefined
+                  : recommendedTourStep === 'errors'
+                    ? () => transitionRecommendedTour(() => {
+                        setRecommendedTourStep('topic');
+                      })
+                    : undefined
             }
             onNext={() => transitionRecommendedTour(() => {
               if (recommendedTourStep === 'summary') {
@@ -2033,6 +2040,8 @@ export function MaterialStudyWorkspace({
                 setRecommendedTourStep('practice');
               } else if (recommendedTourStep === 'practice') {
                 setProgressOpen(true);
+                setRecommendedTourStep('topic');
+              } else if (recommendedTourStep === 'topic') {
                 setRecommendedTourStep('errors');
               } else {
                 closeRecommendedTour('completed');

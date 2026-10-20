@@ -8,11 +8,12 @@ import {
   BookOpenText,
   BrainCircuit,
   ChartNoAxesColumnIncreasing,
+  ListTree,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export type RecommendedStudyStep = 'summary' | 'practice' | 'errors';
+export type RecommendedStudyStep = 'summary' | 'practice' | 'topic' | 'errors';
 
 const steps = {
   summary: {
@@ -27,17 +28,23 @@ const steps = {
     description: 'Practicá con preguntas creadas a partir de tu PDF.',
     icon: BrainCircuit,
   },
+  topic: {
+    label: 'Estudiar por tema',
+    title: 'Estudiá tema por tema',
+    description: 'Entrá en un capítulo, leé su contenido y practicá sus preguntas cuando estén disponibles.',
+    icon: ListTree,
+  },
   errors: {
     label: 'Progreso',
-    title: 'Dejá de estudiar a ciegas',
-    description: 'Después de practicar, Evaluo te ayuda a identificar qué temas necesitás reforzar.',
+    title: 'Mirá tu progreso por tema',
+    description: 'Después de practicar, descubrí qué temas dominás y cuáles conviene reforzar.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
 
-const order: RecommendedStudyStep[] = ['summary', 'practice', 'errors'];
+const order: RecommendedStudyStep[] = ['summary', 'practice', 'topic', 'errors'];
 
-// Tres pantallas reales. El contexto permanece visible: sin recortes de texto
+// Cuatro pantallas reales. El contexto permanece visible: sin recortes de texto
 // ni una evaluación obligatoria para recorrer la plataforma.
 const studyPanelSelector = '[data-onboarding-study-panel]';
 
@@ -117,54 +124,31 @@ function getSpotlight(node: HTMLElement, cardHeight: number, cardWidth: number):
 }
 
 /**
- * Recorrido de menos de 20 segundos: tres conceptos que explican Evaluo.
+ * Recorrido breve: entender, practicar, estudiar por tema y ver progreso.
  * La pantalla real se ve completa durante todo el tutorial.
  * El portal evita que los contenedores con overflow recorten el spotlight.
  */
 export function RecommendedStudyGuide({
   step,
   transitioning = false,
-  onProgressDetailChange,
   onNext,
   onBack,
   onExit,
 }: {
   step: RecommendedStudyStep;
   transitioning?: boolean;
-  onProgressDetailChange?: (show: boolean) => void;
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [spotlight, setSpotlight] = useState<Spotlight | null>(null);
-  // Un clic extra dentro de Progreso; nunca aparece un cuarto paso.
-  const [progressExplained, setProgressExplained] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
   const current = steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
-  const showingProgressDetail = step === 'errors' && progressExplained;
-  const title = showingProgressDetail ? 'Cada práctica te ayuda a mejorar' : current.title;
-  const description = showingProgressDetail
-    ? 'Mirá en tus temas qué dominás y qué conviene reforzar.'
-    : current.description;
-  const handleNext = () => {
-    if (step === 'errors' && !progressExplained) {
-      setProgressExplained(true);
-      onProgressDetailChange?.(true);
-      return;
-    }
-    onNext();
-  };
-  const handleBack = () => {
-    if (showingProgressDetail) {
-      setProgressExplained(false);
-      onProgressDetailChange?.(false);
-      return;
-    }
-    onBack?.();
-  };
+  const handleNext = onNext;
+  const handleBack = onBack;
 
   useEffect(() => {
     setMounted(true);
@@ -338,7 +322,7 @@ export function RecommendedStudyGuide({
         tabIndex={-1}
         data-first-pdf-guide
         aria-busy={transitioning}
-        className={`bg-card border-border fixed z-[90] max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4 ${showingProgressDetail ? 'max-w-[360px]' : 'max-w-[320px]'}`}
+        className="bg-card border-border fixed z-[90] max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-[340px] overflow-y-auto overscroll-contain rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4"
         style={
           spotlight
             ? { top: spotlight.cardTop, left: spotlight.cardLeft, opacity: 1 }
@@ -349,15 +333,15 @@ export function RecommendedStudyGuide({
           <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
             <Icon className="size-4" />
           </span>
-          <div key={step + (showingProgressDetail ? '-detail' : '-intro')} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
+          <div key={step} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
             <p className="text-primary text-[11px] font-semibold tracking-wide uppercase">
-              {number} de 3 · {current.label}
+              {number} de 4 · {current.label}
             </p>
             <h2 className="text-foreground mt-0.5 text-[15px] font-semibold leading-5 tracking-tight">
-              {title}
+              {current.title}
             </h2>
             <p className="text-muted-foreground mt-1 text-[12px] leading-5">
-              {description}
+              {current.description}
             </p>
           </div>
           <button
@@ -371,17 +355,16 @@ export function RecommendedStudyGuide({
           </button>
         </div>
 
-        {showingProgressDetail && (
-          <p data-guide-progress-detail className="text-muted-foreground mt-2 text-[11px] leading-4">
-            Mirá los temas de tu PDF en el panel de abajo. Los estados de colores son un ejemplo,
-            no son resultados reales.
+        {step === 'errors' && (
+          <p className="text-muted-foreground mt-2 text-[11px] leading-4">
+            Mirá la lista de temas: los colores son un ejemplo, no representan resultados reales.
           </p>
         )}
 
         <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${step === 'errors'
           ? 'flex flex-col items-stretch gap-2'
           : 'flex items-center justify-between gap-2'}`}>
-          <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 3'}>
+          <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 4'}>
             {order.map((item, index) => (
               <span
                 key={item}
@@ -403,9 +386,7 @@ export function RecommendedStudyGuide({
               </Button>
             ) : null}
             <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 min-w-0 gap-1.5 whitespace-normal rounded-full px-3 text-[12px] leading-4 sm:whitespace-nowrap sm:px-4">
-              {step === 'errors'
-                ? showingProgressDetail ? 'Empezar a estudiar' : 'Ver cómo funciona'
-                : 'Siguiente'} <ArrowRight className="size-3.5" />
+              {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </div>

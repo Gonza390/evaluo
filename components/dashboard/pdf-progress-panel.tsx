@@ -81,6 +81,7 @@ export function PdfProgressPanel({
   reviewActions,
   embedded = false,
   showOnboardingExample = false,
+  showOnboardingTopic = false,
   assessmentData,
   questionCounts,
   onPractice,
@@ -108,6 +109,7 @@ export function PdfProgressPanel({
   returnToErrors?: boolean;
   embedded?: boolean;
   showOnboardingExample?: boolean;
+  showOnboardingTopic?: boolean;
   assessmentData?: { items: PdfTopicEvidence[]; loadError?: boolean };
   questionCounts?: number[];
   onPractice?: () => void;
@@ -142,7 +144,7 @@ export function PdfProgressPanel({
   const initialError = [...data.pending, ...data.resolved].find(
     (item) => item.id === initialErrorId
   );
-  const [topicId, setTopicId] = useState<string | null>(() =>
+  const [selectedTopicId, setTopicId] = useState<string | null>(() =>
     initialError
       ? (buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find((topic) =>
           topic.errors.some((error) => error.id === initialError.id)
@@ -166,6 +168,13 @@ export function PdfProgressPanel({
     ...(assessmentData?.items ?? []),
     ...evidence,
   ]);
+  // El tutorial presenta la vista real de un capítulo y luego la lista general.
+  // Nunca modifica evidencias, errores ni selecciones guardadas por el estudiante.
+  const topicId = showOnboardingTopic
+    ? topics[0]?.id ?? null
+    : showOnboardingExample
+      ? null
+      : selectedTopicId;
   const pending = views.filter((error) => error.status === 'pending');
   const next = pending[0];
   const recommendedTopic =
@@ -302,6 +311,7 @@ export function PdfProgressPanel({
     <section
       id={`real-topic-detail-${panelId}`}
       ref={detailRef}
+      data-onboarding-topic-detail
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
@@ -1103,7 +1113,7 @@ export function PdfProgressPanel({
                 </h2>
                 {showOnboardingExample && (
                   <p data-tour-progress-disclaimer role="status" className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-[12px] leading-5 text-blue-800">
-                    Ejemplo visual con temas de tu PDF. Los estados Dominado y Reforzar son ilustrativos; no representan tus resultados.
+                    Ejemplo visual con temas de tu PDF. Dominado, Reforzar y Sin evaluar son estados ilustrativos; no representan tus resultados.
                   </p>
                 )}
                 {!showOnboardingExample && topics.length >= 8 && (
@@ -1140,23 +1150,33 @@ export function PdfProgressPanel({
               <ul className="divide-border divide-y">
                 {showOnboardingExample && topics.slice(0, 3).map((topic, index) => {
                   const mastered = index === 0;
+                  const needsReview = index === 1;
+                  const stateStyle = mastered
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : needsReview
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-slate-100 text-slate-700';
                   return (
                     <li key={topic.id} data-tour-example-topic className="flex min-w-0 items-center gap-3 px-4 py-3">
-                      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${mastered
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-800'}`}>
-                        {mastered ? <CheckCircle2 size={17} aria-hidden="true" /> : <Flag size={17} aria-hidden="true" />}
+                      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${stateStyle}`}>
+                        {mastered
+                          ? <CheckCircle2 size={17} aria-hidden="true" />
+                          : needsReview
+                            ? <Flag size={17} aria-hidden="true" />
+                            : <Circle size={17} aria-hidden="true" />}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="text-foreground block text-[13px] font-medium break-words">{topic.title}</span>
                         <span className="text-muted-foreground mt-0.5 block text-xs">
-                          {mastered ? 'Ejemplo: concepto comprendido' : 'Ejemplo: conviene repasar'}
+                          {mastered
+                            ? 'Ejemplo: concepto comprendido'
+                            : needsReview
+                              ? 'Ejemplo: conviene repasar'
+                              : 'Ejemplo: todavía sin evaluar'}
                         </span>
                       </span>
-                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${mastered
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-amber-100 text-amber-900'}`}>
-                        {mastered ? 'Dominado' : 'Reforzar'}
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${stateStyle}`}>
+                        {mastered ? 'Dominado' : needsReview ? 'Reforzar' : 'Sin evaluar'}
                       </span>
                     </li>
                   );

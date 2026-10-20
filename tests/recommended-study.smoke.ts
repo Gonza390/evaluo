@@ -119,57 +119,56 @@ const diagnosticSource = readFileSync('components/student-material-diagnostic.ts
 
 assert.ok(firstGuideSource.includes("label: 'Entender'") &&
           firstGuideSource.includes("label: 'Practicar'") &&
+          firstGuideSource.includes("label: 'Estudiar por tema'") &&
           firstGuideSource.includes("label: 'Progreso'"),
-          'El tutorial debe comunicar únicamente Entender, Practicar y Progreso.');
-assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe enseñar la interfaz real.');
-assert.match(firstGuideSource, /Dejá de estudiar a ciegas/,
-  'Progreso debe comunicar el diferencial de estudiar con resultados.');
-assert.match(firstGuideSource, /step === 'errors' && !progressExplained/,
-  'El clic adicional debe suceder dentro de Progreso y no abrir otro paso.');
-assert.match(firstGuideSource, /setProgressExplained\(true\)/,
-  'El primer clic en Progreso debe mostrar cómo funciona.');
-assert.match(firstGuideSource, /setProgressExplained\(false\)/,
-  'Atrás debe volver al primer mensaje de Progreso.');
-assert.match(firstGuideSource, /data-guide-progress-detail/,
-  'El detalle debe explicar el ciclo de aprendizaje en la tarjeta existente.');
+          'El tutorial debe enseñar los cuatro momentos de Evaluo.');
+assert.match(firstGuideSource, /'summary', 'practice', 'topic', 'errors'/,
+  'Los cuatro pasos deben mantener este orden.');
+assert.match(firstGuideSource, /\{number\} de 4/,
+  'El indicador debe comunicar cuatro pasos, no tres.');
+assert.match(firstGuideSource, /data-first-pdf-guide/,
+  'La guía debe enseñar la interfaz real.');
+assert.match(firstGuideSource, /Estudiá tema por tema/,
+  'El tercer paso debe mostrar cómo estudiar por capítulo.');
+assert.match(firstGuideSource, /Mirá tu progreso por tema/,
+  'El cuarto paso debe enseñar el seguimiento.');
+assert.match(progressPanelSource, /data-onboarding-topic-detail/,
+  'El paso 3 debe abrir la vista real de estudio de un tema.');
+assert.match(progressPanelSource, /showOnboardingTopic\s*\?\s*topics\[0\]/,
+  'El paso 3 debe usar el primer tema real del PDF.');
+assert.match(progressPanelSource, /showOnboardingExample\s*\?\s*null/,
+  'El paso 4 debe volver a la lista general y no quedar en el detalle.');
 assert.match(progressPanelSource, /data-tour-example-topic/,
-  'La muestra visual debe aparecer directamente en la lista de temas de Progreso.');
-assert.match(progressPanelSource, /Dominado.*Reforzar|Reforzar.*Dominado/s,
-  'El ejemplo debe distinguir temas dominados y por reforzar.');
+  'El ejemplo visual debe mostrarse en la lista de temas.');
+assert.match(progressPanelSource, /Dominado.*Reforzar.*Sin evaluar/s,
+  'El ejemplo debe distinguir dominado, reforzar y sin evaluar.');
 assert.match(progressPanelSource, /no representan tus resultados/,
-  'Nunca se deben atribuir resultados ficticios a un estudiante.');
-assert.match(firstGuideSource, /step === 'errors'.*flex flex-col items-stretch/s,
-  'Progreso debe colocar la navegación en filas para evitar el desborde.');
-assert.match(firstGuideSource, /cardRef\.current\?\.getBoundingClientRect\(\)\.width/,
-  'El cálculo de centrado debe medir el ancho real de la tarjeta.');
+  'Los estados ilustrativos no deben atribuirse al estudiante.');
 assert.match(progressPanelSource, /topics\.slice\(0, 3\)/,
-  'La muestra debe usar nombres de los temas reales del PDF.');
-assert.match(firstGuideSource, /Ver cómo funciona/,
-  'El primer CTA de Progreso debe mostrar la explicación.');
-assert.match(firstGuideSource, /Empezar a estudiar/,
-  'El segundo CTA debe mantener el cierre hacia el resumen.');
-assert.match(progressPanelSource, /Ejemplo visual con temas de tu PDF/,
-  'El ejemplo debe explicar que los estados son simulados.');
-assert.match(progressPanelSource, /no representan tus resultados/,
-  'Los estados de ejemplo deben estar identificados como ilustrativos.');
+  'El ejemplo debe usar nombres de temas de ese PDF.');
 assert.match(progressPanelSource, /!showOnboardingExample && visibleTopics\.map/,
-  'La vista real debe restaurarse cuando termina el ejemplo.');
-assert.match(materialWorkspaceSource, /setProgressExampleActive\(false\)/,
-  'El ejemplo debe desactivarse al cerrar el onboarding o volver atrás.');
-assert.match(materialWorkspaceSource, /onProgressDetailChange=\{setProgressExampleActive\}/,
-  'Solo Ver cómo funciona debe habilitar el ejemplo.');
-assert.match(firstGuideSource, /onProgressDetailChange\?\.\(true\)/,
-  'Ver cómo funciona habilita el ejemplo.');
-assert.match(firstGuideSource, /onProgressDetailChange\?\.\(false\)/,
-  'Atrás restaura los estados reales.');
-assert.match(firstGuideSource, /Mirá los temas de tu PDF en el panel de abajo/,
-  'La tarjeta explica dónde mirar sin duplicar la lista.');
-assert.match(previewSource, /progress: \(\{ showOnboardingExample \}\) =>/,
-  'La preview debe admitir el ejemplo temporal.');
-assert.match(materialWorkspaceSource, /showOnboardingExample=\{progressExampleActive/,
-  'La vista real solo presenta el ejemplo durante el tutorial.');
-assert.match(firstGuideSource, /onBack\?\.\(\)/,
-  'El retorno de Progreso debe conservar la navegación original.');
+  'Los resultados reales deben reaparecer al terminar.');
+assert.match(progressPanelSource, /const topicId = showOnboardingTopic/,
+  'El modo guiado no debe modificar el estado persistente de temas.');
+assert.match(materialWorkspaceSource, /showOnboardingTopic = recommendedActive && recommendedTourStep === 'topic'/,
+  'El detalle guiado solo debe mostrarse en el paso 3.');
+assert.match(materialWorkspaceSource, /showOnboardingExample = recommendedActive && recommendedTourStep === 'errors'/,
+  'Los resultados simulados solo deben mostrarse en el paso 4.');
+assert.match(previewSource, /progress: \(\{ showOnboardingExample, showOnboardingTopic \}\) =>/,
+  'La preview debe recibir los dos estados de Progreso.');
+assert.match(materialWorkspaceSource, /showOnboardingTopic=\{showOnboardingTopic\}/,
+  'El PDF real debe usar el mismo estado de estudio por temas.');
+assert.match(firstGuideSource, /Empezar a estudiar/,
+  'El CTA final debe devolver al primer capítulo.');
+assert.doesNotMatch(firstGuideSource, /progressExplained|Ver cómo funciona/,
+  'Progreso no debe añadir un quinto clic oculto.');
+assert.match(firstGuideSource, /step === 'errors'.*flex flex-col items-stretch/s,
+  'La navegación final debe mantenerse dentro de la tarjeta.');
+assert.match(firstGuideSource, /cardRef\.current\?\.getBoundingClientRect\(\)\.width/,
+  'El centrado debe medir el ancho de la tarjeta.');
+assert.match(firstGuideSource, /onBack/,
+  'Los pasos deben permitir retroceder.');
+
 assert.match(firstGuideSource, /createPortal/, 'El foco debe renderizarse fuera de los contenedores con overflow.');
 assert.match(firstGuideSource, /bg-slate-950\/12 backdrop-blur-\[1px\]/, 'El fondo del tutorial debe ser suave.');
 assert.match(firstGuideSource, /radial-gradient\(circle at/, 'Las esquinas internas del foco deben ser realmente redondeadas.');
@@ -194,7 +193,7 @@ assert.match(materialWorkspaceSource, /data-onboarding-guide-space/, 'La tarjeta
 assert.match(materialWorkspaceSource, /data-summary-reading-section="0"/,
   'El primer paso debe mostrar contenido académico de un capítulo y no solo la introducción.');
 assert.match(materialWorkspaceSource, /tourStudySelectors: Record<RecommendedStudyStep, string>/,
-  'Los tres pasos deben abrir contenido útil de cada pantalla.');
+  'Los cuatro pasos deben abrir contenido útil de cada pantalla.');
 assert.match(materialWorkspaceSource, /reader\.scrollTo\(/,
   'Los desplazamientos deben quedar dentro del lector.');
 assert.match(materialWorkspaceSource, /MutationObserver/,
@@ -212,7 +211,7 @@ assert.match(examSource, /data-onboarding-practice-options/,
 assert.doesNotMatch(materialWorkspaceSource, /guidedFirstQuestion|tourQuestionResult/,
   'El onboarding no debe bloquear su avance exigiendo una evaluación.');
 assert.match(materialWorkspaceSource, /data-recommended-topics/,
-  'El tercer paso debe dirigir la vista hacia los temas de progreso.');
+  'El cuarto paso debe dirigir la vista hacia los temas de progreso.');
 assert.match(materialWorkspaceSource, /md:h-2/,
   'El tutorial debe dejar disponible la mayor altura posible del lector.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
@@ -233,8 +232,12 @@ assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso deb
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
 assert.match(materialWorkspaceSource, /changeRecommendedTab\('ejercicios'\);\s*setRecommendedTourStep\('practice'\)/,
   'La guía debe abrir Práctica para enseñar su contenido real.');
-assert.match(materialWorkspaceSource, /setProgressOpen\(true\);\s*setRecommendedTourStep\('errors'\)/,
-  'La guía debe abrir Progreso para enseñar los temas reales.');
+assert.match(materialWorkspaceSource, /setProgressOpen\(true\);\s*setRecommendedTourStep\('topic'\)/,
+  'El tercer paso debe abrir la vista de Progreso y su primer tema.');
+assert.match(materialWorkspaceSource, /setRecommendedTourStep\('errors'\)/,
+  'El cuarto paso debe enseñar la lista ilustrativa de seguimiento.');
+assert.match(materialWorkspaceSource, /setRecommendedTourStep\('topic'\)/,
+  'Desde el cuarto paso se debe poder volver al estudio por tema.');
 assert.doesNotMatch(examSource, /<FirstStudyErrorOnboardingPrompt/, 'La práctica no debe abrir otro onboarding.');
 assert.doesNotMatch(diagnosticSource, /<FirstStudyErrorOnboardingPrompt/, 'El diagnóstico no debe abrir otro onboarding.');
 

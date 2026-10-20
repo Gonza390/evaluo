@@ -25,6 +25,7 @@ export function MaterialProgressContent({
   flashcards,
   sourcePdfHref,
   showOnboardingExample = false,
+  showOnboardingTopic = false,
 }: {
   material: { id: string; title: string };
   sections: unknown;
@@ -40,6 +41,7 @@ export function MaterialProgressContent({
   flashcards?: StudyFlashcard[];
   sourcePdfHref?: string;
   showOnboardingExample?: boolean;
+  showOnboardingTopic?: boolean;
 }) {
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<MaterialProgressDataResult | null>(null);
@@ -108,6 +110,7 @@ export function MaterialProgressContent({
       flashcards={flashcards}
       sourcePdfHref={sourcePdfHref}
       showOnboardingExample={showOnboardingExample}
+      showOnboardingTopic={showOnboardingTopic}
       summaryUnavailable={false}
       initialErrorId={result.initialErrorId ?? undefined}
       onboardingErrorId={result.onboardingErrorId}
