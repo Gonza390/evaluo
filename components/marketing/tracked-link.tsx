@@ -7,6 +7,8 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 type TrackedLinkProps = LinkProps & {
   children: ReactNode;
   className?: string;
+  target?: string;
+  rel?: string;
   eventName: string;
   payload?: Record<string, string | number | boolean | null | undefined>;
   onClick?: MouseEventHandler<HTMLAnchorElement>;

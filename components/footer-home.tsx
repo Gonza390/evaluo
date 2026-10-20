@@ -136,6 +136,12 @@ export function FooterHome({ variant = 'full' }: { variant?: 'full' | 'compact' 
                 Mapas mentales con IA
               </Link>
               <Link
+                href="/uba-xxi/parciales"
+                className="text-xs text-white/80 transition hover:text-white"
+              >
+                Parciales UBA XXI: exámenes y práctica
+              </Link>
+              <Link
                 href="/como-estudiar-ingreso-unlam"
                 className="text-xs text-white/80 transition hover:text-white"
               >
