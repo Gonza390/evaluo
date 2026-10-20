@@ -12,6 +12,8 @@ import {
 import { explainWrongOption } from '../lib/student-materials/answer-evidence.ts';
 import { buildGroundedErrorContrast } from '../lib/student-materials/error-contrast.ts';
 import type { PedagogicalArtifacts, StudyQuestion } from '../lib/student-materials/pedagogy.ts';
+import { buildPedagogicalArtifacts } from '../lib/student-materials/pedagogy-v2.ts';
+import type { StudentMaterialSummary } from '../lib/student-materials/types.ts';
 
 const sections = [
   { title: '1. Epistemología', body: 'La epistemología reflexiona sobre la ciencia. Doxa se distingue de episteme.' },
@@ -123,6 +125,38 @@ const tagged = tagGlossaryChapters(glossary, sections);
 assert.equal(tagged[0]?.chapterTitle, sections[0]?.title);
 assert.equal(tagged[1]?.chapterTitle, sections[1]?.title);
 assert.equal(getTopicStudyResources(sections, tagged, [], 0).concepts.some(x => x.term === 'Epistemología'), true);
+// Contraprueba: una pregunta abierta válida debe sobrevivir. Las respuestas
+// proceden del mismo párrafo, sin interpolar teorías de páginas cercanas.
+const sectionSummary: StudentMaterialSummary = {
+  shortSummary: 'Síntesis conceptual de ciencias y argumentación',
+  keyPoints: ['Las hipótesis pueden contrastarse', 'Distinguir un argumento de su evidencia'],
+  status: 'ready',
+  hasContent: true,
+  provider: 'test',
+  errorMessage: null,
+  sourceChunksCount: 2,
+  sections: [
+    { title: '1. Argumentación científica', body: '### 1.1 Premisas y conclusiones\nLas premisas son proposiciones ofrecidas en apoyo de una conclusión. Para comprender un argumento es necesario identificar qué se sostiene y qué razones se ofrecen. Una conclusión no queda automáticamente demostrada por el mero hecho de estar enunciada.\n\n### 1.2 Objeciones\nSe pueden examinar las premisas de un argumento para detectar dificultades.' },
+    { title: '2. Contrastación empírica', body: '### 2.1 Hipótesis y predicción\nLa contrastación empírica requiere formular predicciones derivadas de una hipótesis y contrastarlas con observaciones. Si la predicción falla deben examinarse la hipótesis y los supuestos auxiliares antes de explicar la evidencia observada.\n\n### 2.2 Supuestos\nLos supuestos auxiliares condicionan lo que la hipótesis permite anticipar.' },
+  ],
+};
+const sectionChunks = sectionSummary.sections.map((section, i) => ({
+  text: section.body,
+  pageStart: i + 1,
+  pageEnd: i + 1,
+  sectionTitle: section.title,
+  excerpt: '',
+}));
+const candidateBank = buildPedagogicalArtifacts({
+  summary: sectionSummary, glossary: [], chunks: sectionChunks,
+});
+const openStudyQuestions = candidateBank.questions.filter(q => q.type === 'open');
+assert.equal(openStudyQuestions.length, 2, 'Debe conservar preguntas abiertas fundamentadas.');
+assert.ok(openStudyQuestions.every(q => unsafeModelAnswerReason(q, sectionSummary.sections) === null));
+assert.ok(openStudyQuestions.every(q => q.reference.pageStart !== null));
+assert.equal(new Set(openStudyQuestions.map(q => q.prompt)).size, 2);
+assert.ok(openStudyQuestions.every(q => !/Un concepto clave es/.test(q.answer)));
+
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
 assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);
