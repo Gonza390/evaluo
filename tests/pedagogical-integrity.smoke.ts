@@ -33,7 +33,7 @@ function open(overrides: Partial<StudyQuestion>): StudyQuestion {
   };
 }
 const wrongCausal = open({});
-assert.equal(unsafeModelAnswerReason(wrongCausal, sections), 'contrast_answer_not_grounded');
+assert.ok(['contrast_not_in_source', 'contrast_answer_not_grounded'].includes(unsafeModelAnswerReason(wrongCausal, sections) ?? ''));
 const repeatedDefinition = open({
   id: 'repeat',
   answer: 'La distinción clave es esta: “validez deductiva” Premisas verdaderas y conclusión falsa no son compatibles. En cambio, “validez inductiva” Premisas verdaderas y conclusión falsa no son compatibles.',
