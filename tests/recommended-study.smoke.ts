@@ -126,7 +126,7 @@ assert.match(firstGuideSource, /getBoundingClientRect\(\)\.height/, 'La posició
 assert.match(firstGuideSource, /transition-\[top,left,opacity\]/, 'La tarjeta debe deslizarse entre secciones.');
 assert.match(materialWorkspaceSource, /duration-\[260ms\]/, 'El panel debe usar transiciones suaves.');
 assert.match(materialWorkspaceSource, /opacity-40/, 'El contenido no debe desaparecer bruscamente.');
-assert.match(firstGuideSource, /data-recommended-practice/, 'La guía debe enfocar la pantalla real de práctica.');
+assert.match(firstGuideSource, /data-onboarding-study-panel/, 'La guía debe enfocar todo el panel y no solo una sección.');
 assert.match(materialWorkspaceSource, /data-recommended-practice/, 'La práctica debe exponer un foco real.');
 assert.match(firstGuideSource, /aria-modal="true"/, 'La guía debe tener semántica accesible.');
 assert.match(firstGuideSource, /Escape/, 'La guía debe poder saltarse con Escape.');
