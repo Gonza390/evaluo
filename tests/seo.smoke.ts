@@ -23,6 +23,39 @@ assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
 assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI landing must be covered by Lighthouse CI');
 assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
 assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
+assertIncludesAll('app/como-estudiar-ingreso-unlam/page.tsx', [
+  'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
+  'canonical: toAbsoluteUrl(path)',
+  "const modifiedAt = '2026-10-20';",
+  'UnlamEditorialGuide',
+]);
+assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
+  'UnlamIngresoToolkit',
+  '/estudiar-pdf-con-ia?source=ingreso-unlam-2027',
+  'Revisado el 20 de octubre de 2026',
+]);
+assertIncludesAll('components/marketing/unlam-ingreso-toolkit.tsx', [
+  'UnlamIngresoPractice',
+  'Materias por carrera',
+  'Educación Médica',
+  'Introducción al conocimiento proyectual',
+  'Matemática',
+  'Filosofía',
+  'https://www.unlam.edu.ar/curso-de-ingreso/',
+]);
+assertIncludesAll('components/marketing/unlam-ingreso-practice.tsx', [
+  'seo_unlam_practice_started',
+  'seo_unlam_practice_answered',
+  'seo_unlam_practice_completed',
+  'El resultado es orientativo',
+  'Practicar con mi manual PDF',
+]);
+assertIncludesAll('lib/analytics-events.ts', [
+  'seo_unlam_practice_started',
+  'seo_unlam_practice_answered',
+  'seo_unlam_practice_completed',
+]);
+assert.ok(source('app/sitemap.ts').includes("new Date('2026-10-20')"), 'Updated UNLaM guide must have recent sitemap modification date');
 assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'Parciales UBA XXI: exámenes anteriores y práctica',
   'canonical: toAbsoluteUrl(PATH)',

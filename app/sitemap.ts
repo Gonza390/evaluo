@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/como-estudiar-ingreso-unlam`,
-      lastModified: new Date('2026-09-17'),
+      lastModified: new Date('2026-10-20'),
     },
     {
       url: `${baseUrl}/uba-xxi/parciales`,

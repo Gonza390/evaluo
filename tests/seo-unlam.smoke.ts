@@ -17,7 +17,7 @@ for (const token of [
   'canonical: toAbsoluteUrl(path)',
   'index: true',
   'follow: true',
-  'Cómo estudiar para el Curso de Ingreso UNLaM 2027',
+  'Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar',
   '28 sep. – 26 oct. 2026',
   '1 feb. – 6 mar. 2027',
   '8 – 12 mar. 2027',
@@ -33,6 +33,7 @@ for (const token of [
   '<h1',
   'En esta guía',
   'No reemplaza el manual',
+  'UnlamIngresoToolkit',
 ]) {
   assert.ok(combined.includes(token), `UNLaM guide must include ${token}`);
 }
@@ -47,6 +48,14 @@ for (const unsupportedClaim of [
   assert.ok(!lower.includes(unsupportedClaim), `UNLaM guide must not claim ${unsupportedClaim}`);
 }
 
+assert.ok(
+  source('components/marketing/unlam-ingreso-toolkit.tsx').includes('UnlamIngresoPractice'),
+  'UNLaM page must offer free study practice',
+);
+assert.ok(
+  source('components/marketing/unlam-ingreso-practice.tsx').includes('seo_unlam_practice_completed'),
+  'UNLaM practice must track completions',
+);
 assert.ok(
   source('app/sitemap.ts').includes('/como-estudiar-ingreso-unlam'),
   'UNLaM ingreso guide must be included in sitemap'
