@@ -15,6 +15,7 @@ import {
   type MaterialAnswerInput,
 } from '@/lib/student-materials/answer-evidence';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { sanitizePedagogicalArtifacts } from '@/lib/student-materials/pedagogical-integrity';
 import type { StudySummarySection } from '@/lib/student-materials/types';
 import { getPdfAssessmentData, type PdfAssessmentData } from '@/lib/student-materials/answer-events';
 
@@ -100,11 +101,12 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
       .eq('student_material_id', material.id)
       .maybeSingle();
     if (summaryError || !material.pedagogical_artifacts) return { success: false };
-    const canonical = resolveMaterialAnswer(
-      input,
+    const sections = (summary?.summary_sections ?? []) as unknown as StudySummarySection[];
+    const safeArtifacts = sanitizePedagogicalArtifacts(
       material.pedagogical_artifacts as unknown as PedagogicalArtifacts,
-      (summary?.summary_sections ?? []) as unknown as StudySummarySection[]
+      sections
     );
+    const canonical = resolveMaterialAnswer(input, safeArtifacts, sections);
     if (!canonical) return { success: false };
     const event = {
       id: input.resultId ?? randomUUID(),
