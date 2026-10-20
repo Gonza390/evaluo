@@ -30,7 +30,7 @@ export async function loadPageOcrCheckpoint(
   if (error) throw new Error(`No se pudo recuperar el OCR guardado: ${error.message}`);
 
   return ((data ?? []) as unknown as Array<Record<string, unknown>>)
-    .map((row) => ({
+    .map((row): CachedPage => ({
       pageNumber: Number(row.page_number),
       content: String(row.content ?? ''),
       confidence: row.confidence === 'alta' || row.confidence === 'baja'
