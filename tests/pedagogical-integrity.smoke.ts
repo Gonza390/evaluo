@@ -264,7 +264,7 @@ const fallbackGenerator = readFileSync('lib/student-materials/pedagogy.ts', 'utf
 assert.doesNotMatch(generator, /model\.confusions\.forEach/, 'No generar tarjetas que sólo repiten errores.');
 assert.match(generator, /items\.length > 6/, 'Evitar listas de memorización excesivamente largas.');
 assert.match(generator, /steps\.length > 6/, 'Evitar procesos de más de seis pasos en una tarjeta.');
-assert.match(fallbackGenerator, /return value\.replace\([^\n]+\\\\\const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');/, 'Restaurar escape seguro de expresiones regulares.');
+assert.ok(fallbackGenerator.includes("return value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');"), 'Restaurar el escape seguro de los caracteres regex.');
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
 assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);
