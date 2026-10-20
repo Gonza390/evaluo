@@ -1216,9 +1216,11 @@ function buildCanonicalConceptQuestions(
         kind: 'concept',
         topic: concept.term,
         prompt:
-          level === 'recordar'
-            ? `Según el PDF, ¿qué describe correctamente “${concept.term}”?`
-            : `¿Cuál de estas afirmaciones representa mejor “${concept.term}” según el material?`,
+          index % 3 === 0
+            ? `¿Qué significa “${concept.term}” en este material?`
+            : index % 3 === 1
+              ? `¿Con qué descripción se corresponde “${concept.term}” en tus apuntes?`
+              : `Al estudiar “${concept.term}”, ¿qué característica permite reconocerlo?`,
         options,
         answer: correct,
         explanation: `En el material, “${concept.term}” se define como: ${correct}. Las demás opciones expresan definiciones de otros conceptos, no de éste.`,
@@ -1269,8 +1271,12 @@ function buildCanonicalRelationshipQuestions(
         kind: 'relationship',
         topic: `${item.source} ↔ ${item.target}`,
         prompt: isCausal
-          ? `¿Qué consecuencia vincula “${item.source}” con “${item.target}” en el PDF?`
-          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”?`,
+          ? `Si se considera “${item.source}”, ¿qué consecuencia para “${item.target}” sostiene el material?`
+          : index % 3 === 0
+            ? `¿Qué vínculo entre “${item.source}” y “${item.target}” permite explicar el PDF?`
+            : index % 3 === 1
+              ? `¿Por qué se relacionan “${item.source}” y “${item.target}” en este tema?`
+              : `¿Qué sucede con “${item.target}” cuando se considera “${item.source}” según estos apuntes?`,
         options,
         answer: correct,
         explanation: `La relación presentada en el PDF es: ${correct}. Se vincula específicamente “${item.source}” con “${item.target}”.`,
@@ -1347,6 +1353,9 @@ function buildCanonicalClassificationQuestions(
       if (withEvidence.length === 0) return null;
 
       const correct = withEvidence[index % withEvidence.length];
+      // No convertir una lista de bullets pegados en un supuesto caso académico.
+      const caseText = cleanLine(correct.detail.split(/[●★➔⇒]|\s{2,}(?=[A-ZÁÉÍÓÚ]{4,}\s*:)/u)[0] ?? '');
+      if (caseText.length < 15 || caseText.length > 240) return null;
       const labels = dedupeStrings(entries.map((entry) => entry.label));
       const distractors = labels.filter(
         (label) => normalizeForDedupe(label) !== normalizeForDedupe(correct.label)
@@ -1360,10 +1369,12 @@ function buildCanonicalClassificationQuestions(
         level: 'recordar',
         kind: 'classification',
         topic: classification.title,
-        prompt: `Un caso del material se describe así: “${truncateAtWord(correct.detail, 175)}”. Dentro de “${classification.title}”, ¿a qué categoría corresponde?`,
+        prompt: index % 2 === 0
+          ? `¿Qué categoría de “${classification.title}” corresponde al criterio “${truncateAtWord(caseText, 130)}”?`
+          : `En el tema “${classification.title}”, ¿qué nombre recibe la categoría caracterizada por “${truncateAtWord(caseText, 130)}”?`,
         options,
         answer: correct.label,
-        explanation: `El caso describe “${correct.label}” porque se caracteriza por: ${truncateAtWord(correct.detail, 180)}. Las demás categorías tienen criterios distintos.`,
+        explanation: `La característica “${truncateAtWord(caseText, 130)}” corresponde a “${correct.label}”. Para distinguir las demás categorías, compará los criterios originales de la clasificación.`,
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
