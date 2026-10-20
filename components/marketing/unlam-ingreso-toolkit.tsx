@@ -34,7 +34,7 @@ const SUBJECT_GROUPS = [
     name: 'Profesorado en Educación Física',
     examples: 'Profesorado en Educación Física · programa diferenciado dentro de Humanidades',
     subjects: ['Fundamentos de la Educación Física', 'Filosofía', 'Seminario de comprensión y producción de textos'],
-    tip: 'Antes de estudiar, identificá qué unidades se evalúan de Fundamentos de la Educación Física. Usá ejercicios breves para recuperar definiciones y situaciones prácticas.',
+    tip: 'Fundamentos de la Educación Física tiene una evaluación teórica escrita y pruebas prácticas de eficiencia física: ambas son obligatorias. La universidad solicita ficha médica ante la coordinación con al menos 10 días de anticipación a las pruebas. Evaluo sirve para preparar la parte teórica, no para reemplazar la preparación física.',
     special: false,
   },
   {
