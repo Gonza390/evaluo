@@ -2,6 +2,7 @@ import { buildPedagogicalArtifacts } from '@/lib/student-material-summary';
 import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
 import { PEDAGOGICAL_QUALITY_REPORT_VERSION } from '@/lib/student-materials/quality';
 import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
+import { sanitizePedagogicalArtifacts } from '@/lib/student-materials/pedagogical-integrity';
 import { logError } from '@/lib/observability';
 
 export const CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION = PEDAGOGICAL_ARTIFACTS_VERSION;
@@ -38,7 +39,7 @@ export async function loadOrBuildPedagogicalArtifacts({
     cachedRow?.pedagogical_artifacts_version === CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION &&
     cachedRow?.pedagogical_artifacts
   ) {
-    return cachedRow.pedagogical_artifacts as Artifacts;
+    return sanitizePedagogicalArtifacts(cachedRow.pedagogical_artifacts as Artifacts, summary.sections);
   }
 
   const [{ data: sourceChunks, error: chunksError }, { data: modelRow, error: modelError }] =
