@@ -34,7 +34,19 @@ assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'UbaXxiParcialesPractice',
   '/estudiar-pdf-con-ia?source=seo-uba-xxi-parciales',
 ]);
+const ubaXxiPage = source('app/uba-xxi/parciales/page.tsx');
+assert.ok(
+  ubaXxiPage.indexOf('<section id="practica"') < ubaXxiPage.indexOf('<section aria-labelledby="anteriores"'),
+  'UBA XXI practice must appear before external exam archives',
+);
+assert.ok(
+  ubaXxiPage.indexOf("title: 'IPC · primer parcial 2026'") < ubaXxiPage.indexOf("title: 'IPC · primer parcial 2025'"),
+  'UBA XXI must feature the verified 2026 IPC exam first',
+);
 assertIncludesAll('components/marketing/uba-xxi-parciales-practice.tsx', [
+  'topicsToReview',
+  'Reforzar con mis apuntes PDF',
+  'Seguir practicando con mi PDF',
   'seo_uba_xxi_practice_started',
   'seo_uba_xxi_practice_answered',
   'seo_uba_xxi_practice_completed',
