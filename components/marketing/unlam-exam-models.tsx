@@ -6,6 +6,8 @@ const PDF_HREF = '/estudiar-pdf-con-ia?source=ingreso-unlam-2027';
 const HISTORICAL_OFFICIAL_MANUAL = 'https://mielingreso.unlam.edu.ar/data4/data/ingreso/contenido/INGRESO_2021004/Manual-Curso-de-Ingreso-2022---Economicas.pdf';
 const SHARED_2026_MATH = 'https://www.studocu.com/es-ar/document/universidad-nacional-de-la-matanza/matematica-curso-de-ingreso/examen-de-matematicas-unlam-ingreso-2026-primera-instancia/155107586';
 const OFFICIAL_MIeL = 'https://mielingreso.unlam.edu.ar/';
+const SHARED_2026_SEMINARIO = 'https://www.studocu.com/es-ar/document/universidad-nacional-de-la-matanza/seminario-de-comprension-y-produccion-de-textos/manual-de-ingreso-2026-seminario-de-comprension-y-produccion-de-textos/140155038';
+const SHARED_ACCOUNTING = 'https://www.studocu.com/es-ar/document/universidad-nacional-de-la-matanza/contabilidadcurso-ingreso/modelo-de-examen-contabilidad-ingreso-unlam/146892896';
 
 const FORMATS = [
   {
@@ -36,6 +38,13 @@ const FORMATS = [
     preparation: 'No memorices solo el resultado: practicá restricciones de dominio, ecuaciones, funciones y explicaciones paso a paso según el programa de tu carrera.',
     tool: 'Organizar tu guía y generar práctica conceptual con tu PDF; para comprobar cálculos y desarrollos extensos, contrastá con las soluciones y el docente.',
   },
+  {
+    number: '05',
+    heading: 'Contabilidad: aplicar conceptos a operaciones',
+    evidence: 'Un modelo externo de ingreso en Contabilidad, subido por un estudiante, contiene situaciones de registración, cuentas y variaciones patrimoniales.',
+    preparation: 'Tomá cada operación, identificá qué cuentas intervienen, explicá el efecto patrimonial y contrastá después con la resolución correcta.',
+    tool: 'Usar el PDF para reforzar definiciones y generar preguntas conceptuales; los asientos y cálculos deben validarse con el material de la cátedra.',
+  },
 ] as const;
 
 const SOURCES = [
@@ -46,10 +55,22 @@ const SOURCES = [
     description: 'Incluye módulos de Seminario, anexos con modelos de examen y ejercicios de Matemática. Es una edición anterior; no se debe usar como programa 2027 sin comprobar cambios.',
   },
   {
+    title: 'Manual de Seminario identificado como edición 2026',
+    badge: 'Copia compartida por estudiantes · no oficial',
+    url: SHARED_2026_SEMINARIO,
+    description: 'Describe ejercicios de opción múltiple, completamiento, justificación y respuesta construida, y remite a modelos en MIeL. No es el programa 2027 verificado por Evaluo.',
+  },
+  {
     title: 'Modelo de examen de Matemática, ingreso 2026',
     badge: 'Copia aportada por estudiantes',
     url: SHARED_2026_MATH,
     description: 'Referencia externa de un examen atribuido a la primera instancia 2026. Evaluo no ha verificado su autenticidad con la universidad ni reproduce sus consignas.',
+  },
+  {
+    title: 'Modelo de examen de Contabilidad del ingreso',
+    badge: 'Copia aportada por estudiantes · referencia',
+    url: SHARED_ACCOUNTING,
+    description: 'Ejercicios de registros contables, cuentas y variaciones patrimoniales. La autenticidad y vigencia para 2027 no están certificadas por la universidad.',
   },
   {
     title: 'MIeL Ingreso · UNLaM',
