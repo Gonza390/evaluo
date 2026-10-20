@@ -438,7 +438,15 @@ export function IaParaEstudiantesExperience() {
               >
                 cómo preparar el ingreso UNLaM 2027
               </Link>
-              {' '}trabajando desde el material oficial.
+              {' '}trabajando desde el material oficial. Si estás preparando exámenes de UBA XXI,
+              también podés consultar{' '}
+              <Link
+                href="/uba-xxi/parciales"
+                className="font-semibold text-blue-700 underline decoration-blue-200 underline-offset-4 transition hover:decoration-blue-500"
+              >
+                modelos de parciales anteriores y una práctica gratuita de IPC
+              </Link>
+              .
             </p>
           </div>
         </section>

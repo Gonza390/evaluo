@@ -20,8 +20,11 @@ assertIncludesAll('app/layout.tsx', [
   'lang="es-AR"',
 ]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
+assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI landing must be covered by Lighthouse CI');
+assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
+assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
 assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
-  'Parciales UBA XXI: exámenes anteriores y práctica para rendir',
+  'Parciales UBA XXI: exámenes anteriores y práctica',
   'canonical: toAbsoluteUrl(PATH)',
   'index: true',
   'follow: true',
@@ -31,7 +34,19 @@ assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'UbaXxiParcialesPractice',
   '/estudiar-pdf-con-ia?source=seo-uba-xxi-parciales',
 ]);
+const ubaXxiPage = source('app/uba-xxi/parciales/page.tsx');
+assert.ok(
+  ubaXxiPage.indexOf('<section id="practica"') < ubaXxiPage.indexOf('<section aria-labelledby="anteriores"'),
+  'UBA XXI practice must appear before external exam archives',
+);
+assert.ok(
+  ubaXxiPage.indexOf("title: 'IPC · primer parcial 2026'") < ubaXxiPage.indexOf("title: 'IPC · primer parcial 2025'"),
+  'UBA XXI must feature the verified 2026 IPC exam first',
+);
 assertIncludesAll('components/marketing/uba-xxi-parciales-practice.tsx', [
+  'topicsToReview',
+  'Reforzar con mis apuntes PDF',
+  'Seguir practicando con mi PDF',
   'seo_uba_xxi_practice_started',
   'seo_uba_xxi_practice_answered',
   'seo_uba_xxi_practice_completed',
