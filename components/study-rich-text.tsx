@@ -12,6 +12,7 @@ import {
   Workflow,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { normalizeStudyHtmlTables } from '@/lib/student-materials/study-html-tables';
 
 type StudyCalloutKind =
   | 'important'
@@ -314,7 +315,7 @@ function StudyCallout({
  * negritas, cursivas, listas, tablas, bloques pedagógicos y referencias físicas al PDF.
  */
 export function StudyRichText({ body, compact = false }: { body: string; compact?: boolean }) {
-  const lines = body
+  const lines = normalizeStudyHtmlTables(body)
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
