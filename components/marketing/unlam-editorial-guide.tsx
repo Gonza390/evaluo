@@ -14,11 +14,12 @@ import {
   UploadCloud,
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
+import { UnlamIngresoToolkit } from '@/components/marketing/unlam-ingreso-toolkit';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 
-const uploadHref = '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1';
+const uploadHref = '/estudiar-pdf-con-ia?source=ingreso-unlam-2027';
 const demoHref = '/demo/material-estudio?source=seo_ingreso_unlam_2027';
 
 const officialSources = {
@@ -62,6 +63,9 @@ function StudyNote({ children }: { children: React.ReactNode }) {
 
 export function UnlamEditorialGuide() {
   const toc = [
+    ['#materias-unlam', 'Materias por carrera'],
+    ['#practica-ingreso', 'Práctica sin registro'],
+    ['#plan-ingreso', 'Cómo estudiar el manual'],
     ['#como-funciona', 'Cómo funciona el ingreso'],
     ['#material', 'Qué material estudiar'],
     ['#metodo', 'Método de estudio'],
@@ -80,8 +84,16 @@ export function UnlamEditorialGuide() {
         <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
           <PublicSiteHeader
             variant="landing"
-            primaryHref={uploadHref}
-            trackingLocation="seo_ingreso_unlam_2027_header"
+            actions={
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Link href="/login?mode=login" className="inline-flex min-h-11 items-center text-xs font-semibold text-slate-600 hover:text-slate-950">Entrar</Link>
+                <TrackedLink href={uploadHref} eventName="cta_click"
+                  payload={{ location: 'seo_ingreso_unlam_2027_header', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
+                  className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-blue-700 px-3 text-xs font-bold text-white transition hover:bg-blue-800 sm:px-4">
+                  Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </TrackedLink>
+              </div>
+            }
           />
         </div>
       </div>
@@ -97,14 +109,14 @@ export function UnlamEditorialGuide() {
                   <span>Universidad Nacional de La Matanza</span>
                 </div>
                 <h1 className="mt-5 max-w-[760px] font-serif text-[2.6rem] leading-[1.01] font-semibold tracking-[-0.04em] text-slate-950 sm:text-[3.45rem] lg:text-[4.1rem]">
-                  Cómo estudiar para el Curso de Ingreso UNLaM 2027
+                  Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar
                 </h1>
                 <p className="mt-5 max-w-3xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
-                  Si buscás cómo estudiar para el ingreso UNLaM 2027, empezá por organizar las materias y el manual oficial. Después alterná comprensión, práctica y repaso de errores en lugar de limitarte a releer.
+                  Consultá las materias según tu carrera, las fechas oficiales de 2027 y una guía para preparar el manual. Además, podés resolver ejercicios gratuitos y continuar practicando con tus propios apuntes en Evaluo.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> 12 min de lectura</span>
-                  <span>Revisado el 18 de septiembre de 2026</span>
+                  <span>Revisado el 20 de octubre de 2026</span>
                   <span>Equipo Evaluo</span>
                 </div>
               </div>
@@ -130,7 +142,7 @@ export function UnlamEditorialGuide() {
                 ))}
               </dl>
               <p className="mt-5 text-xs leading-6 text-slate-600">
-                La segunda instancia es intensiva y semipresencial. Si es tu primera vez, revisá también la modalidad regular publicada por la Universidad.
+                La segunda instancia es intensiva y semipresencial, recomendada para recursantes o aspirantes con experiencia universitaria. Medicina, Arquitectura y Odontología no se ofertan en esta instancia; si es tu primera vez, revisá la modalidad regular.
               </p>
               <div className="mt-4 text-xs">
                 <OfficialLink href={officialSources.calendario}>Calendario oficial</OfficialLink>
@@ -138,6 +150,8 @@ export function UnlamEditorialGuide() {
             </aside>
           </div>
         </section>
+
+        <UnlamIngresoToolkit />
 
         <section className="border-b border-slate-200 bg-slate-50/40">
           <div className="mx-auto grid w-full max-w-[1240px] gap-0 lg:grid-cols-[250px_minmax(0,1fr)]">
@@ -449,7 +463,7 @@ export function UnlamEditorialGuide() {
                   <SectionKicker>08 · Fuentes</SectionKicker>
                   <h2 className="font-serif text-4xl font-semibold leading-[1.08] tracking-[-0.03em]">Información oficial utilizada.</h2>
                   <p className="mt-5 text-sm leading-7 text-slate-600">
-                    La información institucional de esta guía fue revisada el 17 de septiembre de 2026. Las fechas y modalidades pueden cambiar, por lo que conviene confirmar siempre cualquier decisión en los canales oficiales de UNLaM.
+                    La información institucional de esta guía fue contrastada con las páginas oficiales el 20 de octubre de 2026. Las fechas y modalidades pueden cambiar, por lo que conviene confirmar siempre cualquier decisión en los canales oficiales de UNLaM.
                   </p>
                   <div className="mt-7 flex flex-col gap-3 text-sm">
                     <OfficialLink href={officialSources.ingreso}>Sistema de Ingresantes UNLaM</OfficialLink>
