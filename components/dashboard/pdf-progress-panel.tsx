@@ -547,7 +547,7 @@ export function PdfProgressPanel({
                       setErrorId(error.id);
                       setReviewOpen(true);
                     }}
-                    className={actionClass + ' bg-primary text-primary-foreground'}
+                    className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
                   >
                     Entender mis errores <ArrowRight size={16} />
                   </button>
@@ -556,7 +556,7 @@ export function PdfProgressPanel({
                   <button
                     type="button"
                     onClick={() => openTopic(nextStudyTopic.id)}
-                    className={actionClass + ' bg-primary text-primary-foreground'}
+                    className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
                   >
                     Seguir con el tema {topics.indexOf(nextStudyTopic) + 1}
                     <ArrowRight size={16} />
@@ -570,7 +570,8 @@ export function PdfProgressPanel({
                       actionClass +
                       (nextStudyTopic && currentAnswered > 0
                         ? ' border-border border'
-                        : ' bg-primary text-primary-foreground')
+                        : ' bg-primary text-primary-foreground') +
+                      ' xl:hidden'
                     }
                   >
                     {currentAnswered > 0 ? 'Practicar de nuevo' : 'Practicar este tema'}
