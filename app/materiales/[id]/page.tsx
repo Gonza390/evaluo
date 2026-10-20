@@ -431,7 +431,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           universidadName={universidad?.nombre ?? 'Sin universidad'}
           viewerUrl={viewerUrl}
           visibility={visibility}
-          studyGlossary={studyGlossary}
+          studyGlossary={topicGlossary}
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
