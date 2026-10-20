@@ -62,6 +62,7 @@ export function PdfMobileNavigation({
           <button
             key={id}
             type="button"
+            data-recommended-tab={id === 'ejercicios' ? id : undefined}
             onClick={() => onSelect(id)}
             aria-current={active === id ? 'page' : undefined}
             className={itemClass(active === id)}

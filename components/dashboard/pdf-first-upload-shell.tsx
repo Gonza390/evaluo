@@ -580,7 +580,9 @@ export function PdfFirstUploadShell({
   const openMaterial = () => {
     if (!processing || !ready) return;
     setOpen(false);
-    router.push(getStudentMaterialRoute(processing.materialId));
+    router.push(
+      `${getStudentMaterialRoute(processing.materialId)}${processing.isFirstReadyMaterial ? '?recorrido=1' : ''}`
+    );
     router.refresh();
   };
 
