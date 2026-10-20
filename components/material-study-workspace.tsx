@@ -1667,7 +1667,7 @@ export function MaterialStudyWorkspace({
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
                   initialTopicSectionIndex={topicReturn?.index}
-                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  initialReinforce={topicReturn?.reinforce}
                   lastPracticeOutcome={topicReturn?.outcome}
                   onPracticeTopic={(index) => {
                     setTopicReturn((previous) => ({
