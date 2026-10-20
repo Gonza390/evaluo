@@ -10,6 +10,7 @@ import {
   getTopicStudyResources, tagGlossaryChapters,
 } from '../lib/student-materials/topic-study-resources.ts';
 import { explainWrongOption } from '../lib/student-materials/answer-evidence.ts';
+import { buildGroundedErrorContrast } from '../lib/student-materials/error-contrast.ts';
 import type { PedagogicalArtifacts, StudyQuestion } from '../lib/student-materials/pedagogy.ts';
 
 const sections = [
@@ -98,6 +99,18 @@ const glossary = [
   { term: 'Causa común', definition: 'Dos efectos pueden compartir una causa', context: 'Concepto del material', importance: 'alta' as const },
   { term: 'Doxa', definition: 'Conocimiento no fundado', context: 'Concepto del material', importance: 'alta' as const },
 ];
+assert.match(
+  buildGroundedErrorContrast(
+    'Conocimiento institucionalizado.',
+    'Reflexión racional y sistemática sobre la ciencia.',
+    [
+      { term: 'Ciencia', definition: 'Conocimiento institucionalizado.', context: '', importance: 'alta' },
+      { term: 'Epistemología', definition: 'Reflexión racional y sistemática sobre la ciencia.', context: '', importance: 'alta' },
+    ]
+  ) ?? '',
+  /definición de “Ciencia”.*corresponde a “Epistemología”/u
+);
+assert.equal(buildGroundedErrorContrast('Conocimiento institucionalizado.', 'Desconocido', glossary), null);
 const tagged = tagGlossaryChapters(glossary, sections);
 assert.equal(tagged[0]?.chapterTitle, sections[0]?.title);
 assert.equal(tagged[1]?.chapterTitle, sections[1]?.title);
