@@ -131,14 +131,28 @@ assert.match(firstGuideSource, /setProgressExplained\(false\)/,
   'Atrás debe volver al primer mensaje de Progreso.');
 assert.match(firstGuideSource, /data-guide-progress-detail/,
   'El detalle debe explicar el ciclo de aprendizaje en la tarjeta existente.');
+assert.match(firstGuideSource, /data-guide-example-topics/,
+  'La última pantalla debe tener una muestra visual de temas.');
+assert.match(firstGuideSource, /Dominado.*Reforzar|Reforzar.*Dominado/s,
+  'El ejemplo debe distinguir temas dominados y por reforzar.');
+assert.match(firstGuideSource, /Ejemplo ilustrativo: no refleja tu progreso real/,
+  'Nunca se deben atribuir resultados ficticios a un estudiante.');
+assert.match(firstGuideSource, /step === 'errors'.*flex flex-col items-stretch/s,
+  'Progreso debe colocar la navegación en filas para evitar el desborde.');
+assert.match(firstGuideSource, /cardRef\.current\?\.getBoundingClientRect\(\)\.width/,
+  'El cálculo de centrado debe medir el ancho real de la tarjeta.');
+assert.match(materialWorkspaceSource, /exampleTopics=\{summaryChapters\.map/,
+  'La muestra debe usar nombres de capítulos reales del PDF.');
 assert.match(firstGuideSource, /Ver cómo funciona/,
   'El primer CTA de Progreso debe mostrar la explicación.');
 assert.match(firstGuideSource, /Empezar a estudiar/,
   'El segundo CTA debe mantener el cierre hacia el resumen.');
-assert.match(firstGuideSource, /los resultados mostrados son de ejemplo/,
-  'La preview no puede hacer pasar datos simulados por resultados reales.');
-assert.match(firstGuideSource, /tus resultados aparecerán acá cuando empieces/,
-  'El onboarding no puede inventar dificultades para usuarios sin prácticas.');
+assert.match(firstGuideSource, /Vista previa\./,
+  'La vista previa debe quedar claramente identificada.');
+assert.match(firstGuideSource, /no refleja tu progreso real/,
+  'Los estados de ejemplo deben estar identificados como ilustrativos.');
+assert.match(firstGuideSource, /Tus resultados aparecerán después de practicar/,
+  'Los resultados reales deben depender de prácticas completadas.');
 assert.match(materialWorkspaceSource, /demoMode=\{Boolean\(demo\)\}/,
   'La guía debe diferenciar la vista previa de un PDF real.');
 assert.match(firstGuideSource, /onBack\?\.\(\)/,

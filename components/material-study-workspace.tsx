@@ -2000,6 +2000,7 @@ export function MaterialStudyWorkspace({
             step={recommendedTourStep}
             transitioning={onboardingFading}
             demoMode={Boolean(demo)}
+            exampleTopics={summaryChapters.map((chapter) => chapter.displayTitle).slice(0, 3)}
             onExit={() => closeRecommendedTour('skipped')}
             onBack={
               recommendedTourStep === 'practice'

@@ -8,9 +8,6 @@ import {
   BookOpenText,
   BrainCircuit,
   ChartNoAxesColumnIncreasing,
-  CheckCircle2,
-  RotateCcw,
-  Target,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -80,7 +77,7 @@ function findStudyPanel(): HTMLElement | null {
     })[0] ?? null;
 }
 
-function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
+function getSpotlight(node: HTMLElement, cardHeight: number, cardWidth: number): Spotlight {
   // Barra de pestañas y contenido se ven juntos: resumen, práctica o progreso.
   const shellRect = node.getBoundingClientRect();
   const rect = shellRect;
@@ -99,7 +96,8 @@ function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
   const right = Math.min(viewportWidth - inset, rect.right + inset);
   const bottom = Math.max(top, Math.min(viewportHeight - inset, navTop, rect.bottom + inset));
 
-  const cardWidth = Math.min(320, viewportWidth - 24);
+  // El detalle tiene más ancho, pero sigue centrado sin invadir el borde derecho.
+  cardWidth = Math.min(cardWidth, viewportWidth - 24);
   // La tarjeta se mantiene centrada sobre el panel, no sobre un párrafo aislado.
   const cardLeft = Math.max(
     12,
@@ -127,6 +125,7 @@ export function RecommendedStudyGuide({
   step,
   transitioning = false,
   demoMode = false,
+  exampleTopics = [],
   onNext,
   onBack,
   onExit,
@@ -134,6 +133,7 @@ export function RecommendedStudyGuide({
   step: RecommendedStudyStep;
   transitioning?: boolean;
   demoMode?: boolean;
+  exampleTopics?: string[];
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
@@ -149,8 +149,9 @@ export function RecommendedStudyGuide({
   const showingProgressDetail = step === 'errors' && progressExplained;
   const title = showingProgressDetail ? 'Cada práctica te ayuda a mejorar' : current.title;
   const description = showingProgressDetail
-    ? 'Identificá lo que entendiste, reforzá tus dificultades y comprobá tu mejora.'
+    ? 'Identificá lo que entendiste y qué temas conviene reforzar.'
     : current.description;
+  const illustratedTopics = exampleTopics.map((topic) => topic.trim()).filter(Boolean).slice(0, 3);
   const handleNext = () => {
     if (step === 'errors' && !progressExplained) {
       setProgressExplained(true);
@@ -196,7 +197,11 @@ export function RecommendedStudyGuide({
         observed = node;
       }
 
-      const next = getSpotlight(node, cardRef.current?.getBoundingClientRect().height ?? 214);
+      const next = getSpotlight(
+        node,
+        cardRef.current?.getBoundingClientRect().height ?? 214,
+        cardRef.current?.getBoundingClientRect().width ?? 320
+      );
       setSpotlight((previous) =>
         previous &&
         Object.keys(next).every(
@@ -334,7 +339,7 @@ export function RecommendedStudyGuide({
         tabIndex={-1}
         data-first-pdf-guide
         aria-busy={transitioning}
-        className="bg-card border-border fixed z-[90] w-[calc(100vw-24px)] max-w-[320px] rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4"
+        className={`bg-card border-border fixed z-[90] max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4 ${showingProgressDetail ? 'max-w-[360px]' : 'max-w-[320px]'}`}
         style={
           spotlight
             ? { top: spotlight.cardTop, left: spotlight.cardLeft, opacity: 1 }
@@ -368,28 +373,43 @@ export function RecommendedStudyGuide({
         </div>
 
         {showingProgressDetail && (
-          <div data-guide-progress-detail className="mt-2.5">
-            <div className="grid grid-cols-3 gap-1.5" aria-label="Cómo funciona Progreso">
-              {[
-                { icon: CheckCircle2, label: 'Lo que sabés' },
-                { icon: Target, label: 'Qué reforzar' },
-                { icon: RotateCcw, label: 'Volver a probar' },
-              ].map(({ icon: ItemIcon, label }) => (
-                <div key={label} className="bg-muted/60 text-foreground flex min-w-0 flex-col items-center gap-1 rounded-xl px-1.5 py-2 text-center">
-                  <ItemIcon aria-hidden="true" className="text-primary size-3.5" />
-                  <span className="text-[10px] leading-3.5 font-medium">{label}</span>
-                </div>
-              ))}
+          <div data-guide-progress-detail className="mt-2.5 min-w-0">
+            <p className="text-primary text-[10px] font-bold tracking-wide uppercase">
+              Ejemplo con temas de tu PDF
+            </p>
+            <div
+              data-guide-example-topics
+              aria-label="Estados ilustrativos, no son resultados reales"
+              className="border-border mt-1.5 overflow-hidden rounded-xl border"
+            >
+              {illustratedTopics.length > 0 ? illustratedTopics.map((topic, index) => {
+                const mastered = index === 0;
+                return (
+                  <div key={`${index}:${topic}`} className="border-border flex min-w-0 items-center justify-between gap-2 border-b px-2.5 py-2 last:border-b-0">
+                    <span className="text-foreground min-w-0 flex-1 truncate text-[11px] font-medium" title={topic}>{topic}</span>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${mastered
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'bg-amber-50 text-amber-800'}`}>
+                      {mastered ? 'Dominado' : 'Reforzar'}
+                    </span>
+                  </div>
+                );
+              }) : (
+                <p className="text-muted-foreground px-2.5 py-2 text-[11px]">
+                  Cuando tengas temas procesados, vas a poder seguir tu avance acá.
+                </p>
+              )}
             </div>
-            <p className="text-muted-foreground mt-2 text-[11px] leading-4">
-              {demoMode
-                ? 'Vista previa: los resultados mostrados son de ejemplo.'
-                : 'Si todavía no practicaste, tus resultados aparecerán acá cuando empieces.'}
+            <p className="text-muted-foreground mt-1.5 text-[10.5px] leading-4">
+              {demoMode ? 'Vista previa. ' : ''}Ejemplo ilustrativo: no refleja tu progreso real.
+              Tus resultados aparecerán después de practicar.
             </p>
           </div>
         )}
 
-        <div className="border-border/70 mt-2.5 flex items-center justify-between gap-2 border-t pt-2.5">
+        <div className={`border-border/70 mt-2.5 border-t pt-2.5 ${step === 'errors'
+          ? 'flex flex-col items-stretch gap-2'
+          : 'flex items-center justify-between gap-2'}`}>
           <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 3'}>
             {order.map((item, index) => (
               <span
@@ -405,13 +425,13 @@ export function RecommendedStudyGuide({
               />
             ))}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className={`flex min-w-0 items-center gap-1.5 ${step === 'errors' ? 'justify-between' : ''}`}>
             {onBack ? (
               <Button type="button" variant="ghost" size="sm" onClick={handleBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
-            <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 gap-1.5 rounded-full px-4">
+            <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 min-w-0 gap-1.5 whitespace-normal rounded-full px-3 text-[12px] leading-4 sm:whitespace-nowrap sm:px-4">
               {step === 'errors'
                 ? showingProgressDetail ? 'Empezar a estudiar' : 'Ver cómo funciona'
                 : 'Siguiente'} <ArrowRight className="size-3.5" />
