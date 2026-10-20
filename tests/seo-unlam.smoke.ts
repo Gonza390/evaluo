@@ -121,6 +121,24 @@ requireAll('lib/analytics-metadata.ts', [
   'seo_unlam_practice_mode_selected',
   'seo_unlam_practice_completed',
 ]);
+requireAll('app/administrador/unlam-funnel-actions.ts', [
+  'getAdminAccessContext',
+  'listAdminUserIds',
+  "eq('path', PATH)",
+  'seo_unlam_practice_started',
+  'seo_unlam_practice_completed',
+  'pdf_selected',
+  'signup_completed',
+]);
+requireAll('app/administrador/unlam-funnel-panel.tsx', [
+  'Ingreso UNLaM · Embudo de adquisición',
+  'stats.steps.map',
+  'Search Console',
+]);
+requireAll('app/administrador/page.tsx', [
+  'obtenerEmbudoUnlamAdministrador(activePeriod)',
+  'UnlamFunnelPanel',
+]);
 assert.ok(source('app/sitemap.ts').includes('/como-estudiar-ingreso-unlam'), 'Landing must be in sitemap');
 assert.ok(source('components/footer-home.tsx').includes('href="/como-estudiar-ingreso-unlam"'), 'Landing needs an internal link');
 console.log('UNLaM SEO, content and funnel smoke tests passed.');
