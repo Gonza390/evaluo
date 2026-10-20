@@ -309,6 +309,7 @@ export async function enhancePdfExtractionWithVision(input: {
   geminiPdfKeySlot?: GeminiPdfKeySlot;
   forceRequiredOcr?: boolean;
   fileSha256?: string;
+  checkpointVersion?: string;
 }): Promise<VisionEnhancedPdfExtraction> {
   const visualAnalysisEnabled =
     input.forceRequiredOcr === true ||
@@ -354,8 +355,9 @@ export async function enhancePdfExtractionWithVision(input: {
   const fileHash = admin
     ? input.fileSha256 ?? createHash('sha256').update(input.pdfBuffer).digest('hex')
     : null;
+  const checkpointVersion = input.checkpointVersion ?? 'vision-extraction-v1';
   const previouslySaved = admin && input.materialId && fileHash
-    ? await loadPageOcrCheckpoint(admin, input.materialId, fileHash, selectedPageNumbers)
+    ? await loadPageOcrCheckpoint(admin, input.materialId, fileHash, checkpointVersion, selectedPageNumbers)
     : [];
   for (const cached of previouslySaved) {
     if (cached.origin === 'blank') {
@@ -371,7 +373,7 @@ export async function enhancePdfExtractionWithVision(input: {
   }
   const persistPages = async (pages: CachedPage[]) => {
     if (admin && input.materialId && fileHash && pages.length > 0) {
-      await savePageOcrCheckpoint(admin, input.materialId, fileHash, pages);
+      await savePageOcrCheckpoint(admin, input.materialId, fileHash, checkpointVersion, pages);
     }
   };
   const missingPageNumbers = selectMissingOcrPages(selectedPageNumbers, previouslySaved);
