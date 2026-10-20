@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpenCheck, CheckCircle2, ExternalLink, FileQuestion, FileText, GraduationCap, PencilLine, UploadCloud } from 'lucide-react';
+import { ArrowRight, ExternalLink, FileQuestion, UploadCloud } from 'lucide-react';
 import { UnlamExamFormatSample } from '@/components/marketing/unlam-exam-format-sample';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 
