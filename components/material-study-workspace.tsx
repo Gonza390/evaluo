@@ -317,6 +317,16 @@ export function MaterialStudyWorkspace({
   } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
+  const [onboardingFading, setOnboardingFading] = useState(false);
+  const onboardingTransitionRef = useRef<number | null>(null);
+
+  // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
+  useEffect(() => () => {
+    if (onboardingTransitionRef.current !== null) {
+      window.clearTimeout(onboardingTransitionRef.current);
+    }
+  }, []);
+
   // Una sesión compartida por las vistas móvil y escritorio evita perder respuestas al redimensionar.
   const [recommendedSession, setRecommendedSession] = useState(emptyDiagnosticSession);
   const [recommendedTourStep, setRecommendedTourStep] = useState<RecommendedStudyStep | null>(
@@ -542,6 +552,11 @@ export function MaterialStudyWorkspace({
         );
       }
       clearRecommendedStudyQuery();
+      if (onboardingTransitionRef.current !== null) {
+        window.clearTimeout(onboardingTransitionRef.current);
+        onboardingTransitionRef.current = null;
+      }
+      setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
       // La guía termina en el Resumen, listo para estudiar.
@@ -567,6 +582,35 @@ export function MaterialStudyWorkspace({
       recommendedTourStep,
     ]
   );
+  const transitionRecommendedTour = (navigate: () => void) => {
+    if (onboardingTransitionRef.current !== null) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      navigate();
+      return;
+    }
+    // Crossfade liviano sobre el contenido. La guía conserva su lugar y altura.
+    setOnboardingFading(true);
+    onboardingTransitionRef.current = window.setTimeout(() => {
+      onboardingTransitionRef.current = null;
+      navigate();
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setOnboardingFading(false));
+      });
+    }, 170);
+  };
+
+  useEffect(() => {
+    if (!recommendedActive || !recommendedTourStep) return;
+    // Solo se reinicia el scroll interno, nunca el scroll de toda la página.
+    const frame = window.requestAnimationFrame(() => {
+      const activePanel = Array.from(
+        document.querySelectorAll<HTMLElement>('[aria-label="Contenido de estudio"]')
+      ).find((node) => node.getClientRects().length > 0);
+      activePanel?.scrollTo({ top: 0, behavior: 'instant' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [recommendedActive, recommendedTourStep]);
+
   const openRecommendedErrors = (onboardingErrorId: string | null) => {
     setRecommendedTourStep(null);
     if (demo) {
@@ -1229,10 +1273,14 @@ export function MaterialStudyWorkspace({
       key={materialId}
       role="region"
       aria-label="Contenido de estudio"
+      data-onboarding-panel={recommendedActive || undefined}
+      data-onboarding-transitioning={(recommendedActive && onboardingFading) || undefined}
       tabIndex={0}
       className={cn(
         'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
-        demo && 'h-full min-h-0 overflow-y-auto'
+        demo && 'h-full min-h-0 overflow-y-auto',
+        recommendedActive && 'transition-[opacity,transform] duration-[170ms] ease-out motion-reduce:transition-none',
+        recommendedActive && onboardingFading && 'pointer-events-none translate-y-1 opacity-[0.08]'
       )}
     >
       {commentsOpen && activeTab === 'resumen' ? (
@@ -1838,7 +1886,7 @@ export function MaterialStudyWorkspace({
         />
       ) : null}
       <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
-        <div className={`mx-auto flex w-full items-center gap-4 px-4 py-2 sm:px-6 ${progressOpen ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
+        <div className={`mx-auto flex w-full items-center gap-4 px-4 py-2 sm:px-6 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
@@ -1867,47 +1915,43 @@ export function MaterialStudyWorkspace({
         <div className="mx-auto w-full max-w-[1600px] shrink-0 px-2 pt-2 sm:px-4 sm:pt-3 xl:px-5">
           <RecommendedStudyGuide
             step={recommendedTourStep}
+            transitioning={onboardingFading}
             onExit={() => closeRecommendedTour('skipped')}
             onBack={
               recommendedTourStep === 'practice'
-                ? () => {
+                ? () => transitionRecommendedTour(() => {
                     setProgressOpen(false);
                     changeRecommendedTab('resumen');
                     setRecommendedTourStep('summary');
-                  }
+                  })
                 : recommendedTourStep === 'errors'
-                  ? () => {
+                  ? () => transitionRecommendedTour(() => {
                       setProgressOpen(false);
                       changeRecommendedTab('ejercicios');
                       setRecommendedTourStep('practice');
-                    }
+                    })
                   : undefined
             }
-            onNext={() => {
+            onNext={() => transitionRecommendedTour(() => {
               if (recommendedTourStep === 'summary') {
-                // El paso de Práctica debe enseñar la pantalla real, no solo su pestaña.
+                // La transición muestra la pantalla de práctica, no solo su botón.
                 setPracticeSectionIndex(undefined);
                 setDiagnosticMode(false);
                 setProgressOpen(false);
                 changeRecommendedTab('ejercicios');
                 setRecommendedTourStep('practice');
               } else if (recommendedTourStep === 'practice') {
-                // Progreso se muestra con los temas reales, sin superponer recortes.
                 setProgressOpen(true);
                 setRecommendedTourStep('errors');
               } else {
                 closeRecommendedTour('completed');
               }
-              const activePanel = Array.from(
-                document.querySelectorAll<HTMLElement>('[aria-label="Contenido de estudio"]')
-              ).find((node) => node.getClientRects().length > 0);
-              activePanel?.scrollTo({ top: 0, behavior: 'instant' });
-            }}
+            })}
           />
         </div>
       )}
 
-      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
+      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
           <div className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs

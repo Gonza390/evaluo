@@ -119,6 +119,13 @@ const diagnosticSource = readFileSync('components/student-material-diagnostic.ts
 assert.ok(firstGuideSource.includes('Progreso: estudiá tema por tema'), 'La guía debe destacar el estudio por temas.');
 assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe integrarse a la interfaz sin tapar el contenido.');
 assert.doesNotMatch(firstGuideSource, /PdfTourSpotlight|fixed inset-0/, 'El primer recorrido no debe bloquear ni desenfocar la pantalla.');
+assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');
+assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegación guiada debe transicionar entre las pantallas reales.');
+assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La animación debe respetar las preferencias de accesibilidad.');
+assert.match(materialWorkspaceSource, /data-onboarding-transitioning/, 'El contenido debe suavizar el cambio de etapa.');
+const materialStudyCss = readFileSync('app/materiales/[id]/material-study.css', 'utf8');
+assert.match(materialStudyCss, /evaluo-onboarding-copy-appear/, 'El cambio de texto debe ser suave.');
+assert.match(materialStudyCss, /prefers-reduced-motion: reduce/, 'La animación de la guía debe desactivarse cuando corresponda.');
 assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
 assert.match(materialWorkspaceSource, /changeRecommendedTab\('ejercicios'\);\s*setRecommendedTourStep\('practice'\)/,

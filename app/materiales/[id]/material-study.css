@@ -230,3 +230,25 @@ button[aria-label='Mostrar pregunta']:focus-visible {
     padding-inline: 0 !important;
   }
 }
+
+/* Primer PDF: cambios de etapa suaves sin oscurecer ni bloquear el contenido. */
+@keyframes evaluo-onboarding-copy-appear {
+  from {
+    opacity: 0.25;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-first-pdf-guide] [data-guide-copy] {
+  animation: evaluo-onboarding-copy-appear 240ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-first-pdf-guide] [data-guide-copy] {
+    animation: none;
+  }
+}
