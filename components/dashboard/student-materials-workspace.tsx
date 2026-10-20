@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   CircleAlert,
@@ -31,38 +31,8 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 
-type UniversidadOption = {
-  id: string;
-  nombre: string;
-};
-
-type CarreraOption = {
-  id: string;
-  nombre: string;
-  universidad_id: string | null;
-};
-
-type MateriaOption = {
-  id: string;
-  nombre: string;
-  carrera_id?: string | null;
-};
-
-type CarreraMateriaRelation = {
-  carrera_id: string | null;
-  materia_id: string | null;
-};
-
 interface StudentMaterialsWorkspaceProps {
   initialMaterials: StudentMaterial[];
-  universidades: UniversidadOption[];
-  carreras: CarreraOption[];
-  materias: MateriaOption[];
-  carreraMaterias: CarreraMateriaRelation[];
-  initialUniversidadId?: string;
-  initialCarreraId?: string;
-  initialMateriaId?: string;
-  initialOpenUpload?: boolean;
 }
 
 function formatDate(value: string) {
@@ -80,27 +50,11 @@ function formatDate(value: string) {
  */
 export function StudentMaterialsWorkspace({
   initialMaterials,
-  universidades,
-  carreras,
-  materias,
 }: StudentMaterialsWorkspaceProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
-
-  const universityNameById = useMemo(
-    () => new Map(universidades.map((universidad) => [universidad.id, universidad.nombre])),
-    [universidades]
-  );
-  const careerNameById = useMemo(
-    () => new Map(carreras.map((carrera) => [carrera.id, carrera.nombre])),
-    [carreras]
-  );
-  const materiaNameById = useMemo(
-    () => new Map(materias.map((materia) => [materia.id, materia.nombre])),
-    [materias]
-  );
 
   const handleVisibilityChange = (materialId: string, nextVisibility: 'private' | 'shared') => {
     startTransition(async () => {
@@ -221,9 +175,6 @@ export function StudentMaterialsWorkspace({
                         {material.file_name}
                       </p>
                       <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1.5 text-[12px] font-medium text-slate-500">
-                        <span>{universityNameById.get(material.universidad_id) ?? 'Universidad'}</span>
-                        <span>{careerNameById.get(material.carrera_id) ?? 'Carrera'}</span>
-                        <span>{materiaNameById.get(material.materia_id) ?? 'Materia'}</span>
                         <span>{formatDate(material.created_at)}</span>
                         {material.page_count ? <span>{material.page_count} páginas</span> : null}
                       </div>

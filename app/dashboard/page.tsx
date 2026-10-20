@@ -7,6 +7,7 @@ import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
 import { getPendingStudyErrorTopicCount } from '@/lib/study-errors';
 import { getDashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { createClientServer } from '@/lib/supabase-server';
+import { isUuid } from '@/lib/uuid';
 
 function isMissingStudentMaterialsTableError(error: unknown) {
   if (!error || typeof error !== 'object') {
@@ -76,86 +77,25 @@ export default async function DashboardPage({
   }
 
   try {
-    const [
-      materials,
-      universidadesResult,
-      carrerasResult,
-      materiasResult,
-      carreraMateriasResult,
-      profileResult,
-      pendingReinforcementCount,
-    ] = await Promise.all([
+    // PDF-first: la pantalla no requiere descargar el catálogo académico.
+    // Los datos de universidad/carrera se cargan solamente si se abre el formulario opcional.
+    const [materials, pendingReinforcementCount] = await Promise.all([
       fetchStudentMaterialsByUser(supabase, user.id),
-      supabase.from('universidades').select('id, nombre').order('nombre'),
-      supabase.from('carreras').select('id, nombre, universidad_id').order('nombre'),
-      supabase.from('materias').select('id, nombre, carrera_id').order('nombre'),
-      supabase.from('carrera_materias').select('carrera_id, materia_id'),
-      supabase
-        .from('profiles')
-        .select('universidad_id, carrera_id')
-        .eq('id', user.id)
-        .maybeSingle(),
       getPendingStudyErrorTopicCount(user.id),
     ]);
 
-    if (universidadesResult.error) throw universidadesResult.error;
-    if (carrerasResult.error) throw carrerasResult.error;
-    if (materiasResult.error) throw materiasResult.error;
-    if (carreraMateriasResult.error) throw carreraMateriasResult.error;
-    if (profileResult.error) throw profileResult.error;
-
-    const universidades = universidadesResult.data ?? [];
-    const carreras = carrerasResult.data ?? [];
-    const materias = materiasResult.data ?? [];
-    const carreraMaterias = carreraMateriasResult.data ?? [];
-
     const nextStudyAction = await getDashboardNextStudyAction(user.id, materials);
 
-    const rawProfileUniversidadId = String(profileResult.data?.universidad_id ?? '');
-    const profileUniversidadId = universidades.some(
-      (universidad) => universidad.id === rawProfileUniversidadId
-    )
-      ? rawProfileUniversidadId
-      : '';
-    const requestedUniversidadId = String(universidadId ?? '');
-    const resolvedUniversidadId = universidades.some(
-      (universidad) => universidad.id === requestedUniversidadId
-    )
-      ? requestedUniversidadId
-      : profileUniversidadId;
-
-    const careerBelongsToUniversity = (candidateId: string, universityId: string) =>
-      Boolean(
-        candidateId &&
-          universityId &&
-          carreras.some(
-            (carrera) =>
-              carrera.id === candidateId && carrera.universidad_id === universityId
-          )
-      );
-
-    const requestedCarreraId = String(carreraId ?? '');
-    const profileCarreraId = String(profileResult.data?.carrera_id ?? '');
-    const resolvedCarreraId = careerBelongsToUniversity(requestedCarreraId, resolvedUniversidadId)
-      ? requestedCarreraId
-      : careerBelongsToUniversity(profileCarreraId, resolvedUniversidadId)
-        ? profileCarreraId
+    // Conservamos el contexto específico de pregunteros y landings por materia.
+    // La verificación de pertenencia y permisos se realiza en finalizePdfFirstUploadAction,
+    // no mediante la descarga global de 784 materias y 1.401 relaciones.
+    const resolvedUniversidadId = universidadId && isUuid(universidadId) ? universidadId : '';
+    const resolvedCarreraId = carreraId && isUuid(carreraId) ? carreraId : '';
+    const uploadMateriaId =
+      materiaId && isUuid(materiaId) && resolvedUniversidadId && resolvedCarreraId
+        ? materiaId
         : '';
-
-    const subjectBelongsToCareer = (subjectId: string, careerId: string) => {
-      if (!subjectId || !careerId) return false;
-      const subject = materias.find((materia) => materia.id === subjectId);
-      if (!subject) return false;
-      if (subject.carrera_id === careerId) return true;
-      return carreraMaterias.some(
-        (relation) => relation.carrera_id === careerId && relation.materia_id === subjectId
-      );
-    };
-
-    const requestedMateriaId = String(materiaId ?? '');
-    const uploadMateriaId = subjectBelongsToCareer(requestedMateriaId, resolvedCarreraId)
-      ? requestedMateriaId
-      : '';
+    const requestedMateriaId = materiaId && isUuid(materiaId) ? materiaId : '';
 
     const isSucesorioPlan = source === 'preguntero-derecho-sucesorio-p2';
     const formattedExamDate = formatExamDate(examDate);
@@ -205,10 +145,6 @@ export default async function DashboardPage({
 
           <LazyMaeveStudySpace
             materials={materials}
-            universidades={universidades}
-            carreras={carreras}
-            materias={materias}
-            carreraMaterias={carreraMaterias}
             initialUniversidadId={resolvedUniversidadId}
             initialCarreraId={resolvedCarreraId}
             initialMateriaId={uploadMateriaId}

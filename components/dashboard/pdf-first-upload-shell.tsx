@@ -18,6 +18,7 @@ import {
 } from '@/app/dashboard/materiales/actions';
 import { saveStudentMaterialExamContextAction } from '@/app/dashboard/materiales/context-actions';
 import { savePdfFirstAcademicContextAction } from '@/app/dashboard/materiales/pdf-first-context-actions';
+import { loadDashboardAcademicOptionsAction } from '@/app/dashboard/materiales/academic-options-actions';
 import {
   cancelPdfFirstUploadAction,
   finalizePdfFirstUploadAction,
@@ -37,19 +38,10 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 
 type UniversidadOption = { id: string; nombre: string };
 type CarreraOption = { id: string; nombre: string; universidad_id: string | null };
-type MateriaOption = { id: string; nombre: string; carrera_id?: string | null };
-type CarreraMateriaRelation = { carrera_id: string | null; materia_id: string | null };
-
 const MISSING_UNIVERSITY_VALUE = '__missing_university__';
 
 type Props = {
   children: ReactNode;
-  universidades: UniversidadOption[];
-  carreras: CarreraOption[];
-  /** Kept for call-site compatibility; Ship I soft-ask does not require materia. */
-  materias: MateriaOption[];
-  /** Kept for call-site compatibility; Ship I soft-ask does not require materia. */
-  carreraMaterias: CarreraMateriaRelation[];
   initialUniversidadId?: string;
   initialCarreraId?: string;
   initialMateriaId?: string;
@@ -90,10 +82,6 @@ function isUploadTriggerLabel(label: string) {
 
 export function PdfFirstUploadShell({
   children,
-  universidades,
-  carreras,
-  materias: _materias,
-  carreraMaterias: _carreraMaterias,
   initialUniversidadId = '',
   initialCarreraId = '',
   initialMateriaId = '',
@@ -107,6 +95,14 @@ export function PdfFirstUploadShell({
   const isPreAuthPdfResume =
     initialSource.startsWith('pdf-first-landing') || initialSource.startsWith('home-pdf-first-');
   const isDirectSignupFirstPdf = initialSource === 'signup-direct';
+  // El catálogo y el perfil académico se solicitan sólo si el estudiante
+  // abre la opción de universidad/carrera. Nunca se cargan con Mi espacio.
+  const [universidades, setUniversidades] = useState<UniversidadOption[]>([]);
+  const [carreras, setCarreras] = useState<CarreraOption[]>([]);
+  const [academicChoicesStatus, setAcademicChoicesStatus] =
+    useState<'idle' | 'loading' | 'loaded' | 'failed'>('idle');
+  const [academicChoicesError, setAcademicChoicesError] = useState('');
+  const academicFetchInFlightRef = useRef(false);
   const initialProfileUniversity =
     universidades.find((item) => item.id === initialUniversidadId) ?? null;
   const initialProfileCareer =
@@ -150,6 +146,79 @@ export function PdfFirstUploadShell({
   const [savedContextLabel, setSavedContextLabel] = useState(initialAcademicProfileLabel);
   const [showReadyContext, setShowReadyContext] = useState(false);
   const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPreAuthPdfResume);
+
+  useEffect(() => {
+    if (!showReadyContext || academicChoicesStatus !== 'idle' || academicFetchInFlightRef.current) return;
+    academicFetchInFlightRef.current = true;
+    setAcademicChoicesStatus('loading');
+
+    void loadDashboardAcademicOptionsAction()
+      .then((result) => {
+        if (!result.success) {
+          setAcademicChoicesError(result.message);
+          setAcademicChoicesStatus('failed');
+          return;
+        }
+
+        const profileUniversityId = result.profile.universidadId ?? '';
+        const profileCareerId = result.profile.carreraId ?? '';
+        // Un enlace a una materia tiene prioridad sobre el perfil para
+        // el contexto de carga. Si no existe, retomamos los datos guardados.
+        const initialUniversityId =
+          result.universidades.some((option) => option.id === initialUniversidadId)
+            ? initialUniversidadId
+            : profileUniversityId;
+        const resolvedUniversityId =
+          result.universidades.some((option) => option.id === initialUniversityId)
+            ? initialUniversityId
+            : '';
+        const preferredCareerId =
+          initialCarreraId && initialUniversidadId === resolvedUniversityId
+            ? initialCarreraId
+            : profileCareerId;
+        const resolvedCareerId =
+          result.carreras.some(
+            (option) =>
+              option.id === preferredCareerId &&
+              option.universidad_id === resolvedUniversityId
+          )
+            ? preferredCareerId
+            : '';
+
+        const savedUniversity = result.universidades.find(
+          (option) => option.id === profileUniversityId
+        );
+        const savedCareer = result.carreras.find(
+          (option) => option.id === profileCareerId &&
+            option.universidad_id === profileUniversityId
+        );
+        setUniversidades(result.universidades);
+        setCarreras(result.carreras);
+        setUniversityId(resolvedUniversityId);
+        setCareerId(resolvedCareerId);
+        const savedUniversityMatchesSelection =
+          Boolean(savedUniversity) && profileUniversityId === resolvedUniversityId;
+        setProfileUniversitySaved(savedUniversityMatchesSelection);
+        setProfileUniversityName(savedUniversityMatchesSelection ? savedUniversity?.nombre ?? '' : '');
+        const profileMatchesSelection =
+          Boolean(savedUniversity && savedCareer) &&
+          profileUniversityId === resolvedUniversityId &&
+          profileCareerId === resolvedCareerId;
+        setContextSaved(profileMatchesSelection);
+        setSavedContextLabel(
+          [savedUniversity?.nombre, savedCareer?.nombre].filter(Boolean).join(' · ')
+        );
+        setAcademicChoicesError('');
+        setAcademicChoicesStatus('loaded');
+      })
+      .catch(() => {
+        setAcademicChoicesError('No pudimos cargar universidades y carreras. Intentá nuevamente.');
+        setAcademicChoicesStatus('failed');
+      })
+      .finally(() => {
+        academicFetchInFlightRef.current = false;
+      });
+  }, [showReadyContext, academicChoicesStatus, initialUniversidadId, initialCarreraId]);
 
   const selectedUniversity = universidades.find((item) => item.id === universityId) ?? null;
   const availableCareers = useMemo(
@@ -860,7 +929,23 @@ export function PdfFirstUploadShell({
 
                 {!failed && showReadyContext ? (
                   <>
-                    {!contextSaved ? (
+                    {academicChoicesStatus !== 'loaded' ? (
+                      <div className="mt-5 space-y-3" role="status">
+                        {academicChoicesStatus === 'failed' ? (
+                          <>
+                            <p className="text-sm text-red-700">{academicChoicesError}</p>
+                            <Button type="button" variant="outline" onClick={() => setAcademicChoicesStatus('idle')}>
+                              Reintentar carga de universidades
+                            </Button>
+                          </>
+                        ) : (
+                          <p className="flex items-center gap-2 text-sm text-slate-500">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Cargando universidades y carreras...
+                          </p>
+                        )}
+                      </div>
+                    ) : !contextSaved ? (
                       <div className="mt-5 space-y-4">
                         <p className="text-xs leading-5 text-slate-500">
                           Universidad y carrera se guardan en tu perfil una sola vez. No te las
@@ -1030,7 +1115,7 @@ export function PdfFirstUploadShell({
                           Saltar
                         </Button>
                       ) : null}
-                      {!contextSaved ? (
+                      {!contextSaved && academicChoicesStatus === 'loaded' ? (
                         <Button
                           type="button"
                           disabled={!canSaveContext || savingContext}

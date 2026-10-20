@@ -7,17 +7,8 @@ import type { StudentMaterial } from '@/lib/data/student-materials';
 import type { DashboardNextStudyAction } from '@/lib/dashboard-next-study-action';
 import { getStudentMaterialRoute } from '@/lib/routes';
 
-type UniversidadOption = { id: string; nombre: string };
-type CarreraOption = { id: string; nombre: string; universidad_id: string | null };
-type MateriaOption = { id: string; nombre: string; carrera_id?: string | null };
-type CarreraMateriaRelation = { carrera_id: string | null; materia_id: string | null };
-
 export type MaeveStudySpaceProps = {
   materials: StudentMaterial[];
-  universidades: UniversidadOption[];
-  carreras: CarreraOption[];
-  materias: MateriaOption[];
-  carreraMaterias: CarreraMateriaRelation[];
   initialUniversidadId?: string;
   initialCarreraId?: string;
   initialMateriaId?: string;
@@ -35,10 +26,6 @@ export type MaeveStudySpaceProps = {
  */
 export function MaeveStudySpace({
   materials,
-  universidades,
-  carreras,
-  materias,
-  carreraMaterias,
   initialUniversidadId = '',
   initialCarreraId = '',
   initialMateriaId = '',
@@ -55,10 +42,6 @@ export function MaeveStudySpace({
   const primaryMaterialReady = primaryMaterial?.processing_status === 'ready';
   return (
     <PdfFirstUploadShell
-      universidades={universidades}
-      carreras={carreras}
-      materias={materias}
-      carreraMaterias={carreraMaterias}
       initialUniversidadId={initialUniversidadId}
       initialCarreraId={initialCarreraId}
       initialMateriaId={initialMateriaId}
@@ -76,14 +59,6 @@ export function MaeveStudySpace({
       >
         <StudentMaterialsWorkspace
           initialMaterials={materials}
-          universidades={universidades}
-          carreras={carreras}
-          materias={materias}
-          carreraMaterias={carreraMaterias}
-          initialUniversidadId={initialUniversidadId}
-          initialCarreraId={initialCarreraId}
-          initialMateriaId={initialMateriaId}
-          initialOpenUpload={false}
         />
       </MaeveDashboardChrome>
     </PdfFirstUploadShell>
