@@ -77,16 +77,9 @@ const FAQ = [
 ] as const;
 
 export const metadata: Metadata = {
-  title: 'Parciales UBA XXI: exámenes anteriores y práctica para rendir',
+  title: 'Parciales UBA XXI: exámenes anteriores y práctica',
   description:
-    'Consultá ejemplos de parciales UBA XXI de IPC e ICSE de 2025 y 2026. Practicá gratis con preguntas originales y prepará el próximo parcial con tus apuntes PDF.',
-  keywords: [
-    'parciales uba xxi',
-    'parciales uba 21',
-    'parciales uba xxi ipc',
-    'parciales uba xxi icse',
-    'exámenes anteriores uba xxi',
-  ],
+    'Consultá parciales anteriores de IPC e ICSE (2025 y 2026), practicá preguntas gratis con corrección y prepará UBA XXI con tus propios apuntes PDF.'
   alternates: { canonical: toAbsoluteUrl(PATH) },
   robots: { index: true, follow: true },
   openGraph: {
@@ -147,8 +140,28 @@ export default function ParcialesUbaXxiPage() {
       <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-8">
         <PublicSiteHeader
           variant="landing"
-          primaryHref={PDF_HREF}
-          trackingLocation="seo_uba_xxi_parciales_header"
+          actions={
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href="/login?mode=login"
+                className="inline-flex min-h-11 items-center text-xs font-semibold text-slate-600 hover:text-slate-950"
+              >
+                Iniciar sesión
+              </Link>
+              <TrackedLink
+                href={PDF_HREF}
+                eventName="cta_click"
+                payload={{
+                  location: 'seo_uba_xxi_parciales_header',
+                  cta_name: 'elegir_pdf',
+                  destination: PDF_HREF,
+                }}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-blue-700 px-3 text-xs font-bold text-white hover:bg-blue-800 sm:px-4"
+              >
+                Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </TrackedLink>
+            </div>
+          }
         />
       </div>
 
@@ -234,7 +247,7 @@ export default function ParcialesUbaXxiPage() {
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Ejemplos comprobables</p>
             <h2 id="anteriores" className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Exámenes anteriores de UBA XXI por materia
+              Modelos de parciales UBA XXI 2025 y 2026: IPC e ICSE
             </h2>
             <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
               Estos enlaces llevan a publicaciones externas de evaluaciones anteriores. Revisá siempre
@@ -272,6 +285,84 @@ export default function ParcialesUbaXxiPage() {
             Evaluo es una plataforma independiente. Los ejemplos anteriores no son materiales oficiales
             proporcionados por Evaluo y podrían no coincidir con tu cátedra actual.
           </p>
+        </section>
+
+        <section aria-labelledby="analisis-examen-ipc" className="border-t border-slate-100 bg-white py-14 sm:py-20">
+          <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-8">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
+                Cómo aprovechar modelos anteriores
+              </p>
+              <h2 id="analisis-examen-ipc" className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                ¿Qué estudiar para un parcial de IPC UBA XXI?
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
+                Los parciales anteriores sirven para identificar habilidades y tipos de consignas,
+                no para adivinar preguntas futuras. Antes de practicar, comprobá la cátedra y
+                el programa vigente de tu materia.
+              </p>
+            </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">IPC · Buacar · 2025</p>
+                <h3 className="mt-3 text-lg font-bold text-slate-950">Reconocer argumentos</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  En el primer parcial de referencia se pide distinguir cuándo un fragmento
+                  presenta un argumento. Para prepararte, identificá premisas y conclusión
+                  en fragmentos nuevos y justificá por qué lo son.
+                </p>
+                <a href="#practica" className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-blue-700 underline underline-offset-4">
+                  Practicar esta habilidad <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">IPC · Buacar · 2026</p>
+                <h3 className="mt-3 text-lg font-bold text-slate-950">Aplicar conceptos a casos</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Una evaluación de 2026 incluye consignas sobre la teoría de Darwin.
+                  Estudiá los conceptos con tu bibliografía y comprobá si podés aplicarlos
+                  a ejemplos diferentes del examen anterior.
+                </p>
+                <TrackedLink
+                  href={EXAMS[1].href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'seo_uba_xxi_parciales_analysis',
+                    cta_name: 'ver_examen_ipc_2026_externo',
+                    destination: EXAMS[1].href,
+                  }}
+                  className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-blue-700 underline underline-offset-4"
+                >
+                  Consultar modelo 2026 <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </TrackedLink>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">ICSE · Pedrosa · 2025</p>
+                <h3 className="mt-3 text-lg font-bold text-slate-950">Relacionar autores y procesos</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  El examen de referencia plantea preguntas a partir de interpretaciones de autores
+                  y acontecimientos históricos. Prepará fichas de conceptos por autor y practicá
+                  justificar cada elección con el material de tu cátedra.
+                </p>
+                <TrackedLink
+                  href={EXAMS[2].href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  eventName="cta_click"
+                  payload={{
+                    location: 'seo_uba_xxi_parciales_analysis',
+                    cta_name: 'ver_examen_icse_2025_externo',
+                    destination: EXAMS[2].href,
+                  }}
+                  className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-blue-700 underline underline-offset-4"
+                >
+                  Consultar modelo ICSE <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </TrackedLink>
+              </article>
+            </div>
+          </div>
         </section>
 
         <section id="practica" aria-labelledby="titulo-practica" className="scroll-mt-8 border-y border-slate-200 bg-slate-50 py-14 sm:py-20">
