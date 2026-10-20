@@ -106,34 +106,15 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
     stats.entry.gateViewed > 0 ? (stats.entry.gateRegistered / stats.entry.gateViewed) * 100 : 0;
   const failedPct =
     stats.activation.uploads > 0 ? (stats.activation.failed / stats.activation.uploads) * 100 : 0;
-  const checkStartPct =
-    stats.studyFlow.checkPrompted > 0
-      ? (stats.studyFlow.checkStarted / stats.studyFlow.checkPrompted) * 100
-      : 0;
-  const checkCompletionPct =
-    stats.studyFlow.checkStarted > 0
-      ? (stats.studyFlow.checkCompleted / stats.studyFlow.checkStarted) * 100
-      : 0;
-  const checkAccuracyPct =
-    stats.studyFlow.checkAnswers > 0
-      ? (stats.studyFlow.checkCorrectAnswers / stats.studyFlow.checkAnswers) * 100
-      : 0;
-  const reinforcementStartPct =
-    stats.studyFlow.failedCheckUsers > 0
-      ? (stats.studyFlow.reinforcementStarted / stats.studyFlow.failedCheckUsers) * 100
-      : 0;
-  const reinforcementCompletionPct =
-    stats.studyFlow.reinforcementStarted > 0
-      ? (stats.studyFlow.reinforcementCompleted / stats.studyFlow.reinforcementStarted) * 100
-      : 0;
-  const retryAccuracyPct =
-    stats.studyFlow.retryAnswers > 0
-      ? (stats.studyFlow.retryCorrectAnswers / stats.studyFlow.retryAnswers) * 100
-      : 0;
-  const summaryCompletionPct =
-    stats.studyFlow.readers > 0
-      ? (stats.studyFlow.summaryCompleted / stats.studyFlow.readers) * 100
-      : 0;
+  const onboarding = stats.onboarding;
+  const onboardingLabels: Record<string, string> = {
+    summary: 'Entender',
+    practice: 'Practicar',
+    topic: 'Estudiar por tema',
+    errors: 'Progreso',
+  };
+  const pctOfStarted = (count: number) =>
+    onboarding.started ? formatPct((count / onboarding.started) * 100) : '—';
 
   return (
     <section className="admin-product">
@@ -306,94 +287,94 @@ export function ProductPanel({ stats }: { stats: ProductDailyStats }) {
         </div>
       </div>
 
-      <div className="admin-stage-label">④ Aprende — nuevo flujo del resumen</div>
-      <div
-        className="admin-funnel-mini"
-        aria-label={`Flujo de estudio del resumen · ${stats.studyFlow.version}`}
-      >
-        <b>{stats.studyFlow.readers.toLocaleString('es-AR')}</b> empezaron a leer
-        <span>→</span>
-        <b>{stats.studyFlow.checkStarted.toLocaleString('es-AR')}</b> comprobaron
-        <span>→</span>
-        <b>{stats.studyFlow.summaryCompleted.toLocaleString('es-AR')}</b> terminaron el resumen
+      <div className="admin-stage-label">④ Onboarding — primer PDF · 4 pasos</div>
+      <div className="admin-card">
+        <h3>¿Los estudiantes entienden qué hace Evaluo?</h3>
+        <p className="admin-note">
+          Cohorte de estudiantes que iniciaron el recorrido en la fecha seleccionada.
+          Entender → Practicar → Estudiar por tema → Progreso.
+          La demo y las mediciones de versiones anteriores están excluidas.
+        </p>
+        <span className="admin-event">first_pdf_guide_* · {onboarding.version}</span>
+        <div className="admin-kpi-grid">
+          <Metric label="Iniciaron" value={onboarding.started.toLocaleString('es-AR')}
+            sub="Estudiantes únicos con inicio registrado" />
+          <Metric label="Completaron" value={onboarding.completed.toLocaleString('es-AR')}
+            sub={`${formatPct(onboarding.completionPct)} de quienes empezaron`}
+            tone={onboarding.started > 0 && onboarding.completionPct >= 80 ? 'good' : 'neutral'} />
+          <Metric label="Saltaron" value={onboarding.skipped.toLocaleString('es-AR')}
+            sub={`${formatPct(onboarding.skipPct)} de quienes empezaron`}
+            tone={onboarding.skipped > 0 ? 'bad' : 'neutral'} />
+          <Metric label="Sin cierre registrado" value={onboarding.incomplete.toLocaleString('es-AR')}
+            sub="Puede incluir sesiones interrumpidas o eventos pendientes" />
+        </div>
+      </div>
+
+      <div className="admin-grid-2">
+        <div className="admin-card">
+          <h3>Embudo de los cuatro pasos</h3>
+          <span className="admin-event">first_pdf_guide_step_viewed</span>
+          {onboarding.steps.map((step, index) => (
+            <div key={step.id} className="mb-3">
+              <MiniRow
+                label={`${index + 1}. ${onboardingLabels[step.id]}`}
+                value={`${step.reached.toLocaleString('es-AR')} · ${pctOfStarted(step.reached)}`}
+              />
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-blue-500"
+                  style={{ width: `${onboarding.started ? Math.min(100, (step.reached / onboarding.started) * 100) : 0}%` }} />
+              </div>
+            </div>
+          ))}
+          <div className="admin-note">
+            Porcentaje sobre quienes iniciaron. Cada persona se cuenta una vez por paso,
+            incluso si vuelve atrás.
+          </div>
+        </div>
+        <div className="admin-card">
+          <h3>¿En qué paso se van?</h3>
+          <span className="admin-event">first_pdf_guide_skipped · sesiones sin cierre</span>
+          {onboarding.steps.map((step) => (
+            <MiniRow key={step.id}
+              label={onboardingLabels[step.id]}
+              value={step.dropoffs.toLocaleString('es-AR')}
+              tone={step.dropoffs > 0 ? 'bad' : 'neutral'}
+            />
+          ))}
+          <div className="admin-note">
+            Último paso visto entre quienes saltearon o no registraron un cierre.
+            Es una señal de abandono, no una prueba de que ese paso causó la salida.
+          </div>
+        </div>
       </div>
 
       <div className="admin-grid-3">
         <div className="admin-card">
-          <h3>Comprensión durante la lectura</h3>
-          <span className="admin-event">summary_topic_check_*</span>
-          <MiniRow
-            label="Vieron una comprobación"
-            value={stats.studyFlow.checkPrompted.toLocaleString('es-AR')}
-          />
-          <MiniRow
-            label="La empezaron"
-            value={`${stats.studyFlow.checkStarted} · ${formatPct(checkStartPct)}`}
-            tone={stats.studyFlow.checkPrompted > 0 && checkStartPct < 50 ? 'bad' : 'neutral'}
-          />
-          <MiniRow
-            label="La completaron"
-            value={`${stats.studyFlow.checkCompleted} · ${formatPct(checkCompletionPct)}`}
-          />
-          <MiniRow
-            label="La saltearon"
-            value={stats.studyFlow.checkSkipped.toLocaleString('es-AR')}
-          />
-          <MiniRow
-            label="Respuestas correctas"
-            value={`${stats.studyFlow.checkCorrectAnswers}/${stats.studyFlow.checkAnswers} · ${formatPct(checkAccuracyPct)}`}
-          />
+          <h3>Tiempo hasta completar</h3>
+          <Metric label="Mediana" value={formatDuration(onboarding.medianDurationSeconds)}
+            sub="Solo recorridos completos de hasta 30 minutos" />
         </div>
-
         <div className="admin-card">
-          <h3>Refuerzo inmediato</h3>
-          <span className="admin-event">summary_topic_check_reinforcement_*</span>
-          <MiniRow
-            label="Usuarios que fallaron"
-            value={stats.studyFlow.failedCheckUsers.toLocaleString('es-AR')}
-          />
-          <MiniRow
-            label="Eligieron reforzar"
-            value={`${stats.studyFlow.reinforcementStarted} · ${formatPct(reinforcementStartPct)}`}
-            tone={
-              stats.studyFlow.failedCheckUsers > 0 && reinforcementStartPct < 40
-                ? 'bad'
-                : 'neutral'
-            }
-          />
-          <MiniRow
-            label="Completaron el refuerzo"
-            value={`${stats.studyFlow.reinforcementCompleted} · ${formatPct(reinforcementCompletionPct)}`}
-          />
-          <MiniRow
-            label="Acierto en reintento"
-            value={`${stats.studyFlow.retryCorrectAnswers}/${stats.studyFlow.retryAnswers} · ${formatPct(retryAccuracyPct)}`}
-            tone={stats.studyFlow.retryAnswers > 0 && retryAccuracyPct >= 50 ? 'good' : 'neutral'}
-          />
+          <h3>¿Qué hacen después?</h3>
+          <Metric label="Primera acción tras completar"
+            value={`${onboarding.firstActions} · ${onboarding.completed ? formatPct(onboarding.firstActionPct) : '—'}`}
+            sub="Clic real posterior al tutorial, en el mismo material" />
+          {Object.entries(onboarding.actions).sort((a, b) => b[1] - a[1]).slice(0, 5)
+            .map(([action, count]) => (
+              <MiniRow key={action} label={onboardingLabels[action] ?? ({
+                practica: 'Práctica', tarjetas: 'Flashcards', resumen: 'Resumen',
+                glosario: 'Glosario', mapa: 'Mapa mental', progreso: 'Progreso',
+              } as Record<string, string>)[action] ?? action}
+                value={count.toLocaleString('es-AR')} />
+            ))}
         </div>
-
         <div className="admin-card">
-          <h3>Fin del resumen</h3>
-          <span className="admin-event">summary_completed · summary_next_step_clicked</span>
-          <MiniRow
-            label="Llegaron al final"
-            value={`${stats.studyFlow.summaryCompleted} · ${formatPct(summaryCompletionPct)} de lectores`}
-            tone={stats.studyFlow.summaryCompleted > 0 ? 'good' : 'neutral'}
-          />
-          <MiniRow
-            label="Fueron al simulador"
-            value={stats.studyFlow.nextSimulator.toLocaleString('es-AR')}
-          />
-          <MiniRow
-            label="Fueron a Progreso"
-            value={stats.studyFlow.nextErrors.toLocaleString('es-AR')}
-          />
-          <MiniRow
-            label="Eligieron repaso"
-            value={stats.studyFlow.nextReview.toLocaleString('es-AR')}
-          />
+          <h3>Dispositivo al comenzar</h3>
+          <MiniRow label="Teléfono" value={onboarding.mobileStarts.toLocaleString('es-AR')} />
+          <MiniRow label="Escritorio u otros" value={onboarding.desktopStarts.toLocaleString('es-AR')} />
           <div className="admin-note">
-            Usuarios únicos del día. La medición empieza con la versión {stats.studyFlow.version}.
+            Los eventos del nuevo recorrido se contabilizan desde su versión actual;
+            no sumamos historiales del onboarding anterior.
           </div>
         </div>
       </div>
