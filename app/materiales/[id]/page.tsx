@@ -23,7 +23,10 @@ import { buildShareCardPath } from '@/lib/share-card';
 import { ensureStudentMaterialStudyArtifacts } from '@/lib/student-material-summary';
 import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-pedagogical-cache';
 import { createClientServer } from '@/lib/supabase-server';
-import { getFirstReadyStudentMaterialId } from '@/lib/data/student-materials';
+import {
+  FIRST_PDF_ONBOARDING_COMPLETED_KEY,
+  shouldAutoStartFirstPdfOnboarding,
+} from '@/lib/first-pdf-onboarding';
 import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 
 type PageProps = {
@@ -357,29 +360,38 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       summary: studySummary,
       glossary: topicGlossary,
     });
-    const firstReadyMaterialId =
-      isOwner && user ? await getFirstReadyStudentMaterialId(supabase, user.id) : null;
-
     const visibility = normalizeMaterialVisibility(material.visibility);
-    const isFirstReadyMaterial = isOwner && firstReadyMaterialId === material.id;
 
-    let firstPdfGuideAlreadySeen = false;
-    if (isFirstReadyMaterial && user && query.recorrido === '1') {
-      // analytics_events todavía no está incluida en los tipos generados del cliente admin.
+    // One onboarding per NEW account, not per URL, PDF or entry point.
+    // A skipped tour is intentionally eligible again until explicitly completed.
+    const completedAt = user?.app_metadata?.[FIRST_PDF_ONBOARDING_COMPLETED_KEY];
+    const eligibleByAccount = Boolean(
+      isOwner && user && !completedAt &&
+      shouldAutoStartFirstPdfOnboarding({
+        accountCreatedAt: user.created_at,
+        completedAt,
+        previouslyCompleted: false,
+        isOwner,
+        materialReady: material.processing_status === 'ready',
+      })
+    );
+    let previouslyCompleted = false;
+    if (eligibleByAccount && user) {
+      // Backwards compatibility: a real completed tour before this change
+      // also counts, but legacy 'skipped' events never count as completion.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const adminClient = admin as any;
-      const { data: guideOutcome, error: guideOutcomeError } = await adminClient
+      const { data: priorCompletion, error: priorCompletionError } = await adminClient
         .from('analytics_events')
         .select('id')
         .eq('user_id', user.id)
-        .in('event_name', ['first_pdf_guide_completed', 'first_pdf_guide_skipped'])
-        .contains('metadata', { material_id: material.id })
+        .eq('event_name', 'first_pdf_guide_completed')
         .limit(1)
         .maybeSingle();
-
-      if (guideOutcomeError) throw guideOutcomeError;
-      firstPdfGuideAlreadySeen = Boolean(guideOutcome);
+      if (priorCompletionError) throw priorCompletionError;
+      previouslyCompleted = Boolean(priorCompletion);
     }
+    const shouldShowFirstPdfGuide = eligibleByAccount && !previouslyCompleted;
 
     const sharePath = `/materiales/${canonicalSegment}`;
     const uploadParams = new URLSearchParams({ openUpload: '1', source: 'shared_material' });
@@ -403,7 +415,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
         ) : null}
         <LazyMaterialStudyWorkspace
           key={`${material.id}:${query.tab ?? 'resumen'}:${query.error ?? ''}`}
-          initialProgressOpen={isOwner && query.tab === 'progreso'}
+          initialProgressOpen={isOwner && query.tab === 'progreso' && !shouldShowFirstPdfGuide}
           progressConfig={
             isOwner && user
               ? {
@@ -434,7 +446,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studyGlossary={topicGlossary}
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
-          initialDiagnostic={isOwner && query.diagnostico === '1'}
+          initialDiagnostic={isOwner && query.diagnostico === '1' && !shouldShowFirstPdfGuide}
           initialPracticeSectionIndex={
             isOwner && query.tab === 'ejercicios' &&
             typeof query.studyTopic === 'string' &&
@@ -443,11 +455,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
               ? Number(query.studyTopic)
               : undefined
           }
-          recommendedStudyAvailable={isFirstReadyMaterial}
-          initialRecommendedStudy={
-            isFirstReadyMaterial && query.recorrido === '1' && !firstPdfGuideAlreadySeen
-          }
-          initialTab={
+          recommendedStudyAvailable={eligibleByAccount}
+          initialRecommendedStudy={shouldShowFirstPdfGuide}
+          initialTab={shouldShowFirstPdfGuide ? 'resumen' : (
             query.tab === 'tarjetas' ||
             query.tab === 'mapa' ||
             query.tab === 'ejercicios' ||
@@ -455,7 +465,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
             query.tab === 'resumen'
               ? query.tab
               : undefined
-          }
+          )}
           initialPdfPage={initialPdfPage}
           initialViewerVisible={Boolean(query.studyError)}
         >

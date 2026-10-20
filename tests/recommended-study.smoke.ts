@@ -289,9 +289,19 @@ assert.doesNotMatch(
 
 assert.match(
   materialPageSource,
-  /initialRecommendedStudy=\{\s*isFirstReadyMaterial && query\.recorrido === '1' && !firstPdfGuideAlreadySeen\s*\}/,
-  'El recorrido manual solo debe activarse para el primer PDF listo y si la guía todavía no fue vista.'
+  /initialRecommendedStudy=\{shouldShowFirstPdfGuide\}/,
+  'El onboarding debe empezar automáticamente para todo usuario nuevo pendiente.'
 );
+assert.match(materialPageSource, /shouldAutoStartFirstPdfOnboarding\(/,
+  'El servidor debe evaluar la elegibilidad por cuenta, no por URL.');
+assert.doesNotMatch(materialPageSource, /query\.recorrido === '1'/,
+  'El onboarding no puede depender de un parámetro de entrada.');
+assert.doesNotMatch(materialPageSource, /isFirstReadyMaterial/,
+  'Entrar por otro PDF propio no debe impedir el onboarding.');
+assert.match(materialPageSource, /\.eq\('event_name', 'first_pdf_guide_completed'\)/,
+  'Una guía terminada previamente debe contar sin importar el material.');
+assert.doesNotMatch(materialPageSource, /first_pdf_guide_completed', 'first_pdf_guide_skipped'/,
+  'Saltar el recorrido no debe contarse como completarlo.');
 assert.match(
   materialWorkspaceSource,
   /summaryActiveReadingSectionRef/,

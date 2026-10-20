@@ -44,6 +44,7 @@ import {
 import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
+import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
@@ -392,6 +393,7 @@ export function MaterialStudyWorkspace({
   } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
+  const [guideCompletionPending, setGuideCompletionPending] = useState(false);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
@@ -666,6 +668,34 @@ export function MaterialStudyWorkspace({
       recommendedTourStep,
     ]
   );
+  const finishRecommendedTour = async () => {
+    if (guideCompletionPending) return;
+    if (!demo && isOwner && recommendedStudyAvailable) {
+      setGuideCompletionPending(true);
+      try {
+        const result = await completeFirstPdfOnboardingAction();
+        if (!result.success) {
+          toast({
+            title: 'No pudimos guardar el recorrido',
+            description: result.message ?? 'Intentá nuevamente para finalizar.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      } catch {
+        toast({
+          title: 'No pudimos guardar el recorrido',
+          description: 'Revisá tu conexión e intentá nuevamente.',
+          variant: 'destructive',
+        });
+        return;
+      } finally {
+        setGuideCompletionPending(false);
+      }
+    }
+    closeRecommendedTour('completed');
+  };
+
   const transitionRecommendedTour = (navigate: () => void) => {
     if (onboardingTransitionRef.current !== null) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -2041,8 +2071,8 @@ export function MaterialStudyWorkspace({
       {recommendedActive && recommendedTourStep && (
         <RecommendedStudyGuide
             step={recommendedTourStep}
-            transitioning={onboardingFading}
-            onExit={() => closeRecommendedTour('skipped')}
+            transitioning={onboardingFading || guideCompletionPending}
+            onExit={() => { if (!guideCompletionPending) closeRecommendedTour('skipped'); }}
             onBack={
               recommendedTourStep === 'practice'
                 ? () => transitionRecommendedTour(() => {
@@ -2076,7 +2106,7 @@ export function MaterialStudyWorkspace({
               } else if (recommendedTourStep === 'topic') {
                 setRecommendedTourStep('errors');
               } else {
-                closeRecommendedTour('completed');
+                void finishRecommendedTour();
               }
             })}
           />
