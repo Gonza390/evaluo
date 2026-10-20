@@ -58,6 +58,11 @@ import {
   CANONICAL_PEDAGOGICAL_MODEL_VERSION,
 } from '@/lib/student-materials/processing-contract';
 import { getOrAssignGeminiPdfKeySlot } from '@/lib/ai/gemini-pdf-routing';
+import {
+  loadSourceStageCheckpoint,
+  saveSourceStageCheckpoint,
+  markPedagogicalStageCheckpoint,
+} from '@/lib/student-materials/stage-checkpoints';
 
 export type StudentMaterialProcessingStage =
   | 'uploaded'
@@ -166,12 +171,25 @@ export async function processStudentMaterial(input: {
   const canonicalPipelineVersion = buildCanonicalSourcePipelineVersion({
     visualAnalysisEnabled,
   });
+  // Fuente extraída validada e identificada por hash: si se interrumpe la
+  // generación del modelo, nunca volvemos a pagar el OCR ya completado.
+  const sourceCheckpoint = await loadSourceStageCheckpoint(
+    admin, material.id, contentFingerprint, canonicalPipelineVersion
+  );
   const {
     text: nativeText,
     pageCount,
     pages: nativePages,
-  } = await extractPdfTextAndPageCount(buffer);
-  const documentAnalysis = analyzePdfDocument(buffer, nativeText, pageCount);
+  } = sourceCheckpoint ?? await extractPdfTextAndPageCount(buffer);
+  const documentAnalysis = sourceCheckpoint?.documentAnalysis ??
+    analyzePdfDocument(buffer, nativeText, pageCount);
+  if (sourceCheckpoint) {
+    logInfo('processStudentMaterial.sourceCheckpointHit', {
+      materialId: material.id,
+      pageCount,
+      visionPages: sourceCheckpoint.visionPageNumbers.length,
+    });
+  }
   const requiredOcr =
     documentAnalysis.requiresOcr && nativeText.trim().length === 0;
   const visionExtractionEnabled = visualAnalysisEnabled || requiredOcr;
@@ -200,18 +218,28 @@ export async function processStudentMaterial(input: {
     });
   }
 
-  const visionExtraction = await enhancePdfExtractionWithVision({
-    pdfBuffer: buffer,
-    nativeText,
-    nativePages,
-    pageCount,
-    analysis: documentAnalysis,
-    materialId: material.id,
-    userId: material.user_id,
-    pageNumbers: selectedVisionPageNumbers,
-    geminiPdfKeySlot,
-    forceRequiredOcr: requiredOcr,
-  });
+  const visionExtraction = sourceCheckpoint
+    ? {
+        text: sourceCheckpoint.text,
+        pages: sourceCheckpoint.pages,
+        visionUsed: sourceCheckpoint.visionUsed,
+        visionPageNumbers: sourceCheckpoint.visionPageNumbers,
+        visionModel: null,
+      }
+    : await enhancePdfExtractionWithVision({
+        pdfBuffer: buffer,
+        nativeText,
+        nativePages,
+        pageCount,
+        analysis: documentAnalysis,
+        materialId: material.id,
+        userId: material.user_id,
+        pageNumbers: selectedVisionPageNumbers,
+        geminiPdfKeySlot,
+        forceRequiredOcr: requiredOcr,
+        fileSha256: contentFingerprint,
+        checkpointVersion: canonicalPipelineVersion,
+      });
 
   const text = visionExtraction.text;
   const pages = visionExtraction.pages;
@@ -328,6 +356,21 @@ export async function processStudentMaterial(input: {
     );
   }
 
+  // Guardar la etapa de fuente ANTES de llamar al modelo pedagógico. Un
+  // timeout posterior conserva texto, páginas y OCR listos para continuar.
+  if (!sourceCheckpoint && text.trim().length > 0 &&
+      (!documentAnalysis.requiresOcr || visionUsed)) {
+    await saveSourceStageCheckpoint(
+      admin, material.id, contentFingerprint, canonicalPipelineVersion,
+      { text, pages, pageCount, documentAnalysis, visionUsed, visionPageNumbers }
+    );
+    logInfo('processStudentMaterial.sourceCheckpointSaved', {
+      materialId: material.id,
+      pageCount,
+      visionPages: visionPageNumbers.length,
+    });
+  }
+
   if (isVeryLargeNativePdf) {
     logInfo('processStudentMaterial.largeDocument', {
       materialId: material.id,
@@ -424,6 +467,14 @@ export async function processStudentMaterial(input: {
       materialId: material.id,
     });
     throw modelErr;
+  }
+
+  // El modelo canónico ya está persistido: registrar la siguiente etapa
+  // confirma que la generación puede reanudarse desde el resumen/glosario.
+  if (sourceCheckpoint || (!documentAnalysis.requiresOcr || visionUsed)) {
+    await markPedagogicalStageCheckpoint(
+      admin, material.id, contentFingerprint, canonicalPipelineVersion
+    );
   }
 
   if (cachedPedagogicalModel) {
