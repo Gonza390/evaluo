@@ -4,6 +4,7 @@ create table if not exists public.student_material_ocr_pages (
   student_material_id uuid not null references public.student_materials(id) on delete cascade,
   page_number integer not null check (page_number > 0),
   file_sha256 text not null check (length(file_sha256) = 64),
+  pipeline_version text not null,
   origin text not null check (origin in ('vision', 'blank')),
   content text not null,
   confidence text check (confidence in ('alta', 'media', 'baja')),
@@ -22,7 +23,7 @@ create table if not exists public.student_material_processing_checkpoints (
 );
 
 create index if not exists student_material_ocr_pages_file_idx
-  on public.student_material_ocr_pages(student_material_id, file_sha256);
+  on public.student_material_ocr_pages(student_material_id, file_sha256, pipeline_version);
 create index if not exists student_material_checkpoint_updated_idx
   on public.student_material_processing_checkpoints(updated_at);
 
