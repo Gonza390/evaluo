@@ -78,7 +78,17 @@ function findStudyPanel(): HTMLElement | null {
 }
 
 function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
-  const rect = node.getBoundingClientRect();
+  // Las pestañas quedan fuera del foco; iluminamos todo el contenido visible.
+  // Conservamos la carcasa para posicionar la tarjeta por encima de la navegación.
+  const shellRect = node.getBoundingClientRect();
+  const visibleRegion = Array.from(
+    node.querySelectorAll<HTMLElement>('[role="region"][aria-label="Contenido de estudio"]')
+  ).find((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.width > 0 && bounds.height > 0 && bounds.bottom > 0 &&
+      bounds.top < window.innerHeight;
+  });
+  const rect = visibleRegion?.getBoundingClientRect() ?? shellRect;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const inset = 7;
@@ -100,7 +110,8 @@ function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
     12,
     Math.min(viewportWidth - cardWidth - 12, left + (right - left - cardWidth) / 2)
   );
-  const cardTop = Math.max(12, top - cardHeight - 14);
+  // No mover la tarjeta hacia abajo al excluir las pestañas del foco.
+  const cardTop = Math.max(12, shellRect.top - cardHeight - 14);
 
   return {
     top,

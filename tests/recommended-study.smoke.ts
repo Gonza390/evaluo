@@ -130,7 +130,11 @@ assert.match(firstGuideSource, /data-onboarding-study-panel/, 'La guía debe enf
 assert.match(materialWorkspaceSource, /data-recommended-practice/, 'La práctica debe exponer un foco real.');
 assert.match(firstGuideSource, /aria-modal="true"/, 'La guía debe tener semántica accesible.');
 assert.match(firstGuideSource, /Escape/, 'La guía debe poder saltarse con Escape.');
-assert.match(firstGuideSource, /studyPanelSelector/, 'El foco debe abarcar el espacio de estudio completo.');
+assert.match(firstGuideSource, /studyPanelSelector/, 'El foco debe localizar la carcasa de estudio.');
+assert.match(firstGuideSource, /\[role="region"\]\[aria-label="Contenido de estudio"\]/,
+  'El foco debe comenzar por debajo de las pestañas y cubrir todo el lector.');
+assert.match(firstGuideSource, /shellRect\.top - cardHeight - 14/,
+  'La tarjeta debe permanecer centrada sobre la navegación, fuera del contenido iluminado.');
 assert.match(firstGuideSource, /findStudyPanel/, 'Debe seleccionar el panel responsive visible.');
 assert.doesNotMatch(firstGuideSource, /maxFocusHeight/, 'No se debe recortar la altura a un fragmento del resumen.');
 assert.doesNotMatch(firstGuideSource, /scrollIntoView/, 'El tutorial no debe mover el contenido completo inesperadamente.');
