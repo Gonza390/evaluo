@@ -451,15 +451,6 @@ export function PdfProgressPanel({
               )}
             </div>
           )}
-          {(currentQuestionCount !== 0 ||
-            selected?.status === 'pending' ||
-            currentAnswered > 0) && (
-            <p className="text-muted-foreground mt-2 text-xs!">
-              {canPracticeTopic
-                ? `${currentQuestionCount} ${currentQuestionCount === 1 ? 'pregunta disponible para este tema. Una respuesta no alcanza para evaluar todo el capítulo.' : 'preguntas disponibles para este tema. El resultado muestra tu desempeño en la tanda.'}`
-                : 'La práctica general incluye distintos temas del PDF.'}
-            </p>
-          )}
           {currentQuestionCount === 0 && (
             <p role="status" className="border-border mt-4 rounded-lg border p-3 text-sm!">
               Podés estudiar este tema. Todavía no hay preguntas asociadas para evaluar su
