@@ -1,4 +1,8 @@
 import { requestGeminiImagesJson, requestGeminiPdfJson } from '@/lib/ai/providers';
+import { createHash } from 'node:crypto';
+import { createAdminClient } from '@/lib/supabase-admin';
+import { loadPageOcrCheckpoint, savePageOcrCheckpoint } from '@/lib/student-materials/stage-checkpoints';
+import { selectMissingOcrPages, type CachedPage } from '@/lib/student-materials/checkpoint-contract';
 import type { GeminiPdfKeySlot } from '@/lib/ai/providers';
 import { extractJsonObject } from '@/lib/ai/json';
 import { logError, logInfo } from '@/lib/observability';
@@ -304,6 +308,7 @@ export async function enhancePdfExtractionWithVision(input: {
   pageNumbers?: number[];
   geminiPdfKeySlot?: GeminiPdfKeySlot;
   forceRequiredOcr?: boolean;
+  fileSha256?: string;
 }): Promise<VisionEnhancedPdfExtraction> {
   const visualAnalysisEnabled =
     input.forceRequiredOcr === true ||
@@ -345,13 +350,43 @@ export async function enhancePdfExtractionWithVision(input: {
   // en una sola invocación. Renderizar y leer de a cuatro limita el pico de RAM.
   const deterministicBlankPages = new Set<number>();
   const visionPages = new Map<number, VisionPage>();
+  const admin = input.materialId ? createAdminClient() : null;
+  const fileHash = admin
+    ? input.fileSha256 ?? createHash('sha256').update(input.pdfBuffer).digest('hex')
+    : null;
+  const previouslySaved = admin && input.materialId && fileHash
+    ? await loadPageOcrCheckpoint(admin, input.materialId, fileHash, selectedPageNumbers)
+    : [];
+  for (const cached of previouslySaved) {
+    if (cached.origin === 'blank') {
+      deterministicBlankPages.add(cached.pageNumber);
+    } else {
+      visionPages.set(cached.pageNumber, {
+        pageNumber: cached.pageNumber,
+        content: cached.content,
+        confidence: cached.confidence,
+        hasMath: cached.hasMath,
+      });
+    }
+  }
+  const persistPages = async (pages: CachedPage[]) => {
+    if (admin && input.materialId && fileHash && pages.length > 0) {
+      await savePageOcrCheckpoint(admin, input.materialId, fileHash, pages);
+    }
+  };
+  const missingPageNumbers = selectMissingOcrPages(selectedPageNumbers, previouslySaved);
+  logInfo('studentMaterialVisionExtract.checkpointLoaded', {
+    materialId: input.materialId,
+    cachedPages: previouslySaved.length,
+    missingPages: missingPageNumbers.length,
+  });
   let visionModel: string | null = null;
   let renderedPageCount = 0;
   let retriedPageCount = 0;
   const visionStartedAt = Date.now();
   const requiredOcr = input.forceRequiredOcr === true || input.analysis.requiresOcr;
   const OCR_EXTRACTION_BUDGET_MS = 145_000;
-  const allBatches = chunk(selectedPageNumbers, VISION_BATCH_SIZE);
+  const allBatches = chunk(missingPageNumbers, VISION_BATCH_SIZE);
 
   const recordResult = async (result: Awaited<ReturnType<typeof requestGeminiImagesJson>>) => {
     if (!result) return;
@@ -386,6 +421,10 @@ export async function enhancePdfExtractionWithVision(input: {
       scale: VISION_RENDER_SCALE,
     });
     renderedPageCount += renderResult.renderedPageNumbers.length;
+    await persistPages(renderResult.blankPageNumbers.map((pageNumber) => ({
+      pageNumber, content: '', origin: 'blank' as const,
+      confidence: 'alta' as const, hasMath: false,
+    })));
     for (const pageNumber of renderResult.blankPageNumbers) {
       deterministicBlankPages.add(pageNumber);
     }
@@ -413,13 +452,15 @@ export async function enhancePdfExtractionWithVision(input: {
       });
       await recordResult(result);
       if (result?.content) {
-        for (const page of parseVisionPayload(result.content, expectedPages)) {
-          if (isUsableVisionPage(page, false)) {
-            visionPages.set(page.pageNumber, page);
-          }
-        }
+        const accepted = parseVisionPayload(result.content, expectedPages)
+          .filter((page) => isUsableVisionPage(page, false));
+        await persistPages(accepted.map((page) => ({
+          ...page, origin: 'vision' as const,
+        })));
+        for (const page of accepted) visionPages.set(page.pageNumber, page);
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('No se pudo guardar el OCR')) throw error;
       logError('studentMaterialVisionExtract.batch', error, {
         materialId: input.materialId,
         batch: batchIndex + 1,
@@ -448,8 +489,12 @@ export async function enhancePdfExtractionWithVision(input: {
             (candidate) => candidate.pageNumber === pageNumber
           )
           : null;
-        if (page && isUsableVisionPage(page, false)) visionPages.set(pageNumber, page);
+        if (page && isUsableVisionPage(page, false)) {
+          await persistPages([{ ...page, origin: 'vision' }]);
+          visionPages.set(pageNumber, page);
+        }
       } catch (error) {
+        if (error instanceof Error && error.message.includes('No se pudo guardar el OCR')) throw error;
         logError('studentMaterialVisionExtract.retryPage', error, {
           materialId: input.materialId,
           pageNumber,
@@ -481,11 +526,15 @@ export async function enhancePdfExtractionWithVision(input: {
       });
       await recordResult(result);
       if (result?.content) {
-        for (const page of parseVisionPayload(result.content, missingAfterImages, false)) {
-          if (isUsableVisionPage(page, false)) visionPages.set(page.pageNumber, page);
-        }
+        const accepted = parseVisionPayload(result.content, missingAfterImages, false)
+          .filter((page) => isUsableVisionPage(page, false));
+        await persistPages(accepted.map((page) => ({
+          ...page, origin: 'vision' as const,
+        })));
+        for (const page of accepted) visionPages.set(page.pageNumber, page);
       }
     } catch (error) {
+      if (error instanceof Error && error.message.includes('No se pudo guardar el OCR')) throw error;
       logError('studentMaterialVisionExtract.pdfOcrFallback', error, {
         materialId: input.materialId,
         missingPageCount: missingAfterImages.length,
