@@ -20,6 +20,9 @@ assertIncludesAll('app/layout.tsx', [
   'lang="es-AR"',
 ]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
+assert.ok(source('lighthouserc.cjs').includes('/uba-xxi/parciales'), 'UBA XXI landing must be covered by Lighthouse CI');
+assert.ok(source('lib/analytics-client.ts').includes("seo-uba-xxi-parciales"), 'UBA XXI must have a dedicated analytics page type');
+assert.ok(source('components/marketing/seo-study-experiences-v2.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI needs contextual internal linking');
 assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
   'Parciales UBA XXI: exámenes anteriores y práctica para rendir',
   'canonical: toAbsoluteUrl(PATH)',
