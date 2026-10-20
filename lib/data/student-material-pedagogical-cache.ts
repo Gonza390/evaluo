@@ -89,6 +89,9 @@ export async function loadOrBuildPedagogicalArtifacts({
   // respuestas fueran correctas. No reetiquetar silenciosamente ese 100
   // como quality v5 sin una auditoría íntegra de las páginas originales.
   const requiresSemanticReaudit =
+    // Los bancos v12 guardados antes de corregir el pipeline pueden tener
+    // score=100 sin haber pasado por la validación semántica real.
+    Number(cachedRow?.pedagogical_artifacts_version ?? 0) < CURRENT_PEDAGOGICAL_ARTIFACTS_VERSION ||
     Number(previousQuality?.version ?? 0) < PEDAGOGICAL_QUALITY_REPORT_VERSION;
   const downgraded = hasUnsafeArtifacts || requiresSemanticReaudit;
   const updatedQuality =
