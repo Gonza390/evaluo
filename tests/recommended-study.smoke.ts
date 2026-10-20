@@ -117,11 +117,14 @@ const examSource = readFileSync('components/student-material-exam.tsx', 'utf8');
 const diagnosticSource = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
 
 assert.ok(firstGuideSource.includes('Progreso: estudiá tema por tema'), 'La guía debe destacar el estudio por temas.');
-assert.ok(firstGuideSource.includes('data-recommended-topics'), 'El último paso debe enfocar temas reales.');
+assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe integrarse a la interfaz sin tapar el contenido.');
+assert.doesNotMatch(firstGuideSource, /PdfTourSpotlight|fixed inset-0/, 'El primer recorrido no debe bloquear ni desenfocar la pantalla.');
 assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
-assert.ok(materialWorkspaceSource.includes("setProgressOpen(true);\n              setRecommendedTourStep('errors');"),
-  'El tercer paso debe abrir Progreso antes de destacar los temas.');
+assert.match(materialWorkspaceSource, /changeRecommendedTab\('ejercicios'\);\s*setRecommendedTourStep\('practice'\)/,
+  'La guía debe abrir Práctica para enseñar su contenido real.');
+assert.match(materialWorkspaceSource, /setProgressOpen\(true\);\s*setRecommendedTourStep\('errors'\)/,
+  'La guía debe abrir Progreso para enseñar los temas reales.');
 assert.doesNotMatch(examSource, /<FirstStudyErrorOnboardingPrompt/, 'La práctica no debe abrir otro onboarding.');
 assert.doesNotMatch(diagnosticSource, /<FirstStudyErrorOnboardingPrompt/, 'El diagnóstico no debe abrir otro onboarding.');
 

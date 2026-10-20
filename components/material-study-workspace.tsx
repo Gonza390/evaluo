@@ -1467,7 +1467,7 @@ export function MaterialStudyWorkspace({
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div className="px-1 py-1 sm:px-2 sm:py-2">
-            {demo && !recommendedActive ? (
+            {demo ? (
               demo.practice
             ) : diagnosticMode ? (
               <StudentMaterialDiagnostic
@@ -1830,30 +1830,6 @@ export function MaterialStudyWorkspace({
           }}
         />
       )}
-      {recommendedActive && recommendedTourStep && (
-        <RecommendedStudyGuide
-          step={recommendedTourStep}
-          onExit={closeRecommendedTour}
-          onBack={
-            recommendedTourStep === 'practice'
-              ? () => setRecommendedTourStep('summary')
-              : recommendedTourStep === 'errors'
-                ? () => {
-                    setProgressOpen(false);
-                    setRecommendedTourStep('practice');
-                  }
-                : undefined
-          }
-          onNext={() => {
-            if (recommendedTourStep === 'summary') setRecommendedTourStep('practice');
-            else if (recommendedTourStep === 'practice') {
-              // Mostrar los temas reales del PDF, no solo la pestaña.
-              setProgressOpen(true);
-              setRecommendedTourStep('errors');
-            } else closeRecommendedTour('completed');
-          }}
-        />
-      )}
       {isOwner && materialId !== 'demo-material' ? (
         <ExamDatePlanPrompt
           materialId={materialId}
@@ -1886,6 +1862,50 @@ export function MaterialStudyWorkspace({
           />
         </div>
       </section>
+
+      {recommendedActive && recommendedTourStep && (
+        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-2 pt-2 sm:px-4 sm:pt-3 xl:px-5">
+          <RecommendedStudyGuide
+            step={recommendedTourStep}
+            onExit={() => closeRecommendedTour('skipped')}
+            onBack={
+              recommendedTourStep === 'practice'
+                ? () => {
+                    setProgressOpen(false);
+                    changeRecommendedTab('resumen');
+                    setRecommendedTourStep('summary');
+                  }
+                : recommendedTourStep === 'errors'
+                  ? () => {
+                      setProgressOpen(false);
+                      changeRecommendedTab('ejercicios');
+                      setRecommendedTourStep('practice');
+                    }
+                  : undefined
+            }
+            onNext={() => {
+              if (recommendedTourStep === 'summary') {
+                // El paso de Práctica debe enseñar la pantalla real, no solo su pestaña.
+                setPracticeSectionIndex(undefined);
+                setDiagnosticMode(false);
+                setProgressOpen(false);
+                changeRecommendedTab('ejercicios');
+                setRecommendedTourStep('practice');
+              } else if (recommendedTourStep === 'practice') {
+                // Progreso se muestra con los temas reales, sin superponer recortes.
+                setProgressOpen(true);
+                setRecommendedTourStep('errors');
+              } else {
+                closeRecommendedTour('completed');
+              }
+              const activePanel = Array.from(
+                document.querySelectorAll<HTMLElement>('[aria-label="Contenido de estudio"]')
+              ).find((node) => node.getClientRects().length > 0);
+              activePanel?.scrollTo({ top: 0, behavior: 'instant' });
+            }}
+          />
+        </div>
+      )}
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
