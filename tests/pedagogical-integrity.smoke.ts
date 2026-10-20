@@ -5,6 +5,7 @@ import {
   sanitizePedagogicalArtifacts,
   unsafeModelAnswerReason,
   unsafeFlashcardReason,
+  accurateFlashcardLevel,
 } from '../lib/student-materials/pedagogical-integrity.ts';
 import {
   getTopicStudyResources, tagGlossaryChapters,
@@ -89,6 +90,45 @@ const incorrectCard = {
   reference: ref,
 };
 assert.equal(unsafeFlashcardReason(incorrectCard), 'flashcard_repeats_misconception');
+assert.equal(
+  unsafeFlashcardReason({
+    ...incorrectCard,
+    front: '¿Qué problema conceptual señala el material cuando plantea una creencia equivocada?',
+    back: 'Creer que aumentar las ventas equivale a crecer de manera sostenible.',
+  }),
+  'flashcard_repeats_false_belief'
+);
+assert.equal(
+  unsafeFlashcardReason({
+    ...incorrectCard,
+    front: '¿Cómo distinguís la formalización de la burocratización excesiva?',
+    back: 'Confundir la formalización con la burocratización excesiva.',
+  }),
+  'flashcard_repeats_misconception'
+);
+assert.equal(
+  unsafeFlashcardReason({
+    ...incorrectCard,
+    front: '¿Cómo distinguís formalización de burocratización?',
+    back: 'La formalización define responsabilidades; la burocratización excesiva introduce controles rígidos.',
+    kind: 'relationship',
+  }),
+  null,
+  'No rechazar un contraste genuino y fundamentado.'
+);
+assert.equal(
+  accurateFlashcardLevel({
+    ...incorrectCard, kind: 'concept',
+    front: '¿Cómo explicarías “Etermax” sin mirar el PDF?',
+    back: 'Compañía creadora de un juego.',
+  }), 'recordar',
+  'Una definición no se convierte en comprensión por cambiar el verbo.'
+);
+assert.equal(accurateFlashcardLevel({
+  ...incorrectCard, kind: 'relationship',
+  front: '¿Cómo se relacionan dos conceptos?',
+  back: 'Su relación se explica con una consecuencia justificada.',
+}), 'comprender');
 const safeConcept: StudyQuestion = {
   id: 'epistemology',
   type: 'multiple_choice',
@@ -121,6 +161,26 @@ assert.equal(sanitized.flashcards.length, 0);
 assert.deepEqual(sanitized.miniExamQuestionIds, ['epistemology', 'science']);
 assert.equal(sanitized.integrity?.rejectedQuestions, 3);
 assert.equal(sanitized.integrity?.rejectedFlashcards, 1);
+const sanitizedLevels = sanitizePedagogicalArtifacts({
+  ...artifacts,
+  questions: [{
+    ...safeConcept,
+    id: 'classification-example',
+    level: 'aplicar',
+    kind: 'classification',
+    prompt: 'Un caso del material se describe así: “problema de gestión”. ¿Qué categoría corresponde?',
+  }],
+  flashcards: [{
+    ...incorrectCard,
+    front: '¿Cómo explicarías “Etermax” sin mirar el PDF?',
+    back: 'Compañía de software especializada en juegos.',
+    kind: 'concept',
+  }],
+  miniExamQuestionIds: ['classification-example'],
+}, sections);
+assert.equal(sanitizedLevels.questions[0]?.level, 'recordar');
+assert.equal(sanitizedLevels.flashcards[0]?.level, 'recordar');
+assert.equal(sanitizedLevels.flashcards.length, 1);
 assert.equal(isRecognitionPresentedAsHigherOrder({ ...safeConcept, level: 'comprender', prompt: '¿Cuál de estas afirmaciones representa mejor Epistemología?' }), true);
 assert.equal(isRecognitionPresentedAsHigherOrder(safeConcept), false);
 assert.match(
@@ -199,6 +259,12 @@ const unresolved = tagGlossaryChapters([
 ], ambiguousCitations);
 assert.equal(unresolved[0]?.chapterTitle, null, 'No asignar páginas compartidas a un capítulo arbitrario.');
 
+const generator = readFileSync('lib/student-materials/pedagogy-v2.ts', 'utf8');
+const fallbackGenerator = readFileSync('lib/student-materials/pedagogy.ts', 'utf8');
+assert.doesNotMatch(generator, /model\.confusions\.forEach/, 'No generar tarjetas que sólo repiten errores.');
+assert.match(generator, /items\.length > 6/, 'Evitar listas de memorización excesivamente largas.');
+assert.match(generator, /steps\.length > 6/, 'Evitar procesos de más de seis pasos en una tarjeta.');
+assert.match(fallbackGenerator, /return value\.replace\([^\n]+\\\\\const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');/, 'Restaurar escape seguro de expresiones regulares.');
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
 assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);
