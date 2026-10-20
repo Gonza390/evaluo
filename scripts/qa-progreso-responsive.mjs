@@ -124,13 +124,16 @@ await check('topic practice -> result -> return to same topic', async () => {
       await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
     }
     assert.ok(finished, 'Practice should finish within thirty questions');
-    const back = page.getByRole('button', { name: /Entender mis errores|Volver al tema/ }).first();
+    const hasWrongAnswers = await page.getByRole('button', { name: 'Entender mis errores' }).isVisible().catch(() => false);
+    const back = page.getByRole('button', { name: hasWrongAnswers ? 'Entender mis errores' : 'Volver al tema' });
     await back.click();
     await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
     assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Back to same topic');
-    // Con errores, el regreso debe abrir el refuerzo; sin errores, la próxima actividad.
-    const review = page.locator('[data-topic-reinforcement]:visible').first();
-    if (!(await review.isVisible().catch(() => false))) {
+    // Una tanda incorrecta debe llevar a la explicación, no sólo a la vista de Progreso.
+    if (hasWrongAnswers) {
+      await page.locator('[data-topic-reinforcement]:visible').first().waitFor(wait);
+      await page.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
+    } else {
       await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]:visible h4').first().waitFor(wait);
     }
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
