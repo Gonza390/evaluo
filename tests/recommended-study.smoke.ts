@@ -130,7 +130,13 @@ assert.match(firstGuideSource, /data-recommended-practice/, 'La guía debe enfoc
 assert.match(materialWorkspaceSource, /data-recommended-practice/, 'La práctica debe exponer un foco real.');
 assert.match(firstGuideSource, /aria-modal="true"/, 'La guía debe tener semántica accesible.');
 assert.match(firstGuideSource, /Escape/, 'La guía debe poder saltarse con Escape.');
-assert.match(firstGuideSource, /scrollIntoView/, 'La guía debe encontrar el bloque destacado cuando hay scroll.');
+assert.match(firstGuideSource, /studyPanelSelector/, 'El foco debe abarcar el espacio de estudio completo.');
+assert.match(firstGuideSource, /findStudyPanel/, 'Debe seleccionar el panel responsive visible.');
+assert.doesNotMatch(firstGuideSource, /maxFocusHeight/, 'No se debe recortar la altura a un fragmento del resumen.');
+assert.doesNotMatch(firstGuideSource, /scrollIntoView/, 'El tutorial no debe mover el contenido completo inesperadamente.');
+assert.match(materialWorkspaceSource, /data-onboarding-guide-space/, 'La tarjeta debe reservar espacio para no cubrir el lector.');
+assert.equal((materialWorkspaceSource.match(/data-onboarding-study-panel/g) ?? []).length, 2,
+  'Escritorio y móvil deben ofrecer el panel completo como objetivo.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');
 assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegación guiada debe transicionar entre las pantallas reales.');
 assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La animación debe respetar las preferencias de accesibilidad.');

@@ -37,13 +37,9 @@ const steps = {
 
 const order: RecommendedStudyStep[] = ['summary', 'practice', 'errors'];
 
-// Resaltar contenido real de la pantalla, no una captura ni una tarjeta ficticia.
-// Los selectores alternativos cubren paneles responsive o contenido aún no visible.
-const targets: Record<RecommendedStudyStep, string[]> = {
-  summary: ['[data-recommended-summary] header', '[data-recommended-tab="resumen"]'],
-  practice: ['[data-recommended-practice]', '[data-recommended-tab="ejercicios"]'],
-  errors: ['[data-recommended-topics]', '[data-recommended-errors]'],
-};
+// El foco incluye toda la pantalla de estudio: barra de herramientas, pestañas y lector.
+// Cada paso cambia de pestaña real sin recortar arbitrariamente el resumen.
+const studyPanelSelector = '[data-onboarding-study-panel]';
 
 type Spotlight = {
   top: number;
@@ -54,59 +50,71 @@ type Spotlight = {
   cardLeft: number;
 };
 
-function findTarget(step: RecommendedStudyStep): HTMLElement | null {
-  for (const selector of targets[step]) {
-    const candidates = Array.from(document.querySelectorAll<HTMLElement>(selector)).filter(
-      (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden'
-    );
-    const inViewport = candidates.find((node) => {
+function findStudyPanel(): HTMLElement | null {
+  const candidates = Array.from(document.querySelectorAll<HTMLElement>(studyPanelSelector));
+  // Hay versiones desktop/móvil montadas simultáneamente; elegir la realmente visible.
+  return candidates
+    .filter((node) => {
       const rect = node.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0 && rect.bottom > 64 &&
-        rect.top < window.innerHeight - 72;
-    });
-    if (inViewport) return inViewport;
-    if (candidates.length > 0) return candidates[0];
-  }
-  return null;
+      return (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        getComputedStyle(node).visibility !== 'hidden' &&
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight
+      );
+    })
+    .sort((a, b) => {
+      const visibleArea = (node: HTMLElement) => {
+        const rect = node.getBoundingClientRect();
+        const viewportBottom = window.innerHeight;
+        return (
+          Math.max(0, Math.min(rect.right, window.innerWidth) - Math.max(0, rect.left)) *
+          Math.max(0, Math.min(rect.bottom, viewportBottom) - Math.max(0, rect.top))
+        );
+      };
+      return visibleArea(b) - visibleArea(a);
+    })[0] ?? null;
 }
 
 function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
   const rect = node.getBoundingClientRect();
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  const margin = 10;
-  const left = Math.max(margin, rect.left - margin);
-  const top = Math.max(margin, rect.top - margin);
-  const right = Math.min(width - margin, rect.right + margin);
-  // Un foco compacto deja ver mejor el resto de la plataforma.
-  const maxFocusHeight = width < 640 ? 156 : 196;
-  const focusWidth = Math.max(0, right - left);
-  const focusHeight = Math.max(
-    0,
-    Math.min(rect.bottom + margin, height - margin, top + maxFocusHeight) - top
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const inset = 7;
+
+  // No iluminar contenido debajo de la barra fija de navegación móvil.
+  const nav = document.querySelector<HTMLElement>('[data-pdf-mobile-navigation]');
+  const navTop =
+    nav && nav.getBoundingClientRect().height > 0
+      ? nav.getBoundingClientRect().top - inset
+      : viewportHeight - inset;
+  const left = Math.max(inset, rect.left - inset);
+  const top = Math.max(inset, rect.top - inset);
+  const right = Math.min(viewportWidth - inset, rect.right + inset);
+  const bottom = Math.max(top, Math.min(viewportHeight - inset, navTop, rect.bottom + inset));
+
+  const cardWidth = Math.min(360, viewportWidth - 24);
+  // La tarjeta se mantiene centrada sobre el panel, no sobre un párrafo aislado.
+  const cardLeft = Math.max(
+    12,
+    Math.min(viewportWidth - cardWidth - 12, left + (right - left - cardWidth) / 2)
   );
-  const cardWidth = Math.min(360, width - 24);
-  const cardLeft = Math.max(12, Math.min(width - cardWidth - 12, left + focusWidth / 2 - cardWidth / 2));
-  const cardTop =
-    top + focusHeight + 12 + cardHeight < height - 8
-      ? top + focusHeight + 12
-      : top - cardHeight - 12 >= 8
-        ? top - cardHeight - 12
-        : Math.max(8, height - cardHeight - 12);
+  const cardTop = Math.max(12, top - cardHeight - 14);
 
   return {
     top,
     left,
-    width: focusWidth,
-    height: focusHeight,
+    width: Math.max(0, right - left),
+    height: Math.max(0, bottom - top),
     cardTop,
     cardLeft,
   };
 }
 
 /**
- * Recorrido breve del primer PDF. Cuatro capas rodean la zona iluminada:
- * desenfocan el resto sin tapar el contenido real ni desordenar el layout.
+ * Recorrido breve del primer PDF. El foco abarca toda el área visible de estudio:
+ * sin recortar fragmentos de texto ni ocultar pestañas.
  * El portal evita que los contenedores con overflow recorten el spotlight.
  */
 export function RecommendedStudyGuide({
@@ -138,23 +146,14 @@ export function RecommendedStudyGuide({
 
     let frame = 0;
     let retries = 0;
-    let didScroll = false;
     let observer: ResizeObserver | null = null;
     let observed: HTMLElement | null = null;
     let cardObserver: ResizeObserver | null = null;
 
     const update = () => {
-      const node = findTarget(step);
+      const node = findStudyPanel();
       if (!node) {
         if (retries++ < 45) frame = window.requestAnimationFrame(update);
-        return;
-      }
-
-      const rect = node.getBoundingClientRect();
-      if (!didScroll && (rect.top >= window.innerHeight - 96 || rect.bottom <= 72)) {
-        didScroll = true;
-        node.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
-        frame = window.requestAnimationFrame(update);
         return;
       }
 
