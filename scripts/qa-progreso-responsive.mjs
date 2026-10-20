@@ -97,7 +97,7 @@ await check('topic practice -> result -> return to same topic', async () => {
     const nav = page.getByRole('navigation', { name: 'Índice de temas' });
     await nav.getByRole('button').nth(1).click();
     const titleBefore = (await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim();
-    await page.getByRole('button', { name: 'Practicar el tema', exact: true }).click();
+    await page.getByRole('button', { name: 'Practicar este tema', exact: true }).click();
     await page.locator('article').first().waitFor(wait);
     assert.equal(await page.getByRole('button', { name: 'Empezar práctica' }).count(), 0, 'Topic practice must start without a size picker or extra start step');
     const counter = (await page.getByText(/Pregunta 1 de \d+/).first().textContent()) ?? '';
@@ -124,11 +124,18 @@ await check('topic practice -> result -> return to same topic', async () => {
       await page.getByRole('button', { name: 'Siguiente', exact: true }).click();
     }
     assert.ok(finished, 'Practice should finish within thirty questions');
-    const back = page.getByRole('button', { name: /Reforzar este tema|Volver al tema/ }).first();
+    const hasWrongAnswers = await page.getByRole('button', { name: 'Entender mis errores' }).isVisible().catch(() => false);
+    const back = page.getByRole('button', { name: hasWrongAnswers ? 'Entender mis errores' : 'Volver al tema' });
     await back.click();
     await page.locator('[id^="real-detail-title"]:visible').first().waitFor(wait);
     assert.equal((await page.locator('[id^="real-detail-title"]:visible').first().textContent())?.trim(), titleBefore, 'Back to same topic');
-    await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]:visible h4').first().waitFor(wait);
+    // Una tanda incorrecta debe llevar a la explicación, no sólo a la vista de Progreso.
+    if (hasWrongAnswers) {
+      await page.locator('[data-topic-reinforcement]:visible').first().waitFor(wait);
+      await page.getByRole('heading', { name: 'La pregunta que te costó' }).waitFor(wait);
+    } else {
+      await page.locator('aside[aria-label="Aprendizaje y próxima actividad del tema"]:visible h4').first().waitFor(wait);
+    }
     await page.screenshot({ path: folder + '/progreso-post-practice.png', animations: 'disabled' });
   } catch (error) {
     await page.screenshot({ path: folder + '/failed-practice.png', animations: 'disabled' }).catch(() => {});

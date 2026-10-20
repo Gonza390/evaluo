@@ -110,6 +110,7 @@ type MaterialStudyWorkspaceProps = {
   studySummary: StudentMaterialSummary;
   pedagogicalArtifacts?: PedagogicalArtifacts;
   initialDiagnostic?: boolean;
+  initialPracticeSectionIndex?: number;
   recommendedStudyAvailable?: boolean;
   initialRecommendedStudy?: boolean;
   initialTab?: StudyTabId;
@@ -272,6 +273,7 @@ export function MaterialStudyWorkspace({
   studySummary,
   pedagogicalArtifacts,
   initialDiagnostic = false,
+  initialPracticeSectionIndex,
   recommendedStudyAvailable = false,
   initialRecommendedStudy = false,
   initialTab,
@@ -305,7 +307,9 @@ export function MaterialStudyWorkspace({
     initialDiagnostic ? 'ejercicios' : (initialTab ?? 'resumen')
   );
   const [diagnosticMode, setDiagnosticMode] = useState(initialDiagnostic);
-  const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(undefined);
+  const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(
+    initialPracticeSectionIndex
+  );
   const [topicReturn, setTopicReturn] = useState<{
     index: number;
     reinforce: boolean;
@@ -1663,7 +1667,7 @@ export function MaterialStudyWorkspace({
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
                   initialTopicSectionIndex={topicReturn?.index}
-                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  initialReinforce={topicReturn?.reinforce}
                   lastPracticeOutcome={topicReturn?.outcome}
                   onPracticeTopic={(index) => {
                     setTopicReturn((previous) => ({

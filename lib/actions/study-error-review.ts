@@ -313,7 +313,9 @@ export async function generateReviewCheckAction(
     // La clave debe cambiar si ampliamos la fuente: no reutilizamos una pregunta
     // generada contra un fragmento de contexto anterior.
     const checkContextKey = createHash('sha256')
-      .update(JSON.stringify([contextKey, evidence.excerpt]))
+      // Nueva versión: no reciclar comprobaciones antiguas demasiado similares
+      // a la pregunta original; las futuras se validan por diferenciación.
+      .update(JSON.stringify(['distinct-review-v2', contextKey, evidence.excerpt]))
       .digest('hex');
     const admin = createAdminClient();
     const { data: cached, error: cacheError } = await admin

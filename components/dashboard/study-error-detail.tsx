@@ -303,21 +303,6 @@ export function StudyErrorDetail({
   }
   return (
     <div className="w-full min-w-0">
-      {topicReinforcement && (
-        <nav aria-label="Pasos para reforzar una dificultad" className="border-border mb-6 flex flex-wrap items-center gap-2 border-b pb-4 text-xs font-medium">
-          <span className={question ? 'text-muted-foreground' : 'text-primary'}>
-            1 · Tu dificultad
-          </span>
-          <ArrowRight className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
-          <span className={question ? 'text-muted-foreground' : 'text-primary'}>
-            2 · Entender
-          </span>
-          <ArrowRight className="text-muted-foreground h-3.5 w-3.5" aria-hidden="true" />
-          <span className={question ? 'text-primary' : 'text-muted-foreground'}>
-            3 · Comprobar
-          </span>
-        </nav>
-      )}
       {topicReinforcement && !question ? (
         <div className="space-y-6" data-topic-reinforcement>
           <section data-study-error-tour="error" className="border-border bg-card rounded-2xl border p-4 sm:p-6" aria-labelledby="reinforcement-difficulty-heading">

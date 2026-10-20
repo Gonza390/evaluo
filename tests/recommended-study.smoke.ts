@@ -3,6 +3,7 @@ import './material-answer-evidence.smoke.ts';
 import './pdf-progress.smoke.ts';
 import './topic-practice.smoke.ts';
 import './topic-study-resources.smoke.ts';
+import './study-flow-recovery.smoke.ts';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { buildSummaryCheckPlan } from '../lib/student-materials/summary-checks.ts';

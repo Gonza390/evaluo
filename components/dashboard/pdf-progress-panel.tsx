@@ -130,7 +130,11 @@ export function PdfProgressPanel({
     (topic) => topic.id === `section-${initialTopicSectionIndex}`
   );
   const initialTopicError = initialReinforce
-    ? initialTopic?.errors.find((error) => error.status === 'pending')
+    ? (initialTopic?.errors.find(
+        (error) =>
+          error.status === 'pending' &&
+          lastPracticeOutcome?.incorrectPrompts.includes(error.prompt)
+      ) ?? initialTopic?.errors.find((error) => error.status === 'pending'))
     : undefined;
   const [reviewOpen, setReviewOpen] = useState(Boolean(initialErrorId || initialTopicError));
   const initialError = [...data.pending, ...data.resolved].find(
@@ -519,40 +523,78 @@ export function PdfProgressPanel({
               className="border-border border-t py-5"
               aria-label="Cómo continuar con tu estudio"
             >
-              <h3 className="text-base font-semibold">3 · Elegí cómo continuar</h3>
+              <h3 className="text-base font-semibold">3 · Tu próximo paso</h3>
               <p className="text-muted-foreground mt-2 text-sm!">
-                {canPracticeTopic
-                  ? nextStudyTopic
-                    ? 'Podés comprobar lo que entendiste o seguir estudiando el siguiente tema. Vos elegís.'
-                    : 'Podés comprobar lo que entendiste o volver a elegir otro tema del PDF.'
-                  : nextStudyTopic
-                    ? 'Podés seguir estudiando sin hacer una práctica. Este tema todavía no tiene preguntas disponibles.'
-                    : 'Podés volver al contenido de cualquier tema. Este tema todavía no tiene preguntas disponibles.'}
+                {topicPending.length > 0
+                  ? 'Primero repasá tus respuestas incorrectas. Después podrás volver a practicar.'
+                  : currentAnswered > 0 && nextStudyTopic
+                    ? 'Ya practicaste este tema: seguí con el siguiente o elegí practicar de nuevo.'
+                    : canPracticeTopic
+                      ? 'Comprobá lo que entendiste con preguntas de este tema.'
+                      : nextStudyTopic
+                        ? 'Podés continuar con el siguiente tema, aunque este todavía no tenga preguntas.'
+                        : 'Volvé a la lista de temas para seguir estudiando.'}
               </p>
               <div className="mt-4 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                {canPracticeTopic && (
+                {topicPending.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
-                    className={actionClass + ' bg-primary text-primary-foreground'}
+                    onClick={() => {
+                      const error =
+                        topicPending.find((item) =>
+                          lastOutcome?.incorrectPrompts.includes(item.prompt)
+                        ) ?? topicPending[0];
+                      setErrorId(error.id);
+                      setReviewOpen(true);
+                    }}
+                    className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
                   >
-                    Practicar este tema <ArrowRight size={16} />
+                    Entender mis errores <ArrowRight size={16} />
                   </button>
                 )}
-                {nextStudyTopic ? (
+                {topicPending.length === 0 && nextStudyTopic && currentAnswered > 0 && (
                   <button
                     type="button"
                     onClick={() => openTopic(nextStudyTopic.id)}
+                    className={actionClass + ' bg-primary text-primary-foreground xl:hidden'}
+                  >
+                    Seguir con el tema {topics.indexOf(nextStudyTopic) + 1}
+                    <ArrowRight size={16} />
+                  </button>
+                )}
+                {topicPending.length === 0 && canPracticeTopic && (
+                  <button
+                    type="button"
+                    onClick={() => onPracticeTopic?.(currentSectionIndex)}
                     className={
                       actionClass +
-                      (canPracticeTopic
+                      (nextStudyTopic && currentAnswered > 0
                         ? ' border-border border'
-                        : ' bg-primary text-primary-foreground')
+                        : ' bg-primary text-primary-foreground') +
+                      ' xl:hidden'
                     }
                   >
-                    Seguir con el tema {topics.indexOf(nextStudyTopic) + 1} <ArrowRight size={16} />
+                    {currentAnswered > 0 ? 'Practicar de nuevo' : 'Practicar este tema'}
+                    <ArrowRight size={16} />
                   </button>
-                ) : null}
+                )}
+                {topicPending.length === 0 &&
+                  nextStudyTopic &&
+                  currentAnswered === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => openTopic(nextStudyTopic.id)}
+                      className={
+                        actionClass +
+                        (canPracticeTopic
+                          ? ' border-border border'
+                          : ' bg-primary text-primary-foreground')
+                      }
+                    >
+                      Seguir con el tema {topics.indexOf(nextStudyTopic) + 1}
+                      <ArrowRight size={16} />
+                    </button>
+                  )}
               </div>
               {canPracticeTopic && (
                 <p className="text-muted-foreground mt-2 text-xs!">
@@ -624,26 +666,6 @@ export function PdfProgressPanel({
             ) : null}
           </details>
         </div>
-      )}
-      {reviewOpen && currentErrors.length > 1 && (
-        <details className="my-4">
-          <summary className="text-muted-foreground min-h-11 cursor-pointer py-3 text-sm">
-            Cambiar pregunta de repaso
-          </summary>
-          <div className="space-y-2">
-            {currentErrors.map((error) => (
-              <button
-                type="button"
-                key={error.id}
-                aria-pressed={errorId === error.id}
-                onClick={() => setErrorId(error.id)}
-                className={actionClass + ' border-border w-full justify-start border text-left'}
-              >
-                {error.prompt}
-              </button>
-            ))}
-          </div>
-        </details>
       )}
       {reviewOpen && selected ? (
         <StudyErrorDetail
@@ -1008,13 +1030,21 @@ export function PdfProgressPanel({
                   >
                     Reforzar dificultades <ArrowRight size={16} />
                   </button>
+                ) : nextStudyTopic && currentAnswered > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => openTopic(nextStudyTopic.id)}
+                    className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
+                  >
+                    Seguir con el siguiente tema <ArrowRight size={16} />
+                  </button>
                 ) : canPracticeTopic ? (
                   <button
                     type="button"
                     onClick={() => onPracticeTopic?.(currentSectionIndex)}
                     className={actionClass + ' bg-primary text-primary-foreground mt-4 w-full'}
                   >
-                    Practicar el tema <ArrowRight size={16} />
+                    Practicar este tema <ArrowRight size={16} />
                   </button>
                 ) : (
                   <p className="text-muted-foreground mt-3 text-xs">
