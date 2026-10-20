@@ -112,12 +112,14 @@ const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
 const firstGuideSource = readFileSync('components/study/recommended-study-guide.tsx', 'utf8');
 const progressPanelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
-const previewSource = readFileSync('components/preview/real-pdf-progress-preview.tsx', 'utf8');
 const mobileNavigationSource = readFileSync('components/study/pdf-mobile-navigation.tsx', 'utf8');
 const examSource = readFileSync('components/student-material-exam.tsx', 'utf8');
 const diagnosticSource = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
 
-assert.ok(firstGuideSource.includes('Revisá tu progreso'), 'La guía debe destacar el estudio por temas.');
+assert.ok(firstGuideSource.includes("label: 'Entender'") &&
+          firstGuideSource.includes("label: 'Practicar'") &&
+          firstGuideSource.includes("label: 'Progreso'"),
+          'El tutorial debe comunicar únicamente Entender, Practicar y Progreso.');
 assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe enseñar la interfaz real.');
 assert.match(firstGuideSource, /createPortal/, 'El foco debe renderizarse fuera de los contenedores con overflow.');
 assert.match(firstGuideSource, /bg-slate-950\/12 backdrop-blur-\[1px\]/, 'El fondo del tutorial debe ser suave.');
@@ -129,44 +131,29 @@ assert.match(materialWorkspaceSource, /duration-\[260ms\]/, 'El panel debe usar 
 assert.match(materialWorkspaceSource, /opacity-40/, 'El contenido no debe desaparecer bruscamente.');
 assert.match(firstGuideSource, /data-onboarding-study-panel/, 'La guía debe enfocar todo el panel y no solo una sección.');
 assert.match(materialWorkspaceSource, /data-recommended-practice/, 'La práctica debe exponer un foco real.');
-assert.match(firstGuideSource, /aria-modal=\{step !== 'practice'\}/,
-  'Práctica no debe bloquear el teclado de las opciones de respuesta.');
-assert.match(firstGuideSource, /!canAdvance/,
-  'El alumno no debe avanzar sin terminar la primera pregunta.');
+assert.match(firstGuideSource, /aria-modal="true"/, 'La guía debe tener semántica accesible.');
 assert.match(firstGuideSource, /Escape/, 'La guía debe poder saltarse con Escape.');
 assert.match(firstGuideSource, /studyPanelSelector/, 'El foco debe localizar la carcasa de estudio.');
-assert.match(firstGuideSource, /\[role="region"\]\[aria-label="Contenido de estudio"\]/,
-  'El foco debe comenzar por debajo de las pestañas y cubrir todo el lector.');
-assert.match(firstGuideSource, /shellRect\.top - cardHeight - 14/,
-  'La tarjeta debe permanecer centrada sobre la navegación, fuera del contenido iluminado.');
+assert.match(firstGuideSource, /const rect = shellRect/,
+  'El lector y la barra de pestañas deben verse juntos en cada paso.');
+assert.match(firstGuideSource, /shellRect\.top - cardHeight - 12/,
+  'La tarjeta compacta debe estar fuera del área de estudio.');
 assert.match(firstGuideSource, /findStudyPanel/, 'Debe seleccionar el panel responsive visible.');
 assert.doesNotMatch(firstGuideSource, /maxFocusHeight/, 'No se debe recortar la altura a un fragmento del resumen.');
 assert.doesNotMatch(firstGuideSource, /scrollIntoView/, 'El tutorial no debe mover el contenido completo inesperadamente.');
 assert.match(materialWorkspaceSource, /data-onboarding-guide-space/, 'La tarjeta debe reservar espacio para no cubrir el lector.');
 assert.match(materialWorkspaceSource, /data-summary-reading-section="0"/,
   'El primer paso debe mostrar contenido académico de un capítulo y no solo la introducción.');
-assert.match(materialWorkspaceSource, /data-onboarding-first-question/,
-  'El segundo paso debe mostrar una pregunta del PDF en lugar del selector de cantidad.');
+assert.match(materialWorkspaceSource, /data-onboarding-practice-options/,
+  'El segundo paso debe mostrar las opciones normales de práctica sin exigir responder.');
 assert.match(examSource, /data-onboarding-practice-options/,
-  'Las opciones normales de práctica deben mantenerse fuera del tour.');
-assert.match(examSource, /guidedFirstQuestion \? 1/,
-  'La primera práctica guiada debe contener una sola pregunta.');
-assert.match(examSource, /onGuidedResult\?\./,
-  'El tour debe esperar el resultado de la práctica real o simulada.');
-assert.match(examSource, /result\.success/,
-  'La práctica real debe registrarse antes de declarar completada la primera pregunta.');
-assert.match(materialWorkspaceSource, /tourHasQuestion && !tourQuestionResult/,
-  'La guía no puede saltar a Progreso mientras haya una pregunta sin responder.');
-assert.match(materialWorkspaceSource, /getDistinctEligibleExamQuestions/,
-  'No deben presentarse preguntas incompletas o no corregibles.');
-assert.match(materialWorkspaceSource, /router\.refresh\(\)/,
-  'Progreso debe actualizarse después de guardar la respuesta.');
-assert.match(firstGuideSource, /Guardar y ver resultado|Ver mi progreso/,
-  'La guía debe conectar la evaluación con la revisión de progreso.');
+  'Las opciones de práctica deben seguir disponibles, sin modo obligatorio de una pregunta.');
+assert.doesNotMatch(materialWorkspaceSource, /guidedFirstQuestion|tourQuestionResult/,
+  'El onboarding no debe bloquear su avance exigiendo una evaluación.');
 assert.match(materialWorkspaceSource, /data-recommended-topics/,
   'El tercer paso debe dirigir la vista hacia los temas de progreso.');
-assert.match(materialWorkspaceSource, /md:h-10/,
-  'El tutorial no debe robar altura excesiva al lector de escritorio.');
+assert.match(materialWorkspaceSource, /md:h-2/,
+  'El tutorial debe dejar disponible la mayor altura posible del lector.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
   'La guía no debe reiniciar todos los pasos a la introducción.');
 assert.equal((materialWorkspaceSource.match(/<div data-onboarding-study-panel/g) ?? []).length, 2,
@@ -180,10 +167,6 @@ assert.match(materialStudyCss, /evaluo-onboarding-copy-appear/, 'El cambio de te
 assert.match(materialStudyCss, /260ms cubic-bezier/, 'La copia debe aparecer con una transición suave.');
 assert.match(materialStudyCss, /prefers-reduced-motion: reduce/, 'La animación de la guía debe desactivarse cuando corresponda.');
 assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
-assert.match(previewSource, /tourQuestionResult/,
-  'La vista previa debe poder mostrar el resultado de la pregunta de ejemplo.');
-assert.match(previewSource, /guidedFirstQuestion=\{guidedFirstQuestion\}/,
-  'La vista previa debe abrir también una sola pregunta.');
 assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
 assert.match(materialWorkspaceSource, /changeRecommendedTab\('ejercicios'\);\s*setRecommendedTourStep\('practice'\)/,
   'La guía debe abrir Práctica para enseñar su contenido real.');

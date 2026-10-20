@@ -43,8 +43,7 @@ import {
 } from '@/components/study/recommended-study-guide';
 import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import { StudentMaterialExam, type GuidedQuestionResult } from '@/components/student-material-exam';
-import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
+import { StudentMaterialExam } from '@/components/student-material-exam';
 import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
@@ -132,12 +131,7 @@ type MaterialStudyWorkspaceProps = {
     onTabChange: (tab: StudyTabId) => void;
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
-    practice: ReactNode | ((args: {
-      guidedFirstQuestion: boolean;
-      onGuidedResult: (result: GuidedQuestionResult) => void;
-    }) => ReactNode);
-    tourQuestionResult?: GuidedQuestionResult | null;
-    onTourQuestionResult?: (result: GuidedQuestionResult) => void;
+    practice: ReactNode;
     progress?: ReactNode;
     progressOpen?: boolean;
     pendingStudyErrorCount?: number;
@@ -323,7 +317,6 @@ export function MaterialStudyWorkspace({
   } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
-  const [localTourQuestionResult, setLocalTourQuestionResult] = useState<GuidedQuestionResult | null>(null);
   const [onboardingFading, setOnboardingFading] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
 
@@ -541,17 +534,6 @@ export function MaterialStudyWorkspace({
       buildPedagogicalArtifacts({ summary: studySummary, glossary: studyGlossary }),
     [pedagogicalArtifacts, studyGlossary, studySummary]
   );
-  const tourQuestionResult = demo?.tourQuestionResult ?? localTourQuestionResult;
-  const tourHasQuestion = useMemo(
-    () => getDistinctEligibleExamQuestions(studyArtifacts.questions).some(
-      (question) => question.type === 'multiple_choice'
-    ),
-    [studyArtifacts.questions]
-  );
-  const handleGuidedQuestionResult = (result: GuidedQuestionResult) => {
-    setLocalTourQuestionResult(result);
-    demo?.onTourQuestionResult?.(result);
-  };
   const changeRecommendedTab = (tab: StudyTabId) => {
     setActiveTab(tab);
     demo?.onTabChange(tab);
@@ -577,14 +559,11 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      // Después de contestar, quedarse en Progreso para continuar; si se salta,
-      // regresar al resumen sin atribuirle evaluaciones inexistentes.
-      const showProgress = outcome === 'completed' && Boolean(tourQuestionResult) && hasProgress;
-      setLocalProgressOpen(showProgress);
-      demo?.onProgressChange?.(showProgress);
+      // La guía termina en el Resumen, listo para estudiar.
+      setLocalProgressOpen(false);
+      demo?.onProgressChange?.(false);
       setActiveTab('resumen');
       demo?.onTabChange('resumen');
-      if (showProgress && !demo) router.refresh();
       window.requestAnimationFrame(() => {
         const heading = Array.from(
           document.querySelectorAll<HTMLElement>(
@@ -601,9 +580,6 @@ export function MaterialStudyWorkspace({
       materialId,
       recommendedStudyAvailable,
       recommendedTourStep,
-      tourQuestionResult,
-      hasProgress,
-      router,
     ]
   );
   const transitionRecommendedTour = (navigate: () => void) => {
@@ -647,7 +623,7 @@ export function MaterialStudyWorkspace({
 
         const selectors: Record<RecommendedStudyStep, string> = {
           summary: '[data-summary-reading-section="0"]',
-          practice: '[data-onboarding-first-question]',
+          practice: '[data-onboarding-practice-options]',
           errors: '[data-recommended-topics]',
         };
         const target = activePanel.querySelector<HTMLElement>(
@@ -1577,12 +1553,7 @@ export function MaterialStudyWorkspace({
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
           <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
             {demo ? (
-              typeof demo.practice === 'function'
-                ? demo.practice({
-                    guidedFirstQuestion: recommendedActive && recommendedTourStep === 'practice',
-                    onGuidedResult: handleGuidedQuestionResult,
-                  })
-                : demo.practice
+              demo.practice
             ) : diagnosticMode ? (
               <StudentMaterialDiagnostic
                 artifacts={studyArtifacts}
@@ -1639,10 +1610,7 @@ export function MaterialStudyWorkspace({
                 artifacts={studyArtifacts}
                 sections={studySummary.sections}
                 materialId={materialId}
-                guidedFirstQuestion={recommendedActive && recommendedTourStep === 'practice'}
-                onGuidedResult={handleGuidedQuestionResult}
-                onComplete={recommendedActive ? undefined :
-                  practiceSectionIndex === undefined ? requestExamDatePrompt : undefined}
+                onComplete={practiceSectionIndex === undefined ? requestExamDatePrompt : undefined}
               />
             )}
           </div>
@@ -1984,9 +1952,6 @@ export function MaterialStudyWorkspace({
         <RecommendedStudyGuide
             step={recommendedTourStep}
             transitioning={onboardingFading}
-            canAdvance={recommendedTourStep !== 'practice' || !tourHasQuestion || Boolean(tourQuestionResult)}
-            hasQuestion={tourHasQuestion}
-            questionResult={tourQuestionResult}
             onExit={() => closeRecommendedTour('skipped')}
             onBack={
               recommendedTourStep === 'practice'
@@ -2012,7 +1977,6 @@ export function MaterialStudyWorkspace({
                 changeRecommendedTab('ejercicios');
                 setRecommendedTourStep('practice');
               } else if (recommendedTourStep === 'practice') {
-                if (tourHasQuestion && !tourQuestionResult) return;
                 setProgressOpen(true);
                 setRecommendedTourStep('errors');
               } else {
@@ -2024,7 +1988,7 @@ export function MaterialStudyWorkspace({
 
       {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
       {recommendedActive && recommendedTourStep ? (
-        <div aria-hidden="true" data-onboarding-guide-space className="h-36 shrink-0 md:h-10" />
+        <div aria-hidden="true" data-onboarding-guide-space className="h-32 shrink-0 md:h-2" />
       ) : null}
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>

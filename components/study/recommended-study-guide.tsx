@@ -17,28 +17,28 @@ export type RecommendedStudyStep = 'summary' | 'practice' | 'errors';
 const steps = {
   summary: {
     label: 'Entender',
-    title: 'Empezá por el resumen',
-    description: 'Explorá los capítulos creados a partir de tus apuntes.',
+    title: 'Entendé tus apuntes',
+    description: 'Tu PDF se organiza en capítulos para empezar a estudiar.',
     icon: BookOpenText,
   },
   practice: {
     label: 'Practicar',
-    title: 'Practicá con tu PDF',
-    description: 'Elegí una respuesta, comprobala y guardá tu primera práctica.',
+    title: 'Comprobá cuánto sabés',
+    description: 'Practicá con preguntas creadas a partir de tu PDF.',
     icon: BrainCircuit,
   },
   errors: {
-    label: 'Mejorar',
-    title: 'Revisá tu progreso',
-    description: 'Usá tu primera respuesta para decidir qué repasar después.',
+    label: 'Progreso',
+    title: 'Descubrí qué reforzar',
+    description: 'Identificá los temas que necesitan más práctica.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
 
 const order: RecommendedStudyStep[] = ['summary', 'practice', 'errors'];
 
-// El foco incluye toda la pantalla de estudio: barra de herramientas, pestañas y lector.
-// Cada paso cambia de pestaña real sin recortar arbitrariamente el resumen.
+// Tres pantallas reales. El contexto permanece visible: sin recortes de texto
+// ni una evaluación obligatoria para recorrer la plataforma.
 const studyPanelSelector = '[data-onboarding-study-panel]';
 
 type Spotlight = {
@@ -78,17 +78,9 @@ function findStudyPanel(): HTMLElement | null {
 }
 
 function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
-  // Las pestañas quedan fuera del foco; iluminamos todo el contenido visible.
-  // Conservamos la carcasa para posicionar la tarjeta por encima de la navegación.
+  // Barra de pestañas y contenido se ven juntos: resumen, práctica o progreso.
   const shellRect = node.getBoundingClientRect();
-  const visibleRegion = Array.from(
-    node.querySelectorAll<HTMLElement>('[role="region"][aria-label="Contenido de estudio"]')
-  ).find((element) => {
-    const bounds = element.getBoundingClientRect();
-    return bounds.width > 0 && bounds.height > 0 && bounds.bottom > 0 &&
-      bounds.top < window.innerHeight;
-  });
-  const rect = visibleRegion?.getBoundingClientRect() ?? shellRect;
+  const rect = shellRect;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const inset = 7;
@@ -104,14 +96,14 @@ function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
   const right = Math.min(viewportWidth - inset, rect.right + inset);
   const bottom = Math.max(top, Math.min(viewportHeight - inset, navTop, rect.bottom + inset));
 
-  const cardWidth = Math.min(360, viewportWidth - 24);
+  const cardWidth = Math.min(320, viewportWidth - 24);
   // La tarjeta se mantiene centrada sobre el panel, no sobre un párrafo aislado.
   const cardLeft = Math.max(
     12,
     Math.min(viewportWidth - cardWidth - 12, left + (right - left - cardWidth) / 2)
   );
-  // No mover la tarjeta hacia abajo al excluir las pestañas del foco.
-  const cardTop = Math.max(12, shellRect.top - cardHeight - 14);
+  // Explicación centrada sobre el panel, sin tapar las herramientas.
+  const cardTop = Math.max(12, shellRect.top - cardHeight - 12);
 
   return {
     top,
@@ -124,27 +116,19 @@ function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
 }
 
 /**
- * Recorrido breve del primer PDF. El foco abarca toda el área visible de estudio:
- * sin recortar fragmentos de texto ni ocultar pestañas.
+ * Recorrido de menos de 20 segundos: tres conceptos que explican Evaluo.
+ * La pantalla real se ve completa durante todo el tutorial.
  * El portal evita que los contenedores con overflow recorten el spotlight.
  */
 export function RecommendedStudyGuide({
   step,
   transitioning = false,
-  canAdvance = true,
-  hasQuestion = true,
-  questionResult = null,
-  demoMode = false,
   onNext,
   onBack,
   onExit,
 }: {
   step: RecommendedStudyStep;
   transitioning?: boolean;
-  canAdvance?: boolean;
-  hasQuestion?: boolean;
-  questionResult?: { correct: boolean; topic: string } | null;
-  demoMode?: boolean;
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
@@ -155,13 +139,6 @@ export function RecommendedStudyGuide({
   const current = steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
-  const description = step === 'practice' && !hasQuestion
-    ? 'Este PDF todavía no tiene preguntas autocorregibles. Podés seguir explorando.'
-    : step === 'errors' && questionResult
-      ? questionResult.correct
-        ? `¡Bien! Respondiste correctamente sobre ${questionResult.topic}. Seguí practicando para confirmar lo aprendido.`
-        : `Conviene repasar ${questionResult.topic}. Tu respuesta quedó registrada para seguir estudiando.`
-      : current.description;
 
   useEffect(() => {
     setMounted(true);
@@ -228,8 +205,7 @@ export function RecommendedStudyGuide({
 
   useEffect(() => {
     if (!mounted) return;
-    // Durante la práctica dejamos navegar con teclado por las respuestas reales.
-    if (step !== 'practice') cardRef.current?.focus({ preventScroll: true });
+    cardRef.current?.focus({ preventScroll: true });
   }, [mounted, step]);
 
   useEffect(() => {
@@ -240,7 +216,7 @@ export function RecommendedStudyGuide({
         onExit();
         return;
       }
-      if (step === 'practice' || event.key !== 'Tab' || !cardRef.current) return;
+      if (event.key !== 'Tab' || !cardRef.current) return;
       const buttons = Array.from(cardRef.current.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
       if (buttons.length === 0) return;
       const first = buttons[0];
@@ -258,7 +234,7 @@ export function RecommendedStudyGuide({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [mounted, onExit, step]);
+  }, [mounted, onExit]);
 
   if (!mounted) return null;
 
@@ -316,7 +292,7 @@ export function RecommendedStudyGuide({
           }} />
           <div
             aria-hidden="true"
-            className="pointer-events-none fixed z-[81] rounded-[28px] border-[1.5px] border-primary/80 shadow-[0_0_0_4px_rgba(37,99,235,0.10)] transition-[top,left,width,height,opacity] duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+            className="pointer-events-none fixed z-[81] rounded-[28px] border border-primary/25 shadow-[0_0_0_3px_rgba(37,99,235,0.045)] transition-[top,left,width,height,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
             style={{ top: spotlight.top, left: spotlight.left, width: spotlight.width, height: spotlight.height }}
           />
         </>
@@ -327,12 +303,12 @@ export function RecommendedStudyGuide({
       <section
         ref={cardRef}
         role="dialog"
-        aria-modal={step !== 'practice'}
+        aria-modal="true"
         aria-label="Guía rápida del primer PDF"
         tabIndex={-1}
         data-first-pdf-guide
         aria-busy={transitioning}
-        className="bg-card border-border fixed z-[90] w-[calc(100vw-24px)] max-w-[360px] rounded-[28px] border p-4 shadow-[0_18px_45px_rgba(15,23,42,0.14)] outline-none transition-[top,left,opacity] duration-[300ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-5"
+        className="bg-card border-border fixed z-[90] w-[calc(100vw-24px)] max-w-[320px] rounded-[24px] border p-3.5 shadow-[0_12px_30px_rgba(15,23,42,0.12)] outline-none transition-[top,left,opacity] duration-[250ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:p-4"
         style={
           spotlight
             ? { top: spotlight.cardTop, left: spotlight.cardLeft, opacity: 1 }
@@ -340,18 +316,18 @@ export function RecommendedStudyGuide({
         }
       >
         <div className="flex items-start gap-3">
-          <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
-            <Icon className="size-[18px]" />
+          <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
+            <Icon className="size-4" />
           </span>
           <div key={step} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
             <p className="text-primary text-[11px] font-semibold tracking-wide uppercase">
               {number} de 3 · {current.label}
             </p>
-            <h2 className="text-foreground mt-1 text-[16px] font-semibold leading-5 tracking-tight">
+            <h2 className="text-foreground mt-0.5 text-[15px] font-semibold leading-5 tracking-tight">
               {current.title}
             </h2>
-            <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-              {description}
+            <p className="text-muted-foreground mt-1 text-[12px] leading-5">
+              {current.description}
             </p>
           </div>
           <button
@@ -365,15 +341,7 @@ export function RecommendedStudyGuide({
           </button>
         </div>
 
-        {step === 'practice' && hasQuestion && !questionResult ? (
-          <p className="text-muted-foreground mt-3 text-[11px] leading-4">
-            Terminá la pregunta para desbloquear Progreso.
-          </p>
-        ) : null}
-        {step === 'errors' && questionResult && demoMode ? (
-          <p className="text-muted-foreground mt-2 text-[11px]">Resultado simulado de la vista previa.</p>
-        ) : null}
-        <div className="border-border/70 mt-3 flex items-center justify-between gap-2 border-t pt-3">
+        <div className="border-border/70 mt-2.5 flex items-center justify-between gap-2 border-t pt-2.5">
           <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 3'}>
             {order.map((item, index) => (
               <span
@@ -395,10 +363,8 @@ export function RecommendedStudyGuide({
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
-            <Button type="button" size="sm" onClick={onNext} disabled={transitioning || !canAdvance} className="min-h-9 gap-1.5 rounded-full px-4">
-              {step === 'summary' ? 'Probar una pregunta' :
-                step === 'practice' ? 'Ver mi progreso' :
-                'Seguir estudiando'} <ArrowRight className="size-3.5" />
+            <Button type="button" size="sm" onClick={onNext} disabled={transitioning} className="min-h-9 gap-1.5 rounded-full px-4">
+              {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </div>
