@@ -59,6 +59,17 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
     if (!evidenceSupportsAnswer(question.answer, section.body)) return 'section_answer_not_grounded';
   }
   if (question.kind === 'confusion' || question.kind === 'relationship') {
+    if (question.kind === 'relationship' && /\bEn cambio\b/iu.test(question.answer)) {
+      const parts = question.answer.match(/^[“"]([^”"]+)[”"] se caracteriza en el material por:\s*([\s\S]+?)\s+En cambio,\s+[“"]([^”"]+)[”"] se caracteriza por:\s*([\s\S]+)$/iu);
+      if (!parts) return 'comparison_structure_unverifiable';
+      if (norm(parts[2] ?? '') === norm(parts[4] ?? '')) return 'contrast_repeats_same_definition';
+      if (!containsTerm(evidence, parts[1] ?? '') || !containsTerm(evidence, parts[3] ?? '')) {
+        return 'comparison_not_supported_by_source';
+      }
+      if (!evidenceSupportsAnswer(parts[2] ?? '', evidence) || !evidenceSupportsAnswer(parts[4] ?? '', evidence)) {
+        return 'comparison_answer_not_grounded';
+      }
+    }
     if (/^La distinci[oó]n clave es esta:/iu.test(question.answer)) {
       const match = question.answer.match(/^[\s\S]*?[“"]([^”"]+)[”"]\s+([\s\S]+?)\s+En cambio,\s+[“"]([^”"]+)[”"]\s+([\s\S]+)$/iu);
       if (!match) return 'contrast_unverifiable';
