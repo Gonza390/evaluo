@@ -6,19 +6,19 @@ import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/como-estudiar-ingreso-unlam';
 const publishedAt = '2026-09-17';
-const modifiedAt = '2026-09-18';
+const modifiedAt = '2026-10-20';
 
 export const metadata: Metadata = {
-  title: 'Cómo estudiar para el ingreso UNLaM 2027',
+  title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
   description:
-    'Guía para preparar el ingreso UNLaM 2027: cómo organizar el manual, estudiar las materias y practicar para los exámenes del Curso de Ingreso.',
+    'Curso de Ingreso UNLaM 2027: fechas oficiales, materias por carrera, cómo estudiar el manual y práctica gratuita con corrección antes de rendir.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'article',
-    title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
+    title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar | Evaluo',
     description:
-      'Método práctico para preparar el Curso de Ingreso UNLaM 2027: organizá el material, practicá y repasá los temas que todavía cuestan.',
+      'Fechas del Curso de Ingreso UNLaM 2027, materias según la carrera y ejercicios gratuitos para practicar con tus apuntes PDF.',
     url: toAbsoluteUrl(path),
     images: [
       {
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Cómo estudiar para el ingreso UNLaM 2027 | Evaluo',
+    title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar | Evaluo',
     description:
-      'Guía práctica para organizar el material del ingreso UNLaM 2027 y preparar los exámenes del Curso de Ingreso.',
+      'Materias, fechas y estrategias para preparar el manual de ingreso UNLaM 2027. Probá ejercicios gratis antes de estudiar tu PDF.',
     images: ['/opengraph-image.png'],
   },
 };
@@ -42,7 +42,7 @@ export default function ComoEstudiarIngresoUnlamPage() {
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: 'Cómo estudiar para el Curso de Ingreso UNLaM 2027',
+    headline: 'Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar',
     description:
       'Guía práctica para preparar el Curso de Ingreso de la Universidad Nacional de La Matanza usando el material oficial como fuente de estudio.',
     datePublished: publishedAt,
