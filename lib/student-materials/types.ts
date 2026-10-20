@@ -165,6 +165,7 @@ export type StudyGlossaryItem = {
   definition: string;
   context: string;
   importance: 'alta' | 'media';
+  chapterTitle?: string | null;
   englishTerm?: string | null;
 };
 
@@ -173,6 +174,7 @@ export type StudentMaterialPedagogicalQualityReport = {
   status: 'pass' | 'degraded' | 'fail';
   score: number;
   pedagogicalDepthScore: number;
+  semanticAudit?: { rejectedQuestions: number; rejectedFlashcards: number; formulaicHigherOrderQuestions: number; conceptsWithoutUniqueChapter: number };
   pageCount: number | null;
   sourcePagesWithContent: number;
   representedPages: number;

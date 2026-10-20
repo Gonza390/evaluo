@@ -26,6 +26,8 @@ import {
   submitReviewCheckAction,
 } from '@/lib/actions/study-error-review';
 import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
+import type { StudyGlossaryItem } from '@/lib/student-materials/types';
+import { buildGroundedErrorContrast } from '@/lib/student-materials/error-contrast';
 import type {
   ReviewHelpKind,
   ReviewQuestion,
@@ -80,6 +82,7 @@ export function StudyErrorDetail({
   documentHref,
   embedded = false,
   topicContext = false,
+  glossary = [],
 }: {
   item: StudyErrorView;
   materials: StudyErrorsPageData['materials'];
@@ -92,6 +95,7 @@ export function StudyErrorDetail({
   documentHref?: string;
   embedded?: boolean;
   topicContext?: boolean;
+  glossary?: StudyGlossaryItem[];
   conversation: StudyErrorConversation;
   onConversationChange: (
     update: (current: StudyErrorConversation) => StudyErrorConversation
@@ -128,6 +132,11 @@ export function StudyErrorDetail({
   // pantalla que permite asociarlo; no prometemos comprobación sin fuente.
   const topicReinforcement = Boolean(materialId) && (topicContext || !embedded);
   const originalExplanation = item.explanation?.trim() ?? '';
+  const groundedContrast = buildGroundedErrorContrast(
+    item.selectedAnswer,
+    item.correctAnswer,
+    glossary
+  );
   const pendingHelp =
     busy === 'why_wrong' || busy === 'simpler' || busy === 'example' ? busy : null;
   const helpNotice = ['why_wrong', 'simpler', 'example', 'review'].includes(noticeAction ?? '');
@@ -345,6 +354,14 @@ export function StudyErrorDetail({
                 Revisá la explicación de tu actividad antes de probar con otra pregunta.
               </p>
             </div>
+            {groundedContrast && (
+              <div className="border-primary/20 bg-primary/5 rounded-xl border p-4 sm:p-5">
+                <p className="text-primary mb-2 text-xs font-semibold">Por qué tu elección era diferente</p>
+                <p className="text-foreground max-w-[72ch] text-base leading-7 break-words">
+                  {groundedContrast}
+                </p>
+              </div>
+            )}
             {originalExplanation ? (
               <div className="border-border bg-muted/30 rounded-xl border p-4 sm:p-5">
                 <p className="text-foreground max-w-[72ch] text-base leading-7 break-words whitespace-pre-line">

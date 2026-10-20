@@ -24,6 +24,7 @@ import { ensureStudentMaterialStudyArtifacts } from '@/lib/student-material-summ
 import { loadOrBuildPedagogicalArtifacts } from '@/lib/data/student-material-pedagogical-cache';
 import { createClientServer } from '@/lib/supabase-server';
 import { getFirstReadyStudentMaterialId } from '@/lib/data/student-materials';
+import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -349,11 +350,12 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     const initialPdfPage =
       Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : null;
 
+    const topicGlossary = tagGlossaryChapters(studyGlossary, studySummary.sections);
     const pedagogicalArtifacts = await loadOrBuildPedagogicalArtifacts({
       admin,
       materialId: material.id,
       summary: studySummary,
-      glossary: studyGlossary,
+      glossary: topicGlossary,
     });
     const firstReadyMaterialId =
       isOwner && user ? await getFirstReadyStudentMaterialId(supabase, user.id) : null;
@@ -429,7 +431,7 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           universidadName={universidad?.nombre ?? 'Sin universidad'}
           viewerUrl={viewerUrl}
           visibility={visibility}
-          studyGlossary={studyGlossary}
+          studyGlossary={topicGlossary}
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}

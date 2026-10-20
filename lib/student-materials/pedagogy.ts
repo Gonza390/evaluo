@@ -4,6 +4,7 @@ import type {
   CanonicalPedagogicalSourceKind,
   StudyGlossaryItem,
   StudentMaterialSummary,
+  StudySummarySection,
 } from '@/lib/student-materials/types';
 import {
   resolveQuestionBankTarget,
@@ -12,7 +13,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 11;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 12;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -190,6 +191,7 @@ export type StudyQuestion = {
   reference: PedagogicalReference;
 };
 export type PedagogicalArtifacts = {
+  integrity?: { rejectedQuestions: number; rejectedFlashcards: number; rejectedReasons: string[] };
   flashcards: StudyFlashcard[];
   questions: StudyQuestion[];
   miniExamQuestionIds: string[];
@@ -789,36 +791,6 @@ function cleanStudyUnit(value: string) {
   );
 }
 
-function buildExpectedSectionAnswer(body: string) {
-  const rawUnits = body
-    .split(/\n+/)
-    .map(cleanStudyUnit)
-    .filter(Boolean)
-    .map((unit) =>
-      unit
-        .replace(/^\d+(?:\.\d+)+\s+/u, '')
-        .replace(/^ideas clave del material:\s*/iu, '')
-        .replace(/^contenido complementario(?:\s*·\s*p[aá]gina\s*\d+)?:?\s*/iu, '')
-        .trim()
-    )
-    .filter(Boolean)
-    .filter((unit) => !/^ver en pdf\b/i.test(unit))
-    .filter((unit) => !/^[-:|\s]+$/.test(unit));
-
-  const units = rawUnits.flatMap((unit) => {
-    if (unit.length <= 240) return [unit];
-    return unit
-      .split(/(?<=[.!?])\s+/)
-      .map(cleanLine)
-      .filter(Boolean);
-  });
-
-  return truncateAtWord(
-    dedupeStrings(units).slice(0, 4).join(' ') || cleanStudyUnit(body),
-    480
-  );
-}
-
 type CanonicalEvidence = {
   label: string;
   detail: string;
@@ -1041,7 +1013,7 @@ function extractConfusionPair(confusion: string): ComparisonPair | null {
 function buildExpectedConfusionAnswer(
   model: CanonicalPedagogicalModel,
   confusion: string,
-  reference: PedagogicalReference
+  _reference: PedagogicalReference
 ) {
   const pair = extractConfusionPair(confusion);
   if (pair) {
@@ -1069,95 +1041,8 @@ function buildExpectedConfusionAnswer(
     );
   }
 
-  const evidence = findCanonicalEvidence(model, confusion);
-  if (evidence) {
-    return truncateAtWord(
-      `Para evitar la confusión, hay que retener el criterio del material: ${evidence.detail}`,
-      480
-    );
-  }
-
-  const sourceAnswer = buildExpectedSectionAnswer(reference.excerpt);
-  if (
-    sourceAnswer.length >= 40 &&
-    normalizeForDedupe(sourceAnswer) !== normalizeForDedupe(confusion)
-  ) {
-    return truncateAtWord(
-      `La evidencia del PDF permite corregir la confusión así: ${sourceAnswer}`,
-      480
-    );
-  }
-
-  return truncateAtWord(
-    `La confusión consiste en “${confusion}”. Para corregirla, la respuesta debe explicitar qué interpretación descarta el material y cuál sostiene en su lugar.`,
-    480
-  );
-}
-
-function pageRangesOverlap(
-  references: number[] | undefined,
-  reference: PedagogicalReference
-) {
-  if (
-    reference.pageStart === null ||
-    reference.pageEnd === null ||
-    !references?.length
-  ) {
-    return false;
-  }
-
-  return references.some(
-    (page) => page >= reference.pageStart! && page <= reference.pageEnd!
-  );
-}
-
-function buildExpectedSectionAnswerFromModel(
-  sectionTitle: string,
-  sectionBody: string,
-  model: CanonicalPedagogicalModel,
-  reference: PedagogicalReference
-) {
-  const titleTerms = significantTerms(sectionTitle);
-  const topic = model.topics
-    .map((candidate) => {
-      const normalized = normalizeForDedupe(
-        `${candidate.title} ${candidate.description}`
-      );
-      const overlap = titleTerms.filter((term) => normalized.includes(term)).length;
-      const pageBonus = pageRangesOverlap(candidate.pageReferences, reference) ? 3 : 0;
-      return { candidate, score: overlap * 2 + pageBonus };
-    })
-    .sort((left, right) => right.score - left.score)[0];
-
-  const relatedConcepts = model.concepts
-    .filter(
-      (concept) =>
-        pageRangesOverlap(concept.pageReferences, reference) ||
-        significantTerms(concept.term).some((term) =>
-          normalizeForDedupe(sectionBody).includes(term)
-        )
-    )
-    .slice(0, 2);
-
-  const relatedRelationship = model.relationships.find((relationship) =>
-    pageRangesOverlap(relationship.pageReferences, reference)
-  );
-
-  const sentences: string[] = [];
-  if (topic && topic.score > 0) {
-    sentences.push(`La idea central del apartado es: ${topic.candidate.description}`);
-  }
-  for (const concept of relatedConcepts) {
-    sentences.push(`Un concepto clave es “${concept.term}”: ${concept.detail}`);
-  }
-  if (relatedRelationship) {
-    sentences.push(`Además, ${relatedRelationship.description}`);
-  }
-
-  const answer = cleanLine(sentences.join(' '));
-  return answer.length >= 60
-    ? truncateAtWord(answer, 480)
-    : buildExpectedSectionAnswer(sectionBody);
+  // Si no hay respaldo verificable, omitir en vez de enseñar una definición ajena.
+  return null;
 }
 
 function buildFallbackMultipleChoice(
@@ -1173,7 +1058,7 @@ function buildFallbackMultipleChoice(
         truncateAtWord(item, 220)
       );
       const options = placeCorrectOption(correctAnswer, distractors, index % 4).slice(0, 4);
-      const level = index < 2 ? 'recordar' : 'comprender';
+      const level = 'recordar' as const;
 
       return {
         id: `fallback-concept-${index + 1}`,
@@ -1224,7 +1109,7 @@ function buildCanonicalConceptQuestions(
         3
       ).map((candidate) => truncateAtWord(candidate.detail, 210));
       const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
-      const level: StudyQuestion['level'] = index < 2 ? 'recordar' : 'comprender';
+      const level: StudyQuestion['level'] = 'recordar';
 
       return {
         id: `model-concept-${index + 1}`,
@@ -1233,9 +1118,11 @@ function buildCanonicalConceptQuestions(
         kind: 'concept',
         topic: concept.term,
         prompt:
-          level === 'recordar'
-            ? `Según el PDF, ¿qué describe correctamente “${concept.term}”?`
-            : `¿Cuál de estas afirmaciones representa mejor “${concept.term}” según el material?`,
+          index % 3 === 0
+            ? `¿Qué significa “${concept.term}” en este material?`
+            : index % 3 === 1
+              ? `¿Con qué descripción se corresponde “${concept.term}” en tus apuntes?`
+              : `Al estudiar “${concept.term}”, ¿qué característica permite reconocerlo?`,
         options,
         answer: correct,
         explanation: `En el material, “${concept.term}” se define como: ${correct}. Las demás opciones expresan definiciones de otros conceptos, no de éste.`,
@@ -1286,8 +1173,12 @@ function buildCanonicalRelationshipQuestions(
         kind: 'relationship',
         topic: `${item.source} ↔ ${item.target}`,
         prompt: isCausal
-          ? `¿Qué consecuencia vincula “${item.source}” con “${item.target}” en el PDF?`
-          : `¿Qué relación establece el material entre “${item.source}” y “${item.target}”?`,
+          ? `Si se considera “${item.source}”, ¿qué consecuencia para “${item.target}” sostiene el material?`
+          : index % 3 === 0
+            ? `¿Qué vínculo entre “${item.source}” y “${item.target}” permite explicar el PDF?`
+            : index % 3 === 1
+              ? `¿Por qué se relacionan “${item.source}” y “${item.target}” en este tema?`
+              : `¿Qué sucede con “${item.target}” cuando se considera “${item.source}” según estos apuntes?`,
         options,
         answer: correct,
         explanation: `La relación presentada en el PDF es: ${correct}. Se vincula específicamente “${item.source}” con “${item.target}”.`,
@@ -1364,6 +1255,9 @@ function buildCanonicalClassificationQuestions(
       if (withEvidence.length === 0) return null;
 
       const correct = withEvidence[index % withEvidence.length];
+      // No convertir una lista de bullets pegados en un supuesto caso académico.
+      const caseText = cleanLine(correct.detail.split(/[●★➔⇒]|\s{2,}(?=[A-ZÁÉÍÓÚ]{4,}\s*:)/u)[0] ?? '');
+      if (caseText.length < 15 || caseText.length > 240) return null;
       const labels = dedupeStrings(entries.map((entry) => entry.label));
       const distractors = labels.filter(
         (label) => normalizeForDedupe(label) !== normalizeForDedupe(correct.label)
@@ -1374,13 +1268,15 @@ function buildCanonicalClassificationQuestions(
       return {
         id: `model-classification-${index + 1}`,
         type: 'multiple_choice',
-        level: 'aplicar',
+        level: 'recordar',
         kind: 'classification',
         topic: classification.title,
-        prompt: `Un caso del material se describe así: “${truncateAtWord(correct.detail, 175)}”. Dentro de “${classification.title}”, ¿a qué categoría corresponde?`,
+        prompt: index % 2 === 0
+          ? `¿Qué categoría de “${classification.title}” corresponde al criterio “${truncateAtWord(caseText, 130)}”?`
+          : `En el tema “${classification.title}”, ¿qué nombre recibe la categoría caracterizada por “${truncateAtWord(caseText, 130)}”?`,
         options,
         answer: correct.label,
-        explanation: `El caso describe “${correct.label}” porque se caracteriza por: ${truncateAtWord(correct.detail, 180)}. Las demás categorías tienen criterios distintos.`,
+        explanation: `La característica “${truncateAtWord(caseText, 130)}” corresponde a “${correct.label}”. Para distinguir las demás categorías, compará los criterios originales de la clasificación.`,
         reference: referenceFromPages(
           classification.pageReferences,
           classification.title,
@@ -1430,12 +1326,14 @@ function buildCanonicalProcessQuestions(
       return {
         id: `model-process-${index + 1}`,
         type: 'multiple_choice',
-        level: 'aplicar',
+        // Identificar un proceso a partir de sus pasos comprueba
+        // interpretación, no transferencia independiente a un caso nuevo.
+        level: 'comprender',
         kind: 'process',
         topic: process.title,
-        prompt: `En una situación se observan estas acciones: ${scenarioSteps
+        prompt: `En el material se organizan estos pasos: ${scenarioSteps
           .map((step) => `“${truncateAtWord(step, 105)}”`)
-          .join(' → ')}. ¿Qué proceso del PDF describe mejor el caso?`,
+          .join(' → ')}. ¿Qué proceso explican en conjunto?`,
         options,
         answer: process.title,
         explanation: `La secuencia de acciones identifica “${process.title}”. El material lo organiza en estos pasos: ${truncateAtWord(process.steps.join(' → '), 260)}.`,
@@ -1601,40 +1499,52 @@ function buildCanonicalConfusionQuestions(
   }).filter((question): question is StudyQuestion => Boolean(question));
 }
 
+function buildGroundedSectionQuestion(section: StudySummarySection, chunks: PedagogicalChunk[], index: number): StudyQuestion | null {
+  // Respuesta extraída del MISMO apartado del capítulo. No usar palabras
+  // parecidas o la página más próxima para traer definiciones externas.
+  const lines = section.body.split(/\n+/).map(cleanStudyUnit).filter(Boolean);
+  const opening = lines.findIndex(line =>
+    !/^(?:ver en pdf|ideas clave|contenido complementario)/iu.test(line) &&
+    line.length >= 65 && !/^#{1,6}\s/u.test(line)
+  );
+  if (opening < 0) return null;
+  const anchor = lines.slice(0, opening).find(line =>
+    /\d+(?:\.\d+)*\s+/.test(line) && line.length <= 130
+  );
+  const focus = anchor ? anchor.replace(/^\d+(?:\.\d+)*\s+/u, '') : section.title;
+  const answer = truncateAtWord(lines[opening] ?? '', 460);
+  if (answer.length < 65) return null;
+  const reference = findReference(focus, chunks, emptyReference(section.title, answer));
+  const prompts = [
+    `Explicá con tus palabras qué plantea el apartado “${focus}”. ¿Qué idea central deberías recordar?`,
+    `¿Qué sostiene el material sobre “${focus}”? Desarrollá la idea usando sus conceptos principales.`,
+    `Si tuvieras que explicar “${focus}” a otro estudiante, ¿qué indicarías como fundamento principal?`,
+    `¿Cómo presentarías el concepto central de “${focus}” sin repetir el texto de memoria?`,
+  ];
+  return {
+    id: `section-open-${index + 1}`,
+    type: 'open',
+    level: 'comprender',
+    kind: 'section',
+    topic: section.title,
+    // No afirmar una vinculación a capítulo como cita física si falta página.
+    chapterTitle: reference.pageStart !== null ? section.title : undefined,
+    prompt: prompts[index % prompts.length]!,
+    options: [],
+    answer,
+    explanation: 'La respuesta modelo recupera el contenido del mismo apartado del PDF. Se espera una reformulación fiel a sus ideas, no una copia literal.',
+    reference,
+  };
+}
 function buildOpenSectionQuestions(
   summary: StudentMaterialSummary,
   chunks: PedagogicalChunk[],
-  model?: CanonicalPedagogicalModel | null,
+  _model?: CanonicalPedagogicalModel | null,
   limit = 4
 ) {
-  return summary.sections.slice(0, limit).map((section, index): StudyQuestion => {
-    const reference = findReference(
-      section.title,
-      chunks,
-      emptyReference(section.title, section.body)
-    );
-
-    return {
-      id: `section-open-${index + 1}`,
-      type: 'open',
-      level: 'comprender',
-      kind: 'section',
-      topic: section.title,
-      prompt: `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos del material.`,
-      options: [],
-      answer: model
-        ? buildExpectedSectionAnswerFromModel(
-            section.title,
-            section.body,
-            model,
-            reference
-          )
-        : buildExpectedSectionAnswer(section.body),
-      explanation:
-        'Una respuesta sólida debe formular una idea central completa y relacionar conceptos del material, no copiar fragmentos aislados.',
-      reference,
-    };
-  });
+  return summary.sections.slice(0, limit)
+    .map((section, index) => buildGroundedSectionQuestion(section, chunks, index))
+    .filter((question): question is StudyQuestion => Boolean(question));
 }
 
 /**
@@ -1709,7 +1619,7 @@ function anchorAndCompleteChapterQuestions(
       anchored.push({
         id: `chapter-concept-${index + 1}`,
         type: 'multiple_choice',
-        level: 'comprender',
+        level: 'recordar',
         kind: 'concept',
         topic: concept.term,
         chapterTitle: chapter.title,
@@ -1826,7 +1736,10 @@ export function buildPedagogicalArtifacts(input: {
           concept.term,
           chunks,
           emptyReference(
-            sectionTitles[index % Math.max(1, sectionTitles.length)] ?? null,
+            sectionTitles.find((title) =>
+              concept.chapterTitle &&
+              normalizeForDedupe(title) === normalizeForDedupe(concept.chapterTitle)
+            ) ?? null,
             concept.context || concept.definition
           )
         ),

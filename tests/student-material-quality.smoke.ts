@@ -1465,7 +1465,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  11,
+  12,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
@@ -1566,9 +1566,10 @@ const sectionQuestion = validatedOpenQuestions.questions.find(
 );
 assert.ok(
   sectionQuestion &&
-    /idea central/i.test(sectionQuestion.answer) &&
-    /Conjunto vacío|Ley 1420/i.test(sectionQuestion.answer),
-  'Las preguntas abiertas de sección deben construir una respuesta modelo coherente desde el modelo canónico.'
+    /conjunto vacío/i.test(sectionQuestion.answer) &&
+    /marcos normativos/i.test(sectionQuestion.answer) &&
+    !/alfabetizar|diversidad cultural/i.test(sectionQuestion.answer),
+  'Una respuesta abierta de sección debe basarse en su propio resumen, sin mezclar definiciones canónicas externas.'
 );
 
 const canonicalQuality = buildStudentMaterialPedagogicalQualityReport({

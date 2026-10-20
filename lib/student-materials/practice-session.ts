@@ -50,10 +50,16 @@ export function readPracticeDraft(
   }
   if (!value || typeof value !== 'object') return null;
   const draft = value as Partial<PracticeDraft>;
+  const currentSignature = practiceBankSignature(availableQuestions);
+  // La v12 puede regenerar preguntas de OTROS temas sin modificar las
+  // preguntas que componen esta tanda. No descartarla si todos sus IDs siguen
+  // presentes: cada ID v11 deriva de enunciado, respuesta y referencia, y las
+  // opciones seleccionadas se validan contra la nueva lista más abajo.
   if (
     draft.version !== 1 ||
     draft.materialId !== materialId ||
-    draft.bankSignature !== practiceBankSignature(availableQuestions) ||
+    typeof draft.bankSignature !== 'string' ||
+    draft.bankSignature.length > 80 ||
     typeof draft.savedAt !== 'number' ||
     !Number.isFinite(draft.savedAt) ||
     draft.savedAt > now + 60_000 ||
@@ -107,7 +113,7 @@ export function readPracticeDraft(
   return {
     version: 1,
     materialId,
-    bankSignature: draft.bankSignature,
+    bankSignature: currentSignature,
     questionIds: draft.questionIds,
     selectedSize: draft.selectedSize,
     currentIndex: draft.currentIndex!,

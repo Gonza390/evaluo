@@ -440,6 +440,19 @@ assert.deepEqual(restored!.questionIds, originalDraft.questionIds,
 assert.equal(restored!.currentIndex, 37);
 assert.deepEqual(restored!.openDrafts, originalDraft.openDrafts);
 assert.deepEqual(restored!.openAssessments, originalDraft.openAssessments);
+const compatibleRegeneration = [
+  ...eightyUnique,
+  { ...eightyUnique[0]!, id: 'new-question-introduced-in-v12' },
+];
+assert.notEqual(practiceBankSignature(compatibleRegeneration), originalDraft.bankSignature);
+const upgradedDraft = readPracticeDraft(
+  JSON.stringify(originalDraft), 'test-pdf', compatibleRegeneration
+);
+assert.ok(upgradedDraft, 'Una regeneración debe preservar respuestas si las preguntas de la tanda siguen intactas.');
+assert.equal(upgradedDraft!.bankSignature, practiceBankSignature(compatibleRegeneration));
+assert.deepEqual(upgradedDraft!.questionIds, originalDraft.questionIds);
+assert.deepEqual(upgradedDraft!.selectedAnswers, restored!.selectedAnswers);
+
 assert.equal(practiceDraftKey('test-pdf'), 'evaluo:practice-draft:v1:test-pdf');
 assert.equal(readPracticeDraft(JSON.stringify(originalDraft), 'other-pdf', eightyUnique), null);
 assert.equal(readPracticeDraft(JSON.stringify(originalDraft), 'test-pdf', eightyUnique.slice(1)), null,

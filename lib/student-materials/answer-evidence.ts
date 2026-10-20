@@ -33,6 +33,29 @@ function normalize(value: string) {
     .trim();
 }
 
+/** Diferenciar la elección equivocada del concepto correcto cuando el banco
+ * contiene una definición inequívoca del distractor. Sin inventar etiquetas. */
+export function explainWrongOption(
+  question: PedagogicalArtifacts['questions'][number],
+  selected: string,
+  artifacts: PedagogicalArtifacts
+) {
+  if (normalize(selected) === normalize(question.answer)) return question.explanation;
+  const alternatives = artifacts.questions.filter(candidate =>
+    candidate.id !== question.id &&
+    candidate.topic &&
+    normalize(candidate.answer) === normalize(selected) &&
+    normalize(candidate.topic) !== normalize(question.topic ?? '') &&
+    candidate.kind === 'concept'
+  );
+  const meanings = [...new Set(alternatives.map(candidate => candidate.topic))];
+  if (meanings.length === 1) {
+    return `Elegiste una definición de “${meanings[0]}”, pero la pregunta evalúa “${question.topic ?? 'otro concepto'}”. “${question.topic ?? 'El concepto evaluado'}” se describe en el material como: ${question.answer}. Compará ambas definiciones en el PDF para reconocer la diferencia.`;
+  }
+  // Sin un concepto confirmado, no atribuirle una definición a otro campo.
+  return `Tu elección fue: “${selected}”. Para esta pregunta, el PDF respalda: “${question.answer}”. Revisá el fragmento original y compará ambos criterios; la alternativa elegida no satisface la definición solicitada.`;
+}
+
 /** Corregir contra el contenido del servidor; nunca aceptar la respuesta correcta del cliente. */
 export function resolveMaterialAnswer(
   input: MaterialAnswerInput,
@@ -86,7 +109,12 @@ export function resolveMaterialAnswer(
       : input.wasCorrect,
     topic: sections[index]?.title ?? question.topic ?? question.reference.sectionTitle,
     prompt: question.prompt,
-    explanation: question.explanation,
+    explanation:
+      assessed &&
+      'type' in question &&
+      normalize(input.selectedAnswer ?? '') !== normalize(question.answer)
+        ? explainWrongOption(question, input.selectedAnswer ?? '', artifacts)
+        : question.explanation,
     correctAnswer: question.answer,
     selectedAnswer: (input.selectedAnswer ?? '').slice(0, 4000),
     reference: question.reference,

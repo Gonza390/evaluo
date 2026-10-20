@@ -1,3 +1,5 @@
+import { isRecognitionPresentedAsHigherOrder } from '@/lib/student-materials/pedagogical-integrity';
+import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import type {
   CanonicalPedagogicalModel,
   StudyDocumentAnalysis,
@@ -8,7 +10,7 @@ import type {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 4;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 5;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -195,6 +197,13 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
       ? questionLevelCounts.aplicar / input.artifacts.questions.length
       : 0;
 
+  const rejectedQuestions = input.artifacts.integrity?.rejectedQuestions ?? 0;
+  const rejectedFlashcards = input.artifacts.integrity?.rejectedFlashcards ?? 0;
+  const formulaicHigherOrderQuestions = input.artifacts.questions.filter(isRecognitionPresentedAsHigherOrder).length;
+  const conceptsWithoutUniqueChapter = tagGlossaryChapters(input.glossary, input.summary.sections)
+    .filter(item => !item.chapterTitle).length;
+  const semanticAudit = { rejectedQuestions, rejectedFlashcards, formulaicHigherOrderQuestions, conceptsWithoutUniqueChapter };
+
   let pedagogicalDepthScore = 0;
   pedagogicalDepthScore += questionLevelCounts.recordar > 0 ? 10 : 0;
   pedagogicalDepthScore += questionLevelCounts.comprender > 0 ? 20 : 0;
@@ -203,6 +212,11 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   pedagogicalDepthScore += clamp(flashcardKinds.size / 4, 0, 1) * 15;
   pedagogicalDepthScore += clamp(applicationQuestionRatio / 0.2, 0, 1) * 10;
   pedagogicalDepthScore = Math.round(clamp(pedagogicalDepthScore, 0, 100));
+  if (rejectedQuestions > 0 || rejectedFlashcards > 0) {
+    pedagogicalDepthScore = Math.min(pedagogicalDepthScore, 49);
+  } else if (formulaicHigherOrderQuestions >= 3) {
+    pedagogicalDepthScore = Math.min(pedagogicalDepthScore, 69);
+  }
 
   let score = 0;
   score += representedPageRatio * 35;
@@ -224,9 +238,14 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   if (pedagogicalDepthScore < 55) {
     score = Math.min(score, 79);
   }
+  if (rejectedQuestions > 0 || rejectedFlashcards > 0) score = Math.min(score, 59);
 
   const issues: string[] = [];
   if (!input.model) issues.push('canonical_model_missing');
+  if (rejectedQuestions > 0) issues.push('unsafe_model_answers_rejected');
+  if (rejectedFlashcards > 0) issues.push('unsafe_flashcards_rejected');
+  if (formulaicHigherOrderQuestions >= 3) issues.push('higher_order_questions_are_recognition');
+  if (input.glossary.length >= 8 && conceptsWithoutUniqueChapter / input.glossary.length > 0.5) issues.push('glossary_chapter_association_low');
   if (representedPageRatio < 0.75) issues.push('canonical_page_coverage_low');
   if (malformedRatio > 0.08) issues.push('malformed_academic_units');
   if (glossaryCleanRatio < 0.95) issues.push('glossary_noise');
@@ -268,6 +287,7 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     status,
     score,
     pedagogicalDepthScore,
+    semanticAudit,
     pageCount: input.pageCount,
     sourcePagesWithContent: contentPageSet.size,
     representedPages: representedContentPages.length,

@@ -673,6 +673,7 @@ export function PdfProgressPanel({
           topicContext
           key={conversationKey}
           item={selected}
+          glossary={glossary}
           materials={[{ ...material, materiaNombre: null }]}
           pendingCount={currentErrors.filter((error) => error.status === 'pending').length}
           conversation={conversations[conversationKey] ?? initialConversation}
