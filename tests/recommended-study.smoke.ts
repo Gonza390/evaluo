@@ -149,8 +149,8 @@ assert.match(globalCssSource, /\[data-onboarding-step='errors'\] \[data-tour-exa
   'El cuarto paso debe presentar los estados ilustrativos con movimiento suave.');
 assert.match(globalCssSource, /prefers-reduced-motion: reduce/,
   'Los estados de ejemplo deben respetar movimiento reducido.');
-assert.match(firstGuideSource, /Mirá tu progreso por tema/,
-  'El cuarto paso debe enseñar el seguimiento.');
+assert.match(firstGuideSource, /Ahora sabés dónde mejorar/,
+  'El cuarto paso debe cerrar mostrando el valor del seguimiento.');
 assert.match(progressPanelSource, /data-onboarding-topic-detail/,
   'El paso 3 debe abrir la vista real de estudio de un tema.');
 assert.match(progressPanelSource, /showOnboardingTopic\s*\?\s*topics\[0\]/,
