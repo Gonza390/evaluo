@@ -106,10 +106,34 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
   return null;
 }
 export function unsafeFlashcardReason(card: StudyFlashcard): string | null {
-  if (/^\s*¿C[oó]mo distingu[ií]s\b/iu.test(card.front) &&
-    /^\s*Confundir\b/iu.test(card.back)) return 'flashcard_repeats_misconception';
-  if (/^\s*Confundir\b/iu.test(card.back)) return 'flashcard_teaches_misconception';
+  const front = card.front.trim();
+  const back = card.back.trim();
+  if (!front || !back) return 'flashcard_incomplete';
+  if (/^¿C[oó]mo distingu[ií]s\b/iu.test(front) &&
+    /^Confundir\b/iu.test(back)) return 'flashcard_repeats_misconception';
+  if (/^Confundir\b/iu.test(back)) return 'flashcard_teaches_misconception';
+  // Una tarjeta sobre una confusión debe enseñar la distinción o la solución,
+  // no repetir literalmente la falsa creencia del enunciado.
+  if (
+    /^Creer que\b/iu.test(back) &&
+    /(?:qu[eé] problema conceptual|qu[eé] confusi[oó]n|c[oó]mo distingu[ií]s)/iu.test(front)
+  ) return 'flashcard_repeats_false_belief';
+  if (
+    /^¿C[oó]mo distingu[ií]s\b/iu.test(front) &&
+    norm(front).includes(norm(back)) &&
+    !/en cambio|mientras|a diferencia|por otro lado/iu.test(back)
+  ) return 'flashcard_does_not_explain_distinction';
   return null;
+}
+
+/** La taxonomía refleja el esfuerzo mental real, no la formulación del verbo. */
+export function accurateFlashcardLevel(card: StudyFlashcard): StudyFlashcard['level'] {
+  if (
+    card.kind === 'concept' || card.kind === 'classification' ||
+    card.kind === 'formula' || card.kind === 'process' ||
+    /^(?:¿Qu[eé] significa|¿Qu[eé] elementos incluye|¿Qu[eé] representa|¿C[oó]mo explicar[ií]as|¿C[oó]mo se clasifica|Reconstru[ií] el proceso)/iu.test(card.front.trim())
+  ) return 'recordar';
+  return card.level;
 }
 export function isRecognitionPresentedAsHigherOrder(question: StudyQuestion) {
   if (question.level === 'recordar') return false;
@@ -128,12 +152,14 @@ export function sanitizePedagogicalArtifacts(
     const reason = unsafeModelAnswerReason(question, sections);
     if (reason) rejectedReasons.push(reason);
     return !reason;
-  });
+  }).map(question => isRecognitionPresentedAsHigherOrder(question)
+    ? { ...question, level: (question.kind === 'process' ? 'comprender' : 'recordar') as StudyQuestion['level'] }
+    : question);
   const flashcards = artifacts.flashcards.filter(card => {
     const reason = unsafeFlashcardReason(card);
     if (reason) rejectedReasons.push(reason);
     return !reason;
-  });
+  }).map(card => ({ ...card, level: accurateFlashcardLevel(card) }));
   const allowed = new Set(questions.map(question => question.id));
   const items = [...questions, ...flashcards];
   const prior = artifacts.integrity;
