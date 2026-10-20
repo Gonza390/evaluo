@@ -15,6 +15,10 @@ const AXIOM_INGEST_TOKEN = process.env.AXIOM_INGEST_TOKEN;
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
+  // El módulo separado queda fuera del bundle Edge de Next.js.
+  const { installDeprecatedBufferTrace } = await import('@/lib/server-runtime-warnings');
+  installDeprecatedBufferTrace();
+
   const canvas = (await import('canvas')) as unknown as Record<string, unknown>;
   const runtimeGlobals = globalThis as unknown as Record<string, unknown>;
 

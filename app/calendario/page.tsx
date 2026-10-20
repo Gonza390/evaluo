@@ -44,6 +44,7 @@ import {
   type StudyCalendarEvent,
 } from '@/lib/calendar-utils';
 import { logError } from '@/lib/observability';
+import { validateCalendarWrite, describeCalendarSaveError } from '@/lib/calendar-write-validation';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { TourCard } from '@/components/ui/tour-card';
@@ -595,6 +596,22 @@ export default function CalendarioPage() {
       return;
     }
 
+    // Guardar únicamente los valores admitidos por las restricciones de Postgres.
+    const checked = validateCalendarWrite({
+      eventType: payload.type,
+      eventDate: selectedDateKey,
+      examInstance: payload.examInstance,
+      materiaId: payload.materiaId,
+      carreraId: payload.carreraId,
+      materialId: payload.materialId,
+      reminderDays: payload.reminderDays,
+    });
+    if (!checked.ok) {
+      toast({ description: checked.message, variant: 'destructive' });
+      return;
+    }
+    const validEvent = checked.value;
+
     // El calendario no limita la cantidad de parciales según el plan del usuario.
 
     if (storageMode === 'local') {
@@ -634,19 +651,18 @@ export default function CalendarioPage() {
       .from('study_calendar_events')
       .insert({
         user_id: user.id,
-        event_type: payload.type,
+        event_type: validEvent.eventType,
         title: payload.title,
         notes: payload.notes || null,
-        event_date: selectedDateKey,
-        material_id: payload.materialId,
-        materia_id: payload.materiaId,
+        event_date: validEvent.eventDate,
+        material_id: validEvent.materialId,
+        materia_id: validEvent.materiaId,
         materia_nombre: payload.materiaNombre,
-        carrera_id: payload.carreraId,
+        carrera_id: validEvent.carreraId,
         carrera_nombre: payload.carreraNombre,
-        exam_instance: payload.examInstance,
+        exam_instance: validEvent.examInstance,
         source_payload: payload.sourcePayload,
-        reminder_days_before:
-          payload.reminderDays && payload.reminderDays.length > 0 ? payload.reminderDays : null,
+        reminder_days_before: validEvent.reminderDays,
       })
       .select(
         'id, event_type, title, notes, event_date, created_at, material_id, materia_id, materia_nombre, carrera_id, carrera_nombre, exam_instance, source_payload, reminder_days_before'
@@ -686,9 +702,10 @@ export default function CalendarioPage() {
         userId: user.id,
         selectedDate: selectedDateKey,
         eventType: formState.type,
+        postgresCode: error?.code ?? null,
       });
       toast({
-        description: 'No pudimos guardar ese evento. Inténtalo nuevamente.',
+        description: describeCalendarSaveError(error),
         variant: 'destructive',
       });
       return;
