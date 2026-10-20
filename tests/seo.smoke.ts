@@ -20,6 +20,31 @@ assertIncludesAll('app/layout.tsx', [
   'lang="es-AR"',
 ]);
 assertIncludesAll('app/robots.ts', ['rules', 'sitemap']);
+assertIncludesAll('app/uba-xxi/parciales/page.tsx', [
+  'Parciales UBA XXI: exámenes anteriores y práctica para rendir',
+  'canonical: toAbsoluteUrl(PATH)',
+  'index: true',
+  'follow: true',
+  'https://ubaparciales.com/materias/ipc/buacar/primer-parcial/1c-2025/tema-3',
+  'https://ubaparciales.com/materias/ipc/buacar/primer-parcial/1c-2026/tema-1',
+  'https://ubaparciales.com/materias/icse/pedrosa/primer-parcial/1c-2025/tema-1',
+  'UbaXxiParcialesPractice',
+  '/estudiar-pdf-con-ia?source=seo-uba-xxi-parciales',
+]);
+assertIncludesAll('components/marketing/uba-xxi-parciales-practice.tsx', [
+  'seo_uba_xxi_practice_started',
+  'seo_uba_xxi_practice_answered',
+  'seo_uba_xxi_practice_completed',
+  'Revisá la respuesta',
+  'Respuesta correcta:',
+]);
+assertIncludesAll('lib/analytics-events.ts', [
+  'seo_uba_xxi_practice_started',
+  'seo_uba_xxi_practice_answered',
+  'seo_uba_xxi_practice_completed',
+]);
+assert.ok(source('app/sitemap.ts').includes('/uba-xxi/parciales'), 'UBA XXI must be in sitemap');
+assert.ok(source('components/footer-home.tsx').includes('href="/uba-xxi/parciales"'), 'UBA XXI must have a crawlable internal link');
 assertIncludesAll('app/sitemap.ts', [
   'hasAcademicContent',
   'hasSubstantialStudyLandingContent',
