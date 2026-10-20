@@ -15,24 +15,9 @@ const AXIOM_INGEST_TOKEN = process.env.AXIOM_INGEST_TOKEN;
 export async function register() {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
 
-  // Node informa DEP0005 al primer uso de Buffer()/new Buffer() en cada
-  // proceso. El mensaje por defecto no incluye el módulo que lo origina.
-  // Registrar sólo esa pila una vez permite identificar la dependencia real
-  // sin esconder la advertencia ni desactivar controles de Node.
-  const traceProcess = process as typeof process & { __evaluoBufferWarningTrace?: boolean };
-  if (!traceProcess.__evaluoBufferWarningTrace) {
-    traceProcess.__evaluoBufferWarningTrace = true;
-    let reported = false;
-    process.on('warning', (warning) => {
-      if (warning.code !== 'DEP0005' || reported) return;
-      reported = true;
-      const frames = warning.stack?.split('\n').slice(0, 12).join('\n');
-      console.warn('[runtime.bufferDeprecation.origin]', {
-        code: warning.code,
-        frames,
-      });
-    });
-  }
+  // El módulo separado queda fuera del bundle Edge de Next.js.
+  const { installDeprecatedBufferTrace } = await import('@/lib/server-runtime-warnings');
+  installDeprecatedBufferTrace();
 
   const canvas = (await import('canvas')) as unknown as Record<string, unknown>;
   const runtimeGlobals = globalThis as unknown as Record<string, unknown>;
