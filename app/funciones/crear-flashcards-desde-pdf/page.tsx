@@ -5,16 +5,16 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/funciones/crear-flashcards-desde-pdf';
 
 export const metadata: Metadata = {
-  title: 'Crear flashcards con IA desde un PDF y apuntes',
+  title: 'Flashcards desde PDF con IA: creá tarjetas',
   description:
-    'Creá flashcards con IA desde un PDF o tus apuntes. Convertí conceptos del material en preguntas y respuestas para repasar y seguir practicando en Evaluo.',
+    'Creá flashcards desde un PDF con IA. Convertí tus apuntes en tarjetas de preguntas y respuestas, repasá antes del parcial y volvé al material original.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Crear flashcards con IA desde un PDF y apuntes | Evaluo',
+    title: 'Flashcards desde PDF con IA: creá tarjetas | Evaluo',
     description:
-      'Transformá conceptos de tu material en tarjetas de preguntas y respuestas y mantené el repaso conectado con la fuente original.',
+      'Convertí tu PDF en tarjetas de preguntas y respuestas con IA para repasar conceptos y volver al material que estás estudiando.',
     url: toAbsoluteUrl(path),
   },
 };
