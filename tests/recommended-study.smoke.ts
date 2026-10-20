@@ -144,6 +144,18 @@ assert.doesNotMatch(firstGuideSource, /scrollIntoView/, 'El tutorial no debe mov
 assert.match(materialWorkspaceSource, /data-onboarding-guide-space/, 'La tarjeta debe reservar espacio para no cubrir el lector.');
 assert.match(materialWorkspaceSource, /data-summary-reading-section="0"/,
   'El primer paso debe mostrar contenido académico de un capítulo y no solo la introducción.');
+assert.match(materialWorkspaceSource, /tourStudySelectors: Record<RecommendedStudyStep, string>/,
+  'Los tres pasos deben abrir contenido útil de cada pantalla.');
+assert.match(materialWorkspaceSource, /reader\.scrollTo\(/,
+  'Los desplazamientos deben quedar dentro del lector.');
+assert.match(materialWorkspaceSource, /MutationObserver/,
+  'Progreso debe poder mostrar sus temas aunque se rendericen después.');
+assert.match(materialWorkspaceSource, /focusFirstChapterOnExit\(outcome === 'completed'\)/,
+  'Al completar la guía debe prepararse la navegación al primer capítulo.');
+assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
+  'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
+assert.match(materialWorkspaceSource, /tabIndex=\{index === 0 \? -1 : undefined\}/,
+  'El capítulo 1 debe admitir el foco programático sin agregarse a la navegación por Tab.');
 assert.match(materialWorkspaceSource, /data-onboarding-practice-options/,
   'El segundo paso debe mostrar las opciones normales de práctica sin exigir responder.');
 assert.match(examSource, /data-onboarding-practice-options/,
@@ -156,6 +168,8 @@ assert.match(materialWorkspaceSource, /md:h-2/,
   'El tutorial debe dejar disponible la mayor altura posible del lector.');
 assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
   'La guía no debe reiniciar todos los pasos a la introducción.');
+assert.doesNotMatch(materialWorkspaceSource, /setFocusFirstChapterOnExit\(true\)/,
+  'Al saltar el tour no hay que forzar la navegación al capítulo 1.');
 assert.equal((materialWorkspaceSource.match(/<div data-onboarding-study-panel/g) ?? []).length, 2,
   'Escritorio y móvil deben ofrecer el panel completo como objetivo.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');

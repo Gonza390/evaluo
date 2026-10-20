@@ -67,6 +67,56 @@ import {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 
+
+/** Conserva la navegación del alumno: nunca desplaza la página completa. */
+const tourStudySelectors: Record<RecommendedStudyStep, string> = {
+  summary: '[data-summary-reading-section="0"]',
+  practice: '[data-onboarding-practice-options]',
+  errors: '[data-recommended-topics]',
+};
+
+function getVisibleTourReader(): HTMLElement | null {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '[data-onboarding-study-panel] [role="region"][aria-label="Contenido de estudio"]'
+    )
+  )
+    .filter((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 &&
+        rect.bottom > 0 && rect.top < window.innerHeight &&
+        getComputedStyle(node).visibility !== 'hidden';
+    })
+    .sort((a, b) => {
+      const visibleHeight = (node: HTMLElement) => {
+        const rect = node.getBoundingClientRect();
+        return Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(0, rect.top));
+      };
+      return visibleHeight(b) - visibleHeight(a);
+    })[0] ?? null;
+}
+
+function revealTourContent(step: RecommendedStudyStep, focus = false): boolean {
+  const reader = getVisibleTourReader();
+  const target = reader?.querySelector<HTMLElement>(tourStudySelectors[step]);
+  if (!reader || !target) return false;
+  const rect = target.getBoundingClientRect();
+  if (!rect.width || !rect.height || !target.getClientRects().length) return false;
+
+  // En Práctica, mostrar el título y las opciones juntos. En las demás vistas
+  // mantener el capítulo/los temas en la parte superior del lector.
+  const breathingRoom = step === 'practice' ? Math.min(112, reader.clientHeight * 0.2) : 12;
+  reader.scrollTo({
+    top: Math.max(
+      0,
+      reader.scrollTop + rect.top - reader.getBoundingClientRect().top - breathingRoom
+    ),
+    behavior: 'instant',
+  });
+  if (focus) target.focus({ preventScroll: true });
+  return true;
+}
+
 const SummaryTopicCheckPopup = dynamic(() =>
   import('@/components/study/summary-topic-check-popup').then(
     (module) => module.SummaryTopicCheckPopup
@@ -318,6 +368,7 @@ export function MaterialStudyWorkspace({
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
   const [onboardingFading, setOnboardingFading] = useState(false);
+  const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
   const onboardingTransitionRef = useRef<number | null>(null);
 
   // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
@@ -559,19 +610,13 @@ export function MaterialStudyWorkspace({
       setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      // La guía termina en el Resumen, listo para estudiar.
+      // Solo el cierre completo dirige al primer capítulo; Saltar conserva una salida rápida.
+      setFocusFirstChapterOnExit(outcome === 'completed');
       setLocalProgressOpen(false);
       demo?.onProgressChange?.(false);
       setActiveTab('resumen');
       demo?.onTabChange('resumen');
-      window.requestAnimationFrame(() => {
-        const heading = Array.from(
-          document.querySelectorAll<HTMLElement>(
-            '[data-guided-question], [data-recommended-summary]'
-          )
-        ).find((node) => node.getClientRects().length > 0);
-        heading?.focus({ preventScroll: true });
-      });
+      // El desplazamiento se ejecuta luego del render del Resumen (ver efecto inferior).
     },
     [
       clearRecommendedStudyQuery,
@@ -603,50 +648,51 @@ export function MaterialStudyWorkspace({
   useEffect(() => {
     if (!recommendedActive || !recommendedTourStep) return;
 
-    // Mostrar el valor real de cada pantalla, no su texto introductorio:
-    // primer capítulo en Resumen, opciones de preguntas en Práctica y temas en Progreso.
-    // El desplazamiento ocurre solamente dentro del lector, nunca en toda la página.
-    let secondFrame = 0;
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        const visibleWorkspace = Array.from(
-          document.querySelectorAll<HTMLElement>('[data-onboarding-study-panel]')
-        ).find((node) => {
-          const rect = node.getBoundingClientRect();
-          return rect.width > 0 && rect.height > 0 &&
-            getComputedStyle(node).visibility !== 'hidden';
-        });
-        const activePanel = visibleWorkspace?.querySelector<HTMLElement>(
-          '[role="region"][aria-label="Contenido de estudio"]'
-        );
-        if (!activePanel) return;
+    // El panel de Progreso puede montarse de forma diferida. Esperar al contenido real
+    // sin volver al inicio del lector ni mover la página completa.
+    let frame = 0;
+    let observer: MutationObserver | null = null;
+    const step = recommendedTourStep;
+    const reveal = () => {
+      if (revealTourContent(step)) observer?.disconnect();
+    };
+    const reader = getVisibleTourReader();
+    if (reader) {
+      observer = new MutationObserver(() => {
+        window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(reveal);
+      });
+      observer.observe(reader, { childList: true, subtree: true });
+    }
+    frame = window.requestAnimationFrame(() => {
+      frame = window.requestAnimationFrame(reveal);
+    });
+    const limit = window.setTimeout(() => observer?.disconnect(), 2500);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.clearTimeout(limit);
+    };
+  }, [recommendedActive, recommendedTourStep]);
 
-        const selectors: Record<RecommendedStudyStep, string> = {
-          summary: '[data-summary-reading-section="0"]',
-          practice: '[data-onboarding-practice-options]',
-          errors: '[data-recommended-topics]',
-        };
-        const target = activePanel.querySelector<HTMLElement>(
-          selectors[recommendedTourStep]
-        );
-        if (!target) {
-          activePanel.scrollTo({ top: 0, behavior: 'instant' });
-          return;
-        }
+  useEffect(() => {
+    if (!focusFirstChapterOnExit || recommendedActive || progressOpen || activeTab !== 'resumen') {
+      return;
+    }
 
-        const viewportTop = activePanel.getBoundingClientRect().top;
-        const targetTop = target.getBoundingClientRect().top;
-        activePanel.scrollTo({
-          top: Math.max(0, activePanel.scrollTop + targetTop - viewportTop - 14),
-          behavior: 'instant',
-        });
+    // React ya cambió a Resumen: ubicar la lectura en el capítulo 1.
+    let nextFrame = 0;
+    const frame = window.requestAnimationFrame(() => {
+      nextFrame = window.requestAnimationFrame(() => {
+        revealTourContent('summary', true);
+        setFocusFirstChapterOnExit(false);
       });
     });
     return () => {
-      window.cancelAnimationFrame(firstFrame);
-      window.cancelAnimationFrame(secondFrame);
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(nextFrame);
     };
-  }, [recommendedActive, recommendedTourStep]);
+  }, [focusFirstChapterOnExit, recommendedActive, progressOpen, activeTab]);
 
   const openRecommendedErrors = (onboardingErrorId: string | null) => {
     setRecommendedTourStep(null);
@@ -1431,6 +1477,7 @@ export function MaterialStudyWorkspace({
                       id={section.anchor}
                       key={`${section.title}:${section.body}`}
                       data-summary-reading-section={index}
+                      tabIndex={index === 0 ? -1 : undefined}
                       className="border-border scroll-mt-6 border-b py-6 first:pt-0 last:border-b-0 last:pb-2 sm:py-7"
                     >
                       <header className="mb-3 sm:mb-4">
