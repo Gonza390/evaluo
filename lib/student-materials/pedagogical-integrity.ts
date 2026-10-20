@@ -26,7 +26,24 @@ function sectionForQuestion(question: StudyQuestion, sections: StudySummarySecti
 }
 export function unsafeModelAnswerReason(question: StudyQuestion, sections: StudySummarySection[]): string | null {
   if (!question.prompt.trim() || !question.answer.trim()) return 'answer_missing';
-  if (question.type !== 'open') return null;
+  if (question.type === 'multiple_choice') {
+    if (!question.options.some(option => norm(option) === norm(question.answer))) {
+      return 'correct_answer_not_in_options';
+    }
+    // Bloquear únicamente incompatibilidades evidentes: una descripción larga
+    // que no comparte ningún término central con su cita en una pregunta factual.
+    // La coincidencia léxica NO equivale a una validación semántica positiva.
+    if (
+      (question.kind === 'concept' || question.kind === 'relationship') &&
+      norm(question.reference.excerpt).length >= 80
+    ) {
+      const keywords = centralTerms(question.answer);
+      const excerpt = ' ' + norm(question.reference.excerpt) + ' ';
+      const overlap = keywords.filter(word => excerpt.includes(' ' + word + ' ')).length;
+      if (keywords.length >= 6 && overlap === 0) return 'model_answer_unrelated_to_source';
+    }
+    return null;
+  }
 
   const section = sectionForQuestion(question, sections);
   const reference = question.reference.excerpt || '';
