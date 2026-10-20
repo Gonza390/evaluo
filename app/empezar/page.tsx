@@ -10,7 +10,7 @@ export default async function EmpezarPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/login?next=%2Fempezar&reason=guided-start');
+    redirect(`/login?next=${encodeURIComponent('/dashboard?openUpload=1&source=onboarding')}&reason=guided-start`);
   }
 
   const materials = await fetchStudentMaterialsByUser(supabase, user.id);
