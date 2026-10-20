@@ -16,6 +16,7 @@ export async function loadPageOcrCheckpoint(
   admin: AdminClient,
   materialId: string,
   fileHash: string,
+  pipelineVersion: string,
   selectedPageNumbers: number[]
 ): Promise<CachedPage[]> {
   if (!selectedPageNumbers.length) return [];
@@ -24,6 +25,7 @@ export async function loadPageOcrCheckpoint(
     .select('page_number,content,confidence,has_math,origin')
     .eq('student_material_id', materialId)
     .eq('file_sha256', fileHash)
+    .eq('pipeline_version', pipelineVersion)
     .in('page_number', selectedPageNumbers);
   if (error) throw new Error(`No se pudo recuperar el OCR guardado: ${error.message}`);
 
@@ -44,6 +46,7 @@ export async function savePageOcrCheckpoint(
   admin: AdminClient,
   materialId: string,
   fileHash: string,
+  pipelineVersion: string,
   pages: CachedPage[]
 ) {
   if (!pages.length) return;
@@ -54,6 +57,7 @@ export async function savePageOcrCheckpoint(
     student_material_id: materialId,
     page_number: page.pageNumber,
     file_sha256: fileHash,
+    pipeline_version: pipelineVersion,
     origin: page.origin,
     content: page.content,
     confidence: page.origin === 'vision' ? page.confidence : null,
