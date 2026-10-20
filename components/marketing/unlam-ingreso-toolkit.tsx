@@ -1,5 +1,5 @@
 import { ArrowRight, BookOpenCheck, CalendarDays, CheckCircle2, ClipboardList, ExternalLink, FileText, GraduationCap, Info, Lightbulb, UploadCloud } from 'lucide-react';
-import { UnlamIngresoPractice } from '@/components/marketing/unlam-ingreso-practice';
+
 import { TrackedLink } from '@/components/marketing/tracked-link';
 
 const UPLOAD_HREF = '/estudiar-pdf-con-ia?source=ingreso-unlam-2027';
@@ -27,6 +27,14 @@ const SUBJECT_GROUPS = [
     examples: 'Comunicación Social, Relaciones Laborales, Relaciones Públicas, Trabajo Social',
     subjects: ['Filosofía', 'Elementos de lógica matemática', 'Seminario de comprensión y producción de textos'],
     tip: 'Armá una ficha por argumento o concepto: definición, ejemplo, contraejemplo y comparación con otro concepto del manual.',
+    special: false,
+  },
+  {
+    id: 'educacion-fisica',
+    name: 'Profesorado en Educación Física',
+    examples: 'Profesorado en Educación Física · programa diferenciado dentro de Humanidades',
+    subjects: ['Fundamentos de la Educación Física', 'Filosofía', 'Seminario de comprensión y producción de textos'],
+    tip: 'Antes de estudiar, identificá qué unidades se evalúan de Fundamentos de la Educación Física. Usá ejercicios breves para recuperar definiciones y situaciones prácticas.',
     special: false,
   },
   {
@@ -162,31 +170,13 @@ export function UnlamIngresoToolkit() {
             <p className="text-sm leading-6 text-slate-700">
               <strong>Importante:</strong> Medicina, Arquitectura y Odontología cursan un esquema
               de cuatro materias que se ofrece en la primera instancia regular. Esas carreras
-              no se ofertan en la instancia intensiva 2027. Si cursás Educación Física u
-              otra propuesta particular, revisá su esquema específico en la universidad.
+              no se ofertan en la instancia intensiva 2027. El Profesorado en Educación Física tiene materias propias y aparece identificado por separado en esta guía.
               {' '}
               <a href="https://www.unlam.edu.ar/curso-de-ingreso/" target="_blank" rel="noopener noreferrer" className="font-bold text-blue-700 underline underline-offset-4">
                 Ver materias oficiales <ExternalLink className="inline h-3.5 w-3.5" aria-hidden="true" />
               </a>
             </p>
           </div>
-        </div>
-      </section>
-
-      <section id="ejercicios-unlam" aria-labelledby="titulo-practica-unlam" className="scroll-mt-8 border-b border-slate-200 bg-[#f5f7fc] py-12 sm:py-16">
-        <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-8">
-          <div className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Aprendé haciendo</p>
-            <h2 id="titulo-practica-unlam" className="mt-3 text-[2rem] font-black leading-[1.15] tracking-[-0.04em] sm:text-4xl">
-              Probá ejercicios antes de preparar tu examen
-            </h2>
-            <p className="mt-3 mb-6 text-sm leading-7 text-slate-600 sm:text-base">
-              Podés empezar acá sin cuenta. Elegí un área, resolvé dos preguntas originales
-              y revisá las explicaciones. Para seguir con los contenidos que efectivamente
-              estás cursando, usá después tu propio manual o apunte.
-            </p>
-          </div>
-          <UnlamIngresoPractice />
         </div>
       </section>
 
