@@ -14,7 +14,7 @@ const nextActionSource = readFileSync(resolve('lib/dashboard-next-study-action.t
 assert.match(dashboardSource, /LazyMaeveStudySpace/);
 assert.match(dashboardSource, /source\?: string/);
 assert.match(dashboardSource, /dailyMinutes\?: string/);
-assert.match(dashboardSource, /requestedUniversidadId/);
+assert.match(dashboardSource, /isUuid\(universidadId\)/);
 assert.match(dashboardSource, /resolvedUniversidadId/);
 assert.match(dashboardSource, /preguntero-derecho-sucesorio-p2/);
 assert.match(dashboardSource, /getDashboardNextStudyAction/);
