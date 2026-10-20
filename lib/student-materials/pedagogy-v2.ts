@@ -1,4 +1,5 @@
 import { hasSourceContradictedCausalDirection } from '@/lib/student-materials/answer-integrity';
+import { sanitizePedagogicalArtifacts } from '@/lib/student-materials/pedagogical-integrity';
 import type {
   CanonicalPedagogicalModel,
   StudyGlossaryItem,
@@ -44,7 +45,7 @@ export function buildPedagogicalArtifacts(
   const base = buildLegacyPedagogicalArtifacts(input);
   const model = input.canonicalModel;
 
-  if (!model) return base;
+  if (!model) return sanitizePedagogicalArtifacts(base, input.summary.sections);
 
   const canonicalFlashcards = buildCanonicalFlashcards(
     model,
@@ -55,11 +56,11 @@ export function buildPedagogicalArtifacts(
     })
   );
 
-  if (canonicalFlashcards.length < 6) return base;
+  if (canonicalFlashcards.length < 6) return sanitizePedagogicalArtifacts(base, input.summary.sections);
 
   const allItems = [...canonicalFlashcards, ...base.questions];
 
-  return {
+  return sanitizePedagogicalArtifacts({
     ...base,
     flashcards: canonicalFlashcards,
     coverage: {
@@ -72,7 +73,7 @@ export function buildPedagogicalArtifacts(
       ).length,
       totalItems: allItems.length,
     },
-  };
+  }, input.summary.sections);
 }
 
 function buildCanonicalFlashcards(
