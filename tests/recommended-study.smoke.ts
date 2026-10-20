@@ -150,7 +150,7 @@ assert.match(materialWorkspaceSource, /reader\.scrollTo\(/,
   'Los desplazamientos deben quedar dentro del lector.');
 assert.match(materialWorkspaceSource, /MutationObserver/,
   'Progreso debe poder mostrar sus temas aunque se rendericen después.');
-assert.match(materialWorkspaceSource, /focusFirstChapterOnExit\(outcome === 'completed'\)/,
+assert.match(materialWorkspaceSource, /setFocusFirstChapterOnExit\(outcome === 'completed'\)/,
   'Al completar la guía debe prepararse la navegación al primer capítulo.');
 assert.match(materialWorkspaceSource, /revealTourContent\('summary', true\)/,
   'Al finalizar debe mostrarse y enfocarse el primer capítulo real.');
