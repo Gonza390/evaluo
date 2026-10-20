@@ -114,6 +114,7 @@ export function StudentMaterialExam({
   const [saveError, setSaveError] = useState('');
   const [canRestoreAfterRefresh, setCanRestoreAfterRefresh] = useState(false);
   const answerIds = useRef<Record<string, string>>({});
+  const correctionRef = useRef<HTMLElement | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
@@ -925,6 +926,7 @@ export function StudentMaterialExam({
           {isRevealed ? (
             <div className="border-border mt-5 space-y-4 border-t pt-5">
               <section
+                ref={correctionRef}
                 className={cn(
                   'border-l-2 py-0.5 pl-4',
                   current.type === 'multiple_choice' && isCorrect
@@ -1021,7 +1023,17 @@ export function StudentMaterialExam({
             <Button
               type="button"
               disabled={current.type === 'multiple_choice' && !selectedAnswer}
-              onClick={() => setRevealed((items) => ({ ...items, [current.id]: true }))}
+              onClick={() => {
+                setRevealed((items) => ({ ...items, [current.id]: true }));
+                if (current.type === 'multiple_choice' && !isCorrect && window.matchMedia('(max-width: 767px)').matches) {
+                  requestAnimationFrame(() => {
+                    correctionRef.current?.scrollIntoView({
+                      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+                      block: 'nearest',
+                    });
+                  });
+                }
+              }}
               className="h-11 rounded-lg px-5"
             >
               {current.type === 'multiple_choice'
