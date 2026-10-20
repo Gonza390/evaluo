@@ -82,11 +82,30 @@ export async function loadOrBuildPedagogicalArtifacts({
   // Cuando se reconstruye un banco anterior, refrescar también la medición
   // de cobertura de práctica. El score histórico de extracción se conserva.
   const previousQuality = modelRow?.pedagogical_quality_report;
+  const rejectedQuestions = artifacts.integrity?.rejectedQuestions ?? 0;
+  const rejectedFlashcards = artifacts.integrity?.rejectedFlashcards ?? 0;
+  const hasUnsafeArtifacts = rejectedQuestions > 0 || rejectedFlashcards > 0;
   const updatedQuality =
     previousQuality && typeof previousQuality === 'object' && !Array.isArray(previousQuality)
       ? {
           ...previousQuality,
           version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
+          ...(hasUnsafeArtifacts ? {
+            status: 'degraded',
+            score: Math.min(Number(previousQuality.score ?? 0) || 0, 59),
+            pedagogicalDepthScore: Math.min(Number(previousQuality.pedagogicalDepthScore ?? 0) || 0, 49),
+          } : {}),
+          semanticAudit: {
+            rejectedQuestions,
+            rejectedFlashcards,
+            formulaicHigherOrderQuestions: 0,
+            conceptsWithoutUniqueChapter: glossary.filter(item => !item.chapterTitle).length,
+          },
+          issues: [...new Set([
+            ...(Array.isArray(previousQuality.issues) ? previousQuality.issues : []),
+            ...(rejectedQuestions > 0 ? ['unsafe_model_answers_rejected'] : []),
+            ...(rejectedFlashcards > 0 ? ['unsafe_flashcards_rejected'] : []),
+          ])],
           practiceCoverage: analyzeQuestionBankCoverage(
             artifacts.questions,
             summary.sections,
