@@ -11,7 +11,7 @@ const modifiedAt = '2026-10-20';
 export const metadata: Metadata = {
   title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
   description:
-    'Curso de Ingreso UNLaM 2027: modelos de examen anteriores, materias por carrera, ejercicios de práctica y cómo estudiar el manual con Evaluo.',
+    'Ingreso UNLaM 2027: materias por carrera, requisitos para aprobar, modelos anteriores y práctica gratuita con tus apuntes PDF.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
