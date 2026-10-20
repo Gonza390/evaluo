@@ -116,9 +116,15 @@ const mobileNavigationSource = readFileSync('components/study/pdf-mobile-navigat
 const examSource = readFileSync('components/student-material-exam.tsx', 'utf8');
 const diagnosticSource = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
 
-assert.ok(firstGuideSource.includes('Progreso: estudiá tema por tema'), 'La guía debe destacar el estudio por temas.');
-assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe integrarse a la interfaz sin tapar el contenido.');
-assert.doesNotMatch(firstGuideSource, /PdfTourSpotlight|fixed inset-0/, 'El primer recorrido no debe bloquear ni desenfocar la pantalla.');
+assert.ok(firstGuideSource.includes('Revisá tu progreso'), 'La guía debe destacar el estudio por temas.');
+assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe enseñar la interfaz real.');
+assert.match(firstGuideSource, /createPortal/, 'El foco debe renderizarse fuera de los contenedores con overflow.');
+assert.match(firstGuideSource, /backdrop-blur/, 'El resto de la pantalla debe tener un desenfoque leve.');
+assert.match(firstGuideSource, /data-recommended-practice/, 'La guía debe enfocar la pantalla real de práctica.');
+assert.match(materialWorkspaceSource, /data-recommended-practice/, 'La práctica debe exponer un foco real.');
+assert.match(firstGuideSource, /aria-modal="true"/, 'La guía debe tener semántica accesible.');
+assert.match(firstGuideSource, /Escape/, 'La guía debe poder saltarse con Escape.');
+assert.match(firstGuideSource, /scrollIntoView/, 'La guía debe encontrar el bloque destacado cuando hay scroll.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');
 assert.match(materialWorkspaceSource, /transitionRecommendedTour/, 'La navegación guiada debe transicionar entre las pantallas reales.');
 assert.match(materialWorkspaceSource, /prefers-reduced-motion: reduce/, 'La animación debe respetar las preferencias de accesibilidad.');

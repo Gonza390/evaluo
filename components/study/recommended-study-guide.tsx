@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,30 +17,98 @@ export type RecommendedStudyStep = 'summary' | 'practice' | 'errors';
 const steps = {
   summary: {
     label: 'Entender',
-    title: 'Empezá por tus apuntes',
-    description: 'Tus apuntes, ordenados por temas con resúmenes y conceptos para estudiar.',
-    nextLabel: 'Ver práctica',
+    title: 'Empezá por el resumen',
+    description: 'Tus apuntes se organizan por temas para que sepas qué estudiar primero.',
     icon: BookOpenText,
   },
   practice: {
     label: 'Practicar',
-    title: 'Comprobá lo que aprendiste',
-    description: 'Respondé preguntas de tu PDF y descubrí qué temas ya entendiste.',
-    nextLabel: 'Ver Progreso',
+    title: 'Practicá con tu PDF',
+    description: 'Respondé preguntas basadas en tus apuntes y comprobá qué entendiste.',
     icon: BrainCircuit,
   },
   errors: {
     label: 'Mejorar',
-    title: 'Progreso: estudiá tema por tema',
-    description: 'Elegí un tema, repasá sus conceptos, practicá y reforzá lo que te cuesta.',
-    nextLabel: 'Empezar a estudiar',
+    title: 'Revisá tu progreso',
+    description: 'Detectá qué temas reforzar para estudiar mejor antes del examen.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
 
 const order: RecommendedStudyStep[] = ['summary', 'practice', 'errors'];
 
-/** Guía integrada y estable: sin overlay ni contenido bloqueado. */
+// Resaltar contenido real de la pantalla, no una captura ni una tarjeta ficticia.
+// Los selectores alternativos cubren paneles responsive o contenido aún no visible.
+const targets: Record<RecommendedStudyStep, string[]> = {
+  summary: ['[data-recommended-summary] header', '[data-recommended-tab="resumen"]'],
+  practice: ['[data-recommended-practice]', '[data-recommended-tab="ejercicios"]'],
+  errors: ['[data-recommended-topics]', '[data-recommended-errors]'],
+};
+
+type Spotlight = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  cardTop: number;
+  cardLeft: number;
+};
+
+function findTarget(step: RecommendedStudyStep): HTMLElement | null {
+  for (const selector of targets[step]) {
+    const candidates = Array.from(document.querySelectorAll<HTMLElement>(selector)).filter(
+      (node) => node.getClientRects().length > 0 && getComputedStyle(node).visibility !== 'hidden'
+    );
+    const inViewport = candidates.find((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && rect.bottom > 64 &&
+        rect.top < window.innerHeight - 72;
+    });
+    if (inViewport) return inViewport;
+    if (candidates.length > 0) return candidates[0];
+  }
+  return null;
+}
+
+function getSpotlight(node: HTMLElement): Spotlight {
+  const rect = node.getBoundingClientRect();
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const margin = 8;
+  const left = Math.max(margin, rect.left - margin);
+  const top = Math.max(margin, rect.top - margin);
+  const right = Math.min(width - margin, rect.right + margin);
+  const maxFocusHeight = width < 640 ? 184 : 232;
+  const focusWidth = Math.max(0, right - left);
+  const focusHeight = Math.max(
+    0,
+    Math.min(rect.bottom + margin, height - margin, top + maxFocusHeight) - top
+  );
+  const cardWidth = Math.min(360, width - 24);
+  const cardLeft = Math.max(12, Math.min(width - cardWidth - 12, left + focusWidth / 2 - cardWidth / 2));
+  const cardHeight = 188;
+  const cardTop =
+    top + focusHeight + 12 + cardHeight < height - 8
+      ? top + focusHeight + 12
+      : top - cardHeight - 12 >= 8
+        ? top - cardHeight - 12
+        : Math.max(8, height - cardHeight - 12);
+
+  return {
+    top,
+    left,
+    width: focusWidth,
+    height: focusHeight,
+    cardTop,
+    cardLeft,
+  };
+}
+
+/**
+ * Recorrido breve del primer PDF. Cuatro capas rodean la zona iluminada:
+ * desenfocan el resto sin tapar el contenido real ni desordenar el layout.
+ * El portal evita que los contenedores con overflow recorten el spotlight.
+ */
 export function RecommendedStudyGuide({
   step,
   transitioning = false,
@@ -52,89 +122,205 @@ export function RecommendedStudyGuide({
   onBack?: () => void;
   onExit: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+  const [spotlight, setSpotlight] = useState<Spotlight | null>(null);
+  const cardRef = useRef<HTMLElement | null>(null);
   const current = steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
 
-  return (
-    <section
-      data-first-pdf-guide
-      aria-label="Guía rápida del primer PDF"
-      aria-busy={transitioning}
-      className="border-border bg-card relative w-full rounded-2xl border px-3 py-3 shadow-[0_6px_28px_rgba(15,23,42,0.045)] sm:px-4"
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className="bg-primary/10 text-primary hidden size-9 shrink-0 items-center justify-center rounded-xl sm:flex"
-          aria-hidden="true"
-        >
-          <Icon className="size-[18px]" />
-        </div>
-        <div
-          key={step}
-          data-guide-copy
-          aria-live="polite"
-          className="min-h-[102px] min-w-0 flex-1 sm:min-h-[78px]"
-        >
-          <p className="text-primary text-[11px] font-semibold tracking-[0.05em] uppercase">
-            {number} de 3 · {current.label}
-          </p>
-          <h2 className="text-foreground mt-1 text-[15px] font-semibold tracking-tight sm:text-[17px]">
-            {current.title}
-          </h2>
-          <p className="text-muted-foreground mt-1 max-w-[810px] text-[12.5px] leading-[19px] sm:text-[13px] sm:leading-5">
-            {current.description}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onExit}
-          aria-label="Saltar guía e ir a estudiar"
-          title="Saltar guía"
-          className="text-muted-foreground hover:bg-muted focus-visible:outline-ring -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-      <div className="border-border/70 mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
-        <div className="flex items-center gap-1.5" role="img" aria-label={`Paso ${number} de 3`}>
-          {order.map((item, index) => (
-            <span
-              key={item}
-              className={`h-1 rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none ${
-                index + 1 === number
-                  ? 'bg-primary w-7'
-                  : index + 1 < number
-                    ? 'bg-primary/40 w-3'
-                    : 'bg-primary/15 w-3'
-              }`}
-            />
-          ))}
-        </div>
-        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          {onBack && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              disabled={transitioning}
-              className="min-h-9 gap-1.5"
-            >
-              <ArrowLeft className="size-3.5" /> Atrás
-            </Button>
-          )}
-          <Button
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    let frame = 0;
+    let retries = 0;
+    let didScroll = false;
+    let observer: ResizeObserver | null = null;
+    let observed: HTMLElement | null = null;
+
+    const update = () => {
+      const node = findTarget(step);
+      if (!node) {
+        if (retries++ < 45) frame = window.requestAnimationFrame(update);
+        return;
+      }
+
+      const rect = node.getBoundingClientRect();
+      if (!didScroll && (rect.top >= window.innerHeight - 96 || rect.bottom <= 72)) {
+        didScroll = true;
+        node.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
+        frame = window.requestAnimationFrame(update);
+        return;
+      }
+
+      if (observed !== node) {
+        observer?.disconnect();
+        observer = new ResizeObserver(() => {
+          window.cancelAnimationFrame(frame);
+          frame = window.requestAnimationFrame(update);
+        });
+        observer.observe(node);
+        observed = node;
+      }
+
+      const next = getSpotlight(node);
+      setSpotlight((previous) =>
+        previous &&
+        Object.keys(next).every(
+          (key) =>
+            previous[key as keyof Spotlight] === next[key as keyof Spotlight]
+        )
+          ? previous
+          : next
+      );
+    };
+
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(update);
+    };
+
+    scheduleUpdate();
+    window.addEventListener('resize', scheduleUpdate);
+    document.addEventListener('scroll', scheduleUpdate, true);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+      document.removeEventListener('scroll', scheduleUpdate, true);
+    };
+  }, [mounted, step]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    cardRef.current?.focus({ preventScroll: true });
+  }, [mounted, step]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onExit();
+        return;
+      }
+      if (event.key !== 'Tab' || !cardRef.current) return;
+      const buttons = Array.from(cardRef.current.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
+      if (buttons.length === 0) return;
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      if (!cardRef.current.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [mounted, onExit]);
+
+  if (!mounted) return null;
+
+  const overlayClass =
+    'pointer-events-auto fixed z-[80] bg-slate-950/30 backdrop-blur-[3px] motion-reduce:transition-none transition-[top,left,width,height] duration-200';
+
+  return createPortal(
+    <>
+      {spotlight ? (
+        <>
+          <div aria-hidden="true" className={overlayClass} style={{ top: 0, left: 0, right: 0, height: spotlight.top }} />
+          <div aria-hidden="true" className={overlayClass} style={{ top: spotlight.top + spotlight.height, left: 0, right: 0, bottom: 0 }} />
+          <div aria-hidden="true" className={overlayClass} style={{ top: spotlight.top, left: 0, width: spotlight.left, height: spotlight.height }} />
+          <div aria-hidden="true" className={overlayClass} style={{ top: spotlight.top, left: spotlight.left + spotlight.width, right: 0, height: spotlight.height }} />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none fixed z-[81] rounded-xl border-2 border-primary shadow-[0_0_0_5px_rgba(37,99,235,0.17)] transition-[top,left,width,height] duration-200 motion-reduce:transition-none"
+            style={{ top: spotlight.top, left: spotlight.left, width: spotlight.width, height: spotlight.height }}
+          />
+        </>
+      ) : (
+        <div aria-hidden="true" className="pointer-events-auto fixed inset-0 z-[80] bg-slate-950/30 backdrop-blur-[3px]" />
+      )}
+
+      <section
+        ref={cardRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Guía rápida del primer PDF"
+        tabIndex={-1}
+        data-first-pdf-guide
+        aria-busy={transitioning}
+        className="bg-card border-border fixed z-[90] w-[calc(100vw-24px)] max-w-[360px] rounded-2xl border p-4 shadow-[0_20px_75px_rgba(15,23,42,0.25)] outline-none motion-reduce:transition-none sm:p-5"
+        style={
+          spotlight
+            ? { top: spotlight.cardTop, left: spotlight.cardLeft }
+            : { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+        }
+      >
+        <div className="flex items-start gap-3">
+          <span className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
+            <Icon className="size-[18px]" />
+          </span>
+          <div key={step} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
+            <p className="text-primary text-[11px] font-semibold tracking-wide uppercase">
+              {number} de 3 · {current.label}
+            </p>
+            <h2 className="text-foreground mt-1 text-[16px] font-semibold leading-5 tracking-tight">
+              {current.title}
+            </h2>
+            <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
+              {current.description}
+            </p>
+          </div>
+          <button
             type="button"
-            size="sm"
-            onClick={onNext}
-            disabled={transitioning}
-            className="min-h-9 gap-2 px-3 sm:px-4"
+            onClick={onExit}
+            aria-label="Saltar guía e ir a estudiar"
+            title="Saltar guía"
+            className="text-muted-foreground hover:bg-muted focus-visible:outline-ring -mr-1 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg focus-visible:outline-2"
           >
-            {current.nextLabel} <ArrowRight className="size-3.5" />
-          </Button>
+            <X className="size-4" />
+          </button>
         </div>
-      </div>
-    </section>
+
+        <div className="border-border/70 mt-3 flex items-center justify-between gap-2 border-t pt-3">
+          <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 3'}>
+            {order.map((item, index) => (
+              <span
+                key={item}
+                className={
+                  'h-1 rounded-full transition-[width,background-color] duration-200 motion-reduce:transition-none ' +
+                  (index + 1 === number
+                    ? 'bg-primary w-7'
+                    : index + 1 < number
+                      ? 'bg-primary/40 w-3'
+                      : 'bg-primary/15 w-3')
+                }
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5">
+            {onBack ? (
+              <Button type="button" variant="ghost" size="sm" onClick={onBack} disabled={transitioning} className="min-h-9 gap-1 px-2">
+                <ArrowLeft className="size-3.5" /> Atrás
+              </Button>
+            ) : null}
+            <Button type="button" size="sm" onClick={onNext} disabled={transitioning} className="min-h-9 gap-1.5 px-3">
+              {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
+            </Button>
+          </div>
+        </div>
+      </section>
+    </>,
+    document.body
   );
 }

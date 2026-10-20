@@ -1514,7 +1514,7 @@ export function MaterialStudyWorkspace({
         className="animate-tab-panel data-[state=inactive]:hidden"
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
-          <div className="px-1 py-1 sm:px-2 sm:py-2">
+          <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
             {demo ? (
               demo.practice
             ) : diagnosticMode ? (
@@ -1912,8 +1912,7 @@ export function MaterialStudyWorkspace({
       </section>
 
       {recommendedActive && recommendedTourStep && (
-        <div className="mx-auto w-full max-w-[1600px] shrink-0 px-2 pt-2 sm:px-4 sm:pt-3 xl:px-5">
-          <RecommendedStudyGuide
+        <RecommendedStudyGuide
             step={recommendedTourStep}
             transitioning={onboardingFading}
             onExit={() => closeRecommendedTour('skipped')}
@@ -1948,7 +1947,6 @@ export function MaterialStudyWorkspace({
               }
             })}
           />
-        </div>
       )}
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
