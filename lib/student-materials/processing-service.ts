@@ -238,6 +238,7 @@ export async function processStudentMaterial(input: {
         geminiPdfKeySlot,
         forceRequiredOcr: requiredOcr,
         fileSha256: contentFingerprint,
+        checkpointVersion: canonicalPipelineVersion,
       });
 
   const text = visionExtraction.text;
