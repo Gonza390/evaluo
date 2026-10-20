@@ -12,7 +12,6 @@ import {
   recordStudentMaterialStudyResultAction,
   finishStudyErrorOnboardingAction,
 } from '@/lib/actions/study-errors';
-import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
@@ -111,7 +110,6 @@ export function StudentMaterialExam({
   const [contextUnavailable, setContextUnavailable] = useState(false);
   const unavailableTopics = questionCounts.filter((count) => count === 0).length;
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
   const [isRecordingError, setIsRecordingError] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [canRestoreAfterRefresh, setCanRestoreAfterRefresh] = useState(false);
@@ -784,15 +782,8 @@ export function StudentMaterialExam({
     delete answerIds.current[current.id];
 
     if (result.onboardingErrorId) {
-      if (topicSectionIndex !== undefined && onReturnToTopic) {
-        // Este recorrido ya conduce al refuerzo del tema al terminar la tanda.
-        // Evitar que el tutorial general saque al alumno de su material.
-        void finishStudyErrorOnboardingAction(result.onboardingErrorId, 'legacy').catch(() => {});
-        advanceExam();
-        return;
-      }
-      setOnboardingErrorId(result.onboardingErrorId);
-      return;
+      // Guardar el error sin interrumpir la tanda con otro tutorial.
+      void finishStudyErrorOnboardingAction(result.onboardingErrorId, 'legacy').catch(() => {});
     }
 
     advanceExam();
@@ -800,14 +791,6 @@ export function StudentMaterialExam({
 
   return (
     <>
-      <FirstStudyErrorOnboardingPrompt
-        errorId={onboardingErrorId}
-        location="student_material_practice"
-        onClose={() => {
-          setOnboardingErrorId(null);
-          advanceExam();
-        }}
-      />
       <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
         {topicSectionIndex !== undefined && (
           <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-3">

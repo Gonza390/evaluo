@@ -110,6 +110,21 @@ assert.equal(await getFirstReadyStudentMaterialId(client, 'owner-id'), null);
 // Las comprobaciones del lector deben ser respondibles, distintas y respaldadas por el material.
 const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
+const firstGuideSource = readFileSync('components/study/recommended-study-guide.tsx', 'utf8');
+const progressPanelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+const mobileNavigationSource = readFileSync('components/study/pdf-mobile-navigation.tsx', 'utf8');
+const examSource = readFileSync('components/student-material-exam.tsx', 'utf8');
+const diagnosticSource = readFileSync('components/student-material-diagnostic.tsx', 'utf8');
+
+assert.ok(firstGuideSource.includes('Progreso: estudiá tema por tema'), 'La guía debe destacar el estudio por temas.');
+assert.ok(firstGuideSource.includes('data-recommended-topics'), 'El último paso debe enfocar temas reales.');
+assert.ok(progressPanelSource.includes('data-recommended-topics'), 'Progreso debe exponer la lista de temas.');
+assert.ok(mobileNavigationSource.includes("data-recommended-tab={id === 'ejercicios'"), 'La guía debe encontrar Práctica en móvil.');
+assert.ok(materialWorkspaceSource.includes("setProgressOpen(true);\n              setRecommendedTourStep('errors');"),
+  'El tercer paso debe abrir Progreso antes de destacar los temas.');
+assert.doesNotMatch(examSource, /<FirstStudyErrorOnboardingPrompt/, 'La práctica no debe abrir otro onboarding.');
+assert.doesNotMatch(diagnosticSource, /<FirstStudyErrorOnboardingPrompt/, 'El diagnóstico no debe abrir otro onboarding.');
+
 
 // El lector de Progreso tiene que respetar el formato académico real,
 // sin mostrar las marcas Markdown como texto plano ni crear objetivos con IA.

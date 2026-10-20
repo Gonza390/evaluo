@@ -21,7 +21,7 @@ export function RecommendedStudyGuide({
       selector: '[data-recommended-summary]',
       title: 'Entendé tu PDF',
       description:
-        'Acá tenés el resumen con los temas principales de tu material. Empezá por recorrer lo que necesitás estudiar.',
+        'Entendé tus apuntes con un resumen organizado por temas.',
       nextLabel: 'Siguiente',
       progress: '1 de 3 · Entender',
     },
@@ -29,17 +29,17 @@ export function RecommendedStudyGuide({
       selector: '[data-recommended-tab="ejercicios"]',
       title: 'Practicá cuando quieras',
       description:
-        'Cuando ya hayas estudiado, entrá en Práctica para comprobar qué entendiste con preguntas del mismo PDF.',
+        'Comprobá lo aprendido con preguntas basadas en tu PDF.',
       nextLabel: 'Siguiente',
       progress: '2 de 3 · Practicar',
     },
     errors: {
-      selector: '[data-recommended-errors]',
-      title: 'Reforzá lo que te cuesta',
+      selector: '[data-recommended-topics]',
+      title: 'Progreso: estudiá tema por tema',
       description:
-        'Si te equivocás, esos conceptos quedan en Progreso para que puedas entenderlos y volver a practicarlos.',
+        'Cada tema reúne resumen, conceptos y práctica. Descubrí qué reforzar y sabé qué estudiar después.',
       nextLabel: 'Empezar a estudiar',
-      progress: '3 de 3 · Reforzar',
+      progress: '3 de 3 · Mejorar',
     },
   } satisfies Record<
     RecommendedStudyStep,

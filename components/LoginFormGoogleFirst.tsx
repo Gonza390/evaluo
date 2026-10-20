@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronDown, Eye, EyeOff, FileText, Mail } from 'lucide-reac
 import { supabase } from '@/lib/supabase-client';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { getPdfFirstDraftMeta } from '@/lib/pdf-first-draft';
+import { isPdfFirstActivationPath } from '@/lib/profile-completion';
 import { getAnalyticsSessionKey } from '@/lib/analytics-client';
 import { consumeStoredPricingEmail } from '@/lib/pricing-intent';
 
@@ -175,7 +176,7 @@ export default function LoginFormGoogleFirst() {
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
-    if (reason === 'preguntero') return nextPath;
+    if (reason === 'preguntero' || isPdfFirstActivationPath(nextPath)) return nextPath;
 
     const { data } = await supabase
       .from('profiles')

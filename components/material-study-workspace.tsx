@@ -544,6 +544,11 @@ export function MaterialStudyWorkspace({
       clearRecommendedStudyQuery();
       setRecommendedTourStep(null);
       setRecommendedActive(false);
+      // La guía termina en el Resumen, listo para estudiar.
+      setLocalProgressOpen(false);
+      demo?.onProgressChange?.(false);
+      setActiveTab('resumen');
+      demo?.onTabChange('resumen');
       window.requestAnimationFrame(() => {
         const heading = Array.from(
           document.querySelectorAll<HTMLElement>(
@@ -570,7 +575,6 @@ export function MaterialStudyWorkspace({
     }
     const params = new URLSearchParams({ material: materialId });
     if (onboardingErrorId) {
-      params.set('tour', 'first-error');
       params.set('error', onboardingErrorId);
     }
     router.push(`/dashboard/explicaciones?${params}`);
@@ -1834,13 +1838,19 @@ export function MaterialStudyWorkspace({
             recommendedTourStep === 'practice'
               ? () => setRecommendedTourStep('summary')
               : recommendedTourStep === 'errors'
-                ? () => setRecommendedTourStep('practice')
+                ? () => {
+                    setProgressOpen(false);
+                    setRecommendedTourStep('practice');
+                  }
                 : undefined
           }
           onNext={() => {
             if (recommendedTourStep === 'summary') setRecommendedTourStep('practice');
-            else if (recommendedTourStep === 'practice') setRecommendedTourStep('errors');
-            else closeRecommendedTour('completed');
+            else if (recommendedTourStep === 'practice') {
+              // Mostrar los temas reales del PDF, no solo la pestaña.
+              setProgressOpen(true);
+              setRecommendedTourStep('errors');
+            } else closeRecommendedTour('completed');
           }}
         />
       )}

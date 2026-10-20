@@ -1091,6 +1091,7 @@ export function PdfProgressPanel({
               </section>
             )}
             <section
+              data-recommended-topics
               className="border-border bg-card overflow-hidden rounded-2xl border"
               aria-labelledby={`real-topics-title-${panelId}`}
             >
