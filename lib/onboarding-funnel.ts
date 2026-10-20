@@ -30,9 +30,10 @@ export type FirstPdfOnboardingStats = {
 };
 
 /**
- * Daily cohort: each logged-in student contributes only their first tour start of the day.
- * A run is joined by its unique run ID and version, not by an event count. Historical
- * onboarding and simulated preview events never enter this funnel.
+ * Cohorte de estudiantes únicos que iniciaron dentro del período consultado.
+ * Varios intentos de la misma persona se combinan hasta la primera finalización;
+ * saltar en un intento anterior no equivale a un abandono definitivo.
+ * Eventos históricos y demos no forman parte del embudo.
  */
 export function summarizeFirstPdfOnboarding(events: FirstPdfGuideEvent[]): FirstPdfOnboardingStats {
   type Run = {
@@ -71,62 +72,76 @@ export function summarizeFirstPdfOnboarding(events: FirstPdfGuideEvent[]): First
     });
   }
 
-  const firstPerActor = new Map<string, Run>();
+  // La cohorte agrupa intentos por usuario. Un intento posterior completado debe
+  // prevalecer sobre un abandono anterior, sin sumar dos estudiantes.
+  const attemptsByActor = new Map<string, Run[]>();
   for (const run of runs.values()) {
-    const existing = firstPerActor.get(run.actor);
-    if (!existing || run.startedAt < existing.startedAt) firstPerActor.set(run.actor, run);
+    const list = attemptsByActor.get(run.actor) ?? [];
+    list.push(run);
+    attemptsByActor.set(run.actor, list);
   }
-  const chosen = [...firstPerActor.values()];
   const visits = Object.fromEntries(FIRST_PDF_GUIDE_STEPS.map((id) => [id, 0])) as Record<FirstPdfGuideStep, number>;
   const dropoffs = Object.fromEntries(FIRST_PDF_GUIDE_STEPS.map((id) => [id, 0])) as Record<FirstPdfGuideStep, number>;
   const actions: Record<string, number> = {};
   const times: number[] = [];
   let completed = 0, skipped = 0, mobileStarts = 0, firstActions = 0;
+  const maxDuration = 30 * 60 * 1000;
 
-  for (const run of chosen) {
-    if (run.device === 'mobile') mobileStarts++;
+  for (const attempts of attemptsByActor.values()) {
+    attempts.sort((a, b) => a.startedAt - b.startedAt);
+    if (attempts[0].device === 'mobile') mobileStarts++;
     const reached = new Set<FirstPdfGuideStep>();
-    let lastViewed: FirstPdfGuideStep | null = null;
-    let completedAt: number | null = null;
-    let skippedAt: number | null = null;
-    const maxDuration = 30 * 60 * 1000; // protect duration from idle/background tabs
+    let finalAttempt: { skipped: boolean; lastViewed: FirstPdfGuideStep | null } | null = null;
+    let completedRun: { run: Run; completedAt: number } | null = null;
 
-    for (const event of run.events) {
-      if (event.name === 'first_pdf_guide_step_viewed' && event.step &&
-          completedAt === null && skippedAt === null) {
-        reached.add(event.step);
-        lastViewed = event.step;
+    for (const run of attempts) {
+      if (completedRun) break; // eventos posteriores a completar no generan un nuevo onboarding
+      let completedAt: number | null = null;
+      let skippedAt: number | null = null;
+      let lastViewed: FirstPdfGuideStep | null = null;
+
+      for (const event of run.events) {
+        if (event.name === 'first_pdf_guide_step_viewed' && event.step &&
+            completedAt === null && skippedAt === null) {
+          reached.add(event.step);
+          lastViewed = event.step;
+        }
+        if (event.name === 'first_pdf_guide_completed' &&
+            completedAt === null && skippedAt === null) completedAt = event.at;
+        if (event.name === 'first_pdf_guide_skipped' &&
+            skippedAt === null && completedAt === null) skippedAt = event.at;
       }
-      if (event.name === 'first_pdf_guide_completed' && completedAt === null && skippedAt === null) {
-        completedAt = event.at;
-      }
-      if (event.name === 'first_pdf_guide_skipped' && skippedAt === null && completedAt === null) {
-        skippedAt = event.at;
+
+      if (completedAt !== null) {
+        completedRun = { run, completedAt };
+      } else {
+        finalAttempt = { skipped: skippedAt !== null, lastViewed };
       }
     }
     for (const step of reached) visits[step]++;
-    if (completedAt !== null) {
+
+    if (completedRun) {
       completed++;
-      const elapsed = completedAt - run.startedAt;
+      const elapsed = completedRun.completedAt - completedRun.run.startedAt;
       if (elapsed >= 0 && elapsed <= maxDuration) times.push(elapsed / 1000);
-      const action = run.events.find((e) =>
-        e.name === 'first_pdf_guide_post_action' &&
-        e.at >= completedAt! && e.action
+      const action = completedRun.run.events.find((event) =>
+        event.name === 'first_pdf_guide_post_action' &&
+        event.at >= completedRun!.completedAt && event.action
       )?.action;
       if (action) {
         firstActions++;
         actions[action] = (actions[action] ?? 0) + 1;
       }
-    } else {
-      if (skippedAt !== null) skipped++;
-      if (lastViewed) dropoffs[lastViewed]++;
+    } else if (finalAttempt) {
+      if (finalAttempt.skipped) skipped++;
+      if (finalAttempt.lastViewed) dropoffs[finalAttempt.lastViewed]++;
     }
   }
   times.sort((a, b) => a - b);
   const middle = Math.floor(times.length / 2);
   const medianDurationSeconds = times.length === 0 ? null :
     Math.round(times.length % 2 ? times[middle] : (times[middle - 1] + times[middle]) / 2);
-  const started = chosen.length;
+  const started = attemptsByActor.size;
   return {
     version: FIRST_PDF_GUIDE_VERSION,
     started,

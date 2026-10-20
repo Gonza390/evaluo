@@ -86,4 +86,37 @@ assert.equal(stats.firstActionPct,100);
 assert.deepEqual(stats.actions,{practica:1});
 assert.equal(stats.medianDurationSeconds,18);
 assert.equal(summarizeFirstPdfOnboarding([]).started,0);
+
+// Si un estudiante salta primero y completa luego, debe contar como finalizado.
+const twoAttempts: FirstPdfGuideEvent[] = [
+  row('first_pdf_guide_started', 0, { actor: 'retry', run: 'retry-one', session: 'sess-one' }),
+  row('first_pdf_guide_step_viewed', 2, { actor: 'retry', run: 'retry-one', session: 'sess-one', step: 'summary' }),
+  row('first_pdf_guide_skipped', 5, { actor: 'retry', run: 'retry-one', session: 'sess-one', step: 'summary' }),
+  row('first_pdf_guide_started', 60, { actor: 'retry', run: 'retry-two', session: 'sess-two', device: 'desktop' }),
+  row('first_pdf_guide_step_viewed', 61, { actor: 'retry', run: 'retry-two', session: 'sess-two', step: 'summary' }),
+  row('first_pdf_guide_step_viewed', 62, { actor: 'retry', run: 'retry-two', session: 'sess-two', step: 'practice' }),
+  row('first_pdf_guide_step_viewed', 63, { actor: 'retry', run: 'retry-two', session: 'sess-two', step: 'topic' }),
+  row('first_pdf_guide_step_viewed', 64, { actor: 'retry', run: 'retry-two', session: 'sess-two', step: 'errors' }),
+  row('first_pdf_guide_completed', 72, { actor: 'retry', run: 'retry-two', session: 'sess-two' }),
+  row('first_pdf_guide_post_action', 76, { actor: 'retry', run: 'retry-two', session: 'sess-two', action: 'practica' }),
+];
+const retried = summarizeFirstPdfOnboarding(twoAttempts);
+assert.equal(retried.started, 1, 'Two attempts cannot become two students.');
+assert.equal(retried.completed, 1, 'A later completion supersedes an earlier skip.');
+assert.equal(retried.skipped, 0, 'Do not count a completed user as skipped.');
+assert.equal(retried.incomplete, 0);
+assert.deepEqual(retried.steps.map(step => step.reached), [1,1,1,1]);
+assert.deepEqual(retried.steps.map(step => step.dropoffs), [0,0,0,0]);
+assert.equal(retried.mobileStarts, 1, 'Devices reflect first attempt.');
+assert.equal(retried.medianDurationSeconds, 12, 'Completion duration uses the completed attempt.');
+assert.equal(retried.firstActions, 1);
+assert.equal(retried.actions.practica, 1);
+const retriesAfterCompletion = summarizeFirstPdfOnboarding([
+  ...twoAttempts,
+  row('first_pdf_guide_started', 120, { actor: 'retry', run: 'retry-three', session: 'sess-three' }),
+  row('first_pdf_guide_skipped', 123, { actor: 'retry', run: 'retry-three', session: 'sess-three' }),
+]);
+assert.equal(retriesAfterCompletion.skipped, 0, 'Events after completion cannot reopen the guide.');
+assert.equal(retriesAfterCompletion.completed, 1);
+
 console.log('onboarding-metrics.smoke passed');
