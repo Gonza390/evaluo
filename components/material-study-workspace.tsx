@@ -2052,7 +2052,7 @@ export function MaterialStudyWorkspace({
 
       {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
       {recommendedActive && recommendedTourStep ? (
-        <div aria-hidden="true" data-onboarding-guide-space className="h-32 shrink-0 md:h-2" />
+        <div aria-hidden="true" data-onboarding-guide-space className="h-28 shrink-0 md:h-2" />
       ) : null}
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>

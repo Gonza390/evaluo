@@ -133,7 +133,7 @@ assert.match(firstGuideSource, /Estudiá tema por tema/,
   'El tercer paso debe mostrar cómo estudiar por capítulo.');
 assert.match(firstGuideSource, /Ahora sabés dónde mejorar/,
   'El cierre debe comunicar el beneficio del seguimiento.');
-assert.match(firstGuideSource, /Practicá con tus apuntes y descubrí qué temas dominás/,
+assert.match(firstGuideSource, /Practicá y descubrí qué temas dominás/,
   'Progreso debe conectar la práctica con los temas que requieren repaso.');
 assert.match(materialWorkspaceSource, /recommendedTourStep === 'topic' \? 220 : 150/,
   'El paso entre estudiar por tema y Progreso debe tener una transición más pausada.');

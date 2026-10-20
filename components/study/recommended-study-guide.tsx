@@ -37,7 +37,7 @@ const steps = {
   errors: {
     label: 'Progreso',
     title: 'Ahora sabés dónde mejorar',
-    description: 'Practicá con tus apuntes y descubrí qué temas dominás y cuáles necesitan repaso.',
+    description: 'Practicá y descubrí qué temas dominás y cuáles reforzar.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
@@ -356,7 +356,7 @@ export function RecommendedStudyGuide({
         </div>
 
         {step === 'errors' && (
-          <p className="text-muted-foreground mt-2 text-[11px] leading-4">
+          <p className="text-muted-foreground mt-2 hidden text-[11px] leading-4 sm:block">
             Los estados que ves son ilustrativos: tus resultados aparecerán después de practicar.
           </p>
         )}
