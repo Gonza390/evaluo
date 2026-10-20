@@ -651,7 +651,7 @@ export function MaterialStudyWorkspace({
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => setOnboardingFading(false));
       });
-    }, 150);
+    }, recommendedTourStep === 'topic' ? 220 : 150);
   };
 
   useEffect(() => {
@@ -2057,7 +2057,7 @@ export function MaterialStudyWorkspace({
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
-          <div data-onboarding-study-panel className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
               data-demo-focus="study"
               value={progressOpen ? 'progreso' : activeTab}
@@ -2136,7 +2136,7 @@ export function MaterialStudyWorkspace({
             demo && !demo.progress ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col'
           )}
         >
-          <div data-onboarding-study-panel className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
             {content}
           </div>
 

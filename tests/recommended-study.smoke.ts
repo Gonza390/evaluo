@@ -112,6 +112,7 @@ const materialPageSource = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
 const materialWorkspaceSource = readFileSync('components/material-study-workspace.tsx', 'utf8');
 const firstGuideSource = readFileSync('components/study/recommended-study-guide.tsx', 'utf8');
 const progressPanelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+const globalCssSource = readFileSync('app/globals.css', 'utf8');
 const previewSource = readFileSync('components/preview/real-pdf-progress-preview.tsx', 'utf8');
 const mobileNavigationSource = readFileSync('components/study/pdf-mobile-navigation.tsx', 'utf8');
 const examSource = readFileSync('components/student-material-exam.tsx', 'utf8');
@@ -130,6 +131,24 @@ assert.match(firstGuideSource, /data-first-pdf-guide/,
   'La guía debe enseñar la interfaz real.');
 assert.match(firstGuideSource, /Estudiá tema por tema/,
   'El tercer paso debe mostrar cómo estudiar por capítulo.');
+assert.match(firstGuideSource, /Ahora sabés dónde mejorar/,
+  'El cierre debe comunicar el beneficio del seguimiento.');
+assert.match(firstGuideSource, /Practicá con tus apuntes y descubrí qué temas dominás/,
+  'Progreso debe conectar la práctica con los temas que requieren repaso.');
+assert.match(materialWorkspaceSource, /recommendedTourStep === 'topic' \? 220 : 150/,
+  'El paso entre estudiar por tema y Progreso debe tener una transición más pausada.');
+assert.equal((materialWorkspaceSource.match(/data-onboarding-step=\{recommendedActive \? recommendedTourStep : undefined\}/g) ?? []).length, 2,
+  'El énfasis visual debe estar disponible en escritorio y móvil.');
+assert.match(globalCssSource, /\[data-onboarding-step='summary'\] \[data-summary-reading-section='0'\]/,
+  'Entender debe señalar el primer capítulo.');
+assert.match(globalCssSource, /\[data-onboarding-step='practice'\] \[data-onboarding-practice-options\]/,
+  'Practicar debe señalar las opciones reales.');
+assert.match(globalCssSource, /\[data-onboarding-step='topic'\] \[data-onboarding-topic-detail\]/,
+  'El tercer paso debe señalar la vista del tema.');
+assert.match(globalCssSource, /\[data-onboarding-step='errors'\] \[data-tour-example-topic\]/,
+  'El cuarto paso debe presentar los estados ilustrativos con movimiento suave.');
+assert.match(globalCssSource, /prefers-reduced-motion: reduce/,
+  'Los estados de ejemplo deben respetar movimiento reducido.');
 assert.match(firstGuideSource, /Mirá tu progreso por tema/,
   'El cuarto paso debe enseñar el seguimiento.');
 assert.match(progressPanelSource, /data-onboarding-topic-detail/,

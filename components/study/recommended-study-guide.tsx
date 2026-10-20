@@ -36,8 +36,8 @@ const steps = {
   },
   errors: {
     label: 'Progreso',
-    title: 'Mirá tu progreso por tema',
-    description: 'Después de practicar, descubrí qué temas dominás y cuáles conviene reforzar.',
+    title: 'Ahora sabés dónde mejorar',
+    description: 'Practicá con tus apuntes y descubrí qué temas dominás y cuáles necesitan repaso.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
@@ -357,7 +357,7 @@ export function RecommendedStudyGuide({
 
         {step === 'errors' && (
           <p className="text-muted-foreground mt-2 text-[11px] leading-4">
-            Mirá la lista de temas: los colores son un ejemplo, no representan resultados reales.
+            Los estados que ves son ilustrativos: tus resultados aparecerán después de practicar.
           </p>
         )}
 
