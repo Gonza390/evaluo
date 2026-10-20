@@ -1,4 +1,5 @@
 import { isRecognitionPresentedAsHigherOrder } from '@/lib/student-materials/pedagogical-integrity';
+import { tagGlossaryChapters } from '@/lib/student-materials/topic-study-resources';
 import type {
   CanonicalPedagogicalModel,
   StudyDocumentAnalysis,
@@ -199,7 +200,8 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   const rejectedQuestions = input.artifacts.integrity?.rejectedQuestions ?? 0;
   const rejectedFlashcards = input.artifacts.integrity?.rejectedFlashcards ?? 0;
   const formulaicHigherOrderQuestions = input.artifacts.questions.filter(isRecognitionPresentedAsHigherOrder).length;
-  const conceptsWithoutUniqueChapter = input.glossary.filter(item => !item.chapterTitle).length;
+  const conceptsWithoutUniqueChapter = tagGlossaryChapters(input.glossary, input.summary.sections)
+    .filter(item => !item.chapterTitle).length;
   const semanticAudit = { rejectedQuestions, rejectedFlashcards, formulaicHigherOrderQuestions, conceptsWithoutUniqueChapter };
 
   let pedagogicalDepthScore = 0;
