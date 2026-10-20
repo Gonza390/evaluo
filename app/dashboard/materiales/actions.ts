@@ -371,7 +371,7 @@ export async function getStudentMaterialProcessingStateAction(
     const user = await requireAuthenticatedUser();
     const supabase = await createClientServer();
 
-    let { data, error } = await supabase
+    const { data: initialData, error } = await supabase
       .from('student_materials')
       .select(
         'id, user_id, title, file_name, processing_status, processing_stage, processing_progress, processing_message, processing_error'
@@ -384,10 +384,11 @@ export async function getStudentMaterialProcessingStateAction(
       throw error;
     }
 
-    if (!data) {
+    if (!initialData) {
       return null;
     }
 
+    let data = initialData;
     if (data.processing_status === 'processing') {
       const admin = createAdminClient();
       const recovered = await recoverStaleStudentMaterialJobs(admin, materialId);
