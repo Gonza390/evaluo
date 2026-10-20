@@ -33,7 +33,10 @@ export function findConceptTopic(
   concept: Pick<StudyGlossaryItem, 'term' | 'context' | 'englishTerm'>,
   sections: StudySummarySection[]
 ) {
-  const explicit = exactTopics(concept.context, sections);
+  const explicit = [
+    ...exactTopics('chapterTitle' in concept ? String(concept.chapterTitle ?? '') : '', sections),
+    ...exactTopics(concept.context.split(' · Ver en PDF')[0] ?? '', sections),
+  ].filter((value, index, all) => all.indexOf(value) === index);
   // Un título repetido no es una identidad de tema válida.
   if (explicit.length > 1) return -1;
   const mentions = sections.flatMap((section, index) =>
@@ -48,6 +51,20 @@ export function findConceptTopic(
   return mentions.length === 1 ? mentions[0] : -1;
 }
 
+/** Agrega pertenencia verificable sin repartir conceptos arbitrariamente. */
+export function tagGlossaryChapters(
+  glossary: StudyGlossaryItem[],
+  sections: StudySummarySection[]
+): StudyGlossaryItem[] {
+  return glossary.map(concept => {
+    const index = findConceptTopic(concept, sections);
+    return {
+      ...concept,
+      chapterTitle: index >= 0 ? sections[index]?.title ?? null : null,
+    };
+  });
+}
+
 /** No repartir conceptos por posición ni usar similitud vaga como asociación académica. */
 export function getTopicStudyResources(
   sections: StudySummarySection[],
@@ -58,7 +75,21 @@ export function getTopicStudyResources(
   if (!Number.isInteger(sectionIndex) || !sections[sectionIndex])
     return { concepts: [], flashcards: [] };
   const conceptTopics = glossary.map((concept) => findConceptTopic(concept, sections));
-  const concepts = glossary.filter((_, index) => conceptTopics[index] === sectionIndex);
+  const body = normalize(sections[sectionIndex]?.body ?? '');
+  const concepts = glossary
+    .filter((_, index) => conceptTopics[index] === sectionIndex)
+    .sort((left, right) => {
+      const score = (concept: StudyGlossaryItem) => {
+        const term = normalize(concept.term);
+        const first = body.indexOf(term);
+        // Priorizar conceptos que el alumno encuentra en el comienzo del tema,
+        // no el orden alfabético ni un 'alta' genérico.
+        const early = first >= 0 && first <= 600 ? 5 : 0;
+        const heading = normalize(sections[sectionIndex]?.title ?? '').includes(term) ? 5 : 0;
+        return early + heading + (concept.importance === 'alta' ? 1 : 0);
+      };
+      return score(right) - score(left) || left.term.localeCompare(right.term, 'es');
+    });
   const seenCards = new Set<string>();
   const cards = flashcards.filter((card) => {
     const subjectTopics = new Set<number>();
