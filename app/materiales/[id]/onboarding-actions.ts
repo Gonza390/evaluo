@@ -17,15 +17,18 @@ export async function completeFirstPdfOnboardingAction(): Promise<{
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return { success: false, message: 'Iniciá sesión nuevamente.' };
 
-    if (user.app_metadata?.[FIRST_PDF_ONBOARDING_COMPLETED_KEY]) {
+    // Read current server-owned metadata rather than copying potentially stale
+    // metadata from the session into an administrative auth update.
+    const admin = createAdminClient();
+    const { data: current, error: lookupError } = await admin.auth.admin.getUserById(user.id);
+    if (lookupError || !current.user) throw lookupError ?? new Error('missing_auth_user');
+    if (current.user.app_metadata?.[FIRST_PDF_ONBOARDING_COMPLETED_KEY]) {
       return { success: true };
     }
 
-    // Only the server-side service-role client can modify auth.app_metadata.
-    const admin = createAdminClient();
     const { error } = await admin.auth.admin.updateUserById(user.id, {
       app_metadata: {
-        ...(user.app_metadata ?? {}),
+        ...(current.user.app_metadata ?? {}),
         [FIRST_PDF_ONBOARDING_COMPLETED_KEY]: new Date().toISOString(),
       },
     });

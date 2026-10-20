@@ -38,8 +38,12 @@ assert.match(action, /supabase\.auth\.getUser\(\)/);
 assert.match(action, /admin\.auth\.admin\.updateUserById\(user\.id/);
 assert.match(action, /app_metadata:/);
 assert.match(action, /FIRST_PDF_ONBOARDING_COMPLETED_KEY/);
-assert.match(action, /\.\.\.\(user\.app_metadata \?\? \{\}\)/,
-  'Preserve existing auth application metadata.');
+assert.match(action, /admin\.auth\.admin\.getUserById\(user\.id\)/,
+  'Read current server-owned metadata before updating a completion flag.');
+assert.match(action, /\.\.\.\(current\.user\.app_metadata \?\? \{\}\)/,
+  'Preserve the latest auth application metadata rather than stale session data.');
+assert.match(action, /current\.user\.app_metadata\?\.\[FIRST_PDF_ONBOARDING_COMPLETED_KEY\]/,
+  'Repeated completion calls must be idempotent.');
 assert.match(page, /user\?\.app_metadata\?\.\[FIRST_PDF_ONBOARDING_COMPLETED_KEY\]/);
 assert.match(page, /initialRecommendedStudy=\{shouldShowFirstPdfGuide\}/);
 assert.match(page, /initialProgressOpen=\{isOwner && query\.tab === 'progreso' && !shouldShowFirstPdfGuide\}/);
