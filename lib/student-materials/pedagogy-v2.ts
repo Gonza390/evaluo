@@ -98,7 +98,7 @@ function buildCanonicalFlashcards(
     ['classification', 2],
     ['process', 2],
     ['formula', 1],
-    ['confusion', 1],
+    // Las confusiones sin explicación respaldada no constituyen tarjetas válidas.
   ];
 
   const selected = new Map<string, FlashcardCandidate>();
@@ -121,28 +121,13 @@ function buildCanonicalFlashcards(
     .map((candidate) => candidate.card);
 }
 
-function buildConfusionFlashcardFront(detail: string, sectionTitle: string | null) {
-  const normalizedDetail = clean(detail).replace(/[.!?]+$/u, '');
-  const contrast = normalizedDetail.match(/^Confundir\s+(.+?)\s+con\s+(.+)$/iu);
-
-  if (contrast?.[1] && contrast[2]) {
-    return `¿Cómo distinguís ${truncate(contrast[1], 90)} de ${truncate(contrast[2], 90)} según el material?`;
-  }
-
-  if (sectionTitle) {
-    return `¿Qué confusión conceptual conviene evitar en “${truncate(sectionTitle, 90)}”?`;
-  }
-
-  return `¿Qué problema conceptual señala el material cuando plantea “${truncate(normalizedDetail, 110)}”?`;
-}
-
 function buildCandidates(
   model: CanonicalPedagogicalModel,
   chunks: PedagogicalChunk[]
 ): FlashcardCandidate[] {
   const result: FlashcardCandidate[] = [];
 
-  model.concepts.forEach((concept, index) => {
+  model.concepts.forEach((concept) => {
     const term = clean(concept.term);
     const detail = clean(concept.detail);
     if (term.length < 3 || detail.length < 12) return;
@@ -162,12 +147,9 @@ function buildCandidates(
       kind: 'concept',
       page: reference.pageStart,
       card: {
-        front:
-          index % 3 === 0
-            ? `¿Qué significa “${term}” según el material?`
-            : `¿Cómo explicarías “${term}” sin mirar el PDF?`,
+        front: `¿Qué significa “${term}” según el material?`,
         back: detail,
-        level: index % 3 === 0 ? 'recordar' : 'comprender',
+        level: 'recordar',
         reference,
       },
     });
@@ -208,7 +190,8 @@ function buildCandidates(
   model.classifications.forEach((classification) => {
     const title = clean(classification.title);
     const items = classification.items.map(clean).filter(Boolean);
-    if (!title || items.length < 2) return;
+    // Tarjetas de listas extensas terminan siendo copias sin práctica útil.
+    if (!title || items.length < 2 || items.length > 6) return;
 
     const reference = resolveReference(
       model,
@@ -227,7 +210,7 @@ function buildCandidates(
       card: {
         front: `¿Qué elementos incluye “${title}” según el PDF?`,
         back: items.join(' · '),
-        level: 'comprender',
+        level: 'recordar',
         reference,
       },
     });
@@ -236,7 +219,7 @@ function buildCandidates(
   model.processes.forEach((process) => {
     const title = clean(process.title);
     const steps = process.steps.map(clean).filter(Boolean);
-    if (!title || steps.length < 2) return;
+    if (!title || steps.length < 2 || steps.length > 6) return;
 
     const reference = resolveReference(
       model,
@@ -255,7 +238,7 @@ function buildCandidates(
       card: {
         front: `Reconstruí el proceso “${title}” en el orden explicado por el material.`,
         back: steps.join(' → '),
-        level: 'comprender',
+        level: 'recordar',
         reference,
       },
     });
@@ -283,38 +266,12 @@ function buildCandidates(
       card: {
         front: `¿Qué representa “${expression}” en este material?`,
         back: detail,
-        level: 'comprender',
+        level: 'recordar',
         reference,
       },
     });
   });
 
-  model.confusions.forEach((confusion, index) => {
-    const detail = clean(confusion);
-    if (detail.length < 18) return;
-
-    const reference = resolveReference(
-      model,
-      'confusion',
-      detail,
-      undefined,
-      detail,
-      detail,
-      chunks
-    );
-
-    result.push({
-      id: `confusion:${index}:${normalize(detail).slice(0, 80)}`,
-      kind: 'confusion',
-      page: reference.pageStart,
-      card: {
-        front: buildConfusionFlashcardFront(detail, reference.sectionTitle),
-        back: detail,
-        level: 'comprender',
-        reference,
-      },
-    });
-  });
 
   return dedupeCandidates(result);
 }
