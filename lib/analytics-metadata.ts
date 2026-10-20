@@ -155,6 +155,15 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'correct_answers',
     'total_questions',
   ],
+  seo_unlam_practice_started: [
+    'attribution', 'anonymous_id', 'page_type', 'location', 'subject',
+  ],
+  seo_unlam_practice_answered: [
+    'attribution', 'anonymous_id', 'page_type', 'location', 'subject', 'question_number', 'is_correct',
+  ],
+  seo_unlam_practice_completed: [
+    'attribution', 'anonymous_id', 'page_type', 'location', 'subject', 'correct_answers', 'total_questions',
+  ],
   pdf_picker_opened: ['attribution', 'anonymous_id', 'page_type', 'location', 'source'],
   pdf_selected: [
     'attribution',
