@@ -79,7 +79,7 @@ const FAQ = [
 export const metadata: Metadata = {
   title: 'Parciales UBA XXI: exámenes anteriores y práctica',
   description:
-    'Consultá parciales anteriores de IPC e ICSE (2025 y 2026), practicá preguntas gratis con corrección y prepará UBA XXI con tus propios apuntes PDF.'
+    'Consultá parciales anteriores de IPC e ICSE (2025 y 2026), practicá preguntas gratis con corrección y prepará UBA XXI con tus propios apuntes PDF.',
   alternates: { canonical: toAbsoluteUrl(PATH) },
   robots: { index: true, follow: true },
   openGraph: {
