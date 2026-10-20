@@ -296,4 +296,9 @@ assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);
 const cachedQualitySource = readFileSync('lib/data/student-material-pedagogical-cache.ts', 'utf8');
 assert.match(cachedQualitySource, /semantic_reaudit_pending/);
 assert.match(cachedQualitySource, /requiresSemanticReaudit/);
+assert.match(
+  cachedQualitySource,
+  /cachedRow\?\.pedagogical_artifacts_version \?\? 0/,
+  'No conservar como 100/100 el score de un banco v12 anterior al generador corregido.'
+);
 console.log('pedagogical-integrity.smoke: OK');
