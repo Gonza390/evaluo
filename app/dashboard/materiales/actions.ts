@@ -369,11 +369,9 @@ export async function getStudentMaterialProcessingStateAction(
       return null;
     }
     const user = await requireAuthenticatedUser();
-    const admin = createAdminClient();
-    await recoverStaleStudentMaterialJobs(admin, materialId);
     const supabase = await createClientServer();
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('student_materials')
       .select(
         'id, user_id, title, file_name, processing_status, processing_stage, processing_progress, processing_message, processing_error'
@@ -388,6 +386,23 @@ export async function getStudentMaterialProcessingStateAction(
 
     if (!data) {
       return null;
+    }
+
+    if (data.processing_status === 'processing') {
+      const admin = createAdminClient();
+      const recovered = await recoverStaleStudentMaterialJobs(admin, materialId);
+      if (recovered.includes(materialId)) {
+        const refreshed = await supabase
+          .from('student_materials')
+          .select(
+            'id, user_id, title, file_name, processing_status, processing_stage, processing_progress, processing_message, processing_error'
+          )
+          .eq('id', materialId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (refreshed.error) throw refreshed.error;
+        if (refreshed.data) data = refreshed.data;
+      }
     }
 
     return {
