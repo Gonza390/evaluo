@@ -11,14 +11,14 @@ const modifiedAt = '2026-10-20';
 export const metadata: Metadata = {
   title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar',
   description:
-    'Curso de Ingreso UNLaM 2027: fechas oficiales, materias por carrera, cómo estudiar el manual y práctica gratuita con corrección antes de rendir.',
+    'Curso de Ingreso UNLaM 2027: modelos de examen anteriores, materias por carrera, ejercicios de práctica y cómo estudiar el manual con Evaluo.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'article',
     title: 'Curso de Ingreso UNLaM 2027: materias y cómo estudiar | Evaluo',
     description:
-      'Fechas del Curso de Ingreso UNLaM 2027, materias según la carrera y ejercicios gratuitos para practicar con tus apuntes PDF.',
+      'Modelos de examen de ingreso UNLaM de años anteriores, materias según la carrera y ejercicios originales para practicar con tus apuntes PDF.',
     url: toAbsoluteUrl(path),
     images: [
       {
