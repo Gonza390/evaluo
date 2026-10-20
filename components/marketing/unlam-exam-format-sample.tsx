@@ -58,7 +58,7 @@ export function UnlamExamFormatSample() {
   }
 
   function compare() {
-    if (!justification.trim() || !report.trim()) return;
+    if (selected === null || !justification.trim() || !report.trim()) return;
     trackMarketingEvent('seo_unlam_practice_completed', {
       location: 'seo_unlam_exam_format_sample',
       subject: 'seminario_modelo',
@@ -182,7 +182,7 @@ export function UnlamExamFormatSample() {
       </p>
       <button
         type="button"
-        disabled={!justification.trim() || !report.trim() || showGuide}
+        disabled={selected === null || !justification.trim() || !report.trim() || showGuide}
         onClick={compare}
         className="mt-4 inline-flex min-h-12 items-center justify-center rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
