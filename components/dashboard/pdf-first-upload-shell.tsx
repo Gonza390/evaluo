@@ -103,6 +103,7 @@ export function PdfFirstUploadShell({
     useState<'idle' | 'loading' | 'loaded' | 'failed'>('idle');
   const [academicChoicesError, setAcademicChoicesError] = useState('');
   const academicFetchInFlightRef = useRef(false);
+  const academicFetchVersionRef = useRef(0);
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const resumeHandledRef = useRef(false);
   const readyTrackedRef = useRef(false);
@@ -134,10 +135,12 @@ export function PdfFirstUploadShell({
   useEffect(() => {
     if (!showReadyContext || academicChoicesStatus !== 'idle' || academicFetchInFlightRef.current) return;
     academicFetchInFlightRef.current = true;
+    const requestVersion = ++academicFetchVersionRef.current;
     setAcademicChoicesStatus('loading');
 
     void loadDashboardAcademicOptionsAction()
       .then((result) => {
+        if (requestVersion !== academicFetchVersionRef.current) return;
         if (!result.success) {
           setAcademicChoicesError(result.message);
           setAcademicChoicesStatus('failed');
@@ -196,11 +199,14 @@ export function PdfFirstUploadShell({
         setAcademicChoicesStatus('loaded');
       })
       .catch(() => {
+        if (requestVersion !== academicFetchVersionRef.current) return;
         setAcademicChoicesError('No pudimos cargar universidades y carreras. Intentá nuevamente.');
         setAcademicChoicesStatus('failed');
       })
       .finally(() => {
-        academicFetchInFlightRef.current = false;
+        if (requestVersion === academicFetchVersionRef.current) {
+          academicFetchInFlightRef.current = false;
+        }
       });
   }, [showReadyContext, academicChoicesStatus, initialUniversidadId, initialCarreraId]);
 
@@ -313,6 +319,8 @@ export function PdfFirstUploadShell({
     setSavedContextLabel('');
     setUniversidades([]);
     setCarreras([]);
+    academicFetchVersionRef.current += 1;
+    academicFetchInFlightRef.current = false;
     setAcademicChoicesStatus('idle');
     setAcademicChoicesError('');
     setShowReadyContext(false);
