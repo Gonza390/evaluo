@@ -74,6 +74,19 @@ assert.equal(
   unsafeModelAnswerReason(legacyComparison, sections),
   'comparison_copies_source_without_contrast'
 );
+const sectionHeadingOnly = open({
+  id: 'admin-heading-only',
+  kind: 'section',
+  topic: sections[1]!.title,
+  chapterTitle: sections[1]!.title,
+  prompt: 'Explicá la aplicación práctica y resolución organizacional.',
+  answer: '3.1 Análisis de la situación problemática en empresas de alimentos y catering',
+});
+assert.equal(
+  unsafeModelAnswerReason(sectionHeadingOnly, sections),
+  'section_answer_is_heading_not_explanation',
+  'Un título de subsección nunca debe pasar como respuesta modelo.'
+);
 const foreignSection = open({
   id: 'foreign',
   type: 'open',
@@ -265,6 +278,18 @@ assert.doesNotMatch(generator, /model\.confusions\.forEach/, 'No generar tarjeta
 assert.match(generator, /items\.length > 6/, 'Evitar listas de memorización excesivamente largas.');
 assert.match(generator, /steps\.length > 6/, 'Evitar procesos de más de seis pasos en una tarjeta.');
 assert.ok(fallbackGenerator.includes("return value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');"), 'Restaurar el escape seguro de los caracteres regex.');
+const processingService = readFileSync('lib/student-materials/processing-service.ts', 'utf8');
+assert.match(
+  processingService,
+  /import \{ buildPedagogicalArtifacts \} from '@\/lib\/student-materials\/pedagogy-v2'/,
+  'El procesamiento inicial debe ejecutar los controles de calidad de v12 antes de persistir.'
+);
+const processingPage = readFileSync('app/materiales/[id]/page.tsx', 'utf8');
+assert.ok(
+  processingPage.indexOf('if (user?.id === material.user_id') >= 0 &&
+  processingPage.indexOf('if (user?.id === material.user_id') < processingPage.indexOf('recoverStaleStudentMaterialJobs(admin, materialId)'),
+  'La recuperación de un material atascado debe exigir que el solicitante sea su propietario.'
+);
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
 assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);

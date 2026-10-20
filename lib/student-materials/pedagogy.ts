@@ -1505,7 +1505,12 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
   const lines = section.body.split(/\n+/).map(cleanStudyUnit).filter(Boolean);
   const opening = lines.findIndex(line =>
     !/^(?:ver en pdf|ideas clave|contenido complementario)/iu.test(line) &&
-    line.length >= 65 && !/^#{1,6}\s/u.test(line)
+    line.length >= 65 &&
+    !/^#{1,6}\s/u.test(line) &&
+    // “3.1 Análisis de la situación…” es un título, no una respuesta.
+    !/^\d+(?:\.\d+)+\s/u.test(line) &&
+    line.trim().split(/\s+/u).length >= 12 &&
+    /[.!?]/u.test(line)
   );
   if (opening < 0) return null;
   const anchor = lines.slice(0, opening).find(line =>

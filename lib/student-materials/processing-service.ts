@@ -45,10 +45,8 @@ import type {
 } from '@/lib/student-materials/types';
 import type { Json } from '@/types/supabase';
 import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
-import {
-  buildPedagogicalArtifacts,
-  PEDAGOGICAL_ARTIFACTS_VERSION,
-} from '@/lib/student-materials/pedagogy';
+import { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy-v2';
+import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
 import {
   buildStudentMaterialPedagogicalQualityReport,
   PEDAGOGICAL_QUALITY_REPORT_VERSION,

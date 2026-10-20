@@ -214,9 +214,9 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
 
   try {
     const admin = createAdminClient();
-    await recoverStaleStudentMaterialJobs(admin, materialId);
-
-    const { data: material, error } = await supabase
+    // Primero aplicar RLS: un visitante no debe modificar el estado de
+    // un PDF ajeno por el simple hecho de conocer su identificador.
+    const { data: initialMaterial, error } = await supabase
       .from('student_materials')
       .select(
         'id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path, page_count, visibility, created_at, processing_status, processing_stage, processing_progress, processing_message, processing_error'
@@ -225,7 +225,23 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
       .maybeSingle();
 
     if (error) throw error;
-    if (!material) notFound();
+    if (!initialMaterial) notFound();
+
+    let material = initialMaterial;
+    if (user?.id === material.user_id && material.processing_status === 'processing') {
+      const recovered = await recoverStaleStudentMaterialJobs(admin, materialId);
+      if (recovered.includes(materialId)) {
+        const refreshed = await supabase
+          .from('student_materials')
+          .select(
+            'id, user_id, universidad_id, carrera_id, materia_id, title, file_name, file_path, page_count, visibility, created_at, processing_status, processing_stage, processing_progress, processing_message, processing_error'
+          )
+          .eq('id', materialId)
+          .maybeSingle();
+        if (refreshed.error) throw refreshed.error;
+        if (refreshed.data) material = refreshed.data;
+      }
+    }
 
     const canonicalSegment = buildSeoEntitySlug(material.title, material.id);
     if (routeValue.includes('--') && routeValue !== canonicalSegment) {

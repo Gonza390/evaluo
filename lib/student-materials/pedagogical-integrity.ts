@@ -66,6 +66,13 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
   const evidence = section ? section.body : reference;
   if (question.kind === 'section') {
     if (!section) return 'section_without_chapter';
+    const answerWithoutNumber = question.answer
+      .replace(/^\s*(?:#{1,6}\s*)?\d+(?:\.\d+)*[.)]?\s+/u, '')
+      .trim();
+    if (
+      answerWithoutNumber.split(/\s+/u).length < 12 ||
+      (answerWithoutNumber.length < 140 && !/[.!?]/u.test(answerWithoutNumber))
+    ) return 'section_answer_is_heading_not_explanation';
     const named = [...question.answer.matchAll(/Un concepto clave es\s+[“"]([^”"]+)[”"]/giu)];
     if (named.some(match => !containsTerm(section.body, match[1] ?? ''))) {
       return 'section_answer_contains_foreign_concepts';
