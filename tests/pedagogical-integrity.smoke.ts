@@ -50,6 +50,29 @@ const wrongComparison = open({
   answer: '“nivel 1” se caracteriza en el material por: Observaciones empíricas particulares. En cambio, “nivel 3” se caracteriza por: Es un acto de habla con entonación propia.',
 });
 assert.equal(unsafeModelAnswerReason(wrongComparison, sections), 'comparison_not_supported_by_source');
+// Segunda auditoría real: Administración, módulos 3 y 4 (v5).
+const legacyConfusion = open({
+  id: 'admin-confusion',
+  kind: 'confusion',
+  prompt: 'Aclará con tus palabras esta confusión: “Confundir vender mas con crecer saludablemente, ignorando la capacidad estructural y de respuesta.”',
+  answer: 'Confundir vender mas con crecer saludablemente, ignorando la capacidad estructural y de respuesta.',
+});
+assert.equal(
+  unsafeModelAnswerReason(legacyConfusion, sections),
+  'confusion_answer_repeats_misconception'
+);
+const excerptCopied = '●Abrirse a la posibilidad de explorar nuevos mercados o lanzar nuevos productos o servicios para captar oportunidades de crecimiento.';
+const legacyComparison = open({
+  id: 'admin-comparison',
+  kind: 'relationship',
+  prompt: 'Compará las estrategias de crecimiento e integración según el material.',
+  answer: excerptCopied,
+  reference: { ...ref, excerpt: excerptCopied },
+});
+assert.equal(
+  unsafeModelAnswerReason(legacyComparison, sections),
+  'comparison_copies_source_without_contrast'
+);
 const foreignSection = open({
   id: 'foreign',
   type: 'open',
