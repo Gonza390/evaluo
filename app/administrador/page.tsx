@@ -15,6 +15,8 @@ import { obtenerReferidosAdministrador } from './referrals-actions';
 import { ReferralsPanel } from './referrals-panel';
 import { obtenerAdquisicionAdministrador, type AcquisitionSourceKey } from './acquisition-actions';
 import { AcquisitionPanel } from './acquisition-panel';
+import { obtenerEmbudoUnlamAdministrador } from './unlam-funnel-actions';
+import { UnlamFunnelPanel } from './unlam-funnel-panel';
 import { obtenerProductoDiarioAdministrador } from './product-actions';
 import { ProductPanel } from './product-panel';
 import { obtenerMailsAdministrador, type MailFilterType } from './mail-actions';
@@ -156,6 +158,7 @@ export default async function AdministradorPage({
   const [
     productResult,
     acquisitionResult,
+    unlamFunnelResult,
     referralResult,
     academicUsageResult,
     usersResult,
@@ -173,6 +176,7 @@ export default async function AdministradorPage({
     needsAcquisition
       ? obtenerAdquisicionAdministrador(activePeriod, selectedAcquisitionSource)
       : Promise.resolve(null),
+    needsAcquisition ? obtenerEmbudoUnlamAdministrador(activePeriod) : Promise.resolve(null),
     needsReferrals ? obtenerReferidosAdministrador() : Promise.resolve(null),
     needsBiblioteca ? obtenerUsoAcademicoAdministrador() : Promise.resolve(null),
     needsUsers ? obtenerUsuariosAdministradorPaginadoCacheado(usersPage, 25) : Promise.resolve(null),
@@ -199,11 +203,18 @@ export default async function AdministradorPage({
   } else if (activePanel === 'adquisicion') {
     panelContent =
       acquisitionResult?.success && acquisitionResult.stats ? (
-        <AcquisitionPanel
-          stats={acquisitionResult.stats}
-          activePeriod={activePeriod}
-          selectedSource={selectedAcquisitionSource}
-        />
+        <>
+          <AcquisitionPanel
+            stats={acquisitionResult.stats}
+            activePeriod={activePeriod}
+            selectedSource={selectedAcquisitionSource}
+          />
+          {unlamFunnelResult?.success && unlamFunnelResult.stats ? (
+            <UnlamFunnelPanel stats={unlamFunnelResult.stats} />
+          ) : (
+            <ErrorPanel message={unlamFunnelResult?.message ?? 'No pudimos cargar el embudo UNLaM.'} />
+          )}
+        </>
       ) : (
         <ErrorPanel message={acquisitionResult?.message ?? 'No pudimos cargar Adquisición.'} />
       );
