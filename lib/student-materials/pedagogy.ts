@@ -1326,12 +1326,14 @@ function buildCanonicalProcessQuestions(
       return {
         id: `model-process-${index + 1}`,
         type: 'multiple_choice',
-        level: 'aplicar',
+        // Identificar un proceso a partir de sus pasos comprueba
+        // interpretación, no transferencia independiente a un caso nuevo.
+        level: 'comprender',
         kind: 'process',
         topic: process.title,
-        prompt: `En una situación se observan estas acciones: ${scenarioSteps
+        prompt: `En el material se organizan estos pasos: ${scenarioSteps
           .map((step) => `“${truncateAtWord(step, 105)}”`)
-          .join(' → ')}. ¿Qué proceso del PDF describe mejor el caso?`,
+          .join(' → ')}. ¿Qué proceso explican en conjunto?`,
         options,
         answer: process.title,
         explanation: `La secuencia de acciones identifica “${process.title}”. El material lo organiza en estos pasos: ${truncateAtWord(process.steps.join(' → '), 260)}.`,
