@@ -18,19 +18,19 @@ const steps = {
   summary: {
     label: 'Entender',
     title: 'Empezá por el resumen',
-    description: 'Tus apuntes se organizan por temas para que sepas qué estudiar primero.',
+    description: 'Explorá los capítulos creados a partir de tus apuntes.',
     icon: BookOpenText,
   },
   practice: {
     label: 'Practicar',
     title: 'Practicá con tu PDF',
-    description: 'Respondé preguntas basadas en tus apuntes y comprobá qué entendiste.',
+    description: 'Elegí una respuesta, comprobala y guardá tu primera práctica.',
     icon: BrainCircuit,
   },
   errors: {
     label: 'Mejorar',
     title: 'Revisá tu progreso',
-    description: 'Detectá qué temas reforzar para estudiar mejor antes del examen.',
+    description: 'Usá tu primera respuesta para decidir qué repasar después.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
@@ -131,12 +131,20 @@ function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
 export function RecommendedStudyGuide({
   step,
   transitioning = false,
+  canAdvance = true,
+  hasQuestion = true,
+  questionResult = null,
+  demoMode = false,
   onNext,
   onBack,
   onExit,
 }: {
   step: RecommendedStudyStep;
   transitioning?: boolean;
+  canAdvance?: boolean;
+  hasQuestion?: boolean;
+  questionResult?: { correct: boolean; topic: string } | null;
+  demoMode?: boolean;
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
@@ -147,6 +155,13 @@ export function RecommendedStudyGuide({
   const current = steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
+  const description = step === 'practice' && !hasQuestion
+    ? 'Este PDF todavía no tiene preguntas autocorregibles. Podés seguir explorando.'
+    : step === 'errors' && questionResult
+      ? questionResult.correct
+        ? `¡Bien! Respondiste correctamente sobre ${questionResult.topic}. Seguí practicando para confirmar lo aprendido.`
+        : `Conviene repasar ${questionResult.topic}. Tu respuesta quedó registrada para seguir estudiando.`
+      : current.description;
 
   useEffect(() => {
     setMounted(true);
@@ -213,7 +228,8 @@ export function RecommendedStudyGuide({
 
   useEffect(() => {
     if (!mounted) return;
-    cardRef.current?.focus({ preventScroll: true });
+    // Durante la práctica dejamos navegar con teclado por las respuestas reales.
+    if (step !== 'practice') cardRef.current?.focus({ preventScroll: true });
   }, [mounted, step]);
 
   useEffect(() => {
@@ -224,7 +240,7 @@ export function RecommendedStudyGuide({
         onExit();
         return;
       }
-      if (event.key !== 'Tab' || !cardRef.current) return;
+      if (step === 'practice' || event.key !== 'Tab' || !cardRef.current) return;
       const buttons = Array.from(cardRef.current.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
       if (buttons.length === 0) return;
       const first = buttons[0];
@@ -242,7 +258,7 @@ export function RecommendedStudyGuide({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [mounted, onExit]);
+  }, [mounted, onExit, step]);
 
   if (!mounted) return null;
 
@@ -311,7 +327,7 @@ export function RecommendedStudyGuide({
       <section
         ref={cardRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal={step !== 'practice'}
         aria-label="Guía rápida del primer PDF"
         tabIndex={-1}
         data-first-pdf-guide
@@ -335,7 +351,7 @@ export function RecommendedStudyGuide({
               {current.title}
             </h2>
             <p className="text-muted-foreground mt-1.5 text-[13px] leading-5">
-              {current.description}
+              {description}
             </p>
           </div>
           <button
@@ -349,6 +365,14 @@ export function RecommendedStudyGuide({
           </button>
         </div>
 
+        {step === 'practice' && hasQuestion && !questionResult ? (
+          <p className="text-muted-foreground mt-3 text-[11px] leading-4">
+            Terminá la pregunta para desbloquear Progreso.
+          </p>
+        ) : null}
+        {step === 'errors' && questionResult && demoMode ? (
+          <p className="text-muted-foreground mt-2 text-[11px]">Resultado simulado de la vista previa.</p>
+        ) : null}
         <div className="border-border/70 mt-3 flex items-center justify-between gap-2 border-t pt-3">
           <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 3'}>
             {order.map((item, index) => (
@@ -371,8 +395,10 @@ export function RecommendedStudyGuide({
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
-            <Button type="button" size="sm" onClick={onNext} disabled={transitioning} className="min-h-9 gap-1.5 rounded-full px-4">
-              {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
+            <Button type="button" size="sm" onClick={onNext} disabled={transitioning || !canAdvance} className="min-h-9 gap-1.5 rounded-full px-4">
+              {step === 'summary' ? 'Probar una pregunta' :
+                step === 'practice' ? 'Ver mi progreso' :
+                'Seguir estudiando'} <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </div>

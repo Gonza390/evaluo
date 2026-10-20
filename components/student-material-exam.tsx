@@ -39,10 +39,17 @@ import {
   type PracticeDraft,
 } from '@/lib/student-materials/practice-session';
 
+export type GuidedQuestionResult = {
+  correct: boolean;
+  topic: string;
+};
+
 type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
+  guidedFirstQuestion?: boolean;
+  onGuidedResult?: (result: GuidedQuestionResult) => void;
   onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
   sections?: StudySummarySection[];
   topicSectionIndex?: number;
@@ -59,6 +66,8 @@ export function StudentMaterialExam({
   artifacts,
   materialId,
   onComplete,
+  guidedFirstQuestion = false,
+  onGuidedResult,
   onReturnToTopic,
   sections = [],
   simulation,
@@ -68,16 +77,18 @@ export function StudentMaterialExam({
     topicSectionIndex === undefined ? undefined : sections[topicSectionIndex]?.title;
   const draftStorageKey =
     practiceDraftKey(materialId) +
-    (topicSectionIndex === undefined ? '' : `:topic:${topicSectionIndex}`);
+    (guidedFirstQuestion ? ':first-question-tour' :
+      topicSectionIndex === undefined ? '' : `:topic:${topicSectionIndex}`);
   const eligibleQuestions = useMemo(
     () =>
       getDistinctEligibleExamQuestions(artifacts.questions).filter(
         (question) =>
-          topicSectionIndex === undefined ||
+          (!guidedFirstQuestion || question.type === 'multiple_choice') &&
+          (topicSectionIndex === undefined ||
           (question.type === 'multiple_choice' &&
-            findSummarySectionForQuestion(question, sections) === topicSectionIndex)
+            findSummarySectionForQuestion(question, sections) === topicSectionIndex))
       ),
-    [artifacts.questions, sections, topicSectionIndex]
+    [artifacts.questions, sections, topicSectionIndex, guidedFirstQuestion]
   );
   const eligibleIds = useMemo(
     () => new Set(eligibleQuestions.map((question) => question.id)),
@@ -103,6 +114,8 @@ export function StudentMaterialExam({
   const [selectedSize, setSelectedSize] = useState(defaultSize);
   const topicPracticeCount = topicPracticeQuestionCount(eligibleQuestions.length);
   const topicAutoStartRequested = useRef(false);
+  const guidedAutoStartRequested = useRef(false);
+  const guidedRootRef = useRef<HTMLDivElement | null>(null);
   const [started, setStarted] = useState(false);
   // Congelar la tanda: los nuevos resultados no deben cambiar preguntas en pleno intento.
   const [questions, setQuestions] = useState<StudyQuestion[]>([]);
@@ -288,8 +301,10 @@ export function StudentMaterialExam({
     const nextQuestions = selectTopicPracticeQuestions({
       questions: eligibleQuestions,
       preferredQuestionIds,
-      targetCount: topicSectionIndex === undefined ? selectedSize || defaultSize : topicPracticeCount,
+      targetCount: guidedFirstQuestion ? 1 :
+        topicSectionIndex === undefined ? selectedSize || defaultSize : topicPracticeCount,
       complete:
+        !guidedFirstQuestion &&
         topicSectionIndex === undefined &&
         sizeOptions.find((option) => option.count === (selectedSize || defaultSize))?.mode ===
           'complete',
@@ -339,6 +354,30 @@ export function StudentMaterialExam({
     topicAutoStartRequested.current = true;
     startTopicPractice();
   }, [topicSectionIndex, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
+
+  useEffect(() => {
+    if (!guidedFirstQuestion || !draftLoaded || savedDraft || started || preparing ||
+        guidedAutoStartRequested.current || eligibleQuestions.length === 0) return;
+    // Ambos layouts existen en el DOM: iniciar únicamente en el que puede ver el alumno.
+    if (!guidedRootRef.current?.getClientRects().length) return;
+    guidedAutoStartRequested.current = true;
+    startTopicPractice();
+  }, [guidedFirstQuestion, draftLoaded, savedDraft, started, preparing, eligibleQuestions.length]);
+
+  useEffect(() => {
+    if (!guidedFirstQuestion || !started || !questions[currentIndex]) return;
+    const frame = window.requestAnimationFrame(() => {
+      const target = guidedRootRef.current;
+      const reader = target?.closest<HTMLElement>('[role="region"][aria-label="Contenido de estudio"]');
+      if (!reader || !target) return;
+      const offset = target.getBoundingClientRect().top - reader.getBoundingClientRect().top;
+      reader.scrollTo({
+        top: Math.max(0, reader.scrollTop + offset - 12),
+        behavior: 'instant',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [guidedFirstQuestion, started, questions, currentIndex]);
 
   if (eligibleQuestions.length === 0 || sizeOptions.length === 0) {
     return (
@@ -404,7 +443,7 @@ export function StudentMaterialExam({
 
   if (!started) {
     return (
-      <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
+      <div ref={guidedRootRef} className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
         {topicSectionIndex !== undefined && onReturnToTopic && (
           <button
             type="button"
@@ -712,6 +751,12 @@ export function StudentMaterialExam({
 
     if (simulation) {
       simulation.onAnswer(current, wasCorrect);
+      if (guidedFirstQuestion) {
+        onGuidedResult?.({
+          correct: wasCorrect,
+          topic: current.topic ?? current.reference.sectionTitle ?? 'Este concepto',
+        });
+      }
       advanceExam();
       return;
     }
@@ -786,12 +831,18 @@ export function StudentMaterialExam({
       void finishStudyErrorOnboardingAction(result.onboardingErrorId, 'legacy').catch(() => {});
     }
 
+    if (guidedFirstQuestion) {
+      onGuidedResult?.({
+        correct: wasCorrect,
+        topic: current.topic ?? current.reference.sectionTitle ?? 'Este concepto',
+      });
+    }
     advanceExam();
   };
 
   return (
     <>
-      <div className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
+      <div ref={guidedRootRef} data-onboarding-first-question={guidedFirstQuestion || undefined} className="mx-auto max-w-4xl space-y-4 px-1 py-2 sm:px-2 sm:py-4">
         {topicSectionIndex !== undefined && (
           <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b pb-3">
             <p className="text-muted-foreground text-sm!">{topicTitle}</p>
@@ -1035,7 +1086,7 @@ export function StudentMaterialExam({
               onClick={() => void goNext()}
               className="h-11 rounded-lg px-5"
             >
-              {currentIndex === questions.length - 1 ? 'Ver resultado' : 'Siguiente'}
+              {currentIndex === questions.length - 1 ? (guidedFirstQuestion ? 'Guardar y ver resultado' : 'Ver resultado') : 'Siguiente'}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}

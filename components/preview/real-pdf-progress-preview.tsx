@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import { MaterialStudyWorkspace, type StudyTabId } from '@/components/material-study-workspace';
 import { AppShellProviders } from '@/components/app-shell-providers';
-import { StudentMaterialExam } from '@/components/student-material-exam';
+import { StudentMaterialExam, type GuidedQuestionResult } from '@/components/student-material-exam';
 import type { StudentMaterialSummary, StudyGlossaryItem } from '@/lib/student-material-summary';
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
@@ -164,6 +164,7 @@ export function RealPdfProgressPreview({
   const pdfHref = sampleDocument?.pdfHref ?? '/material-general-prueba.pdf';
   const examples = sampleDocument ? [] : defaultExamples;
   const [version, setVersion] = useState(0);
+  const [tourQuestionResult, setTourQuestionResult] = useState<GuidedQuestionResult | null>(null);
   const [practiceEvidence, setPracticeEvidence] = useState<PdfTopicEvidence[]>([]);
   const [answeredItemKeys, setAnsweredItemKeys] = useState<string[]>([]);
   const [independentAnswers, setIndependentAnswers] = useState<IndependentPracticeAnswer[]>([]);
@@ -413,6 +414,7 @@ export function RealPdfProgressPreview({
                 type="button"
                 onClick={() => {
                   setFirstVisit(true);
+                  setTourQuestionResult(null);
                   setPracticeEvidence([]);
                   setAnsweredItemKeys([]);
                   setIndependentAnswers([]);
@@ -443,6 +445,7 @@ export function RealPdfProgressPreview({
                 type="button"
                 onClick={() => {
                   setVersion((current) => current + 1);
+                  setTourQuestionResult(null);
                   setPracticeEvidence([]);
                   setAnsweredItemKeys([]);
                   setIndependentAnswers([]);
@@ -487,7 +490,7 @@ export function RealPdfProgressPreview({
             canRegenerate={false}
             studySummary={summary}
             studyGlossary={glossary}
-            pedagogicalArtifacts={artifacts}
+            pedagogicalArtifacts={previewArtifacts}
             demo={{
               activeTab: tab,
               onTabChange: (next) => {
@@ -498,6 +501,8 @@ export function RealPdfProgressPreview({
               onViewerChange: setViewerVisible,
               progressOpen,
               pendingStudyErrorCount: data.pending.length,
+              tourQuestionResult,
+              onTourQuestionResult: setTourQuestionResult,
               onProgressChange: setProgressOpen,
               progress: (
                 <PdfProgressPanel
@@ -560,7 +565,7 @@ export function RealPdfProgressPreview({
                   reviewActions={reviewActions}
                 />
               ),
-              practice: (
+              practice: ({ guidedFirstQuestion, onGuidedResult }) => (
                 <StudentMaterialExam
                   key={practiceSectionIndex ?? 'all'}
                   topicSectionIndex={practiceSectionIndex}
@@ -578,6 +583,8 @@ export function RealPdfProgressPreview({
                   artifacts={previewArtifacts}
                   sections={summary.sections}
                   materialId={material.id}
+                  guidedFirstQuestion={guidedFirstQuestion}
+                  onGuidedResult={onGuidedResult}
                   simulation={{
                     context: {
                       evidence: assessmentData.items,
