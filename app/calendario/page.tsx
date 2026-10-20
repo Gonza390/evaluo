@@ -703,7 +703,6 @@ export default function CalendarioPage() {
         selectedDate: selectedDateKey,
         eventType: formState.type,
         postgresCode: error?.code ?? null,
-        postgresConstraint: error?.details ?? null,
       });
       toast({
         description: describeCalendarSaveError(error),
