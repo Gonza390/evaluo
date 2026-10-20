@@ -12,7 +12,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 11;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 12;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -190,6 +190,7 @@ export type StudyQuestion = {
   reference: PedagogicalReference;
 };
 export type PedagogicalArtifacts = {
+  integrity?: { rejectedQuestions: number; rejectedFlashcards: number; rejectedReasons: string[] };
   flashcards: StudyFlashcard[];
   questions: StudyQuestion[];
   miniExamQuestionIds: string[];
@@ -1069,29 +1070,8 @@ function buildExpectedConfusionAnswer(
     );
   }
 
-  const evidence = findCanonicalEvidence(model, confusion);
-  if (evidence) {
-    return truncateAtWord(
-      `Para evitar la confusión, hay que retener el criterio del material: ${evidence.detail}`,
-      480
-    );
-  }
-
-  const sourceAnswer = buildExpectedSectionAnswer(reference.excerpt);
-  if (
-    sourceAnswer.length >= 40 &&
-    normalizeForDedupe(sourceAnswer) !== normalizeForDedupe(confusion)
-  ) {
-    return truncateAtWord(
-      `La evidencia del PDF permite corregir la confusión así: ${sourceAnswer}`,
-      480
-    );
-  }
-
-  return truncateAtWord(
-    `La confusión consiste en “${confusion}”. Para corregirla, la respuesta debe explicitar qué interpretación descarta el material y cuál sostiene en su lugar.`,
-    480
-  );
+  // Si no hay respaldo verificable, omitir en vez de enseñar una definición ajena.
+  return null;
 }
 
 function pageRangesOverlap(
@@ -1132,15 +1112,18 @@ function buildExpectedSectionAnswerFromModel(
   const relatedConcepts = model.concepts
     .filter(
       (concept) =>
-        pageRangesOverlap(concept.pageReferences, reference) ||
-        significantTerms(concept.term).some((term) =>
-          normalizeForDedupe(sectionBody).includes(term)
+        significantTerms(concept.term).length > 0 &&
+        (' ' + normalizeForDedupe(sectionBody) + ' ').includes(
+          ' ' + normalizeForDedupe(concept.term) + ' '
         )
     )
     .slice(0, 2);
 
-  const relatedRelationship = model.relationships.find((relationship) =>
-    pageRangesOverlap(relationship.pageReferences, reference)
+  const relatedRelationship = model.relationships.find(
+    (relationship) =>
+      (' ' + normalizeForDedupe(sectionBody) + ' ').includes(
+        ' ' + normalizeForDedupe(relationship.description) + ' '
+      )
   );
 
   const sentences: string[] = [];
@@ -1173,7 +1156,7 @@ function buildFallbackMultipleChoice(
         truncateAtWord(item, 220)
       );
       const options = placeCorrectOption(correctAnswer, distractors, index % 4).slice(0, 4);
-      const level = index < 2 ? 'recordar' : 'comprender';
+      const level = 'recordar' as const;
 
       return {
         id: `fallback-concept-${index + 1}`,
@@ -1224,7 +1207,7 @@ function buildCanonicalConceptQuestions(
         3
       ).map((candidate) => truncateAtWord(candidate.detail, 210));
       const options = placeCorrectOption(correct, distractors, index % 4).slice(0, 4);
-      const level: StudyQuestion['level'] = index < 2 ? 'recordar' : 'comprender';
+      const level: StudyQuestion['level'] = 'recordar';
 
       return {
         id: `model-concept-${index + 1}`,
@@ -1374,7 +1357,7 @@ function buildCanonicalClassificationQuestions(
       return {
         id: `model-classification-${index + 1}`,
         type: 'multiple_choice',
-        level: 'aplicar',
+        level: 'recordar',
         kind: 'classification',
         topic: classification.title,
         prompt: `Un caso del material se describe así: “${truncateAtWord(correct.detail, 175)}”. Dentro de “${classification.title}”, ¿a qué categoría corresponde?`,
@@ -1709,7 +1692,7 @@ function anchorAndCompleteChapterQuestions(
       anchored.push({
         id: `chapter-concept-${index + 1}`,
         type: 'multiple_choice',
-        level: 'comprender',
+        level: 'recordar',
         kind: 'concept',
         topic: concept.term,
         chapterTitle: chapter.title,
