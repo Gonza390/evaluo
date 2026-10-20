@@ -29,19 +29,19 @@ const OFFICIAL_FAQ = 'https://ubaxxi.uba.ar/preguntas-frecuentes/';
 const EXAMS = [
   {
     subject: 'IPC',
-    title: 'IPC · primer parcial 2025',
-    details: 'Cátedra Buacar · 1.º cuatrimestre · tema 3',
-    description: 'Referencia para observar cómo se evalúan argumentos, premisas y tipos de enunciados.',
-    href: 'https://ubaparciales.com/materias/ipc/buacar/primer-parcial/1c-2025/tema-3',
-    label: 'Ver parcial IPC 2025',
-  },
-  {
-    subject: 'IPC',
     title: 'IPC · primer parcial 2026',
     details: 'Cátedra Buacar · 1.º cuatrimestre · tema 1',
     description: 'Otra evaluación publicada para comparar el tipo de consignas entre cuatrimestres.',
     href: 'https://ubaparciales.com/materias/ipc/buacar/primer-parcial/1c-2026/tema-1',
     label: 'Ver parcial IPC 2026',
+  },
+  {
+    subject: 'IPC',
+    title: 'IPC · primer parcial 2025',
+    details: 'Cátedra Buacar · 1.º cuatrimestre · tema 3',
+    description: 'Referencia para observar cómo se evalúan argumentos, premisas y tipos de enunciados.',
+    href: 'https://ubaparciales.com/materias/ipc/buacar/primer-parcial/1c-2025/tema-3',
+    label: 'Ver parcial IPC 2025',
   },
   {
     subject: 'ICSE',
@@ -105,13 +105,18 @@ export const metadata: Metadata = {
   },
 };
 
-function PrimaryCta({ location, label }: { location: string; label: string }) {
+function PrimaryCta({ location, label, variant = 'solid' }: { location: string; label: string; variant?: 'solid' | 'outline' }) {
   return (
     <TrackedLink
       href={PDF_HREF}
       eventName="cta_click"
       payload={{ location, cta_name: 'estudiar_con_mi_pdf', destination: PDF_HREF }}
-      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.18)] transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+      className={
+        'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ' +
+        (variant === 'outline'
+          ? 'border border-blue-200 bg-white text-blue-800 hover:bg-blue-50'
+          : 'bg-blue-700 text-white shadow-[0_12px_24px_rgba(29,78,216,0.18)] hover:bg-blue-800')
+      }
     >
       <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
       {label}
@@ -182,11 +187,11 @@ export default function ParcialesUbaXxiPage() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
                   href="#practica"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-3 text-sm font-bold text-blue-800 transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.18)] transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   <ListChecks className="h-4 w-4" aria-hidden="true" /> Probar 3 preguntas gratis
                 </a>
-                <PrimaryCta location="seo_uba_xxi_parciales_hero" label="Estudiar con mi PDF" />
+                <PrimaryCta location="seo_uba_xxi_parciales_hero" label="Estudiar con mi PDF" variant="outline" />
               </div>
               <p className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
@@ -202,18 +207,18 @@ export default function ParcialesUbaXxiPage() {
                 <FileText className="h-5 w-5 text-blue-600" aria-hidden="true" />
               </div>
               <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950">
-                IPC · Primer parcial 2025
+                IPC · Primer parcial 2026
               </h2>
-              <p className="mt-2 text-sm text-slate-600">Cátedra Buacar · 1.º cuatrimestre · tema 3</p>
+              <p className="mt-2 text-sm text-slate-600">Cátedra Buacar · 1.º cuatrimestre · tema 1</p>
               <div className="mt-5 border-t border-slate-200 pt-5">
                 <p className="text-xs font-bold uppercase tracking-[0.13em] text-slate-500">
                   Qué podés observar en ese examen
                 </p>
                 <ul className="mt-3 space-y-3 text-sm leading-6 text-slate-700">
                   {[
-                    'Distinguir un argumento de otros enunciados.',
-                    'Identificar premisas y conclusión.',
-                    'Interpretar enunciados y razonamientos inductivos.',
+                    'Distinguir argumentos de otros fragmentos.',
+                    'Identificar premisas y conclusiones de una deducción.',
+                    'Relacionar conceptos teóricos con casos concretos.'
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
@@ -234,12 +239,28 @@ export default function ParcialesUbaXxiPage() {
                 }}
                 className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-blue-700 underline decoration-blue-200 underline-offset-4 hover:decoration-blue-500"
               >
-                Consultar el parcial de 2025 <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                Consultar el parcial de 2026 <ExternalLink className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
               <p className="mt-2 text-xs leading-5 text-slate-500">
                 Publicado por un tercero. No reproducimos sus consignas ni afirmamos que el próximo examen será igual.
               </p>
             </div>
+          </div>
+        </section>
+
+        <section id="practica" aria-labelledby="titulo-practica" className="scroll-mt-8 border-y border-slate-200 bg-slate-50 py-14 sm:py-20">
+          <div className="mx-auto w-full max-w-[860px] px-4 sm:px-8">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Del examen anterior a la práctica</p>
+            <h2 id="titulo-practica" className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+              Probá cómo se estudia IPC con preguntas nuevas
+            </h2>
+            <p className="mt-4 mb-7 text-sm leading-7 text-slate-600 sm:text-base">
+              Los modelos de IPC de 2025 y 2026 incluyen habilidades como reconocer argumentos,
+              ubicar premisas y evaluar inferencias. Probá tres preguntas originales de Evaluo
+              sobre esas habilidades: no están copiadas de un examen, no cubren todo el programa
+              ni anticipan consignas oficiales.
+            </p>
+            <UbaXxiParcialesPractice />
           </div>
         </section>
 
@@ -324,14 +345,14 @@ export default function ParcialesUbaXxiPage() {
                   a ejemplos diferentes del examen anterior.
                 </p>
                 <TrackedLink
-                  href={EXAMS[1].href}
+                  href={EXAMS[0].href}
                   target="_blank"
                   rel="noopener noreferrer"
                   eventName="cta_click"
                   payload={{
                     location: 'seo_uba_xxi_parciales_analysis',
                     cta_name: 'ver_examen_ipc_2026_externo',
-                    destination: EXAMS[1].href,
+                    destination: EXAMS[0].href,
                   }}
                   className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-blue-700 underline underline-offset-4"
                 >
@@ -362,21 +383,6 @@ export default function ParcialesUbaXxiPage() {
                 </TrackedLink>
               </article>
             </div>
-          </div>
-        </section>
-
-        <section id="practica" aria-labelledby="titulo-practica" className="scroll-mt-8 border-y border-slate-200 bg-slate-50 py-14 sm:py-20">
-          <div className="mx-auto w-full max-w-[860px] px-4 sm:px-8">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Del examen anterior a la práctica</p>
-            <h2 id="titulo-practica" className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Probá cómo se estudia IPC con preguntas nuevas
-            </h2>
-            <p className="mt-4 mb-7 text-sm leading-7 text-slate-600 sm:text-base">
-              En el parcial de referencia de 2025 aparecen habilidades como reconocer argumentos,
-              ubicar premisas y evaluar inferencias. Estas tres preguntas son originales de Evaluo:
-              no están copiadas de un examen ni anticipan consignas oficiales.
-            </p>
-            <UbaXxiParcialesPractice />
           </div>
         </section>
 
