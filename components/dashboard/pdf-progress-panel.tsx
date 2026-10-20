@@ -80,6 +80,8 @@ export function PdfProgressPanel({
   simulation,
   reviewActions,
   embedded = false,
+  showOnboardingExample = false,
+  showOnboardingTopic = false,
   assessmentData,
   questionCounts,
   onPractice,
@@ -106,6 +108,8 @@ export function PdfProgressPanel({
   onboardingErrorId?: string | null;
   returnToErrors?: boolean;
   embedded?: boolean;
+  showOnboardingExample?: boolean;
+  showOnboardingTopic?: boolean;
   assessmentData?: { items: PdfTopicEvidence[]; loadError?: boolean };
   questionCounts?: number[];
   onPractice?: () => void;
@@ -140,7 +144,7 @@ export function PdfProgressPanel({
   const initialError = [...data.pending, ...data.resolved].find(
     (item) => item.id === initialErrorId
   );
-  const [topicId, setTopicId] = useState<string | null>(() =>
+  const [selectedTopicId, setTopicId] = useState<string | null>(() =>
     initialError
       ? (buildPdfProgress(sections, [...data.pending, ...data.resolved]).topics.find((topic) =>
           topic.errors.some((error) => error.id === initialError.id)
@@ -164,6 +168,13 @@ export function PdfProgressPanel({
     ...(assessmentData?.items ?? []),
     ...evidence,
   ]);
+  // El tutorial presenta la vista real de un capítulo y luego la lista general.
+  // Nunca modifica evidencias, errores ni selecciones guardadas por el estudiante.
+  const topicId = showOnboardingTopic
+    ? topics[0]?.id ?? null
+    : showOnboardingExample
+      ? null
+      : selectedTopicId;
   const pending = views.filter((error) => error.status === 'pending');
   const next = pending[0];
   const recommendedTopic =
@@ -300,6 +311,7 @@ export function PdfProgressPanel({
     <section
       id={`real-topic-detail-${panelId}`}
       ref={detailRef}
+      data-onboarding-topic-detail
       tabIndex={-1}
       aria-labelledby={`real-detail-title-${panelId}`}
       className="bg-card focus-visible:outline-ring min-w-0 w-full py-4 focus-visible:outline-2"
@@ -1092,14 +1104,20 @@ export function PdfProgressPanel({
               </section>
             )}
             <section
+              data-recommended-topics
               className="border-border bg-card overflow-hidden rounded-2xl border"
               aria-labelledby={`real-topics-title-${panelId}`}
             >
               <div className="p-4 pb-2">
                 <h2 id={`real-topics-title-${panelId}`} className="text-base font-semibold">
-                  Contenido de tu PDF
+                  {showOnboardingExample ? 'Así vas a ver tu progreso' : 'Contenido de tu PDF'}
                 </h2>
-                {topics.length >= 8 && (
+                {showOnboardingExample && (
+                  <p data-tour-progress-disclaimer role="status" className="mt-2 rounded-lg bg-blue-50 px-3 py-2 text-[12px] leading-5 text-blue-800">
+                    Ejemplo visual con temas de tu PDF. Dominado, Reforzar y Sin evaluar son estados ilustrativos; no representan tus resultados.
+                  </p>
+                )}
+                {!showOnboardingExample && topics.length >= 8 && (
                   <label className="mt-4 block text-sm">
                     <span className="text-muted-foreground">Buscar tema</span>
                     <input
@@ -1111,7 +1129,7 @@ export function PdfProgressPanel({
                     />
                   </label>
                 )}
-                <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtrar temas">
+                {!showOnboardingExample && <div className="mt-3 flex flex-wrap gap-2" aria-label="Filtrar temas">
                   {['Todos', 'Por reforzar', 'Sin evaluar'].map((label) => (
                     <button
                       type="button"
@@ -1128,10 +1146,43 @@ export function PdfProgressPanel({
                       {label}
                     </button>
                   ))}
-                </div>
+                </div>}
               </div>
               <ul className="divide-border divide-y">
-                {visibleTopics.map((topic) => {
+                {showOnboardingExample && topics.slice(0, 3).map((topic, index) => {
+                  const mastered = index === 0;
+                  const needsReview = index === 1;
+                  const stateStyle = mastered
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : needsReview
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-slate-100 text-slate-700';
+                  return (
+                    <li key={topic.id} data-tour-example-topic className="flex min-w-0 items-center gap-3 px-4 py-3">
+                      <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${stateStyle}`}>
+                        {mastered
+                          ? <CheckCircle2 size={17} aria-hidden="true" />
+                          : needsReview
+                            ? <Flag size={17} aria-hidden="true" />
+                            : <Circle size={17} aria-hidden="true" />}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="text-foreground block text-[13px] font-medium break-words">{topic.title}</span>
+                        <span className="text-muted-foreground mt-0.5 block text-xs">
+                          {mastered
+                            ? 'Ejemplo: concepto comprendido'
+                            : needsReview
+                              ? 'Ejemplo: conviene repasar'
+                              : 'Ejemplo: todavía sin evaluar'}
+                        </span>
+                      </span>
+                      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${stateStyle}`}>
+                        {mastered ? 'Dominado' : needsReview ? 'Reforzar' : 'Sin evaluar'}
+                      </span>
+                    </li>
+                  );
+                })}
+                {!showOnboardingExample && visibleTopics.map((topic) => {
                   const questionIndex = topics.findIndex((item) => item.id === topic.id);
                   const unavailable =
                     questionCounts?.[questionIndex] === 0 &&
@@ -1220,15 +1271,20 @@ export function PdfProgressPanel({
                   );
                 })}
               </ul>
-              {!visibleTopics.length && (
+              {!showOnboardingExample && !visibleTopics.length && (
                 <p className="text-muted-foreground px-6 pb-6 text-sm">
                   {topics.length
                     ? 'No hay temas en este filtro.'
                     : 'Todavía no hay temas disponibles para mostrar.'}
                 </p>
               )}
+              {showOnboardingExample && topics.length === 0 && (
+                <p className="text-muted-foreground px-4 py-3 text-sm">
+                  Todavía no hay capítulos disponibles para armar un ejemplo.
+                </p>
+              )}
             </section>
-            {unmatched.length > 0 && (
+            {unmatched.length > 0 && !showOnboardingExample && (
               <section className="border-border bg-card rounded-3xl border p-6 lg:col-span-2">
                 <h2 className="font-semibold">Otros conceptos con errores</h2>
                 <p className="text-muted-foreground mt-2 text-sm">

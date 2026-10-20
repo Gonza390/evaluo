@@ -148,6 +148,7 @@ export function RealPdfProgressPreview({
   initialErrorId,
   initialProgressOpen = false,
   initialFirstVisit = false,
+  showOnboarding = false,
   sampleDocument,
 }: {
   summary: StudentMaterialSummary;
@@ -156,6 +157,7 @@ export function RealPdfProgressPreview({
   initialErrorId?: string;
   initialProgressOpen?: boolean;
   initialFirstVisit?: boolean;
+  showOnboarding?: boolean;
   sampleDocument?: { id: string; title: string; pageCount: number; pdfHref: string };
 }) {
   const material = sampleDocument ?? defaultMaterial;
@@ -467,6 +469,8 @@ export function RealPdfProgressPreview({
         <div className="material-study-editorial min-h-0 flex-1 overflow-hidden">
           <MaterialStudyWorkspace
             key={version}
+            recommendedStudyAvailable={showOnboarding}
+            initialRecommendedStudy={showOnboarding}
             backHref="/preview/progreso-pdf"
             materialId={material.id}
             title={
@@ -495,8 +499,10 @@ export function RealPdfProgressPreview({
               progressOpen,
               pendingStudyErrorCount: data.pending.length,
               onProgressChange: setProgressOpen,
-              progress: (
+              progress: ({ showOnboardingExample, showOnboardingTopic }) => (
                 <PdfProgressPanel
+                  showOnboardingExample={showOnboardingExample}
+                  showOnboardingTopic={showOnboardingTopic}
                   glossary={glossary}
                   flashcards={previewArtifacts.flashcards}
                   sourcePdfHref={pdfHref}

@@ -8,8 +8,10 @@ import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-material
 import { cn } from '@/lib/utils';
 import { selectDiagnosticQuestions } from '@/lib/student-materials/diagnostic-questions';
 import type { StudySummarySection } from '@/lib/student-materials/types';
-import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
-import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
+import {
+  recordStudentMaterialStudyResultAction,
+  finishStudyErrorOnboardingAction,
+} from '@/lib/actions/study-errors';
 
 type Props = {
   artifacts: PedagogicalArtifacts;
@@ -283,10 +285,8 @@ export function StudentMaterialDiagnostic({
         if (!recorded.success) throw new Error('No se pudo guardar');
         if (recorded.onboardingErrorId) {
           setOnboardingErrorId((previous) => previous ?? recorded.onboardingErrorId ?? null);
-          if (!guided) {
-            delete answerIds.current[current.id];
-            return;
-          }
+          // El primer error ya no interrumpe el diagnóstico con otro tutorial.
+          void finishStudyErrorOnboardingAction(recorded.onboardingErrorId, 'legacy').catch(() => {});
         }
         delete answerIds.current[current.id];
         advanceDiagnostic();
@@ -303,16 +303,6 @@ export function StudentMaterialDiagnostic({
 
   return (
     <>
-      {!guided && (
-        <FirstStudyErrorOnboardingPrompt
-          errorId={onboardingErrorId}
-          location="student_material_diagnostic"
-          onClose={() => {
-            setOnboardingErrorId(null);
-            advanceDiagnostic();
-          }}
-        />
-      )}
       <div className="mx-auto max-w-3xl px-1 py-3 sm:px-2 sm:py-5">
         <div className="flex items-center justify-between gap-3">
           <button

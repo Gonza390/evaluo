@@ -1,0 +1,28 @@
+name: Onboarding mobile visual QA
+on:
+  push:
+    branches: [master, "codex/**"]
+  workflow_dispatch:
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Inspect onboarding at 4 mobile viewport sizes
+        run: node scripts/audit-onboarding-mobile.mjs
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onboarding-mobile-screenshots
+          path: artifacts/mobile-onboarding/*.png
+          if-no-files-found: ignore
+          retention-days: 14

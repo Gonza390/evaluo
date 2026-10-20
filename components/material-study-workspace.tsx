@@ -67,6 +67,57 @@ import {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { buildSummaryCheckPlan } from '@/lib/student-materials/summary-checks';
 
+
+/** Conserva la navegación del alumno: nunca desplaza la página completa. */
+const tourStudySelectors: Record<RecommendedStudyStep, string> = {
+  summary: '[data-summary-reading-section="0"]',
+  practice: '[data-onboarding-practice-options]',
+  topic: '[data-onboarding-topic-detail]',
+  errors: '[data-recommended-topics]',
+};
+
+function getVisibleTourReader(): HTMLElement | null {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(
+      '[data-onboarding-study-panel] [role="region"][aria-label="Contenido de estudio"]'
+    )
+  )
+    .filter((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 &&
+        rect.bottom > 0 && rect.top < window.innerHeight &&
+        getComputedStyle(node).visibility !== 'hidden';
+    })
+    .sort((a, b) => {
+      const visibleHeight = (node: HTMLElement) => {
+        const rect = node.getBoundingClientRect();
+        return Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(0, rect.top));
+      };
+      return visibleHeight(b) - visibleHeight(a);
+    })[0] ?? null;
+}
+
+function revealTourContent(step: RecommendedStudyStep, focus = false): boolean {
+  const reader = getVisibleTourReader();
+  const target = reader?.querySelector<HTMLElement>(tourStudySelectors[step]);
+  if (!reader || !target) return false;
+  const rect = target.getBoundingClientRect();
+  if (!rect.width || !rect.height || !target.getClientRects().length) return false;
+
+  // En Práctica, mostrar el título y las opciones juntos. En las demás vistas
+  // mantener el capítulo/los temas en la parte superior del lector.
+  const breathingRoom = step === 'practice' ? Math.min(112, reader.clientHeight * 0.2) : 12;
+  reader.scrollTo({
+    top: Math.max(
+      0,
+      reader.scrollTop + rect.top - reader.getBoundingClientRect().top - breathingRoom
+    ),
+    behavior: 'instant',
+  });
+  if (focus) target.focus({ preventScroll: true });
+  return true;
+}
+
 const SummaryTopicCheckPopup = dynamic(() =>
   import('@/components/study/summary-topic-check-popup').then(
     (module) => module.SummaryTopicCheckPopup
@@ -132,7 +183,10 @@ type MaterialStudyWorkspaceProps = {
     viewerVisible: boolean;
     onViewerChange: (visible: boolean) => void;
     practice: ReactNode;
-    progress?: ReactNode;
+    progress?: ReactNode | ((args: {
+      showOnboardingExample: boolean;
+      showOnboardingTopic: boolean;
+    }) => ReactNode);
     progressOpen?: boolean;
     pendingStudyErrorCount?: number;
     onProgressChange?: (open: boolean) => void;
@@ -317,11 +371,27 @@ export function MaterialStudyWorkspace({
   } | null>(null);
   const [diagnosticReviewTopics, setDiagnosticReviewTopics] = useState<string[]>([]);
   const [recommendedActive, setRecommendedActive] = useState(initialRecommendedStudy);
+  const [onboardingFading, setOnboardingFading] = useState(false);
+  const [focusFirstChapterOnExit, setFocusFirstChapterOnExit] = useState(false);
+  const onboardingTransitionRef = useRef<number | null>(null);
+
+  // Las transiciones solo son visuales: sin movimiento para usuarios con reduced motion.
+  useEffect(() => () => {
+    if (onboardingTransitionRef.current !== null) {
+      window.clearTimeout(onboardingTransitionRef.current);
+    }
+  }, []);
+
   // Una sesión compartida por las vistas móvil y escritorio evita perder respuestas al redimensionar.
   const [recommendedSession, setRecommendedSession] = useState(emptyDiagnosticSession);
   const [recommendedTourStep, setRecommendedTourStep] = useState<RecommendedStudyStep | null>(
     initialRecommendedStudy && !initialDiagnostic ? 'summary' : null
   );
+  const showOnboardingTopic = recommendedActive && recommendedTourStep === 'topic';
+  const showOnboardingExample = recommendedActive && recommendedTourStep === 'errors';
+  const displayedProgressContent = typeof progressContent === 'function'
+    ? progressContent({ showOnboardingExample, showOnboardingTopic })
+    : progressContent;
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [summaryCheckChapterIndex, setSummaryCheckChapterIndex] = useState<number | null>(null);
   const [summaryEndPendingCount, setSummaryEndPendingCount] = useState<number | null>(null);
@@ -542,16 +612,20 @@ export function MaterialStudyWorkspace({
         );
       }
       clearRecommendedStudyQuery();
+      if (onboardingTransitionRef.current !== null) {
+        window.clearTimeout(onboardingTransitionRef.current);
+        onboardingTransitionRef.current = null;
+      }
+      setOnboardingFading(false);
       setRecommendedTourStep(null);
       setRecommendedActive(false);
-      window.requestAnimationFrame(() => {
-        const heading = Array.from(
-          document.querySelectorAll<HTMLElement>(
-            '[data-guided-question], [data-recommended-summary]'
-          )
-        ).find((node) => node.getClientRects().length > 0);
-        heading?.focus({ preventScroll: true });
-      });
+      // Solo el cierre completo dirige al primer capítulo; Saltar conserva una salida rápida.
+      setFocusFirstChapterOnExit(outcome === 'completed');
+      setLocalProgressOpen(false);
+      demo?.onProgressChange?.(false);
+      setActiveTab('resumen');
+      demo?.onTabChange('resumen');
+      // El desplazamiento se ejecuta luego del render del Resumen (ver efecto inferior).
     },
     [
       clearRecommendedStudyQuery,
@@ -562,6 +636,73 @@ export function MaterialStudyWorkspace({
       recommendedTourStep,
     ]
   );
+  const transitionRecommendedTour = (navigate: () => void) => {
+    if (onboardingTransitionRef.current !== null) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      navigate();
+      return;
+    }
+    // Fade corto al salir, cambio real de pestaña y entrada suave.
+    // El recorte y la tarjeta interpolan su posición en paralelo.
+    setOnboardingFading(true);
+    onboardingTransitionRef.current = window.setTimeout(() => {
+      onboardingTransitionRef.current = null;
+      navigate();
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setOnboardingFading(false));
+      });
+    }, recommendedTourStep === 'topic' ? 220 : 150);
+  };
+
+  useEffect(() => {
+    if (!recommendedActive || !recommendedTourStep) return;
+
+    // El panel de Progreso puede montarse de forma diferida. Esperar al contenido real
+    // sin volver al inicio del lector ni mover la página completa.
+    let frame = 0;
+    let observer: MutationObserver | null = null;
+    const step = recommendedTourStep;
+    const reveal = () => {
+      if (revealTourContent(step)) observer?.disconnect();
+    };
+    const reader = getVisibleTourReader();
+    if (reader) {
+      observer = new MutationObserver(() => {
+        window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(reveal);
+      });
+      observer.observe(reader, { childList: true, subtree: true });
+    }
+    frame = window.requestAnimationFrame(() => {
+      frame = window.requestAnimationFrame(reveal);
+    });
+    const limit = window.setTimeout(() => observer?.disconnect(), 2500);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.clearTimeout(limit);
+    };
+  }, [recommendedActive, recommendedTourStep]);
+
+  useEffect(() => {
+    if (!focusFirstChapterOnExit || recommendedActive || progressOpen || activeTab !== 'resumen') {
+      return;
+    }
+
+    // React ya cambió a Resumen: ubicar la lectura en el capítulo 1.
+    let nextFrame = 0;
+    const frame = window.requestAnimationFrame(() => {
+      nextFrame = window.requestAnimationFrame(() => {
+        revealTourContent('summary', true);
+        setFocusFirstChapterOnExit(false);
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(nextFrame);
+    };
+  }, [focusFirstChapterOnExit, recommendedActive, progressOpen, activeTab]);
+
   const openRecommendedErrors = (onboardingErrorId: string | null) => {
     setRecommendedTourStep(null);
     if (demo) {
@@ -570,7 +711,6 @@ export function MaterialStudyWorkspace({
     }
     const params = new URLSearchParams({ material: materialId });
     if (onboardingErrorId) {
-      params.set('tour', 'first-error');
       params.set('error', onboardingErrorId);
     }
     router.push(`/dashboard/explicaciones?${params}`);
@@ -1225,10 +1365,14 @@ export function MaterialStudyWorkspace({
       key={materialId}
       role="region"
       aria-label="Contenido de estudio"
+      data-onboarding-panel={recommendedActive || undefined}
+      data-onboarding-transitioning={(recommendedActive && onboardingFading) || undefined}
       tabIndex={0}
       className={cn(
         'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 pb-2.5 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none focus-visible:ring-inset sm:px-4 sm:pb-4',
-        demo && 'h-full min-h-0 overflow-y-auto'
+        demo && 'h-full min-h-0 overflow-y-auto',
+        recommendedActive && 'transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+        recommendedActive && onboardingFading && 'pointer-events-none translate-y-1 opacity-40'
       )}
     >
       {commentsOpen && activeTab === 'resumen' ? (
@@ -1342,6 +1486,7 @@ export function MaterialStudyWorkspace({
                       id={section.anchor}
                       key={`${section.title}:${section.body}`}
                       data-summary-reading-section={index}
+                      tabIndex={index === 0 ? -1 : undefined}
                       className="border-border scroll-mt-6 border-b py-6 first:pt-0 last:border-b-0 last:pb-2 sm:py-7"
                     >
                       <header className="mb-3 sm:mb-4">
@@ -1462,8 +1607,8 @@ export function MaterialStudyWorkspace({
         className="animate-tab-panel data-[state=inactive]:hidden"
       >
         <Activity mode={activeTab === 'ejercicios' && !progressOpen ? 'visible' : 'hidden'}>
-          <div className="px-1 py-1 sm:px-2 sm:py-2">
-            {demo && !recommendedActive ? (
+          <div data-recommended-practice className="px-1 py-1 sm:px-2 sm:py-2">
+            {demo ? (
               demo.practice
             ) : diagnosticMode ? (
               <StudentMaterialDiagnostic
@@ -1657,12 +1802,14 @@ export function MaterialStudyWorkspace({
           className="animate-tab-panel data-[state=inactive]:hidden"
         >
           {progressOpen
-            ? (progressContent ??
+            ? (displayedProgressContent ??
               (progressConfig ? (
                 <MaterialProgressContent
                   glossary={studyGlossary}
                   flashcards={studyArtifacts.flashcards}
                   sourcePdfHref={viewerUrl}
+                  showOnboardingExample={showOnboardingExample}
+                  showOnboardingTopic={showOnboardingTopic}
                   material={{ id: materialId, title }}
                   sections={studySummary.sections}
                   questionCounts={progressConfig.questionCounts}
@@ -1826,24 +1973,6 @@ export function MaterialStudyWorkspace({
           }}
         />
       )}
-      {recommendedActive && recommendedTourStep && (
-        <RecommendedStudyGuide
-          step={recommendedTourStep}
-          onExit={closeRecommendedTour}
-          onBack={
-            recommendedTourStep === 'practice'
-              ? () => setRecommendedTourStep('summary')
-              : recommendedTourStep === 'errors'
-                ? () => setRecommendedTourStep('practice')
-                : undefined
-          }
-          onNext={() => {
-            if (recommendedTourStep === 'summary') setRecommendedTourStep('practice');
-            else if (recommendedTourStep === 'practice') setRecommendedTourStep('errors');
-            else closeRecommendedTour('completed');
-          }}
-        />
-      )}
       {isOwner && materialId !== 'demo-material' ? (
         <ExamDatePlanPrompt
           materialId={materialId}
@@ -1852,7 +1981,7 @@ export function MaterialStudyWorkspace({
         />
       ) : null}
       <section className="bg-card shrink-0 border-b border-[#E8EDF5]">
-        <div className={`mx-auto flex w-full items-center gap-4 px-4 py-2 sm:px-6 ${progressOpen ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
+        <div className={`mx-auto flex w-full items-center gap-4 px-4 py-2 sm:px-6 ${progressOpen && !recommendedActive ? 'max-w-none lg:px-5' : 'max-w-[1600px] lg:px-4'}`}>
           <div className="min-w-0 flex-1">
             <Link
               href={backHref}
@@ -1877,9 +2006,58 @@ export function MaterialStudyWorkspace({
         </div>
       </section>
 
-      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
+      {recommendedActive && recommendedTourStep && (
+        <RecommendedStudyGuide
+            step={recommendedTourStep}
+            transitioning={onboardingFading}
+            onExit={() => closeRecommendedTour('skipped')}
+            onBack={
+              recommendedTourStep === 'practice'
+                ? () => transitionRecommendedTour(() => {
+                    setProgressOpen(false);
+                    changeRecommendedTab('resumen');
+                    setRecommendedTourStep('summary');
+                  })
+                : recommendedTourStep === 'topic'
+                  ? () => transitionRecommendedTour(() => {
+                      setProgressOpen(false);
+                      changeRecommendedTab('ejercicios');
+                      setRecommendedTourStep('practice');
+                    })
+                  : recommendedTourStep === 'errors'
+                    ? () => transitionRecommendedTour(() => {
+                        setRecommendedTourStep('topic');
+                      })
+                    : undefined
+            }
+            onNext={() => transitionRecommendedTour(() => {
+              if (recommendedTourStep === 'summary') {
+                // La transición muestra la pantalla de práctica, no solo su botón.
+                setPracticeSectionIndex(undefined);
+                setDiagnosticMode(false);
+                setProgressOpen(false);
+                changeRecommendedTab('ejercicios');
+                setRecommendedTourStep('practice');
+              } else if (recommendedTourStep === 'practice') {
+                setProgressOpen(true);
+                setRecommendedTourStep('topic');
+              } else if (recommendedTourStep === 'topic') {
+                setRecommendedTourStep('errors');
+              } else {
+                closeRecommendedTour('completed');
+              }
+            })}
+          />
+      )}
+
+      {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
+      {recommendedActive && recommendedTourStep ? (
+        <div aria-hidden="true" data-onboarding-guide-space className="h-28 shrink-0 md:h-2" />
+      ) : null}
+
+      <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
         <div className="hidden min-h-0 flex-1 xl:flex">
-          <div className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card relative h-full min-h-0 w-full overflow-hidden rounded-2xl border shadow-[0_24px_70px_rgba(15,23,42,0.10)]">
             <Tabs
               data-demo-focus="study"
               value={progressOpen ? 'progreso' : activeTab}
@@ -1958,7 +2136,7 @@ export function MaterialStudyWorkspace({
             demo && !demo.progress ? 'space-y-4' : 'flex min-h-0 flex-1 flex-col'
           )}
         >
-          <div className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
+          <div data-onboarding-study-panel data-onboarding-step={recommendedActive ? recommendedTourStep : undefined} className="border-border bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-none">
             {content}
           </div>
 
