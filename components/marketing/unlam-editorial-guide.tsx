@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { FooterHome } from '@/components/footer-home';
 import { UnlamIngresoToolkit } from '@/components/marketing/unlam-ingreso-toolkit';
+import { UnlamExamModels } from '@/components/marketing/unlam-exam-models';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { TrackedLink } from '@/components/marketing/tracked-link';
@@ -63,6 +64,7 @@ function StudyNote({ children }: { children: React.ReactNode }) {
 
 export function UnlamEditorialGuide() {
   const toc = [
+    ['#modelos-examen-unlam', 'Modelos de examen y práctica'],
     ['#materias-unlam', 'Materias por carrera'],
     ['#practica-ingreso', 'Práctica sin registro'],
     ['#plan-ingreso', 'Cómo estudiar el manual'],
@@ -132,6 +134,12 @@ export function UnlamEditorialGuide() {
                     <ListChecks className="h-4 w-4" aria-hidden="true"/> Practicar gratis
                   </TrackedLink>
                 </div>
+                <a
+                  href="#modelos-examen-unlam"
+                  className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-blue-700 underline decoration-blue-200 underline-offset-4 hover:decoration-blue-500"
+                >
+                  Ver modelos de examen y cómo prepararlos <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </a>
                 <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> Guía y práctica interactiva</span>
                   <span>Revisado el 20 de octubre de 2026</span>
@@ -177,6 +185,7 @@ export function UnlamEditorialGuide() {
           </div>
         </section>
 
+        <UnlamExamModels />
         <UnlamIngresoToolkit />
 
         <section className="border-b border-slate-200 bg-slate-50/40">
