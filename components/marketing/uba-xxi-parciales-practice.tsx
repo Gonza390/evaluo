@@ -57,6 +57,9 @@ export function UbaXxiParcialesPractice() {
   const answered = Object.keys(answers).length;
   const finished = answered === QUESTIONS.length;
   const correctCount = QUESTIONS.filter((question, index) => answers[index] === question.correct).length;
+  const topicsToReview = QUESTIONS.filter(
+    (question, index) => finished && answers[index] !== question.correct,
+  ).map((question) => question.topic);
 
   function choose(questionIndex: number, optionIndex: number) {
     if (answers[questionIndex] !== undefined) return;
@@ -170,9 +173,30 @@ export function UbaXxiParcialesPractice() {
           <p className="mt-2 text-2xl font-black tracking-tight text-slate-950">
             {correctCount} de {QUESTIONS.length} respuestas correctas
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-700">
-            Este ejercicio es ilustrativo y no equivale a un examen oficial ni determina si vas a aprobar.
-            Para preparar tu cursada, compará tus respuestas con la bibliografía y practicá también los temas restantes.
+          {topicsToReview.length > 0 ? (
+            <div className="mt-4 rounded-xl border border-blue-100 bg-white p-4">
+              <p className="text-sm font-bold text-slate-900">
+                Próximo paso: repasá {topicsToReview.length === 1 ? 'este concepto' : 'estos conceptos'} en tus apuntes
+              </p>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+                {topicsToReview.map((topic) => <li key={topic}>{topic}</li>)}
+              </ul>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Volvé a la bibliografía de tu cátedra y probá nuevas consignas sobre esos temas.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-4 rounded-xl border border-blue-100 bg-white p-4">
+              <p className="text-sm font-bold text-slate-900">Respondés bien estos tres ejemplos</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                El próximo desafío es resolver preguntas distintas del resto del programa usando
+                tus apuntes actuales, sin depender de las respuestas de un examen viejo.
+              </p>
+            </div>
+          )}
+          <p className="mt-4 text-sm leading-6 text-slate-700">
+            Esta práctica breve es ilustrativa: no equivale a un examen oficial,
+            no cubre todo el programa y no permite predecir si vas a aprobar.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <TrackedLink
@@ -185,7 +209,7 @@ export function UbaXxiParcialesPractice() {
               }}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
-              Practicar con mi propio PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              {topicsToReview.length > 0 ? 'Reforzar con mis apuntes PDF' : 'Seguir practicando con mi PDF'} <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </TrackedLink>
             <button
               type="button"
