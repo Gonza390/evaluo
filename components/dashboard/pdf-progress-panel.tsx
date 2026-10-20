@@ -667,26 +667,6 @@ export function PdfProgressPanel({
           </details>
         </div>
       )}
-      {reviewOpen && currentErrors.length > 1 && (
-        <details className="my-4">
-          <summary className="text-muted-foreground min-h-11 cursor-pointer py-3 text-sm">
-            Cambiar pregunta de repaso
-          </summary>
-          <div className="space-y-2">
-            {currentErrors.map((error) => (
-              <button
-                type="button"
-                key={error.id}
-                aria-pressed={errorId === error.id}
-                onClick={() => setErrorId(error.id)}
-                className={actionClass + ' border-border w-full justify-start border text-left'}
-              >
-                {error.prompt}
-              </button>
-            ))}
-          </div>
-        </details>
-      )}
       {reviewOpen && selected ? (
         <StudyErrorDetail
           embedded
