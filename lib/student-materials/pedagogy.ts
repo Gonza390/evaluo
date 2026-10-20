@@ -1512,6 +1512,7 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
   const focus = anchor ? anchor.replace(/^\d+(?:\.\d+)*\s+/u, '') : section.title;
   const answer = truncateAtWord(lines[opening] ?? '', 460);
   if (answer.length < 65) return null;
+  const reference = findReference(focus, chunks, emptyReference(section.title, answer));
   const prompts = [
     `Explicá con tus palabras qué plantea el apartado “${focus}”. ¿Qué idea central deberías recordar?`,
     `¿Qué sostiene el material sobre “${focus}”? Desarrollá la idea usando sus conceptos principales.`,
@@ -1524,12 +1525,13 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     level: 'comprender',
     kind: 'section',
     topic: section.title,
-    chapterTitle: section.title,
+    // No afirmar una vinculación a capítulo como cita física si falta página.
+    chapterTitle: reference.pageStart !== null ? section.title : undefined,
     prompt: prompts[index % prompts.length]!,
     options: [],
     answer,
     explanation: 'La respuesta modelo recupera el contenido del mismo apartado del PDF. Se espera una reformulación fiel a sus ideas, no una copia literal.',
-    reference: findReference(focus, chunks, emptyReference(section.title, answer)),
+    reference,
   };
 }
 function buildOpenSectionQuestions(
