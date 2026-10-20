@@ -1205,7 +1205,7 @@ function splitClassificationItem(value: string) {
 }
 
 function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\function buildGroundedSectionQuestion(');
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function extractClassificationItemDetail(
