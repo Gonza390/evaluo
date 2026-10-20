@@ -35,7 +35,7 @@ assertIncludesAll('components/marketing/unlam-editorial-guide.tsx', [
   'Revisado el 20 de octubre de 2026',
 ]);
 assertIncludesAll('components/marketing/unlam-ingreso-toolkit.tsx', [
-  'UnlamIngresoPractice',
+  'Profesorado en Educación Física',
   'Materias por carrera',
   'Educación Médica',
   'Introducción al conocimiento proyectual',
