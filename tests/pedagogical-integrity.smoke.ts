@@ -157,6 +157,25 @@ assert.ok(openStudyQuestions.every(q => q.reference.pageStart !== null));
 assert.equal(new Set(openStudyQuestions.map(q => q.prompt)).size, 2);
 assert.ok(openStudyQuestions.every(q => !/Un concepto clave es/.test(q.answer)));
 
+const pageMappedSections = [
+  { title: 'Epistemología', body: 'La epistemología reflexiona sobre el conocimiento.\nVer en PDF · páginas 1, 2, 3' },
+  { title: 'Argumentación', body: 'Los argumentos necesitan premisas y conclusiones.\nVer en PDF · páginas 4, 5' },
+];
+const pageMappedGlossary = tagGlossaryChapters([
+  { term: 'Conocimiento como producto', definition: 'Los resultados del conocimiento', context: 'Ver en PDF · página 1', importance: 'alta' },
+  { term: 'Concepto compartido', definition: 'Un término usado en varios capítulos', context: 'Ver en PDF · página 4', importance: 'media' },
+], pageMappedSections);
+assert.equal(pageMappedGlossary[0]?.chapterTitle, 'Epistemología');
+assert.equal(pageMappedGlossary[1]?.chapterTitle, 'Argumentación');
+const ambiguousCitations = [
+  { title: 'Bloque A', body: 'Material de estudio.\nVer en PDF · páginas 1, 2' },
+  { title: 'Bloque B', body: 'Otro contenido.\nVer en PDF · páginas 2, 3' },
+];
+const unresolved = tagGlossaryChapters([
+  { term: 'Concepto compartido', definition: 'No hay un título inequívoco', context: 'Ver en PDF · página 2', importance: 'media' },
+], ambiguousCitations);
+assert.equal(unresolved[0]?.chapterTitle, null, 'No asignar páginas compartidas a un capítulo arbitrario.');
+
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
 assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);
