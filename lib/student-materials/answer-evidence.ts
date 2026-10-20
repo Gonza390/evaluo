@@ -111,6 +111,7 @@ export function resolveMaterialAnswer(
     prompt: question.prompt,
     explanation:
       assessed &&
+      'type' in question &&
       normalize(input.selectedAnswer ?? '') !== normalize(question.answer)
         ? explainWrongOption(question, input.selectedAnswer ?? '', artifacts)
         : question.explanation,
