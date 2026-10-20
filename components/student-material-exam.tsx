@@ -463,7 +463,7 @@ export function StudentMaterialExam({
           </div>
         )}
 
-        <div className="grid gap-3 py-5 sm:grid-cols-3">
+        <div data-onboarding-practice-options className="grid gap-3 py-5 sm:grid-cols-3">
           {sizeOptions.map((option) => {
             const selected = selectedSize === option.count;
             return (

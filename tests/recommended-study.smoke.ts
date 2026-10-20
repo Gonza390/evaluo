@@ -139,6 +139,18 @@ assert.match(firstGuideSource, /findStudyPanel/, 'Debe seleccionar el panel resp
 assert.doesNotMatch(firstGuideSource, /maxFocusHeight/, 'No se debe recortar la altura a un fragmento del resumen.');
 assert.doesNotMatch(firstGuideSource, /scrollIntoView/, 'El tutorial no debe mover el contenido completo inesperadamente.');
 assert.match(materialWorkspaceSource, /data-onboarding-guide-space/, 'La tarjeta debe reservar espacio para no cubrir el lector.');
+assert.match(materialWorkspaceSource, /data-summary-reading-section="0"/,
+  'El primer paso debe mostrar contenido académico de un capítulo y no solo la introducción.');
+assert.match(materialWorkspaceSource, /data-onboarding-practice-options/,
+  'El segundo paso debe mostrar las opciones para comenzar la práctica.');
+assert.match(examSource, /data-onboarding-practice-options/,
+  'Las opciones de práctica deben exponer un destino para la guía.');
+assert.match(materialWorkspaceSource, /data-recommended-topics/,
+  'El tercer paso debe dirigir la vista hacia los temas de progreso.');
+assert.match(materialWorkspaceSource, /md:h-10/,
+  'El tutorial no debe robar altura excesiva al lector de escritorio.');
+assert.doesNotMatch(materialWorkspaceSource, /activePanel\?\.scrollTo\(\{ top: 0/,
+  'La guía no debe reiniciar todos los pasos a la introducción.');
 assert.equal((materialWorkspaceSource.match(/data-onboarding-study-panel/g) ?? []).length, 2,
   'Escritorio y móvil deben ofrecer el panel completo como objetivo.');
 assert.match(firstGuideSource, /data-guide-copy/, 'La explicación debe poder animarse sin mover toda la pantalla.');

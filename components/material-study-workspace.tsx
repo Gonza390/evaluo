@@ -602,14 +602,50 @@ export function MaterialStudyWorkspace({
 
   useEffect(() => {
     if (!recommendedActive || !recommendedTourStep) return;
-    // Solo se reinicia el scroll interno, nunca el scroll de toda la página.
-    const frame = window.requestAnimationFrame(() => {
-      const activePanel = Array.from(
-        document.querySelectorAll<HTMLElement>('[aria-label="Contenido de estudio"]')
-      ).find((node) => node.getClientRects().length > 0);
-      activePanel?.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Mostrar el valor real de cada pantalla, no su texto introductorio:
+    // primer capítulo en Resumen, opciones de preguntas en Práctica y temas en Progreso.
+    // El desplazamiento ocurre solamente dentro del lector, nunca en toda la página.
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        const visibleWorkspace = Array.from(
+          document.querySelectorAll<HTMLElement>('[data-onboarding-study-panel]')
+        ).find((node) => {
+          const rect = node.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 &&
+            getComputedStyle(node).visibility !== 'hidden';
+        });
+        const activePanel = visibleWorkspace?.querySelector<HTMLElement>(
+          '[role="region"][aria-label="Contenido de estudio"]'
+        );
+        if (!activePanel) return;
+
+        const selectors: Record<RecommendedStudyStep, string> = {
+          summary: '[data-summary-reading-section="0"]',
+          practice: '[data-onboarding-practice-options]',
+          errors: '[data-recommended-topics]',
+        };
+        const target = activePanel.querySelector<HTMLElement>(
+          selectors[recommendedTourStep]
+        );
+        if (!target) {
+          activePanel.scrollTo({ top: 0, behavior: 'instant' });
+          return;
+        }
+
+        const viewportTop = activePanel.getBoundingClientRect().top;
+        const targetTop = target.getBoundingClientRect().top;
+        activePanel.scrollTo({
+          top: Math.max(0, activePanel.scrollTop + targetTop - viewportTop - 14),
+          behavior: 'instant',
+        });
+      });
     });
-    return () => window.cancelAnimationFrame(frame);
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
   }, [recommendedActive, recommendedTourStep]);
 
   const openRecommendedErrors = (onboardingErrorId: string | null) => {
@@ -1950,9 +1986,9 @@ export function MaterialStudyWorkspace({
           />
       )}
 
-      {/* Reservar aire para la explicación sin cubrir ni cortar el lector de estudio. */}
+      {/* El tutorial mantiene la tarjeta fuera del lector sin reducir tanto su altura visible. */}
       {recommendedActive && recommendedTourStep ? (
-        <div aria-hidden="true" data-onboarding-guide-space className="h-40 shrink-0 md:h-24" />
+        <div aria-hidden="true" data-onboarding-guide-space className="h-36 shrink-0 md:h-10" />
       ) : null}
 
       <section className={`mx-auto flex min-h-0 w-full flex-1 flex-col px-2 py-2 sm:px-4 xl:pb-3 ${progressOpen && !recommendedActive ? 'max-w-none xl:px-5' : 'max-w-[1600px] xl:px-4'}`}>
