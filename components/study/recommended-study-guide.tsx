@@ -8,6 +8,9 @@ import {
   BookOpenText,
   BrainCircuit,
   ChartNoAxesColumnIncreasing,
+  CheckCircle2,
+  RotateCcw,
+  Target,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,8 +32,8 @@ const steps = {
   },
   errors: {
     label: 'Progreso',
-    title: 'Descubrí qué reforzar',
-    description: 'Identificá los temas que necesitan más práctica.',
+    title: 'Dejá de estudiar a ciegas',
+    description: 'Después de practicar, Evaluo te ayuda a identificar qué temas necesitás reforzar.',
     icon: ChartNoAxesColumnIncreasing,
   },
 } as const;
@@ -123,22 +126,45 @@ function getSpotlight(node: HTMLElement, cardHeight: number): Spotlight {
 export function RecommendedStudyGuide({
   step,
   transitioning = false,
+  demoMode = false,
   onNext,
   onBack,
   onExit,
 }: {
   step: RecommendedStudyStep;
   transitioning?: boolean;
+  demoMode?: boolean;
   onNext: () => void;
   onBack?: () => void;
   onExit: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [spotlight, setSpotlight] = useState<Spotlight | null>(null);
+  // Un clic extra dentro de Progreso; nunca aparece un cuarto paso.
+  const [progressExplained, setProgressExplained] = useState(false);
   const cardRef = useRef<HTMLElement | null>(null);
   const current = steps[step];
   const Icon = current.icon;
   const number = order.indexOf(step) + 1;
+  const showingProgressDetail = step === 'errors' && progressExplained;
+  const title = showingProgressDetail ? 'Cada práctica te ayuda a mejorar' : current.title;
+  const description = showingProgressDetail
+    ? 'Identificá lo que entendiste, reforzá tus dificultades y comprobá tu mejora.'
+    : current.description;
+  const handleNext = () => {
+    if (step === 'errors' && !progressExplained) {
+      setProgressExplained(true);
+      return;
+    }
+    onNext();
+  };
+  const handleBack = () => {
+    if (showingProgressDetail) {
+      setProgressExplained(false);
+      return;
+    }
+    onBack?.();
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -319,15 +345,15 @@ export function RecommendedStudyGuide({
           <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-xl" aria-hidden="true">
             <Icon className="size-4" />
           </span>
-          <div key={step} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
+          <div key={step + (showingProgressDetail ? '-detail' : '-intro')} data-guide-copy aria-live="polite" className="min-w-0 flex-1">
             <p className="text-primary text-[11px] font-semibold tracking-wide uppercase">
               {number} de 3 · {current.label}
             </p>
             <h2 className="text-foreground mt-0.5 text-[15px] font-semibold leading-5 tracking-tight">
-              {current.title}
+              {title}
             </h2>
             <p className="text-muted-foreground mt-1 text-[12px] leading-5">
-              {current.description}
+              {description}
             </p>
           </div>
           <button
@@ -340,6 +366,28 @@ export function RecommendedStudyGuide({
             <X className="size-4" />
           </button>
         </div>
+
+        {showingProgressDetail && (
+          <div data-guide-progress-detail className="mt-2.5">
+            <div className="grid grid-cols-3 gap-1.5" aria-label="Cómo funciona Progreso">
+              {[
+                { icon: CheckCircle2, label: 'Lo que sabés' },
+                { icon: Target, label: 'Qué reforzar' },
+                { icon: RotateCcw, label: 'Volver a probar' },
+              ].map(({ icon: ItemIcon, label }) => (
+                <div key={label} className="bg-muted/60 text-foreground flex min-w-0 flex-col items-center gap-1 rounded-xl px-1.5 py-2 text-center">
+                  <ItemIcon aria-hidden="true" className="text-primary size-3.5" />
+                  <span className="text-[10px] leading-3.5 font-medium">{label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-muted-foreground mt-2 text-[11px] leading-4">
+              {demoMode
+                ? 'Vista previa: los resultados mostrados son de ejemplo.'
+                : 'Si todavía no practicaste, tus resultados aparecerán acá cuando empieces.'}
+            </p>
+          </div>
+        )}
 
         <div className="border-border/70 mt-2.5 flex items-center justify-between gap-2 border-t pt-2.5">
           <div className="flex items-center gap-1.5" role="img" aria-label={'Paso ' + number + ' de 3'}>
@@ -359,12 +407,14 @@ export function RecommendedStudyGuide({
           </div>
           <div className="flex items-center gap-1.5">
             {onBack ? (
-              <Button type="button" variant="ghost" size="sm" onClick={onBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
+              <Button type="button" variant="ghost" size="sm" onClick={handleBack} disabled={transitioning} className="min-h-9 gap-1 rounded-full px-3">
                 <ArrowLeft className="size-3.5" /> Atrás
               </Button>
             ) : null}
-            <Button type="button" size="sm" onClick={onNext} disabled={transitioning} className="min-h-9 gap-1.5 rounded-full px-4">
-              {step === 'errors' ? 'Empezar a estudiar' : 'Siguiente'} <ArrowRight className="size-3.5" />
+            <Button type="button" size="sm" onClick={handleNext} disabled={transitioning} className="min-h-9 gap-1.5 rounded-full px-4">
+              {step === 'errors'
+                ? showingProgressDetail ? 'Empezar a estudiar' : 'Ver cómo funciona'
+                : 'Siguiente'} <ArrowRight className="size-3.5" />
             </Button>
           </div>
         </div>

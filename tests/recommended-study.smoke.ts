@@ -121,6 +121,28 @@ assert.ok(firstGuideSource.includes("label: 'Entender'") &&
           firstGuideSource.includes("label: 'Progreso'"),
           'El tutorial debe comunicar únicamente Entender, Practicar y Progreso.');
 assert.ok(firstGuideSource.includes('data-first-pdf-guide'), 'La guía debe enseñar la interfaz real.');
+assert.match(firstGuideSource, /Dejá de estudiar a ciegas/,
+  'Progreso debe comunicar el diferencial de estudiar con resultados.');
+assert.match(firstGuideSource, /step === 'errors' && !progressExplained/,
+  'El clic adicional debe suceder dentro de Progreso y no abrir otro paso.');
+assert.match(firstGuideSource, /setProgressExplained\(true\)/,
+  'El primer clic en Progreso debe mostrar cómo funciona.');
+assert.match(firstGuideSource, /setProgressExplained\(false\)/,
+  'Atrás debe volver al primer mensaje de Progreso.');
+assert.match(firstGuideSource, /data-guide-progress-detail/,
+  'El detalle debe explicar el ciclo de aprendizaje en la tarjeta existente.');
+assert.match(firstGuideSource, /Ver cómo funciona/,
+  'El primer CTA de Progreso debe mostrar la explicación.');
+assert.match(firstGuideSource, /Empezar a estudiar/,
+  'El segundo CTA debe mantener el cierre hacia el resumen.');
+assert.match(firstGuideSource, /los resultados mostrados son de ejemplo/,
+  'La preview no puede hacer pasar datos simulados por resultados reales.');
+assert.match(firstGuideSource, /tus resultados aparecerán acá cuando empieces/,
+  'El onboarding no puede inventar dificultades para usuarios sin prácticas.');
+assert.match(materialWorkspaceSource, /demoMode=\{Boolean\(demo\)\}/,
+  'La guía debe diferenciar la vista previa de un PDF real.');
+assert.match(firstGuideSource, /onBack\?\.\(\)/,
+  'El retorno de Progreso debe conservar la navegación original.');
 assert.match(firstGuideSource, /createPortal/, 'El foco debe renderizarse fuera de los contenedores con overflow.');
 assert.match(firstGuideSource, /bg-slate-950\/12 backdrop-blur-\[1px\]/, 'El fondo del tutorial debe ser suave.');
 assert.match(firstGuideSource, /radial-gradient\(circle at/, 'Las esquinas internas del foco deben ser realmente redondeadas.');

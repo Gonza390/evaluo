@@ -1999,6 +1999,7 @@ export function MaterialStudyWorkspace({
         <RecommendedStudyGuide
             step={recommendedTourStep}
             transitioning={onboardingFading}
+            demoMode={Boolean(demo)}
             onExit={() => closeRecommendedTour('skipped')}
             onBack={
               recommendedTourStep === 'practice'
