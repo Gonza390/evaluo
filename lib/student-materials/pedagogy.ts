@@ -1595,40 +1595,50 @@ function buildCanonicalConfusionQuestions(
   }).filter((question): question is StudyQuestion => Boolean(question));
 }
 
+function buildGroundedSectionQuestion(section: StudySummarySection, index: number): StudyQuestion | null {
+  // Respuesta extraída del MISMO apartado del capítulo. No usar palabras
+  // parecidas o la página más próxima para traer definiciones externas.
+  const lines = section.body.split(/\n+/).map(cleanStudyUnit).filter(Boolean);
+  const opening = lines.findIndex(line =>
+    !/^(?:ver en pdf|ideas clave|contenido complementario)/iu.test(line) &&
+    line.length >= 65 && !/^#{1,6}\s/u.test(line)
+  );
+  if (opening < 0) return null;
+  const anchor = lines.slice(0, opening).find(line =>
+    /\d+(?:\.\d+)*\s+/.test(line) && line.length <= 130
+  );
+  const focus = anchor ? anchor.replace(/^\d+(?:\.\d+)*\s+/u, '') : section.title;
+  const answer = truncateAtWord(lines[opening] ?? '', 460);
+  if (answer.length < 65) return null;
+  const prompts = [
+    `Explicá con tus palabras qué plantea el apartado “${focus}”. ¿Qué idea central deberías recordar?`,
+    `¿Qué sostiene el material sobre “${focus}”? Desarrollá la idea usando sus conceptos principales.`,
+    `Si tuvieras que explicar “${focus}” a otro estudiante, ¿qué indicarías como fundamento principal?`,
+    `¿Cómo presentarías el concepto central de “${focus}” sin repetir el texto de memoria?`,
+  ];
+  return {
+    id: `section-open-${index + 1}`,
+    type: 'open',
+    level: 'comprender',
+    kind: 'section',
+    topic: section.title,
+    chapterTitle: section.title,
+    prompt: prompts[index % prompts.length]!,
+    options: [],
+    answer,
+    explanation: 'La respuesta modelo recupera el contenido del mismo apartado del PDF. Se espera una reformulación fiel a sus ideas, no una copia literal.',
+    reference: { pageStart: null, pageEnd: null, sectionTitle: section.title, excerpt: lines[opening] ?? '' },
+  };
+}
 function buildOpenSectionQuestions(
   summary: StudentMaterialSummary,
-  chunks: PedagogicalChunk[],
-  model?: CanonicalPedagogicalModel | null,
+  _chunks: PedagogicalChunk[],
+  _model?: CanonicalPedagogicalModel | null,
   limit = 4
 ) {
-  return summary.sections.slice(0, limit).map((section, index): StudyQuestion => {
-    const reference = findReference(
-      section.title,
-      chunks,
-      emptyReference(section.title, section.body)
-    );
-
-    return {
-      id: `section-open-${index + 1}`,
-      type: 'open',
-      level: 'comprender',
-      kind: 'section',
-      topic: section.title,
-      prompt: `Explicá con tus palabras la idea central de “${section.title}” y relacioná al menos dos conceptos del material.`,
-      options: [],
-      answer: model
-        ? buildExpectedSectionAnswerFromModel(
-            section.title,
-            section.body,
-            model,
-            reference
-          )
-        : buildExpectedSectionAnswer(section.body),
-      explanation:
-        'Una respuesta sólida debe formular una idea central completa y relacionar conceptos del material, no copiar fragmentos aislados.',
-      reference,
-    };
-  });
+  return summary.sections.slice(0, limit)
+    .map((section, index) => buildGroundedSectionQuestion(section, index))
+    .filter((question): question is StudyQuestion => Boolean(question));
 }
 
 /**
