@@ -32,13 +32,53 @@ function comparable(value: string) {
   return value.normalize('NFKC').replace(/\s+/g, ' ').trim().toLocaleLowerCase('es');
 }
 
-/** Nunca se acepta una pregunta sin cita verificable ni una copia de la original. */
+/**
+ * Evita una comprobación que sólo reorganiza la misma definición o cambia
+ * palabras de una pregunta previa. No alcanza para validar la calidad
+ * semántica: el prompt sigue exigiendo un contexto o tarea cognitiva nuevos.
+ */
+export function isDistinctReviewQuestion(candidate: string, original: string) {
+  if (comparable(candidate) === comparable(original)) return false;
+
+  // Ignorar fórmulas interrogativas que no representan nuevo aprendizaje.
+  const stopwords = new Set([
+    'segun', 'texto', 'pdf', 'que', 'como', 'cual', 'cuales',
+    'para', 'por', 'las', 'los', 'del', 'con', 'de', 'el', 'la',
+    'un', 'una', 'y', 'o', 'es', 'son', 'se', 'ser',
+    'correctamente', 'mejor', 'siguiente', 'siguientes',
+    'afirmacion', 'afirmaciones', 'opcion', 'opciones',
+    'definicion', 'definiciones', 'describe', 'describen',
+    'sobre', 'acerca', 'este', 'esta',
+  ]);
+  const tokens = (question: string) =>
+    new Set(
+      question
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/gu, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/gu, ' ')
+        .split(' ')
+        .filter((word) => word.length >= 3 && !stopwords.has(word))
+    );
+  const first = tokens(candidate);
+  const second = tokens(original);
+  if (!first.size || !second.size) return false;
+  const shared = [...first].filter((word) => second.has(word)).length;
+  if (first.size === second.size && shared === first.size) return false;
+  return !(
+    Math.min(first.size, second.size) >= 2 &&
+    shared / Math.min(first.size, second.size) >= 0.85 &&
+    shared / Math.max(first.size, second.size) >= 0.65
+  );
+}
+
+/** Nunca se acepta una pregunta sin cita verificable ni una copia reformulada de la original. */
 export function validateReviewQuestion(value: unknown, source: string, original: string) {
   const parsed = questionSchema.safeParse(value);
   if (!parsed.success) return null;
   const result = parsed.data;
   if (new Set(result.options.map(comparable)).size !== 3) return null;
-  if (comparable(result.question) === comparable(original)) return null;
+  if (!isDistinctReviewQuestion(result.question, original)) return null;
   if (!comparable(source).includes(comparable(result.evidenceQuote))) return null;
   return result;
 }
