@@ -502,7 +502,7 @@ export function RealPdfProgressPreview({
                   sourcePdfHref={pdfHref}
                   embedded
                   initialTopicSectionIndex={topicReturn?.index}
-                  initialReinforce={topicReturn?.outcome ? false : topicReturn?.reinforce}
+                  initialReinforce={topicReturn?.reinforce}
                   lastPracticeOutcome={topicReturn?.outcome}
                   initialErrorId={initialErrorId}
                   material={material}
