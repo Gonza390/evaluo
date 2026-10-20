@@ -103,20 +103,6 @@ export function PdfFirstUploadShell({
     useState<'idle' | 'loading' | 'loaded' | 'failed'>('idle');
   const [academicChoicesError, setAcademicChoicesError] = useState('');
   const academicFetchInFlightRef = useRef(false);
-  const initialProfileUniversity =
-    universidades.find((item) => item.id === initialUniversidadId) ?? null;
-  const initialProfileCareer =
-    carreras.find(
-      (item) => item.id === initialCarreraId && item.universidad_id === initialUniversidadId
-    ) ?? null;
-  const hasInitialUniversityProfile = Boolean(initialProfileUniversity);
-  const hasInitialAcademicProfile = Boolean(initialProfileUniversity && initialProfileCareer);
-  const initialAcademicProfileLabel = [
-    initialProfileUniversity?.nombre,
-    initialProfileCareer?.nombre,
-  ]
-    .filter(Boolean)
-    .join(' · ');
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const resumeHandledRef = useRef(false);
   const readyTrackedRef = useRef(false);
@@ -138,12 +124,10 @@ export function PdfFirstUploadShell({
   const [addingCareer, setAddingCareer] = useState(false);
   const [newCareer, setNewCareer] = useState('');
   const [savingContext, setSavingContext] = useState(false);
-  const [profileUniversitySaved, setProfileUniversitySaved] = useState(hasInitialUniversityProfile);
-  const [profileUniversityName, setProfileUniversityName] = useState(
-    initialProfileUniversity?.nombre ?? ''
-  );
-  const [contextSaved, setContextSaved] = useState(hasInitialAcademicProfile);
-  const [savedContextLabel, setSavedContextLabel] = useState(initialAcademicProfileLabel);
+  const [profileUniversitySaved, setProfileUniversitySaved] = useState(false);
+  const [profileUniversityName, setProfileUniversityName] = useState('');
+  const [contextSaved, setContextSaved] = useState(false);
+  const [savedContextLabel, setSavedContextLabel] = useState('');
   const [showReadyContext, setShowReadyContext] = useState(false);
   const [restoringDraft, setRestoringDraft] = useState(initialOpen && isPreAuthPdfResume);
 
@@ -323,22 +307,18 @@ export function PdfFirstUploadShell({
     setAddingCareer(false);
     setNewCareer('');
     setSavingContext(false);
-    setProfileUniversitySaved(hasInitialUniversityProfile);
-    setProfileUniversityName(initialProfileUniversity?.nombre ?? '');
-    setContextSaved(hasInitialAcademicProfile);
-    setSavedContextLabel(initialAcademicProfileLabel);
+    setProfileUniversitySaved(false);
+    setProfileUniversityName('');
+    setContextSaved(false);
+    setSavedContextLabel('');
+    setUniversidades([]);
+    setCarreras([]);
+    setAcademicChoicesStatus('idle');
+    setAcademicChoicesError('');
     setShowReadyContext(false);
     readyTrackedRef.current = false;
     firstPdfReadyTrackedRef.current = false;
-  }, [
-    hasInitialAcademicProfile,
-    hasInitialUniversityProfile,
-    initialAcademicProfileLabel,
-    initialProfileUniversity?.nombre,
-    initialCarreraId,
-    initialExamDate,
-    initialUniversidadId,
-  ]);
+  }, [initialCarreraId, initialExamDate, initialUniversidadId]);
 
   const close = useCallback(() => {
     if (uploading) return;
