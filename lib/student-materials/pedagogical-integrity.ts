@@ -56,7 +56,7 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
   }
   if (
     question.kind === 'relationship' &&
-    /^Compar[aá]\b/iu.test(question.prompt) &&
+    /^Compar[aá](?:\s|$)/iu.test(question.prompt) &&
     norm(question.answer) === norm(question.reference.excerpt || '') &&
     !/\ben cambio\b|\bmientras\b|\ba diferencia\b|\bpor otro lado\b|\ben contraste\b|\bversus\b/iu.test(question.answer)
   ) return 'comparison_copies_source_without_contrast';
