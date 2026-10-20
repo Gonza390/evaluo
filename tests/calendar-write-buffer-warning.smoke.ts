@@ -49,12 +49,14 @@ assert.doesNotMatch(describeCalendarSaveError({ code: '23514', message: 'sensiti
 
 const page = readFileSync('app/calendario/page.tsx', 'utf8');
 const instrumentation = readFileSync('instrumentation.ts', 'utf8');
+const runtimeTracer = readFileSync('lib/server-runtime-warnings.ts', 'utf8');
 assert.match(page, /validateCalendarWrite\(/);
 assert.match(page, /event_type: validEvent\.eventType/);
 assert.match(page, /exam_instance: validEvent\.examInstance/);
 assert.match(page, /postgresCode: error\?\.code/);
-assert.match(instrumentation, /warning\.code !== 'DEP0005'/);
-assert.match(instrumentation, /runtime\.bufferDeprecation\.origin/);
-assert.doesNotMatch(instrumentation, /noDeprecation\s*=\s*true/);
+assert.match(runtimeTracer, /warning\.code !== 'DEP0005'/);
+assert.match(runtimeTracer, /runtime\.bufferDeprecation\.origin/);
+assert.match(instrumentation, /server-runtime-warnings/);
+assert.doesNotMatch(runtimeTracer, /noDeprecation\s*=\s*true/);
 
 console.log('Calendar CHECK constraint and Buffer deprecation diagnostic tests passed.');
