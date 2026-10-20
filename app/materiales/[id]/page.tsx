@@ -32,6 +32,7 @@ type PageProps = {
     studyError?: string;
     page?: string;
     tab?: string;
+    studyTopic?: string;
     recorrido?: string;
     error?: string;
     tour?: string;
@@ -432,6 +433,14 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           studySummary={studySummary}
           pedagogicalArtifacts={pedagogicalArtifacts}
           initialDiagnostic={isOwner && query.diagnostico === '1'}
+          initialPracticeSectionIndex={
+            isOwner && query.tab === 'ejercicios' &&
+            typeof query.studyTopic === 'string' &&
+            /^(0|[1-9]\d{0,3})$/.test(query.studyTopic) &&
+            Number(query.studyTopic) < studySummary.sections.length
+              ? Number(query.studyTopic)
+              : undefined
+          }
           recommendedStudyAvailable={isFirstReadyMaterial}
           initialRecommendedStudy={
             isFirstReadyMaterial && query.recorrido === '1' && !firstPdfGuideAlreadySeen
