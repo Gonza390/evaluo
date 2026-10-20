@@ -45,6 +45,22 @@ export function unsafeModelAnswerReason(question: StudyQuestion, sections: Study
     return null;
   }
 
+  // Bancos históricos: en algunos PDFs "aclarar la confusión" tenía
+  // literalmente como respuesta modelo la misma confusión del enunciado.
+  if (question.kind === 'confusion') {
+    const claimedMisconception = question.prompt.match(/[“"]([^”"]{12,})[”"]/u)?.[1];
+    if (
+      claimedMisconception &&
+      norm(question.answer) === norm(claimedMisconception)
+    ) return 'confusion_answer_repeats_misconception';
+  }
+  if (
+    question.kind === 'relationship' &&
+    /^Compar[aá]\b/iu.test(question.prompt) &&
+    norm(question.answer) === norm(question.reference.excerpt || '') &&
+    !/\ben cambio\b|\bmientras\b|\ba diferencia\b|\bpor otro lado\b|\ben contraste\b|\bversus\b/iu.test(question.answer)
+  ) return 'comparison_copies_source_without_contrast';
+
   const section = sectionForQuestion(question, sections);
   const reference = question.reference.excerpt || '';
   const evidence = section ? section.body : reference;
