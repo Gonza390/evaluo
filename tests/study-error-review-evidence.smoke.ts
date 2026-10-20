@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { selectReviewCheckEvidence } from '../lib/study-error-review-evidence.ts';
+import { isDistinctReviewQuestion, validateReviewQuestion } from '../lib/study-error-review-contract.ts';
 
 const original =
   'Su aplicación sobre enunciados empíricos de primer nivel permite obtener una generalización empírica.';
@@ -59,4 +61,54 @@ const bounded = selectReviewCheckEvidence({
   chunks: [{ chunk_index: 7, chunk_text: longText, page_start: 4, page_end: 4 }],
 });
 assert.ok((bounded.excerpt?.length ?? 0) <= 2900);
+// El refuerzo tiene que evaluar el mismo concepto con una tarea diferente,
+// no permitir respuestas repetidas o la misma pregunta con sinónimos.
+assert.equal(
+  isDistinctReviewQuestion(
+    '¿Cuál de las siguientes definiciones describe correctamente la epistemología?',
+    'Según el PDF, ¿qué describe correctamente Epistemología?'
+  ),
+  false
+);
+assert.equal(
+  isDistinctReviewQuestion(
+    'Una alumna analiza cómo se fundamentan y justifican los conocimientos de la ciencia. ¿Qué campo estudia esa tarea?',
+    'Según el PDF, ¿qué describe correctamente Epistemología?'
+  ),
+  true
+);
+const sourceExcerpt =
+  'La epistemología es una reflexión racional, ordenada y sistemática acerca de la ciencia y su objetivo.';
+const answerCandidate = {
+  supported: true as const,
+  question: 'Una alumna analiza cómo se fundamentan y justifican los conocimientos de la ciencia. ¿Qué campo estudia esa tarea?',
+  options: [
+    'La epistemología, porque reflexiona sobre los fundamentos del conocimiento científico.',
+    'La tecnología, porque convierte los descubrimientos en productos.',
+    'La estadística, porque calcula la frecuencia de fenómenos.',
+  ],
+  correctIndex: 0,
+  feedback: 'La epistemología analiza racionalmente los fundamentos de la ciencia.',
+  evidenceQuote: sourceExcerpt,
+};
+assert.ok(
+  validateReviewQuestion(
+    answerCandidate,
+    sourceExcerpt,
+    'Según el PDF, ¿qué describe correctamente Epistemología?'
+  )
+);
+assert.equal(
+  validateReviewQuestion(
+    { ...answerCandidate, question: '¿Cuál de las siguientes definiciones describe correctamente la epistemología?' },
+    sourceExcerpt,
+    'Según el PDF, ¿qué describe correctamente Epistemología?'
+  ),
+  null
+);
+const panelSource = readFileSync('components/dashboard/pdf-progress-panel.tsx', 'utf8');
+const detailSource = readFileSync('components/dashboard/study-error-detail.tsx', 'utf8');
+assert.doesNotMatch(panelSource, /Cambiar pregunta de repaso/);
+assert.doesNotMatch(detailSource, /Pasos para reforzar una dificultad/);
+assert.match(detailSource, /Comprobar lo aprendido/);
 console.log('Study error review evidence smoke tests passed.');
