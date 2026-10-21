@@ -608,13 +608,6 @@ export function PdfProgressPanel({
                     </button>
                   )}
               </div>
-              {canPracticeTopic && (
-                <p className="text-muted-foreground mt-2 text-xs!">
-                  {currentQuestionCount}{' '}
-                  {currentQuestionCount === 1 ? 'pregunta disponible' : 'preguntas disponibles'} de
-                  este tema
-                </p>
-              )}
               {nextStudyTopic ? (
                 <p className="text-muted-foreground mt-3 text-sm! break-words">
                   Siguiente: {nextStudyTopic.title}
