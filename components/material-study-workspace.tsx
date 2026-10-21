@@ -46,7 +46,7 @@ import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
 import { StudentMaterialExam } from '@/components/student-material-exam';
-import { StudentMaterialFlashcards } from '@/components/student-material-flashcards';
+
 import { ExamDatePlanPrompt } from '@/components/exam-date-plan-prompt';
 import { PremiumUpsell } from '@/components/premium/premium-upsell';
 import { regenerateStudentMaterialStudyAction } from '@/app/dashboard/materiales/actions';
@@ -130,6 +130,18 @@ const SummaryCompletionPopup = dynamic(() =>
     (module) => module.SummaryCompletionPopup
   )
 );
+// Las tarjetas y su sincronización se descargan sólo al abrir el módulo de estudio.
+const StudentMaterialFlashcards = dynamic(
+  () => import('@/components/student-material-flashcards').then((module) => module.StudentMaterialFlashcards),
+  {
+    loading: () => (
+      <p role="status" className="text-muted-foreground px-4 py-6 text-sm">
+        Cargando flashcards…
+      </p>
+    ),
+  }
+);
+
 const MaterialProgressContent = dynamic(
   () =>
     import('@/components/study/material-progress-content').then(
