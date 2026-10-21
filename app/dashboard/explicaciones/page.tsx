@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createClientServer } from '@/lib/supabase-server';
-import { getPendingStudyErrorOnboarding, getStudyErrorsPageData } from '@/lib/study-errors';
+import { getStudyErrorsPageData } from '@/lib/study-errors';
 import { StudyErrorsClient } from '@/components/dashboard/study-errors-client';
 import { isUuid } from '@/lib/uuid';
 import { pdfProgressReviewHref } from '@/lib/study-error-navigation';
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default async function StudyErrorsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ tour?: string; error?: string; material?: string }>;
+  searchParams?: Promise<{ error?: string; material?: string }>;
 }) {
   const supabase = await createClientServer();
   const {
@@ -44,28 +44,15 @@ export default async function StudyErrorsPage({
   if (!data.loadError && targetMaterialId) {
     const href = pdfProgressReviewHref(
       targetMaterialId,
-      requestedError,
-      params.tour === 'first-error'
+      requestedError
     );
     if (href) redirect(href);
   }
-  const pendingOnboardingErrorId =
-    params.tour === 'first-error' && requestedErrorId
-      ? await getPendingStudyErrorOnboarding(user.id, requestedErrorId)
-      : null;
-  const onboardingActive =
-    Boolean(pendingOnboardingErrorId) &&
-    data.pending.some((item) => item.id === pendingOnboardingErrorId);
-
   return (
     <StudyErrorsClient
       data={data}
       initialErrorId={requestedError?.id}
       initialMaterialId={params.material && isUuid(params.material) ? params.material : undefined}
-      onboarding={{
-        active: onboardingActive,
-        errorId: onboardingActive ? pendingOnboardingErrorId : null,
-      }}
     />
   );
 }
