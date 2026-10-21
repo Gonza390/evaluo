@@ -337,6 +337,15 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return Response.json({ error: 'invalid_material' }, { status: 400 });
     }
 
+    const supabase = await createClientServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return Response.json({ error: 'authentication_required' }, { status: 401 });
+    }
+
     const admin = createAdminClient();
     const { data: material, error: materialError } = await admin
       .from('student_materials')
@@ -350,12 +359,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return Response.json({ error: 'material_not_found' }, { status: 404 });
     }
 
-    const supabase = await createClientServer();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const isOwner = user?.id === material.user_id;
+    const isOwner = user.id === material.user_id;
     const isShared = material.visibility === 'shared';
     if (!isShared && !isOwner) {
       return Response.json({ error: 'material_not_found' }, { status: 404 });
