@@ -21,7 +21,6 @@ import {
   saveFlashcardProgressAction,
 } from '@/app/dashboard/materiales/actions';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
-import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 import { scheduleFlashcardReviewReminderAction } from '@/lib/actions/flashcard-review-reminders';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
@@ -95,7 +94,6 @@ export function StudentMaterialFlashcards({
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
   const [showAllReviewTopics, setShowAllReviewTopics] = useState(false);
-  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
   const [isSchedulingReminder, setIsSchedulingReminder] = useState(false);
   const [reminderScheduled, setReminderScheduled] = useState(false);
   const [reminderError, setReminderError] = useState<string | null>(null);
@@ -309,10 +307,6 @@ export function StudentMaterialFlashcards({
           correctAnswer: currentCard.back,
           selectedAnswer: result === 'known' ? currentCard.back : 'No lo sabía',
           reference: currentCard.reference,
-        }).then((recorded) => {
-          if (recorded.onboardingErrorId) {
-            setOnboardingErrorId(recorded.onboardingErrorId);
-          }
         });
       }
 
@@ -393,11 +387,6 @@ export function StudentMaterialFlashcards({
   if (allReviewed) {
     return (
       <>
-        <FirstStudyErrorOnboardingPrompt
-          errorId={onboardingErrorId}
-          location="student_material_flashcards"
-          onClose={() => setOnboardingErrorId(null)}
-        />
         <div className="bg-card rounded-2xl border border-emerald-200 px-4 py-5 text-center sm:px-5">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-none">
             <Check className="h-5 w-5" />
@@ -529,11 +518,6 @@ export function StudentMaterialFlashcards({
 
   const session = (
     <>
-      <FirstStudyErrorOnboardingPrompt
-        errorId={onboardingErrorId}
-        location="student_material_flashcards"
-        onClose={() => setOnboardingErrorId(null)}
-      />
       <div
         className={cn(
           demoMode ? 'space-y-3' : 'space-y-4',
