@@ -66,7 +66,7 @@ export function UnlamEditorialGuide() {
                 <Link href="/login?mode=login" className="inline-flex min-h-11 items-center text-xs font-semibold text-slate-600 hover:text-slate-950">Entrar</Link>
                 <TrackedLink href={uploadHref} eventName="cta_click"
                   payload={{ location: 'seo_ingreso_unlam_2027_header', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
-                  className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-blue-700 px-3 text-xs font-bold text-white transition hover:bg-blue-800 sm:px-4">
+                  className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-[#174BBD] px-3 text-xs font-bold text-white transition hover:bg-[#0D2F82] sm:px-4">
                   Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </TrackedLink>
               </div>
@@ -76,37 +76,37 @@ export function UnlamEditorialGuide() {
       </div>
 
       <main>
-        <section className="border-b border-slate-200 bg-[radial-gradient(circle_at_88%_12%,rgba(99,102,241,0.08),transparent_30%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
-          <div className="mx-auto grid w-full max-w-[1240px] lg:grid-cols-[minmax(0,1.25fr)_360px]">
-            <div className="px-4 py-10 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+        <section className="border-b border-blue-100 bg-[radial-gradient(circle_at_88%_8%,rgba(37,99,235,0.13),transparent_42%),linear-gradient(180deg,#ffffff_0%,#f0f5ff_100%)]">
+          <div className="mx-auto grid w-full max-w-[1160px] gap-6 px-4 pb-8 pt-8 sm:gap-8 sm:px-8 sm:pb-12 sm:pt-12 lg:grid-cols-[minmax(0,1.12fr)_minmax(320px,0.88fr)] lg:items-center lg:gap-12 lg:py-16">
+            <div className="min-w-0">
               <div className="max-w-[820px]">
-                <div className="flex flex-wrap items-center gap-3 text-[11px] font-black uppercase tracking-[0.17em] text-blue-700">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.11em] text-[#174BBD] sm:text-[11px]">
                   <span>Guía 2027</span>
-                  <span className="h-1 w-1 rounded-full bg-gradient-to-r from-brand to-brand-2" />
+                  <span className="h-1 w-1 rounded-full bg-[#2563EB]" />
                   <span>Universidad Nacional de La Matanza</span>
                 </div>
-                <h1 className="mt-5 max-w-[760px] font-serif text-[2.6rem] leading-[1.01] font-semibold tracking-[-0.04em] text-slate-950 sm:text-[3.45rem] lg:text-[4.1rem]">
-                  Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar
+                <h1 className="mt-5 max-w-[720px] text-[2.45rem] font-black leading-[1.07] tracking-[-0.05em] text-[#0f1b3d] sm:text-5xl lg:text-[3.45rem]">
+                  Curso de Ingreso <span className="text-[#174BBD]">UNLaM 2027</span>: materias, fechas y cómo estudiar
                 </h1>
-                <p className="mt-5 max-w-3xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
+                <p className="mt-5 max-w-2xl text-[15px] leading-7 text-slate-600 sm:text-base sm:leading-8">
                   Consultá las materias según tu carrera, las fechas oficiales de 2027 y una guía para preparar el manual. Además, podés resolver ejercicios gratuitos y continuar practicando con tus propios apuntes en Evaluo.
                 </p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <TrackedLink
-                    href="#materias-unlam"
-                    eventName="cta_click"
-                    payload={{ location: 'seo_ingreso_unlam_2027_hero', cta_name: 'ver_materias_por_carrera', destination: '#materias-unlam' }}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_25px_rgba(29,78,216,0.16)] hover:bg-blue-800"
-                  >
-                    Ver materias de mi carrera <ArrowRight className="h-4 w-4" aria-hidden="true"/>
-                  </TrackedLink>
-                  <TrackedLink
                     href="#practica-ingreso"
                     eventName="cta_click"
                     payload={{ location: 'seo_ingreso_unlam_2027_hero', cta_name: 'practicar_sin_registro', destination: '#practica-ingreso' }}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-3 text-sm font-bold text-blue-800 hover:bg-blue-50"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(23,75,189,0.20)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                   >
-                    <ListChecks className="h-4 w-4" aria-hidden="true"/> Practicar gratis
+                    <ListChecks className="h-4 w-4" aria-hidden="true" /> Practicar gratis <ArrowRight className="h-4 w-4" aria-hidden="true"/>
+                  </TrackedLink>
+                  <TrackedLink
+                    href="#materias-unlam"
+                    eventName="cta_click"
+                    payload={{ location: 'seo_ingreso_unlam_2027_hero', cta_name: 'ver_materias_por_carrera', destination: '#materias-unlam' }}
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-3 text-sm font-bold text-[#174BBD] transition hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  >
+                    Ver materias de mi carrera
                   </TrackedLink>
                 </div>
                 <a
@@ -115,7 +115,7 @@ export function UnlamEditorialGuide() {
                 >
                   Ver modelos de examen y cómo prepararlos <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
-                <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-200 pt-4 text-[11px] text-slate-500">
+                <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-blue-100 pt-4 text-[11px] text-slate-500">
                   <span className="inline-flex items-center gap-2"><Clock3 className="h-4 w-4" aria-hidden="true" /> Guía y práctica interactiva</span>
                   <span>Revisado el 20 de octubre de 2026</span>
                   <span>Equipo Evaluo</span>
@@ -123,26 +123,26 @@ export function UnlamEditorialGuide() {
               </div>
             </div>
 
-            <aside className="border-t border-slate-200 bg-blue-50/60 px-5 py-8 sm:px-8 lg:border-t-0 lg:border-l lg:px-7 lg:py-10">
+            <aside className="min-w-0 rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_22px_65px_rgba(15,23,42,0.09)] sm:p-7">
               <div className="flex items-center gap-3">
                 <CalendarDays className="h-5 w-5 text-blue-700" aria-hidden="true" />
                 <p className="text-[11px] font-black uppercase tracking-[0.17em] text-blue-700">Segunda instancia 2027</p>
               </div>
-              <h2 className="mt-3 font-serif text-2xl font-semibold leading-tight sm:text-[28px]">Las fechas que importan</h2>
-              <dl className="mt-7 divide-y divide-slate-200 border-y border-slate-200">
+              <h2 className="mt-3 text-2xl font-black leading-tight tracking-[-0.035em] text-[#0f1b3d] sm:text-[28px]">Las fechas que importan</h2>
+              <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-1 border-y border-slate-200 py-2 sm:gap-x-6">
                 {[
                   ['Preinscripción', '28 sep. – 26 oct. 2026'],
                   ['Documentación', '5 – 26 oct. 2026'],
                   ['Cursada intensiva', '1 feb. – 6 mar. 2027'],
                   ['Exámenes', '8 – 12 mar. 2027'],
                 ].map(([label, value]) => (
-                  <div key={label} className="py-3.5">
+                  <div key={label} className="min-w-0 py-3">
                     <dt className="text-xs font-semibold uppercase tracking-[0.11em] text-slate-500">{label}</dt>
                     <dd className="mt-1 text-[15px] font-bold text-slate-950">{value}</dd>
                   </div>
                 ))}
               </dl>
-              <div className="mt-5 rounded-xl border border-blue-100 bg-white p-3">
+              <div className="mt-4 rounded-xl border border-blue-100 bg-[#f4f7ff] p-3">
                 <p className="text-xs font-bold text-slate-900">Primera instancia regular 2027</p>
                 <p className="mt-1 text-xs leading-6 text-slate-600">
                   Cursada presencial: 20 de julio al 9 de diciembre de 2026.
@@ -217,7 +217,7 @@ export function UnlamEditorialGuide() {
               </div>
               <TrackedLink href={uploadHref} eventName="cta_click"
                 payload={{ location: 'seo_ingreso_unlam_2027_final', cta_name: 'elegir_manual_pdf', destination: uploadHref }}
-                className="mt-5 inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-blue-900 hover:bg-blue-50 sm:mt-0">
+                className="mt-5 inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#0D2F82] hover:bg-blue-50 sm:mt-0">
                 <UploadCloud className="h-4 w-4" aria-hidden="true" /> Elegir mi PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
             </div>
