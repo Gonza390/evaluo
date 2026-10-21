@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 export default async function PdfProgressPage({
   searchParams,
 }: {
-  searchParams: Promise<{ material?: string; error?: string; tour?: string; from?: string }>;
+  searchParams: Promise<{ material?: string; error?: string; from?: string }>;
 }) {
-  const { material: materialId, error: requestedError, tour, from } = await searchParams;
+  const { material: materialId, error: requestedError, from } = await searchParams;
   if (materialId && !isUuid(materialId)) notFound();
   const supabase = await createClientServer();
   const {
@@ -74,7 +74,6 @@ export default async function PdfProgressPage({
     );
   const destination = new URLSearchParams({ tab: 'progreso' });
   if (requestedError) destination.set('error', requestedError.slice(0, 80));
-  if (tour === 'first-error') destination.set('tour', tour);
   if (from === 'errores') destination.set('from', from);
   redirect(`/materiales/${material.id}?${destination}`);
 }
