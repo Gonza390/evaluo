@@ -3,11 +3,6 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
-import {
-  getPdfFirstActivationHref,
-  hasCompleteAcademicProfile,
-  isPdfFirstActivationPath,
-} from '@/lib/profile-completion';
 
 function normalizeAnalyticsSessionKey(value: string | null) {
   const normalized = String(value ?? '').trim();
@@ -120,8 +115,6 @@ export async function GET(request: Request) {
           );
         }
       }
-
-
     }
   }
 
