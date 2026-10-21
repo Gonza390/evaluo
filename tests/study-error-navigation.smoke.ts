@@ -16,7 +16,7 @@ const target = new URL(href, 'https://evaluo.com.ar');
 assert.equal(target.pathname, '/dashboard/progreso');
 assert.equal(target.searchParams.get('material'), 'pdf-1');
 assert.equal(target.searchParams.get('error'), exercise.id);
-assert.equal(target.searchParams.get('tour'), 'first-error');
+assert.equal(target.searchParams.has('tour'), false);
 assert.equal(target.searchParams.get('from'), 'errores');
 assert.equal(pdfProgressReviewHref(null, exercise), null);
 assert.equal(
