@@ -13,10 +13,7 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
-import {
-  deleteStudentMaterialAction,
-  updateStudentMaterialVisibilityAction,
-} from '@/app/dashboard/materiales/actions';
+import { deleteStudentMaterialAction } from '@/app/dashboard/materiales/actions';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { Button } from '@/components/ui/button';
@@ -55,24 +52,6 @@ export function StudentMaterialsWorkspace({
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [materialToDelete, setMaterialToDelete] = useState<StudentMaterial | null>(null);
-
-  const handleVisibilityChange = (materialId: string, nextVisibility: 'private' | 'shared') => {
-    startTransition(async () => {
-      const result = await updateStudentMaterialVisibilityAction({
-        materialId,
-        visibility: nextVisibility,
-      });
-
-      toast({
-        description: result.message,
-        variant: result.success ? 'default' : 'destructive',
-      });
-
-      if (result.success) {
-        router.refresh();
-      }
-    });
-  };
 
   const handleDeleteMaterial = () => {
     if (!materialToDelete) {
@@ -190,20 +169,6 @@ export function StudentMaterialsWorkspace({
                               ? 'Revisar'
                               : 'Ver estado'}
                         </Link>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-slate-500"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          handleVisibilityChange(material.id, isShared ? 'private' : 'shared');
-                        }}
-                        disabled={isPending}
-                      >
-                        {isShared ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-                        {isShared ? 'Dejar de compartir' : 'Compartir'}
                       </Button>
                       <Button
                         type="button"
