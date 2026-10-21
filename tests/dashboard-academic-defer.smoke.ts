@@ -11,7 +11,9 @@ assert.ok(!dashboard.includes(".from('universidades')"), 'Mi espacio no debe bus
 assert.ok(!dashboard.includes(".from('carreras')"), 'Mi espacio no debe buscar carreras en la carga inicial.');
 assert.ok(!dashboard.includes(".from('materias')"), 'Mi espacio no debe buscar materias en la carga inicial.');
 assert.ok(!dashboard.includes(".from('carrera_materias')"), 'Mi espacio no debe buscar las relaciones académicas en la carga inicial.');
-assert.ok(!dashboard.includes(".from('profiles')"), 'El perfil académico debe obtenerse sólo al usar el selector opcional.');
+// La pantalla puede consultar solamente el perfil mínimo para el recordatorio opcional.
+assert.ok(dashboard.includes("hasReadyMaterial && openUpload !== '1'"), 'Consultar el perfil únicamente si ya hay materiales y no se solicita subida.');
+assert.ok(dashboard.includes(".from('profiles')"), 'El recordatorio académico debe usar la información mínima del perfil.');
 assert.ok(shell.includes('loadDashboardAcademicOptionsAction()'), 'El selector opcional debe solicitar el catálogo bajo demanda.');
 assert.ok(shell.includes("!showReadyContext || academicChoicesStatus !== 'idle'"), 'No ejecutar la consulta si el selector opcional está cerrado.');
 assert.ok(academicAction.includes("supabase.auth.getUser()"), 'El catálogo bajo demanda requiere sesión.');
