@@ -22,8 +22,6 @@ import { getPdfAssessmentData, type PdfAssessmentData } from '@/lib/student-mate
 const FREE_STUDY_ERROR_EXPLANATIONS_LIMIT = 5;
 const STUDY_ERROR_EXPLANATION_WINDOW_MS = 3 * 60 * 60 * 1000;
 import {
-  finishStudyErrorOnboarding,
-  getPendingStudyErrorOnboarding,
   getStudyErrorsPageData,
   type StudyErrorsPageData,
   markStudyErrorReviewed,
@@ -47,7 +45,6 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
   success: boolean;
   resolved?: boolean;
   errorId?: string | null;
-  onboardingErrorId?: string | null;
 }> {
   const user = await requireUser();
   if (!user) return { success: false };
@@ -173,11 +170,7 @@ export async function recordStudentMaterialStudyResultAction(input: MaterialAnsw
       },
     });
 
-    const onboardingErrorId = errorId
-      ? await getPendingStudyErrorOnboarding(user.id, errorId)
-      : null;
-
-    return { success: true, resolved: false, errorId: errorId ?? null, onboardingErrorId };
+    return { success: true, resolved: false, errorId: errorId ?? null };
   } catch (error) {
     logError('studyErrors.materialResult', error, {
       userId: user.id,
@@ -194,14 +187,12 @@ export type MaterialProgressDataResult =
       data: StudyErrorsPageData;
       assessmentData: PdfAssessmentData;
       initialErrorId: string | null;
-      onboardingErrorId: string | null;
     }
   | { success: false };
 
 export async function getMaterialProgressDataAction(input: {
   materialId: string;
   requestedError?: string;
-  tour?: string;
 }): Promise<MaterialProgressDataResult> {
   const user = await requireUser();
   if (!user || !isUuid(input.materialId)) return { success: false };
@@ -226,17 +217,11 @@ export async function getMaterialProgressDataAction(input: {
       input.requestedError && isUuid(input.requestedError) ? input.requestedError : null;
     const initialErrorId =
       [...data.pending, ...data.resolved].find((item) => item.id === requestedError)?.id ?? null;
-    const onboardingErrorId =
-      input.tour === 'first-error' && initialErrorId
-        ? await getPendingStudyErrorOnboarding(user.id, initialErrorId)
-        : null;
-
     return {
       success: true,
       data: { ...data, materials: [] },
       assessmentData,
       initialErrorId,
-      onboardingErrorId,
     };
   } catch (error) {
     logError('studyErrors.materialProgress', error, {
@@ -288,31 +273,6 @@ export async function markStudyErrorReviewedAction(errorId: string): Promise<{ s
   if (!user || !errorId) return { success: false };
 
   const success = await markStudyErrorReviewed(user.id, errorId);
-  return { success };
-}
-
-export async function getPendingStudyErrorOnboardingAction(): Promise<{
-  errorId: string | null;
-}> {
-  const user = await requireUser();
-  if (!user) return { errorId: null };
-
-  return { errorId: await getPendingStudyErrorOnboarding(user.id) };
-}
-
-export async function finishStudyErrorOnboardingAction(
-  errorId: string,
-  outcome: 'completed' | 'skipped' | 'legacy'
-): Promise<{ success: boolean }> {
-  const user = await requireUser();
-  if (!user || !errorId) return { success: false };
-
-  const success = await finishStudyErrorOnboarding({
-    userId: user.id,
-    errorId,
-    outcome,
-  });
-
   return { success };
 }
 
