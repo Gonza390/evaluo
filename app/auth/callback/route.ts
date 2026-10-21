@@ -136,7 +136,10 @@ export async function GET(request: Request) {
       ) {
         // El Preguntero ya generó valor antes del registro: no interrumpir la continuidad
         // con el perfil académico. Ese dato se puede pedir después.
-        if (reason === 'preguntero') {
+        if (
+          reason === 'preguntero' ||
+          (reason === 'shared-pdf' && nextPath.startsWith('/materiales/'))
+        ) {
           return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
         }
 
