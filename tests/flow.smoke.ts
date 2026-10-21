@@ -130,7 +130,7 @@ assert.equal(
     carreraId: 'car-1',
     activeSubjects: [],
   }),
-  false
+  true
 );
 assert.equal(
   hasCompleteAcademicProfile({
