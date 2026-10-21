@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 // Los modelos y credenciales son ficticios: las solicitudes se interceptan.
 // La prueba verifica que AbortError no bloquee el fallback al modelo secundario.
@@ -36,4 +37,9 @@ async function checkFallback(kind: 'json' | 'text') {
 
 await checkFallback('json');
 await checkFallback('text');
-console.log('AI network fallback regression tests passed.');
+const studyErrorsSource = readFileSync(new URL('../lib/actions/study-errors.ts', import.meta.url), 'utf8');
+assert.match(studyErrorsSource, /if \(!user \|\| !isUuid\(materialId\)\) return \{ count: 0 \}/);
+const flashcardSource = readFileSync(new URL('../app/dashboard/materiales/actions.ts', import.meta.url), 'utf8');
+assert.match(flashcardSource, /logError\('flashcard_progress_load', error, \{ materialId \}\)/);
+assert.match(flashcardSource, /logError\('flashcard_progress_save', error, \{ materialId \}\)/);
+console.log('AI fallback and production error guard regression tests passed.');

@@ -579,7 +579,8 @@ export async function getFlashcardProgressAction(
 
     return { success: true, progress: { recall, votes } };
   } catch (error) {
-    logError('flashcard_progress_load', { error, materialId });
+    // Pasar el error real para conservar el código PostgreSQL y el mensaje en logs.
+    logError('flashcard_progress_load', error, { materialId });
     return { success: false, progress: { recall: {}, votes: {} } };
   }
 }
@@ -618,7 +619,7 @@ export async function saveFlashcardProgressAction(
 
     return { success: true, message: 'Progreso guardado.' };
   } catch (error) {
-    logError('flashcard_progress_save', { error, materialId });
+    logError('flashcard_progress_save', error, { materialId });
     return {
       success: false,
       message: error instanceof Error ? error.message : 'No pudimos guardar el progreso.',

@@ -15,6 +15,12 @@ import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/
 const VISION_RENDER_SCALE = 2.2;
 const VISION_BATCH_SIZE = 4;
 const VISION_CONCURRENCY = 2;
+
+// Los escaneos completos envían menos imágenes por solicitud: un lote de cuatro
+// suele agotar el tiempo de Gemini Vision y fuerza relecturas más costosas.
+export function selectVisionBatchSize(requiredOcr: boolean) {
+  return requiredOcr ? 2 : VISION_BATCH_SIZE;
+}
 const MAX_FULL_SCAN_VISION_PAGES = 48;
 const MAX_SELECTIVE_VISION_PAGES = 12;
 const MIN_CANONICAL_PAGE_CHARS = 40;
@@ -381,6 +387,7 @@ export async function enhancePdfExtractionWithVision(input: {
     materialId: input.materialId,
     cachedPages: previouslySaved.length,
     missingPages: missingPageNumbers.length,
+    requiredOcr: input.forceRequiredOcr === true || input.analysis.requiresOcr,
   });
   let visionModel: string | null = null;
   let renderedPageCount = 0;
@@ -388,7 +395,8 @@ export async function enhancePdfExtractionWithVision(input: {
   const visionStartedAt = Date.now();
   const requiredOcr = input.forceRequiredOcr === true || input.analysis.requiresOcr;
   const OCR_EXTRACTION_BUDGET_MS = 145_000;
-  const allBatches = chunk(missingPageNumbers, VISION_BATCH_SIZE);
+  const visionBatchSize = selectVisionBatchSize(requiredOcr);
+  const allBatches = chunk(missingPageNumbers, visionBatchSize);
 
   const recordResult = async (result: Awaited<ReturnType<typeof requestGeminiImagesJson>>) => {
     if (!result) return;
@@ -419,7 +427,7 @@ export async function enhancePdfExtractionWithVision(input: {
 
     const renderResult = await renderPdfPagesToPngs(input.pdfBuffer, {
       pageNumbers,
-      batchSize: VISION_BATCH_SIZE,
+      batchSize: visionBatchSize,
       scale: VISION_RENDER_SCALE,
     });
     renderedPageCount += renderResult.renderedPageNumbers.length;
@@ -473,7 +481,7 @@ export async function enhancePdfExtractionWithVision(input: {
     const retryEntries = candidates.filter((candidate) => !visionPages.has(candidate.pageNumber));
     // Sólo reintentar las páginas incompletas, sin mantener todas las
     // imágenes del documento en memoria mientras llegan respuestas de IA.
-    await mapWithConcurrency(retryEntries, VISION_CONCURRENCY, async ({ image, pageNumber }) => {
+    await mapWithConcurrency(retryEntries, requiredOcr ? 1 : VISION_CONCURRENCY, async ({ image, pageNumber }) => {
       if (requiredOcr && Date.now() - visionStartedAt > OCR_EXTRACTION_BUDGET_MS) return;
       retriedPageCount += 1;
       try {

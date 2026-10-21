@@ -93,6 +93,7 @@ export function StudentMaterialFlashcards({
   const [voteByCard, setVoteByCard] = useState<Record<number, QualityVote>>({});
   const [hasLoadedProgress, setHasLoadedProgress] = useState(false);
   const [hasLoadedServer, setHasLoadedServer] = useState(false);
+  const [progressSyncError, setProgressSyncError] = useState(false);
   const [showAllReviewTopics, setShowAllReviewTopics] = useState(false);
   const [isSchedulingReminder, setIsSchedulingReminder] = useState(false);
   const [reminderScheduled, setReminderScheduled] = useState(false);
@@ -247,10 +248,17 @@ export function StudentMaterialFlashcards({
     let active = true;
     void getFlashcardProgressAction(materialId)
       .then((result) => {
-        if (!active || !result.success) return;
-        // El servidor es la fuente de verdad: sus valores prevalecen sobre el caché local.
-        setRecallByCard((current) => ({ ...current, ...result.progress.recall }));
-        setVoteByCard((current) => ({ ...current, ...result.progress.votes }));
+        if (!active) return;
+        if (!result.success) {
+          setProgressSyncError(true);
+          return;
+        }
+        // Mantener los cambios locales que pueden haber ocurrido mientras cargaba el servidor.
+        setRecallByCard((current) => ({ ...result.progress.recall, ...current }));
+        setVoteByCard((current) => ({ ...result.progress.votes, ...current }));
+      })
+      .catch(() => {
+        if (active) setProgressSyncError(true);
       })
       .finally(() => {
         if (active) setHasLoadedServer(true);
@@ -275,11 +283,29 @@ export function StudentMaterialFlashcards({
       vote: voteByCard[cardIndex] ?? null,
     }));
 
-    const timer = window.setTimeout(() => {
-      void saveFlashcardProgressAction(materialId, entries);
-    }, 800);
+    let active = true;
+    let retryTimer: number | null = null;
+    const persist = async (attempt: number) => {
+      try {
+        const result = await saveFlashcardProgressAction(materialId, entries);
+        if (!result.success) throw new Error(result.message);
+        if (active) setProgressSyncError(false);
+      } catch {
+        if (!active) return;
+        setProgressSyncError(true);
+        // El caché local conserva los cambios; los errores transitorios se reintentan.
+        if (attempt < 2) {
+          retryTimer = window.setTimeout(() => void persist(attempt + 1), 2_000 * (attempt + 1));
+        }
+      }
+    };
 
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => void persist(0), 800);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      if (retryTimer !== null) window.clearTimeout(retryTimer);
+    };
   }, [demoMode, hasLoadedProgress, hasLoadedServer, materialId, recallByCard, voteByCard]);
 
   const navigateBack = useCallback(() => {
@@ -470,6 +496,12 @@ export function StudentMaterialFlashcards({
               <Check className="h-4 w-4" /> Finalizar sesión
             </Button>
           </div>
+          {!demoMode && progressSyncError ? (
+            <p role="status" className="text-amber-700 mx-auto mt-3 max-w-md text-xs leading-5">
+              Guardamos tus tarjetas en este navegador, pero todavía no pudimos sincronizarlas.
+              Volveremos a intentarlo.
+            </p>
+          ) : null}
           {reminderError ? (
             <p className="text-destructive mx-auto mt-3 max-w-md text-xs leading-5">
               {reminderError}

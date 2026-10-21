@@ -236,7 +236,8 @@ export async function getMaterialPendingStudyErrorTopicCountAction(
   materialId: string
 ): Promise<{ count: number }> {
   const user = await requireUser();
-  if (!user || !materialId) return { count: 0 };
+  // Los identificadores de demos y otros valores simbólicos nunca llegan a columnas UUID.
+  if (!user || !isUuid(materialId)) return { count: 0 };
 
   try {
     const admin = createAdminClient();
