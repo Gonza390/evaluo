@@ -292,7 +292,9 @@ assert.match(sharedPdfThumbnail, /if \(studentMaterialMatch && !user\)/);
 assert.match(sharedPdfThumbnail, /private, no-store, max-age=0/);
 assert.match(materialLoginForm, /reason === 'shared-pdf'/);
 assert.match(materialLoginForm, /emailRedirectTo/);
-assert.match(oauthCallback, /reason === 'shared-pdf'/);
+// OAuth conserva el enlace al material a través de nextPath validado.
+assert.match(oauthCallback, /requestUrl\.searchParams\.get\('next'\)/);
+assert.match(oauthCallback, /NextResponse\.redirect/);
 for (const table of ['student_material_summaries', 'student_material_glossaries', 'student_material_chunks']) {
   assert.match(securedStudyRls, new RegExp(`on public\\.${table}\\nfor select\\nto authenticated`));
 }
