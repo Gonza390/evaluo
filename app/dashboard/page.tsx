@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
+import { AcademicProfileReminder } from '@/components/dashboard/academic-profile-reminder';
 import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
@@ -86,6 +87,21 @@ export default async function DashboardPage({
 
     const nextStudyAction = await getDashboardNextStudyAction(user.id, materials);
 
+    // Preguntar los datos académicos sólo después de tener un PDF listo.
+    // El formulario de carga inicial y la guía del primer PDF no se interrumpen.
+    const hasReadyMaterial = materials.some((material) => material.processing_status === 'ready');
+    const profileContext = hasReadyMaterial && openUpload !== '1'
+      ? await supabase
+          .from('profiles')
+          .select('universidad_id, carrera_id')
+          .eq('id', user.id)
+          .maybeSingle()
+      : null;
+    const needsAcademicContext = Boolean(
+      profileContext && !profileContext.error &&
+      (!profileContext.data?.universidad_id || !profileContext.data?.carrera_id)
+    );
+
     // Conservamos el contexto específico de pregunteros y landings por materia.
     // La verificación de pertenencia y permisos se realiza en finalizePdfFirstUploadAction,
     // no mediante la descarga global de 784 materias y 1.401 relaciones.
@@ -155,6 +171,12 @@ export default async function DashboardPage({
             pendingReinforcementCount={pendingReinforcementCount}
             nextStudyAction={nextStudyAction}
           />
+          {needsAcademicContext ? (
+            <AcademicProfileReminder
+              userId={user.id}
+              missingUniversity={!profileContext?.data?.universidad_id}
+            />
+          ) : null}
         </div>
       </div>
     );

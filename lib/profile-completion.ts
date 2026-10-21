@@ -18,13 +18,9 @@ export function getAcademicProfileActiveSubjectIds(value: unknown): string[] {
 export function hasCompleteAcademicProfile({
   universidadId,
   carreraId,
-  activeSubjects,
 }: AcademicProfileCompletionInput) {
-  return (
-    hasValue(universidadId) &&
-    hasValue(carreraId) &&
-    getAcademicProfileActiveSubjectIds(activeSubjects).length > 0
-  );
+  // Las materias se eligen al estudiar: ya no son un requisito de activación.
+  return hasValue(universidadId) && hasValue(carreraId);
 }
 
 

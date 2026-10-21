@@ -3,11 +3,6 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
-import {
-  getPdfFirstActivationHref,
-  hasCompleteAcademicProfile,
-  isPdfFirstActivationPath,
-} from '@/lib/profile-completion';
 
 function normalizeAnalyticsSessionKey(value: string | null) {
   const normalized = String(value ?? '').trim();
@@ -26,7 +21,6 @@ export async function GET(request: Request) {
     requestUrl.searchParams.get('analytics_session')
   );
   const nextPathRaw = requestUrl.searchParams.get('next');
-  const reason = String(requestUrl.searchParams.get('reason') ?? '').trim();
   // Solo redirigir a rutas internas: rechaza URLs absolutas (https://), scheme
   // relativo (//host) y rutas que no empiecen con '/'.
   const nextPath =
@@ -121,39 +115,7 @@ export async function GET(request: Request) {
         }
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('universidad_id, carrera_id, active_subjects')
-        .eq('id', data.session.user.id)
-        .maybeSingle();
 
-      if (
-        !hasCompleteAcademicProfile({
-          universidadId: profile?.universidad_id,
-          carreraId: profile?.carrera_id,
-          activeSubjects: profile?.active_subjects,
-        })
-      ) {
-        // El Preguntero ya generó valor antes del registro: no interrumpir la continuidad
-        // con el perfil académico. Ese dato se puede pedir después.
-        if (
-          reason === 'preguntero' ||
-          (reason === 'shared-pdf' && nextPath.startsWith('/materiales/'))
-        ) {
-          return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
-        }
-
-        // Ship B.1: no bloquear activación PDF-first con el gate de perfil académico.
-        if (isPdfFirstActivationPath(nextPath)) {
-          return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
-        }
-        if (nextPath === '/dashboard') {
-          return NextResponse.redirect(`${requestUrl.origin}${getPdfFirstActivationHref()}`);
-        }
-        return NextResponse.redirect(
-          `${requestUrl.origin}/completar-perfil?next=${encodeURIComponent(nextPath)}`
-        );
-      }
     }
   }
 
