@@ -30,21 +30,22 @@ function AcademicProfilePageContent() {
   useEffect(() => {
     if (loading || !user) return;
     let active = true;
-    void supabase.from('profiles')
-      .select('universidad_id, carrera_id')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    void (async () => {
+      try {
+        const { data } = await supabase.from('profiles')
+          .select('universidad_id, carrera_id')
+          .eq('id', user.id)
+          .maybeSingle();
         if (!active) return;
         if (data?.universidad_id && data?.carrera_id) {
           router.replace(nextPath);
         } else {
           setChecking(false);
         }
-      })
-      .catch(() => {
+      } catch {
         if (active) setChecking(false);
-      });
+      }
+    })();
     return () => { active = false; };
   }, [loading, nextPath, router, user]);
 
