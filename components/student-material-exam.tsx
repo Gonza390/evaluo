@@ -8,10 +8,7 @@ import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-s
 import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-materials/pedagogy';
 import { cn } from '@/lib/utils';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
-import {
-  recordStudentMaterialStudyResultAction,
-  finishStudyErrorOnboardingAction,
-} from '@/lib/actions/study-errors';
+import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
@@ -755,7 +752,7 @@ export function StudentMaterialExam({
       serverActionMismatch = /Failed to find Server Action|older or newer deployment/i.test(
         String(error)
       );
-      return { success: false, onboardingErrorId: null };
+      return { success: false };
     });
     setIsRecordingError(false);
     if (!result.success) {
@@ -771,11 +768,6 @@ export function StudentMaterialExam({
       return;
     }
     delete answerIds.current[current.id];
-
-    if (result.onboardingErrorId) {
-      // Guardar el error sin interrumpir la tanda con otro tutorial.
-      void finishStudyErrorOnboardingAction(result.onboardingErrorId, 'legacy').catch(() => {});
-    }
 
     advanceExam();
   };
