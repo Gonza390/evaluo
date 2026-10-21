@@ -19,7 +19,7 @@ export function UnlamUnifiedPractice() {
     });
   }
   return (
-    <section id="practica-ingreso" aria-labelledby="unlam-unified-practice-title" className="scroll-mt-8 border-b border-slate-200 bg-[#f4f7fe] py-12 sm:py-16">
+    <section id="practica-ingreso" aria-labelledby="unlam-unified-practice-title" className="scroll-mt-8 border-b border-slate-200 bg-[#f4f7ff] py-12 sm:py-16">
       <div className="mx-auto w-full max-w-[1160px] px-4 sm:px-8">
         <p className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.14em] text-blue-700">
           <GraduationCap className="h-4 w-4" aria-hidden="true"/> Sin registro, con explicaciones
@@ -35,12 +35,12 @@ export function UnlamUnifiedPractice() {
         <div className="mt-6 grid max-w-3xl gap-2 sm:grid-cols-2" role="group" aria-label="Tipo de práctica">
           <button type="button" aria-pressed={mode === 'modelo_seminario'} onClick={() => choose('modelo_seminario')}
             className={'flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
-              (mode === 'modelo_seminario' ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
+              (mode === 'modelo_seminario' ? 'border-[#174BBD] bg-[#174BBD] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
             <FileQuestion className="h-5 w-5 shrink-0" aria-hidden="true" /> Modelo guiado: Seminario
           </button>
           <button type="button" aria-pressed={mode === 'materias'} onClick={() => choose('materias')}
             className={'flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ' +
-              (mode === 'materias' ? 'border-blue-700 bg-blue-700 text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
+              (mode === 'materias' ? 'border-[#174BBD] bg-[#174BBD] text-white' : 'border-slate-200 bg-white text-slate-700 hover:bg-blue-50')}>
             <BookOpenCheck className="h-5 w-5 shrink-0" aria-hidden="true" /> Ejercicios por materia
           </button>
         </div>
