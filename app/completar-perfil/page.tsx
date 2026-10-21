@@ -2,147 +2,72 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ProfileCompletionPrivateCatalog } from '@/components/profile-completion-private-catalog';
-import { Spinner } from '@/components/ui/spinner';
+import { AcademicProfileSimpleForm } from '@/components/profile-academic-simple';
 import { useUser } from '@/hooks/useUser';
-import { logError } from '@/lib/observability';
-import {
-  hasCompleteAcademicProfile,
-  isPdfFirstActivationPath,
-} from '@/lib/profile-completion';
 import { supabase } from '@/lib/supabase-client';
 
 function sanitizeNextPath(value: string | null) {
-  if (
-    !value ||
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)
-  ) {
+  if (!value || !value.startsWith('/') || value.startsWith('//') ||
+      /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)) {
     return '/dashboard';
   }
-
   return value;
 }
 
-function ProfileSetupLoading({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-white px-4">
-      <div className={`w-full ${compact ? 'max-w-xl' : 'max-w-2xl'} border-y border-slate-200 py-10 text-center`}>
-        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-          <Spinner size="sm" />
-        </div>
-        <p className="mt-4 text-sm font-semibold text-slate-800">Preparando tu experiencia académica</p>
-        <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-slate-500">
-          Revisamos tu universidad, carrera y materias para llevarte al siguiente paso.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function CompletarPerfilContent() {
+function AcademicProfilePageContent() {
   const { user, loading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = sanitizeNextPath(searchParams.get('next'));
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
-  const [requiresCompletion, setRequiresCompletion] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
+      router.replace('/login?next=' + encodeURIComponent('/completar-perfil?next=' + encodeURIComponent(nextPath)));
     }
   }, [loading, nextPath, router, user]);
 
   useEffect(() => {
+    if (loading || !user) return;
     let active = true;
-
-    async function checkProfile() {
-      if (loading) return;
-
-      if (!user) {
-        if (active) {
-          setIsCheckingProfile(false);
-          setRequiresCompletion(false);
-        }
-        return;
-      }
-
-      if (isPdfFirstActivationPath(nextPath)) {
-        if (active) {
-          setRequiresCompletion(false);
-          setIsCheckingProfile(false);
-          router.replace(nextPath);
-        }
-        return;
-      }
-
-      setIsCheckingProfile(true);
-
+    void (async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('universidad_id, carrera_id, active_subjects')
+        const { data } = await supabase.from('profiles')
+          .select('universidad_id, carrera_id')
           .eq('id', user.id)
           .maybeSingle();
-
-        if (error) throw error;
         if (!active) return;
-
-        if (
-          hasCompleteAcademicProfile({
-            universidadId: data?.universidad_id,
-            carreraId: data?.carrera_id,
-            activeSubjects: data?.active_subjects,
-          })
-        ) {
-          setRequiresCompletion(false);
+        if (data?.universidad_id && data?.carrera_id) {
           router.replace(nextPath);
-          return;
+        } else {
+          setChecking(false);
         }
-
-        setRequiresCompletion(true);
-      } catch (error) {
-        logError('completarPerfil.checkProfile', error, { userId: user.id, nextPath });
-        if (active) setRequiresCompletion(true);
-      } finally {
-        if (active) setIsCheckingProfile(false);
+      } catch {
+        if (active) setChecking(false);
       }
-    }
-
-    void checkProfile();
-    return () => {
-      active = false;
-    };
+    })();
+    return () => { active = false; };
   }, [loading, nextPath, router, user]);
 
-  if (!user || loading || isCheckingProfile) {
-    return <ProfileSetupLoading />;
+  if (loading || !user || checking) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-white px-4">
+        <p className="text-sm text-slate-500">Preparando tus datos académicos…</p>
+      </main>
+    );
   }
 
-  if (!requiresCompletion) return null;
-
   return (
-    <div className="min-h-screen bg-white">
-      <ProfileCompletionPrivateCatalog
-        userId={user.id}
-        isOpen={true}
-        allowSkip={false}
-        onComplete={() => {
-          const completionDestination = nextPath === '/dashboard' ? '/empezar' : nextPath;
-          router.replace(completionDestination);
-          router.refresh();
-        }}
-      />
-    </div>
+    <main className="flex min-h-screen items-center justify-center bg-slate-50/40 px-4 py-10">
+      <AcademicProfileSimpleForm nextPath={nextPath} />
+    </main>
   );
 }
 
 export default function CompletarPerfilPage() {
   return (
-    <Suspense fallback={<ProfileSetupLoading compact={true} />}>
-      <CompletarPerfilContent />
+    <Suspense fallback={<main className="min-h-screen bg-white" />}>
+      <AcademicProfilePageContent />
     </Suspense>
   );
 }
