@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { CalendarDays, Clock3, Sparkles } from 'lucide-react';
 import { StudyStatePanel } from '@/components/study-state-panel';
-import { AcademicProfileReminder } from '@/components/dashboard/academic-profile-reminder';
+import { LazyAcademicProfileReminder } from '@/components/dashboard/lazy-academic-profile-reminder';
 import { LazyMaeveStudySpace } from '@/components/dashboard/lazy-maeve-study-space';
 import { ReferralPortalDashboardShortcut } from '@/components/referrals/ReferralPortalDashboardShortcut';
 import { fetchStudentMaterialsByUser } from '@/lib/data/student-materials';
@@ -172,7 +172,7 @@ export default async function DashboardPage({
             nextStudyAction={nextStudyAction}
           />
           {needsAcademicContext ? (
-            <AcademicProfileReminder
+            <LazyAcademicProfileReminder
               userId={user.id}
               missingUniversity={!profileContext?.data?.universidad_id}
             />
