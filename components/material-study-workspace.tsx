@@ -173,7 +173,6 @@ type MaterialStudyWorkspaceProps = {
   progressConfig?: {
     questionCounts: number[];
     requestedError?: string;
-    tour?: string;
     returnToErrors?: boolean;
   };
   initialProgressOpen?: boolean;
@@ -763,16 +762,13 @@ export function MaterialStudyWorkspace({
     };
   }, [focusFirstChapterOnExit, recommendedActive, progressOpen, activeTab]);
 
-  const openRecommendedErrors = (onboardingErrorId: string | null) => {
+  const openRecommendedErrors = () => {
     setRecommendedTourStep(null);
     if (demo) {
       demo.onReinforce?.(diagnosticReviewTopics);
       return;
     }
     const params = new URLSearchParams({ material: materialId });
-    if (onboardingErrorId) {
-      params.set('error', onboardingErrorId);
-    }
     router.push(`/dashboard/explicaciones?${params}`);
   };
 
@@ -1889,7 +1885,7 @@ export function MaterialStudyWorkspace({
                     handleStudyTabChange('ejercicios', 'summary_chapter');
                   }}
                   requestedError={topicReturn ? undefined : progressConfig.requestedError}
-                  tour={progressConfig.tour}
+                  
                   returnToErrors={progressConfig.returnToErrors}
                 />
               ) : null))
