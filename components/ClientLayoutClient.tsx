@@ -193,7 +193,7 @@ function ClientLayoutInner({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/universidad/') ||
     pathname === '/materias' ||
     pathname.startsWith('/explorar/materia/');
-  const showBottomNav = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute;
+  const showBottomNav = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute && !isMaterialStudyRoute;
   const showTopBar = !isAdministradorRoute && !isSimuladorRoute && !isLegalRoute;
   const showSidebar = showTopBar && Boolean(user);
   const todayKey = streak?.todayKey ?? '';
