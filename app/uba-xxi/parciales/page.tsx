@@ -114,8 +114,8 @@ function PrimaryCta({ location, label, variant = 'solid' }: { location: string; 
       className={
         'inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ' +
         (variant === 'outline'
-          ? 'border border-blue-200 bg-white text-blue-800 hover:bg-blue-50'
-          : 'bg-blue-700 text-white shadow-[0_12px_24px_rgba(29,78,216,0.18)] hover:bg-blue-800')
+          ? 'border border-blue-200 bg-white text-[#174BBD] hover:bg-blue-50'
+          : 'bg-[linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)] text-white shadow-[0_12px_28px_rgba(23,75,189,0.20)] hover:brightness-110')
       }
     >
       <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
@@ -161,7 +161,7 @@ export default function ParcialesUbaXxiPage() {
                   cta_name: 'elegir_pdf',
                   destination: PDF_HREF,
                 }}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-blue-700 px-3 text-xs font-bold text-white hover:bg-blue-800 sm:px-4"
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-[#174BBD] px-3 text-xs font-bold text-white transition hover:bg-[#0D2F82] sm:px-4"
               >
                 Elegir PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedLink>
@@ -171,14 +171,14 @@ export default function ParcialesUbaXxiPage() {
       </div>
 
       <main>
-        <section className="border-b border-slate-200 bg-[radial-gradient(circle_at_80%_0%,rgba(99,102,241,0.13),transparent_37%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
+        <section className="border-b border-blue-100 bg-[radial-gradient(circle_at_88%_8%,rgba(37,99,235,0.13),transparent_42%),linear-gradient(180deg,#ffffff_0%,#f0f5ff_100%)]">
           <div className="mx-auto grid w-full max-w-[1160px] gap-8 px-4 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1.12fr_0.88fr] lg:items-center lg:gap-12 lg:py-20">
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-blue-700">
+              <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#174BBD]">
                 <GraduationCap className="h-4 w-4" aria-hidden="true" /> UBA XXI · Preparación de parciales
               </p>
-              <h1 className="mt-5 max-w-2xl text-[2.45rem] font-black leading-[1.07] tracking-[-0.05em] text-slate-950 sm:text-5xl lg:text-[3.45rem]">
-                Parciales UBA XXI: <span className="text-blue-700">exámenes anteriores</span> y práctica para rendir
+              <h1 className="mt-5 max-w-2xl text-[2.45rem] font-black leading-[1.07] tracking-[-0.05em] text-[#0f1b3d] sm:text-5xl lg:text-[3.45rem]">
+                Parciales UBA XXI: <span className="text-[#174BBD]">exámenes anteriores</span> y práctica para rendir
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">
                 Mirá ejemplos de parciales reales de IPC e ICSE de 2025 y 2026, entendé qué tipo de
@@ -187,7 +187,7 @@ export default function ParcialesUbaXxiPage() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
                   href="#practica"
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_24px_rgba(29,78,216,0.18)] transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(23,75,189,0.20)] transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
                   <ListChecks className="h-4 w-4" aria-hidden="true" /> Probar 3 preguntas gratis
                 </a>
@@ -199,7 +199,7 @@ export default function ParcialesUbaXxiPage() {
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_25px_80px_rgba(15,23,42,0.1)] sm:p-7">
+            <div className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_22px_65px_rgba(15,23,42,0.09)] sm:p-7">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
                   Examen anterior de referencia
@@ -248,7 +248,7 @@ export default function ParcialesUbaXxiPage() {
           </div>
         </section>
 
-        <section id="practica" aria-labelledby="titulo-practica" className="scroll-mt-8 border-y border-slate-200 bg-slate-50 py-14 sm:py-20">
+        <section id="practica" aria-labelledby="titulo-practica" className="scroll-mt-8 border-y border-blue-100 bg-[#f4f7ff] py-12 sm:py-16">
           <div className="mx-auto w-full max-w-[860px] px-4 sm:px-8">
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Del examen anterior a la práctica</p>
             <h2 id="titulo-practica" className="mt-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
@@ -431,7 +431,7 @@ export default function ParcialesUbaXxiPage() {
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-[#0f1b3d] py-14 text-white sm:py-20">
+        <section className="border-y border-blue-200 bg-[linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)] py-14 text-white sm:py-20">
           <div className="mx-auto grid w-full max-w-[1160px] gap-10 px-4 sm:px-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-300">Prepará el próximo parcial</p>

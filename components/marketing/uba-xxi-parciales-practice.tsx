@@ -94,7 +94,7 @@ export function UbaXxiParcialesPractice() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-white p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)]">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
             Práctica abierta · sin registro
@@ -111,7 +111,7 @@ export function UbaXxiParcialesPractice() {
         const hasAnswered = selected !== undefined;
         const correct = selected === question.correct;
         return (
-          <fieldset key={question.topic} className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <fieldset key={question.topic} className="min-w-0 rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_10px_35px_rgba(15,23,42,0.05)] sm:p-6">
             <legend className="sr-only">Pregunta {index + 1}: {question.topic}</legend>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-700">
               {String(index + 1).padStart(2, '0')} / {QUESTIONS.length} · {question.topic}

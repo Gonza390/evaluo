@@ -21,6 +21,9 @@ requireAll(landingPath, [
   'Curso de Ingreso UNLaM 2027: materias, fechas y cómo estudiar',
 ]);
 requireAll('components/marketing/unlam-editorial-guide.tsx', [
+  'linear-gradient(145deg,#0D2F82_0%,#174BBD_52%,#2563EB_100%)',
+  'font-black leading-[1.07]',
+  'Calendario oficial',
   'UnlamUnifiedPractice',
   'UnlamAdmissionGuide',
   'UnlamIngresoToolkit',
