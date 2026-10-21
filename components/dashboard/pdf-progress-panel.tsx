@@ -1024,11 +1024,13 @@ export function PdfProgressPanel({
       ) : (
         <div className="mt-5">
           <div className={
-              recommendedTopic
+              recommendedTopic && !showOnboardingExample
                 ? 'grid gap-5 lg:grid-cols-[minmax(270px,0.75fr)_minmax(0,1.25fr)] lg:items-start'
                 : 'space-y-4'
             }>
-            {recommendedTopic && (
+            {/* En el paso Progreso del recorrido, los estados tienen prioridad visual,
+                especialmente en pantallas móviles; después vuelve la actividad recomendada. */}
+            {recommendedTopic && !showOnboardingExample && (
               <section
                 className="border-primary/20 bg-primary/5 rounded-2xl border p-5 sm:p-6 lg:sticky lg:top-2"
                 aria-label="Actividad recomendada"
