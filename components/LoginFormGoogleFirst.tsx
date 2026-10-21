@@ -48,6 +48,11 @@ function getAuthContextCopy(nextPath: string, reason: string, isSignUp: boolean)
       ? 'Guardá las respuestas que ya hiciste y seguí practicando exactamente donde quedaste.'
       : 'Ingresá para recuperar tus respuestas y continuar el mismo Preguntero.';
   }
+  if (reason === 'shared-pdf' && nextPath.startsWith('/materiales/')) {
+    return isSignUp
+      ? 'Creá tu cuenta gratis para abrir el PDF que te compartieron y usar sus herramientas de estudio.'
+      : 'Iniciá sesión para abrir el PDF compartido. Después vas a volver directamente al material.';
+  }
   if (nextPath.startsWith('/dashboard/materiales')) {
     return isSignUp
       ? 'Creá tu cuenta para subir tu PDF y convertirlo en resumen, glosario, tarjetas y práctica.'
@@ -176,7 +181,11 @@ export default function LoginFormGoogleFirst() {
   const contextCopy = getAuthContextCopy(nextPath, reason, isSignUp);
 
   const resolvePostLoginPath = async (userId: string) => {
-    if (reason === 'preguntero' || isPdfFirstActivationPath(nextPath)) return nextPath;
+    if (
+      reason === 'preguntero' ||
+      (reason === 'shared-pdf' && nextPath.startsWith('/materiales/')) ||
+      isPdfFirstActivationPath(nextPath)
+    ) return nextPath;
 
     const { data } = await supabase
       .from('profiles')
@@ -251,7 +260,15 @@ export default function LoginFormGoogleFirst() {
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+        const emailRedirectTo =
+          reason === 'shared-pdf' && nextPath.startsWith('/materiales/')
+            ? `${window.location.origin}/auth/callback?reason=shared-pdf&next=${encodeURIComponent(nextPath)}`
+            : undefined;
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          ...(emailRedirectTo ? { options: { emailRedirectTo } } : {}),
+        });
         if (error) return setMessage(error.message);
         trackMarketingEvent(
           'signup_completed',
@@ -265,7 +282,15 @@ export default function LoginFormGoogleFirst() {
           },
           data.user?.id ?? null
         );
-        setMessage('Registro exitoso. Revisá tu correo para confirmar tu cuenta.');
+        if (data.session && reason === 'shared-pdf' && nextPath.startsWith('/materiales/')) {
+          window.location.href = nextPath;
+          return;
+        }
+        setMessage(
+          reason === 'shared-pdf'
+            ? 'Registro exitoso. Revisá tu correo para confirmar la cuenta y acceder al PDF compartido.'
+            : 'Registro exitoso. Revisá tu correo para confirmar tu cuenta.'
+        );
         return;
       }
 
