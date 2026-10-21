@@ -131,7 +131,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/simulador/errores') ||
     pathname.startsWith('/simulador/ultimo-intento');
 
+  const isSharedMaterialRoute = pathname.startsWith('/materiales/');
   const isProtectedRoute =
+    isSharedMaterialRoute ||
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/calendario') ||
     pathname.startsWith('/configuracion') ||
@@ -217,6 +219,7 @@ export async function proxy(request: NextRequest) {
   if (isProtectedRoute && !user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`);
+    if (isSharedMaterialRoute) loginUrl.searchParams.set('reason', 'shared-pdf');
     return persistReferralCookie(request, redirectPreservingSessionCookies(response, loginUrl));
   }
 
