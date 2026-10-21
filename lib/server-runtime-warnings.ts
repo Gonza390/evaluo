@@ -10,6 +10,11 @@ export function installDeprecatedBufferTrace() {
   if (traceProcess.__evaluoBufferWarningTrace) return;
   traceProcess.__evaluoBufferWarningTrace = true;
 
+  // Sin esta opción, la pila de DEP0005 puede contener sólo el mensaje
+  // genérico y no el archivo que invocó al constructor obsoleto.
+  // No suprimir la advertencia: necesitamos su origen antes de tocar dependencias.
+  (traceProcess as typeof process & { traceDeprecation?: boolean }).traceDeprecation = true;
+
   let reported = false;
   process.on('warning', (warning: Error & { code?: string }) => {
     if (warning.code !== 'DEP0005' || reported) return;

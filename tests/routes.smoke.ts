@@ -154,7 +154,10 @@ assert.match(simulatorLegacySource, /acquisitionVariant === 'preguntero_google_v
 assert.doesNotMatch(simulatorLegacySource, /Opcional/);
 assert.doesNotMatch(simulatorLegacySource, /Ver resúmenes y material de la materia/);
 assert.doesNotMatch(profileCompletionSource, /cameFromDemo/);
-assert.match(profileCompletionSource, /router\.replace\(completionDestination\)/);
+// El perfil académico ahora es opcional y vuelve al destino solicitado.
+assert.match(profileCompletionSource, /function sanitizeNextPath/);
+assert.match(profileCompletionSource, /router\.replace\(nextPath\)/);
+assert.match(profileCompletionSource, /AcademicProfileSimpleForm nextPath=\{nextPath\}/);
 assert.match(pdfUploadShellSource, /preguntero_exam_pdf_uploaded/);
 
 for (const href of ['/explorar', '/pregunteros', '/']) {
@@ -289,7 +292,9 @@ assert.match(sharedPdfThumbnail, /if \(studentMaterialMatch && !user\)/);
 assert.match(sharedPdfThumbnail, /private, no-store, max-age=0/);
 assert.match(materialLoginForm, /reason === 'shared-pdf'/);
 assert.match(materialLoginForm, /emailRedirectTo/);
-assert.match(oauthCallback, /reason === 'shared-pdf'/);
+// OAuth conserva el enlace al material a través de nextPath validado.
+assert.match(oauthCallback, /requestUrl\.searchParams\.get\('next'\)/);
+assert.match(oauthCallback, /NextResponse\.redirect/);
 for (const table of ['student_material_summaries', 'student_material_glossaries', 'student_material_chunks']) {
   assert.match(securedStudyRls, new RegExp(`on public\\.${table}\\nfor select\\nto authenticated`));
 }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { renderPdfPagesToPngs } from '../lib/student-materials/pdf-render.ts';
-import { selectVisionPageNumbers } from '../lib/student-materials/vision-extract.ts';
+import { selectVisionPageNumbers, selectVisionBatchSize } from '../lib/student-materials/vision-extract.ts';
 
 // PDF real pero generado localmente: no accede a datos de estudiantes ni a APIs.
 const pdf = await PDFDocument.create();
@@ -30,6 +30,9 @@ assert.equal(firstBatch.images.length, 2);
 assert.equal(secondBatch.images.length, 1);
 assert.ok(firstBatch.blankPageNumbers.includes(1), 'Una página completamente vacía debe identificarse.');
 assert.ok(!firstBatch.blankPageNumbers.includes(2), 'El OCR nunca debe descartar la página que tiene texto.');
+
+assert.equal(selectVisionBatchSize(true), 2, 'Los lotes de escaneos completos deben ser pequeños.');
+assert.equal(selectVisionBatchSize(false), 4, 'La extracción selectiva mantiene su capacidad.');
 
 const scanAnalysis = {
   documentType: 'scanned' as const,
