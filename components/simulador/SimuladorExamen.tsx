@@ -6,8 +6,6 @@ import type { SimuladorExamenProps as LegacySimuladorExamenProps } from '@/compo
 import { SimulatorFinishedResult } from '@/components/simulador/SimulatorFinishedResult';
 import { supabase } from '@/lib/supabase-client';
 import { logError } from '@/lib/observability';
-import { getPendingStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
-import { FirstStudyErrorOnboardingPrompt } from '@/components/study-errors/first-error-onboarding-prompt';
 
 export type SimuladorExamenProps = LegacySimuladorExamenProps;
 
@@ -43,7 +41,6 @@ export default function SimuladorExamen(props: SimuladorExamenProps) {
   const [baselineReady, setBaselineReady] = useState(false);
   const [finishDetected, setFinishDetected] = useState(false);
   const [finishedAttempt, setFinishedAttempt] = useState<AttemptRow | null>(null);
-  const [onboardingErrorId, setOnboardingErrorId] = useState<string | null>(null);
   const [materiaNombre, setMateriaNombre] = useState('');
 
   const mode = props.mode ?? 'regular';
@@ -129,10 +126,6 @@ export default function SimuladorExamen(props: SimuladorExamenProps) {
           setFinishedAttempt(latestAttempt);
           baselineAttemptIdRef.current = latestAttempt.id;
 
-          const onboarding = await getPendingStudyErrorOnboardingAction();
-          if (onboarding.errorId) {
-            setOnboardingErrorId(onboarding.errorId);
-          }
           return;
         }
         await wait(ATTEMPT_WAIT_MS);
@@ -180,11 +173,6 @@ export default function SimuladorExamen(props: SimuladorExamenProps) {
   if (finishedAttempt) {
     return (
       <>
-        <FirstStudyErrorOnboardingPrompt
-          errorId={onboardingErrorId}
-          location="simulator_result"
-          onClose={() => setOnboardingErrorId(null)}
-        />
         <SimulatorFinishedResult
           materiaId={props.materiaId}
           materiaNombre={materiaNombre}
