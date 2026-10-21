@@ -132,8 +132,9 @@ export function StudentMaterialShareControl({
             </button>
           </div>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Al activar el enlace, cualquier persona podrá abrir y compartir este PDF, junto con su
-            resumen, glosario y material de estudio.
+            Al activar el enlace, cualquier persona con una cuenta de Evaluo podrá abrir y
+            compartir este PDF, junto con su resumen, glosario y material de estudio.
+            Quienes no hayan iniciado sesión deberán ingresar o registrarse primero.
           </p>
           <div className="mt-4 flex gap-2">
             <button
