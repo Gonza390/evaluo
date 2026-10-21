@@ -238,7 +238,7 @@ const demoFourStepSource = readFileSync(resolve('components/demo-four-step-study
 assert.match(demoMaterialSource, /DemoFourStepStudy/);
 assert.doesNotMatch(demoMaterialSource, /DemoMaterialGuidedTourV6|hasPremiumAccess/);
 assert.match(demoFourStepSource, /isOwner=\{false\}/);
-assert.match(demoFourStepSource, /materialId="demo-material"/);
+assert.match(demoFourStepSource, /materialId=(?:"demo-material"|\{DEMO_MATERIAL_ID\})/);
 assert.match(demoFourStepSource, /buildPedagogicalArtifacts/);
 assert.match(demoFourStepSource, /demo=\{\{/);
 
