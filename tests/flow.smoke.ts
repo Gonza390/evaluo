@@ -543,16 +543,6 @@ assert.match(
 );
 assert.match(homePageSource, /canonical: '\/'/);
 
-const firstErrorPromptSource = readFileSync(
-  resolve('components/study-errors/first-error-onboarding-prompt.tsx'),
-  'utf8'
-);
-assert.match(firstErrorPromptSource, /Guardamos tu primer error/);
-assert.match(firstErrorPromptSource, /tour=first-error&error=/);
-assert.match(firstErrorPromptSource, /finishStudyErrorOnboardingAction\(errorId, 'skipped'\)/);
-assert.match(firstErrorPromptSource, /hasSeenFirstPdfDemoErrors/);
-assert.match(firstErrorPromptSource, /finishStudyErrorOnboardingAction\(errorId, 'legacy'\)/);
-
 const studyErrorsSource = readFileSync(
   resolve('components/dashboard/study-errors-client.tsx'),
   'utf8'
@@ -568,7 +558,7 @@ for (const target of ['error', 'understand', 'source', 'practice']) {
     `El onboarding de Mis errores debe destacar ${target}.`
   );
 }
-assert.match(studyErrorsSource, /finishStudyErrorOnboardingAction\(onboarding\.errorId, outcome\)/);
+assert.doesNotMatch(studyErrorsSource, /finishStudyErrorOnboardingAction|FirstErrorOnboardingPrompt/);
 
 const reviewSource =
   'La memoria de trabajo permite mantener y manipular información durante una tarea.';
