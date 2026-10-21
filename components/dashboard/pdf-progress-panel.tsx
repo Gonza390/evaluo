@@ -22,8 +22,6 @@ import {
   type PdfTopicEvidence,
 } from '@/lib/student-materials/progress';
 import type { StudyErrorConversation, StudyErrorReviewActions } from './study-error-detail';
-import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
-import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 import { getTopicStudyResources } from '@/lib/student-materials/topic-study-resources';
 import type { StudyFlashcard } from '@/lib/student-materials/pedagogy';
 import type { StudyGlossaryItem } from '@/lib/student-materials/types';
@@ -94,7 +92,6 @@ export function PdfProgressPanel({
   initialTopicSectionIndex,
   initialReinforce = false,
   lastPracticeOutcome,
-  onboardingErrorId,
   returnToErrors = false,
 }: {
   material: { id: string; title: string };
@@ -105,7 +102,6 @@ export function PdfProgressPanel({
   initialTopicSectionIndex?: number;
   initialReinforce?: boolean;
   lastPracticeOutcome?: TopicPracticeOutcome;
-  onboardingErrorId?: string | null;
   returnToErrors?: boolean;
   embedded?: boolean;
   showOnboardingExample?: boolean;
@@ -157,10 +153,6 @@ export function PdfProgressPanel({
       initialTopic?.errors.find((error) => error.status === 'pending')?.id ??
       null
   );
-  const [tourStep, setTourStep] = useState(
-    onboardingErrorId && initialError?.status === 'pending' ? 0 : -1
-  );
-  const tourClosing = useRef(false);
   const [conversations, setConversations] = useState<Record<string, StudyErrorConversation>>({});
   const detailRef = useRef<HTMLElement>(null);
   const [evidence, setEvidence] = useState<PdfTopicEvidence[]>([]);
@@ -271,17 +263,6 @@ export function PdfProgressPanel({
     });
     return () => cancelAnimationFrame(frame);
   }, [reviewOpen, errorId]);
-  async function closeTour(outcome: 'completed' | 'skipped') {
-    if (tourClosing.current || !onboardingErrorId) return;
-    tourClosing.current = true;
-    try {
-      await finishStudyErrorOnboardingAction(onboardingErrorId, outcome);
-    } finally {
-      setTourStep(-1);
-      tourClosing.current = false;
-    }
-  }
-
   function openTopic(id: string, preferredErrorId?: string) {
     const errors =
       id === 'unmatched' ? unmatched : (topics.find((topic) => topic.id === id)?.errors ?? []);
@@ -760,28 +741,6 @@ export function PdfProgressPanel({
     <div
       className={`${embedded ? 'w-full py-3 sm:py-4' : 'mx-auto w-full max-w-none px-1 py-3 sm:px-3 sm:py-4'} min-w-0 [&_p]:leading-5!`}
     >
-      {tourStep >= 0 && selected && (
-        <PdfTourSpotlight
-          selector={
-            tourStep === 0
-              ? '[data-study-error-tour="error"]'
-              : '[data-study-error-tour="understand"]'
-          }
-          title={tourStep === 0 ? 'Tu error está en Progreso' : 'Entendé y comprobá el concepto'}
-          description={
-            tourStep === 0
-              ? 'Este tema reúne el concepto que te costó y su refuerzo.'
-              : 'Revisá la explicación. Después respondé una pregunta diferente y volvé a tus temas.'
-          }
-          progress={`${tourStep + 1} de 2`}
-          nextLabel={tourStep === 0 ? 'Siguiente' : 'Entendido'}
-          onNext={() => (tourStep === 0 ? setTourStep(1) : void closeTour('completed'))}
-          onBack={tourStep === 1 ? () => setTourStep(0) : undefined}
-          onExit={() => void closeTour('skipped')}
-          ariaLabel="Guía de Progreso"
-          footerLabel="Tu primer error"
-        />
-      )}
       {!embedded && !simulation && (
         <PdfMobileNavigation
           hasPendingErrors={pending.length > 0}
