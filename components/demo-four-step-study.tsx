@@ -1,105 +1,117 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { BookOpenText, BrainCircuit, ChartNoAxesColumnIncreasing } from 'lucide-react';
+import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
 import {
   MaterialStudyWorkspace,
   type StudyTabId,
 } from '@/components/material-study-workspace';
 import { StudentMaterialDiagnostic } from '@/components/student-material-diagnostic';
-import { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { buildPedagogicalArtifacts, type StudyQuestion } from '@/lib/student-materials/pedagogy';
+import type { StudyErrorsPageData } from '@/lib/study-errors';
+import type { PdfTopicEvidence } from '@/lib/student-materials/progress';
+import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
 import type { StudyGlossaryItem, StudentMaterialSummary } from '@/lib/student-materials/types';
 
+const DEMO_MATERIAL_ID = 'demo-material';
+const DEMO_TITLE = 'IA y nuevas tecnologías';
+const DEMO_PDF_URL = '/material-general-prueba.pdf';
+
+// La muestra utiliza el panel real, pero nunca consulta ni guarda progreso de cuentas.
+const emptyDemoProgress: StudyErrorsPageData = {
+  pending: [],
+  resolved: [],
+  materials: [{ id: DEMO_MATERIAL_ID, title: DEMO_TITLE, materiaNombre: null }],
+};
+
+type DemoAnswer = {
+  question: StudyQuestion;
+  selected: string;
+  answeredAt: string;
+};
+
+function normalizeAnswer(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * La misma pantalla de Progreso que usan los PDFs reales, sin consultas al servidor.
+ * Los estados ilustrativos del cuarto paso los dibuja PdfProgressPanel: no hay
+ * resultados inventados almacenados, y solo se refleja lo respondido en esta demo.
+ */
 function DemoProgress({
-  title,
   summary,
-  reviewTopics,
-  showOnboardingTopic,
+  glossary,
+  flashcards,
+  questions,
+  answers,
   showOnboardingExample,
+  showOnboardingTopic,
   onPractice,
 }: {
-  title: string;
   summary: StudentMaterialSummary;
-  reviewTopics: string[];
-  showOnboardingTopic: boolean;
+  glossary: StudyGlossaryItem[];
+  flashcards: ReturnType<typeof buildPedagogicalArtifacts>['flashcards'];
+  questions: StudyQuestion[];
+  answers: Record<string, DemoAnswer>;
   showOnboardingExample: boolean;
+  showOnboardingTopic: boolean;
   onPractice: () => void;
 }) {
-  const chapters = summary.sections.slice(0, 4);
-  const suggested = reviewTopics[0] || chapters[0]?.title || 'Conceptos fundamentales';
+  const { counts, evidence } = useMemo(() => {
+    const counts = summary.sections.map(() => 0);
+    for (const question of questions) {
+      const section = findSummarySectionForQuestion(question, summary.sections);
+      if (section >= 0) counts[section] += 1;
+    }
+    const evidence: PdfTopicEvidence[] = Object.values(answers).flatMap((answer) => {
+      const section = findSummarySectionForQuestion(answer.question, summary.sections);
+      if (section < 0) return [];
+      const correct = normalizeAnswer(answer.selected) === normalizeAnswer(answer.question.answer);
+      return [{
+        topic: null,
+        sectionTitle: summary.sections[section].title,
+        correct: correct ? 1 : 0,
+        incorrect: correct ? 0 : 1,
+        selfReported: 0,
+        lastAnsweredAt: answer.answeredAt,
+      }];
+    });
+    return { counts, evidence };
+  }, [answers, questions, summary.sections]);
+
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 px-3 py-4 sm:px-6 sm:py-6">
-      <div className="border-b border-slate-200 pb-4">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-blue-600">
-          Progreso de ejemplo
-        </p>
-        <h2 className="mt-1 text-xl font-bold tracking-tight text-slate-950">
-          Tu progreso con este PDF
-        </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Una demostración del seguimiento por capítulo. No modifica tus resultados reales.
-        </p>
-      </div>
-      <section data-onboarding-topic-detail className={
-        'rounded-2xl border p-4 sm:p-5 ' +
-        (showOnboardingTopic ? 'border-blue-200 bg-blue-50/40' : 'border-slate-200 bg-white')
-      }>
-        <div className="flex items-start gap-3">
-          <BookOpenText className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-              Estudiar por tema
-            </p>
-            <h3 className="mt-1 text-base font-bold text-slate-900">
-              {chapters[0]?.title || title}
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Abrí un capítulo, repasá sus conceptos y practicá preguntas vinculadas a ese tema.
-            </p>
-            <button type="button" onClick={onPractice}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-              <BrainCircuit className="h-4 w-4" aria-hidden="true" /> Practicar con este PDF
-            </button>
-          </div>
-        </div>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          {chapters.slice(0, 4).map((chapter, i) => (
-            <div key={chapter.title} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700">
-              <span className="mr-2 font-semibold text-blue-600">{i + 1}.</span>{chapter.title}
-            </div>
-          ))}
-        </div>
-      </section>
-      <section data-recommended-topics className={
-        'rounded-2xl border p-4 sm:p-5 ' +
-        (showOnboardingExample ? 'border-blue-200 bg-blue-50/40' : 'border-slate-200 bg-white')
-      }>
-        <div className="flex items-start gap-3">
-          <ChartNoAxesColumnIncreasing className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" aria-hidden="true" />
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-              Progreso y refuerzo
-            </p>
-            <h3 className="mt-1 text-base font-bold text-slate-900">
-              Descubrí qué temas necesitás reforzar
-            </h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Cuando respondés preguntas, Evaluo identifica los temas que dominás y aquellos en los que conviene volver a practicar.
-            </p>
-            <p className="mt-3 rounded-xl bg-white px-3 py-2.5 text-sm text-slate-700">
-              Tema de ejemplo: <strong>{suggested}</strong>
-            </p>
-          </div>
-        </div>
-      </section>
+    <div className="mx-auto w-full max-w-[1450px] px-3 py-3 sm:px-5">
+      <p role="status" className="mb-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 text-blue-900">
+        Muestra de Evaluo: esta es la misma pantalla de Progreso que vas a usar con tus PDFs.
+        Solo cuenta las respuestas que hagas acá y no guarda resultados en tu cuenta.
+      </p>
+      <PdfProgressPanel
+        embedded
+        material={{ id: DEMO_MATERIAL_ID, title: DEMO_TITLE }}
+        sections={summary.sections}
+        data={emptyDemoProgress}
+        summaryUnavailable={false}
+        assessmentData={{ items: evidence }}
+        questionCounts={counts}
+        glossary={glossary}
+        flashcards={flashcards}
+        sourcePdfHref={DEMO_PDF_URL}
+        showOnboardingTopic={showOnboardingTopic}
+        showOnboardingExample={showOnboardingExample}
+        onPractice={onPractice}
+        onPracticeTopic={onPractice}
+      />
     </div>
   );
 }
 
-/**
- * Demostración pública del MISMO recorrido principal de cuatro pasos.
- * Muestra datos de ejemplo y nunca escribe respuestas o progreso en una cuenta.
- */
+/** Demo pública del onboarding real de cuatro pasos, sin efectos en perfiles. */
 export function DemoFourStepStudy({
   guided = true,
   summary,
@@ -114,7 +126,7 @@ export function DemoFourStepStudy({
   const [activeTab, setActiveTab] = useState<StudyTabId>('resumen');
   const [viewerVisible, setViewerVisible] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
-  const [reviewTopics, setReviewTopics] = useState<string[]>([]);
+  const [demoAnswers, setDemoAnswers] = useState<Record<string, DemoAnswer>>({});
   const artifacts = useMemo(
     () => buildPedagogicalArtifacts({ summary, glossary, pageCount }),
     [summary, glossary, pageCount]
@@ -131,11 +143,11 @@ export function DemoFourStepStudy({
       canRegenerate={false}
       fileName="IA y nuevas tecnologías - Material de estudio.pdf"
       isPremium
-      materialId="demo-material"
+      materialId={DEMO_MATERIAL_ID}
       isOwner={false}
       pageCount={pageCount}
-      title="IA y nuevas tecnologías"
-      viewerUrl="/material-general-prueba.pdf"
+      title={DEMO_TITLE}
+      viewerUrl={DEMO_PDF_URL}
       visibility="private"
       studyGlossary={glossary}
       studySummary={summary}
@@ -151,12 +163,17 @@ export function DemoFourStepStudy({
           <StudentMaterialDiagnostic
             artifacts={artifacts}
             sections={summary.sections}
-            materialId="demo-material"
+            materialId={DEMO_MATERIAL_ID}
             guided
             demo
+            onDemoAnswer={(question, selected) => {
+              setDemoAnswers((previous) => ({
+                ...previous,
+                [question.id]: { question, selected, answeredAt: new Date().toISOString() },
+              }));
+            }}
             onExit={() => setActiveTab('resumen')}
-            onReviewTopics={(topics) => {
-              setReviewTopics(topics);
+            onReviewTopics={() => {
               setProgressOpen(true);
             }}
             onReinforce={() => setProgressOpen(true)}
@@ -164,9 +181,11 @@ export function DemoFourStepStudy({
         ),
         progress: ({ showOnboardingExample, showOnboardingTopic }) => (
           <DemoProgress
-            title="IA y nuevas tecnologías"
             summary={summary}
-            reviewTopics={reviewTopics}
+            glossary={glossary}
+            flashcards={artifacts.flashcards}
+            questions={artifacts.questions}
+            answers={demoAnswers}
             showOnboardingExample={showOnboardingExample}
             showOnboardingTopic={showOnboardingTopic}
             onPractice={openPractice}
