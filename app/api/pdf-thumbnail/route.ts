@@ -60,6 +60,9 @@ export async function GET(request: Request) {
     // Validación de visibilidad con RLS. También permitimos materiales de
     // estudiantes únicamente cuando están compartidos y terminaron de procesarse.
     const server = await createClientServer();
+    const {
+      data: { user },
+    } = await server.auth.getUser();
     const [{ data: resourceMatch }, { data: resumenMatch }, { data: studentMaterialMatch }] =
       await Promise.all([
         server.from('recursos').select('id').eq('url_archivo', objectPath).limit(1).maybeSingle(),
@@ -76,6 +79,12 @@ export async function GET(request: Request) {
 
     if (!resourceMatch && !resumenMatch && !studentMaterialMatch) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
+    }
+
+    // La portada también es parte del documento: no exponer su primera
+    // página en los catálogos públicos antes de iniciar sesión.
+    if (studentMaterialMatch && !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
     const { data: fileData, error: downloadError } = await admin.storage
@@ -107,7 +116,9 @@ export async function GET(request: Request) {
     return new Response(thumbnail, {
       headers: {
         'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+        'Cache-Control': studentMaterialMatch
+          ? 'private, no-store, max-age=0'
+          : 'public, max-age=3600, stale-while-revalidate=86400',
         ...Object.fromEntries(rateLimitHeaders(rateLimit)),
       },
     });
