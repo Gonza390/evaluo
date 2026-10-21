@@ -262,4 +262,37 @@ assert.match(materialViewerSource, /StudentMaterialProcessingRetry/);
 assert.match(materialRetrySource, /processStudentMaterialAction\(materialId\)/);
 assert.match(materialRetrySource, /Reintentar procesamiento/);
 
+// El acceso al PDF compartido requiere cuenta incluso fuera del navegador.
+const protectedPdfPage = readFileSync(resolve('app/materiales/[id]/page.tsx'), 'utf8');
+const directPdfDownload = readFileSync(
+  resolve('app/api/student-materials/[id]/download/route.ts'),
+  'utf8'
+);
+const sharedPdfThumbnail = readFileSync(resolve('app/api/pdf-thumbnail/route.ts'), 'utf8');
+const materialLoginForm = readFileSync(resolve('components/LoginFormGoogleFirst.tsx'), 'utf8');
+const oauthCallback = readFileSync(resolve('app/auth/callback/route.ts'), 'utf8');
+const securedStudyRls = readFileSync(
+  resolve('supabase/migrations/20261021091000_require_auth_for_shared_student_material_content.sql'),
+  'utf8'
+);
+const authGuardPosition = protectedPdfPage.indexOf('if (!user) {');
+const signedUrlPosition = protectedPdfPage.indexOf('createSignedUrl(material.file_path');
+assert.ok(authGuardPosition >= 0 && authGuardPosition < signedUrlPosition);
+assert.match(protectedPdfPage, /reason=shared-pdf&next=/);
+assert.match(directPdfDownload, /error: 'authentication_required'/);
+assert.ok(
+  directPdfDownload.indexOf("error: 'authentication_required'") <
+    directPdfDownload.indexOf(".from('student_materials')"),
+  'La descarga no debe consultar ni servir un PDF sin autenticación.'
+);
+assert.match(sharedPdfThumbnail, /if \(studentMaterialMatch && !user\)/);
+assert.match(sharedPdfThumbnail, /private, no-store, max-age=0/);
+assert.match(materialLoginForm, /reason === 'shared-pdf'/);
+assert.match(materialLoginForm, /emailRedirectTo/);
+assert.match(oauthCallback, /reason === 'shared-pdf'/);
+for (const table of ['student_material_summaries', 'student_material_glossaries', 'student_material_chunks']) {
+  assert.match(securedStudyRls, new RegExp(`on public\\.${table}\\nfor select\\nto authenticated`));
+}
+assert.equal((securedStudyRls.match(/to authenticated/g) ?? []).length, 3);
+
 console.log('Route smoke tests passed.');
