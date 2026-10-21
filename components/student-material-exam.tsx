@@ -375,11 +375,6 @@ export function StudentMaterialExam({
           <h2 className="text-foreground mt-2 text-xl font-semibold">
             {topicTitle}
           </h2>
-          <p className="text-muted-foreground mt-2 text-sm leading-6">
-            {eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS
-              ? `Una tanda de hasta ${MAX_TOPIC_PRACTICE_QUESTIONS} preguntas de este tema. Priorizamos las que todavía no respondiste.`
-              : `${topicPracticeCount} ${topicPracticeCount === 1 ? 'pregunta disponible' : 'preguntas disponibles'} de este tema.`}
-          </p>
         </div>
         {savedDraft && !isSimulation ? (
           <div className="border-primary/30 bg-primary/5 rounded-xl border p-4">
@@ -424,11 +419,6 @@ export function StudentMaterialExam({
           <h2 className="text-foreground mt-2 text-[20px] font-bold tracking-[-0.05em] sm:text-[22px]">
             {topicTitle ?? 'Elegí cuánto querés practicar'}
           </h2>
-          <p className="text-muted-foreground mt-2 max-w-2xl text-[13.5px] leading-6">
-            {topicSectionIndex === undefined
-              ? 'Priorizamos los temas del resumen que faltan evaluar y después los que necesitan más práctica. En Completo respondés todas las preguntas disponibles. Al terminar, recibís tu resultado.'
-              : 'Esta práctica incluye únicamente preguntas asociadas a este tema. El resultado corresponde a esta tanda, no al dominio de todo el capítulo.'}
-          </p>
         </header>
 
         {topicSectionIndex === undefined &&
@@ -825,14 +815,6 @@ export function StudentMaterialExam({
           <div>
             <p className="text-muted-foreground text-[12px] font-bold tracking-[0.14em] uppercase">
               Pregunta {currentIndex + 1} de {questions.length}
-            </p>
-            {topicSectionIndex !== undefined && eligibleQuestions.length > MAX_TOPIC_PRACTICE_QUESTIONS && (
-              <p className="text-muted-foreground mt-1 text-xs">
-                Este tema tiene {eligibleQuestions.length} preguntas en total. En cada tanda priorizamos las que te faltan.
-              </p>
-            )}
-            <p className="text-muted-foreground mt-1 text-xs md:hidden">
-              Basado únicamente en este PDF
             </p>
           </div>
           <span className="text-primary text-[11px] font-bold tracking-[0.12em] uppercase md:hidden">
