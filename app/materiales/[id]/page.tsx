@@ -39,7 +39,6 @@ type PageProps = {
     studyTopic?: string;
     recorrido?: string;
     error?: string;
-    tour?: string;
     from?: string;
   }>;
 };
@@ -440,7 +439,6 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
                     pedagogicalArtifacts.questions
                   ),
                   requestedError: query.error?.slice(0, 80),
-                  tour: query.tour,
                   returnToErrors: query.from === 'errores',
                 }
               : undefined
