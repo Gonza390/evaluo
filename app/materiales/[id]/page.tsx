@@ -211,6 +211,18 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     data: { user },
   } = await supabase.auth.getUser();
 
+  // El enlace sigue siendo compartible, pero nunca se genera una URL firmada
+  // para un visitante sin sesión. Tras ingresar o registrarse vuelve acá.
+  if (!user) {
+    const next = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (typeof value === 'string') next.set(key, value);
+    }
+    const materialPath = `/materiales/${encodeURIComponent(routeValue)}`;
+    const destination = `${materialPath}${next.size ? `?${next.toString()}` : ''}`;
+    redirect(`/login?reason=shared-pdf&next=${encodeURIComponent(destination)}`);
+  }
+
   try {
     const admin = createAdminClient();
     // Primero aplicar RLS: un visitante no debe modificar el estado de
