@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import './preview.css';
-import { FirstPdfGuidedPreview } from '@/components/preview/first-pdf-guided-preview';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
-  title: 'Preview · Tu primer PDF en Evaluo',
+  title: 'Muestra · Tu primer PDF en Evaluo',
   robots: { index: false, follow: false },
 };
 
+/** Mantener enlaces antiguos sin crear un segundo recorrido de onboarding. */
 export default function FirstPdfPreviewPage() {
-  return <FirstPdfGuidedPreview />;
+  redirect('/demo/material-estudio?tour=1&source=first_pdf_preview');
 }
