@@ -184,6 +184,26 @@ try {
   assert.equal(loginGuest.headers.get('location'), null);
   assert.equal(authState.calls, callsBeforeLogin + 1, 'La optimización se limita a la portada.');
 
+  // El enlace de un PDF de otro estudiante debe conservarse al pedir sesión.
+  const sharedPdfGuest = await proxy(
+    new NextRequest('https://evaluo.com.ar/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555?tab=tarjetas')
+  );
+  const sharedLoginUrl = new URL(sharedPdfGuest.headers.get('location')!);
+  assert.equal(sharedLoginUrl.pathname, '/login');
+  assert.equal(sharedLoginUrl.searchParams.get('reason'), 'shared-pdf');
+  assert.equal(
+    sharedLoginUrl.searchParams.get('next'),
+    '/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555?tab=tarjetas'
+  );
+  assert.equal(sharedPdfGuest.headers.get('cache-control'), 'private, no-store');
+
+  authState.user = { id: 'signed-in-student' };
+  const sharedPdfMember = await proxy(
+    new NextRequest('https://evaluo.com.ar/materiales/resumen-ipc--11111111-2222-4333-8444-555555555555')
+  );
+  assert.equal(sharedPdfMember.headers.get('location'), null);
+  authState.user = null;
+
   const callsBeforePublicPage = authState.calls;
   const publicPage = await proxy(new NextRequest('https://evaluo.com.ar/pricing'));
   assert.equal(publicPage.headers.get('location'), null);
