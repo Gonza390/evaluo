@@ -23,7 +23,8 @@ export async function saveSimpleAcademicProfileAction(input: {
       return { success: false as const, message: 'Seleccioná tu universidad y tu carrera.' };
     }
 
-    const admin = createAdminClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tipos generados del catálogo no incluyen campos de aprobación existentes en producción
+    const admin = createAdminClient() as any;
     const [{ data: university, error: universityError }, { data: career, error: careerError }] = await Promise.all([
       admin.from('universidades')
         .select('id, approval_status, owner_user_id')
