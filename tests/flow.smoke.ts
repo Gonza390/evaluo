@@ -233,26 +233,14 @@ assert.equal(
 );
 
 const demoMaterialSource = readFileSync(resolve('app/demo/material-estudio/page.tsx'), 'utf8');
-assert.match(
-  demoMaterialSource,
-  /hasPremiumAccess\(user\.id\)/,
-  'El PDF demo debe resolver Premium desde el servidor y no simular acceso Premium.'
-);
-assert.match(
-  demoMaterialSource,
-  /isPremium=\{isPremium\}/,
-  'El workspace demo debe recibir el entitlement Premium real.'
-);
-assert.match(
-  demoMaterialSource,
-  /backHref=\{user \? '\/dashboard\/materiales' : '\/'\}/,
-  'Un usuario autenticado debe volver desde el PDF demo a sus materiales.'
-);
-assert.doesNotMatch(
-  demoMaterialSource,
-  /GENERAL_PEDAGOGICAL_ARTIFACTS|pedagogicalArtifacts=/,
-  'El PDF demo no debe reutilizar artefactos pedagógicos persistidos de una versión anterior.'
-);
+const demoFourStepSource = readFileSync(resolve('components/demo-four-step-study.tsx'), 'utf8');
+// El único demo de material usa el recorrido público de cuatro pasos, sin permisos ni escrituras.
+assert.match(demoMaterialSource, /DemoFourStepStudy/);
+assert.doesNotMatch(demoMaterialSource, /DemoMaterialGuidedTourV6|hasPremiumAccess/);
+assert.match(demoFourStepSource, /isOwner=\{false\}/);
+assert.match(demoFourStepSource, /materialId="demo-material"/);
+assert.match(demoFourStepSource, /buildPedagogicalArtifacts/);
+assert.match(demoFourStepSource, /demo=\{\{/);
 
 const subscriptionSettingsSource = readFileSync(
   resolve('components/pricing/SubscriptionSettings.tsx'),
