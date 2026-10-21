@@ -121,36 +121,7 @@ export async function GET(request: Request) {
         }
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('universidad_id, carrera_id, active_subjects')
-        .eq('id', data.session.user.id)
-        .maybeSingle();
 
-      if (
-        !hasCompleteAcademicProfile({
-          universidadId: profile?.universidad_id,
-          carreraId: profile?.carrera_id,
-          activeSubjects: profile?.active_subjects,
-        })
-      ) {
-        // El Preguntero ya generó valor antes del registro: no interrumpir la continuidad
-        // con el perfil académico. Ese dato se puede pedir después.
-        if (reason === 'preguntero') {
-          return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
-        }
-
-        // Ship B.1: no bloquear activación PDF-first con el gate de perfil académico.
-        if (isPdfFirstActivationPath(nextPath)) {
-          return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
-        }
-        if (nextPath === '/dashboard') {
-          return NextResponse.redirect(`${requestUrl.origin}${getPdfFirstActivationHref()}`);
-        }
-        return NextResponse.redirect(
-          `${requestUrl.origin}/completar-perfil?next=${encodeURIComponent(nextPath)}`
-        );
-      }
     }
   }
 
