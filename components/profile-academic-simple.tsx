@@ -19,12 +19,23 @@ function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 
-export function AcademicProfileSimpleForm({ nextPath }: { nextPath: string }) {
+export function AcademicProfileSimpleForm({
+  nextPath,
+  onComplete,
+  onLater,
+  onlyMissingFields = false,
+}: {
+  nextPath: string;
+  onComplete?: () => void;
+  onLater?: () => void;
+  onlyMissingFields?: boolean;
+}) {
   const router = useRouter();
   const [universities, setUniversities] = useState<University[]>([]);
   const [careers, setCareers] = useState<Career[]>([]);
   const [universityId, setUniversityId] = useState('');
   const [careerId, setCareerId] = useState('');
+  const [savedUniversity, setSavedUniversity] = useState(false);
   const [universitySearch, setUniversitySearch] = useState('');
   const [careerSearch, setCareerSearch] = useState('');
   const [universitySuggestions, setUniversitySuggestions] = useState(false);
@@ -47,6 +58,7 @@ export function AcademicProfileSimpleForm({ nextPath }: { nextPath: string }) {
       const career = result.carreras.find((item) => item.id === result.profile.carreraId &&
         item.universidad_id === result.profile.universidadId);
       if (university) {
+        setSavedUniversity(true);
         setUniversityId(university.id);
         setUniversitySearch(university.nombre);
       }
@@ -143,7 +155,8 @@ export function AcademicProfileSimpleForm({ nextPath }: { nextPath: string }) {
         setError(result.message);
         return;
       }
-      router.replace(nextPath);
+      if (onComplete) onComplete();
+      else router.replace(nextPath);
       router.refresh();
     } catch {
       setError('No pudimos guardar tus datos. Intentá nuevamente.');
@@ -167,7 +180,11 @@ export function AcademicProfileSimpleForm({ nextPath }: { nextPath: string }) {
       </div>
 
       <div className="space-y-5">
-        <div>
+        {onlyMissingFields && savedUniversity && universityId ? (
+          <p className="rounded-xl bg-slate-50 px-3 py-3 text-sm text-slate-700">
+            Universidad: <strong>{universitySearch}</strong>
+          </p>
+        ) : <div>
           <label htmlFor="academic-university" className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
             <School className="h-4 w-4 text-slate-500" /> Universidad
           </label>
@@ -202,7 +219,7 @@ export function AcademicProfileSimpleForm({ nextPath }: { nextPath: string }) {
               ) : null}
             </div>
           ) : null}
-        </div>
+        </div>}
 
         {universityId ? (
           <div>
@@ -248,7 +265,7 @@ export function AcademicProfileSimpleForm({ nextPath }: { nextPath: string }) {
       {error ? <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
       <div className="mt-7 flex items-center justify-between gap-3">
-        <Button type="button" variant="ghost" onClick={() => router.replace(nextPath)} disabled={busy}>
+        <Button type="button" variant="ghost" onClick={() => { if (onLater) onLater(); else router.replace(nextPath); }} disabled={busy}>
           Ahora no
         </Button>
         <Button type="button" onClick={() => void save()} disabled={loading || busy || !universityId || !careerId}>
