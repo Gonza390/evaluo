@@ -12,7 +12,6 @@ import {
   FileText,
   Search,
 } from 'lucide-react';
-import { finishStudyErrorOnboardingAction } from '@/lib/actions/study-errors';
 import type { StudyErrorView, StudyErrorsPageData } from '@/lib/study-errors';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { pdfProgressReviewHref, studyErrorGroupId } from '@/lib/study-error-navigation';
@@ -24,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PdfTourSpotlight } from '@/components/study/pdf-tour-spotlight';
 import {
   StudyErrorDetail,
   reviewPrimaryButton,
@@ -39,28 +37,24 @@ const resolvedLabel = (count: number) => `${count} ${count === 1 ? 'resuelto' : 
 
 export function StudyErrorsClient({
   data,
-  onboarding,
   initialMaterialId,
   initialErrorId,
   reviewActions,
   preview = false,
 }: {
   data: StudyErrorsPageData;
-  onboarding?: { active: boolean; errorId: string | null };
   initialMaterialId?: string;
   initialErrorId?: string;
   reviewActions?: StudyErrorReviewActions;
   preview?: boolean;
 }) {
   const router = useRouter();
-  const initialError = onboarding?.active
-    ? data.pending.find((item) => item.id === onboarding.errorId)
-    : initialErrorId
-      ? [...data.pending, ...data.resolved].find((item) => item.id === initialErrorId)
-      : initialMaterialId
-        ? (data.pending.find((item) => item.recommendation?.materialId === initialMaterialId) ??
-          data.resolved.find((item) => item.recommendation?.materialId === initialMaterialId))
-        : null;
+  const initialError = initialErrorId
+    ? [...data.pending, ...data.resolved].find((item) => item.id === initialErrorId)
+    : initialMaterialId
+      ? (data.pending.find((item) => item.recommendation?.materialId === initialMaterialId) ??
+        data.resolved.find((item) => item.recommendation?.materialId === initialMaterialId))
+      : null;
   const initialMaterialAvailable = Boolean(
     initialMaterialId &&
     (data.materials.some((material) => material.id === initialMaterialId) ||
@@ -81,7 +75,6 @@ export function StudyErrorsClient({
   const [query, setQuery] = useState('');
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [notice, setNotice] = useState('');
-  const [tourStep, setTourStep] = useState(onboarding?.active && initialError ? 0 : -1);
   const [overrides, setOverrides] = useState<
     Record<string, { baseFailedAt: string; changes: Partial<StudyErrorView> }>
   >({});
@@ -90,7 +83,6 @@ export function StudyErrorsClient({
   // Historial de este repaso: cada error y PDF conserva su conversación en esta pantalla.
   // Un nuevo fallo o un cambio de PDF abre un contexto nuevo y evita reutilizar otra fuente.
   const [conversations, setConversations] = useState<Record<string, StudyErrorConversation>>({});
-  const tourClosing = useRef(false);
   const views = useMemo(
     () =>
       [...data.pending, ...data.resolved].map((item) => {
@@ -231,48 +223,6 @@ export function StudyErrorsClient({
     returnToMaterials();
     if (!preview) router.refresh();
   }
-  const steps = selected
-    ? [
-        {
-          selector: '[data-study-error-tour="error"]',
-          title: 'Este es tu primer error',
-          description: 'Evaluo guarda el concepto que te costó para que puedas volver a repasarlo.',
-        },
-        {
-          selector: '[data-study-error-tour="understand"]',
-          title: 'Ayudame a entenderlo',
-          description:
-            'Pedí una explicación del concepto. Después podés pedir una versión más simple o un ejemplo.',
-        },
-        {
-          selector: '[data-study-error-tour="source"]',
-          title: selected.recommendation
-            ? 'Tu PDF respalda el repaso'
-            : 'Conectalo con tus apuntes',
-          description: selected.recommendation
-            ? 'Abrí el fragmento acá mismo, sin perder el error que estás repasando.'
-            : 'Asociá tus apuntes para estudiar y comprobar este concepto con tu material.',
-        },
-        {
-          selector: '[data-study-error-tour="practice"]',
-          title: 'Comprobá si lo entendiste',
-          description:
-            'Después del repaso respondés una pregunta diferente. Un acierto guarda este error como Resuelto.',
-        },
-      ]
-    : [];
-
-  async function closeTour(outcome: 'completed' | 'skipped') {
-    if (tourClosing.current) return;
-    tourClosing.current = true;
-    try {
-      if (onboarding?.errorId) await finishStudyErrorOnboardingAction(onboarding.errorId, outcome);
-    } finally {
-      setTourStep(-1);
-      tourClosing.current = false;
-    }
-  }
-
   if (data.loadError)
     return (
       <div className="mx-auto max-w-3xl px-5 py-10">
@@ -288,26 +238,6 @@ export function StudyErrorsClient({
 
   return (
     <>
-      {tourStep >= 0 && steps[tourStep] && (
-        <PdfTourSpotlight
-          selector={steps[tourStep].selector}
-          title={steps[tourStep].title}
-          description={steps[tourStep].description}
-          progress={`${tourStep + 1} de ${steps.length}`}
-          nextLabel={tourStep === steps.length - 1 ? 'Entendido' : 'Siguiente'}
-          onNext={() => {
-            if (tourStep < steps.length - 1) {
-              setTourStep((step) => step + 1);
-              return;
-            }
-            void closeTour('completed');
-          }}
-          onBack={tourStep > 0 ? () => setTourStep((step) => step - 1) : undefined}
-          onExit={() => void closeTour('skipped')}
-          ariaLabel="Guía de Progreso"
-          footerLabel="Tu primer error"
-        />
-      )}
       <div
         className="text-foreground mx-auto w-full max-w-[1180px] min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
         style={!materialId ? { maxWidth: '960px' } : undefined}
