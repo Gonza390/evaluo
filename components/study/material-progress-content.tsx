@@ -18,7 +18,6 @@ export function MaterialProgressContent({
   initialTopicSectionIndex,
   initialReinforce,
   lastPracticeOutcome,
-  tour,
   returnToErrors = false,
   onPracticeTopic,
   glossary,
@@ -34,7 +33,6 @@ export function MaterialProgressContent({
   initialTopicSectionIndex?: number;
   initialReinforce?: boolean;
   lastPracticeOutcome?: TopicPracticeOutcome;
-  tour?: string;
   returnToErrors?: boolean;
   onPracticeTopic?: (sectionIndex: number) => void;
   glossary?: StudyGlossaryItem[];
@@ -54,7 +52,6 @@ export function MaterialProgressContent({
     void getMaterialProgressDataAction({
       materialId: material.id,
       requestedError,
-      tour,
     }).then((next) => {
       if (cancelled) return;
       setResult(next);
@@ -64,7 +61,7 @@ export function MaterialProgressContent({
     return () => {
       cancelled = true;
     };
-  }, [attempt, material.id, requestedError, tour]);
+  }, [attempt, material.id, requestedError]);
 
   if (loading) {
     return (
@@ -113,7 +110,6 @@ export function MaterialProgressContent({
       showOnboardingTopic={showOnboardingTopic}
       summaryUnavailable={false}
       initialErrorId={result.initialErrorId ?? undefined}
-      onboardingErrorId={result.onboardingErrorId}
       returnToErrors={returnToErrors}
     />
   );

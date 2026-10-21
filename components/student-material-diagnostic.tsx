@@ -8,10 +8,7 @@ import type { PedagogicalArtifacts, StudyQuestion } from '@/lib/student-material
 import { cn } from '@/lib/utils';
 import { selectDiagnosticQuestions } from '@/lib/student-materials/diagnostic-questions';
 import type { StudySummarySection } from '@/lib/student-materials/types';
-import {
-  recordStudentMaterialStudyResultAction,
-  finishStudyErrorOnboardingAction,
-} from '@/lib/actions/study-errors';
+import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 
 type Props = {
   artifacts: PedagogicalArtifacts;
@@ -25,7 +22,7 @@ type Props = {
   onDemoAnswer?: (question: StudyQuestion, selectedAnswer: string) => void;
   onResult?: (result: DiagnosticResult) => void;
   onRestart?: () => void;
-  onReinforce?: (onboardingErrorId: string | null) => void;
+  onReinforce?: () => void;
   session?: DiagnosticSession;
   onSessionChange?: Dispatch<SetStateAction<DiagnosticSession>>;
 };
@@ -35,13 +32,11 @@ export type DiagnosticSession = {
   currentIndex: number;
   selectedAnswers: Record<string, string>;
   finished: boolean;
-  onboardingErrorId: string | null;
 };
 export const emptyDiagnosticSession: DiagnosticSession = {
   currentIndex: 0,
   selectedAnswers: {},
   finished: false,
-  onboardingErrorId: null,
 };
 
 function normalize(value: string) {
@@ -74,7 +69,7 @@ export function StudentMaterialDiagnostic({
     [artifacts, guided, sections]
   );
   const [localSession, setLocalSession] = useState(emptyDiagnosticSession);
-  const { currentIndex, selectedAnswers, finished, onboardingErrorId } = session ?? localSession;
+  const { currentIndex, selectedAnswers, finished } = session ?? localSession;
   const updateSession = onSessionChange ?? setLocalSession;
   const setCurrentIndex = (value: SetStateAction<number>) =>
     updateSession((previous) => ({
@@ -88,11 +83,6 @@ export function StudentMaterialDiagnostic({
     }));
   const setFinished = (finished: boolean) =>
     updateSession((previous) => ({ ...previous, finished }));
-  const setOnboardingErrorId = (value: SetStateAction<string | null>) =>
-    updateSession((previous) => ({
-      ...previous,
-      onboardingErrorId: typeof value === 'function' ? value(previous.onboardingErrorId) : value,
-    }));
   const [isRecordingError, setIsRecordingError] = useState(false);
   const [saveError, setSaveError] = useState('');
   const answerIds = useRef<Record<string, string>>({});
@@ -211,7 +201,7 @@ export function StudentMaterialDiagnostic({
             type="button"
             onClick={() =>
               guided && result.reviewTopics.length > 0 && onReinforce
-                ? onReinforce(onboardingErrorId)
+                ? onReinforce()
                 : onReviewTopics(result.reviewTopics)
             }
             className="h-11 w-full rounded-lg"
@@ -283,11 +273,6 @@ export function StudentMaterialDiagnostic({
       try {
         const recorded = await recordStudentMaterialStudyResultAction(payload);
         if (!recorded.success) throw new Error('No se pudo guardar');
-        if (recorded.onboardingErrorId) {
-          setOnboardingErrorId((previous) => previous ?? recorded.onboardingErrorId ?? null);
-          // El primer error ya no interrumpe el diagnóstico con otro tutorial.
-          void finishStudyErrorOnboardingAction(recorded.onboardingErrorId, 'legacy').catch(() => {});
-        }
         delete answerIds.current[current.id];
         advanceDiagnostic();
       } catch {
