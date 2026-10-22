@@ -18,7 +18,7 @@ export async function GET() {
     const [planResult, soldResult, reservedResult] = await Promise.all([
       admin
         .from('subscription_plans')
-        .select('price_ars')
+        .select('id')
         .eq('code', 'premium')
         .eq('is_active', true)
         .single(),
@@ -39,11 +39,7 @@ export async function GET() {
       throw planResult.error ?? soldResult.error ?? reservedResult.error ?? new Error('plan_unavailable');
     }
 
-    const configuredMonthlyPrice = Number(planResult.data.price_ars);
-    const monthlyPriceArs =
-      Number.isFinite(configuredMonthlyPrice) && configuredMonthlyPrice > 0
-        ? configuredMonthlyPrice
-        : PREMIUM_MONTHLY_PRICE_ARS;
+    const monthlyPriceArs = PREMIUM_MONTHLY_PRICE_ARS;
     const semesterSold = soldResult.count ?? 0;
     const semesterReserved = reservedResult.count ?? 0;
     const semesterRemaining = Math.max(
