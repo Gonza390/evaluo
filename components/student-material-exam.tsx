@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
@@ -10,7 +11,11 @@ import { cn } from '@/lib/utils';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
-import { saveNextStudyObjectiveAction, type NextStudyObjective } from '@/lib/actions/next-study-objective';
+import {
+  saveNextStudyObjectiveAction,
+  continueNextStudyTomorrowAction,
+  type NextStudyObjective,
+} from '@/lib/actions/next-study-objective';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
   getDistinctEligibleExamQuestions,
@@ -41,6 +46,7 @@ type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
+  onContinueToTopic?: (index: number) => void;
   onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
   sections?: StudySummarySection[];
   topicSectionIndex?: number;
@@ -57,11 +63,14 @@ export function StudentMaterialExam({
   artifacts,
   materialId,
   onComplete,
+  onContinueToTopic,
   onReturnToTopic,
   sections = [],
   simulation,
   topicSectionIndex,
 }: StudentMaterialExamProps) {
+  const router = useRouter();
+  const [tomorrowStatus, setTomorrowStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const topicTitle =
     topicSectionIndex === undefined ? undefined : sections[topicSectionIndex]?.title;
   const draftStorageKey =
@@ -277,6 +286,7 @@ export function StudentMaterialExam({
     savedAnswerIdsRef.current = [];
     setNextObjective(null);
     setObjectiveStatus('idle');
+    setTomorrowStatus('idle');
     setSaveError('');
     setCanRestoreAfterRefresh(false);
     setCurrentIndex(0);
@@ -552,6 +562,25 @@ export function StudentMaterialExam({
     }).catch(() => setObjectiveStatus('error'));
   };
 
+  const continueTomorrow = async () => {
+    if (objectiveStatus !== 'saved' || !nextObjective || tomorrowStatus === 'saving') return;
+    setTomorrowStatus('saving');
+    const outcome = await continueNextStudyTomorrowAction({
+      materialId,
+      objectiveId: nextObjective.id,
+    }).catch(() => ({ success: false }));
+    if (!outcome.success) {
+      setTomorrowStatus('error');
+      return;
+    }
+    void trackClientAnalyticsEvent({
+      eventName: 'cta_click',
+      metadata: { location: 'practice_result', cta_name: 'continue_tomorrow', destination: '/dashboard' },
+    });
+    router.push('/dashboard');
+    router.refresh();
+  };
+
   if (finished) {
     const reviewTopics = Array.from(
       new Set(
@@ -604,12 +633,11 @@ export function StudentMaterialExam({
                   {nextStepTitle}
                 </h3>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Repaso sugerido el{' '}
-                  {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString('es-AR', {
-                    day: 'numeric',
-                    month: 'long',
-                  })}
-                  {' · '}Guardado en Mi espacio
+                  {nextObjective.kind === 'reinforce'
+                    ? 'Retomá este tema con una práctica breve y comprobá qué aprendiste.'
+                    : nextObjective.kind === 'practice'
+                      ? 'Ya tenés un tema preparado para seguir estudiando.'
+                      : 'Podés continuar con otra práctica cuando quieras.'}
                 </p>
               </>
             ) : (
@@ -624,21 +652,61 @@ export function StudentMaterialExam({
             )}
           </section>
 
-          <Link
-            href="/dashboard"
-            aria-disabled={objectiveStatus === 'saving' || objectiveStatus === 'idle'}
-            onClick={(event) => {
-              if (objectiveStatus === 'saving' || objectiveStatus === 'idle') {
-                event.preventDefault();
-              }
-            }}
-            className="bg-primary text-primary-foreground mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:opacity-90 aria-disabled:cursor-wait aria-disabled:opacity-60"
-          >
-            {objectiveStatus === 'saving' || objectiveStatus === 'idle'
-              ? 'Guardando objetivo…'
-              : 'Terminar por hoy'}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="mt-8 space-y-3">
+            {nextObjective?.kind === 'reinforce' && nextObjective.topicSectionIndex === null ? (
+              <Link
+                href={`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`}
+                aria-disabled={objectiveStatus !== 'saved'}
+                onClick={(event) => {
+                  if (objectiveStatus !== 'saved') event.preventDefault();
+                  else void trackClientAnalyticsEvent({
+                    eventName: 'cta_click',
+                    metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'study_errors' },
+                  });
+                }}
+                className="bg-primary text-primary-foreground inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+              >
+                Continuar ahora <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Button
+                type="button"
+                disabled={objectiveStatus !== 'saved' || tomorrowStatus === 'saving'}
+                onClick={() => {
+                  if (!nextObjective) return;
+                  void trackClientAnalyticsEvent({
+                    eventName: 'cta_click',
+                    metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'topic_practice' },
+                  });
+                  if (nextObjective.topicSectionIndex !== null && onContinueToTopic) {
+                    onContinueToTopic(nextObjective.topicSectionIndex);
+                  } else {
+                    resetExam();
+                  }
+                }}
+                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+              >
+                Continuar ahora <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={objectiveStatus !== 'saved' || tomorrowStatus === 'saving'}
+              onClick={() => void continueTomorrow()}
+              className="min-h-12 w-full rounded-xl text-sm font-semibold"
+            >
+              {tomorrowStatus === 'saving' ? 'Guardando para mañana…' : 'Continuar mañana'}
+            </Button>
+            {tomorrowStatus === 'error' ? (
+              <p role="alert" className="text-destructive text-center text-xs">
+                No pudimos guardar el repaso para mañana. Volvé a intentarlo.
+              </p>
+            ) : null}
+            <p className="text-muted-foreground text-center text-xs">
+              Si elegís mañana, el repaso queda guardado en Mi espacio.
+            </p>
+          </div>
 
           <details className="group border-border mt-5 border-t pt-4">
             <summary className="text-muted-foreground hover:text-foreground flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 text-sm font-medium">
