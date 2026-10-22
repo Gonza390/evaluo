@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Check, CircleAlert, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { pdfStudyQuestionActionsClassName } from '@/components/study/pdf-study-styles';
@@ -10,6 +11,11 @@ import { cn } from '@/lib/utils';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
+import {
+  saveNextStudyObjectiveAction,
+  continueNextStudyTomorrowAction,
+  type NextStudyObjective,
+} from '@/lib/actions/next-study-objective';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
   getDistinctEligibleExamQuestions,
@@ -40,6 +46,7 @@ type StudentMaterialExamProps = {
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
+  onContinueToTopic?: (index: number) => void;
   onReturnToTopic?: (reinforce: boolean, outcome?: TopicPracticeOutcome) => void;
   sections?: StudySummarySection[];
   topicSectionIndex?: number;
@@ -56,11 +63,14 @@ export function StudentMaterialExam({
   artifacts,
   materialId,
   onComplete,
+  onContinueToTopic,
   onReturnToTopic,
   sections = [],
   simulation,
   topicSectionIndex,
 }: StudentMaterialExamProps) {
+  const router = useRouter();
+  const [tomorrowStatus, setTomorrowStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const topicTitle =
     topicSectionIndex === undefined ? undefined : sections[topicSectionIndex]?.title;
   const draftStorageKey =
@@ -111,15 +121,30 @@ export function StudentMaterialExam({
   const [saveError, setSaveError] = useState('');
   const [canRestoreAfterRefresh, setCanRestoreAfterRefresh] = useState(false);
   const answerIds = useRef<Record<string, string>>({});
+  const sessionIdRef = useRef('');
+  const savedAnswerIdsRef = useRef<string[]>([]);
+  const [nextObjective, setNextObjective] = useState<NextStudyObjective | null>(null);
+  const [objectiveStatus, setObjectiveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const correctionRef = useRef<HTMLElement | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [openAssessments, setOpenAssessments] = useState<Record<string, OpenAssessment>>({});
   const [finished, setFinished] = useState(false);
+  const finalResultRef = useRef<HTMLDivElement | null>(null);
   const [savedDraft, setSavedDraft] = useState<PracticeDraft | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const isSimulation = Boolean(simulation);
+
+  // El panel de ejercicios tiene scroll propio. Al finalizar, mostrar el resultado
+  // desde arriba aunque la última pregunta haya dejado el scroll al pie del panel.
+  useEffect(() => {
+    if (!finished || topicSectionIndex !== undefined || isSimulation) return;
+    finalResultRef.current?.closest<HTMLElement>(
+      '[role="region"][aria-label="Contenido de estudio"]'
+    )?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [finished, topicSectionIndex, isSimulation]);
+
   const bankSignature = useMemo(
     () => practiceBankSignature(eligibleQuestions),
     [eligibleQuestions]
@@ -158,6 +183,8 @@ export function StudentMaterialExam({
       revealed,
       openAssessments,
       answerIds: { ...answerIds.current },
+      sessionId: sessionIdRef.current,
+      savedAnswerIds: [...savedAnswerIdsRef.current],
       contextUnavailable,
       savedAt: Date.now(),
     };
@@ -214,6 +241,8 @@ export function StudentMaterialExam({
       return;
     }
     answerIds.current = { ...savedDraft.answerIds };
+    sessionIdRef.current = savedDraft.sessionId || crypto.randomUUID();
+    savedAnswerIdsRef.current = [...(savedDraft.savedAnswerIds ?? [])];
     setQuestions(frozen);
     setSelectedSize(savedDraft.selectedSize);
     setCurrentIndex(savedDraft.currentIndex);
@@ -264,6 +293,11 @@ export function StudentMaterialExam({
 
   const clearAttempt = () => {
     answerIds.current = {};
+    sessionIdRef.current = crypto.randomUUID();
+    savedAnswerIdsRef.current = [];
+    setNextObjective(null);
+    setObjectiveStatus('idle');
+    setTomorrowStatus('idle');
     setSaveError('');
     setCanRestoreAfterRefresh(false);
     setCurrentIndex(0);
@@ -514,6 +548,50 @@ export function StudentMaterialExam({
     );
   }
 
+  const persistNextObjective = () => {
+    if (isSimulation) return;
+    if (!sessionIdRef.current || savedAnswerIdsRef.current.length !== questions.length) {
+      setObjectiveStatus('error');
+      return;
+    }
+    setObjectiveStatus('saving');
+    void saveNextStudyObjectiveAction({
+      materialId,
+      sessionId: sessionIdRef.current,
+      answerIds: [...savedAnswerIdsRef.current],
+    }).then((response) => {
+      if (!response.success || !response.objective) {
+        setObjectiveStatus('error');
+        return;
+      }
+      setNextObjective(response.objective);
+      setObjectiveStatus('saved');
+      void trackClientAnalyticsEvent({
+        eventName: 'study_next_objective_created',
+        metadata: { material_id: materialId, objective_id: response.objective.id, kind: response.objective.kind },
+      });
+    }).catch(() => setObjectiveStatus('error'));
+  };
+
+  const continueTomorrow = async () => {
+    if (objectiveStatus !== 'saved' || !nextObjective || tomorrowStatus === 'saving') return;
+    setTomorrowStatus('saving');
+    const outcome = await continueNextStudyTomorrowAction({
+      materialId,
+      objectiveId: nextObjective.id,
+    }).catch(() => ({ success: false }));
+    if (!outcome.success) {
+      setTomorrowStatus('error');
+      return;
+    }
+    void trackClientAnalyticsEvent({
+      eventName: 'cta_click',
+      metadata: { location: 'practice_result', cta_name: 'continue_tomorrow', destination: '/dashboard' },
+    });
+    router.push('/dashboard');
+    router.refresh();
+  };
+
   if (finished) {
     const reviewTopics = Array.from(
       new Set(
@@ -527,6 +605,351 @@ export function StudentMaterialExam({
           .filter((value): value is string => Boolean(value))
       )
     ).slice(0, 5);
+
+    // Mostrar el desglose por temas únicamente al terminar la práctica GENERAL del PDF.
+    // Las tandas exclusivas de un capítulo conservan su pantalla anterior hasta diseñarlas.
+    if (!isSimulation && topicSectionIndex === undefined) {
+      const nextStepTitle =
+        nextObjective?.kind === 'reinforce'
+          ? `Reforzar ${nextObjective.topicTitle || 'mis errores'}`
+          : nextObjective?.kind === 'practice'
+            ? `Practicar ${nextObjective.topicTitle || 'el próximo tema'}`
+            : 'Consolidar lo aprendido';
+
+      // Acertar toda una tanda no significa haber recorrido todas las preguntas del tema.
+      // Los totales del banco se calculan SOLO sobre preguntas elegibles y verificables.
+      const topicName = (question: StudyQuestion) => {
+        const sectionIndex = findSummarySectionForQuestion(question, sections);
+        return (
+          (sectionIndex >= 0 ? sections[sectionIndex]?.title : undefined) ||
+          question.chapterTitle ||
+          question.topic ||
+          question.reference.sectionTitle ||
+          'Tema sin capítulo identificado'
+        ).trim();
+      };
+      const bankCounts = new Map<string, number>();
+      for (const question of eligibleQuestions) {
+        if (question.type !== 'multiple_choice') continue;
+        const topic = topicName(question);
+        bankCounts.set(topic, (bankCounts.get(topic) ?? 0) + 1);
+      }
+      const byTopic = new Map<string, { title: string; total: number; correct: number; bankSize: number }>();
+      for (const question of questions) {
+        if (question.type !== 'multiple_choice') continue;
+        const title = topicName(question);
+        const item = byTopic.get(title) ?? {
+          title,
+          total: 0,
+          correct: 0,
+          bankSize: bankCounts.get(title) ?? 0,
+        };
+        item.total += 1;
+        if (normalizeAnswer(selectedAnswers[question.id] ?? '') === normalizeAnswer(question.answer))
+          item.correct += 1;
+        byTopic.set(title, item);
+      }
+      const topicResults = [...byTopic.values()].sort((left, right) =>
+        left.correct / left.total - right.correct / right.total ||
+        right.total - left.total || left.title.localeCompare(right.title, 'es')
+      );
+      const wrongAnswers = questions.filter((question) =>
+        question.type === 'multiple_choice'
+          ? normalizeAnswer(selectedAnswers[question.id] ?? '') !== normalizeAnswer(question.answer)
+          : openAssessments[question.id] === 'review'
+      );
+      const hasOpenQuestions = questions.some((question) => question.type === 'open');
+      const isQuestionCorrect = (question: StudyQuestion) =>
+        question.type === 'multiple_choice'
+          ? normalizeAnswer(selectedAnswers[question.id] ?? '') === normalizeAnswer(question.answer)
+          : openAssessments[question.id] === 'got_it';
+
+      return (
+        <div ref={finalResultRef} className="@container/practice-result mx-auto w-full max-w-[1440px] px-1 py-2 sm:px-3 sm:py-4">
+          <div className="grid min-w-0 grid-cols-1 gap-3 @min-[660px]/practice-result:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] @min-[1040px]/practice-result:grid-cols-[minmax(165px,0.7fr)_minmax(0,1.2fr)_minmax(290px,1fr)] @min-[1040px]/practice-result:gap-4">
+          <header className="border-border bg-card flex min-w-0 flex-col items-center justify-center rounded-2xl border px-4 py-5 text-center @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto @min-[1040px]/practice-result:min-h-[260px]">
+            <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
+              Práctica terminada
+            </p>
+            <h2 className="text-foreground mt-4 text-5xl font-bold tracking-[-0.07em] sm:text-6xl">
+              {result.correct} <span className="text-muted-foreground/45">/ {result.total}</span>
+            </h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              respuestas correctas
+            </p>
+          </header>
+
+          <section className="border-border bg-card min-w-0 rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto">
+            <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-foreground text-sm font-semibold">Así te fue por tema</h3>
+              <span className="text-muted-foreground text-xs">
+                {topicResults.length} {topicResults.length === 1 ? 'tema evaluado' : 'temas evaluados'}
+              </span>
+            </div>
+            {topicResults.length ? (
+              <div className="space-y-5">
+                {topicResults.slice(0, 3).map((topic) => {
+                  const percentage = Math.round((topic.correct / topic.total) * 100);
+                  const color = percentage === 100
+                    ? 'bg-emerald-500'
+                    : percentage >= 70 ? 'bg-primary' : 'bg-amber-500';
+                  return (
+                    <div key={topic.title} className="space-y-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-foreground min-w-0 text-sm font-medium">{topic.title}</span>
+                        <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                          {topic.correct}/{topic.total}
+                        </span>
+                      </div>
+                      <div
+                        className="bg-muted h-1.5 overflow-hidden rounded-full"
+                        role="progressbar"
+                        aria-label={`Aciertos en ${topic.title}`}
+                        aria-valuemin={0}
+                        aria-valuemax={topic.total}
+                        aria-valuenow={topic.correct}
+                      >
+                        <div className={`h-full rounded-full ${color}`} style={{ width: `${percentage}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Esta tanda no incluyó preguntas de opción múltiple asociadas a temas.
+              </p>
+            )}
+            <p className="text-muted-foreground mt-4 text-xs">
+              Aciertos en esta tanda, no dominio definitivo de los temas.
+              {hasOpenQuestions ? ' Las preguntas abiertas se autoevalúan.' : ''}
+            </p>
+          </section>
+
+          <div className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-2 @min-[660px]/practice-result:row-span-2 @min-[660px]/practice-result:row-start-1 @min-[1040px]/practice-result:col-start-3 @min-[1040px]/practice-result:row-span-1">
+          <section aria-live="polite">
+            <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
+              Tu próximo paso
+            </p>
+            {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
+              <p className="text-muted-foreground mt-3 text-sm">
+                Preparando tu próximo repaso…
+              </p>
+            ) : objectiveStatus === 'saved' && nextObjective ? (
+              <>
+                <h3 className="text-foreground mt-2 text-xl font-semibold tracking-tight">
+                  {nextStepTitle}
+                </h3>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {nextObjective.kind === 'reinforce'
+                    ? 'Retomá este tema con una práctica breve y comprobá qué aprendiste.'
+                    : nextObjective.kind === 'practice'
+                      ? 'Ya tenés un tema preparado para seguir estudiando.'
+                      : 'Podés continuar con otra práctica cuando quieras.'}
+                </p>
+              </>
+            ) : (
+              <div className="mt-3">
+                <p className="text-muted-foreground text-sm">
+                  No pudimos guardar tu próximo repaso. Tu práctica sí quedó guardada.
+                </p>
+                <Button type="button" variant="outline" onClick={persistNextObjective} className="mt-3">
+                  Reintentar
+                </Button>
+              </div>
+            )}
+          </section>
+
+          <div className="mt-auto space-y-3 pt-6">
+            {nextObjective?.kind === 'reinforce' && nextObjective.topicSectionIndex === null ? (
+              <Link
+                href={`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`}
+                aria-disabled={objectiveStatus !== 'saved'}
+                onClick={(event) => {
+                  if (objectiveStatus !== 'saved') event.preventDefault();
+                  else void trackClientAnalyticsEvent({
+                    eventName: 'cta_click',
+                    metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'study_errors' },
+                  });
+                }}
+                className="bg-primary text-primary-foreground inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:opacity-90 aria-disabled:pointer-events-none aria-disabled:opacity-60"
+              >
+                Continuar ahora <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Button
+                type="button"
+                disabled={objectiveStatus !== 'saved' || tomorrowStatus === 'saving'}
+                onClick={() => {
+                  if (!nextObjective) return;
+                  void trackClientAnalyticsEvent({
+                    eventName: 'cta_click',
+                    metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'topic_practice' },
+                  });
+                  if (nextObjective.topicSectionIndex !== null && onContinueToTopic) {
+                    if (nextObjective.topicSectionIndex === topicSectionIndex) {
+                      resetExam();
+                    } else {
+                      onContinueToTopic(nextObjective.topicSectionIndex);
+                    }
+                  } else {
+                    resetExam();
+                  }
+                }}
+                className="min-h-12 w-full rounded-xl text-sm font-semibold"
+              >
+                Continuar ahora <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={objectiveStatus !== 'saved' || tomorrowStatus === 'saving'}
+              onClick={() => void continueTomorrow()}
+              className="min-h-12 w-full rounded-xl text-sm font-semibold"
+            >
+              {tomorrowStatus === 'saving' ? 'Guardando para mañana…' : 'Continuar mañana'}
+            </Button>
+            {tomorrowStatus === 'error' ? (
+              <p role="alert" className="text-destructive text-center text-xs">
+                No pudimos guardar el repaso para mañana. Volvé a intentarlo.
+              </p>
+            ) : null}
+            <p className="text-muted-foreground text-center text-xs">
+              Si elegís mañana, el repaso queda guardado en Mi espacio.
+            </p>
+          </div>
+
+          </div>
+          </div>
+          <details className="group border-border bg-card mt-3 rounded-2xl border px-4 py-1 sm:px-5">
+            <summary className="text-muted-foreground hover:text-foreground flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold">
+              Ver todos los detalles
+              <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+            </summary>
+            <div className="grid gap-6 border-t py-4 @min-[800px]/practice-result:grid-cols-2 @min-[800px]/practice-result:gap-7">
+              <section className="space-y-3">
+                <h3 className="text-foreground text-sm font-semibold">Resultados de todos los temas</h3>
+                {topicResults.length ? (
+                  topicResults.map((topic) => {
+                    const percentage = Math.round(topic.correct / topic.total * 100);
+                    return (
+                      <div key={topic.title} className="space-y-1.5">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-foreground text-sm font-medium">{topic.title}</span>
+                          <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                            {topic.correct}/{topic.total}
+                          </span>
+                        </div>
+                        <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                          <div className="bg-primary h-full rounded-full" style={{ width: `${percentage}%` }} />
+                        </div>
+                        {topic.bankSize > 0 ? (
+                          <p className="text-muted-foreground text-xs">
+                            En esta tanda aparecieron {topic.total} de {topic.bankSize} preguntas válidas disponibles de este tema.
+                            {topic.total < topic.bankSize && topic.correct === topic.total
+                              ? ' Todavía quedan preguntas distintas por comprobar.' : ''}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    No hubo preguntas de opción múltiple vinculadas a un tema en esta tanda.
+                  </p>
+                )}
+                <p className="text-muted-foreground text-xs">
+                  El banco puede cambiar cuando se actualiza el PDF. Estas cantidades describen esta práctica, no todo tu historial.
+                </p>
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Preguntas para revisar · {wrongAnswers.length}
+                </h3>
+                {wrongAnswers.length ? (
+                  <div className="space-y-2">
+                    {wrongAnswers.map((question) => (
+                      <details key={question.id} className="border-border rounded-xl border px-3 py-2.5">
+                        <summary className="text-foreground cursor-pointer text-sm font-medium leading-6">
+                          {question.prompt}
+                        </summary>
+                        <div className="text-muted-foreground space-y-3 pt-4 text-sm leading-6">
+                          <p>
+                            <span className="text-foreground font-semibold">Tu respuesta: </span>
+                            {question.type === 'multiple_choice'
+                              ? selectedAnswers[question.id] || 'Sin respuesta'
+                              : openDrafts[question.id] || 'Sin respuesta escrita'}
+                          </p>
+                          <p>
+                            <span className="text-foreground font-semibold">
+                              {question.type === 'multiple_choice' ? 'Respuesta correcta: ' : 'Respuesta esperada: '}
+                            </span>
+                            {question.answer}
+                          </p>
+                          {question.explanation && (
+                            <p><span className="text-foreground font-semibold">¿Por qué? </span>{question.explanation}</p>
+                          )}
+                          <p className="text-xs">Fuente: {sourceLabel(question)}</p>
+                          {question.type === 'open' && (
+                            <p className="text-xs">La respuesta abierta fue autoevaluada, no corregida automáticamente.</p>
+                          )}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    No quedaron respuestas para revisar en esta tanda.
+                  </p>
+                )}
+              </section>
+
+              <details className="border-border border-t pt-4 @min-[800px]/practice-result:col-span-2">
+                <summary className="text-foreground cursor-pointer text-sm font-semibold">
+                  Todas mis respuestas · {questions.length}
+                </summary>
+                <div className="mt-4 space-y-2">
+                  {questions.map((question, index) => (
+                    <details key={question.id} className="border-border rounded-xl border px-3 py-2.5">
+                      <summary className="text-foreground cursor-pointer text-sm font-medium leading-6">
+                        <span className={isQuestionCorrect(question) ? 'text-emerald-700' : 'text-amber-700'}>
+                          {isQuestionCorrect(question) ? '✓' : '•'}
+                        </span>
+                        {' '}Pregunta {index + 1}: {question.prompt}
+                      </summary>
+                      <div className="text-muted-foreground space-y-2 pt-3 text-sm">
+                        <p><span className="text-foreground font-semibold">Tu respuesta: </span>
+                          {question.type === 'multiple_choice'
+                            ? selectedAnswers[question.id] || 'Sin respuesta'
+                            : openDrafts[question.id] || 'Sin respuesta escrita'}
+                        </p>
+                        <p><span className="text-foreground font-semibold">Respuesta esperada: </span>
+                          {question.answer}
+                        </p>
+                        {question.explanation && <p>{question.explanation}</p>}
+                        <p className="text-xs">Fuente: {sourceLabel(question)}</p>
+                        {question.type === 'open' && <p className="text-xs">Pregunta autoevaluada.</p>}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </details>
+              <div className="flex flex-wrap gap-3 @min-[800px]/practice-result:col-span-2">
+                <Link href={`/dashboard/progreso?material=${materialId}`}
+                  className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold">
+                  Ver mi progreso
+                </Link>
+                <Button type="button" variant="outline" onClick={resetExam}>
+                  <RotateCcw className="h-4 w-4" /> Nueva práctica
+                </Button>
+              </div>
+            </div>
+          </details>
+        </div>
+      );
+    }
 
     return (
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
@@ -618,6 +1041,36 @@ export function StudentMaterialExam({
             intento; no cuentan como errores.
           </p>
         )}
+        {!isSimulation && (
+          <section className="border-primary/20 bg-primary/5 mt-5 rounded-xl border p-4 sm:p-5" aria-live="polite">
+            <p className="text-primary text-[11px] font-bold tracking-[0.13em] uppercase">Tu próximo objetivo</p>
+            {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
+              <p className="text-muted-foreground mt-2 text-sm">Preparando tu próximo repaso con tus respuestas guardadas…</p>
+            ) : objectiveStatus === 'saved' && nextObjective ? (
+              <>
+                <h3 className="text-foreground mt-2 text-lg font-bold">
+                  {nextObjective.kind === 'reinforce' ? `Reforzar: ${nextObjective.topicTitle || 'tus errores'}`
+                    : nextObjective.kind === 'practice' ? `Practicar: ${nextObjective.topicTitle || 'el próximo tema'}`
+                    : 'Consolidar lo aprendido'}
+                </h3>
+                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                  {nextObjective.kind === 'reinforce' ? 'Volvé a comprobar los conceptos que te costaron en esta práctica.'
+                    : nextObjective.kind === 'practice' ? 'Seguí con un tema que todavía necesita una comprobación.'
+                    : 'Comprobá lo aprendido con otra tanda de preguntas.'}
+                </p>
+                <p className="text-muted-foreground mt-2 text-xs font-medium">
+                  Repaso sugerido: {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+                </p>
+                <p className="text-primary mt-3 text-xs font-semibold">✓ Guardado en Mi espacio para tu próxima visita</p>
+              </>
+            ) : (
+              <>
+                <p className="text-muted-foreground mt-2 text-sm">Tu práctica está guardada, pero no pudimos guardar tu próximo objetivo.</p>
+                <Button type="button" variant="outline" className="mt-3" onClick={persistNextObjective}>Reintentar guardar objetivo</Button>
+              </>
+            )}
+          </section>
+        )}
         <div className="flex flex-wrap gap-3 pt-5">
           {topicSectionIndex !== undefined && onReturnToTopic ? (
             <Button
@@ -645,6 +1098,14 @@ export function StudentMaterialExam({
               className="border-border focus-visible:outline-ring inline-flex min-h-11 items-center rounded-lg border px-4 text-sm font-semibold focus-visible:outline-2"
             >
               Ver mi progreso
+            </Link>
+          )}
+          {!isSimulation && (
+            <Link href="/dashboard" onClick={(event) => {
+              if (objectiveStatus === 'saving' || objectiveStatus === 'idle') event.preventDefault();
+            }} aria-disabled={objectiveStatus === 'saving' || objectiveStatus === 'idle'}
+              className="border-border inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold aria-disabled:cursor-wait aria-disabled:opacity-60">
+              {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? 'Guardando próximo objetivo…' : 'Terminar por hoy'}
             </Link>
           )}
           <Button
@@ -687,6 +1148,8 @@ export function StudentMaterialExam({
         });
       onComplete?.();
       setFinished(true);
+      // La próxima acción persistente se ofrece por ahora solo en la práctica general.
+      if (topicSectionIndex === undefined) persistNextObjective();
       return;
     }
     setCurrentIndex((index) => index + 1);
@@ -736,6 +1199,8 @@ export function StudentMaterialExam({
         revealed,
         openAssessments,
         answerIds: { ...answerIds.current },
+        sessionId: sessionIdRef.current,
+        savedAnswerIds: [...savedAnswerIdsRef.current],
         contextUnavailable,
         savedAt: Date.now(),
       };
@@ -767,6 +1232,7 @@ export function StudentMaterialExam({
       );
       return;
     }
+    if (!savedAnswerIdsRef.current.includes(payload.resultId)) savedAnswerIdsRef.current.push(payload.resultId);
     delete answerIds.current[current.id];
 
     advanceExam();

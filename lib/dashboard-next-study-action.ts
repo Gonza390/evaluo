@@ -6,7 +6,7 @@ import { logError } from '@/lib/observability';
 import type { StudentMaterial } from '@/lib/data/student-materials';
 
 export type DashboardNextStudyAction = {
-  kind: 'reinforce' | 'resume_practice' | 'start_practice' | 'continue_summary';
+  kind: 'reinforce' | 'resume_practice' | 'start_practice' | 'continue_summary' | 'saved_objective';
   materialId: string;
   title: string;
   description: string;
@@ -65,6 +65,28 @@ export async function getDashboardNextStudyAction(
   const readyById = new Map(readyMaterials.map((material) => [material.id, material]));
   const readyIds = readyMaterials.map((material) => material.id);
   const admin = createAdminClient();
+  // Tabla de objetivos aún no incluida en el tipo generado de Supabase.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const objectivesDb = admin as any;
+  const { data: saved, error: savedError } = await objectivesDb.from('study_next_objectives')
+    .select('id, material_id, kind, topic_title, topic_section_index, review_on, status')
+    .eq('user_id', userId).in('material_id', readyIds)
+    .in('status', ['pending', 'started']).order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (savedError && savedError.code !== '42P01') logError('dashboardNextStudyAction.savedObjective', savedError, { userId });
+  if (saved && readyById.has(saved.material_id)) {
+    const material = readyById.get(saved.material_id)!;
+    const params = new URLSearchParams({ tab: 'ejercicios' });
+    if (Number.isInteger(saved.topic_section_index) && saved.topic_section_index >= 0)
+      params.set('studyTopic', String(saved.topic_section_index));
+    const verb = saved.kind === 'reinforce' ? 'Reforzar' : saved.kind === 'practice' ? 'Practicar' : 'Consolidar';
+    return {
+      kind: 'saved_objective', materialId: saved.material_id,
+      title: `${verb}: ${saved.topic_title || titleForMaterial(material)}`,
+      description: `${titleForMaterial(material)} · Tu próximo repaso quedó preparado.`,
+      cta: 'Continuar mi repaso',
+      href: `/materiales/${saved.material_id}?${params.toString()}`,
+    };
+  }
   // study_errors existe en producción pero todavía no está incluido en el tipo generado.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = admin as any;

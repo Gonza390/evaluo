@@ -1704,6 +1704,13 @@ export function MaterialStudyWorkspace({
               <StudentMaterialExam
                 key={practiceSectionIndex ?? 'all'}
                 topicSectionIndex={practiceSectionIndex}
+                onContinueToTopic={(index) => {
+                  if (!Number.isInteger(index) || index < 0 || index >= studySummary.sections.length) return;
+                  setTopicReturn(null);
+                  setPracticeSectionIndex(index);
+                  setDiagnosticMode(false);
+                  handleStudyTabChange('ejercicios', 'summary_chapter');
+                }}
                 onReturnToTopic={
                   hasProgress
                     ? (reinforce, outcome) => {
