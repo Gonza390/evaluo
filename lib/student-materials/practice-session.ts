@@ -12,6 +12,8 @@ export type PracticeDraft = {
   revealed: Record<string, boolean>;
   openAssessments: Record<string, 'got_it' | 'review'>;
   answerIds: Record<string, string>;
+  savedAnswerIds?: string[];
+  sessionId?: string;
   contextUnavailable: boolean;
   savedAt: number;
 };
@@ -122,6 +124,11 @@ export function readPracticeDraft(
     revealed: safeBoolMap(draft.revealed),
     openAssessments,
     answerIds,
+    savedAnswerIds: Array.isArray(draft.savedAnswerIds)
+      ? [...new Set(draft.savedAnswerIds.filter((id): id is string => typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)))].slice(0, draft.questionIds.length)
+      : [],
+    sessionId: typeof draft.sessionId === 'string' && /^[0-9a-f-]{36}$/i.test(draft.sessionId)
+      ? draft.sessionId : undefined,
     contextUnavailable: draft.contextUnavailable === true,
     savedAt: draft.savedAt,
   };
