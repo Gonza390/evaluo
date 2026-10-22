@@ -149,7 +149,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient() as unknown as SupabaseClient;
   const { data: plan, error: planError } = await admin
     .from('subscription_plans')
-    .select('id, price_ars')
+    .select('id')
     .eq('code', 'premium')
     .eq('is_active', true)
     .single();
@@ -187,11 +187,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'offer_unavailable' }, { status: 503 });
   }
 
-  const configuredMonthlyPrice = Number(plan.price_ars);
-  const monthlyPrice =
-    Number.isFinite(configuredMonthlyPrice) && configuredMonthlyPrice > 0
-      ? configuredMonthlyPrice
-      : PREMIUM_MONTHLY_PRICE_ARS;
+  const monthlyPrice = PREMIUM_MONTHLY_PRICE_ARS;
   const baseAmount =
     offerCode === 'semester'
       ? PREMIUM_SEMESTER_PRICE_ARS
