@@ -5,6 +5,9 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { logError } from '@/lib/observability';
 import { isUuid } from '@/lib/uuid';
 import type { StudySummarySection } from '@/lib/student-materials/types';
+import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
+import { getDistinctEligibleExamQuestions } from '@/lib/student-materials/practice-questions';
+import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
 
 export type NextStudyObjective = {
   id: string;
@@ -52,7 +55,7 @@ export async function saveNextStudyObjectiveAction(input: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const materialDb = admin as any;
     const { data: material, error: materialError } = await materialDb.from('student_materials')
-      .select('id, exam_date, processing_status').eq('id', input.materialId)
+      .select('id, exam_date, processing_status, pedagogical_artifacts').eq('id', input.materialId)
       .eq('user_id', user.id).maybeSingle();
     if (materialError || !material || material.processing_status !== 'ready') return { success: false };
     const { data: savedAnswers, error: answersError } = await admin.from('student_material_answer_events')
@@ -80,7 +83,16 @@ export async function saveNextStudyObjectiveAction(input: {
     }
     const mostDifficult = [...missed.values()].sort((a, b) => b.count - a.count)[0] ?? null;
     const assessedTopics = new Set(assessed.map((row) => normalize(row.topic)));
-    const nextIndex = sections.findIndex((section) => section?.title && !assessedTopics.has(normalize(section.title)));
+    const questions = (material.pedagogical_artifacts as PedagogicalArtifacts | null)?.questions ?? [];
+    const availableTopics = new Set(
+      getDistinctEligibleExamQuestions(questions)
+        .filter((question) => question.type === 'multiple_choice')
+        .map((question) => findSummarySectionForQuestion(question, sections))
+        .filter((index) => index >= 0)
+    );
+    const nextIndex = sections.findIndex((section, index) =>
+      section?.title && availableTopics.has(index) && !assessedTopics.has(normalize(section.title))
+    );
     const kind: NextStudyObjective['kind'] = mostDifficult ? 'reinforce' : nextIndex >= 0 ? 'practice' : 'consolidate';
     const topicTitle = mostDifficult?.title ?? (nextIndex >= 0 ? sections[nextIndex]!.title : null);
     const topicSectionIndex = topicTitle
