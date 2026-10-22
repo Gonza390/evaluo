@@ -1533,9 +1533,9 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     // No unir definiciones de subtítulos distintos ni inventar explicaciones.
     const sentences = (block.body.match(/[^.!?]+[.!?]+(?=\s|$)/gu) ?? [])
       .map(cleanLine)
-      .filter(sentence => sentence.length >= 55 && sentence.split(/\s+/u).length >= 10);
+      .filter(sentence => sentence.length >= 45 && sentence.split(/\s+/u).length >= 7);
     return { focus: block.focus, answer: sentences.slice(0, 2).join(' ') };
-  }).find(block => block.answer.length >= 140 && block.answer.length <= 540);
+  }).find(block => block.answer.length >= 120 && block.answer.length <= 480);
   if (!grounded) return null;
   const reference = findReference(
     grounded.focus,
