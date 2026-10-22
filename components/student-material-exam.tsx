@@ -654,9 +654,9 @@ export function StudentMaterialExam({
           : openAssessments[question.id] === 'got_it';
 
       return (
-        <div className="mx-auto max-w-6xl px-3 py-5 sm:px-5 sm:py-8">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12 xl:gap-5">
-          <header className="border-border bg-card flex flex-col items-center justify-center rounded-2xl border px-5 py-7 text-center md:min-h-[285px] xl:col-span-3">
+        <div className="@container/practice-result mx-auto w-full max-w-[1440px] px-1 py-2 sm:px-3 sm:py-4">
+          <div className="grid min-w-0 grid-cols-1 gap-3 @min-[660px]/practice-result:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] @min-[1040px]/practice-result:grid-cols-[minmax(165px,0.7fr)_minmax(0,1.2fr)_minmax(290px,1fr)] @min-[1040px]/practice-result:gap-4">
+          <header className="border-border bg-card flex min-w-0 flex-col items-center justify-center rounded-2xl border px-4 py-5 text-center @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto @min-[1040px]/practice-result:min-h-[260px]">
             <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
               Práctica terminada
             </p>
@@ -668,7 +668,7 @@ export function StudentMaterialExam({
             </p>
           </header>
 
-          <section className="border-border bg-card rounded-2xl border p-5 sm:p-6 xl:col-span-5">
+          <section className="border-border bg-card min-w-0 rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto">
             <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="text-foreground text-sm font-semibold">Así te fue por tema</h3>
               <span className="text-muted-foreground text-xs">
@@ -715,7 +715,7 @@ export function StudentMaterialExam({
             </p>
           </section>
 
-          <div className="border-border bg-card flex flex-col rounded-2xl border p-5 sm:p-6 md:col-span-2 xl:col-span-4">
+          <div className="border-border bg-card flex min-w-0 flex-col rounded-2xl border p-4 sm:p-5 @min-[660px]/practice-result:col-start-2 @min-[660px]/practice-result:row-span-2 @min-[660px]/practice-result:row-start-1 @min-[1040px]/practice-result:col-start-3 @min-[1040px]/practice-result:row-span-1">
           <section aria-live="polite">
             <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
               Tu próximo paso
@@ -811,12 +811,12 @@ export function StudentMaterialExam({
 
           </div>
           </div>
-          <details className="group border-border bg-card mt-4 rounded-2xl border px-5 py-2 sm:px-6 xl:mt-5">
+          <details className="group border-border bg-card mt-3 rounded-2xl border px-4 py-1 sm:px-5">
             <summary className="text-muted-foreground hover:text-foreground flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold">
               Ver todos los detalles
               <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
             </summary>
-            <div className="grid gap-7 border-t py-5 lg:grid-cols-2 lg:gap-8">
+            <div className="grid gap-6 border-t py-4 @min-[800px]/practice-result:grid-cols-2 @min-[800px]/practice-result:gap-7">
               <section className="space-y-3">
                 <h3 className="text-foreground text-sm font-semibold">Resultados de todos los temas</h3>
                 {topicResults.length ? (
@@ -895,7 +895,7 @@ export function StudentMaterialExam({
                 )}
               </section>
 
-              <details className="border-border border-t pt-5 lg:col-span-2">
+              <details className="border-border border-t pt-4 @min-[800px]/practice-result:col-span-2">
                 <summary className="text-foreground cursor-pointer text-sm font-semibold">
                   Todas mis respuestas · {questions.length}
                 </summary>
@@ -925,7 +925,7 @@ export function StudentMaterialExam({
                   ))}
                 </div>
               </details>
-              <div className="flex flex-wrap gap-3 lg:col-span-2">
+              <div className="flex flex-wrap gap-3 @min-[800px]/practice-result:col-span-2">
                 <Link href={`/dashboard/progreso?material=${materialId}`}
                   className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold">
                   Ver mi progreso
