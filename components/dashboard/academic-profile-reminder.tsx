@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AcademicProfileSimpleForm } from '@/components/profile-academic-simple';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
@@ -25,7 +25,7 @@ export function AcademicProfileReminder({
   const outcomeRef = useRef(false);
   const storageKey = 'evaluo:academic-profile-reminder:' + userId;
 
-  const getPopupMetadata = () => {
+  const getPopupMetadata = useCallback(() => {
     if (!popupIdRef.current) {
       popupIdRef.current = window.crypto?.randomUUID?.() ??
         `popup-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -36,7 +36,7 @@ export function AcademicProfileReminder({
       popup_version: POPUP_VERSION,
       missing_university: missingUniversity,
     };
-  };
+  }, [missingUniversity]);
 
   useEffect(() => {
     try {
@@ -51,7 +51,7 @@ export function AcademicProfileReminder({
     if (!open || viewedRef.current) return;
     viewedRef.current = true;
     trackMarketingEvent('academic_profile_popup_viewed', getPopupMetadata());
-  }, [open, missingUniversity]);
+  }, [open, getPopupMetadata]);
 
   const dismiss = (method: 'later' | 'close') => {
     if (!open) return;
