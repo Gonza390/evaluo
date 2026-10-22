@@ -1148,7 +1148,8 @@ export function StudentMaterialExam({
         });
       onComplete?.();
       setFinished(true);
-      persistNextObjective();
+      // La próxima acción persistente se ofrece por ahora solo en la práctica general.
+      if (topicSectionIndex === undefined) persistNextObjective();
       return;
     }
     setCurrentIndex((index) => index + 1);
