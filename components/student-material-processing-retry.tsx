@@ -51,7 +51,7 @@ export function StudentMaterialProcessingRetry({
         router.refresh();
       }
     });
-  }, [autoRetry, materialId, router, toast]);
+  }, [autoRetry, materialId, router, startTransition, toast]);
 
   useEffect(() => {
     if (autoRetry && !autoTriggeredRef.current) {
