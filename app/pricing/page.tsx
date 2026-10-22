@@ -8,7 +8,7 @@ import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
-  'Estudiá gratis con tus PDFs, practicá por temas y reforzá errores. Conocé los beneficios reales y precios de Evaluo Premium.';
+  'Estudiá gratis con tus apuntes. Con Premium prepará más materias, cargá más PDFs y ampliá tus herramientas de estudio desde $9.990 por mes.';
 
 export const metadata: Metadata = {
   title: 'Planes y precios',
@@ -39,20 +39,19 @@ export const metadata: Metadata = {
 };
 
 const freeFeatures = [
-  '2 PDFs propios cada 15 días',
-  'Resúmenes, glosario y flashcards de tus PDFs',
-  'Práctica por temas, resultados y progreso',
+  '2 PDFs cada 15 días',
+  'Resúmenes y flashcards de tus apuntes',
+  'Práctica y progreso por temas',
   'Repaso de errores con ayudas de IA limitadas',
-  'Simuladores básicos y calendario de exámenes',
+  'Calendario de exámenes y simuladores básicos',
 ];
 
 const premiumFeatures = [
   'Todo lo que incluye Gratis',
-  'Hasta 3 PDFs nuevos por día',
-  'Mapas mentales de tus PDFs',
-  'Modalidades Premium de simuladores de materias',
-  'Más explicaciones con IA en los simuladores',
-  'Más ayudas y comprobaciones con IA para reforzar errores',
+  'Hasta 3 PDFs por día',
+  'Mapas mentales de tus apuntes',
+  'Más ayudas con IA para reforzar errores',
+  'Modos Premium y explicaciones adicionales en simuladores',
 ];
 
 const comparison = [
@@ -98,11 +97,11 @@ export default async function PricingPage({
               Evaluo Premium
             </span>
             <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] break-words min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
-              Estudiá con tus apuntes. Avanzá más con Premium.
+              Estudiá gratis con tus apuntes. Prepará más materias con Premium.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Subí tus PDFs, entendé cada tema, practicá y corregí tus errores gratis. Si
-              necesitás preparar más materiales o ampliar las ayudas de estudio, elegí Premium.
+              Subí tus PDFs, practicá y reforzá tus errores gratis. Con Premium, cargá más
+              materiales, accedé a mapas mentales y ampliá tus ayudas con IA.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
@@ -119,7 +118,7 @@ export default async function PricingPage({
                   Retomá tu compra
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-                  Premium mensual a $9.990
+                  Retomá Premium a $9.990 por mes
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">
                   Esta oferta está disponible si empezaste una compra y todavía no la completaste.
