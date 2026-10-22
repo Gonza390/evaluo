@@ -1,0 +1,37 @@
+name: Temporary Next.js security lock refresh
+on:
+  push:
+    branches:
+      - fix/stalled-pdf-and-d1-invalid-material-20261022
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate-lock:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/stalled-pdf-and-d1-invalid-material-20261022
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Regenerate lockfile with security patch
+        run: |
+          npm install --package-lock-only --ignore-scripts --save-exact next@16.4.1
+          node -e "const p=require('./package.json'); const l=require('./package-lock.json'); if(p.dependencies.next!=='16.4.1'||l.packages['node_modules/next'].version!=='16.4.1') process.exit(1)"
+          npm audit --audit-level=high
+
+      - name: Commit updated dependency manifests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix(security): update Next.js to patched 16.4.1"
+          git push origin HEAD:fix/stalled-pdf-and-d1-invalid-material-20261022
