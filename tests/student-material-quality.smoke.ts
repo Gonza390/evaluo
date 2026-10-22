@@ -1564,12 +1564,10 @@ assert.ok(
 const sectionQuestion = validatedOpenQuestions.questions.find(
   (question) => question.kind === 'section'
 );
-assert.ok(
-  sectionQuestion &&
-    /conjunto vacío/i.test(sectionQuestion.answer) &&
-    /marcos normativos/i.test(sectionQuestion.answer) &&
-    !/alfabetizar|diversidad cultural/i.test(sectionQuestion.answer),
-  'Una respuesta abierta de sección debe basarse en su propio resumen, sin mezclar definiciones canónicas externas.'
+assert.equal(
+  sectionQuestion,
+  undefined,
+  'Una sola frase descriptiva no justifica generar una respuesta abierta explicativa ni mezclar contenido externo.'
 );
 
 const canonicalQuality = buildStudentMaterialPedagogicalQualityReport({
