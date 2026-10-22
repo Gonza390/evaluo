@@ -78,27 +78,44 @@ function isMissingTableError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const code = 'code' in error ? String((error as { code?: string }).code ?? '') : '';
   const message = 'message' in error ? String((error as { message?: string }).message ?? '') : '';
-  return code === '42P01' || /student_material_ai_usage/i.test(message);
+  // Un error CHECK 23514 también nombra la tabla: no debemos silenciarlo
+  // interpretándolo como si la tabla faltara.
+  return (
+    code === '42P01' ||
+    (code === 'PGRST205' && message.includes('student_material_ai_usage')) ||
+    (message.includes('student_material_ai_usage') &&
+      /does not exist|not found in the schema cache/i.test(message))
+  );
 }
 
-async function flushPendingAiUsageForMaterial(admin: AdminClient, materialId: string): Promise<void> {
+/**
+ * Persistir también durante la ruta de error: las llamadas visuales que
+ * recuperaron páginas antes de un timeout igualmente consumieron tokens.
+ *
+ * Sólo retiramos las filas confirmadas por Postgres. Si un INSERT falla,
+ * las conservamos para el siguiente intento en este mismo proceso.
+ */
+export async function flushPendingAiUsageForMaterial(admin: AdminClient, materialId: string): Promise<void> {
   const pending = pendingAiUsageByMaterial.get(materialId);
   if (!pending || pending.length === 0) return;
 
-  // Retiramos el lote antes del INSERT para que nunca se duplique si esta
-  // función se invoca más de una vez para el mismo material.
-  pendingAiUsageByMaterial.delete(materialId);
+  // Copiamos el lote para no eliminar filas agregadas mientras dura el INSERT.
+  const batch = pending.slice();
 
   try {
     const { error } = await admin
       .from('student_material_ai_usage' as never)
-      .insert(pending as never);
+      .insert(batch as never);
     if (error) throw error;
+
+    // No descartamos las métricas antes de tener confirmación de persistencia.
+    pending.splice(0, batch.length);
+    if (pending.length === 0) pendingAiUsageByMaterial.delete(materialId);
   } catch (error) {
     if (!isMissingTableError(error)) {
       logError('studentMaterialAiUsage.flush', error, {
         materialId,
-        recordCount: pending.length,
+        recordCount: batch.length,
       });
     }
   }
