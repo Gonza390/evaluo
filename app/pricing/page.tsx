@@ -7,7 +7,7 @@ import { FooterHome } from '@/components/footer-home';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
-  'Conocé tu progreso, descubrí qué temas reforzar y continuá preparando tus parciales con tus apuntes. Planes Gratis y Premium desde $9.990 al mes.';
+  'Descubrí qué temas dominás, reforzá tus errores y continuá avanzando con tus apuntes. Evaluo Free y Premium desde $9.990 al mes.';
 
 export const metadata: Metadata = {
   title: 'Planes y precios',
@@ -46,11 +46,11 @@ const freeFeatures = [
 ];
 
 const premiumFeatures = [
-  'Tu práctica, tus resultados y todo lo de Gratis',
-  'Seguí tu progreso en más materiales: hasta 3 PDFs por día',
-  'Mapas mentales de tus apuntes',
-  'Más ayudas con IA para avanzar en tus temas difíciles',
-  'Modos Premium y explicaciones adicionales en simuladores',
+  'Todo lo de Gratis, incluido tu progreso por tema',
+  'Seguí estudiando con hasta 3 PDFs por día',
+  'Reforzá tus errores con más ayudas de IA',
+  'Relacioná conceptos con mapas mentales',
+  'Practicá con las modalidades Premium del simulador',
 ];
 
 const comparison = [
@@ -99,8 +99,8 @@ export default async function PricingPage({
               No estudies a ciegas. Descubrí cuánto avanzaste y qué necesitás reforzar.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Practicá con tus apuntes, conocé tu progreso por tema y descubrí dónde mejorar.
-              Empezá gratis. Con Premium, continuá estudiando más materiales y ampliá tus ayudas con IA.
+              Practicá con tus apuntes, descubrí qué temas dominás y qué necesitás reforzar.
+              Con Premium, seguí avanzando con más materiales y más ayuda para estudiar.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
@@ -116,11 +116,11 @@ export default async function PricingPage({
                 Planes
               </p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-                Gratis o Premium. Sin vueltas.
+                Elegí cómo querés seguir avanzando.
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                Elegí cómo continuar tu preparación: gratis, mes a mes o durante 6 meses.
-                Tu progreso y tus resultados están disponibles en los tres planes.
+                Tu progreso y tus resultados están incluidos en los tres planes.
+                Elegí Premium cuando necesites estudiar más materiales y reforzar con más ayuda.
               </p>
             </div>
 
@@ -133,12 +133,12 @@ export default async function PricingPage({
 
             <div className="mx-auto mt-16 max-w-3xl text-center">
               <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                Tu progreso es lo importante. Las herramientas te ayudan a conseguirlo.
+                Primero entendé tus avances. Después, reforzá lo que falta.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                En los tres planes podés practicar, revisar errores y conocer tu avance por tema.
-                Premium te permite continuar ese recorrido con más materiales y ayudas,
-                sin que el progreso deje de ser parte de Gratis.
+                Practicá, revisá tus errores y conocé tu progreso desde Gratis.
+                Premium amplía la capacidad para seguir estudiando y las herramientas
+                disponibles para reforzar.
               </p>
             </div>
 
