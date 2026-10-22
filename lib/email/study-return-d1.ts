@@ -5,6 +5,7 @@ import { getDashboardNextStudyAction, type DashboardNextStudyAction } from '@/li
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { logError, logInfo } from '@/lib/observability';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { getRealStudyMaterialId } from '@/lib/email/study-return-material-id';
 
 const CAMPAIGN_KEY = 'study_return_d1_v1';
 const INACTIVE_HOURS = 24;
@@ -61,10 +62,7 @@ function metadataString(row: AnalyticsRow, key: string) {
 }
 
 function materialIdFromEvent(row: AnalyticsRow) {
-  const metadataId = metadataString(row, 'material_id');
-  if (metadataId) return metadataId;
-  const match = row.path?.match(/^\/materiales\/([0-9a-fA-F-]{36})/);
-  return match?.[1] ?? null;
+  return getRealStudyMaterialId(row);
 }
 
 function isMeaningfulStudySignal(row: AnalyticsRow) {
