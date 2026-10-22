@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import {
+  createMercadoPagoSubscription,
+  createMercadoPagoOneTimePreference,
+} from '../lib/payments/mercadopago.ts';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -66,4 +70,58 @@ assert.match(planSync, /SET price_ars = 9990/);
 assert.match(planSync, /WHERE code = 'premium' AND is_active = true/);
 assert.doesNotMatch(planSync, /^UPDATE public\.user_subscriptions/gm);
 
-console.log('Pricing: precios, checkout, proveedor y suscripciones existentes OK.');
+// Simulamos la solicitud HTTP a Mercado Pago con fetch falso.
+// No se usa la red, ninguna credencial real ni se crean pagos o suscripciones.
+const priorFetch = globalThis.fetch;
+const priorToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+const intercepted: Array<{ url: string; init?: RequestInit }> = [];
+process.env.MERCADOPAGO_ACCESS_TOKEN = 'TEST-mocked-price-contract';
+globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
+  intercepted.push({ url: String(input), init });
+  return new Response(
+    JSON.stringify({ id: 'mocked-provider-id', init_point: 'https://www.mercadopago.com.ar/mock' }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
+  );
+};
+
+try {
+  await createMercadoPagoSubscription({
+    attemptId: 'monthly-amount-smoke',
+    email: 'test_buyer@example.com',
+    amount: PREMIUM_MONTHLY_PRICE_ARS,
+    backUrl: 'https://evaluo.com.ar/pricing/resultado',
+  });
+  await createMercadoPagoOneTimePreference({
+    attemptId: 'semester-amount-smoke',
+    email: 'test_buyer@example.com',
+    amount: PREMIUM_SEMESTER_PRICE_ARS,
+    backUrl: 'https://evaluo.com.ar/pricing/resultado',
+    notificationUrl: 'https://evaluo.com.ar/api/webhooks/mercadopago',
+  });
+
+  assert.equal(intercepted.length, 2);
+  const [monthlyCall, semesterCall] = intercepted;
+  assert.equal(monthlyCall.url, 'https://api.mercadopago.com/preapproval');
+  assert.equal(semesterCall.url, 'https://api.mercadopago.com/checkout/preferences');
+  assert.equal(monthlyCall.init?.method, 'POST');
+  assert.equal(semesterCall.init?.method, 'POST');
+
+  const recurring = JSON.parse(String(monthlyCall.init?.body));
+  const semester = JSON.parse(String(semesterCall.init?.body));
+  assert.equal(recurring.auto_recurring.transaction_amount, 9_990);
+  assert.equal(recurring.auto_recurring.currency_id, 'ARS');
+  assert.equal(recurring.auto_recurring.frequency, 1);
+  assert.equal(recurring.auto_recurring.frequency_type, 'months');
+  assert.equal(recurring.external_reference, 'monthly-amount-smoke');
+  assert.equal(semester.items.length, 1);
+  assert.equal(semester.items[0].unit_price, 45_000);
+  assert.equal(semester.items[0].quantity, 1);
+  assert.equal(semester.items[0].currency_id, 'ARS');
+  assert.equal(semester.external_reference, 'semester-amount-smoke');
+} finally {
+  globalThis.fetch = priorFetch;
+  if (priorToken === undefined) delete process.env.MERCADOPAGO_ACCESS_TOKEN;
+  else process.env.MERCADOPAGO_ACCESS_TOKEN = priorToken;
+}
+
+console.log('Pricing: precios, payload Mercado Pago simulado y suscripciones existentes OK.');
