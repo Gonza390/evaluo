@@ -16,6 +16,17 @@ export type GenerateSummaryInput = {
   materialId?: string;
   userId?: string;
   geminiPdfKeySlot?: GeminiPdfKeySlot;
+  // Sólo el procesamiento de un archivo persistido configura reanudación.
+  pedagogicalCheckpoint?: {
+    fileSha256: string;
+    pipelineVersion: string;
+    modelVersion: number;
+  };
+  onPedagogicalMapProgress?: (progress: {
+    completed: number;
+    total: number;
+    reused: number;
+  }) => Promise<void>;
 };
 
 export type PersistSummaryArtifactsInput = {

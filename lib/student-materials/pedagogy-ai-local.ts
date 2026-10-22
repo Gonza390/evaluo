@@ -5,7 +5,13 @@ import {
   requestNvidiaJson,
   type ProviderResult,
 } from '@/lib/ai/providers';
-import { recordAiUsage } from '@/lib/student-materials/ai-usage';
+import { recordAiUsage, flushPendingAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
+import { createAdminClient } from '@/lib/supabase-admin';
+import {
+  isReusablePedagogicalMapCheckpoint,
+  loadPedagogicalMapCheckpoints,
+  savePedagogicalMapCheckpoint,
+} from '@/lib/student-materials/pedagogical-map-checkpoints';
 import {
   buildCompleteTraceableDocumentChunks,
   type CompleteDocumentChunk,
@@ -256,16 +262,77 @@ export async function generatePedagogicalModel(
     chunksWithPhysicalPage: chunks.filter((chunk) => chunk.pageStart !== null).length,
   });
 
+  // Cargar solamente mapas del mismo PDF y de la misma versión del algoritmo.
+  // La clave de cada grupo incorpora el texto y los índices de chunk.
+  const checkpointAdmin =
+    input.materialId && input.pedagogicalCheckpoint ? createAdminClient() : null;
+  const restored = new Map<number, CompactPedagogicalNode>();
+  if (checkpointAdmin && input.materialId && input.pedagogicalCheckpoint) {
+    const stored = await loadPedagogicalMapCheckpoints(
+      checkpointAdmin, input.materialId, input.pedagogicalCheckpoint
+    );
+    for (const row of stored) {
+      const index = (row as { group_index?: number }).group_index;
+      if (typeof index !== 'number' || !Number.isInteger(index)) continue;
+      const group = mapGroups[index];
+      if (!group || !isReusablePedagogicalMapCheckpoint(
+        row, index, group, input.pedagogicalCheckpoint
+      )) continue;
+      const allowed = new Set(group.chunkIndexes.map((chunkIndex) => chunkIndex + 1));
+      const normalized = normalizeCompactPedagogicalNode(
+        row.node as unknown as JsonRecord, allowed
+      );
+      if (hasContent(normalized)) restored.set(index, normalized);
+    }
+    logInfo('pedagogy.localReduce.checkpointsLoaded', {
+      materialId: input.materialId,
+      restoredGroups: restored.size,
+      groupCount: mapGroups.length,
+    });
+  }
+
   const partials: CompactPedagogicalNode[] = [];
 
   for (let start = 0; start < mapGroups.length; start += MAP_CONCURRENCY) {
     const batch = mapGroups.slice(start, start + MAP_CONCURRENCY);
-    const results = await Promise.all(
-      batch.map((group) =>
-        mapGroupWithRecovery(group, chunks, chunks.length, input)
-      )
-    );
 
+    // allSettled permite persistir los resultados válidos aunque falle otro
+    // proveedor dentro de la misma tanda. La tanda fallida se reintentará
+    // sin repetir los grupos cuyo checkpoint ya quedó confirmado en Postgres.
+    const settled = await Promise.allSettled(batch.map(async (group, offset) => {
+      const groupIndex = start + offset;
+      const cached = restored.get(groupIndex);
+      if (cached) return cached;
+
+      const result = await mapGroupWithRecovery(group, chunks, chunks.length, input);
+      if (result && checkpointAdmin && input.materialId && input.pedagogicalCheckpoint) {
+        await savePedagogicalMapCheckpoint(
+          checkpointAdmin,
+          input.materialId,
+          input.pedagogicalCheckpoint,
+          groupIndex,
+          group,
+          result
+        );
+      }
+      return result;
+    }));
+
+    // La contabilidad NO espera a que todo el PDF llegue a "ready".
+    // Si Vercel cancela una ejecución posterior, las tandas anteriores
+    // conservarán su consumo en la base de datos.
+    if (checkpointAdmin && input.materialId) {
+      await flushPendingAiUsageForMaterial(checkpointAdmin, input.materialId);
+    }
+
+    const rejected = settled.find(
+      (item): item is PromiseRejectedResult => item.status === 'rejected'
+    );
+    if (rejected) throw rejected.reason;
+
+    const results = settled.map((item) =>
+      item.status === 'fulfilled' ? item.value : null
+    );
     const available = results.filter(
       (result): result is CompactPedagogicalNode => result !== null
     );
@@ -280,6 +347,14 @@ export async function generatePedagogicalModel(
     }
 
     partials.push(...available);
+
+    if (input.onPedagogicalMapProgress) {
+      await input.onPedagogicalMapProgress({
+        completed: partials.length,
+        total: mapGroups.length,
+        reused: restored.size,
+      });
+    }
   }
 
   if (partials.length === 0) return null;
@@ -393,8 +468,9 @@ async function mapGroupWithRecovery(
 async function requestPedagogicalMapJson(
   group: PedagogicalMapGroup,
   totalChunks: number,
-  geminiPdfKeySlot?: GenerateSummaryInput['geminiPdfKeySlot']
+  input: GenerateSummaryInput
 ): Promise<ProviderResult | null> {
+  const geminiPdfKeySlot = input.geminiPdfKeySlot;
   const prompt = PEDAGOGICAL_MAP_PROMPT(group, totalChunks);
   const attempts: Array<{
     provider: string;
@@ -453,6 +529,16 @@ async function requestPedagogicalMapJson(
     try {
       const result = await attempt.run();
       if (result) {
+        // Incluso un JSON inválido consume tokens y puede activar un fallback.
+        // Registrar todo resultado recibido, no sólo el último aceptado.
+        await recordAiUsage({
+          materialId: input.materialId,
+          userId: input.userId,
+          provider: result.provider,
+          model: result.model,
+          operation: 'summary_map',
+          usage: result.usage,
+        });
         const parsed = tryParseJsonRecord(result.content);
         if (!parsed) {
           logError(
@@ -521,19 +607,10 @@ async function mapGroupAttempt(
     const result = await requestPedagogicalMapJson(
       group,
       totalChunks,
-      input.geminiPdfKeySlot
+      input
     );
 
     if (!result) return null;
-
-    await recordAiUsage({
-      materialId: input.materialId,
-      userId: input.userId,
-      provider: result.provider,
-      model: result.model,
-      operation: 'summary_map',
-      usage: result.usage,
-    });
 
     const parsed = tryParseJsonRecord(result.content);
     if (!parsed) return null;
