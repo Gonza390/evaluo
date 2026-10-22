@@ -81,6 +81,7 @@ const ANALYTICS_EVENT_NAMES = [
   'summary_next_step_clicked',
   'student_material_exam_started',
   'student_material_exam_completed',
+  'study_next_objective_created',
   'student_material_flashcards_started',
   'pdf_gate_viewed',
   'pdf_gate_cta_clicked',

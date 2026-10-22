@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import type { TopicPracticeOutcome } from '@/lib/student-materials/topic-practice-feedback';
 import { recordStudentMaterialStudyResultAction } from '@/lib/actions/study-errors';
 import { trackClientAnalyticsEvent } from '@/lib/analytics-client';
+import { saveNextStudyObjectiveAction, type NextStudyObjective } from '@/lib/actions/next-study-objective';
 import { MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
 import {
   getDistinctEligibleExamQuestions,
@@ -111,6 +112,10 @@ export function StudentMaterialExam({
   const [saveError, setSaveError] = useState('');
   const [canRestoreAfterRefresh, setCanRestoreAfterRefresh] = useState(false);
   const answerIds = useRef<Record<string, string>>({});
+  const sessionIdRef = useRef('');
+  const savedAnswerIdsRef = useRef<string[]>([]);
+  const [nextObjective, setNextObjective] = useState<NextStudyObjective | null>(null);
+  const [objectiveStatus, setObjectiveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
   const correctionRef = useRef<HTMLElement | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
@@ -158,6 +163,8 @@ export function StudentMaterialExam({
       revealed,
       openAssessments,
       answerIds: { ...answerIds.current },
+      sessionId: sessionIdRef.current,
+      savedAnswerIds: [...savedAnswerIdsRef.current],
       contextUnavailable,
       savedAt: Date.now(),
     };
@@ -214,6 +221,8 @@ export function StudentMaterialExam({
       return;
     }
     answerIds.current = { ...savedDraft.answerIds };
+    sessionIdRef.current = savedDraft.sessionId || crypto.randomUUID();
+    savedAnswerIdsRef.current = [...(savedDraft.savedAnswerIds ?? [])];
     setQuestions(frozen);
     setSelectedSize(savedDraft.selectedSize);
     setCurrentIndex(savedDraft.currentIndex);
@@ -264,6 +273,10 @@ export function StudentMaterialExam({
 
   const clearAttempt = () => {
     answerIds.current = {};
+    sessionIdRef.current = crypto.randomUUID();
+    savedAnswerIdsRef.current = [];
+    setNextObjective(null);
+    setObjectiveStatus('idle');
     setSaveError('');
     setCanRestoreAfterRefresh(false);
     setCurrentIndex(0);
@@ -618,6 +631,36 @@ export function StudentMaterialExam({
             intento; no cuentan como errores.
           </p>
         )}
+        {!isSimulation && (
+          <section className="border-primary/20 bg-primary/5 mt-5 rounded-xl border p-4 sm:p-5" aria-live="polite">
+            <p className="text-primary text-[11px] font-bold tracking-[0.13em] uppercase">Tu próximo objetivo</p>
+            {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
+              <p className="text-muted-foreground mt-2 text-sm">Preparando tu próximo repaso con tus respuestas guardadas…</p>
+            ) : objectiveStatus === 'saved' && nextObjective ? (
+              <>
+                <h3 className="text-foreground mt-2 text-lg font-bold">
+                  {nextObjective.kind === 'reinforce' ? `Reforzar: ${nextObjective.topicTitle || 'tus errores'}`
+                    : nextObjective.kind === 'practice' ? `Practicar: ${nextObjective.topicTitle || 'el próximo tema'}`
+                    : 'Consolidar lo aprendido'}
+                </h3>
+                <p className="text-muted-foreground mt-2 text-sm leading-6">
+                  {nextObjective.kind === 'reinforce' ? 'Volvé a comprobar los conceptos que te costaron en esta práctica.'
+                    : nextObjective.kind === 'practice' ? 'Seguí con un tema que todavía necesita una comprobación.'
+                    : 'Comprobá lo aprendido con otra tanda de preguntas.'}
+                </p>
+                <p className="text-muted-foreground mt-2 text-xs font-medium">
+                  Repaso sugerido: {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' })}
+                </p>
+                <p className="text-primary mt-3 text-xs font-semibold">✓ Guardado en Mi espacio para tu próxima visita</p>
+              </>
+            ) : (
+              <>
+                <p className="text-muted-foreground mt-2 text-sm">Tu práctica está guardada, pero no pudimos guardar tu próximo objetivo.</p>
+                <Button type="button" variant="outline" className="mt-3" onClick={persistNextObjective}>Reintentar guardar objetivo</Button>
+              </>
+            )}
+          </section>
+        )}
         <div className="flex flex-wrap gap-3 pt-5">
           {topicSectionIndex !== undefined && onReturnToTopic ? (
             <Button
@@ -647,6 +690,11 @@ export function StudentMaterialExam({
               Ver mi progreso
             </Link>
           )}
+          {!isSimulation && (
+            <Link href="/dashboard" className="border-border inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold">
+              Terminar por hoy
+            </Link>
+          )}
           <Button
             variant={topicSectionIndex !== undefined ? 'outline' : 'default'}
             onClick={resetExam}
@@ -672,6 +720,31 @@ export function StudentMaterialExam({
     current.type === 'multiple_choice' ? isRevealed : isRevealed && Boolean(openAssessment);
   const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
 
+  const persistNextObjective = () => {
+    if (isSimulation) return;
+    if (!sessionIdRef.current || savedAnswerIdsRef.current.length !== questions.length) {
+      setObjectiveStatus('error');
+      return;
+    }
+    setObjectiveStatus('saving');
+    void saveNextStudyObjectiveAction({
+      materialId,
+      sessionId: sessionIdRef.current,
+      answerIds: [...savedAnswerIdsRef.current],
+    }).then((response) => {
+      if (!response.success || !response.objective) {
+        setObjectiveStatus('error');
+        return;
+      }
+      setNextObjective(response.objective);
+      setObjectiveStatus('saved');
+      void trackClientAnalyticsEvent({
+        eventName: 'study_next_objective_created',
+        metadata: { material_id: materialId, objective_id: response.objective.id, kind: response.objective.kind },
+      });
+    }).catch(() => setObjectiveStatus('error'));
+  };
+
   const advanceExam = () => {
     if (currentIndex >= questions.length - 1) {
       if (!simulation)
@@ -687,6 +760,7 @@ export function StudentMaterialExam({
         });
       onComplete?.();
       setFinished(true);
+      persistNextObjective();
       return;
     }
     setCurrentIndex((index) => index + 1);
@@ -736,6 +810,8 @@ export function StudentMaterialExam({
         revealed,
         openAssessments,
         answerIds: { ...answerIds.current },
+        sessionId: sessionIdRef.current,
+        savedAnswerIds: [...savedAnswerIdsRef.current],
         contextUnavailable,
         savedAt: Date.now(),
       };
@@ -767,6 +843,7 @@ export function StudentMaterialExam({
       );
       return;
     }
+    if (!savedAnswerIdsRef.current.includes(payload.resultId)) savedAnswerIdsRef.current.push(payload.resultId);
     delete answerIds.current[current.id];
 
     advanceExam();
