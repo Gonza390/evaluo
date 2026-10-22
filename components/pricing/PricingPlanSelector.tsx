@@ -111,7 +111,7 @@ export function PricingPlanSelector({
               href="/estudiar-pdf-con-ia"
               className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              Empezar gratis con mi PDF
+              Empezá gratis con tu PDF
             </Link>
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
               <ShieldCheck className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
