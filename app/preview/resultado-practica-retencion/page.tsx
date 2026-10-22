@@ -26,13 +26,21 @@ export default function PreviewPracticeResult() {
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[#0F1B3D]">
             Reforzar tipos de conocimiento
           </h2>
-          <p className="mt-2 text-sm text-[#64748B]">
-            Repaso sugerido dentro de 3 días · Guardado en Mi espacio
+          <p className="mt-2 text-sm leading-6 text-[#64748B]">
+            Retomá este tema con una práctica breve y comprobá qué aprendiste.
           </p>
         </section>
 
-        <div className="mt-8 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-5 text-sm font-semibold text-white">
-          Terminar por hoy <ArrowRight className="size-4" aria-hidden="true" />
+        <div className="mt-8 space-y-3">
+          <div className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-5 text-sm font-semibold text-white">
+            Continuar ahora <ArrowRight className="size-4" aria-hidden="true" />
+          </div>
+          <div className="flex min-h-12 w-full items-center justify-center rounded-xl border border-[#D5DCEB] bg-white px-5 text-sm font-semibold text-[#0F1B3D]">
+            Continuar mañana
+          </div>
+          <p className="text-center text-xs text-[#64748B]">
+            Si elegís mañana, el repaso queda guardado en Mi espacio.
+          </p>
         </div>
 
         <details className="group mt-5 border-t border-[#E7EBF4] pt-4">
@@ -65,7 +73,7 @@ export default function PreviewPracticeResult() {
         </details>
       </section>
       <p className="mx-auto mt-5 max-w-xl text-center text-xs text-[#94A3B8]">
-        Vista previa del diseño con datos de ejemplo.
+        Vista previa visual con datos de ejemplo. Los botones funcionan en la pantalla real, al terminar una práctica.
       </p>
     </main>
   );
