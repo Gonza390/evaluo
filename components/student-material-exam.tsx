@@ -566,6 +566,155 @@ export function StudentMaterialExam({
       )
     ).slice(0, 5);
 
+    // La vista del PDF prioriza el resultado y un solo próximo paso.
+    // El desglose y las acciones existentes siguen disponibles al expandir "Ver detalles".
+    if (!isSimulation) {
+      const nextStepTitle =
+        nextObjective?.kind === 'reinforce'
+          ? `Reforzar ${nextObjective.topicTitle || 'mis errores'}`
+          : nextObjective?.kind === 'practice'
+            ? `Practicar ${nextObjective.topicTitle || 'el próximo tema'}`
+            : 'Consolidar lo aprendido';
+
+      return (
+        <div className="mx-auto max-w-xl px-2 py-8 sm:py-12">
+          <header className="text-center">
+            <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
+              Práctica terminada
+            </p>
+            <h2 className="text-foreground mt-4 text-5xl font-bold tracking-[-0.07em] sm:text-6xl">
+              {result.correct} <span className="text-muted-foreground/45">/ {result.total}</span>
+            </h2>
+            <p className="text-muted-foreground mt-2 text-sm">
+              respuestas correctas
+            </p>
+          </header>
+
+          <section className="border-border mt-9 border-t pt-7" aria-live="polite">
+            <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
+              Tu próximo paso
+            </p>
+            {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? (
+              <p className="text-muted-foreground mt-3 text-sm">
+                Preparando tu próximo repaso…
+              </p>
+            ) : objectiveStatus === 'saved' && nextObjective ? (
+              <>
+                <h3 className="text-foreground mt-2 text-xl font-semibold tracking-tight">
+                  {nextStepTitle}
+                </h3>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Repaso sugerido el{' '}
+                  {new Date(`${nextObjective.reviewOn}T12:00:00`).toLocaleDateString('es-AR', {
+                    day: 'numeric',
+                    month: 'long',
+                  })}
+                  {' · '}Guardado en Mi espacio
+                </p>
+              </>
+            ) : (
+              <div className="mt-3">
+                <p className="text-muted-foreground text-sm">
+                  No pudimos guardar tu próximo repaso. Tu práctica sí quedó guardada.
+                </p>
+                <Button type="button" variant="outline" onClick={persistNextObjective} className="mt-3">
+                  Reintentar
+                </Button>
+              </div>
+            )}
+          </section>
+
+          <Link
+            href="/dashboard"
+            aria-disabled={objectiveStatus === 'saving' || objectiveStatus === 'idle'}
+            onClick={(event) => {
+              if (objectiveStatus === 'saving' || objectiveStatus === 'idle') {
+                event.preventDefault();
+              }
+            }}
+            className="bg-primary text-primary-foreground mt-8 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:opacity-90 aria-disabled:cursor-wait aria-disabled:opacity-60"
+          >
+            {objectiveStatus === 'saving' || objectiveStatus === 'idle'
+              ? 'Guardando objetivo…'
+              : 'Terminar por hoy'}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+
+          <details className="group border-border mt-5 border-t pt-4">
+            <summary className="text-muted-foreground hover:text-foreground flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 text-sm font-medium">
+              Ver detalles y otras opciones
+              <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+            </summary>
+            <div className="space-y-5 pt-5">
+              <div className="border-border grid grid-cols-3 gap-3 border-b pb-5">
+                {(['recordar', 'comprender', 'aplicar'] as const)
+                  .filter((level) => topicSectionIndex === undefined || result.levels[level].total > 0)
+                  .map((level) => (
+                    <div key={level}>
+                      <p className="text-muted-foreground text-[10px] font-semibold tracking-wide uppercase">
+                        {levelLabel(level)}
+                      </p>
+                      <p className="text-foreground mt-1 text-base font-semibold">
+                        {result.levels[level].correct}/{result.levels[level].total}
+                      </p>
+                    </div>
+                  ))}
+              </div>
+              {reviewTopics.length > 0 ? (
+                <div>
+                  <h4 className="text-foreground text-sm font-semibold">Temas para repasar</h4>
+                  <ul className="text-muted-foreground mt-2 space-y-1 text-sm">
+                    {reviewTopics.map((topic) => <li key={topic}>• {topic}</li>)}
+                  </ul>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No quedaron temas marcados para repasar en esta tanda.
+                </p>
+              )}
+              {topicSectionIndex !== undefined ? (
+                <p className="text-muted-foreground text-xs">
+                  Este resultado corresponde solamente a esta tanda; no mide el dominio de todo el tema.
+                </p>
+              ) : sections.length > 0 ? (
+                <p className="text-muted-foreground text-xs">
+                  Los temas no evaluados en esta práctica no cuentan como errores.
+                </p>
+              ) : null}
+              <div className="flex flex-wrap gap-3">
+                {topicSectionIndex !== undefined && onReturnToTopic ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onReturnToTopic(result.wrong.length > 0, {
+                      sectionIndex: topicSectionIndex,
+                      total: result.total,
+                      correct: result.correct,
+                      incorrect: result.wrong.length,
+                      incorrectPrompts: result.wrong.map((question) => question.prompt),
+                    })}
+                  >
+                    {result.wrong.length > 0 ? 'Entender mis errores' : 'Volver al tema'}
+                  </Button>
+                ) : (
+                  <Link
+                    href={`/dashboard/progreso?material=${materialId}`}
+                    className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold"
+                  >
+                    Ver mi progreso
+                  </Link>
+                )}
+                <Button type="button" variant="outline" onClick={resetExam}>
+                  <RotateCcw className="h-4 w-4" />
+                  {topicSectionIndex !== undefined ? 'Practicar de nuevo' : 'Nueva práctica'}
+                </Button>
+              </div>
+            </div>
+          </details>
+        </div>
+      );
+    }
+
     return (
       <div className="mx-auto max-w-4xl px-1 py-2 sm:px-2 sm:py-4">
         <header className="border-border border-b pb-6">
