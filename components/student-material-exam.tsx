@@ -38,6 +38,7 @@ import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-c
 import {
   buildPracticeTopicResults,
   visiblePracticeTopicResults,
+  getPracticeTopicPerformance,
 } from '@/lib/student-materials/practice-result-topics';
 import {
   practiceBankSignature,
@@ -683,39 +684,27 @@ export function StudentMaterialExam({
             {topicResults.length ? (
               <div className="space-y-3.5">
                 {visibleTopics.map((topic) => {
-                  const percentage = Math.round((topic.correct / topic.total) * 100);
-                  const isAllCorrect = topic.correct === topic.total;
-                  const needsReinforcement = topic.correct === 0;
-                  const barColor = isAllCorrect
-                    ? 'bg-emerald-500'
-                    : needsReinforcement ? 'bg-amber-500' : 'bg-primary';
-                  const barTrack = needsReinforcement
-                    ? 'bg-amber-100 dark:bg-amber-950/40'
-                    : isAllCorrect ? 'bg-emerald-100 dark:bg-emerald-950/40' : 'bg-primary/10';
-                  const scoreTone = needsReinforcement
-                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
-                    : isAllCorrect
-                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-                      : 'bg-primary/10 text-primary';
+                  const performance = getPracticeTopicPerformance(topic.correct, topic.total);
                   return (
                     <div key={topic.title} className="space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                         <span className="text-foreground min-w-0 flex-1 text-sm font-medium">{topic.title}</span>
-                        <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${scoreTone}`}>
-                          {topic.correct}/{topic.total}
-                          {' · '}
-                          {needsReinforcement ? 'Reforzar' : isAllCorrect ? 'Todo correcto' : 'En progreso'}
+                        <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${performance.badgeClass}`}>
+                          {topic.correct}/{topic.total} · {performance.label}
                         </span>
                       </div>
                       <div
-                        className={`${barTrack} h-2 overflow-hidden rounded-full`}
+                        className={`${performance.trackClass} relative h-2.5 overflow-hidden rounded-full`}
                         role="progressbar"
-                        aria-label={`Aciertos en ${topic.title}`}
+                        aria-label={`Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
                         aria-valuemin={0}
-                        aria-valuemax={topic.total}
-                        aria-valuenow={topic.correct}
+                        aria-valuemax={100}
+                        aria-valuenow={performance.percentage}
                       >
-                        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${percentage}%` }} />
+                        <div className={`h-full rounded-full ${performance.fillClass}`} style={{ width: `${performance.percentage}%` }} />
+                        {performance.percentage === 0 && (
+                          <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 rounded-full ${performance.zeroMarkerClass}`} />
+                        )}
                       </div>
                     </div>
                   );
@@ -843,30 +832,27 @@ export function StudentMaterialExam({
                 <h3 className="text-foreground text-sm font-semibold">Resultados de todos los temas</h3>
                 {topicResults.length ? (
                   topicResults.map((topic) => {
-                    const percentage = Math.round(topic.correct / topic.total * 100);
-                    const isAllCorrect = topic.correct === topic.total;
-                    const needsReinforcement = topic.correct === 0;
-                    const scoreColor = needsReinforcement
-                      ? 'text-amber-700 dark:text-amber-300'
-                      : isAllCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-primary';
-                    const trackColor = needsReinforcement
-                      ? 'bg-amber-100 dark:bg-amber-950/40'
-                      : isAllCorrect ? 'bg-emerald-100 dark:bg-emerald-950/40' : 'bg-primary/10';
-                    const barColor = isAllCorrect
-                      ? 'bg-emerald-500'
-                      : needsReinforcement ? 'bg-amber-500' : 'bg-primary';
+                    const performance = getPracticeTopicPerformance(topic.correct, topic.total);
                     return (
                       <div key={topic.title} className="space-y-1.5">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-foreground min-w-0 flex-1 text-sm font-medium">{topic.title}</span>
-                          <span className={`shrink-0 text-sm font-semibold tabular-nums ${scoreColor}`}>
-                            {topic.correct}/{topic.total}
-                            {' · '}
-                            {needsReinforcement ? 'Reforzar' : isAllCorrect ? 'Todo correcto' : 'En progreso'}
+                          <span className={`shrink-0 text-sm font-semibold tabular-nums ${performance.textClass}`}>
+                            {topic.correct}/{topic.total} · {performance.label}
                           </span>
                         </div>
-                        <div className={`${trackColor} h-1.5 overflow-hidden rounded-full`}>
-                          <div className={`${barColor} h-full rounded-full`} style={{ width: `${percentage}%` }} />
+                        <div
+                          className={`${performance.trackClass} relative h-2 overflow-hidden rounded-full`}
+                          role="progressbar"
+                          aria-label={`Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={performance.percentage}
+                        >
+                          <div className={`h-full rounded-full ${performance.fillClass}`} style={{ width: `${performance.percentage}%` }} />
+                          {performance.percentage === 0 && (
+                            <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 rounded-full ${performance.zeroMarkerClass}`} />
+                          )}
                         </div>
                         {topic.bankSize > 0 ? (
                           <p className="text-muted-foreground text-xs">

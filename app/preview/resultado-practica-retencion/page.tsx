@@ -1,4 +1,5 @@
 import { ArrowRight, RotateCcw } from 'lucide-react';
+import { getPracticeTopicPerformance } from '@/lib/student-materials/practice-result-topics';
 
 export const metadata = {
   title: 'Vista previa del resultado general | Evaluo',
@@ -6,10 +7,10 @@ export const metadata = {
 };
 
 const topics = [
-  { title: 'Metodología, Contrastación e Hipótesis', correct: 0, total: 2, available: 8 },
-  { title: 'Epistemología, Ciencia y Demarcación', correct: 0, total: 1, available: 7 },
-  { title: 'Estructura Conceptual y Teorías Científicas', correct: 0, total: 1, available: 6 },
-  { title: 'Ciencia y sociedad', correct: 1, total: 1, available: 5 },
+  { title: 'Metodología, Contrastación e Hipótesis', correct: 0, total: 1, available: 8 },
+  { title: 'Epistemología, Ciencia y Demarcación', correct: 1, total: 2, available: 7 },
+  { title: 'Estructura Conceptual y Teorías Científicas', correct: 2, total: 2, available: 6 },
+  { title: 'Ciencia y sociedad', correct: 4, total: 5, available: 9 },
 ];
 
 const mistakes = [
@@ -21,13 +22,6 @@ const mistakes = [
     source: 'Tema: Metodología · Ejemplo ilustrativo',
   },
   {
-    title: '¿Para qué se formula una hipótesis?',
-    chosen: 'Para establecer una verdad definitiva',
-    expected: 'Para proponer una explicación que pueda ponerse a prueba',
-    explanation: 'La hipótesis plantea una propuesta que admite evaluación mediante evidencia.',
-    source: 'Tema: Metodología · Ejemplo ilustrativo',
-  },
-  {
     title: '¿Qué estudia la epistemología?',
     chosen: 'Únicamente las tecnologías actuales',
     expected: 'Los fundamentos, métodos y alcances del conocimiento',
@@ -35,11 +29,11 @@ const mistakes = [
     source: 'Tema: Epistemología · Ejemplo ilustrativo',
   },
   {
-    title: '¿Qué caracteriza a una teoría científica?',
-    chosen: 'Ser una opinión sin relación con evidencia',
-    expected: 'Un conjunto articulado de conceptos e hipótesis que permite explicar fenómenos',
-    explanation: 'Las teorías científicas organizan proposiciones y evidencias para explicar fenómenos.',
-    source: 'Tema: Teorías científicas · Ejemplo ilustrativo',
+    title: '¿Qué vínculo existe entre ciencia y sociedad?',
+    chosen: 'No existe relación entre ellas',
+    expected: 'La ciencia influye en la sociedad y también responde a problemas sociales',
+    explanation: 'Los desarrollos científicos y las necesidades sociales se afectan mutuamente.',
+    source: 'Tema: Ciencia y sociedad · Ejemplo ilustrativo',
   },
 ];
 
@@ -63,7 +57,7 @@ export default function PreviewPracticeResult() {
             Práctica terminada
           </p>
           <h1 className="mt-4 text-6xl font-bold tracking-[-0.07em] text-[#0F1B3D]">
-            1 <span className="text-[#CBD5E1]">/ 5</span>
+            7 <span className="text-[#CBD5E1]">/ 10</span>
           </h1>
           <p className="mt-2 text-sm text-[#64748B]">respuestas correctas</p>
         </header>
@@ -75,24 +69,27 @@ export default function PreviewPracticeResult() {
           </div>
           <div className="space-y-3.5">
             {topics.map((topic) => {
-              const percentage = Math.round(topic.correct / topic.total * 100);
-              const allCorrect = topic.correct === topic.total;
-              const needsReinforcement = topic.correct === 0;
-              const barColor = allCorrect ? 'bg-emerald-500' : needsReinforcement ? 'bg-amber-500' : 'bg-[#4F5DFF]';
-              const trackColor = needsReinforcement ? 'bg-amber-100' : allCorrect ? 'bg-emerald-100' : 'bg-indigo-100';
-              const badgeColor = needsReinforcement
-                ? 'bg-amber-50 text-amber-700'
-                : allCorrect ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700';
+              const performance = getPracticeTopicPerformance(topic.correct, topic.total);
               return (
                 <div key={topic.title} className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <span className="min-w-0 flex-1 text-sm font-medium text-[#0F1B3D]">{topic.title}</span>
-                    <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${badgeColor}`}>
-                      {topic.correct}/{topic.total} · {needsReinforcement ? 'Reforzar' : allCorrect ? 'Todo correcto' : 'En progreso'}
+                    <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${performance.badgeClass}`}>
+                      {topic.correct}/{topic.total} · {performance.label}
                     </span>
                   </div>
-                  <div className={`h-2 overflow-hidden rounded-full ${trackColor}`}>
-                    <div className={`h-full rounded-full ${barColor}`} style={{ width: `${percentage}%` }} />
+                  <div
+                    className={`relative h-2.5 overflow-hidden rounded-full ${performance.trackClass}`}
+                    role="progressbar"
+                    aria-label={`Aciertos en ${topic.title}: ${performance.percentage}%, ${performance.label}`}
+                    aria-valuenow={performance.percentage}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div className={`h-full rounded-full ${performance.fillClass}`} style={{ width: `${performance.percentage}%` }} />
+                    {performance.percentage === 0 && (
+                      <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 rounded-full ${performance.zeroMarkerClass}`} />
+                    )}
                   </div>
                 </div>
               );
@@ -138,25 +135,36 @@ export default function PreviewPracticeResult() {
           <div className="grid gap-6 border-t py-4 @min-[800px]/practice-result:grid-cols-2 @min-[800px]/practice-result:gap-7">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-[#0F1B3D]">Resultados de todos los temas</h3>
-              {topics.map((topic) => (
-                <div key={topic.title}>
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium text-[#0F1B3D]">{topic.title}</span>
-                    <span className="text-[#64748B]">{topic.correct}/{topic.total}</span>
+              {topics.map((topic) => {
+                const performance = getPracticeTopicPerformance(topic.correct, topic.total);
+                return (
+                  <div key={topic.title} className="space-y-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="min-w-0 flex-1 font-medium text-[#0F1B3D]">{topic.title}</span>
+                      <span className={`font-semibold ${performance.textClass}`}>
+                        {topic.correct}/{topic.total} · {performance.label}
+                      </span>
+                    </div>
+                    <div className={`relative h-2 overflow-hidden rounded-full ${performance.trackClass}`}>
+                      <div className={`h-full rounded-full ${performance.fillClass}`} style={{ width: `${performance.percentage}%` }} />
+                      {performance.percentage === 0 && (
+                        <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 rounded-full ${performance.zeroMarkerClass}`} />
+                      )}
+                    </div>
+                    <p className="text-xs text-[#64748B]">
+                      En esta tanda aparecieron {topic.total} de {topic.available} preguntas válidas disponibles del tema.
+                      {topic.correct === topic.total && topic.total < topic.available
+                        ? ' Aún hay otras preguntas por comprobar.' : ''}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs text-[#64748B]">
-                    En esta tanda aparecieron {topic.total} de {topic.available} preguntas válidas disponibles del tema.
-                    {topic.correct === topic.total && topic.total < topic.available
-                      ? ' Aún hay otras preguntas por comprobar.' : ''}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
               <p className="text-xs text-[#64748B]">
                 Esta cobertura describe solamente la tanda, no todo el historial.
               </p>
             </div>
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-[#0F1B3D]">Preguntas para revisar · 4</h3>
+              <h3 className="text-sm font-semibold text-[#0F1B3D]">Preguntas para revisar · 3</h3>
               {mistakes.map((item) => (
                 <details key={item.title} className="rounded-xl border border-[#E7EBF4] px-3 py-3">
                   <summary className="cursor-pointer text-sm font-medium leading-6 text-[#0F1B3D]">
@@ -173,10 +181,10 @@ export default function PreviewPracticeResult() {
             </div>
             <details className="border-t border-[#E7EBF4] pt-4 @min-[800px]/practice-result:col-span-2">
               <summary className="cursor-pointer text-sm font-semibold text-[#0F1B3D]">
-                Todas mis respuestas · 5
+                Todas mis respuestas · 10
               </summary>
               <p className="mt-3 text-sm text-[#64748B]">
-                En la pantalla real, acá vas a poder revisar las cinco respuestas, incluso las correctas.
+                En la pantalla real, acá vas a poder revisar las diez respuestas, incluso las correctas.
               </p>
             </details>
             <div className="flex flex-wrap gap-3 @min-[800px]/practice-result:col-span-2">

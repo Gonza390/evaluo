@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   buildPracticeTopicResults,
   visiblePracticeTopicResults,
+  getPracticeTopicPerformance,
 } from '../lib/student-materials/practice-result-topics.ts';
 
 const questions = [
@@ -45,3 +46,22 @@ assert.ok(visible.some((topic) => topic.title === 'Ya acertado'),
 assert.equal(visiblePracticeTopicResults(many, 5).length, 5);
 assert.equal(visiblePracticeTopicResults(many.slice(0, 4), 5).length, 4);
 
+
+for (const [correct, total, expectedPercentage, expectedTone, expectedLabel] of [
+  [0, 5, 0, 'amber', 'Reforzar'],
+  [1, 5, 20, 'amber', 'Reforzar'],
+  [49, 100, 49, 'amber', 'Reforzar'],
+  [1, 2, 50, 'indigo', 'En progreso'],
+  [79, 100, 79, 'indigo', 'En progreso'],
+  [4, 5, 80, 'green', 'Buen resultado'],
+  [5, 5, 100, 'green', 'Buen resultado'],
+] as const) {
+  const performance = getPracticeTopicPerformance(correct, total);
+  assert.equal(performance.percentage, expectedPercentage);
+  assert.equal(performance.tone, expectedTone);
+  assert.equal(performance.label, expectedLabel);
+  assert.ok(performance.fillClass.length && performance.trackClass.length && performance.badgeClass.length);
+}
+assert.equal(getPracticeTopicPerformance(0, 0).percentage, 0);
+assert.equal(getPracticeTopicPerformance(0, 2).fillClass, 'bg-amber-500');
+assert.equal(getPracticeTopicPerformance(2, 2).fillClass, 'bg-emerald-500');
