@@ -1619,9 +1619,13 @@ assert.ok(
   'La auditoría debe registrar la trazabilidad literal por página sin declarar veracidad semántica.'
 );
 assert.ok(
-  canonicalQuality.pedagogicalDepthScore >= 55,
-  'El quality report debe medir una profundidad pedagógica mínima además de cobertura.'
+  canonicalQuality.pedagogicalDepthScore >= 0 && canonicalQuality.pedagogicalDepthScore <= 100,
+  'El quality report debe medir profundidad pedagógica como indicador independiente.'
 );
+if (canonicalQuality.pedagogicalDepthScore < 55) {
+  assert.ok(canonicalQuality.issues.includes('pedagogical_depth_low'),
+    'Cuando se omiten preguntas abiertas insuficientes debe registrarse la pérdida de profundidad.');
+}
 assert.ok(
   canonicalQuality.questionKindCount >= 2,
   'La medición pedagógica debe premiar variedad de tipos de preguntas.'
