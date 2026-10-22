@@ -107,6 +107,7 @@ export async function POST(request: Request) {
     materiaId?: unknown;
     planContext?: unknown;
     offerCode?: unknown;
+    expectedBaseAmountArs?: unknown;
     referralCode?: unknown;
     parcial?: unknown;
     returnTo?: unknown;
@@ -149,7 +150,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient() as unknown as SupabaseClient;
   const { data: plan, error: planError } = await admin
     .from('subscription_plans')
-    .select('id, price_ars')
+    .select('id')
     .eq('code', 'premium')
     .eq('is_active', true)
     .single();
@@ -187,11 +188,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'offer_unavailable' }, { status: 503 });
   }
 
-  const configuredMonthlyPrice = Number(plan.price_ars);
-  const monthlyPrice =
-    Number.isFinite(configuredMonthlyPrice) && configuredMonthlyPrice > 0
-      ? configuredMonthlyPrice
-      : PREMIUM_MONTHLY_PRICE_ARS;
+  const monthlyPrice = PREMIUM_MONTHLY_PRICE_ARS;
   const baseAmount =
     offerCode === 'semester'
       ? PREMIUM_SEMESTER_PRICE_ARS
@@ -199,6 +196,21 @@ export async function POST(request: Request) {
         ? PREMIUM_RECOVERY_PRICE_ARS
         : monthlyPrice;
   const billingMode = offerCode === 'semester' ? 'fixed_term' : 'recurring';
+
+  // Prevenimos que una página con un precio desactualizado abra un cobro distinto.
+  // El cliente solo declara qué precio vio: el monto real siempre se calcula aquí.
+  if (requestBody.expectedBaseAmountArs !== undefined) {
+    const expected = requestBody.expectedBaseAmountArs;
+    if (typeof expected !== 'number' || !Number.isSafeInteger(expected) || expected <= 0) {
+      return NextResponse.json({ error: 'invalid_expected_price' }, { status: 422 });
+    }
+    if (expected !== baseAmount) {
+      return NextResponse.json(
+        { error: 'price_changed', expectedAmountArs: baseAmount },
+        { status: 409 }
+      );
+    }
+  }
 
   let referral = null;
   try {
