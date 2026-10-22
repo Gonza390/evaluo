@@ -844,16 +844,29 @@ export function StudentMaterialExam({
                 {topicResults.length ? (
                   topicResults.map((topic) => {
                     const percentage = Math.round(topic.correct / topic.total * 100);
+                    const isAllCorrect = topic.correct === topic.total;
+                    const needsReinforcement = topic.correct === 0;
+                    const scoreColor = needsReinforcement
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : isAllCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-primary';
+                    const trackColor = needsReinforcement
+                      ? 'bg-amber-100 dark:bg-amber-950/40'
+                      : isAllCorrect ? 'bg-emerald-100 dark:bg-emerald-950/40' : 'bg-primary/10';
+                    const barColor = isAllCorrect
+                      ? 'bg-emerald-500'
+                      : needsReinforcement ? 'bg-amber-500' : 'bg-primary';
                     return (
                       <div key={topic.title} className="space-y-1.5">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <span className="text-foreground text-sm font-medium">{topic.title}</span>
-                          <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-foreground min-w-0 flex-1 text-sm font-medium">{topic.title}</span>
+                          <span className={`shrink-0 text-sm font-semibold tabular-nums ${scoreColor}`}>
                             {topic.correct}/{topic.total}
+                            {' · '}
+                            {needsReinforcement ? 'Reforzar' : isAllCorrect ? 'Todo correcto' : 'En progreso'}
                           </span>
                         </div>
-                        <div className="bg-muted h-1.5 overflow-hidden rounded-full">
-                          <div className="bg-primary h-full rounded-full" style={{ width: `${percentage}%` }} />
+                        <div className={`${trackColor} h-1.5 overflow-hidden rounded-full`}>
+                          <div className={`${barColor} h-full rounded-full`} style={{ width: `${percentage}%` }} />
                         </div>
                         {topic.bankSize > 0 ? (
                           <p className="text-muted-foreground text-xs">
@@ -867,7 +880,7 @@ export function StudentMaterialExam({
                   })
                 ) : (
                   <p className="text-muted-foreground text-sm">
-                    No hubo preguntas de opción múltiple vinculadas a un tema en esta tanda.
+                    No hubo preguntas vinculadas a un tema en esta tanda.
                   </p>
                 )}
                 <p className="text-muted-foreground text-xs">
