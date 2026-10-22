@@ -59,4 +59,17 @@ assert.match(runtimeTracer, /runtime\.bufferDeprecation\.origin/);
 assert.match(instrumentation, /server-runtime-warnings/);
 assert.doesNotMatch(runtimeTracer, /noDeprecation\s*=\s*true/);
 
+const migration = readFileSync(
+  'supabase/migrations/20261022092124_calendar_legacy_exam_instance_ai_source_vision.sql',
+  'utf8'
+);
+assert.match(migration, /lower\(btrim\(new\.exam_instance\)\) = 'parcial_1'/);
+assert.match(migration, /lower\(btrim\(new\.exam_instance\)\) = 'parcial_2'/);
+assert.match(migration, /new\.exam_instance := '1'/);
+assert.match(migration, /new\.exam_instance := '2'/);
+assert.match(migration, /before insert or update of exam_instance/i);
+assert.match(migration, /'source_vision'::text/);
+assert.match(migration, /student_material_ai_usage_operation_check/);
+assert.doesNotMatch(migration, /drop constraint if exists study_calendar_events_exam_instance_check/i);
+
 console.log('Calendar CHECK constraint and Buffer deprecation diagnostic tests passed.');
