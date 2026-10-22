@@ -654,8 +654,9 @@ export function StudentMaterialExam({
           : openAssessments[question.id] === 'got_it';
 
       return (
-        <div className="mx-auto max-w-xl px-2 py-8 sm:py-12">
-          <header className="text-center">
+        <div className="mx-auto max-w-6xl px-3 py-5 sm:px-5 sm:py-8">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12 xl:gap-5">
+          <header className="border-border bg-card flex flex-col items-center justify-center rounded-2xl border px-5 py-7 text-center md:min-h-[285px] xl:col-span-3">
             <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
               Práctica terminada
             </p>
@@ -667,15 +668,15 @@ export function StudentMaterialExam({
             </p>
           </header>
 
-          <section className="border-border mt-8 border-t pt-6">
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <section className="border-border bg-card rounded-2xl border p-5 sm:p-6 xl:col-span-5">
+            <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="text-foreground text-sm font-semibold">Así te fue por tema</h3>
               <span className="text-muted-foreground text-xs">
                 {topicResults.length} {topicResults.length === 1 ? 'tema evaluado' : 'temas evaluados'}
               </span>
             </div>
             {topicResults.length ? (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {topicResults.slice(0, 3).map((topic) => {
                   const percentage = Math.round((topic.correct / topic.total) * 100);
                   const color = percentage === 100
@@ -714,7 +715,8 @@ export function StudentMaterialExam({
             </p>
           </section>
 
-          <section className="border-border mt-6 border-t pt-6" aria-live="polite">
+          <div className="border-border bg-card flex flex-col rounded-2xl border p-5 sm:p-6 md:col-span-2 xl:col-span-4">
+          <section aria-live="polite">
             <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
               Tu próximo paso
             </p>
@@ -747,7 +749,7 @@ export function StudentMaterialExam({
             )}
           </section>
 
-          <div className="mt-8 space-y-3">
+          <div className="mt-auto space-y-3 pt-6">
             {nextObjective?.kind === 'reinforce' && nextObjective.topicSectionIndex === null ? (
               <Link
                 href={`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`}
@@ -807,12 +809,14 @@ export function StudentMaterialExam({
             </p>
           </div>
 
-          <details className="group border-border mt-5 border-t pt-4">
-            <summary className="text-muted-foreground hover:text-foreground flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 text-sm font-medium">
+          </div>
+          </div>
+          <details className="group border-border bg-card mt-4 rounded-2xl border px-5 py-2 sm:px-6 xl:mt-5">
+            <summary className="text-muted-foreground hover:text-foreground flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold">
               Ver todos los detalles
               <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
             </summary>
-            <div className="space-y-6 pt-5">
+            <div className="grid gap-7 border-t py-5 lg:grid-cols-2 lg:gap-8">
               <section className="space-y-3">
                 <h3 className="text-foreground text-sm font-semibold">Resultados de todos los temas</h3>
                 {topicResults.length ? (
@@ -849,7 +853,7 @@ export function StudentMaterialExam({
                 </p>
               </section>
 
-              <section className="border-border space-y-3 border-t pt-5">
+              <section className="space-y-3">
                 <h3 className="text-foreground text-sm font-semibold">
                   Preguntas para revisar · {wrongAnswers.length}
                 </h3>
@@ -891,7 +895,7 @@ export function StudentMaterialExam({
                 )}
               </section>
 
-              <details className="border-border border-t pt-5">
+              <details className="border-border border-t pt-5 lg:col-span-2">
                 <summary className="text-foreground cursor-pointer text-sm font-semibold">
                   Todas mis respuestas · {questions.length}
                 </summary>
@@ -921,8 +925,8 @@ export function StudentMaterialExam({
                   ))}
                 </div>
               </details>
-              <div className="flex flex-wrap gap-3">
-                <Link href={`/dashboard/progreso?material=${materialId}`}
+              <div className="flex flex-wrap gap-3 lg:col-span-2">
+                <Link href={`/dashboard/progreso?material=${materialId}`
                   className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold">
                   Ver mi progreso
                 </Link>
