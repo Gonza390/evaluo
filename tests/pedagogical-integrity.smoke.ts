@@ -253,6 +253,27 @@ assert.ok(openStudyQuestions.every(q => q.reference.pageStart !== null));
 assert.equal(new Set(openStudyQuestions.map(q => q.prompt)).size, 2);
 assert.ok(openStudyQuestions.every(q => !/Un concepto clave es/.test(q.answer)));
 
+// Una pregunta abierta necesita dos oraciones del mismo subtítulo.
+// No debe unir dos definiciones de apartados distintos ni usar un título.
+const separatedSubsections: StudentMaterialSummary = {
+  ...sectionSummary,
+  sections: [{
+    title: '3. Dos temas independientes',
+    body: '### 3.1 Primer tema\\nLa primera noción se define mediante múltiples argumentos que permiten entender su alcance dentro de un modelo académico.\\n### 3.2 Segundo tema\\nLa segunda noción se describe como un fenómeno separado que requiere otra categoría de análisis en esta materia.',
+  }],
+};
+const separatedBank = buildPedagogicalArtifacts({
+  summary: separatedSubsections, glossary: [], chunks: [{
+    text: separatedSubsections.sections[0]!.body,
+    pageStart: 1, pageEnd: 1, sectionTitle: separatedSubsections.sections[0]!.title, excerpt: '',
+  }],
+});
+assert.equal(separatedBank.questions.filter(q => q.kind === 'section' && q.type === 'open').length, 0,
+  'No inventar una explicación uniendo frases de subapartados diferentes.');
+assert.ok(openStudyQuestions.every(q =>
+  q.answer.split(/[.!?]+/u).filter(part => part.trim().length >= 55).length >= 2
+), 'Cada respuesta abierta debe aportar idea y desarrollo en el mismo apartado.');
+
 const pageMappedSections = [
   { title: 'Epistemología', body: 'La epistemología reflexiona sobre el conocimiento.\nVer en PDF · páginas 1, 2, 3' },
   { title: 'Argumentación', body: 'Los argumentos necesitan premisas y conclusiones.\nVer en PDF · páginas 4, 5' },
@@ -292,7 +313,7 @@ assert.ok(
 );
 const qualitySource = readFileSync('lib/student-materials/quality.ts', 'utf8');
 assert.match(qualitySource, /unsafe_model_answers_rejected/);
-assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 5/);
+assert.match(qualitySource, /PEDAGOGICAL_QUALITY_REPORT_VERSION = 6/);
 const cachedQualitySource = readFileSync('lib/data/student-material-pedagogical-cache.ts', 'utf8');
 assert.match(cachedQualitySource, /semantic_reaudit_pending/);
 assert.match(cachedQualitySource, /requiresSemanticReaudit/);
