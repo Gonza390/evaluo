@@ -36,6 +36,10 @@ import { getStudentMaterialPracticeContextAction } from '@/lib/actions/student-m
 import type { StudySummarySection } from '@/lib/student-materials/types';
 import { findSummarySectionForQuestion } from '@/lib/student-materials/summary-checks';
 import {
+  buildPracticeTopicResults,
+  visiblePracticeTopicResults,
+} from '@/lib/student-materials/practice-result-topics';
+import {
   practiceBankSignature,
   practiceDraftKey,
   readPracticeDraft,
@@ -630,29 +634,19 @@ export function StudentMaterialExam({
       };
       const bankCounts = new Map<string, number>();
       for (const question of eligibleQuestions) {
-        if (question.type !== 'multiple_choice') continue;
         const topic = topicName(question);
         bankCounts.set(topic, (bankCounts.get(topic) ?? 0) + 1);
       }
-      const byTopic = new Map<string, { title: string; total: number; correct: number; bankSize: number }>();
-      for (const question of questions) {
-        if (question.type !== 'multiple_choice') continue;
-        const title = topicName(question);
-        const item = byTopic.get(title) ?? {
-          title,
-          total: 0,
-          correct: 0,
-          bankSize: bankCounts.get(title) ?? 0,
-        };
-        item.total += 1;
-        if (normalizeAnswer(selectedAnswers[question.id] ?? '') === normalizeAnswer(question.answer))
-          item.correct += 1;
-        byTopic.set(title, item);
-      }
-      const topicResults = [...byTopic.values()].sort((left, right) =>
-        left.correct / left.total - right.correct / right.total ||
-        right.total - left.total || left.title.localeCompare(right.title, 'es')
+      // Mismo criterio que el resultado global: incluye preguntas abiertas
+      // autoevaluadas y evita discrepancias entre 1/5 y las filas por tema.
+      const wrongIds = new Set(result.wrong.map((question) => question.id));
+      const topicResults = buildPracticeTopicResults(
+        questions,
+        topicName,
+        (question) => !wrongIds.has(question.id),
+        bankCounts
       );
+      const visibleTopics = visiblePracticeTopicResults(topicResults);
       const wrongAnswers = questions.filter((question) =>
         question.type === 'multiple_choice'
           ? normalizeAnswer(selectedAnswers[question.id] ?? '') !== normalizeAnswer(question.answer)
@@ -687,29 +681,41 @@ export function StudentMaterialExam({
               </span>
             </div>
             {topicResults.length ? (
-              <div className="space-y-5">
-                {topicResults.slice(0, 3).map((topic) => {
+              <div className="space-y-3.5">
+                {visibleTopics.map((topic) => {
                   const percentage = Math.round((topic.correct / topic.total) * 100);
-                  const color = percentage === 100
+                  const isAllCorrect = topic.correct === topic.total;
+                  const needsReinforcement = topic.correct === 0;
+                  const barColor = isAllCorrect
                     ? 'bg-emerald-500'
-                    : percentage >= 70 ? 'bg-primary' : 'bg-amber-500';
+                    : needsReinforcement ? 'bg-amber-500' : 'bg-primary';
+                  const barTrack = needsReinforcement
+                    ? 'bg-amber-100 dark:bg-amber-950/40'
+                    : isAllCorrect ? 'bg-emerald-100 dark:bg-emerald-950/40' : 'bg-primary/10';
+                  const scoreTone = needsReinforcement
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300'
+                    : isAllCorrect
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                      : 'bg-primary/10 text-primary';
                   return (
-                    <div key={topic.title} className="space-y-1.5">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span className="text-foreground min-w-0 text-sm font-medium">{topic.title}</span>
-                        <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                    <div key={topic.title} className="space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                        <span className="text-foreground min-w-0 flex-1 text-sm font-medium">{topic.title}</span>
+                        <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${scoreTone}`}>
                           {topic.correct}/{topic.total}
+                          {' · '}
+                          {needsReinforcement ? 'Reforzar' : isAllCorrect ? 'Todo correcto' : 'En progreso'}
                         </span>
                       </div>
                       <div
-                        className="bg-muted h-1.5 overflow-hidden rounded-full"
+                        className={`${barTrack} h-2 overflow-hidden rounded-full`}
                         role="progressbar"
                         aria-label={`Aciertos en ${topic.title}`}
                         aria-valuemin={0}
                         aria-valuemax={topic.total}
                         aria-valuenow={topic.correct}
                       >
-                        <div className={`h-full rounded-full ${color}`} style={{ width: `${percentage}%` }} />
+                        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${percentage}%` }} />
                       </div>
                     </div>
                   );
@@ -720,9 +726,14 @@ export function StudentMaterialExam({
                 Esta tanda no incluyó preguntas de opción múltiple asociadas a temas.
               </p>
             )}
+            {topicResults.length > visibleTopics.length && (
+              <p className="text-muted-foreground mt-3 text-xs">
+                {topicResults.length - visibleTopics.length} temas más en «Ver todos los detalles».
+              </p>
+            )}
             <p className="text-muted-foreground mt-4 text-xs">
               Aciertos en esta tanda, no dominio definitivo de los temas.
-              {hasOpenQuestions ? ' Las preguntas abiertas se autoevalúan.' : ''}
+              {hasOpenQuestions ? ' Las respuestas abiertas fueron autoevaluadas.' : ''}
             </p>
           </section>
 
