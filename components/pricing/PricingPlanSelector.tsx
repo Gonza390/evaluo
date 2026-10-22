@@ -91,7 +91,7 @@ export function PricingPlanSelector({
               <span className="pb-1 text-sm text-slate-600">para siempre</span>
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Subí tus propios PDFs y seguí un recorrido completo: estudiá cada tema, practicá y reforzá tus errores.
+              Subí tus apuntes, practicá y reforzá tus errores. Ideal para empezar a estudiar con Evaluo.
             </p>
           </div>
 
