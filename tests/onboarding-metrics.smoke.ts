@@ -59,12 +59,12 @@ assert.deepEqual(safeAcademicEvent, {
   missing_university: true,
   dismiss_method: 'later',
 });
-assert.match(academicPopup, /viewedRef\\.current/);
-assert.match(academicPopup, /outcomeRef\\.current/);
-assert.match(academicPopup, /onComplete=\\{complete\\}/);
-assert.match(academicPopup, /onLater=\\{\\(\\) => dismiss\\('later'\\)\\}/);
-assert.match(academicForm, /if \\(!result\\.success\\)/);
-assert.match(academicForm, /if \\(onComplete\\) onComplete\\(\\)/);
+assert.match(academicPopup, /viewedRef\.current/);
+assert.match(academicPopup, /outcomeRef\.current/);
+assert.match(academicPopup, /onComplete=\{complete\}/);
+assert.match(academicPopup, /onLater=\{\(\) => dismiss\('later'\)\}/);
+assert.match(academicForm, /if \(!result\.success\)/);
+assert.match(academicForm, /if \(onComplete\) onComplete\(\)/);
 
 const t = '2026-10-20T09:00:00.000Z';
 const at = (sec: number) => new Date(Date.parse(t) + sec * 1000).toISOString();
