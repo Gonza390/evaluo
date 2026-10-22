@@ -131,9 +131,20 @@ export function StudentMaterialExam({
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [openAssessments, setOpenAssessments] = useState<Record<string, OpenAssessment>>({});
   const [finished, setFinished] = useState(false);
+  const finalResultRef = useRef<HTMLDivElement | null>(null);
   const [savedDraft, setSavedDraft] = useState<PracticeDraft | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const isSimulation = Boolean(simulation);
+
+  // El panel de ejercicios tiene scroll propio. Al finalizar, mostrar el resultado
+  // desde arriba aunque la última pregunta haya dejado el scroll al pie del panel.
+  useEffect(() => {
+    if (!finished || topicSectionIndex !== undefined || isSimulation) return;
+    finalResultRef.current?.closest<HTMLElement>(
+      '[role="region"][aria-label="Contenido de estudio"]'
+    )?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [finished, topicSectionIndex, isSimulation]);
+
   const bankSignature = useMemo(
     () => practiceBankSignature(eligibleQuestions),
     [eligibleQuestions]
@@ -654,7 +665,7 @@ export function StudentMaterialExam({
           : openAssessments[question.id] === 'got_it';
 
       return (
-        <div className="@container/practice-result mx-auto w-full max-w-[1440px] px-1 py-2 sm:px-3 sm:py-4">
+        <div ref={finalResultRef} className="@container/practice-result mx-auto w-full max-w-[1440px] px-1 py-2 sm:px-3 sm:py-4">
           <div className="grid min-w-0 grid-cols-1 gap-3 @min-[660px]/practice-result:grid-cols-[minmax(0,1fr)_minmax(280px,0.9fr)] @min-[1040px]/practice-result:grid-cols-[minmax(165px,0.7fr)_minmax(0,1.2fr)_minmax(290px,1fr)] @min-[1040px]/practice-result:gap-4">
           <header className="border-border bg-card flex min-w-0 flex-col items-center justify-center rounded-2xl border px-4 py-5 text-center @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto @min-[1040px]/practice-result:min-h-[260px]">
             <p className="text-primary text-xs font-semibold tracking-[0.12em] uppercase">
