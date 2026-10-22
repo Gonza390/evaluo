@@ -257,7 +257,7 @@ export function PaymentCheckoutCard({
           {isSemester ? 'Premium · 6 meses' : isRecovery ? 'Retomá Premium' : 'Premium mensual'}
         </span>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">
-          {isSemester ? '6 meses de Premium' : 'Premium'}
+          {isSemester ? 'Progresá durante 6 meses' : isRecovery ? 'Retomá Premium' : 'Seguí avanzando'}
         </h2>
 
         <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
@@ -339,7 +339,9 @@ export function PaymentCheckoutCard({
       ) : null}
 
       <p className="mt-5 text-sm leading-6 text-slate-600">
-        Para estudiantes que necesitan preparar más materias y ampliar sus herramientas de estudio.
+        {isSemester
+          ? 'Dale continuidad a tu preparación durante el semestre, con más materiales y ayudas cuando lo necesites.'
+          : 'Continuá tu progreso en más materiales y reforzá tus dificultades con ayudas adicionales.'}
       </p>
 
       <ul className="mt-7 flex-1 space-y-4">
