@@ -183,9 +183,20 @@ export function PaymentCheckoutCard({
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, materiaId, planContext: 'premium', offerCode }),
+        body: JSON.stringify({
+          source,
+          materiaId,
+          planContext: 'premium',
+          offerCode,
+          expectedBaseAmountArs: displayedPrice,
+        }),
       });
-      const payload = (await response.json()) as { checkoutUrl?: string; error?: string };
+      const payload = (await response.json()) as {
+        checkoutUrl?: string;
+        error?: string;
+        baseAmountArs?: number;
+        amountArs?: number;
+      };
       if (response.status === 401) {
         checkoutWindow?.close();
         const nextPath = `${window.location.pathname}${window.location.search}`;
@@ -203,16 +214,26 @@ export function PaymentCheckoutCard({
       if (response.status === 409) {
         checkoutWindow?.close();
         setError(
-          payload.error === 'checkout_in_progress'
-            ? 'Ya tenés un pago en curso. Completalo desde Mercado Pago o esperá unos minutos.'
-            : payload.error === 'semester_sold_out'
-              ? 'Los 50 cupos de esta oferta ya están ocupados.'
-              : 'Ya existe un acceso Premium para esta cuenta. Revisalo desde Configuración.'
+          payload.error === 'price_changed'
+            ? 'El precio se actualizó. Recargá la página para ver el importe antes de continuar.'
+            : payload.error === 'checkout_in_progress'
+              ? 'Ya tenés un pago en curso. Completalo desde Mercado Pago o esperá unos minutos.'
+              : payload.error === 'semester_sold_out'
+                ? 'Los 50 cupos de esta oferta ya están ocupados.'
+                : 'Ya existe un acceso Premium para esta cuenta. Revisalo desde Configuración.'
         );
         setLoading(false);
         return;
       }
       if (!response.ok || !payload.checkoutUrl) throw new Error(payload.error || 'checkout_error');
+      if (
+        payload.baseAmountArs !== displayedPrice ||
+        !Number.isFinite(payload.amountArs) ||
+        (payload.amountArs ?? 0) <= 0 ||
+        (payload.amountArs ?? 0) > displayedPrice!
+      ) {
+        throw new Error('checkout_amount_mismatch');
+      }
       const providerUrl = new URL(payload.checkoutUrl);
       const isMercadoPagoUrl =
         providerUrl.protocol === 'https:' &&
