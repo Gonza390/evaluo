@@ -213,8 +213,10 @@ function assertDomainArtifacts(
     `${label}: cada multiple choice debe conservar la respuesta correcta.`
   );
   assert.ok(
-    output.questions.some((question) => question.type === 'open' && question.level === 'comprender'),
-    `${label}: debe conservar al menos una pregunta abierta de comprensión.`
+    output.questions.filter(question => question.type === 'open').every(question =>
+      question.answer.length >= 120 && question.answer.split(/[.!?]+/u).filter(part => part.trim()).length >= 2
+    ),
+    `${label}: si hay preguntas abiertas, deben tener idea y desarrollo documentados; nunca forzarlas con resúmenes mínimos.`
   );
   assert.ok(
     output.coverage.referencedItems === output.coverage.totalItems,
