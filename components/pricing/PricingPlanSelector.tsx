@@ -22,7 +22,7 @@ export function PricingPlanSelector({
   source,
   materiaId,
 }: PricingPlanSelectorProps) {
-  const [billingMode, setBillingMode] = useState<BillingMode>('semester');
+  const [billingMode, setBillingMode] = useState<BillingMode>('monthly');
 
   function chooseBillingMode(nextMode: BillingMode) {
     if (nextMode === billingMode) return;
@@ -91,7 +91,7 @@ export function PricingPlanSelector({
               <span className="pb-1 text-sm text-slate-600">para siempre</span>
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Explorá materias, estudiá materiales compartidos y probá las herramientas básicas de Evaluo.
+              Subí tus propios PDFs y seguí un recorrido completo: estudiá cada tema, practicá y reforzá tus errores.
             </p>
           </div>
 
@@ -108,10 +108,10 @@ export function PricingPlanSelector({
 
           <div className="mt-8">
             <Link
-              href="/explorar"
+              href="/estudiar-pdf-con-ia"
               className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-900 transition hover:border-blue-300 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
-              Seguir gratis
+              Empezar gratis con mi PDF
             </Link>
             <p className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] leading-5 text-slate-500">
               <ShieldCheck className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
