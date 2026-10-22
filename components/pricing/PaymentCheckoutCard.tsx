@@ -13,7 +13,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
-import type { PremiumOfferCode } from '@/lib/payments/offers';
+import {
+  PREMIUM_MONTHLY_PRICE_ARS,
+  PREMIUM_MONTHLY_REFERENCE_PRICE_ARS,
+  PREMIUM_RECOVERY_PRICE_ARS,
+  semesterSavingsPercent,
+  type PremiumOfferCode,
+} from '@/lib/payments/offers';
 
 const currency = new Intl.NumberFormat('es-AR', {
   style: 'currency',
@@ -43,11 +49,11 @@ type PremiumOffer = {
 };
 
 const FALLBACK_OFFER: PremiumOffer = {
-  monthlyPriceArs: 12990,
-  monthlyReferencePriceArs: 15990,
+  monthlyPriceArs: PREMIUM_MONTHLY_PRICE_ARS,
+  monthlyReferencePriceArs: PREMIUM_MONTHLY_REFERENCE_PRICE_ARS,
   semesterPriceArs: 45000,
   semesterEquivalentMonthlyArs: 7500,
-  semesterSavingsPercent: 42,
+  semesterSavingsPercent: semesterSavingsPercent(),
   semesterLimit: 50,
   semesterSold: 0,
   semesterReserved: 0,
@@ -140,8 +146,8 @@ export function PaymentCheckoutCard({
 
   const displayedPrice = useMemo(() => {
     if (!offer) return null;
-    if (offerCode === 'semester') return offer.semesterEquivalentMonthlyArs;
-    if (offerCode === 'recovery') return 9990;
+    if (offerCode === 'semester') return offer.semesterPriceArs;
+    if (offerCode === 'recovery') return PREMIUM_RECOVERY_PRICE_ARS;
     return offer.monthlyPriceArs;
   }, [offer, offerCode]);
 
@@ -155,7 +161,7 @@ export function PaymentCheckoutCard({
   const isSemester = offerCode === 'semester';
   const isRecovery = offerCode === 'recovery';
   const semesterSoldOut = isSemester && offer ? !offer.semesterAvailable : false;
-  const billingLabel = '/mes';
+  const billingLabel = isSemester ? 'pago único' : '/mes';
 
   async function startCheckout() {
     trackMarketingEvent('premium_checkout_clicked', {
@@ -177,9 +183,20 @@ export function PaymentCheckoutCard({
       const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, materiaId, planContext: 'premium', offerCode }),
+        body: JSON.stringify({
+          source,
+          materiaId,
+          planContext: 'premium',
+          offerCode,
+          expectedBaseAmountArs: displayedPrice,
+        }),
       });
-      const payload = (await response.json()) as { checkoutUrl?: string; error?: string };
+      const payload = (await response.json()) as {
+        checkoutUrl?: string;
+        error?: string;
+        baseAmountArs?: number;
+        amountArs?: number;
+      };
       if (response.status === 401) {
         checkoutWindow?.close();
         const nextPath = `${window.location.pathname}${window.location.search}`;
@@ -197,16 +214,26 @@ export function PaymentCheckoutCard({
       if (response.status === 409) {
         checkoutWindow?.close();
         setError(
-          payload.error === 'checkout_in_progress'
-            ? 'Ya tenés un pago en curso. Completalo desde Mercado Pago o esperá unos minutos.'
-            : payload.error === 'semester_sold_out'
-              ? 'Los 50 cupos de esta oferta ya están ocupados.'
-              : 'Ya existe un acceso Premium para esta cuenta. Revisalo desde Configuración.'
+          payload.error === 'price_changed'
+            ? 'El precio se actualizó. Recargá la página para ver el importe antes de continuar.'
+            : payload.error === 'checkout_in_progress'
+              ? 'Ya tenés un pago en curso. Completalo desde Mercado Pago o esperá unos minutos.'
+              : payload.error === 'semester_sold_out'
+                ? 'Los 50 cupos de esta oferta ya están ocupados.'
+                : 'Ya existe un acceso Premium para esta cuenta. Revisalo desde Configuración.'
         );
         setLoading(false);
         return;
       }
       if (!response.ok || !payload.checkoutUrl) throw new Error(payload.error || 'checkout_error');
+      if (
+        payload.baseAmountArs !== displayedPrice ||
+        !Number.isFinite(payload.amountArs) ||
+        (payload.amountArs ?? 0) <= 0 ||
+        (payload.amountArs ?? 0) > displayedPrice!
+      ) {
+        throw new Error('checkout_amount_mismatch');
+      }
       const providerUrl = new URL(payload.checkoutUrl);
       const isMercadoPagoUrl =
         providerUrl.protocol === 'https:' &&
@@ -248,10 +275,10 @@ export function PaymentCheckoutCard({
       <div>
         <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
           <Sparkles className="h-3.5 w-3.5" />
-          {isSemester ? 'Premium · 6 meses' : isRecovery ? 'Oferta especial' : 'Premium mensual'}
+          {isSemester ? 'Premium · 6 meses' : isRecovery ? 'Retomá Premium' : 'Premium mensual'}
         </span>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">
-          {isSemester ? '6 meses de Premium' : 'Premium'}
+          {isSemester ? 'Sostené tu progreso' : isRecovery ? 'Retomá Premium' : 'Reforzá y seguí avanzando'}
         </h2>
 
         <div className="mt-3 flex flex-wrap items-end gap-x-2 gap-y-1">
@@ -261,7 +288,7 @@ export function PaymentCheckoutCard({
           {displayedPrice ? <span className="pb-1 text-sm text-slate-600">{billingLabel}</span> : null}
         </div>
 
-        {offer && !isRecovery ? (
+        {offer ? (
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
             {isSemester ? (
               <>
@@ -272,12 +299,12 @@ export function PaymentCheckoutCard({
                   Ahorrás {offer.semesterSavingsPercent}%
                 </span>
               </>
-            ) : offer.monthlyReferencePriceArs > offer.monthlyPriceArs ? (
+            ) : offer.monthlyReferencePriceArs > (displayedPrice ?? 0) ? (
               <>
                 <span className="text-slate-500 line-through">
                   {currency.format(offer.monthlyReferencePriceArs)}
                 </span>
-                <span className="font-bold text-emerald-700">Precio de lanzamiento</span>
+                <span className="font-bold text-emerald-700">Precio promocional</span>
               </>
             ) : null}
           </div>
@@ -287,10 +314,10 @@ export function PaymentCheckoutCard({
           {!offer
             ? 'Verificando precio y disponibilidad.'
             : isSemester
-              ? `Pagás ${currency.format(offer.semesterPriceArs)} una sola vez y tenés Premium durante 6 meses. Sin renovación automática.`
+              ? `Equivale a ${currency.format(offer.semesterEquivalentMonthlyArs)} por mes. Pagás una sola vez por los 6 meses, sin renovación automática.`
               : isRecovery
-                ? 'Precio especial mensual para retomar tu compra de Premium.'
-                : 'Renovación mensual automática. Podés cancelar futuras renovaciones cuando quieras.'}
+                ? 'Retomá tu compra al precio promocional vigente. Renovación mensual automática.'
+                : 'Precio promocional. Renovación mensual automática; podés cancelar futuras renovaciones cuando quieras.'}
         </p>
 
         {isSemester ? (
@@ -331,6 +358,12 @@ export function PaymentCheckoutCard({
           </p>
         </div>
       ) : null}
+
+      <p className="mt-5 text-sm leading-6 text-slate-600">
+        {isSemester
+          ? 'Prepará más materiales y reforzá tus errores con IA durante 6 meses.'
+          : 'Practicá con más apuntes y pedí explicaciones cuando necesitás reforzar un tema.'}
+      </p>
 
       <ul className="mt-7 flex-1 space-y-4">
         {features.map((feature) => (
