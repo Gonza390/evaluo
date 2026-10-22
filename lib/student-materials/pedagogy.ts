@@ -1534,7 +1534,7 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     const sentences = (block.body.match(/[^.!?]+[.!?]+(?=\s|$)/gu) ?? [])
       .map(cleanLine)
       .filter(sentence => sentence.length >= 45 && sentence.split(/\s+/u).length >= 7);
-    return { focus: block.focus, answer: sentences.slice(0, 2).join(' ') };
+    return { focus: block.focus, answer: sentences.length >= 2 ? sentences.slice(0, 2).join(' ') : '' };
   }).find(block => block.answer.length >= 120 && block.answer.length <= 480);
   if (!grounded) return null;
   const reference = findReference(
