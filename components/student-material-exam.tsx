@@ -926,7 +926,7 @@ export function StudentMaterialExam({
                 </div>
               </details>
               <div className="flex flex-wrap gap-3 lg:col-span-2">
-                <Link href={`/dashboard/progreso?material=${materialId}`
+                <Link href={`/dashboard/progreso?material=${materialId}`}
                   className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold">
                   Ver mi progreso
                 </Link>
