@@ -468,8 +468,9 @@ async function mapGroupWithRecovery(
 async function requestPedagogicalMapJson(
   group: PedagogicalMapGroup,
   totalChunks: number,
-  geminiPdfKeySlot?: GenerateSummaryInput['geminiPdfKeySlot']
+  input: GenerateSummaryInput
 ): Promise<ProviderResult | null> {
+  const geminiPdfKeySlot = input.geminiPdfKeySlot;
   const prompt = PEDAGOGICAL_MAP_PROMPT(group, totalChunks);
   const attempts: Array<{
     provider: string;
@@ -528,6 +529,16 @@ async function requestPedagogicalMapJson(
     try {
       const result = await attempt.run();
       if (result) {
+        // Incluso un JSON inválido consume tokens y puede activar un fallback.
+        // Registrar todo resultado recibido, no sólo el último aceptado.
+        await recordAiUsage({
+          materialId: input.materialId,
+          userId: input.userId,
+          provider: result.provider,
+          model: result.model,
+          operation: 'summary_map',
+          usage: result.usage,
+        });
         const parsed = tryParseJsonRecord(result.content);
         if (!parsed) {
           logError(
@@ -596,19 +607,10 @@ async function mapGroupAttempt(
     const result = await requestPedagogicalMapJson(
       group,
       totalChunks,
-      input.geminiPdfKeySlot
+      input
     );
 
     if (!result) return null;
-
-    await recordAiUsage({
-      materialId: input.materialId,
-      userId: input.userId,
-      provider: result.provider,
-      model: result.model,
-      operation: 'summary_map',
-      usage: result.usage,
-    });
 
     const parsed = tryParseJsonRecord(result.content);
     if (!parsed) return null;
