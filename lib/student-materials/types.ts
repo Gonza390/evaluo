@@ -173,6 +173,11 @@ export type StudentMaterialPedagogicalQualityReport = {
   version: number;
   status: 'pass' | 'degraded' | 'fail';
   score: number;
+  /** Cobertura y estructura de la extracción; no mide precisión literal. */
+  extractionScore?: number;
+  /** Porcentaje de elementos aceptados y con trazabilidad, no exactitud académica. */
+  bankQualityScore?: number;
+  bankAcceptanceRatio?: number;
   pedagogicalDepthScore: number;
   semanticAudit?: { rejectedQuestions: number; rejectedFlashcards: number; formulaicHigherOrderQuestions: number; conceptsWithoutUniqueChapter: number };
   pageCount: number | null;

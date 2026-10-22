@@ -13,7 +13,7 @@ import {
   selectSourceDistributedItems,
 } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_ARTIFACTS_VERSION = 13;
+export const PEDAGOGICAL_ARTIFACTS_VERSION = 14;
 
 function cleanLine(value: string) {
   return value.replace(/\s+/g, ' ').trim();
@@ -1500,31 +1500,53 @@ function buildCanonicalConfusionQuestions(
 }
 
 function buildGroundedSectionQuestion(section: StudySummarySection, chunks: PedagogicalChunk[], index: number): StudyQuestion | null {
-  // Respuesta extraída del MISMO apartado del capítulo. No usar palabras
-  // parecidas o la página más próxima para traer definiciones externas.
-  const lines = section.body.split(/\n+/).map(cleanStudyUnit).filter(Boolean);
-  const opening = lines.findIndex(line =>
-    !/^(?:ver en pdf|ideas clave|contenido complementario)/iu.test(line) &&
-    line.length >= 65 &&
-    !/^#{1,6}\s/u.test(line) &&
-    // “3.1 Análisis de la situación…” es un título, no una respuesta.
-    !/^\d+(?:\.\d+)+\s/u.test(line) &&
-    line.trim().split(/\s+/u).length >= 12 &&
-    /[.!?]/u.test(line)
+  // Una respuesta abierta requiere una idea + su explicación procedentes de
+  // un MISMO bloque del apartado. No completar con otro capítulo o con IA.
+  const blocks: Array<{ focus: string; body: string }> = [];
+  let focus = section.title;
+  let lines: string[] = [];
+  const flush = () => {
+    if (lines.length > 0) blocks.push({ focus, body: lines.join(' ') });
+    lines = [];
+  };
+  for (const raw of section.body.split(/\n/u)) {
+    const line = cleanStudyUnit(raw);
+    if (!line || /^(?:ver en pdf|ideas clave|contenido complementario)/iu.test(line)) {
+      flush();
+      continue;
+    }
+    const isSubheading =
+      /^\d+(?:\.\d+)*(?:[.)])?\s+\S/u.test(line) &&
+      line.length <= 130 &&
+      !/[.!?]$/u.test(line);
+    if (isSubheading) {
+      flush();
+      focus = line.replace(/^\d+(?:\.\d+)*(?:[.)])?\s+/u, '').trim();
+      continue;
+    }
+    lines.push(line);
+  }
+  flush();
+
+  const grounded = blocks.map((block) => {
+    // Dos oraciones sustantivas del mismo pasaje: afirmación y desarrollo.
+    // No unir definiciones de subtítulos distintos ni inventar explicaciones.
+    const sentences = (block.body.match(/[^.!?]+[.!?]+(?=\s|$)/gu) ?? [])
+      .map(cleanLine)
+      .filter(sentence => sentence.length >= 45 && sentence.split(/\s+/u).length >= 7);
+    return { focus: block.focus, answer: sentences.length >= 2 ? sentences.slice(0, 2).join(' ') : '' };
+  }).find(block => block.answer.length >= 120 && block.answer.length <= 480);
+  if (!grounded) return null;
+  const reference = findReference(
+    grounded.focus,
+    chunks,
+    emptyReference(section.title, grounded.answer)
   );
-  if (opening < 0) return null;
-  const anchor = lines.slice(0, opening).find(line =>
-    /\d+(?:\.\d+)*\s+/.test(line) && line.length <= 130
-  );
-  const focus = anchor ? anchor.replace(/^\d+(?:\.\d+)*\s+/u, '') : section.title;
-  const answer = truncateAtWord(lines[opening] ?? '', 460);
-  if (answer.length < 65) return null;
-  const reference = findReference(focus, chunks, emptyReference(section.title, answer));
   const prompts = [
-    `Explicá con tus palabras qué plantea el apartado “${focus}”. ¿Qué idea central deberías recordar?`,
-    `¿Qué sostiene el material sobre “${focus}”? Desarrollá la idea usando sus conceptos principales.`,
-    `Si tuvieras que explicar “${focus}” a otro estudiante, ¿qué indicarías como fundamento principal?`,
-    `¿Cómo presentarías el concepto central de “${focus}” sin repetir el texto de memoria?`,
+    `Explicá con tus palabras qué plantea el apartado “${grounded.focus}”. ¿Qué idea central deberías recordar?`,
+    `¿Qué sostiene el material sobre “${grounded.focus}”? Desarrollá la idea usando sus conceptos principales.`,
+    `Si tuvieras que explicar “${grounded.focus}” a otro estudiante, ¿qué indicarías como fundamento principal?`,
+    `¿Cómo presentarías el concepto central de “${grounded.focus}” sin repetir el texto de memoria?`,
   ];
   return {
     id: `section-open-${index + 1}`,
@@ -1532,12 +1554,11 @@ function buildGroundedSectionQuestion(section: StudySummarySection, chunks: Peda
     level: 'comprender',
     kind: 'section',
     topic: section.title,
-    // No afirmar una vinculación a capítulo como cita física si falta página.
     chapterTitle: reference.pageStart !== null ? section.title : undefined,
     prompt: prompts[index % prompts.length]!,
     options: [],
-    answer,
-    explanation: 'La respuesta modelo recupera el contenido del mismo apartado del PDF. Se espera una reformulación fiel a sus ideas, no una copia literal.',
+    answer: grounded.answer,
+    explanation: 'La respuesta modelo presenta una idea y su desarrollo, extraídos del mismo apartado del PDF. Contrastá ambas partes con la fuente.',
     reference,
   };
 }

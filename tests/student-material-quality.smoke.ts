@@ -1465,7 +1465,7 @@ const canonicalPedagogy = buildPedagogicalArtifacts({
 
 assert.equal(
   PEDAGOGICAL_ARTIFACTS_VERSION,
-  13,
+  14,
   'Cambiar el contrato canónico debe invalidar artefactos pedagógicos viejos.'
 );
 assert.ok(
@@ -1564,12 +1564,10 @@ assert.ok(
 const sectionQuestion = validatedOpenQuestions.questions.find(
   (question) => question.kind === 'section'
 );
-assert.ok(
-  sectionQuestion &&
-    /conjunto vacío/i.test(sectionQuestion.answer) &&
-    /marcos normativos/i.test(sectionQuestion.answer) &&
-    !/alfabetizar|diversidad cultural/i.test(sectionQuestion.answer),
-  'Una respuesta abierta de sección debe basarse en su propio resumen, sin mezclar definiciones canónicas externas.'
+assert.equal(
+  sectionQuestion,
+  undefined,
+  'Una sola frase descriptiva no justifica generar una respuesta abierta explicativa ni mezclar contenido externo.'
 );
 
 const canonicalQuality = buildStudentMaterialPedagogicalQualityReport({
@@ -1621,9 +1619,13 @@ assert.ok(
   'La auditoría debe registrar la trazabilidad literal por página sin declarar veracidad semántica.'
 );
 assert.ok(
-  canonicalQuality.pedagogicalDepthScore >= 55,
-  'El quality report debe medir una profundidad pedagógica mínima además de cobertura.'
+  canonicalQuality.pedagogicalDepthScore >= 0 && canonicalQuality.pedagogicalDepthScore <= 100,
+  'El quality report debe medir profundidad pedagógica como indicador independiente.'
 );
+if (canonicalQuality.pedagogicalDepthScore < 55) {
+  assert.ok(canonicalQuality.issues.includes('pedagogical_depth_low'),
+    'Cuando se omiten preguntas abiertas insuficientes debe registrarse la pérdida de profundidad.');
+}
 assert.ok(
   canonicalQuality.questionKindCount >= 2,
   'La medición pedagógica debe premiar variedad de tipos de preguntas.'
@@ -1632,6 +1634,35 @@ assert.ok(
   canonicalQuality.flashcardKindCount >= 2,
   'La medición pedagógica debe verificar variedad estructural de flashcards.'
 );
+
+// P0: registrar extracción, aceptación y profundidad por separado.
+assert.equal(typeof canonicalQuality.extractionScore, 'number');
+assert.equal(typeof canonicalQuality.bankQualityScore, 'number');
+assert.equal(typeof canonicalQuality.bankAcceptanceRatio, 'number');
+const rejectedFixtureQuality = buildStudentMaterialPedagogicalQualityReport({
+  pageCount: 7,
+  pages: Array.from({ length: 7 }, (_, index) =>
+    `Página ${index + 1} con contenido académico suficiente para verificar cobertura canónica y trazabilidad de los artefactos de estudio.`
+  ),
+  documentAnalysis: { ...analysis, pageCount: 7, requiresOcr: false },
+  model: canonicalGlossaryFixture,
+  summary: canonicalGuideFallback,
+  glossary: canonicalGlossary,
+  artifacts: {
+    ...canonicalPedagogy,
+    integrity: { rejectedQuestions: 1, rejectedFlashcards: 0, rejectedReasons: ['model_answer_unrelated_to_source'] },
+  },
+  visionUsed: false,
+});
+assert.equal(rejectedFixtureQuality.extractionScore, canonicalQuality.extractionScore,
+  'Un rechazo no cambia la calidad del texto extraído.');
+assert.equal(rejectedFixtureQuality.pedagogicalDepthScore, canonicalQuality.pedagogicalDepthScore,
+  'La profundidad no debe bajar por una pregunta rechazada.');
+assert.equal(rejectedFixtureQuality.status, 'degraded',
+  'Los rechazos siguen activando las alertas de calidad.');
+assert.ok((rejectedFixtureQuality.bankQualityScore ?? 0) > 59,
+  'Un solo rechazo no debe limitar la calidad del banco a 59.');
+assert.ok((rejectedFixtureQuality.bankAcceptanceRatio ?? 1) < 1);
 
 const missingCanonicalQuality = buildStudentMaterialPedagogicalQualityReport({
   pageCount: 2,

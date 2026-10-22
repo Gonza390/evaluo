@@ -10,7 +10,7 @@ import type {
 import type { PedagogicalArtifacts } from '@/lib/student-materials/pedagogy';
 import { analyzeQuestionBankCoverage } from '@/lib/student-materials/question-bank';
 
-export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 5;
+export const PEDAGOGICAL_QUALITY_REPORT_VERSION = 6;
 const MIN_CONTENT_CHARS_PER_PAGE = 80;
 
 function cleanLine(value: string) {
@@ -212,12 +212,36 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   pedagogicalDepthScore += clamp(flashcardKinds.size / 4, 0, 1) * 15;
   pedagogicalDepthScore += clamp(applicationQuestionRatio / 0.2, 0, 1) * 10;
   pedagogicalDepthScore = Math.round(clamp(pedagogicalDepthScore, 0, 100));
-  if (rejectedQuestions > 0 || rejectedFlashcards > 0) {
-    pedagogicalDepthScore = Math.min(pedagogicalDepthScore, 49);
-  } else if (formulaicHigherOrderQuestions >= 3) {
+  if (formulaicHigherOrderQuestions >= 3) {
     pedagogicalDepthScore = Math.min(pedagogicalDepthScore, 69);
   }
 
+  // Indicadores independientes: cobertura de extracción, salud del banco
+  // publicable y variedad cognitiva. Ninguno certifica verdad semántica.
+  const expectedPages = input.pageCount && input.pageCount > 0
+    ? input.pageCount
+    : input.pages?.length ?? 0;
+  const extractedContentRatio = expectedPages > 0
+    ? clamp(contentPages.length / expectedPages, 0, 1)
+    : 0;
+  const extractionScore = Math.round(clamp(
+    extractedContentRatio * 45 +
+    representedPageRatio * 35 +
+    (1 - malformedRatio) * 15 +
+    (input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5),
+    0, 100
+  ));
+  const generatedArtifactCount = artifactCount + rejectedQuestions + rejectedFlashcards;
+  const bankAcceptanceRatio = generatedArtifactCount > 0
+    ? artifactCount / generatedArtifactCount
+    : 0;
+  const bankQualityScore = Math.round(clamp(
+    bankAcceptanceRatio * 65 + artifactReferenceRatio * 35,
+    0, 100
+  ));
+
+  // Mantener el score histórico como indicador de procesamiento, sin
+  // confundir rechazos o profundidad con defectos del texto extraído.
   let score = 0;
   score += representedPageRatio * 35;
   score += clamp(academicUnitCount / Math.max(12, contentPages.length * 2), 0, 1) * 20;
@@ -232,14 +256,8 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
   score += input.documentAnalysis.requiresOcr && !input.visionUsed ? 0 : 5;
   score = Math.round(clamp(score, 0, 100));
 
-  // El score principal mide confiabilidad del procesamiento. La profundidad
-  // pedagógica se informa por separado para no ocultar problemas de cobertura
-  // detrás de un buen mix de preguntas.
-  if (pedagogicalDepthScore < 55) {
-    score = Math.min(score, 79);
-  }
-  if (rejectedQuestions > 0 || rejectedFlashcards > 0) score = Math.min(score, 59);
-
+  // Rechazos y profundidad se reflejan en sus indicadores específicos y
+  // siguen degradando el status de calidad, no la nota de extracción.
   const issues: string[] = [];
   if (!input.model) issues.push('canonical_model_missing');
   if (rejectedQuestions > 0) issues.push('unsafe_model_answers_rejected');
@@ -286,6 +304,9 @@ export function buildStudentMaterialPedagogicalQualityReport(input: {
     version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
     status,
     score,
+    extractionScore,
+    bankQualityScore,
+    bankAcceptanceRatio: Math.round(bankAcceptanceRatio * 1000) / 1000,
     pedagogicalDepthScore,
     semanticAudit,
     pageCount: input.pageCount,
