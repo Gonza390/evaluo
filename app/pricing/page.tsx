@@ -4,7 +4,6 @@ import { ShieldCheck, Sparkles } from 'lucide-react';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
-import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
@@ -109,31 +108,6 @@ export default async function PricingPage({
             </p>
           </div>
         </section>
-
-        {showRecovery ? (
-          <section className="border-b border-blue-100 bg-blue-50/40 px-4 py-12 sm:px-6">
-            <div className="mx-auto max-w-xl">
-              <div className="mb-6 text-center">
-                <p className="text-xs font-bold tracking-[0.18em] text-blue-700 uppercase">
-                  Retomá tu compra
-                </p>
-                <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-                  Retomá Premium a $9.990 por mes
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Esta oferta está disponible si empezaste una compra y todavía no la completaste.
-                </p>
-              </div>
-              <PaymentCheckoutCard
-                features={premiumFeatures}
-                source={source === 'pricing_direct' ? 'checkout_recovery' : source}
-                materiaId={materiaId}
-                offerCode="recovery"
-                featured
-              />
-            </div>
-          </section>
-        ) : null}
 
         <section id="elegir-plan" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl">
