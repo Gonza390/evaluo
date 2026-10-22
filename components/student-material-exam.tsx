@@ -679,7 +679,11 @@ export function StudentMaterialExam({
                     metadata: { location: 'practice_result', cta_name: 'continue_now', destination: 'topic_practice' },
                   });
                   if (nextObjective.topicSectionIndex !== null && onContinueToTopic) {
-                    onContinueToTopic(nextObjective.topicSectionIndex);
+                    if (nextObjective.topicSectionIndex === topicSectionIndex) {
+                      resetExam();
+                    } else {
+                      onContinueToTopic(nextObjective.topicSectionIndex);
+                    }
                   } else {
                     resetExam();
                   }
