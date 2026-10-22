@@ -34,13 +34,13 @@ export function PricingPlanSelector({
             <span className="inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700">
               Gratis
             </span>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">Empezá sin pagar</h2>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-950">Descubrí tu progreso</h2>
             <div className="mt-3 flex items-end gap-2">
               <span className="text-4xl font-bold tracking-tight text-slate-950">$0</span>
               <span className="pb-1 text-sm text-slate-600">para siempre</span>
             </div>
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Subí tus apuntes, practicá y reforzá tus errores. Ideal para empezar a estudiar con Evaluo.
+              Empezá con tus apuntes, descubrí qué sabés y reconocé los temas que necesitás reforzar.
             </p>
           </div>
 
