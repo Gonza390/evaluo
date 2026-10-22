@@ -7,7 +7,7 @@ import { FooterHome } from '@/components/footer-home';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
-  'Estudiá gratis con tus apuntes. Con Premium prepará más materias, cargá más PDFs y ampliá tus herramientas de estudio desde $9.990 por mes.';
+  'Conocé tu progreso, descubrí qué temas reforzar y continuá preparando tus parciales con tus apuntes. Planes Gratis y Premium desde $9.990 al mes.';
 
 export const metadata: Metadata = {
   title: 'Planes y precios',
@@ -40,16 +40,16 @@ export const metadata: Metadata = {
 const freeFeatures = [
   '2 PDFs cada 15 días',
   'Resúmenes y flashcards de tus apuntes',
-  'Práctica y progreso por temas',
-  'Repaso de errores con ayudas de IA limitadas',
+  'Práctica para conocer tu progreso por tema',
+  'Identificá qué errores necesitás reforzar',
   'Calendario de exámenes y simuladores básicos',
 ];
 
 const premiumFeatures = [
-  'Todo lo que incluye Gratis',
-  'Hasta 3 PDFs por día',
+  'Tu práctica, tus resultados y todo lo de Gratis',
+  'Seguí tu progreso en más materiales: hasta 3 PDFs por día',
   'Mapas mentales de tus apuntes',
-  'Más ayudas con IA para reforzar errores',
+  'Más ayudas con IA para avanzar en tus temas difíciles',
   'Modos Premium y explicaciones adicionales en simuladores',
 ];
 
@@ -96,11 +96,11 @@ export default async function PricingPage({
               Evaluo Premium
             </span>
             <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] break-words min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
-              Estudiá gratis con tus apuntes. Prepará más materias con Premium.
+              No estudies a ciegas. Descubrí cuánto avanzaste y qué necesitás reforzar.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Subí tus PDFs, practicá y reforzá tus errores gratis. Con Premium, cargá más
-              materiales, accedé a mapas mentales y ampliá tus ayudas con IA.
+              Practicá con tus apuntes, conocé tu progreso por tema y descubrí dónde mejorar.
+              Empezá gratis. Con Premium, continuá estudiando más materiales y ampliá tus ayudas con IA.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
@@ -119,8 +119,8 @@ export default async function PricingPage({
                 Gratis o Premium. Sin vueltas.
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                Premium es siempre el mismo. Elegí si preferís pagarlo mes a mes o cubrir un
-                semestre con 6 meses.
+                Elegí cómo continuar tu preparación: gratis, mes a mes o durante 6 meses.
+                Tu progreso y tus resultados están disponibles en los tres planes.
               </p>
             </div>
 
@@ -133,12 +133,12 @@ export default async function PricingPage({
 
             <div className="mx-auto mt-16 max-w-3xl text-center">
               <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                Aprender es gratis. Premium te da más capacidad para continuar.
+                Tu progreso es lo importante. Las herramientas te ayudan a conseguirlo.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                Con ambos planes podés estudiar tus PDFs, practicar por tema, ver resultados y
-                seguir tu progreso. Premium amplía la cantidad de materiales y ciertas funciones
-                de IA, sin quitarte el recorrido básico de aprendizaje.
+                En los tres planes podés practicar, revisar errores y conocer tu avance por tema.
+                Premium te permite continuar ese recorrido con más materiales y ayudas,
+                sin que el progreso deje de ser parte de Gratis.
               </p>
             </div>
 
