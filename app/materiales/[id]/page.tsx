@@ -10,6 +10,7 @@ import { LazyMaterialStudyWorkspace } from '@/components/lazy-material-study-wor
 import { MaterialStudyStatusWorkspace } from '@/components/material-study-status-workspace';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { StudentMaterialProcessingRetry } from '@/components/student-material-processing-retry';
+import { StudentMaterialProcessingRefresh } from '@/components/student-material-processing-refresh';
 import { StudentMaterialShareControl } from '@/components/student-material-share-control';
 import { resolveAdminActor } from '@/lib/access-control';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -278,6 +279,25 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
     if (!viewerUrl || signedUrlResult.error) notFound();
 
     const isOwner = user?.id === material.user_id;
+    let shouldAutoResume = false;
+    if (
+      isOwner &&
+      material.processing_status === 'failed' &&
+      material.processing_error ===
+        'El procesamiento superó el tiempo máximo. Podés reintentarlo sin volver a subir el PDF.'
+    ) {
+      const { data: failedJob, error: jobError } = await admin
+        .from('student_material_jobs')
+        .select('status, attempts')
+        .eq('student_material_id', material.id)
+        .eq('status', 'failed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // Reanudación automática sólo para timeouts y con intentos restantes.
+      shouldAutoResume = !jobError && Boolean(failedJob && failedJob.attempts < 3);
+    }
     const canRegenerate = isOwner && (await resolveAdminActor(user));
     const isPremium = await hasPremiumAccess(user?.id ?? '');
     const hasFullAcademicContext = Boolean(
@@ -311,8 +331,12 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           actions={
             <>
               {failed && isOwner ? (
-                <StudentMaterialProcessingRetry materialId={material.id} />
+                <StudentMaterialProcessingRetry
+                  materialId={material.id}
+                  autoRetry={shouldAutoResume}
+                />
               ) : null}
+              {!failed && isOwner ? <StudentMaterialProcessingRefresh /> : null}
               {!failed ? (
                 <Link
                   href={backHref}
