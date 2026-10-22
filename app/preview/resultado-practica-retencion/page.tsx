@@ -1,29 +1,72 @@
-import { CheckCircle2, CalendarDays, BookmarkCheck, RotateCcw } from 'lucide-react';
-export const metadata = { title: 'Vista previa del resultado de práctica | Evaluo', robots: { index: false, follow: false } };
+import { ArrowRight, RotateCcw } from 'lucide-react';
+
+export const metadata = {
+  title: 'Vista previa de resultado de práctica | Evaluo',
+  robots: { index: false, follow: false },
+};
+
 export default function PreviewPracticeResult() {
- return <main className="min-h-screen bg-[#F5F7FB] px-4 py-10">
-  <section className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 sm:p-9">
-    <p className="text-xs font-bold tracking-widest text-[#4F5DFF] uppercase">Práctica completada</p>
-    <div className="mt-3 flex items-end gap-4"><h1 className="text-4xl font-bold text-[#0F1B3D]">80%</h1><p className="pb-1 text-sm text-slate-500">8 de 10 respuestas consolidadas</p></div>
-    <div className="mt-6 grid grid-cols-3 gap-4 border-y py-5">
-      <div><p className="text-xs text-slate-500">RECORDAR</p><p className="font-bold">3/3</p></div>
-      <div><p className="text-xs text-slate-500">COMPRENDER</p><p className="font-bold">3/4</p></div>
-      <div><p className="text-xs text-slate-500">APLICAR</p><p className="font-bold">2/3</p></div>
-    </div>
-    <div className="border-b py-5"><h2 className="font-semibold">Temas para repasar</h2><p className="mt-2 text-sm text-slate-700">• Tipos de conocimiento</p></div>
-    <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-5">
-      <p className="text-xs font-bold tracking-widest text-[#4F5DFF] uppercase">Tu próximo objetivo</p>
-      <h2 className="mt-3 text-xl font-bold text-[#0F1B3D]">Reforzar: Tipos de conocimiento</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-600">Volvé a comprobar los conceptos que te costaron en esta práctica.</p>
-      <p className="mt-3 flex items-center gap-2 text-xs text-slate-500"><CalendarDays className="size-4"/> Repaso sugerido: dentro de 3 días</p>
-      <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#4F5DFF]"><BookmarkCheck className="size-4"/> Guardado en Mi espacio para tu próxima visita</p>
-    </div>
-    <div className="mt-6 flex flex-wrap gap-3">
-      <span className="inline-flex min-h-11 items-center rounded-lg border px-4 text-sm font-semibold">Ver mi progreso</span>
-      <span className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-semibold"><CheckCircle2 className="size-4"/> Terminar por hoy</span>
-      <span className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#4F5DFF] px-4 text-sm font-semibold text-white"><RotateCcw className="size-4"/> Nueva práctica</span>
-    </div>
-    <p className="mt-8 text-xs text-slate-400">Vista previa ilustrativa con datos de ejemplo; no muestra resultados de un usuario real.</p>
-  </section>
- </main>;
+  return (
+    <main className="min-h-screen bg-[#F5F7FB] px-4 py-12 sm:py-20">
+      <section className="mx-auto max-w-xl rounded-2xl border border-[#E7EBF4] bg-white px-6 py-10 shadow-[0_18px_48px_rgba(15,27,61,0.04)] sm:px-12 sm:py-12">
+        <header className="text-center">
+          <p className="text-xs font-semibold tracking-[0.12em] text-[#4F5DFF] uppercase">
+            Práctica terminada
+          </p>
+          <h1 className="mt-4 text-6xl font-bold tracking-[-0.07em] text-[#0F1B3D]">
+            8 <span className="text-[#CBD5E1]">/ 10</span>
+          </h1>
+          <p className="mt-2 text-sm text-[#64748B]">respuestas correctas</p>
+        </header>
+
+        <section className="mt-9 border-t border-[#E7EBF4] pt-7">
+          <p className="text-[11px] font-semibold tracking-[0.12em] text-[#4F5DFF] uppercase">
+            Tu próximo paso
+          </p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[#0F1B3D]">
+            Reforzar tipos de conocimiento
+          </h2>
+          <p className="mt-2 text-sm text-[#64748B]">
+            Repaso sugerido dentro de 3 días · Guardado en Mi espacio
+          </p>
+        </section>
+
+        <div className="mt-8 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-5 text-sm font-semibold text-white">
+          Terminar por hoy <ArrowRight className="size-4" aria-hidden="true" />
+        </div>
+
+        <details className="group mt-5 border-t border-[#E7EBF4] pt-4">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 text-sm font-medium text-[#64748B]">
+            Ver detalles y otras opciones
+            <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
+          </summary>
+          <div className="space-y-5 pt-5">
+            <div className="grid grid-cols-3 gap-3 border-b border-[#E7EBF4] pb-5">
+              {[
+                { name: 'Recordar', score: '3/3' },
+                { name: 'Comprender', score: '3/4' },
+                { name: 'Aplicar', score: '2/3' },
+              ].map((item) => (
+                <div key={item.name}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">{item.name}</p>
+                  <p className="mt-1 text-base font-semibold text-[#0F1B3D]">{item.score}</p>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#0F1B3D]">Tema para repasar</p>
+              <p className="mt-2 text-sm text-[#64748B]">Tipos de conocimiento</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <span className="inline-flex min-h-10 items-center rounded-lg border border-[#E7EBF4] px-4 text-sm font-semibold text-[#0F1B3D]">Ver mi progreso</span>
+              <span className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#E7EBF4] px-4 text-sm font-semibold text-[#0F1B3D]"><RotateCcw className="size-4"/> Nueva práctica</span>
+            </div>
+          </div>
+        </details>
+      </section>
+      <p className="mx-auto mt-5 max-w-xl text-center text-xs text-[#94A3B8]">
+        Vista previa del diseño con datos de ejemplo.
+      </p>
+    </main>
+  );
 }
