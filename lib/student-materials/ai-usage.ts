@@ -78,7 +78,14 @@ function isMissingTableError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const code = 'code' in error ? String((error as { code?: string }).code ?? '') : '';
   const message = 'message' in error ? String((error as { message?: string }).message ?? '') : '';
-  return code === '42P01' || /student_material_ai_usage/i.test(message);
+  // Un error CHECK 23514 también nombra la tabla: no debemos silenciarlo
+  // interpretándolo como si la tabla faltara.
+  return (
+    code === '42P01' ||
+    (code === 'PGRST205' && message.includes('student_material_ai_usage')) ||
+    (message.includes('student_material_ai_usage') &&
+      /does not exist|not found in the schema cache/i.test(message))
+  );
 }
 
 /**
