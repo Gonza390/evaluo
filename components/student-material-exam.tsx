@@ -595,15 +595,63 @@ export function StudentMaterialExam({
       )
     ).slice(0, 5);
 
-    // La vista del PDF prioriza el resultado y un solo próximo paso.
-    // El desglose y las acciones existentes siguen disponibles al expandir "Ver detalles".
-    if (!isSimulation) {
+    // Mostrar el desglose por temas únicamente al terminar la práctica GENERAL del PDF.
+    // Las tandas exclusivas de un capítulo conservan su pantalla anterior hasta diseñarlas.
+    if (!isSimulation && topicSectionIndex === undefined) {
       const nextStepTitle =
         nextObjective?.kind === 'reinforce'
           ? `Reforzar ${nextObjective.topicTitle || 'mis errores'}`
           : nextObjective?.kind === 'practice'
             ? `Practicar ${nextObjective.topicTitle || 'el próximo tema'}`
             : 'Consolidar lo aprendido';
+
+      // Acertar toda una tanda no significa haber recorrido todas las preguntas del tema.
+      // Los totales del banco se calculan SOLO sobre preguntas elegibles y verificables.
+      const topicName = (question: StudyQuestion) => {
+        const sectionIndex = findSummarySectionForQuestion(question, sections);
+        return (
+          (sectionIndex >= 0 ? sections[sectionIndex]?.title : undefined) ||
+          question.chapterTitle ||
+          question.topic ||
+          question.reference.sectionTitle ||
+          'Tema sin capítulo identificado'
+        ).trim();
+      };
+      const bankCounts = new Map<string, number>();
+      for (const question of eligibleQuestions) {
+        if (question.type !== 'multiple_choice') continue;
+        const topic = topicName(question);
+        bankCounts.set(topic, (bankCounts.get(topic) ?? 0) + 1);
+      }
+      const byTopic = new Map<string, { title: string; total: number; correct: number; bankSize: number }>();
+      for (const question of questions) {
+        if (question.type !== 'multiple_choice') continue;
+        const title = topicName(question);
+        const item = byTopic.get(title) ?? {
+          title,
+          total: 0,
+          correct: 0,
+          bankSize: bankCounts.get(title) ?? 0,
+        };
+        item.total += 1;
+        if (normalizeAnswer(selectedAnswers[question.id] ?? '') === normalizeAnswer(question.answer))
+          item.correct += 1;
+        byTopic.set(title, item);
+      }
+      const topicResults = [...byTopic.values()].sort((left, right) =>
+        left.correct / left.total - right.correct / right.total ||
+        right.total - left.total || left.title.localeCompare(right.title, 'es')
+      );
+      const wrongAnswers = questions.filter((question) =>
+        question.type === 'multiple_choice'
+          ? normalizeAnswer(selectedAnswers[question.id] ?? '') !== normalizeAnswer(question.answer)
+          : openAssessments[question.id] === 'review'
+      );
+      const hasOpenQuestions = questions.some((question) => question.type === 'open');
+      const isQuestionCorrect = (question: StudyQuestion) =>
+        question.type === 'multiple_choice'
+          ? normalizeAnswer(selectedAnswers[question.id] ?? '') === normalizeAnswer(question.answer)
+          : openAssessments[question.id] === 'got_it';
 
       return (
         <div className="mx-auto max-w-xl px-2 py-8 sm:py-12">
@@ -619,7 +667,54 @@ export function StudentMaterialExam({
             </p>
           </header>
 
-          <section className="border-border mt-9 border-t pt-7" aria-live="polite">
+          <section className="border-border mt-8 border-t pt-6">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-foreground text-sm font-semibold">Así te fue por tema</h3>
+              <span className="text-muted-foreground text-xs">
+                {topicResults.length} {topicResults.length === 1 ? 'tema evaluado' : 'temas evaluados'}
+              </span>
+            </div>
+            {topicResults.length ? (
+              <div className="space-y-4">
+                {topicResults.slice(0, 3).map((topic) => {
+                  const percentage = Math.round((topic.correct / topic.total) * 100);
+                  const color = percentage === 100
+                    ? 'bg-emerald-500'
+                    : percentage >= 70 ? 'bg-primary' : 'bg-amber-500';
+                  return (
+                    <div key={topic.title} className="space-y-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="text-foreground min-w-0 text-sm font-medium">{topic.title}</span>
+                        <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                          {topic.correct}/{topic.total}
+                        </span>
+                      </div>
+                      <div
+                        className="bg-muted h-1.5 overflow-hidden rounded-full"
+                        role="progressbar"
+                        aria-label={`Aciertos en ${topic.title}`}
+                        aria-valuemin={0}
+                        aria-valuemax={topic.total}
+                        aria-valuenow={topic.correct}
+                      >
+                        <div className={`h-full rounded-full ${color}`} style={{ width: `${percentage}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm">
+                Esta tanda no incluyó preguntas de opción múltiple asociadas a temas.
+              </p>
+            )}
+            <p className="text-muted-foreground mt-4 text-xs">
+              Aciertos en esta tanda, no dominio definitivo de los temas.
+              {hasOpenQuestions ? ' Las preguntas abiertas se autoevalúan.' : ''}
+            </p>
+          </section>
+
+          <section className="border-border mt-6 border-t pt-6" aria-live="polite">
             <p className="text-primary text-[11px] font-semibold tracking-[0.12em] uppercase">
               Tu próximo paso
             </p>
@@ -714,71 +809,125 @@ export function StudentMaterialExam({
 
           <details className="group border-border mt-5 border-t pt-4">
             <summary className="text-muted-foreground hover:text-foreground flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 text-sm font-medium">
-              Ver detalles y otras opciones
+              Ver todos los detalles
               <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
             </summary>
-            <div className="space-y-5 pt-5">
-              <div className="border-border grid grid-cols-3 gap-3 border-b pb-5">
-                {(['recordar', 'comprender', 'aplicar'] as const)
-                  .filter((level) => topicSectionIndex === undefined || result.levels[level].total > 0)
-                  .map((level) => (
-                    <div key={level}>
-                      <p className="text-muted-foreground text-[10px] font-semibold tracking-wide uppercase">
-                        {levelLabel(level)}
-                      </p>
-                      <p className="text-foreground mt-1 text-base font-semibold">
-                        {result.levels[level].correct}/{result.levels[level].total}
-                      </p>
-                    </div>
-                  ))}
-              </div>
-              {reviewTopics.length > 0 ? (
-                <div>
-                  <h4 className="text-foreground text-sm font-semibold">Temas para repasar</h4>
-                  <ul className="text-muted-foreground mt-2 space-y-1 text-sm">
-                    {reviewTopics.map((topic) => <li key={topic}>• {topic}</li>)}
-                  </ul>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  No quedaron temas marcados para repasar en esta tanda.
-                </p>
-              )}
-              {topicSectionIndex !== undefined ? (
-                <p className="text-muted-foreground text-xs">
-                  Este resultado corresponde solamente a esta tanda; no mide el dominio de todo el tema.
-                </p>
-              ) : sections.length > 0 ? (
-                <p className="text-muted-foreground text-xs">
-                  Los temas no evaluados en esta práctica no cuentan como errores.
-                </p>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                {topicSectionIndex !== undefined && onReturnToTopic ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => onReturnToTopic(result.wrong.length > 0, {
-                      sectionIndex: topicSectionIndex,
-                      total: result.total,
-                      correct: result.correct,
-                      incorrect: result.wrong.length,
-                      incorrectPrompts: result.wrong.map((question) => question.prompt),
-                    })}
-                  >
-                    {result.wrong.length > 0 ? 'Entender mis errores' : 'Volver al tema'}
-                  </Button>
+            <div className="space-y-6 pt-5">
+              <section className="space-y-3">
+                <h3 className="text-foreground text-sm font-semibold">Resultados de todos los temas</h3>
+                {topicResults.length ? (
+                  topicResults.map((topic) => {
+                    const percentage = Math.round(topic.correct / topic.total * 100);
+                    return (
+                      <div key={topic.title} className="space-y-1.5">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <span className="text-foreground text-sm font-medium">{topic.title}</span>
+                          <span className="text-muted-foreground shrink-0 text-sm tabular-nums">
+                            {topic.correct}/{topic.total}
+                          </span>
+                        </div>
+                        <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                          <div className="bg-primary h-full rounded-full" style={{ width: `${percentage}%` }} />
+                        </div>
+                        {topic.bankSize > 0 ? (
+                          <p className="text-muted-foreground text-xs">
+                            En esta tanda aparecieron {topic.total} de {topic.bankSize} preguntas válidas disponibles de este tema.
+                            {topic.total < topic.bankSize && topic.correct === topic.total
+                              ? ' Todavía quedan preguntas distintas por comprobar.' : ''}
+                          </p>
+                        ) : null}
+                      </div>
+                    );
+                  })
                 ) : (
-                  <Link
-                    href={`/dashboard/progreso?material=${materialId}`}
-                    className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold"
-                  >
-                    Ver mi progreso
-                  </Link>
+                  <p className="text-muted-foreground text-sm">
+                    No hubo preguntas de opción múltiple vinculadas a un tema en esta tanda.
+                  </p>
                 )}
+                <p className="text-muted-foreground text-xs">
+                  El banco puede cambiar cuando se actualiza el PDF. Estas cantidades describen esta práctica, no todo tu historial.
+                </p>
+              </section>
+
+              <section className="border-border space-y-3 border-t pt-5">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Preguntas para revisar · {wrongAnswers.length}
+                </h3>
+                {wrongAnswers.length ? (
+                  <div className="space-y-2">
+                    {wrongAnswers.map((question) => (
+                      <details key={question.id} className="border-border rounded-xl border px-3 py-2.5">
+                        <summary className="text-foreground cursor-pointer text-sm font-medium leading-6">
+                          {question.prompt}
+                        </summary>
+                        <div className="text-muted-foreground space-y-3 pt-4 text-sm leading-6">
+                          <p>
+                            <span className="text-foreground font-semibold">Tu respuesta: </span>
+                            {question.type === 'multiple_choice'
+                              ? selectedAnswers[question.id] || 'Sin respuesta'
+                              : openDrafts[question.id] || 'Sin respuesta escrita'}
+                          </p>
+                          <p>
+                            <span className="text-foreground font-semibold">
+                              {question.type === 'multiple_choice' ? 'Respuesta correcta: ' : 'Respuesta esperada: '}
+                            </span>
+                            {question.answer}
+                          </p>
+                          {question.explanation && (
+                            <p><span className="text-foreground font-semibold">¿Por qué? </span>{question.explanation}</p>
+                          )}
+                          <p className="text-xs">Fuente: {sourceLabel(question)}</p>
+                          {question.type === 'open' && (
+                            <p className="text-xs">La respuesta abierta fue autoevaluada, no corregida automáticamente.</p>
+                          )}
+                        </div>
+                      </details>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    No quedaron respuestas para revisar en esta tanda.
+                  </p>
+                )}
+              </section>
+
+              <details className="border-border border-t pt-5">
+                <summary className="text-foreground cursor-pointer text-sm font-semibold">
+                  Todas mis respuestas · {questions.length}
+                </summary>
+                <div className="mt-4 space-y-2">
+                  {questions.map((question, index) => (
+                    <details key={question.id} className="border-border rounded-xl border px-3 py-2.5">
+                      <summary className="text-foreground cursor-pointer text-sm font-medium leading-6">
+                        <span className={isQuestionCorrect(question) ? 'text-emerald-700' : 'text-amber-700'}>
+                          {isQuestionCorrect(question) ? '✓' : '•'}
+                        </span>
+                        {' '}Pregunta {index + 1}: {question.prompt}
+                      </summary>
+                      <div className="text-muted-foreground space-y-2 pt-3 text-sm">
+                        <p><span className="text-foreground font-semibold">Tu respuesta: </span>
+                          {question.type === 'multiple_choice'
+                            ? selectedAnswers[question.id] || 'Sin respuesta'
+                            : openDrafts[question.id] || 'Sin respuesta escrita'}
+                        </p>
+                        <p><span className="text-foreground font-semibold">Respuesta esperada: </span>
+                          {question.answer}
+                        </p>
+                        {question.explanation && <p>{question.explanation}</p>}
+                        <p className="text-xs">Fuente: {sourceLabel(question)}</p>
+                        {question.type === 'open' && <p className="text-xs">Pregunta autoevaluada.</p>}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </details>
+              <div className="flex flex-wrap gap-3">
+                <Link href={`/dashboard/progreso?material=${materialId}`}
+                  className="border-border inline-flex min-h-10 items-center rounded-lg border px-4 text-sm font-semibold">
+                  Ver mi progreso
+                </Link>
                 <Button type="button" variant="outline" onClick={resetExam}>
-                  <RotateCcw className="h-4 w-4" />
-                  {topicSectionIndex !== undefined ? 'Practicar de nuevo' : 'Nueva práctica'}
+                  <RotateCcw className="h-4 w-4" /> Nueva práctica
                 </Button>
               </div>
             </div>
