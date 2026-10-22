@@ -466,7 +466,6 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'flow_version',
   ],
   student_material_exam_completed: [
-  study_next_objective_created: ['material_id', 'objective_id', 'kind'],
     'attribution',
     'anonymous_id',
     'page_type',
@@ -476,6 +475,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'score_pct',
     'flow_version',
   ],
+  study_next_objective_created: ['material_id', 'objective_id', 'kind'],
   student_material_flashcards_started: [
     'attribution',
     'anonymous_id',
