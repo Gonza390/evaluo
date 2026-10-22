@@ -44,7 +44,7 @@ import type {
   StudyDocumentAnalysis,
 } from '@/lib/student-materials/types';
 import type { Json } from '@/types/supabase';
-import { aggregateAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
+import { aggregateAiUsageForMaterial, flushPendingAiUsageForMaterial } from '@/lib/student-materials/ai-usage';
 import { buildPedagogicalArtifacts } from '@/lib/student-materials/pedagogy-v2';
 import { PEDAGOGICAL_ARTIFACTS_VERSION } from '@/lib/student-materials/pedagogy';
 import {
@@ -742,6 +742,9 @@ export async function processStudentMaterial(input: {
 
 export async function markStudentMaterialProcessingFailed(materialId: string, error: unknown) {
   const admin = createAdminClient();
+  // Conservar consumo de Gemini Vision aun si el PDF no llegó a ready.
+  // La persistencia es best effort y no debe bloquear el error original.
+  await flushPendingAiUsageForMaterial(admin, materialId);
   await updateStudentMaterialProcessing(admin, materialId, {
     processingStatus: 'failed',
     processingStage: 'failed',
