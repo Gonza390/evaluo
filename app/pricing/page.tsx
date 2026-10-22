@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Check, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { MarketingPageViewTracker } from '@/components/marketing/page-view-tracker';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { FooterHome } from '@/components/footer-home';
@@ -8,7 +8,7 @@ import { PaymentCheckoutCard } from '@/components/pricing/PaymentCheckoutCard';
 import { PricingPlanSelector } from '@/components/pricing/PricingPlanSelector';
 
 const pricingDescription =
-  'Empezá gratis o elegí Evaluo Premium mensual o por 6 meses para preparar tus parciales.';
+  'Estudiá gratis con tus PDFs, practicá por temas y reforzá errores. Conocé los beneficios reales y precios de Evaluo Premium.';
 
 export const metadata: Metadata = {
   title: 'Planes y precios',
@@ -38,29 +38,34 @@ export const metadata: Metadata = {
   },
 };
 
-const premiumFeatures = [
-  'Todo lo de Gratis',
-  'Simuladores completos para practicar parciales',
-  'Explicaciones de respuestas sin límite diario',
-  'Práctica personalizada según tus errores',
-  'Seguimiento de progreso por tema',
-  'Convertí tus propios apuntes en material para estudiar',
+const freeFeatures = [
+  '2 PDFs propios cada 15 días',
+  'Resúmenes, glosario y flashcards de tus PDFs',
+  'Práctica por temas, resultados y progreso',
+  'Repaso de errores con ayudas de IA limitadas',
+  'Simuladores básicos y calendario de exámenes',
 ];
 
-const freeFeatures = [
-  'Resúmenes y materiales compartidos por materia',
-  'Pregunteros para practicar',
-  'Simuladores en formato básico',
-  'Una revisión de errores por semana',
+const premiumFeatures = [
+  'Todo lo que incluye Gratis',
+  'Hasta 3 PDFs nuevos por día',
+  'Mapas mentales de tus PDFs',
+  'Modalidades Premium de simuladores de materias',
+  'Más explicaciones con IA en los simuladores',
+  'Más ayudas y comprobaciones con IA para reforzar errores',
 ];
 
 const comparison = [
-  ['Resúmenes y materiales', true, true],
-  ['Pregunteros', true, true],
-  ['Simuladores completos', false, true],
-  ['Explicaciones de respuestas sin límite diario', false, true],
-  ['Práctica personalizada de errores', false, true],
-  ['Progreso avanzado por tema', false, true],
+  ['Carga de PDFs propios', '2 cada 15 días', 'Hasta 3 por día'],
+  ['Resúmenes y glosario', 'Incluidos', 'Incluidos'],
+  ['Flashcards', 'Incluidas', 'Incluidas'],
+  ['Práctica y resultados de tus PDFs', 'Incluidos', 'Incluidos'],
+  ['Progreso por tema y repaso de errores', 'Incluidos', 'Incluidos'],
+  ['Ayudas y comprobaciones con IA para errores', 'Con cupos', 'Uso ampliado'],
+  ['Mapa mental de tus PDFs', 'No incluido', 'Incluido'],
+  ['Simuladores de materias', 'Básicos', 'Modos Premium'],
+  ['Explicaciones con IA en simuladores', 'Hasta 3', 'Más explicaciones'],
+  ['Calendario de exámenes', 'Incluido', 'Incluido'],
 ] as const;
 
 export default async function PricingPage({
@@ -93,11 +98,11 @@ export default async function PricingPage({
               Evaluo Premium
             </span>
             <h1 className="mx-auto mt-6 max-w-4xl text-[2rem] leading-[1.05] font-bold tracking-[-0.04em] break-words min-[360px]:text-4xl sm:text-6xl sm:leading-[1.04]">
-              Estudiá mejor. Elegí el plan que te acompañe.
+              Estudiá con tus apuntes. Avanzá más con Premium.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-xl sm:leading-8">
-              Empezá gratis. Cuando quieras más práctica, explicaciones y seguimiento, pasate a
-              Premium.
+              Subí tus PDFs, entendé cada tema, practicá y corregí tus errores gratis. Si
+              necesitás preparar más materiales o ampliar las ayudas de estudio, elegí Premium.
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
@@ -155,43 +160,43 @@ export default async function PricingPage({
 
             <div className="mx-auto mt-16 max-w-3xl text-center">
               <h2 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-                Premium te ayuda a saber qué estudiar después.
+                Aprender es gratis. Premium te da más capacidad para continuar.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                No se trata sólo de tener más herramientas: practicá, entendé tus errores y enfocá
-                tu tiempo en los temas que más necesitás reforzar antes del parcial.
+                Con ambos planes podés estudiar tus PDFs, practicar por tema, ver resultados y
+                seguir tu progreso. Premium amplía la cantidad de materiales y ciertas funciones
+                de IA, sin quitarte el recorrido básico de aprendizaje.
               </p>
             </div>
 
             <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white">
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] border-b border-slate-200 bg-slate-50 px-3 py-4 text-[11px] font-bold text-slate-900 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 min-[360px]:text-xs sm:grid-cols-[1fr_140px_140px] sm:px-6 sm:text-sm">
-                <span>Función</span>
+              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_88px_96px] border-b border-slate-200 bg-slate-50 px-3 py-4 text-xs font-bold text-slate-900 min-[360px]:grid-cols-[minmax(0,1fr)_108px_112px] min-[360px]:px-4 sm:grid-cols-[minmax(0,1fr)_180px_180px] sm:px-6 sm:text-sm">
+                <span>Qué incluye</span>
                 <span className="text-center">Gratis</span>
                 <span className="text-center text-blue-700">Premium</span>
               </div>
               {comparison.map(([feature, free, premium]) => (
                 <div
                   key={feature}
-                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_48px_60px] items-center border-b border-slate-200 px-3 py-4 text-sm last:border-0 min-[360px]:grid-cols-[minmax(0,1fr)_60px_72px] min-[360px]:px-4 sm:grid-cols-[1fr_140px_140px] sm:px-6"
+                  className="grid min-w-0 grid-cols-[minmax(0,1fr)_88px_96px] items-center border-b border-slate-200 px-3 py-4 last:border-0 min-[360px]:grid-cols-[minmax(0,1fr)_108px_112px] min-[360px]:px-4 sm:grid-cols-[minmax(0,1fr)_180px_180px] sm:px-6"
                 >
-                  <span className="min-w-0 pr-2 text-[13px] leading-5 break-words text-slate-800 min-[360px]:pr-3 min-[360px]:text-sm">
+                  <span className="min-w-0 pr-2 text-xs leading-5 break-words text-slate-800 min-[360px]:pr-3 min-[360px]:text-sm">
                     {feature}
                   </span>
-                  <span className="flex justify-center">
-                    {free ? (
-                      <Check className="h-5 w-5 text-emerald-700" aria-label="Incluido" />
-                    ) : (
-                      <X className="h-5 w-5 text-slate-500" aria-label="No incluido" />
-                    )}
+                  <span className="px-1 text-center text-[11px] leading-4 font-medium break-words text-slate-600 sm:text-xs">
+                    {free}
                   </span>
-                  <span className="flex justify-center">
-                    {premium ? (
-                      <Check className="h-5 w-5 text-blue-700" aria-label="Incluido" />
-                    ) : null}
+                  <span className="px-1 text-center text-[11px] leading-4 font-semibold break-words text-blue-800 sm:text-xs">
+                    {premium}
                   </span>
                 </div>
               ))}
             </div>
+            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-5 text-slate-500">
+              Los cupos de PDFs se aplican a nuevas cargas. Las ayudas con IA y los simuladores
+              están sujetos a sus condiciones de uso. Tus materiales y resultados ya guardados
+              no desaparecen por seguir en Gratis.
+            </p>
 
             <div className="mt-12 text-center text-sm text-slate-600">
               <p>Los pagos se procesan de forma segura con Mercado Pago.</p>
