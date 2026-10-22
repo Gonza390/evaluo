@@ -346,6 +346,23 @@ export async function processStudentMaterial(input: {
     materialId: material.id,
     userId: material.user_id,
     geminiPdfKeySlot,
+    pedagogicalCheckpoint: {
+      fileSha256: contentFingerprint,
+      pipelineVersion: canonicalPipelineVersion,
+      modelVersion: CANONICAL_PEDAGOGICAL_MODEL_VERSION,
+    },
+    onPedagogicalMapProgress: async ({ completed, total, reused }: {
+      completed: number; total: number; reused: number;
+    }) => {
+      await updateStudentMaterialProcessing(admin, material.id, {
+        processingStatus: 'processing',
+        processingStage: 'extracting',
+        processingProgress: Math.min(60, 45 + Math.round(15 * completed / total)),
+        processingMessage:
+          `Modelo académico: ${completed} de ${total} bloques guardados` +
+          (reused > 0 ? ` (${reused} recuperados).` : '.'),
+      });
+    },
   };
 
   if (requiredOcr && text.trim().length === 0) {
