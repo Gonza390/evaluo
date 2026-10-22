@@ -140,7 +140,7 @@ export function PaymentCheckoutCard({
 
   const displayedPrice = useMemo(() => {
     if (!offer) return null;
-    if (offerCode === 'semester') return offer.semesterEquivalentMonthlyArs;
+    if (offerCode === 'semester') return offer.semesterPriceArs;
     if (offerCode === 'recovery') return 9990;
     return offer.monthlyPriceArs;
   }, [offer, offerCode]);
@@ -155,7 +155,7 @@ export function PaymentCheckoutCard({
   const isSemester = offerCode === 'semester';
   const isRecovery = offerCode === 'recovery';
   const semesterSoldOut = isSemester && offer ? !offer.semesterAvailable : false;
-  const billingLabel = '/mes';
+  const billingLabel = isSemester ? 'pago único' : '/mes';
 
   async function startCheckout() {
     trackMarketingEvent('premium_checkout_clicked', {
@@ -272,13 +272,6 @@ export function PaymentCheckoutCard({
                   Ahorrás {offer.semesterSavingsPercent}%
                 </span>
               </>
-            ) : offer.monthlyReferencePriceArs > offer.monthlyPriceArs ? (
-              <>
-                <span className="text-slate-500 line-through">
-                  {currency.format(offer.monthlyReferencePriceArs)}
-                </span>
-                <span className="font-bold text-emerald-700">Precio de lanzamiento</span>
-              </>
             ) : null}
           </div>
         ) : null}
@@ -287,7 +280,7 @@ export function PaymentCheckoutCard({
           {!offer
             ? 'Verificando precio y disponibilidad.'
             : isSemester
-              ? `Pagás ${currency.format(offer.semesterPriceArs)} una sola vez y tenés Premium durante 6 meses. Sin renovación automática.`
+              ? `Equivale a ${currency.format(offer.semesterEquivalentMonthlyArs)} por mes. Pagás una sola vez por los 6 meses, sin renovación automática.`
               : isRecovery
                 ? 'Precio especial mensual para retomar tu compra de Premium.'
                 : 'Renovación mensual automática. Podés cancelar futuras renovaciones cuando quieras.'}
