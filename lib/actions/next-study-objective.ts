@@ -48,7 +48,10 @@ export async function saveNextStudyObjectiveAction(input: {
   }
   try {
     const admin = createAdminClient();
-    const { data: material, error: materialError } = await admin.from('student_materials')
+    // exam_date existe en producción pero aún no en el tipo generado.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const materialDb = admin as any;
+    const { data: material, error: materialError } = await materialDb.from('student_materials')
       .select('id, exam_date, processing_status').eq('id', input.materialId)
       .eq('user_id', user.id).maybeSingle();
     if (materialError || !material || material.processing_status !== 'ready') return { success: false };

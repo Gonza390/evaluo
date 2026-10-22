@@ -460,6 +460,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'question_count',
     'flow_version',
   ],
+  study_next_objective_created: ['material_id', 'objective_id', 'kind'],
   student_material_exam_completed: [
     'attribution',
     'anonymous_id',

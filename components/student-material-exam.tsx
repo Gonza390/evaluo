@@ -527,6 +527,31 @@ export function StudentMaterialExam({
     );
   }
 
+  const persistNextObjective = () => {
+    if (isSimulation) return;
+    if (!sessionIdRef.current || savedAnswerIdsRef.current.length !== questions.length) {
+      setObjectiveStatus('error');
+      return;
+    }
+    setObjectiveStatus('saving');
+    void saveNextStudyObjectiveAction({
+      materialId,
+      sessionId: sessionIdRef.current,
+      answerIds: [...savedAnswerIdsRef.current],
+    }).then((response) => {
+      if (!response.success || !response.objective) {
+        setObjectiveStatus('error');
+        return;
+      }
+      setNextObjective(response.objective);
+      setObjectiveStatus('saved');
+      void trackClientAnalyticsEvent({
+        eventName: 'study_next_objective_created',
+        metadata: { material_id: materialId, objective_id: response.objective.id, kind: response.objective.kind },
+      });
+    }).catch(() => setObjectiveStatus('error'));
+  };
+
   if (finished) {
     const reviewTopics = Array.from(
       new Set(
@@ -691,8 +716,11 @@ export function StudentMaterialExam({
             </Link>
           )}
           {!isSimulation && (
-            <Link href="/dashboard" className="border-border inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold">
-              Terminar por hoy
+            <Link href="/dashboard" onClick={(event) => {
+              if (objectiveStatus === 'saving' || objectiveStatus === 'idle') event.preventDefault();
+            }} aria-disabled={objectiveStatus === 'saving' || objectiveStatus === 'idle'}
+              className="border-border inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold aria-disabled:cursor-wait aria-disabled:opacity-60">
+              {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? 'Guardando próximo objetivo…' : 'Terminar por hoy'}
             </Link>
           )}
           <Button
@@ -719,31 +747,6 @@ export function StudentMaterialExam({
   const canAdvance =
     current.type === 'multiple_choice' ? isRevealed : isRevealed && Boolean(openAssessment);
   const progress = Math.round(((currentIndex + 1) / questions.length) * 100);
-
-  const persistNextObjective = () => {
-    if (isSimulation) return;
-    if (!sessionIdRef.current || savedAnswerIdsRef.current.length !== questions.length) {
-      setObjectiveStatus('error');
-      return;
-    }
-    setObjectiveStatus('saving');
-    void saveNextStudyObjectiveAction({
-      materialId,
-      sessionId: sessionIdRef.current,
-      answerIds: [...savedAnswerIdsRef.current],
-    }).then((response) => {
-      if (!response.success || !response.objective) {
-        setObjectiveStatus('error');
-        return;
-      }
-      setNextObjective(response.objective);
-      setObjectiveStatus('saved');
-      void trackClientAnalyticsEvent({
-        eventName: 'study_next_objective_created',
-        metadata: { material_id: materialId, objective_id: response.objective.id, kind: response.objective.kind },
-      });
-    }).catch(() => setObjectiveStatus('error'));
-  };
 
   const advanceExam = () => {
     if (currentIndex >= questions.length - 1) {

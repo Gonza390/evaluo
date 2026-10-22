@@ -138,6 +138,11 @@ export function buildStudyReturnD1Message(input: {
       heading: 'Ahora comprobá qué entendiste',
       paragraph: `Ya recorriste el resumen de ${title}. El próximo paso es practicar para detectar qué parte necesitás reforzar antes de seguir.`,
     },
+    saved_objective: {
+      subject: `Tenés un repaso listo de ${title}`,
+      heading: input.action.title,
+      paragraph: `Preparaste tu próximo objetivo en ${title}. Retomá el repaso que Evaluo te dejó guardado.`,
+    },
     continue_summary: {
       subject: `Seguí con ${title} desde donde lo dejaste`,
       heading: `Continuá con ${title}`,
@@ -273,6 +278,7 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       resume_practice: 0,
       start_practice: 0,
       continue_summary: 0,
+      saved_objective: 0,
     },
   };
 
