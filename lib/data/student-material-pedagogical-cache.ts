@@ -98,7 +98,9 @@ export async function loadOrBuildPedagogicalArtifacts({
     previousQuality && typeof previousQuality === 'object' && !Array.isArray(previousQuality)
       ? {
           ...previousQuality,
-          version: PEDAGOGICAL_QUALITY_REPORT_VERSION,
+          // No certificar una auditoría v6 usando el banco histórico: faltan
+          // las páginas originales y las métricas independientes nuevas.
+          version: Math.min(Number(previousQuality.version ?? 0), PEDAGOGICAL_QUALITY_REPORT_VERSION - 1),
           ...(downgraded ? {
             status: previousQuality.status === 'fail' ? 'fail' : 'degraded',
             score: Math.min(Number(previousQuality.score ?? 0) || 0, hasUnsafeArtifacts ? 59 : 79),
