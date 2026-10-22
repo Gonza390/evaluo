@@ -6,32 +6,40 @@ export const metadata = {
 };
 
 const topics = [
-  { title: 'Segmentación', correct: 3, total: 3, available: 12 },
-  { title: 'Posicionamiento', correct: 3, total: 4, available: 8 },
-  { title: 'Mercado meta', correct: 1, total: 3, available: 9 },
+  { title: 'Metodología, Contrastación e Hipótesis', correct: 0, total: 2, available: 8 },
+  { title: 'Epistemología, Ciencia y Demarcación', correct: 0, total: 1, available: 7 },
+  { title: 'Estructura Conceptual y Teorías Científicas', correct: 0, total: 1, available: 6 },
+  { title: 'Ciencia y sociedad', correct: 1, total: 1, available: 5 },
 ];
 
 const mistakes = [
   {
-    title: '¿Qué caracteriza al mercado meta?',
-    chosen: 'Todos los consumidores del mercado',
-    expected: 'El segmento específico al que se dirige la oferta',
-    explanation: 'La empresa selecciona uno o más segmentos; no necesariamente se dirige a todo el mercado.',
-    source: 'Tema: Mercado meta · Página 8',
+    title: '¿Qué es la contrastación de una hipótesis?',
+    chosen: 'Una explicación que no se puede revisar',
+    expected: 'La evaluación de consecuencias contrastables de una hipótesis frente a la evidencia',
+    explanation: 'Se examina si las predicciones derivadas de la hipótesis son compatibles con la evidencia disponible.',
+    source: 'Tema: Metodología · Ejemplo ilustrativo',
   },
   {
-    title: '¿En qué se diferencia un segmento de un mercado meta?',
-    chosen: 'Son exactamente lo mismo',
-    expected: 'Un segmento es un grupo identificado; se convierte en meta cuando la organización decide atenderlo',
-    explanation: 'Segmentar permite identificar grupos; elegir un mercado meta es una decisión posterior.',
-    source: 'Tema: Mercado meta · Página 9',
+    title: '¿Para qué se formula una hipótesis?',
+    chosen: 'Para establecer una verdad definitiva',
+    expected: 'Para proponer una explicación que pueda ponerse a prueba',
+    explanation: 'La hipótesis plantea una propuesta que admite evaluación mediante evidencia.',
+    source: 'Tema: Metodología · Ejemplo ilustrativo',
   },
   {
-    title: '¿Qué busca el posicionamiento?',
-    chosen: 'Aumentar la cantidad de segmentos existentes',
-    expected: 'Construir una percepción diferenciada en la mente del público objetivo',
-    explanation: 'El posicionamiento se relaciona con la percepción de una propuesta respecto a sus alternativas.',
-    source: 'Tema: Posicionamiento · Página 6',
+    title: '¿Qué estudia la epistemología?',
+    chosen: 'Únicamente las tecnologías actuales',
+    expected: 'Los fundamentos, métodos y alcances del conocimiento',
+    explanation: 'La epistemología examina cómo se produce y justifica el conocimiento.',
+    source: 'Tema: Epistemología · Ejemplo ilustrativo',
+  },
+  {
+    title: '¿Qué caracteriza a una teoría científica?',
+    chosen: 'Ser una opinión sin relación con evidencia',
+    expected: 'Un conjunto articulado de conceptos e hipótesis que permite explicar fenómenos',
+    explanation: 'Las teorías científicas organizan proposiciones y evidencias para explicar fenómenos.',
+    source: 'Tema: Teorías científicas · Ejemplo ilustrativo',
   },
 ];
 
@@ -55,7 +63,7 @@ export default function PreviewPracticeResult() {
             Práctica terminada
           </p>
           <h1 className="mt-4 text-6xl font-bold tracking-[-0.07em] text-[#0F1B3D]">
-            7 <span className="text-[#CBD5E1]">/ 10</span>
+            1 <span className="text-[#CBD5E1]">/ 5</span>
           </h1>
           <p className="mt-2 text-sm text-[#64748B]">respuestas correctas</p>
         </header>
@@ -63,21 +71,27 @@ export default function PreviewPracticeResult() {
         <section className="min-w-0 rounded-2xl border border-[#E7EBF4] bg-white p-4 sm:p-5 @min-[660px]/practice-result:col-start-1 @min-[1040px]/practice-result:col-auto">
           <div className="mb-5 flex items-baseline justify-between gap-2">
             <h2 className="text-sm font-semibold text-[#0F1B3D]">Así te fue por tema</h2>
-            <span className="text-xs text-[#64748B]">3 temas evaluados</span>
+            <span className="text-xs text-[#64748B]">4 temas evaluados</span>
           </div>
-          <div className="space-y-5">
+          <div className="space-y-3.5">
             {topics.map((topic) => {
               const percentage = Math.round(topic.correct / topic.total * 100);
-              const barColor = percentage === 100
-                ? 'bg-emerald-500'
-                : percentage >= 70 ? 'bg-[#4F5DFF]' : 'bg-amber-500';
+              const allCorrect = topic.correct === topic.total;
+              const needsReinforcement = topic.correct === 0;
+              const barColor = allCorrect ? 'bg-emerald-500' : needsReinforcement ? 'bg-amber-500' : 'bg-[#4F5DFF]';
+              const trackColor = needsReinforcement ? 'bg-amber-100' : allCorrect ? 'bg-emerald-100' : 'bg-indigo-100';
+              const badgeColor = needsReinforcement
+                ? 'bg-amber-50 text-amber-700'
+                : allCorrect ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-50 text-indigo-700';
               return (
-                <div key={topic.title} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-medium text-[#0F1B3D]">{topic.title}</span>
-                    <span className="shrink-0 text-sm text-[#64748B]">{topic.correct}/{topic.total}</span>
+                <div key={topic.title} className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <span className="min-w-0 flex-1 text-sm font-medium text-[#0F1B3D]">{topic.title}</span>
+                    <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${badgeColor}`}>
+                      {topic.correct}/{topic.total} · {needsReinforcement ? 'Reforzar' : allCorrect ? 'Todo correcto' : 'En progreso'}
+                    </span>
                   </div>
-                  <div className="h-1.5 overflow-hidden rounded-full bg-[#EAEFF5]">
+                  <div className={`h-2 overflow-hidden rounded-full ${trackColor}`}>
                     <div className={`h-full rounded-full ${barColor}`} style={{ width: `${percentage}%` }} />
                   </div>
                 </div>
@@ -95,7 +109,7 @@ export default function PreviewPracticeResult() {
             Tu próxima acción
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[#0F1B3D]">
-            Reforzá Mercado meta
+            Reforzá Metodología, Contrastación e Hipótesis
           </h2>
           <p className="mt-2 text-sm leading-6 text-[#64748B]">
             Revisá lo que te costó y comprobá nuevamente lo aprendido.
@@ -142,7 +156,7 @@ export default function PreviewPracticeResult() {
               </p>
             </div>
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-[#0F1B3D]">Preguntas para revisar · 3</h3>
+              <h3 className="text-sm font-semibold text-[#0F1B3D]">Preguntas para revisar · 4</h3>
               {mistakes.map((item) => (
                 <details key={item.title} className="rounded-xl border border-[#E7EBF4] px-3 py-3">
                   <summary className="cursor-pointer text-sm font-medium leading-6 text-[#0F1B3D]">
@@ -159,10 +173,10 @@ export default function PreviewPracticeResult() {
             </div>
             <details className="border-t border-[#E7EBF4] pt-4 @min-[800px]/practice-result:col-span-2">
               <summary className="cursor-pointer text-sm font-semibold text-[#0F1B3D]">
-                Todas mis respuestas · 10
+                Todas mis respuestas · 5
               </summary>
               <p className="mt-3 text-sm text-[#64748B]">
-                En la pantalla real, acá vas a poder revisar las diez respuestas, incluso las correctas.
+                En la pantalla real, acá vas a poder revisar las cinco respuestas, incluso las correctas.
               </p>
             </details>
             <div className="flex flex-wrap gap-3 @min-[800px]/practice-result:col-span-2">
