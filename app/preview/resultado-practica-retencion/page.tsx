@@ -37,9 +37,10 @@ const mistakes = [
 
 export default function PreviewPracticeResult() {
   return (
-    <main className="min-h-screen bg-[#F5F7FB] px-4 py-10 sm:py-16">
-      <section className="mx-auto max-w-xl rounded-2xl border border-[#E7EBF4] bg-white px-5 py-8 shadow-[0_18px_48px_rgba(15,27,61,0.04)] sm:px-9 sm:py-10">
-        <header className="text-center">
+    <main className="min-h-screen bg-[#F5F7FB] px-4 py-6 sm:px-6 sm:py-10">
+      <section className="mx-auto max-w-6xl">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-12 xl:gap-5">
+        <header className="flex flex-col items-center justify-center rounded-2xl border border-[#E7EBF4] bg-white px-6 py-7 text-center shadow-[0_10px_35px_rgba(15,27,61,0.03)] md:min-h-[285px] xl:col-span-3">
           <p className="text-xs font-semibold tracking-[0.12em] text-[#4F5DFF] uppercase">
             Práctica terminada
           </p>
@@ -49,12 +50,12 @@ export default function PreviewPracticeResult() {
           <p className="mt-2 text-sm text-[#64748B]">respuestas correctas</p>
         </header>
 
-        <section className="mt-8 border-t border-[#E7EBF4] pt-6">
-          <div className="mb-4 flex items-baseline justify-between gap-2">
+        <section className="rounded-2xl border border-[#E7EBF4] bg-white p-5 shadow-[0_10px_35px_rgba(15,27,61,0.03)] sm:p-6 xl:col-span-5">
+          <div className="mb-5 flex items-baseline justify-between gap-2">
             <h2 className="text-sm font-semibold text-[#0F1B3D]">Así te fue por tema</h2>
             <span className="text-xs text-[#64748B]">3 temas evaluados</span>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-5">
             {topics.map((topic) => {
               const percentage = Math.round(topic.correct / topic.total * 100);
               const barColor = percentage === 100
@@ -78,7 +79,8 @@ export default function PreviewPracticeResult() {
           </p>
         </section>
 
-        <section className="mt-6 border-t border-[#E7EBF4] pt-6">
+        <div className="flex flex-col rounded-2xl border border-[#E7EBF4] bg-white p-5 shadow-[0_10px_35px_rgba(15,27,61,0.03)] sm:p-6 md:col-span-2 xl:col-span-4">
+        <section>
           <p className="text-[11px] font-semibold tracking-[0.12em] text-[#4F5DFF] uppercase">
             Tu próxima acción
           </p>
@@ -90,7 +92,7 @@ export default function PreviewPracticeResult() {
           </p>
         </section>
 
-        <div className="mt-7 space-y-3">
+        <div className="mt-auto space-y-3 pt-6">
           <div className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#4F5DFF] px-5 text-sm font-semibold text-white">
             Continuar ahora <ArrowRight className="size-4" aria-hidden="true" />
           </div>
@@ -102,12 +104,14 @@ export default function PreviewPracticeResult() {
           </p>
         </div>
 
-        <details className="group mt-5 border-t border-[#E7EBF4] pt-4">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 text-sm font-medium text-[#64748B]">
+        </div>
+        </div>
+        <details className="group mt-4 rounded-2xl border border-[#E7EBF4] bg-white px-5 py-2 shadow-[0_10px_35px_rgba(15,27,61,0.03)] sm:px-6 xl:mt-5">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-[#64748B]">
             Ver todos los detalles
             <span aria-hidden="true" className="transition-transform group-open:rotate-180">⌄</span>
           </summary>
-          <div className="space-y-6 pt-5">
+          <div className="grid gap-7 border-t py-5 lg:grid-cols-2 lg:gap-8">
             <div className="space-y-3">
               <h3 className="text-sm font-semibold text-[#0F1B3D]">Resultados de todos los temas</h3>
               {topics.map((topic) => (
@@ -127,7 +131,7 @@ export default function PreviewPracticeResult() {
                 Esta cobertura describe solamente la tanda, no todo el historial.
               </p>
             </div>
-            <div className="space-y-3 border-t border-[#E7EBF4] pt-5">
+            <div className="space-y-3">
               <h3 className="text-sm font-semibold text-[#0F1B3D]">Preguntas para revisar · 3</h3>
               {mistakes.map((item) => (
                 <details key={item.title} className="rounded-xl border border-[#E7EBF4] px-3 py-3">
@@ -143,7 +147,7 @@ export default function PreviewPracticeResult() {
                 </details>
               ))}
             </div>
-            <details className="border-t border-[#E7EBF4] pt-5">
+            <details className="border-t border-[#E7EBF4] pt-5 lg:col-span-2">
               <summary className="cursor-pointer text-sm font-semibold text-[#0F1B3D]">
                 Todas mis respuestas · 10
               </summary>
@@ -151,7 +155,7 @@ export default function PreviewPracticeResult() {
                 En la pantalla real, acá vas a poder revisar las diez respuestas, incluso las correctas.
               </p>
             </details>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 lg:col-span-2">
               <span className="inline-flex min-h-10 items-center rounded-lg border border-[#E7EBF4] px-4 text-sm font-semibold text-[#0F1B3D]">
                 Ver mi progreso
               </span>
@@ -162,7 +166,7 @@ export default function PreviewPracticeResult() {
           </div>
         </details>
       </section>
-      <p className="mx-auto mt-4 max-w-xl text-center text-xs text-[#94A3B8]">
+      <p className="mx-auto mt-4 max-w-6xl text-center text-xs text-[#94A3B8]">
         Vista previa ilustrativa del ejercicio general: las preguntas, resultados y cantidades reales varían según el PDF.
       </p>
     </main>
