@@ -23,6 +23,7 @@ export function StudentMaterialProcessingRetry({
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const startedRef = useRef(false);
+  const autoTriggeredRef = useRef(false);
 
   const retry = useCallback(() => {
     if (startedRef.current) return;
@@ -53,7 +54,10 @@ export function StudentMaterialProcessingRetry({
   }, [autoRetry, materialId, router, toast]);
 
   useEffect(() => {
-    if (autoRetry) retry();
+    if (autoRetry && !autoTriggeredRef.current) {
+      autoTriggeredRef.current = true;
+      retry();
+    }
   }, [autoRetry, retry]);
 
   return (
