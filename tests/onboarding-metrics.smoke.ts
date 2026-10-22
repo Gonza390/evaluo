@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { isAllowedAnalyticsEventName } from '../lib/analytics-events.ts';
+import { sanitizeAnalyticsMetadata } from '../lib/analytics-metadata.ts';
 import {
   FIRST_PDF_GUIDE_VERSION,
   summarizeFirstPdfOnboarding,
@@ -29,6 +31,41 @@ for (const event of ['first_pdf_guide_started','first_pdf_guide_step_viewed','fi
 for (const key of ['guide_version','guide_run_id']) {
   assert.match(whitelist, new RegExp("'" + key + "'"));
 }
+// El popup académico tiene un embudo medible sin enviar universidad, carrera ni texto libre.
+const academicPopup = root('components/dashboard/academic-profile-reminder.tsx');
+const academicForm = root('components/profile-academic-simple.tsx');
+for (const event of [
+  'academic_profile_popup_viewed',
+  'academic_profile_popup_postponed',
+  'academic_profile_popup_completed',
+]) {
+  assert.ok(isAllowedAnalyticsEventName(event), event + ' must be registered by the API.');
+  assert.match(academicPopup, new RegExp(event));
+}
+const safeAcademicEvent = sanitizeAnalyticsMetadata('academic_profile_popup_postponed', {
+  page_type: 'dashboard',
+  popup_id: 'test-popup-run',
+  popup_version: 'academic_profile_popup_v1',
+  missing_university: true,
+  dismiss_method: 'later',
+  universidad_id: 'should-not-be-logged',
+  carrera_id: 'should-not-be-logged',
+  carrera_nombre: 'sensitive free text',
+});
+assert.deepEqual(safeAcademicEvent, {
+  page_type: 'dashboard',
+  popup_id: 'test-popup-run',
+  popup_version: 'academic_profile_popup_v1',
+  missing_university: true,
+  dismiss_method: 'later',
+});
+assert.match(academicPopup, /viewedRef\.current/);
+assert.match(academicPopup, /outcomeRef\.current/);
+assert.match(academicPopup, /onComplete=\{complete\}/);
+assert.match(academicPopup, /onLater=\{\(\) => dismiss\('later'\)\}/);
+assert.match(academicForm, /if \(!result\.success\)/);
+assert.match(academicForm, /if \(onComplete\) onComplete\(\)/);
+
 const t = '2026-10-20T09:00:00.000Z';
 const at = (sec: number) => new Date(Date.parse(t) + sec * 1000).toISOString();
 const row = (name: string, sec: number, overrides: {

@@ -294,6 +294,11 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'next_mode',
   ],
   profile_completed: ['active_subject_count'],
+  academic_profile_popup_viewed: ['page_type', 'popup_id', 'popup_version', 'missing_university'],
+  academic_profile_popup_postponed: [
+    'page_type', 'popup_id', 'popup_version', 'missing_university', 'dismiss_method',
+  ],
+  academic_profile_popup_completed: ['page_type', 'popup_id', 'popup_version', 'missing_university'],
   student_material_processing_ready: ['material_id', 'page_count', 'processing_strategy'],
   student_material_study_opened: ['material_id', 'is_owner', 'visibility'],
   first_pdf_ready_viewed: [
