@@ -13,12 +13,25 @@ export type NextStudyObjective = {
   id: string;
   kind: 'reinforce' | 'practice' | 'consolidate';
   topicTitle: string | null;
+  topicSectionIndex: number | null;
   reviewOn: string;
 };
 
 function normalize(value: string | null | undefined) {
   return (value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function argentinaDatePlusDays(days: number) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  const today = `${get('year')}-${get('month')}-${get('day')}`;
+  const next = new Date(`${today}T12:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next.toISOString().slice(0, 10);
 }
 
 function reviewDate(examDate: string | null) {
@@ -102,26 +115,61 @@ export async function saveNextStudyObjectiveAction(input: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = admin as any;
     const { data: existing, error: readError } = await db.from('study_next_objectives')
-      .select('id, session_id, source_finished_at, kind, topic_title, review_on')
+      .select('id, session_id, source_finished_at, kind, topic_title, topic_section_index, review_on')
       .eq('user_id', user.id).eq('material_id', material.id).maybeSingle();
     if (readError) throw readError;
     if (existing && (existing.session_id === input.sessionId ||
         Date.parse(existing.source_finished_at) > Date.parse(finishedAt))) {
       return { success: true, objective: { id: existing.id, kind: existing.kind,
-        topicTitle: existing.topic_title, reviewOn: existing.review_on } };
+        topicTitle: existing.topic_title, topicSectionIndex: existing.topic_section_index, reviewOn: existing.review_on } };
     }
     const { data: saved, error: saveError } = await db.from('study_next_objectives').upsert({
       user_id: user.id, material_id: material.id, session_id: input.sessionId,
       kind, topic_title: topicTitle?.slice(0, 500) ?? null,
-      topic_section_index: topicSectionIndex >= 0 ? topicSectionIndex : null,
+      topic_section_index: topicSectionIndex >= 0 && availableTopics.has(topicSectionIndex) ? topicSectionIndex : null,
       review_on: reviewDate(material.exam_date), source_finished_at: finishedAt,
       status: 'pending', created_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,material_id' }).select('id, kind, topic_title, review_on').single();
+    }, { onConflict: 'user_id,material_id' }).select('id, kind, topic_title, topic_section_index, review_on').single();
     if (saveError || !saved) throw saveError ?? new Error('No se pudo guardar el objetivo');
     return { success: true, objective: { id: saved.id, kind: saved.kind,
-      topicTitle: saved.topic_title, reviewOn: saved.review_on } };
+      topicTitle: saved.topic_title, topicSectionIndex: saved.topic_section_index, reviewOn: saved.review_on } };
   } catch (error) {
     logError('studyNextObjective.save', error, { userId: user.id, materialId: input.materialId });
+    return { success: false };
+  }
+}
+
+
+/** El botón "Continuar mañana" mueve la fecha del objetivo guardado.
+ *  No programa un correo: el objetivo seguirá accesible en Mi espacio.
+ */
+export async function continueNextStudyTomorrowAction(input: {
+  materialId: string;
+  objectiveId: string;
+}): Promise<{ success: boolean; reviewOn?: string }> {
+  const supabase = await createClientServer();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || !input || !isUuid(input.materialId) || !isUuid(input.objectiveId)) {
+    return { success: false };
+  }
+  try {
+    const admin = createAdminClient();
+    // La modificación ocurre en el servidor, filtrada por el propietario y objetivo exacto.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = admin as any;
+    const reviewOn = argentinaDatePlusDays(1);
+    const { data, error } = await db.from('study_next_objectives')
+      .update({ review_on: reviewOn, status: 'pending' })
+      .eq('id', input.objectiveId)
+      .eq('material_id', input.materialId)
+      .eq('user_id', user.id)
+      .in('status', ['pending', 'started'])
+      .select('id')
+      .maybeSingle();
+    if (error || !data) return { success: false };
+    return { success: true, reviewOn };
+  } catch (error) {
+    logError('studyNextObjective.continueTomorrow', error, { userId: user.id, materialId: input.materialId });
     return { success: false };
   }
 }
