@@ -46,11 +46,11 @@ const freeFeatures = [
 ];
 
 const premiumFeatures = [
-  'Todo lo de Gratis, incluido tu progreso por tema',
-  'Seguí estudiando con hasta 3 PDFs por día',
-  'Reforzá tus errores con más ayudas de IA',
-  'Relacioná conceptos con mapas mentales',
-  'Practicá con las modalidades Premium del simulador',
+  'Todo lo de Gratis: práctica, resultados y progreso por tema',
+  'Subí hasta 3 PDFs por día para preparar más materias',
+  'Pedí más explicaciones con IA y preguntas para repasar tus errores',
+  'Creá mapas mentales para relacionar conceptos de tus apuntes',
+  'Accedé a modos Premium de simuladores con más explicaciones',
 ];
 
 const comparison = [
