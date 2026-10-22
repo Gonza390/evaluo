@@ -340,8 +340,8 @@ export function PaymentCheckoutCard({
 
       <p className="mt-5 text-sm leading-6 text-slate-600">
         {isSemester
-          ? 'Mantené tu preparación durante 6 meses, con más materiales y ayudas cuando los necesites.'
-          : 'Seguí practicando con tus materiales y reforzá lo que te cuesta con más ayudas de IA.'}
+          ? 'Prepará más materiales y reforzá tus errores con IA durante 6 meses.'
+          : 'Practicá con más apuntes y pedí explicaciones cuando necesitás reforzar un tema.'}
       </p>
 
       <ul className="mt-7 flex-1 space-y-4">
