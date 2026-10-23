@@ -22,7 +22,7 @@ function normalizeSource(value: string | null) {
   return normalized ? `pdf-first-landing-${normalized}` : 'pdf-first-landing';
 }
 
-export function PdfFirstLandingUploader() {
+export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_ia', sourceKey }: { trackingLocation?: string; sourceKey?: string } = {}) {
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
@@ -31,18 +31,18 @@ export function PdfFirstLandingUploader() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const resolvedSource = normalizeSource(params.get('source') ?? params.get('utm_source'));
+    const resolvedSource = normalizeSource(sourceKey ?? params.get('source') ?? params.get('utm_source'));
     setSource(resolvedSource);
 
     trackMarketingEvent('pdf_first_landing_viewed', {
-      location: 'estudiar_pdf_con_ia',
+      location: trackingLocation,
       source: resolvedSource,
     });
-  }, []);
+  }, [trackingLocation, sourceKey]);
 
   const chooseFile = () => {
     trackMarketingEvent('pdf_picker_opened', {
-      location: 'estudiar_pdf_con_ia',
+      location: trackingLocation,
       source,
     });
     pickerRef.current?.click();
@@ -70,7 +70,7 @@ export function PdfFirstLandingUploader() {
     setError('');
     setFile(selected);
     trackMarketingEvent('pdf_selected', {
-      location: 'estudiar_pdf_con_ia',
+      location: trackingLocation,
       source,
       file_size_bytes: selected.size,
     });
@@ -86,7 +86,7 @@ export function PdfFirstLandingUploader() {
       await savePdfFirstDraft(file, source);
 
       trackMarketingEvent('create_material_clicked', {
-        location: 'estudiar_pdf_con_ia',
+        location: trackingLocation,
         source,
         file_size_bytes: file.size,
       });
