@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { processStudentMaterialAction } from '@/app/dashboard/materiales/actions';
+import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
