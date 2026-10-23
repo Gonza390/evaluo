@@ -2,12 +2,9 @@ import 'server-only';
 
 import type { AdminClient } from '@/lib/student-materials/types';
 import { renderPdfPagesToPngs } from '@/lib/student-materials/pdf-render';
+import { buildStudentMaterialThumbnailPath } from '@/lib/student-materials/thumbnail-path';
 
 const THUMBNAIL_RENDER_SCALE = 0.7;
-
-export function buildStudentMaterialThumbnailPath(filePath: string) {
-  return `${filePath}.thumbnail.png`;
-}
 
 export async function loadStudentMaterialThumbnail(
   admin: AdminClient,
