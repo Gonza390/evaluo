@@ -33,6 +33,10 @@
       "schedule": "30 8 * * *"
     },
     {
+      "path": "/api/internal/student-material-jobs?recovery=1",
+      "schedule": "0 12 * * *"
+    },
+    {
       "path": "/api/internal/analytics-retention?retention_days=180&batch_size=1000&max_batches=100",
       "schedule": "45 8 * * *"
     },
