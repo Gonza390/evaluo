@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { processNextStudentMaterialJobAction } from '@/app/dashboard/materiales/actions';
+import { processNextStudentMaterialJobAction } from '@/app/dashboard/materiales/processing-actions';
 import { logError, logInfo } from '@/lib/observability';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { isInternalQueueRequestAuthorized } from '@/lib/student-materials/job-auth';
