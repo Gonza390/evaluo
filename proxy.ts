@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/types/supabase';
+import { isTerminalAuthSessionError } from '@/lib/auth-session-errors';
 import {
   checkProxyRateLimit,
   getClientIpFromRequest,
@@ -188,7 +189,20 @@ export async function proxy(request: NextRequest) {
   const supabase = createClient(request, response);
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  // Un refresh token revocado puede permanecer en cookies de una pestaña vieja.
+  // Borramos sólo cookies de Auth, evitando propagar el JWT inválido a otras
+  // acciones SSR. Los fallos transitorios de red NO invalidan la sesión.
+  if (!user && isTerminalAuthSessionError(authError)) {
+    for (const cookie of request.cookies.getAll()) {
+      if (/^sb-[a-zA-Z0-9_-]+-auth-token(?:\.\d+)?$/.test(cookie.name)) {
+        request.cookies.delete(cookie.name);
+        response.cookies.delete(cookie.name);
+      }
+    }
+  }
 
   if (isHomeRoute && user) {
     const homeResponse = redirectPreservingSessionCookies(

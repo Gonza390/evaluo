@@ -1,8 +1,18 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type { Database } from '@/types/supabase';
 import { createAdminClient, isAdminClientConfigured } from '@/lib/supabase-admin';
+
+type SessionCookie = { name: string; value: string; options?: CookieOptions };
+function redirectWithSessionCookies(url: string, sessionCookies: SessionCookie[]) {
+  const response = NextResponse.redirect(url);
+  for (const cookie of sessionCookies) {
+    response.cookies.set(cookie.name, cookie.value, cookie.options);
+  }
+  response.headers.set('Cache-Control', 'private, no-store');
+  return response;
+}
 
 function normalizeAnalyticsSessionKey(value: string | null) {
   const normalized = String(value ?? '').trim();
@@ -31,21 +41,30 @@ export async function GET(request: Request) {
       ? nextPathRaw
       : '/dashboard';
 
+  if (!code) {
+    const loginUrl = new URL('/login', requestUrl.origin);
+    loginUrl.searchParams.set('next', nextPath);
+    loginUrl.searchParams.set('reason', 'auth-expired');
+    return NextResponse.redirect(loginUrl);
+  }
+
   if (code) {
     const cookieStore = await cookies();
+    const sessionCookies: SessionCookie[] = [];
     const supabase = createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
+          getAll() {
+            return cookieStore.getAll();
           },
-          set(name, value, options) {
-            cookieStore.set(name, value, options);
-          },
-          remove(name, options) {
-            cookieStore.set(name, '', options);
+          setAll(cookiesToSet) {
+            // El callback debe devolver los Set-Cookie en la redirección real.
+            for (const cookie of cookiesToSet) {
+              cookieStore.set(cookie.name, cookie.value, cookie.options);
+              sessionCookies.push(cookie);
+            }
           },
         },
       }
@@ -109,15 +128,20 @@ export async function GET(request: Request) {
           .eq('user_id', user.id);
 
         if (!materialCountError && (materialCount ?? 0) === 0) {
-          return NextResponse.redirect(
-            `${requestUrl.origin}/dashboard?openUpload=1&source=signup-direct`
+          return redirectWithSessionCookies(
+            `${requestUrl.origin}/dashboard?openUpload=1&source=signup-direct`,
+            sessionCookies
           );
         }
       }
 
-
+      return redirectWithSessionCookies(`${requestUrl.origin}${nextPath}`, sessionCookies);
     }
-  }
 
-  return NextResponse.redirect(`${requestUrl.origin}${nextPath}`);
+    // Código OAuth expirado, reutilizado o inválido: solicitar nuevo inicio de sesión.
+    const loginUrl = new URL('/login', requestUrl.origin);
+    loginUrl.searchParams.set('next', nextPath);
+    loginUrl.searchParams.set('reason', 'auth-expired');
+    return redirectWithSessionCookies(loginUrl.toString(), sessionCookies);
+  }
 }

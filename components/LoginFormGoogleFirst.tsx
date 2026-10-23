@@ -147,8 +147,10 @@ export default function LoginFormGoogleFirst() {
         intent: requestedIntent || null,
       });
     }
-    if (params.get('reason') === 'inactive') {
+    if (requestedReason === 'inactive') {
       setNotice('Tu sesión se cerró por inactividad. Ingresá de nuevo para continuar.');
+    } else if (requestedReason === 'auth-expired') {
+      setNotice('Tu sesión venció o fue cerrada. Volvé a iniciar sesión para continuar donde estabas.');
     }
 
     setIntent(requestedIntent);
