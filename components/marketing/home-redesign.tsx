@@ -314,6 +314,31 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
         </div>
       </section>
 
+      <section aria-labelledby="herramientas-pdf" className="sec" style={{ padding: '48px 0' }}>
+        <div className="w">
+          <div className="eb l">Herramientas para estudiar</div>
+          <h2 id="herramientas-pdf" style={{ fontSize: 'clamp(26px, 4vw, 38px)', maxWidth: '760px' }}>
+            ¿Qué necesitás hacer con tus apuntes?
+          </h2>
+          <p style={{ fontSize: '15px', maxWidth: '720px', margin: '14px 0 28px' }}>
+            Elegí una función para empezar con tu propio PDF: resumir, entender, conectar ideas o preparar un examen con inteligencia artificial.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+            {[
+              { href: '/funciones/resumir-pdf-con-ia', title: 'Resumir PDF con IA', detail: 'Identificá las ideas y los conceptos importantes.' },
+              { href: '/estudiar-pdf-con-ia', title: 'Estudiar un PDF con IA', detail: 'Uní resumen, flashcards, mapas y ejercicios.' },
+              { href: '/funciones/crear-mapa-mental-desde-pdf', title: 'Crear mapa mental desde PDF', detail: 'Visualizá las relaciones entre temas y subtemas.' },
+              { href: '/ia-para-estudiantes', title: 'IA para estudiantes', detail: 'Elegí cómo usar IA para preparar parciales y finales.' },
+            ].map((item) => (
+              <a key={item.href} href={item.href} className="card" style={{ display: 'block', padding: '22px', textDecoration: 'none' }}>
+                <h3 style={{ fontSize: '17px', margin: 0, color: 'var(--t)' }}>{item.title} →</h3>
+                <p style={{ fontSize: '13px', margin: '10px 0 0', lineHeight: 1.6 }}>{item.detail}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="producto" className="sec">
         <div className="w">
           <div style={{ maxWidth: '680px' }}>
