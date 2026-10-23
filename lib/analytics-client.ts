@@ -61,7 +61,15 @@ export function getAnalyticsPageType(pathname: string) {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/explorar/materia/')) return 'materia';
   if (pathname === '/explorar') return 'explorar';
-  if (/^\\/es(?:-mx|-co|-es)?\\/estudiar-pdf-con-ia\\/?$/.test(pathname)) {
+  const regionalPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  if (
+    [
+      '/es/estudiar-pdf-con-ia',
+      '/es-mx/estudiar-pdf-con-ia',
+      '/es-co/estudiar-pdf-con-ia',
+      '/es-es/estudiar-pdf-con-ia',
+    ].includes(regionalPath)
+  ) {
     return 'seo-international-study-pdf';
   }
   if (pathname === '/uba-xxi/parciales') return 'seo-uba-xxi-parciales';
