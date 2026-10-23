@@ -41,6 +41,9 @@ type PageProps = {
     recorrido?: string;
     error?: string;
     from?: string;
+    utm_source?: string;
+    utm_campaign?: string;
+    utm_content?: string;
   }>;
 };
 
@@ -396,6 +399,22 @@ export default async function StudentMaterialViewerPage({ params, searchParams }
           material_id: material.id,
           is_owner: isOwner,
           visibility: normalizeMaterialVisibility(material.visibility),
+        },
+      });
+    }
+
+    // Count actual arrivals from transactional PDF emails, separately from page opens.
+    // The next practice events can be joined to this event by user, material and time.
+    if (user?.id && query.utm_source === 'sender' && typeof query.utm_campaign === 'string' &&
+      /^(student_material_ready_v1|study_return_d1_v1|study_return_48h_v1|flashcard_review_reminder|exam_reminder_(1|3|7)d)$/.test(query.utm_campaign)) {
+      await trackServerAnalyticsEvent({
+        eventName: 'pdf_lifecycle_email_landing_viewed',
+        userId: user.id,
+        path: `/materiales/${material.id}`,
+        metadata: {
+          material_id: material.id,
+          campaign_key: query.utm_campaign,
+          content: typeof query.utm_content === 'string' ? query.utm_content.slice(0, 80) : null,
         },
       });
     }
