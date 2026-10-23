@@ -33,6 +33,7 @@ import { consumeFirstPdfDemoUpload } from '@/lib/first-pdf-demo-analytics';
 import { clearPdfFirstDraft, loadPdfFirstDraft } from '@/lib/pdf-first-draft';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 import { PdfProcessingPanel } from '@/components/pdf-processing/pdf-processing-panel';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
@@ -111,6 +112,7 @@ export function PdfFirstUploadShell({
   const directSignupOpenTrackedRef = useRef(false);
   const autoRetryCountsRef = useRef<Record<string, number>>({});
   const autoRetryingMaterialRef = useRef<string | null>(null);
+  const processingPollRef = useRef(createSingleFlightPolling<StudentMaterialProcessingState | null>());
   const [open, setOpen] = useState(initialOpen);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
@@ -250,17 +252,35 @@ export function PdfFirstUploadShell({
 
   useEffect(() => {
     if (!processing || processing.status === 'ready' || processing.status === 'failed') return;
-    const interval = window.setInterval(async () => {
-      const state = await getStudentMaterialProcessingStateAction(processing.materialId);
-      if (!state) return;
+    let active = true;
+    const materialId = processing.materialId;
 
+    const poll = async () => {
+      if (document.visibilityState === 'hidden') return;
+      const outcome = await processingPollRef.current.run(
+        () => getStudentMaterialProcessingStateAction(materialId)
+      );
+      if (!active || outcome.kind === 'busy') return;
+      if (outcome.kind === 'error') {
+        // Un error transitorio de transporte no indica que la IA haya fallado.
+        // Después de varios intentos avisamos sin bloquear la recuperación.
+        if (outcome.consecutiveFailures === 3) {
+          setProcessing((current) =>
+            current?.materialId === materialId
+              ? { ...current, message: 'Seguimos procesando tu PDF. Estamos restableciendo la conexión…' }
+              : current
+          );
+        }
+        return;
+      }
+      const state = outcome.value;
+      if (!state) return;
       if (
         state.status === 'failed' &&
         isTransientProcessingFailure(state.error) &&
         (autoRetryCountsRef.current[state.materialId] ?? 0) < 2
       ) {
         if (autoRetryingMaterialRef.current === state.materialId) return;
-
         autoRetryCountsRef.current[state.materialId] =
           (autoRetryCountsRef.current[state.materialId] ?? 0) + 1;
         autoRetryingMaterialRef.current = state.materialId;
@@ -272,10 +292,12 @@ export function PdfFirstUploadShell({
           message: 'Tuvimos una interrupción temporal. Reintentando automáticamente…',
           error: null,
         });
-
         window.setTimeout(() => {
+          if (!active) return;
           void processStudentMaterialAction(state.materialId)
-            .catch(() => undefined)
+            .catch(() => {
+              // El resultado definitivo se consulta por polling y es recuperable.
+            })
             .finally(() => {
               if (autoRetryingMaterialRef.current === state.materialId) {
                 autoRetryingMaterialRef.current = null;
@@ -285,18 +307,27 @@ export function PdfFirstUploadShell({
         return;
       }
 
-      if (
-        state.status === 'failed' &&
-        autoRetryingMaterialRef.current === state.materialId
-      ) {
+      if (state.status === 'failed' && autoRetryingMaterialRef.current === state.materialId) {
         return;
       }
-
       setProcessing(state);
       setDisplayProgress((current) => Math.max(current, state.progress));
       if (state.status === 'ready') router.refresh();
-    }, 1400);
-    return () => window.clearInterval(interval);
+    };
+
+    // Una sola solicitud a la vez, en vez de generar peticiones concurrentes
+    // cada 1,4 segundos cuando el servidor tarda en responder.
+    void poll();
+    const interval = window.setInterval(() => { void poll(); }, 3_500);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') void poll();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [processing?.materialId, processing?.status, router]);
 
   const reset = useCallback(() => {
@@ -491,11 +522,15 @@ export function PdfFirstUploadShell({
         message: 'PDF subido. Empezamos a procesarlo.',
         error: null,
       };
+      processingPollRef.current.reset();
       autoRetryCountsRef.current[result.materialId] = 0;
       autoRetryingMaterialRef.current = null;
       setProcessing(initialState);
       setDisplayProgress(10);
-      void processStudentMaterialAction(result.materialId);
+      void processStudentMaterialAction(result.materialId).catch(() => {
+        // El trabajador puede seguir activo aunque se corte la respuesta HTTP.
+        // El polling recupera el estado persistido sin volver a subir el PDF.
+      });
       preparedPath = null;
     } catch (error) {
       if (preparedPath) {
@@ -588,6 +623,14 @@ export function PdfFirstUploadShell({
 
     try {
       await processStudentMaterialAction(processing.materialId);
+    } catch {
+      setProcessing((current) => current ? {
+        ...current,
+        status: 'failed',
+        stage: 'failed',
+        message: 'No pudimos iniciar el reintento. Podés volver a intentarlo.',
+        error: 'Se interrumpió la conexión al iniciar el procesamiento.',
+      } : null);
     } finally {
       if (autoRetryingMaterialRef.current === processing.materialId) {
         autoRetryingMaterialRef.current = null;
