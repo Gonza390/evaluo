@@ -15,8 +15,9 @@ import {
 } from '@/lib/student-materials/canonical-glossary';
 import { completeStudentMaterialJob } from '@/lib/student-material-jobs';
 import {
+  downloadStudentMaterialFile,
   findStudentMaterialForProcessing,
-  loadStudentMaterialProcessingContext,
+  loadStudentMaterialProcessingMetadata,
   updateStudentMaterialProcessing,
 } from '@/lib/repositories/student-materials';
 import { createAdminClient } from '@/lib/supabase-admin';
@@ -36,6 +37,7 @@ import {
   selectVisionPageNumbers,
 } from '@/lib/student-materials/vision-extract';
 import { buildClientVisionPagePaths } from '@/lib/student-materials/client-vision-cache';
+import { ensureStudentMaterialThumbnail } from '@/lib/student-materials/thumbnail';
 import { isStudentMaterialVisualAnalysisEnabled } from '@/lib/student-materials/visual-analysis-policy';
 import { logError, logInfo } from '@/lib/observability';
 import { trackServerAnalyticsEvent } from '@/lib/server-analytics';
@@ -58,6 +60,7 @@ import {
 } from '@/lib/student-materials/processing-contract';
 import { getOrAssignGeminiPdfKeySlot } from '@/lib/ai/gemini-pdf-routing';
 import {
+  loadReusableSourceStageCheckpoint,
   loadSourceStageCheckpoint,
   saveSourceStageCheckpoint,
   markPedagogicalStageCheckpoint,
@@ -162,31 +165,69 @@ export async function processStudentMaterial(input: {
   });
 
   const extractionStartedAt = Date.now();
-  const context = await loadStudentMaterialProcessingContext(admin, material);
-  const buffer = Buffer.from(await context.file.arrayBuffer());
-  const contentFingerprint = createHash('sha256').update(buffer).digest('hex');
+  const context = await loadStudentMaterialProcessingMetadata(admin, material);
   const visualAnalysisEnabled =
     await isStudentMaterialVisualAnalysisEnabled(material.id);
   const canonicalPipelineVersion = buildCanonicalSourcePipelineVersion({
     visualAnalysisEnabled,
   });
-  // Fuente extraída validada e identificada por hash: si se interrumpe la
-  // generación del modelo, nunca volvemos a pagar el OCR ya completado.
-  const sourceCheckpoint = await loadSourceStageCheckpoint(
-    admin, material.id, contentFingerprint, canonicalPipelineVersion
+
+  // El archivo de un material es inmutable después de finalizar la carga.
+  // Por eso, si ya existe una etapa de fuente válida para esta versión del
+  // pipeline, podemos reanudar sin volver a descargar el PDF completo.
+  const reusableSource = await loadReusableSourceStageCheckpoint(
+    admin,
+    material.id,
+    canonicalPipelineVersion
   );
+
+  let buffer: Buffer | undefined;
+  let contentFingerprint = reusableSource?.fileHash ?? '';
+  let sourceCheckpoint = reusableSource?.source ?? null;
+
+  if (!sourceCheckpoint) {
+    const file = await downloadStudentMaterialFile(admin, material);
+    buffer = Buffer.from(await file.arrayBuffer());
+    contentFingerprint = createHash('sha256').update(buffer).digest('hex');
+
+    // Compatibilidad con checkpoints previos: validar por hash cuando ya
+    // descargamos el archivo por no haber encontrado uno reutilizable.
+    sourceCheckpoint = await loadSourceStageCheckpoint(
+      admin,
+      material.id,
+      contentFingerprint,
+      canonicalPipelineVersion
+    );
+  }
+
+  if (!sourceCheckpoint && !buffer) {
+    throw new Error('No pudimos recuperar la fuente del PDF para procesarla.');
+  }
+
   const {
     text: nativeText,
     pageCount,
     pages: nativePages,
-  } = sourceCheckpoint ?? await extractPdfTextAndPageCount(buffer);
+  } = sourceCheckpoint ?? await extractPdfTextAndPageCount(buffer!);
   const documentAnalysis = sourceCheckpoint?.documentAnalysis ??
-    analyzePdfDocument(buffer, nativeText, pageCount);
+    analyzePdfDocument(buffer!, nativeText, pageCount);
+
+  if (buffer) {
+    try {
+      await ensureStudentMaterialThumbnail(admin, material.file_path, buffer);
+    } catch (thumbnailError) {
+      logError('processStudentMaterial.thumbnail', thumbnailError, {
+        materialId: material.id,
+      });
+    }
+  }
+
   if (sourceCheckpoint) {
     logInfo('processStudentMaterial.sourceCheckpointHit', {
       materialId: material.id,
       pageCount,
       visionPages: sourceCheckpoint.visionPageNumbers.length,
+      skippedPdfDownload: Boolean(reusableSource),
     });
   }
   const requiredOcr =
@@ -227,7 +268,7 @@ export async function processStudentMaterial(input: {
         clientRenderedPageNumbers: [] as number[],
       }
     : await enhancePdfExtractionWithVision({
-        pdfBuffer: buffer,
+        pdfBuffer: buffer!,
         nativeText,
         nativePages,
         pageCount,
