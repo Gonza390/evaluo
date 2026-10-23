@@ -142,6 +142,8 @@ export function StudentMaterialExam({
   const savedAnswerIdsRef = useRef<string[]>([]);
   const [nextObjective, setNextObjective] = useState<NextStudyObjective | null>(null);
   const [objectiveStatus, setObjectiveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
+  // Descartar respuestas tardías cuando se reinicia una tanda o se reintenta el guardado.
+  const objectiveRequestRef = useRef(0);
   const correctionRef = useRef<HTMLElement | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [openDrafts, setOpenDrafts] = useState<Record<string, string>>({});
@@ -318,6 +320,7 @@ export function StudentMaterialExam({
     answerIds.current = {};
     sessionIdRef.current = crypto.randomUUID();
     savedAnswerIdsRef.current = [];
+    objectiveRequestRef.current += 1;
     setNextObjective(null);
     setObjectiveStatus('idle');
     setTomorrowStatus('idle');
@@ -582,12 +585,23 @@ export function StudentMaterialExam({
       setObjectiveStatus('error');
       return;
     }
+    const requestId = ++objectiveRequestRef.current;
     setObjectiveStatus('saving');
-    void saveNextStudyObjectiveAction({
-      materialId,
-      sessionId: sessionIdRef.current,
-      answerIds: [...savedAnswerIdsRef.current],
-    }).then((response) => {
+    // El próximo objetivo es opcional: un servidor lento no debe dejar el
+    // resultado esperando indefinidamente. El intento es idempotente y reintentable.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<{ success: false }>((resolve) => {
+      timer = window.setTimeout(() => resolve({ success: false }), 15_000);
+    });
+    void Promise.race([
+      saveNextStudyObjectiveAction({
+        materialId,
+        sessionId: sessionIdRef.current,
+        answerIds: [...savedAnswerIdsRef.current],
+      }),
+      timeout,
+    ]).then((response) => {
+      if (objectiveRequestRef.current !== requestId) return;
       if (!response.success || !response.objective) {
         setObjectiveStatus('error');
         return;
@@ -598,7 +612,11 @@ export function StudentMaterialExam({
         eventName: 'study_next_objective_created',
         metadata: { material_id: materialId, objective_id: response.objective.id, kind: response.objective.kind },
       });
-    }).catch(() => setObjectiveStatus('error'));
+    }).catch(() => {
+      if (objectiveRequestRef.current === requestId) setObjectiveStatus('error');
+    }).finally(() => {
+      if (timer !== undefined) window.clearTimeout(timer);
+    });
   };
 
   const continueTomorrow = async () => {
@@ -1136,11 +1154,11 @@ export function StudentMaterialExam({
             </Link>
           )}
           {!isSimulation && (
-            <Link href="/dashboard" onClick={(event) => {
-              if (objectiveStatus === 'saving' || objectiveStatus === 'idle') event.preventDefault();
-            }} aria-disabled={objectiveStatus === 'saving' || objectiveStatus === 'idle'}
-              className="border-border inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold aria-disabled:cursor-wait aria-disabled:opacity-60">
-              {objectiveStatus === 'saving' || objectiveStatus === 'idle' ? 'Guardando próximo objetivo…' : 'Terminar por hoy'}
+            <Link
+              href="/dashboard"
+              className="border-border inline-flex min-h-11 items-center justify-center rounded-lg border px-4 text-sm font-semibold"
+            >
+              Terminar por hoy
             </Link>
           )}
           <Button
@@ -1187,8 +1205,9 @@ export function StudentMaterialExam({
         });
       onComplete?.();
       setFinished(true);
-      // La próxima acción persistente se ofrece por ahora solo en la práctica general.
-      if (topicSectionIndex === undefined) persistNextObjective();
+      // También guardar el próximo objetivo al practicar un tema concreto.
+      // El resultado y la salida no dependen de que este guardado termine.
+      if (!isSimulation) persistNextObjective();
       return;
     }
     setCurrentIndex((index) => index + 1);
