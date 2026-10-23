@@ -80,7 +80,11 @@ export async function inspectPdfForClientVision(
           lowTextPages += 1;
         }
       } finally {
-        await page.cleanup().catch(() => undefined);
+        try {
+          page.cleanup();
+        } catch {
+          // Liberación best-effort del proxy de página.
+        }
       }
     }
 
@@ -143,7 +147,11 @@ export async function renderPdfPagesForClientVision(input: {
       const context = canvas.getContext('2d', { alpha: false });
 
       if (!context) {
-        await page.cleanup().catch(() => undefined);
+        try {
+          page.cleanup();
+        } catch {
+          // Liberación best-effort del proxy de página.
+        }
         continue;
       }
 
@@ -160,7 +168,11 @@ export async function renderPdfPagesForClientVision(input: {
         await input.onPage(pageNumber, blob);
         completed.push(pageNumber);
       } finally {
-        await page.cleanup().catch(() => undefined);
+        try {
+          page.cleanup();
+        } catch {
+          // Liberación best-effort del proxy de página.
+        }
         canvas.width = 0;
         canvas.height = 0;
       }
