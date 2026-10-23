@@ -18,6 +18,7 @@ type StudyCopy = {
   exampleTopic: string;
   exampleQuestion: string;
   exampleAnswer: string;
+  exampleOptions?: string[];
   searchContext: string;
   faqs: { question: string; answer: string }[];
 };
@@ -102,8 +103,13 @@ export const STUDY_MARKETS: Record<StudyMarket, StudyCopy> = {
     benefitDescription: 'Pon a prueba tu comprensión con preguntas, revisa las explicaciones y consulta los apartados originales cuando tengas dudas. El mismo PDF sirve para resumir, recordar y practicar.',
     exampleLabel: 'Ejemplo: temario de psicología',
     exampleTopic: 'Memoria de trabajo',
-    exampleQuestion: '¿Qué distingue a la memoria de trabajo de un simple almacenamiento temporal?',
-    exampleAnswer: 'Además de mantener información durante un periodo breve, permite manipularla para realizar tareas como razonar, comprender o resolver problemas.',
+    exampleQuestion: '¿Cuál de estas actividades exige utilizar la memoria de trabajo?',
+    exampleOptions: [
+      'Recordar automáticamente una contraseña muy conocida.',
+      'Mantener varios datos en mente y combinarlos para resolver un problema.',
+      'Reconocer una imagen que viste hace años.',
+    ],
+    exampleAnswer: 'La segunda opción. La memoria de trabajo permite mantener y manipular información de forma temporal para tareas como razonar o resolver problemas; no consiste solo en almacenarla.',
     searchContext: 'Úsalo con tus propios apuntes o un tema concreto de una asignatura, sin depender de una academia o universidad específica.',
     faqs: [
       { question: '¿Puedo crear tests a partir de mis apuntes en PDF?', answer: 'Evaluo genera preguntas para practicar a partir de tu documento. Las actividades son de estudio y no sustituyen los tests oficiales.' },
@@ -138,6 +144,7 @@ export function getStudyLandingMetadata(market: StudyMarket): Metadata {
       title: content.title + ' | Evaluo',
       description: content.description,
       locale: content.htmlLang.replace('-', '_'),
+      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Evaluo: estudiar con PDF y practicar preguntas' }],
     },
   };
 }
