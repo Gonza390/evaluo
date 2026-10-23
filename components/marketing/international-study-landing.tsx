@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, BookOpenCheck, CheckCircle2, FileText, Layers3, Target } from 'lucide-react';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
+import { InternationalDocumentLanguage } from '@/components/marketing/international-document-language';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
@@ -47,6 +48,7 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
 
   return (
     <div lang={copy.htmlLang} className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100">
+      <InternationalDocumentLanguage lang={copy.htmlLang} />
       <MarketingAnalyticsSlot />
       <JsonLd
         data={buildBreadcrumbJsonLd([
