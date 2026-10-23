@@ -13,7 +13,7 @@
   --s5: #64748b;
   --bd: #e2e8f0;
   --soft: #f8fafc;
-  --ok: #059669;
+  --ok: #047857;
   font-family: inherit;
   font-size: 16px;
   color: var(--s6);
@@ -663,7 +663,7 @@
     flex: 1;
     min-width: 0;
   }
-  .home-redesign .hero-preparation h3 {
+  .home-redesign .hero-preparation h2 {
     font-size: 18px !important;
     line-height: 1.35;
   }
