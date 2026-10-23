@@ -3,6 +3,9 @@ import { ArrowRight, BookOpenCheck, CheckCircle2, FileText, Layers3, Target } fr
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { buildBreadcrumbJsonLd } from '@/lib/seo';
+import { REGIONAL_STUDY_GUIDES } from '@/lib/regional-study-guides';
 import {
   STUDY_MARKETS,
   STUDY_MARKET_ORDER,
@@ -38,12 +41,20 @@ const studySteps = [
 
 export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
   const copy = STUDY_MARKETS[market];
+  const guide = REGIONAL_STUDY_GUIDES[market];
   const source = 'international-study-' + market;
   const demoUrl = '/demo/material-estudio?source=' + source;
 
   return (
     <div lang={copy.htmlLang} className="w-full overflow-x-clip bg-white text-slate-900 selection:bg-blue-100">
       <MarketingAnalyticsSlot />
+      <JsonLd
+        data={buildBreadcrumbJsonLd([
+          { name: 'Evaluo', path: '/' },
+          { name: 'Estudiar PDF con IA', path: '/estudiar-pdf-con-ia' },
+          { name: copy.country, path: copy.path },
+        ])}
+      />
       <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
         <PublicSiteHeader
           variant="landing"
@@ -139,14 +150,108 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
             <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_16px_42px_rgba(15,23,42,0.06)] sm:p-8">
               <p className="text-[11px] font-bold tracking-wide text-blue-700 uppercase">Tema: {copy.exampleTopic}</p>
               <h3 className="mt-4 text-lg font-bold leading-7 text-slate-950">{copy.exampleQuestion}</h3>
-              <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
-                <p className="text-xs font-bold text-blue-800">Ejemplo de explicación</p>
-                <p className="mt-2 text-sm leading-7 text-slate-700">{copy.exampleAnswer}</p>
-              </div>
+              <details className="group mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+                <summary className="cursor-pointer text-sm font-bold text-blue-800">
+                  Intenta responder y descubre la explicación
+                </summary>
+                <p className="mt-3 border-t border-blue-100 pt-3 text-sm leading-7 text-slate-700">{copy.exampleAnswer}</p>
+                <p className="mt-2 text-xs leading-5 text-slate-600">
+                  Comprueba si tu razonamiento coincide y qué parte del tema necesitas repasar.
+                </p>
+              </details>
               <p className="mt-4 text-xs leading-5 text-slate-500">
                 Ejemplo preparado para esta página; no representa una pregunta oficial ni un resultado de un estudiante.
               </p>
             </div>
+          </div>
+        </section>
+
+        <section className="py-16 sm:py-20" aria-labelledby="guia-regional">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <p className="text-xs font-bold tracking-[0.14em] text-blue-700 uppercase">
+              Guía práctica de estudio · {copy.country}
+            </p>
+            <h2 id="guia-regional" className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              {guide.question}
+            </h2>
+            <p className="mt-5 max-w-3xl text-base leading-8 text-slate-600">{guide.approach}</p>
+            <h3 className="mt-10 text-2xl font-bold tracking-tight text-slate-900">{guide.guideTitle}</h3>
+            <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-600">{guide.guideIntro}</p>
+            <ol className="mt-6 grid gap-4 sm:grid-cols-2">
+              {guide.steps.map((step, index) => (
+                <li key={step.title} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-6">
+                  <span className="text-xs font-bold text-blue-700">Paso {index + 1}</span>
+                  <h4 className="mt-2 text-lg font-bold text-slate-950">{step.title}</h4>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{step.description}</p>
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-12 grid gap-8 lg:grid-cols-[1fr_0.9fr]">
+              <div>
+                <h3 className="text-2xl font-bold tracking-tight text-slate-900">{guide.mistakesTitle}</h3>
+                <div className="mt-5 space-y-5">
+                  {guide.mistakes.map((item) => (
+                    <div key={item.title} className="border-l-2 border-blue-200 pl-4">
+                      <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
+                      <p className="mt-1 text-sm leading-7 text-slate-600">{item.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-[24px] border border-blue-100 bg-blue-50/60 p-6 sm:p-7">
+                <h3 className="text-xl font-bold text-slate-950">{guide.selfCheckTitle}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{guide.selfCheckIntro}</p>
+                <ul className="mt-5 space-y-4">
+                  {guide.selfCheckQuestions.map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm leading-6 text-slate-700">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href="#seleccionar-pdf"
+                  className="mt-7 inline-flex min-h-11 items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800"
+                >
+                  Empezar con mi PDF <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border-y border-slate-100 bg-slate-50/70 py-16 sm:py-20" aria-labelledby="otras-formas-de-estudiar">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <h2 id="otras-formas-de-estudiar" className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              Otras formas de trabajar con el mismo PDF
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+              No hace falta usar todas las herramientas a la vez. Elige la que responda a tu duda actual:
+              comprender un texto, recordar conceptos o relacionar ideas antes de practicar.
+            </p>
+            <div className="mt-7 grid gap-4 md:grid-cols-3">
+              {[
+                { title: 'Resumir un PDF con IA', href: '/funciones/resumir-pdf-con-ia', text: 'Extrae las ideas principales para orientar la primera lectura.' },
+                { title: 'Crear flashcards desde PDF', href: '/funciones/crear-flashcards-desde-pdf', text: 'Practica la recuperación de conceptos sin consultar la respuesta.' },
+                { title: 'Hacer un mapa mental desde PDF', href: '/funciones/crear-mapa-mental-desde-pdf', text: 'Visualiza cómo se relacionan temas, conceptos y apartados.' },
+              ].map((item) => (
+                <Link key={item.href} href={item.href} className="rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-blue-200 hover:shadow-sm">
+                  <h3 className="text-sm font-bold text-blue-700">{item.title} <ArrowRight className="ml-1 inline h-4 w-4" aria-hidden="true" /></h3>
+                  <p className="mt-2 text-xs leading-6 text-slate-600">{item.text}</p>
+                </Link>
+              ))}
+            </div>
+            <p className="mt-6 max-w-4xl text-xs leading-6 text-slate-500">
+              Por qué recomendamos practicar sin mirar: la investigación sobre aprendizaje reconoce los beneficios
+              de la práctica de recuperación y el estudio distribuido.
+              {' '}
+              <a href="https://www.psychologicalscience.org/publications/journals/pspi/learning-techniques.html" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline underline-offset-2">
+                Revisión científica de técnicas de estudio (Dunlosky y colaboradores).
+              </a>
+              {' '}
+              Las respuestas generadas automáticamente deben contrastarse con el material original.
+            </p>
           </div>
         </section>
 
