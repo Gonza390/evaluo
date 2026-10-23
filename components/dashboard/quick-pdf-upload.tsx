@@ -20,6 +20,7 @@ import {
 import { getStudentMaterialRoute } from '@/lib/routes';
 import { getSupabaseBrowserClient } from '@/lib/supabase-client';
 import { MAX_STUDENT_MATERIAL_FILE_SIZE_BYTES } from '@/lib/student-materials/validation';
+import { createSingleFlightPolling } from '@/lib/student-materials/processing-polling';
 
 type UniversidadOption = {
   id: string;
@@ -87,6 +88,7 @@ export function QuickPdfUpload({
   const [analyzeVisuals, setAnalyzeVisuals] = useState(false);
   const [visualQuota, setVisualQuota] = useState<StudentMaterialVisualAnalysisQuota | null>(null);
   const [visualQuotaLoading, setVisualQuotaLoading] = useState(true);
+  const processingPollRef = useRef(createSingleFlightPolling<Awaited<ReturnType<typeof getStudentMaterialProcessingStateAction>>>());
   const [uploading, setUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [processingMaterialId, setProcessingMaterialId] = useState<string | null>(null);
@@ -146,27 +148,40 @@ export function QuickPdfUpload({
 
   useEffect(() => {
     if (!processingMaterialId) return undefined;
-
-    const interval = window.setInterval(async () => {
-      const state = await getStudentMaterialProcessingStateAction(processingMaterialId);
+    let active = true;
+    const poll = async () => {
+      if (document.visibilityState === 'hidden') return;
+      const outcome = await processingPollRef.current.run(
+        () => getStudentMaterialProcessingStateAction(processingMaterialId)
+      );
+      if (!active || outcome.kind === 'busy') return;
+      if (outcome.kind === 'error') {
+        if (outcome.consecutiveFailures === 3) {
+          setProcessingMessage('Reconectando con el procesamiento de tu PDF…');
+        }
+        return;
+      }
+      const state = outcome.value;
       if (!state) return;
 
       setProcessingMessage(state.message || 'Preparando tu material...');
       setProcessingProgress(state.progress ?? 0);
 
       if (state.status === 'ready') {
-        window.clearInterval(interval);
         router.replace(getStudentMaterialRoute(processingMaterialId));
         router.refresh();
       } else if (state.status === 'failed') {
-        window.clearInterval(interval);
         setErrorMessage(state.error || 'No pudimos terminar de preparar el PDF.');
         setProcessingMaterialId(null);
         setUploading(false);
       }
-    }, 1800);
-
-    return () => window.clearInterval(interval);
+    };
+    void poll();
+    const interval = window.setInterval(() => { void poll(); }, 3_500);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
   }, [processingMaterialId, router]);
 
   const handleFile = (file: File | null) => {
@@ -298,7 +313,9 @@ export function QuickPdfUpload({
           ? 'PDF subido. Usaremos visión solo en las páginas que realmente lo necesiten.'
           : 'PDF subido. Estamos preparando tu espacio de estudio con extracción estándar.'
       );
-      void processStudentMaterialAction(result.materialId);
+      void processStudentMaterialAction(result.materialId).catch(() => {
+        // El estado de la tarea permanece en Supabase y el polling sigue activo.
+      });
     } catch (error) {
       if (preparedFilePath) {
         await cancelStudentMaterialUploadAction(preparedFilePath).catch(() => undefined);
