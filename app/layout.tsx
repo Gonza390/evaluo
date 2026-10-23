@@ -117,13 +117,13 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/evaluo-logo-icono.svg',
+        url: '/evaluo-icon.svg?v=20261023',
         type: 'image/svg+xml',
         sizes: 'any',
       },
     ],
-    shortcut: [{ url: '/evaluo-logo-icono.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/apple-icon.png' }],
+    shortcut: [{ url: '/evaluo-icon.svg?v=20261023', type: 'image/svg+xml' }],
+    apple: [{ url: '/apple-icon.png?v=20261023' }],
   },
 };
 
