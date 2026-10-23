@@ -12,6 +12,7 @@ module.exports = {
         'http://localhost:3000/pregunteros',
         'http://localhost:3000/uba-xxi/parciales',
         'http://localhost:3000/como-estudiar-ingreso-unlam',
+        'http://localhost:3000/es-es/estudiar-pdf-con-ia',
         'http://localhost:3000/pricing',
         'http://localhost:3000/demo/material-estudio',
       ],
