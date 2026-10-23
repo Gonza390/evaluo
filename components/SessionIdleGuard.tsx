@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase-client';
+import { isTerminalAuthSessionError } from '@/lib/auth-session-errors';
 
 const DEFAULT_IDLE_MINUTES = 60;
 const MIN_IDLE_MINUTES = 15;
@@ -49,6 +50,7 @@ export default function SessionIdleGuard() {
   const signingOutRef = useRef(false);
   const hasSessionRef = useRef(false);
   const lastWriteRef = useRef(0);
+  const sessionCheckInFlightRef = useRef(false);
 
   useEffect(() => {
     let disposed = false;
@@ -63,7 +65,7 @@ export default function SessionIdleGuard() {
       lastWriteRef.current = now;
     };
 
-    const expireSession = async () => {
+    const expireSession = async (reason: 'inactive' | 'auth-expired' = 'inactive') => {
       if (signingOutRef.current || disposed) return;
       signingOutRef.current = true;
       hasSessionRef.current = false;
@@ -75,35 +77,50 @@ export default function SessionIdleGuard() {
         if (disposed) return;
         const currentPath = `${window.location.pathname}${window.location.search}`;
         const nextPath = window.location.pathname.startsWith('/login') ? '/dashboard' : currentPath;
-        window.location.replace(`/login?reason=inactive&next=${encodeURIComponent(nextPath)}`);
+        window.location.replace(`/login?reason=${reason}&next=${encodeURIComponent(nextPath)}`);
       }
     };
 
     const checkSession = async (recordIfActive = false) => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      if (sessionCheckInFlightRef.current || signingOutRef.current) return;
+      sessionCheckInFlightRef.current = true;
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
-      if (disposed) return;
-      hasSessionRef.current = Boolean(session);
+        if (disposed) return;
+        if (error) {
+          if (isTerminalAuthSessionError(error)) await expireSession('auth-expired');
+          return; // No cerrar una sesión válida por un corte de red temporal.
+        }
 
-      if (!session) {
-        clearLastActivity();
-        return;
+        const hadSession = hasSessionRef.current;
+        hasSessionRef.current = Boolean(session);
+        if (!session) {
+          clearLastActivity();
+          if (hadSession) await expireSession('auth-expired');
+          return;
+        }
+
+        const lastActivity = readLastActivity();
+        if (lastActivity === null) {
+          recordActivity(true);
+          return;
+        }
+
+        if (Date.now() - lastActivity >= IDLE_TIMEOUT_MS) {
+          await expireSession('inactive');
+          return;
+        }
+
+        if (recordIfActive) recordActivity(true);
+      } catch {
+        // No generar promesas rechazadas si el proveedor tiene un corte temporal.
+      } finally {
+        sessionCheckInFlightRef.current = false;
       }
-
-      const lastActivity = readLastActivity();
-      if (lastActivity === null) {
-        recordActivity(true);
-        return;
-      }
-
-      if (Date.now() - lastActivity >= IDLE_TIMEOUT_MS) {
-        await expireSession();
-        return;
-      }
-
-      if (recordIfActive) recordActivity(true);
     };
 
     const handleActivity = () => recordActivity(false);
@@ -131,10 +148,14 @@ export default function SessionIdleGuard() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      const previouslyAuthenticated = hasSessionRef.current;
       hasSessionRef.current = Boolean(session);
       if (!session) {
         clearLastActivity();
+        if (event === 'SIGNED_OUT' && previouslyAuthenticated && !signingOutRef.current) {
+          void expireSession('auth-expired');
+        }
         return;
       }
 
