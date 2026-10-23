@@ -8,9 +8,7 @@ import {
   finalizeStudentMaterialUploadAction,
   prepareStudentMaterialUploadAction,
 } from '@/app/dashboard/materiales/upload-actions';
-import {
-  processStudentMaterialAction,
-} from '@/app/dashboard/materiales/actions';
+import { processStudentMaterialAction } from '@/app/dashboard/materiales/processing-actions';
 import {
   getStudentMaterialVisualAnalysisQuotaAction,
   updateStudentMaterialVisualAnalysisAction,
