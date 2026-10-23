@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
 import { getDashboardMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 import { buildEvaluoEmailHtml, escapeEmailHtml } from '@/lib/email/evaluo-email';
 
 const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires';
@@ -339,6 +340,7 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     sent: 0,
     duplicates: 0,
     missingEmail: 0,
+    skippedFrequency: 0,
     failed: 0,
   };
 
@@ -350,6 +352,12 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     }
 
     if (dryRun) continue;
+    // One-day exam alerts are critical and never silently suppressed.
+    // Non-urgent seven/three-day nudges respect the lifecycle email budget.
+    if (candidate.days !== 1 && !(await canSendPdfStudyNudge(candidate.userId))) {
+      summary.skippedFrequency += 1;
+      continue;
+    }
 
     const { data: reservation, error: reservationError } = await db
       .from('email_reminder_deliveries')
