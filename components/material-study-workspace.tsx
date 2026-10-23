@@ -536,12 +536,14 @@ export function MaterialStudyWorkspace({
               pending_count: count,
               flow_version: SUMMARY_FLOW_VERSION,
             });
-            trackMarketingEvent('summary_completion_popup_viewed', {
-              material_id: materialId,
-              pending_count: count,
-              flow_version: SUMMARY_FLOW_VERSION,
-            });
           }
+          // También medir lecturas legítimas de PDFs compartidos: el popup se
+          // muestra a visitantes autenticados, no únicamente al propietario.
+          trackMarketingEvent('summary_completion_popup_viewed', {
+            material_id: materialId,
+            pending_count: count,
+            flow_version: SUMMARY_FLOW_VERSION,
+          });
           setSummaryCompletionOpen(true);
         });
       }, 4000);
@@ -1143,7 +1145,7 @@ export function MaterialStudyWorkspace({
       const source = resolvePracticeEntrySource(entry);
       const entryId = crypto.randomUUID();
       setPracticeEntry({ source, id: entryId });
-      if (isOwner && !demo) {
+      if (!demo) {
         trackMarketingEvent('student_material_practice_entry_opened', {
           material_id: materialId,
           flow_version: MATERIAL_PRACTICE_FLOW_VERSION,
