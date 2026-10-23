@@ -336,13 +336,11 @@ async function loadClientRenderedPages(
     })
   );
 
-  return new Map(
-    entries
-      .filter(
-        (entry): entry is { pageNumber: number; image: Buffer } => Boolean(entry)
-      )
-      .map((entry) => [entry.pageNumber, entry.image] as const)
-  );
+  const result = new Map<number, Buffer>();
+  for (const entry of entries) {
+    if (entry) result.set(entry.pageNumber, entry.image);
+  }
+  return result;
 }
 
 export async function enhancePdfExtractionWithVision(input: {
