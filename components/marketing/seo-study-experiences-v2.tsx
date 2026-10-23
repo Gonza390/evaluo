@@ -730,6 +730,32 @@ export function EstudiarPdfExperience() {
           ]}
         />
 
+        <section className="border-y border-slate-100 bg-slate-50/70 py-14" aria-labelledby="estudiar-pdf-en-otros-paises">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <p className="text-xs font-bold tracking-wide text-blue-700 uppercase">Evaluo internacional</p>
+            <h2 id="estudiar-pdf-en-otros-paises" className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              Estudiá con tus apuntes desde otros países
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+              La experiencia parte del PDF de cada estudiante. También preparamos guías en español
+              para quienes buscan crear preguntas, organizar una guía de estudio o preparar exámenes
+              en México, Colombia, España y otros países.
+            </p>
+            <nav aria-label="Versiones internacionales para estudiar PDF" className="mt-6 flex flex-wrap gap-3">
+              {[
+                { href: '/es-mx/estudiar-pdf-con-ia', title: 'México: guía de estudio con IA' },
+                { href: '/es-co/estudiar-pdf-con-ia', title: 'Colombia: preparar parciales' },
+                { href: '/es-es/estudiar-pdf-con-ia', title: 'España: estudiar para un test' },
+                { href: '/es/estudiar-pdf-con-ia', title: 'Estudiar PDF en español internacional' },
+              ].map(({ href, title }) => (
+                <Link key={href} href={href} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-blue-700 transition hover:border-blue-200 hover:bg-blue-50">
+                  {title} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </section>
+
         <FaqSection
           title="Antes de estudiar tu PDF con IA"
           items={[
