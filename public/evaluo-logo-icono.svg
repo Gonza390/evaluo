@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"><title>Evaluo</title><g transform="scale(1.875)">
+
+<rect width="64" height="64" rx="14" fill="#2563EB"/>
+<path d="M21 11 H38 L49 22 V47 Q49 53 43 53 H21 Q15 53 15 47 V17 Q15 11 21 11 Z" fill="#FFFFFF" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round"/>
+<path d="M38 11 V19 Q38 22 41 22 H49 Z" fill="#FFC933" stroke="#1B1B3A" stroke-width="3" stroke-linejoin="round"/>
+<circle cx="25" cy="33" r="3.2" fill="#1B1B3A"/>
+<circle cx="39" cy="33" r="3.2" fill="#1B1B3A"/>
+<path d="M26 41 Q32 46.5 38 41" stroke="#1B1B3A" stroke-width="3" stroke-linecap="round" fill="none"/>
+</g></svg>
