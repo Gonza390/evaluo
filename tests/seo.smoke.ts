@@ -391,3 +391,46 @@ assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
   'market,',
   'isInternational',
 ]);
+
+
+/* Validación de contenido útil, enlazado e indexación de mercados internacionales. */
+assertIncludesAll('lib/regional-study-guides.ts', [
+  'REGIONAL_STUDY_GUIDES',
+  'es-mx',
+  'es-co',
+  'es-es',
+  'guideTitle',
+  'selfCheckQuestions',
+  'guía de estudio',
+  'parcial',
+  'temario',
+]);
+assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  'REGIONAL_STUDY_GUIDES[market]',
+  'guide.guideTitle',
+  'guide.steps.map(',
+  'guide.mistakes.map(',
+  'guide.selfCheckQuestions.map(',
+  'copy.exampleOptions.map(',
+  'Intenta responder y descubre la explicación',
+  'buildBreadcrumbJsonLd',
+  'InternationalDocumentLanguage',
+  '/funciones/resumir-pdf-con-ia',
+  '/funciones/crear-flashcards-desde-pdf',
+  '/funciones/crear-mapa-mental-desde-pdf',
+]);
+assertIncludesAll('components/marketing/seo-study-experiences-v2.tsx', [
+  '/es-mx/estudiar-pdf-con-ia',
+  '/es-co/estudiar-pdf-con-ia',
+  '/es-es/estudiar-pdf-con-ia',
+  '/es/estudiar-pdf-con-ia',
+]);
+assertIncludesAll('components/footer-home.tsx', [
+  'href="/es/estudiar-pdf-con-ia"',
+]);
+assertIncludesAll('lib/analytics-client.ts', [
+  "return 'seo-international-study-pdf';",
+]);
+assertIncludesAll('lighthouserc.cjs', [
+  '/es-es/estudiar-pdf-con-ia',
+]);
