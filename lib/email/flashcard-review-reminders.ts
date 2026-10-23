@@ -3,6 +3,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 import { buildEvaluoEmailHtml, escapeEmailHtml } from '@/lib/email/evaluo-email';
 
 type ReminderRow = {
@@ -117,10 +118,22 @@ export async function runFlashcardReviewReminderDispatch(options?: { dryRun?: bo
     cancelled: 0,
     failed: 0,
     skipped: 0,
+    deferredFrequency: 0,
   };
 
   for (const reminder of reminders) {
     if (dryRun) continue;
+
+    if (!(await canSendPdfStudyNudge(reminder.user_id))) {
+      // Preserve the user's requested flashcard reminder and retry tomorrow.
+      const nextDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const { error: postponeError } = await db.from('flashcard_review_reminders')
+        .update({ scheduled_for: nextDate, updated_at: new Date().toISOString() })
+        .eq('id', reminder.id).eq('status', 'pending');
+      if (postponeError) throw postponeError;
+      summary.deferredFrequency += 1;
+      continue;
+    }
 
     const { data: claimed, error: claimError } = await db
       .from('flashcard_review_reminders')

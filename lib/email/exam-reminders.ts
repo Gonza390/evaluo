@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
 import { getDashboardMateriaRoute, getStudentMaterialRoute } from '@/lib/routes';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 import { buildEvaluoEmailHtml, escapeEmailHtml } from '@/lib/email/evaluo-email';
 
 const ARGENTINA_TIME_ZONE = 'America/Argentina/Buenos_Aires';
@@ -97,6 +98,8 @@ function buildExamReminderMessage(input: {
   days: ReminderDays;
   materialTitle: string;
   destinationUrl: string;
+  hasMaterial: boolean;
+  pendingTopics: string[];
 }) {
   const subject = getReminderSubject(input.days, input.materia);
   const heading =
@@ -106,19 +109,28 @@ function buildExamReminderMessage(input: {
         ? 'Te quedan 3 días'
         : 'Mañana rendís';
 
-  const bodyHtml = `<p style="margin:0 0 12px;">Tu examen de <strong>${escapeEmailHtml(
-    input.materia
-  )}</strong> está programado para <strong>${escapeEmailHtml(input.examDate)}</strong>.</p>
-<p style="margin:0;">Volvé a <strong>${escapeEmailHtml(
-    input.materialTitle
-  )}</strong> y seguí estudiando desde el material que ya preparaste.</p>`;
+  const topics = [...new Set(input.pendingTopics.map((topic) => topic.trim()).filter(Boolean))].slice(0, 3);
+  const guidance = input.days === 7
+    ? 'Todavía tenés tiempo para organizar el repaso y practicar los temas que te cuestan.'
+    : input.days === 3
+      ? 'Enfocate en los temas que te costaron y comprobá qué entendiste con una nueva práctica.'
+      : 'Hoy conviene repasar los puntos que te costaron, sin empezar todo de nuevo.';
+  const topicsHtml = topics.length
+    ? `<p style="margin:14px 0 8px;font-weight:700;color:#0F1B3D;">Según tus respuestas, estos temas necesitan refuerzo:</p><ul style="margin:0;padding-left:20px;">${topics.map((topic) => `<li style="margin:0 0 6px;">${escapeEmailHtml(topic)}</li>`).join('')}</ul>`
+    : input.hasMaterial
+      ? '<p style="margin:12px 0 0;">Si todavía no practicaste lo suficiente, una tanda de ejercicios puede ayudarte a identificar qué reforzar.</p>'
+      : '<p style="margin:12px 0 0;">Entrá a tu espacio y prepará una práctica con tus apuntes.</p>';
+  const bodyHtml = `<p style="margin:0 0 12px;">Tu examen de <strong>${escapeEmailHtml(input.materia)}</strong> está programado para <strong>${escapeEmailHtml(input.examDate)}</strong>.</p>
+<p style="margin:0 0 12px;">${escapeEmailHtml(guidance)}</p>
+${input.hasMaterial ? `<p style="margin:0;">Podés continuar con <strong>${escapeEmailHtml(input.materialTitle)}</strong>.</p>` : ''}
+${topicsHtml}`;
 
   const html = buildEvaluoEmailHtml({
     firstname: input.firstname,
     heading,
     eyebrow: input.materia,
     bodyHtml,
-    ctaLabel: 'Continuar estudiando',
+    ctaLabel: topics.length ? 'Repasar mis temas pendientes' : input.hasMaterial ? 'Practicar con mi PDF' : 'Ir a mi espacio',
     ctaUrl: input.destinationUrl,
     reason: 'Te enviamos este recordatorio porque registraste esta fecha de examen en Evaluo.',
   });
@@ -137,8 +149,8 @@ function buildTrackedUrl(path: string, days: ReminderDays, content: string) {
   return url.toString();
 }
 
-function buildMaterialUrl(materialId: string, days: ReminderDays) {
-  return buildTrackedUrl(getStudentMaterialRoute(materialId), days, 'continue_studying');
+function buildMaterialUrl(materialId: string, days: ReminderDays, hasPending: boolean) {
+  return buildTrackedUrl(`${getStudentMaterialRoute(materialId)}?tab=${hasPending ? 'progreso' : 'ejercicios'}`, days, hasPending ? 'topic_review' : 'start_practice');
 }
 
 function buildMateriaWorkspaceUrl(materiaId: string, days: ReminderDays) {
@@ -287,6 +299,22 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     ((profilesResult.data ?? []) as ProfileRow[]).map((profile) => [profile.id, profile.nombre])
   );
 
+  const linkedMaterialIds = [...new Set(candidates.map((candidate) => candidate.materialId).filter((id): id is string => Boolean(id)))];
+  const errorsResult = linkedMaterialIds.length
+    ? await db.from('study_errors').select('user_id,student_material_id,topic')
+        .eq('status', 'pending').in('student_material_id', linkedMaterialIds).limit(2000)
+    : { data: [], error: null };
+  if (errorsResult.error) throw errorsResult.error;
+  const pendingTopics = new Map<string, Set<string>>();
+  for (const row of (errorsResult.data ?? []) as Array<{ user_id: string; student_material_id: string | null; topic: string | null }>) {
+    const topic = row.topic?.trim();
+    if (!topic || !row.student_material_id) continue;
+    const key = `${row.user_id}:${row.student_material_id}`;
+    const topics = pendingTopics.get(key) ?? new Set<string>();
+    topics.add(topic);
+    pendingTopics.set(key, topics);
+  }
+
   const userById = new Map<
     string,
     Awaited<ReturnType<typeof admin.auth.admin.getUserById>>['data']['user']
@@ -312,6 +340,7 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     sent: 0,
     duplicates: 0,
     missingEmail: 0,
+    skippedFrequency: 0,
     failed: 0,
   };
 
@@ -323,6 +352,12 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
     }
 
     if (dryRun) continue;
+    // One-day exam alerts are critical and never silently suppressed.
+    // Non-urgent seven/three-day nudges respect the lifecycle email budget.
+    if (candidate.days !== 1 && !(await canSendPdfStudyNudge(candidate.userId))) {
+      summary.skippedFrequency += 1;
+      continue;
+    }
 
     const { data: reservation, error: reservationError } = await db
       .from('email_reminder_deliveries')
@@ -363,8 +398,11 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
         candidate.materiaFallback ||
         'tu materia';
       const formattedExamDate = formatExamDate(candidate.examDate);
+      const topics = candidate.materialId
+        ? [...(pendingTopics.get(`${candidate.userId}:${candidate.materialId}`) ?? [])].slice(0, 3)
+        : [];
       const materialUrl = candidate.materialId
-        ? buildMaterialUrl(candidate.materialId, candidate.days)
+        ? buildMaterialUrl(candidate.materialId, candidate.days, topics.length > 0)
         : null;
       const materiaUrl =
         !materialUrl && candidate.materiaId
@@ -380,6 +418,8 @@ export async function runExamReminderDispatch(options?: { dryRun?: boolean }) {
         days: candidate.days,
         materialTitle: displayTitle,
         destinationUrl,
+        hasMaterial: Boolean(candidate.materialId),
+        pendingTopics: topics,
       });
 
       const senderResult = await sendSenderTransactional({
