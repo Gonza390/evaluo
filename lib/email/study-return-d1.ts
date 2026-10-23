@@ -5,6 +5,7 @@ import { getDashboardNextStudyAction, type DashboardNextStudyAction } from '@/li
 import type { StudentMaterial } from '@/lib/data/student-materials';
 import { logError, logInfo } from '@/lib/observability';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 import { getRealStudyMaterialId } from '@/lib/email/study-return-material-id';
 
 const CAMPAIGN_KEY = 'study_return_d1_v1';
@@ -271,6 +272,7 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     skippedDisabled: 0,
     skippedAdmin: 0,
     skippedRecentEmail: 0,
+    skippedFrequency: 0,
     skippedInvalid: 0,
     failed: 0,
     actions: {
@@ -392,6 +394,10 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
     }
     if (blockedUsers.has(candidate.userId)) {
       summary.skippedRecentEmail += 1;
+      continue;
+    }
+    if (!dryRun && !(await canSendPdfStudyNudge(candidate.userId))) {
+      summary.skippedFrequency += 1;
       continue;
     }
 
