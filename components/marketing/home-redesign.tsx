@@ -192,9 +192,9 @@ export function HomeRedesign({ primaryHref }: { primaryHref: string }) {
                     <div className="eb" style={{ marginBottom: '6px' }}>
                       Nivel de preparación
                     </div>
-                    <h3 style={{ fontSize: '20px', letterSpacing: '-.03em' }}>
+                    <h2 style={{ fontSize: '20px', letterSpacing: '-.03em' }}>
                       Vas bien, pero todavía no estás listo.
-                    </h3>
+                    </h2>
                     <div style={{ fontSize: '12px', marginTop: '6px' }}>
                       Examen: lun 26 oct · <b style={{ color: 'var(--t)' }}>quedan 10 días</b>
                     </div>
