@@ -286,11 +286,14 @@ export function IaParaEstudiantesExperience() {
               Subí los apuntes o PDFs que realmente tenés que rendir y usá IA para entender conceptos, crear resúmenes y flashcards, practicar preguntas y detectar qué necesitás reforzar antes de un parcial o final. El material original sigue siendo la fuente del recorrido.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <PrimaryCta label="Subir mis apuntes o PDF" trackingPrefix="seo_ia_estudiantes_v2" location="hero" />
+              <PrimaryCta label="Estudiar mis apuntes con IA" trackingPrefix="seo_ia_estudiantes_v2" location="hero" />
               <DemoCta trackingPrefix="seo_ia_estudiantes_v2" label="Ver cómo se estudia en Evaluo" />
             </div>
             <p className="mt-4 text-xs font-medium text-slate-500">
-              Pensado para parciales, finales, ingresos y materias universitarias donde necesitás pasar de leer a comprobar qué sabés.
+              IA para estudiar parciales y finales: resumí un PDF, organizá temas en un mapa mental, repasá flashcards y practicá preguntas creadas a partir de tus apuntes.
+            </p>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-600">
+              ¿Buscás una IA para estudiantes universitarios? Elegí la tarea que necesitás resolver: comprender el contenido, memorizar conceptos o comprobar cuánto sabés antes de rendir.
             </p>
 
             <div className="mt-12 grid gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
@@ -511,7 +514,7 @@ export function EstudiarPdfExperience() {
                 Estudiá un PDF con IA: <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">resumen, conceptos, flashcards y práctica</span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Elegí el PDF que realmente tenés que estudiar y convertilo en una sesión conectada de resumen, conceptos, flashcards y preguntas de práctica. No te pedimos registro hasta que decidas crear el material.
+                Para estudiar un PDF con inteligencia artificial, primero seleccioná tus apuntes. Evaluo organiza el documento en resumen, glosario y mapa mental, y te permite repasar con flashcards y practicar ejercicios del mismo contenido. Elegís el archivo antes de registrarte.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
@@ -528,7 +531,7 @@ export function EstudiarPdfExperience() {
               </div>
             </div>
 
-            <PdfFirstLandingUploader />
+            <PdfFirstLandingUploader trackingLocation="seo_estudiar_pdf_ia" sourceKey="estudiar-pdf-con-ia" />
           </div>
         </section>
 
@@ -660,9 +663,22 @@ export function ResumirPdfExperience() {
                 Convertí un PDF largo en una estructura de estudio con ideas centrales y conceptos relacionados. Después podés volver al material, llevar esos conceptos a flashcards o continuar con ejercicios sobre la misma fuente.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <PrimaryCta label="Resumir mi PDF" trackingPrefix="seo_resumir_pdf_ia_v2" location="hero" />
+                <a href="#elegir-pdf-para-resumir" className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)]">
+                <UploadCloud className="h-4.5 w-4.5" aria-hidden="true" />
+                Elegir PDF para resumir
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
                 <DemoCta trackingPrefix="seo_resumir_pdf_ia_v2" label="Ver un resumen dentro de Evaluo" />
               </div>
+            </div>
+
+            <div id="elegir-pdf-para-resumir" className="mx-auto mt-12 max-w-2xl scroll-mt-24">
+              <h2 className="mb-3 text-center text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Cómo resumir un PDF con IA: empezá con tus apuntes</h2>
+              <p className="mx-auto mb-6 max-w-xl text-center text-sm leading-7 text-slate-600">
+                Elegí tu archivo PDF. Después, al crear el material en Evaluo, vas a poder consultar el resumen con ideas principales y conceptos del documento, y seguir practicando sin perder la fuente.
+              </p>
+              <PdfFirstLandingUploader trackingLocation="seo_resumir_pdf_ia" sourceKey="resumir-pdf-con-ia" />
+              <p className="mt-4 text-center text-xs text-slate-500">No necesitás registrarte para elegir el PDF; la cuenta se solicita cuando decidís crear el material.</p>
             </div>
 
             <div className="mt-12 grid gap-4 lg:grid-cols-[1fr_64px_1fr] lg:items-stretch">
