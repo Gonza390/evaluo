@@ -5,16 +5,16 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/funciones/resumir-pdf-con-ia';
 
 export const metadata: Metadata = {
-  title: 'Resumir PDF con IA para estudiar y practicar',
+  title: 'Resumir PDF con IA: resumen de apuntes para estudiar',
   description:
-    'Resumí un PDF con IA para estudiar: ordená ideas y conceptos y seguí con glosario, flashcards y ejercicios sobre el mismo material en Evaluo.',
+    'Resumir PDF con IA para estudiar: elegí tus apuntes, obtené un resumen con ideas y conceptos clave y continuá practicando sobre el mismo documento en Evaluo.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Resumir PDF con IA para estudiar y practicar | Evaluo',
+    title: 'Resumir PDF con IA: resumen de apuntes para estudiar | Evaluo',
     description:
-      'Convertí un PDF largo en una estructura de estudio y seguí trabajando los mismos conceptos con flashcards y ejercicios.',
+      'Elegí tu PDF, organizá las ideas clave en un resumen y seguí estudiando con flashcards y ejercicios del mismo material.',
     url: toAbsoluteUrl(path),
   },
 };
