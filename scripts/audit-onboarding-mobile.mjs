@@ -73,6 +73,61 @@ try {
     console.log(name+'/finished',JSON.stringify(end));
     if(end.guide||end.examples)failures.push(name+': guide or fake progress persisted after completion');
   }
+  // Recorremos también el lector real con contenido del PDF de prueba sin
+  // onboarding: las pestañas no deben desbordar ni desaparecer en móviles.
+  const readerBase = 'http://127.0.0.1:3150/preview/progreso-pdf';
+  const readerMetrics = '(() => {'
+    + 'const nav=document.querySelector("[data-pdf-mobile-navigation]");'
+    + 'const root=document.documentElement;'
+    + 'const region=Array.from(document.querySelectorAll("[role=region][aria-label]")).find(n=>n.getAttribute("aria-label")==="Contenido de estudio"&&n.getBoundingClientRect().width>0);'
+    + 'const rect=n=>{if(!n)return null;const r=n.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,width:r.width,height:r.height}};'
+    + 'const active=nav?.querySelector("button[aria-current=page]");'
+    + 'return {width:innerWidth,height:innerHeight,scrollWidth:root.scrollWidth,nav:rect(nav),region:rect(region),active:active?.textContent?.trim()||null};'
+    + '})()';
+  for (const [width,height,name] of devices) {
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:true});
+    await call('Emulation.setTouchEmulationEnabled',{enabled:true});
+    await call('Page.navigate',{url:readerBase+'?mobile_qa='+width});
+    await waitFor(async()=>{
+      const x=await evaluate(readerMetrics);
+      return x.nav&&x.region&&x.active?.includes('Resumen');
+    },'PDF reader ready '+name,130);
+    for (const tab of ['Resumen','Flashcards','Práctica','Progreso']) {
+      const changed = await evaluate('(() => {const nav=document.querySelector("[data-pdf-mobile-navigation]");const b=Array.from(nav?.querySelectorAll("button")||[]).find(n=>n.textContent.trim().startsWith('+JSON.stringify(tab)+'));if(!b)return false;b.click();return true})()');
+      if(!changed){failures.push('reader '+name+'/'+tab+': tab button missing');continue}
+      await waitFor(async()=>{
+        const x=await evaluate(readerMetrics);
+        return x.active?.includes(tab);
+      },'PDF reader tab '+tab+' '+name,70);
+      await sleep(400);
+      const x=await evaluate(readerMetrics),key='reader '+name+'/'+tab;
+      console.log(key,JSON.stringify(x));
+      if(x.scrollWidth>width+2)failures.push(key+': horizontal overflow '+x.scrollWidth+' > '+width);
+      if(!x.nav||x.nav.left < -1||x.nav.right>width+1||x.nav.bottom>height+2||x.nav.top<0)
+        failures.push(key+': navigation outside viewport '+JSON.stringify(x.nav));
+      if(!x.region||x.region.width<120||x.region.right>width+3)
+        failures.push(key+': study region outside viewport '+JSON.stringify(x.region));
+      const shot=await call('Page.captureScreenshot',{format:'png',fromSurface:true});
+      await writeFile('artifacts/mobile-onboarding/reader-'+name+'-'+tab.toLowerCase()+'.png',Buffer.from(shot.result.data,'base64'));
+    }
+  }
+  // Completamos la matriz responsive con tablet y escritorio.
+  for (const [width,height] of [[768,1024],[1024,768],[1440,900]]) {
+    await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await call('Emulation.setTouchEmulationEnabled',{enabled:false});
+    await call('Page.navigate',{url:readerBase+'?desktop_qa='+width});
+    await waitFor(async()=>{
+      const x=await evaluate(readerMetrics);
+      return x.region&&x.region.width>100;
+    },'PDF reader desktop '+width,130);
+    const x=await evaluate(readerMetrics);
+    console.log('reader desktop/'+width,JSON.stringify(x));
+    if(x.scrollWidth>width+2)failures.push('reader desktop/'+width+': horizontal overflow '+x.scrollWidth);
+    if(x.nav&&x.nav.width>0)failures.push('reader desktop/'+width+': mobile navigation still visible');
+    const shot=await call('Page.captureScreenshot',{format:'png',fromSurface:true});
+    await writeFile('artifacts/mobile-onboarding/reader-desktop-'+width+'.png',Buffer.from(shot.result.data,'base64'));
+  }
+
   console.log('MOBILE_AUDIT_RESULT',failures.length?'FAIL':'PASS',JSON.stringify(failures));
   if(failures.length)process.exitCode=1;
 }catch(e){console.error('MOBILE_AUDIT_ERROR',e);process.exitCode=1}
