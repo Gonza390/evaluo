@@ -351,3 +351,43 @@ const packageJson = source('package.json');
 assert.ok(packageJson.includes('"tw-animate-css"'), 'tw-animate-css must remain installed');
 
 console.log('SEO smoke tests passed.');
+/* Expansión internacional: rutas estáticas, hreflang, contenidos y PDF-first. */
+for (const market of ['es', 'es-mx', 'es-co', 'es-es']) {
+  assertIncludesAll(`app/${market}/estudiar-pdf-con-ia/page.tsx`, [
+    'InternationalStudyLanding',
+    'getStudyLandingMetadata',
+  ]);
+  assert.ok(
+    source('app/sitemap.ts').includes(`/${market}/estudiar-pdf-con-ia`),
+    `International market ${market} needs an indexable sitemap URL`,
+  );
+}
+assertIncludesAll('lib/international-study-landings.ts', [
+  "es: toAbsoluteUrl(STUDY_MARKETS.es.path)",
+  "'es-MX':",
+  "'es-CO':",
+  "'es-ES':",
+  "'es-AR':",
+  "'x-default':",
+  'canonical: url',
+  'robots: { index: true, follow: true }',
+  'guía de estudio',
+  'parciales',
+  'tipo test',
+]);
+assertIncludesAll('app/estudiar-pdf-con-ia/page.tsx', [
+  'languages: STUDY_HREFLANG',
+]);
+assertIncludesAll('components/marketing/international-study-landing.tsx', [
+  'PdfFirstLandingUploader',
+  'market={market}',
+  'locale="neutral"',
+  'id="seleccionar-pdf"',
+  'STUDY_MARKET_ORDER',
+]);
+assertIncludesAll('components/marketing/pdf-first-landing-uploader.tsx', [
+  "locale?: 'neutral'",
+  'market?: string',
+  'market,',
+  'isInternational',
+]);
