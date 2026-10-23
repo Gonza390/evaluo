@@ -35,7 +35,7 @@ export function buildEvaluoEmailHtml(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="margin:0 0 28px;padding:14px 18px;background:#174BBD;border-radius:14px;"><img src="https://cdn.sender.net/email_images/455373/images/0/evaluo_logo_blanco_email.png" width="176" height="64" alt="Evaluo" style="display:block;width:176px;height:64px;border:0;" /></div>
+                <div style="margin-bottom:28px;"><img src="https://evaluo.com.ar/evaluo-logo-email.png" width="180" height="66" alt="Evaluo" style="display:block;width:180px;height:66px;border:0;" /></div>
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 ${safeEyebrow ? `<p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeEyebrow}</p>` : ''}
