@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { EstudiarPdfExperience } from '@/components/marketing/seo-study-experiences-v2';
 import { toAbsoluteUrl } from '@/lib/site';
+import { STUDY_HREFLANG } from '@/lib/international-study-landings';
 
 const path = '/estudiar-pdf-con-ia';
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   title: 'Estudiar PDF con IA: resumen, flashcards y ejercicios',
   description:
     'Estudiá un PDF con IA: elegí tus apuntes, creá resumen, mapa mental y flashcards y practicá ejercicios sobre el mismo documento en Evaluo.',
-  alternates: { canonical: toAbsoluteUrl(path) },
+  alternates: { canonical: toAbsoluteUrl(path), languages: STUDY_HREFLANG },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
