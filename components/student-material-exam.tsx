@@ -40,6 +40,7 @@ import {
   visiblePracticeTopicResults,
   getPracticeTopicPerformance,
 } from '@/lib/student-materials/practice-result-topics';
+import { practiceScope, type PracticeEntrySource } from '@/lib/student-materials/practice-entry';
 import {
   practiceBankSignature,
   practiceDraftKey,
@@ -48,6 +49,9 @@ import {
 } from '@/lib/student-materials/practice-session';
 
 type StudentMaterialExamProps = {
+  /** Fuente de la navegación; no equivale al inicio real de las preguntas. */
+  entrySource?: PracticeEntrySource;
+  entryId?: string | null;
   artifacts: PedagogicalArtifacts;
   materialId: string;
   onComplete?: () => void;
@@ -67,6 +71,8 @@ type OpenAssessment = 'got_it' | 'review';
 export function StudentMaterialExam({
   artifacts,
   materialId,
+  entrySource = 'direct_tab',
+  entryId = null,
   onComplete,
   onContinueToTopic,
   onReturnToTopic,
@@ -127,6 +133,12 @@ export function StudentMaterialExam({
   const [canRestoreAfterRefresh, setCanRestoreAfterRefresh] = useState(false);
   const answerIds = useRef<Record<string, string>>({});
   const sessionIdRef = useRef('');
+  // Congelar la fuente al comenzar: cambiar de pestaña no altera
+  // el origen de una práctica que ya está en marcha.
+  const attemptEntryRef = useRef<{ source: PracticeEntrySource; id: string | null }>({
+    source: entrySource,
+    id: entryId,
+  });
   const savedAnswerIdsRef = useRef<string[]>([]);
   const [nextObjective, setNextObjective] = useState<NextStudyObjective | null>(null);
   const [objectiveStatus, setObjectiveStatus] = useState<'idle'|'saving'|'saved'|'error'>('idle');
@@ -189,6 +201,8 @@ export function StudentMaterialExam({
       openAssessments,
       answerIds: { ...answerIds.current },
       sessionId: sessionIdRef.current,
+      entrySource: attemptEntryRef.current.source,
+      entryId: attemptEntryRef.current.id,
       savedAnswerIds: [...savedAnswerIdsRef.current],
       contextUnavailable,
       savedAt: Date.now(),
@@ -247,6 +261,10 @@ export function StudentMaterialExam({
     }
     answerIds.current = { ...savedDraft.answerIds };
     sessionIdRef.current = savedDraft.sessionId || crypto.randomUUID();
+    attemptEntryRef.current = {
+      source: savedDraft.entrySource ?? 'resumed_draft',
+      id: savedDraft.entryId ?? null,
+    };
     savedAnswerIdsRef.current = [...(savedDraft.savedAnswerIds ?? [])];
     setQuestions(frozen);
     setSelectedSize(savedDraft.selectedSize);
@@ -338,14 +356,19 @@ export function StudentMaterialExam({
     setContextUnavailable(Boolean(context.loadError));
     setSavedDraft(null);
     clearAttempt();
+    attemptEntryRef.current = { source: entrySource, id: entryId };
     setStarted(true);
     setPreparing(false);
-    if (!simulation)
+    if (!simulation && nextQuestions.length > 0)
       void trackClientAnalyticsEvent({
         eventName: 'student_material_exam_started',
         metadata: {
           material_id: materialId,
           question_count: nextQuestions.length,
+          practice_scope: practiceScope(topicSectionIndex),
+          entry_source: attemptEntryRef.current.source,
+          entry_id: attemptEntryRef.current.id,
+          attempt_id: sessionIdRef.current,
           flow_version: MATERIAL_PRACTICE_FLOW_VERSION,
         },
       });
@@ -1155,6 +1178,10 @@ export function StudentMaterialExam({
             question_count: result.total,
             correct_count: result.correct,
             score_pct: result.percentage,
+            practice_scope: practiceScope(topicSectionIndex),
+            entry_source: attemptEntryRef.current.source,
+            entry_id: attemptEntryRef.current.id,
+            attempt_id: sessionIdRef.current,
             flow_version: MATERIAL_PRACTICE_FLOW_VERSION,
           },
         });
@@ -1212,6 +1239,8 @@ export function StudentMaterialExam({
         openAssessments,
         answerIds: { ...answerIds.current },
         sessionId: sessionIdRef.current,
+        entrySource: attemptEntryRef.current.source,
+        entryId: attemptEntryRef.current.id,
         savedAnswerIds: [...savedAnswerIdsRef.current],
         contextUnavailable,
         savedAt: Date.now(),

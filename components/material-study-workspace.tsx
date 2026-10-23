@@ -41,7 +41,12 @@ import {
   RecommendedStudyGuide,
   type RecommendedStudyStep,
 } from '@/components/study/recommended-study-guide';
-import { SUMMARY_FLOW_VERSION } from '@/lib/analytics-events';
+import { SUMMARY_FLOW_VERSION, MATERIAL_PRACTICE_FLOW_VERSION } from '@/lib/analytics-events';
+import {
+  resolvePracticeEntrySource,
+  type PracticeEntryPoint,
+  type PracticeEntrySource,
+} from '@/lib/student-materials/practice-entry';
 import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { FIRST_PDF_GUIDE_VERSION } from '@/lib/onboarding-funnel';
 import { completeFirstPdfOnboardingAction } from '@/app/materiales/[id]/onboarding-actions';
@@ -385,6 +390,15 @@ export function MaterialStudyWorkspace({
   const [practiceSectionIndex, setPracticeSectionIndex] = useState<number | undefined>(
     initialPracticeSectionIndex
   );
+  // Atribución explícita del acceso a la pestaña Ejercicios; no implica que
+  // el alumno haya iniciado la tanda de preguntas.
+  const [practiceEntry, setPracticeEntry] = useState<{
+    source: PracticeEntrySource;
+    id: string | null;
+  }>({
+    source: initialPracticeSectionIndex === undefined ? 'direct_tab' : 'topic_practice',
+    id: null,
+  });
   const [topicReturn, setTopicReturn] = useState<{
     index: number;
     reinforce: boolean;
@@ -523,6 +537,13 @@ export function MaterialStudyWorkspace({
               flow_version: SUMMARY_FLOW_VERSION,
             });
           }
+          // También medir lecturas legítimas de PDFs compartidos: el popup se
+          // muestra a visitantes autenticados, no únicamente al propietario.
+          trackMarketingEvent('summary_completion_popup_viewed', {
+            material_id: materialId,
+            pending_count: count,
+            flow_version: SUMMARY_FLOW_VERSION,
+          });
           setSummaryCompletionOpen(true);
         });
       }, 4000);
@@ -1112,12 +1133,28 @@ export function MaterialStudyWorkspace({
     chapter.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
-  const handleStudyTabChange = (value: string, entry: 'tab' | 'summary_chapter' = 'tab') => {
+  const handleStudyTabChange = (value: string, entry: PracticeEntryPoint = 'tab') => {
     setProgressOpen(false);
     const nextTab = value as StudyTabId;
     trackPostGuideAction(nextTab === 'ejercicios' ? 'practica' :
       entry === 'summary_chapter' ? 'tema' : nextTab);
-    if (nextTab === 'ejercicios' && entry === 'tab') setPracticeSectionIndex(undefined);
+    if (nextTab === 'ejercicios') {
+      // El popup y la pestaña directa abren la práctica GENERAL del PDF.
+      // Solo el acceso desde un tema conserva la selección de ese tema.
+      if (entry !== 'summary_chapter') setPracticeSectionIndex(undefined);
+      const source = resolvePracticeEntrySource(entry);
+      const entryId = crypto.randomUUID();
+      setPracticeEntry({ source, id: entryId });
+      if (!demo) {
+        trackMarketingEvent('student_material_practice_entry_opened', {
+          material_id: materialId,
+          flow_version: MATERIAL_PRACTICE_FLOW_VERSION,
+          entry_source: source,
+          entry_id: entryId,
+          practice_scope: entry === 'summary_chapter' ? 'topic' : 'general',
+        });
+      }
+    }
     if (
       nextTab === 'ejercicios' &&
       isOwner &&
@@ -1704,6 +1741,8 @@ export function MaterialStudyWorkspace({
               <StudentMaterialExam
                 key={practiceSectionIndex ?? 'all'}
                 topicSectionIndex={practiceSectionIndex}
+                entrySource={practiceEntry.source}
+                entryId={practiceEntry.id}
                 onContinueToTopic={(index) => {
                   if (!Number.isInteger(index) || index < 0 || index >= studySummary.sections.length) return;
                   setTopicReturn(null);
@@ -2016,15 +2055,16 @@ export function MaterialStudyWorkspace({
             setSummaryCompletionOpen(false);
             router.push(`/dashboard/explicaciones?material=${encodeURIComponent(materialId)}`);
           }}
-          onSimulator={() => {
+          onPractice={() => {
             trackMarketingEvent('summary_next_step_clicked', {
               material_id: materialId,
-              action: 'simulator',
+              action: 'practice',
+              entry_source: 'summary_popup',
               pending_count: summaryEndPendingCount ?? 0,
               flow_version: SUMMARY_FLOW_VERSION,
             });
             setSummaryCompletionOpen(false);
-            handleStudyTabChange('ejercicios', 'summary_chapter');
+            handleStudyTabChange('ejercicios', 'summary_popup');
           }}
           onReview={(tab) => {
             trackMarketingEvent('summary_next_step_clicked', {

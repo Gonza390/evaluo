@@ -1,4 +1,5 @@
 import type { StudyQuestion } from './pedagogy';
+import type { PracticeEntrySource } from './practice-entry';
 
 export type PracticeDraft = {
   version: 1;
@@ -14,6 +15,8 @@ export type PracticeDraft = {
   answerIds: Record<string, string>;
   savedAnswerIds?: string[];
   sessionId?: string;
+  entrySource?: PracticeEntrySource;
+  entryId?: string | null;
   contextUnavailable: boolean;
   savedAt: number;
 };
@@ -129,6 +132,12 @@ export function readPracticeDraft(
       : [],
     sessionId: typeof draft.sessionId === 'string' && /^[0-9a-f-]{36}$/i.test(draft.sessionId)
       ? draft.sessionId : undefined,
+    entrySource: draft.entrySource === 'direct_tab' ||
+      draft.entrySource === 'topic_practice' ||
+      draft.entrySource === 'summary_popup' ||
+      draft.entrySource === 'resumed_draft' ? draft.entrySource : undefined,
+    entryId: typeof draft.entryId === 'string' && /^[0-9a-f-]{36}$/i.test(draft.entryId)
+      ? draft.entryId : null,
     contextUnavailable: draft.contextUnavailable === true,
     savedAt: draft.savedAt,
   };

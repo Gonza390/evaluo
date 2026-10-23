@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
-  BrainCircuit,
+  ClipboardCheck,
   Crown,
   Map as MapIcon,
   RotateCcw,
@@ -10,7 +10,6 @@ import {
   SquareLibrary,
   X,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type ReviewTab = 'tarjetas' | 'glosario' | 'mapa';
 
@@ -19,7 +18,7 @@ type Props = {
   pendingCount: number;
   isPremium: boolean;
   onClose: () => void;
-  onSimulator: () => void;
+  onPractice: () => void;
   onErrors: () => void;
   onReview: (tab: ReviewTab) => void;
 };
@@ -29,7 +28,7 @@ export function SummaryCompletionPopup({
   pendingCount,
   isPremium,
   onClose,
-  onSimulator,
+  onPractice,
   onErrors,
   onReview,
 }: Props) {
@@ -64,9 +63,8 @@ export function SummaryCompletionPopup({
                 </h2>
               </DialogTitle>
               <p className="text-muted-foreground mt-2 text-[13.5px] leading-6">
-                {hasPending
-                  ? `Antes de seguir, tenés ${pendingCount} ${pendingCount === 1 ? 'tema' : 'temas'} para reforzar.`
-                  : 'Ya recorriste los temas principales de este PDF. Ahora podés ponerte a prueba.'}
+                Ya recorriste los temas principales de este PDF. Comprobá cuánto aprendiste con
+                preguntas generadas a partir del material que acabás de estudiar.
               </p>
             </div>
 
@@ -80,32 +78,47 @@ export function SummaryCompletionPopup({
             </button>
           </div>
 
-          <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
-            {hasPending ? (
+          <div className="mt-6 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 sm:p-5 dark:border-indigo-400/25 dark:bg-indigo-950/25">
+            <div className="flex items-start gap-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300">
+                <ClipboardCheck className="size-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-foreground text-[15px] font-bold">Practicá con tu PDF</h3>
+                <p className="text-muted-foreground mt-1 text-[13px] leading-5">
+                  Respondé ejercicios creados a partir de este mismo material y descubrí qué conceptos conviene reforzar.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              data-summary-practice-cta
+              onClick={onPractice}
+              className="bg-primary hover:bg-primary/90 focus-visible:ring-ring mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold text-white transition focus-visible:ring-2 focus-visible:ring-offset-2"
+            >
+              Comenzar práctica
+              <ClipboardCheck className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {hasPending ? (
+            <div className="border-border mt-3 rounded-xl border bg-card p-4">
+              <p className="text-foreground text-[13px] font-semibold">
+                También tenés {pendingCount} {pendingCount === 1 ? 'tema pendiente' : 'temas pendientes'} para reforzar
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs leading-5">
+                Podés revisarlos ahora o hacer una nueva práctica.
+              </p>
               <button
                 type="button"
                 onClick={onErrors}
-                className="bg-primary hover:bg-primary/90 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white transition"
+                className="border-border text-foreground hover:bg-muted mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-[13px] font-semibold transition"
               >
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="size-4" aria-hidden="true" />
                 Reforzar mis errores
               </button>
-            ) : null}
-
-            <button
-              type="button"
-              onClick={onSimulator}
-              className={cn(
-                'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition',
-                hasPending
-                  ? 'border-border bg-card text-foreground hover:bg-muted border'
-                  : 'bg-primary hover:bg-primary/90 text-white sm:col-span-2'
-              )}
-            >
-              <BrainCircuit className="h-4 w-4" />
-              Hacer simulador
-            </button>
-          </div>
+            </div>
+          ) : null}
 
           <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="text-muted-foreground text-[11px] font-bold tracking-[0.1em] uppercase">
@@ -144,6 +157,9 @@ export function SummaryCompletionPopup({
               </button>
             </div>
           </div>
+          <p className="text-muted-foreground mt-4 text-center text-[11px] leading-5">
+            Podés cerrar esta ventana y volver al resumen cuando quieras.
+          </p>
         </div>
       </DialogContent>
     </Dialog>
