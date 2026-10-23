@@ -3,6 +3,7 @@ import 'server-only';
 import { createAdminClient } from '@/lib/supabase-admin';
 import { logError, logInfo } from '@/lib/observability';
 import { sendSenderTransactional } from '@/lib/email/sender';
+import { canSendPdfStudyNudge } from '@/lib/email/pdf-study-frequency';
 
 const CAMPAIGN_KEY = 'study_return_48h_v1';
 const INACTIVE_HOURS = 48;
@@ -165,6 +166,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
     skippedDisabled: 0,
     skippedReturned: 0,
     skippedInvalid: 0,
+    skippedFrequency: 0,
     failed: 0,
   };
 
@@ -195,6 +197,10 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
   }
 
   for (const candidate of candidates) {
+    if (!(await canSendPdfStudyNudge(candidate.user_id))) {
+      summary.skippedFrequency += 1;
+      continue;
+    }
     const { data: reservation, error: reservationError } = await db
       .from('study_return_reminders')
       .insert({
@@ -223,6 +229,7 @@ export async function runStudyReturn48hDispatch(options?: { dryRun?: boolean }) 
           .select('id')
           .eq('user_id', candidate.user_id)
           .gt('created_at', candidate.last_activity_at)
+          .or('session_key.is.null,session_key.not.like.server:%')
           .limit(1),
         db
           .from('student_materials')
