@@ -50,6 +50,13 @@ assert.doesNotMatch(describeCalendarSaveError({ code: '23514', message: 'sensiti
 const page = readFileSync('app/calendario/page.tsx', 'utf8');
 const instrumentation = readFileSync('instrumentation.ts', 'utf8');
 const runtimeTracer = readFileSync('lib/server-runtime-warnings.ts', 'utf8');
+// El recorrido guiado del Calendario fue eliminado, no deshabilitado.
+assert.doesNotMatch(page, /TourCard|CalendarTour|calendarTourStep|showCalendarTour/);
+assert.doesNotMatch(page, /getCalendarTourStorageKey|evaluo_calendar_tour_seen/);
+assert.doesNotMatch(page, /monthTourRef|gridTourRef|composerTourRef|createTourRef/);
+assert.match(page, /const openComposerForDate =/);
+assert.match(page, /const handleCreateEvent =/);
+assert.match(page, /const handleDeleteEvent =/);
 assert.match(page, /validateCalendarWrite\(/);
 assert.match(page, /event_type: validEvent\.eventType/);
 assert.match(page, /exam_instance: validEvent\.examInstance/);
