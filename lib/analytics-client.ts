@@ -61,6 +61,17 @@ export function getAnalyticsPageType(pathname: string) {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/explorar/materia/')) return 'materia';
   if (pathname === '/explorar') return 'explorar';
+  const regionalPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  if (
+    [
+      '/es/estudiar-pdf-con-ia',
+      '/es-mx/estudiar-pdf-con-ia',
+      '/es-co/estudiar-pdf-con-ia',
+      '/es-es/estudiar-pdf-con-ia',
+    ].includes(regionalPath)
+  ) {
+    return 'seo-international-study-pdf';
+  }
   if (pathname === '/uba-xxi/parciales') return 'seo-uba-xxi-parciales';
   if (pathname === '/como-estudiar-ingreso-unlam') return 'seo-unlam-ingreso-2027';
   if (pathname.startsWith('/universidad/')) return 'universidad';
