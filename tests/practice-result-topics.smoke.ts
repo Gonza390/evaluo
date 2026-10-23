@@ -61,6 +61,10 @@ for (const [correct, total, expectedPercentage, expectedTone, expectedLabel] of 
   assert.equal(performance.tone, expectedTone);
   assert.equal(performance.label, expectedLabel);
   assert.ok(performance.fillClass.length && performance.trackClass.length && performance.badgeClass.length);
+  assert.ok(performance.badgeClass.includes('text-slate-900'), 'Las etiquetas deben tener texto oscuro de alto contraste.');
+  assert.equal(performance.textClass, 'text-foreground', 'Los textos no deben depender del color de la barra.');
+  assert.equal(performance.indicatorClass, performance.fillClass, 'El punto debe identificar el estado visualmente.');
+
 }
 assert.equal(getPracticeTopicPerformance(0, 0).percentage, 0);
 assert.equal(getPracticeTopicPerformance(0, 2).fillClass, 'bg-amber-500');

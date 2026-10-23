@@ -65,6 +65,7 @@ export type PracticeTopicPerformance = {
   trackClass: string;
   badgeClass: string;
   textClass: string;
+  indicatorClass: string;
   zeroMarkerClass: string;
 };
 
@@ -80,8 +81,9 @@ export function getPracticeTopicPerformance(correct: number, total: number): Pra
       tone: 'amber',
       fillClass: 'bg-amber-500',
       trackClass: 'bg-amber-100 dark:bg-amber-950/40',
-      badgeClass: 'bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
-      textClass: 'text-amber-700 dark:text-amber-300',
+      badgeClass: 'border border-slate-200 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+      textClass: 'text-foreground',
+      indicatorClass: 'bg-amber-500',
       zeroMarkerClass: 'bg-amber-500',
     };
   }
@@ -93,8 +95,9 @@ export function getPracticeTopicPerformance(correct: number, total: number): Pra
       tone: 'indigo',
       fillClass: 'bg-indigo-500',
       trackClass: 'bg-indigo-100 dark:bg-indigo-950/40',
-      badgeClass: 'bg-indigo-50 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-300',
-      textClass: 'text-indigo-700 dark:text-indigo-300',
+      badgeClass: 'border border-slate-200 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+      textClass: 'text-foreground',
+      indicatorClass: 'bg-indigo-500',
       zeroMarkerClass: 'bg-indigo-500',
     };
   }
@@ -105,8 +108,9 @@ export function getPracticeTopicPerformance(correct: number, total: number): Pra
     tone: 'green',
     fillClass: 'bg-emerald-500',
     trackClass: 'bg-emerald-100 dark:bg-emerald-950/40',
-    badgeClass: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300',
-    textClass: 'text-emerald-700 dark:text-emerald-300',
+    badgeClass: 'border border-slate-200 bg-slate-100 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100',
+    textClass: 'text-foreground',
+    indicatorClass: 'bg-emerald-500',
     zeroMarkerClass: 'bg-emerald-500',
   };
 }

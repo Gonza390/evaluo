@@ -74,7 +74,8 @@ export default function PreviewPracticeResult() {
                 <div key={topic.title} className="space-y-2">
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <span className="min-w-0 flex-1 text-sm font-medium text-[#0F1B3D]">{topic.title}</span>
-                    <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${performance.badgeClass}`}>
+                    <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold ${performance.badgeClass}`}>
+                      <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${performance.indicatorClass}`} />
                       {topic.correct}/{topic.total} · {performance.label}
                     </span>
                   </div>
@@ -141,7 +142,8 @@ export default function PreviewPracticeResult() {
                   <div key={topic.title} className="space-y-1.5">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span className="min-w-0 flex-1 font-medium text-[#0F1B3D]">{topic.title}</span>
-                      <span className={`font-semibold ${performance.textClass}`}>
+                      <span className={`inline-flex items-center gap-1.5 font-semibold ${performance.textClass}`}>
+                        <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${performance.indicatorClass}`} />
                         {topic.correct}/{topic.total} · {performance.label}
                       </span>
                     </div>

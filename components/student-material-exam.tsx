@@ -689,7 +689,8 @@ export function StudentMaterialExam({
                     <div key={topic.title} className="space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                         <span className="text-foreground min-w-0 flex-1 text-sm font-medium">{topic.title}</span>
-                        <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${performance.badgeClass}`}>
+                        <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold tabular-nums ${performance.badgeClass}`}>
+                          <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${performance.indicatorClass}`} />
                           {topic.correct}/{topic.total} · {performance.label}
                         </span>
                       </div>
@@ -837,7 +838,8 @@ export function StudentMaterialExam({
                       <div key={topic.title} className="space-y-1.5">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <span className="text-foreground min-w-0 flex-1 text-sm font-medium">{topic.title}</span>
-                          <span className={`shrink-0 text-sm font-semibold tabular-nums ${performance.textClass}`}>
+                          <span className={`inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold tabular-nums ${performance.textClass}`}>
+                            <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${performance.indicatorClass}`} />
                             {topic.correct}/{topic.total} · {performance.label}
                           </span>
                         </div>
