@@ -109,6 +109,15 @@ export default async function PricingPage({
           </div>
         </section>
 
+        <section aria-label="Precio internacional de Evaluo" className="border-b border-blue-100 bg-blue-50/50 px-4 py-8 sm:px-6">
+          <div className="mx-auto max-w-4xl rounded-2xl border border-blue-100 bg-white px-5 py-6 text-center shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Premium internacional</p>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">US$ 9,99 <span className="text-base font-medium text-slate-500">/ mes</span></p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Cobro mediante Paddle, sujeto a aprobación y habilitación del checkout internacional. Todavía no disponible para comprar.</p>
+            <p className="mt-2 text-xs text-slate-500">En Argentina se mantienen los planes en pesos y los pagos con Mercado Pago.</p>
+          </div>
+        </section>
+
         <section id="elegir-plan" className="px-4 py-12 sm:px-6 sm:py-16">
           <div className="mx-auto max-w-7xl">
             <div className="mb-7 text-center">
