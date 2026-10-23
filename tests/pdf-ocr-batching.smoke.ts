@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { renderPdfPagesToPngs } from '../lib/student-materials/pdf-render.ts';
 import { selectVisionPageNumbers, selectVisionBatchSize } from '../lib/student-materials/vision-extract.ts';
+import {
+  CLIENT_VISION_MAX_PAGES,
+  buildClientVisionPagePath,
+  buildClientVisionPagePaths,
+} from '../lib/student-materials/client-vision-cache.ts';
 
 // PDF real pero generado localmente: no accede a datos de estudiantes ni a APIs.
 const pdf = await PDFDocument.create();
@@ -50,4 +55,18 @@ for (const total of [14, 46]) {
   assert.equal(selected[0], 1);
   assert.equal(selected.at(-1), total);
 }
+assert.equal(CLIENT_VISION_MAX_PAGES, 48);
+assert.equal(
+  buildClientVisionPagePath('student-materials/user/material.pdf', 7),
+  'student-materials/user/material.pdf.client-vision/page-007.png'
+);
+assert.deepEqual(
+  buildClientVisionPagePaths('student-materials/user/material.pdf', [3, 1, 3, 2]),
+  [
+    'student-materials/user/material.pdf.client-vision/page-001.png',
+    'student-materials/user/material.pdf.client-vision/page-002.png',
+    'student-materials/user/material.pdf.client-vision/page-003.png',
+  ]
+);
+
 console.log('PDF OCR batch rendering and coverage smoke tests passed.');
