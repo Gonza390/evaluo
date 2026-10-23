@@ -589,7 +589,7 @@ export function StudentMaterialExam({
     setObjectiveStatus('saving');
     // El próximo objetivo es opcional: un servidor lento no debe dejar el
     // resultado esperando indefinidamente. El intento es idempotente y reintentable.
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    let timer: number | undefined;
     const timeout = new Promise<{ success: false }>((resolve) => {
       timer = window.setTimeout(() => resolve({ success: false }), 15_000);
     });
