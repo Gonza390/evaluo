@@ -201,6 +201,8 @@ export function StudentMaterialExam({
       openAssessments,
       answerIds: { ...answerIds.current },
       sessionId: sessionIdRef.current,
+      entrySource: attemptEntryRef.current.source,
+      entryId: attemptEntryRef.current.id,
       savedAnswerIds: [...savedAnswerIdsRef.current],
       contextUnavailable,
       savedAt: Date.now(),
@@ -259,7 +261,10 @@ export function StudentMaterialExam({
     }
     answerIds.current = { ...savedDraft.answerIds };
     sessionIdRef.current = savedDraft.sessionId || crypto.randomUUID();
-    attemptEntryRef.current = { source: 'resumed_draft', id: null };
+    attemptEntryRef.current = {
+      source: savedDraft.entrySource ?? 'resumed_draft',
+      id: savedDraft.entryId ?? null,
+    };
     savedAnswerIdsRef.current = [...(savedDraft.savedAnswerIds ?? [])];
     setQuestions(frozen);
     setSelectedSize(savedDraft.selectedSize);
@@ -1234,6 +1239,8 @@ export function StudentMaterialExam({
         openAssessments,
         answerIds: { ...answerIds.current },
         sessionId: sessionIdRef.current,
+        entrySource: attemptEntryRef.current.source,
+        entryId: attemptEntryRef.current.id,
         savedAnswerIds: [...savedAnswerIdsRef.current],
         contextUnavailable,
         savedAt: Date.now(),
