@@ -150,6 +150,15 @@ export function InternationalStudyLanding({ market }: { market: StudyMarket }) {
             <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_16px_42px_rgba(15,23,42,0.06)] sm:p-8">
               <p className="text-[11px] font-bold tracking-wide text-blue-700 uppercase">Tema: {copy.exampleTopic}</p>
               <h3 className="mt-4 text-lg font-bold leading-7 text-slate-950">{copy.exampleQuestion}</h3>
+              {copy.exampleOptions ? (
+                <ol className="mt-4 space-y-2" type="A">
+                  {copy.exampleOptions.map((option, index) => (
+                    <li key={option} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm leading-6 text-slate-700">
+                      <span className="mr-2 font-bold text-blue-700">{String.fromCharCode(65 + index)}.</span>{option}
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
               <details className="group mt-5 rounded-xl border border-blue-100 bg-blue-50/70 p-4">
                 <summary className="cursor-pointer text-sm font-bold text-blue-800">
                   Intenta responder y descubre la explicación
