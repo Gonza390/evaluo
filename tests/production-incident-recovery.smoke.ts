@@ -68,7 +68,7 @@ assert.match(callback, /redirectWithSessionCookies/);
 const worker = readFileSync('app/api/internal/student-material-jobs/route.ts', 'utf8');
 assert.match(worker, /isInternalQueueRequestAuthorized\(request\)/);
 assert.match(worker, /MAX_JOBS_PER_DISPATCH = 3/);
-assert.match(worker, /DISPATCH_BUDGET_MS = 210_000/);
+assert.match(worker, /DISPATCH_BUDGET_MS = 90_000/);
 assert.match(worker, /jobs_processed: jobsProcessed/);
 
 const vercel = JSON.parse(readFileSync('vercel.json', 'utf8')) as {
