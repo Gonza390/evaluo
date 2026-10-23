@@ -41,6 +41,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/estudiar-pdf-con-ia`,
     },
     {
+      url: `${baseUrl}/es/estudiar-pdf-con-ia`,
+    },
+    {
+      url: `${baseUrl}/es-mx/estudiar-pdf-con-ia`,
+    },
+    {
+      url: `${baseUrl}/es-co/estudiar-pdf-con-ia`,
+    },
+    {
+      url: `${baseUrl}/es-es/estudiar-pdf-con-ia`,
+    },
+    {
       url: `${baseUrl}/funciones/resumir-pdf-con-ia`,
     },
     {
