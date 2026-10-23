@@ -22,7 +22,18 @@ function normalizeSource(value: string | null) {
   return normalized ? `pdf-first-landing-${normalized}` : 'pdf-first-landing';
 }
 
-export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_ia', sourceKey }: { trackingLocation?: string; sourceKey?: string } = {}) {
+export function PdfFirstLandingUploader({
+  trackingLocation = 'estudiar_pdf_con_ia',
+  sourceKey,
+  locale,
+  market,
+}: {
+  trackingLocation?: string;
+  sourceKey?: string;
+  locale?: 'neutral';
+  market?: string;
+} = {}) {
+  const isInternational = locale === 'neutral';
   const pickerRef = useRef<HTMLInputElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState('');
@@ -37,13 +48,15 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
     trackMarketingEvent('pdf_first_landing_viewed', {
       location: trackingLocation,
       source: resolvedSource,
+      market,
     });
-  }, [trackingLocation, sourceKey]);
+  }, [trackingLocation, sourceKey, market]);
 
   const chooseFile = () => {
     trackMarketingEvent('pdf_picker_opened', {
       location: trackingLocation,
       source,
+      market,
     });
     pickerRef.current?.click();
   };
@@ -73,6 +86,7 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
       location: trackingLocation,
       source,
       file_size_bytes: selected.size,
+      market,
     });
   };
 
@@ -89,6 +103,7 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
         location: trackingLocation,
         source,
         file_size_bytes: file.size,
+        market,
       });
 
       const nextPath = `/dashboard?openUpload=1&source=${encodeURIComponent(source)}`;
@@ -98,7 +113,7 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
       login.searchParams.set('next', nextPath);
       window.location.href = `${login.pathname}${login.search}`;
     } catch {
-      setError('No pudimos conservar el PDF para continuar. Probá nuevamente.');
+      setError(isInternational ? 'No pudimos guardar el PDF. Inténtalo de nuevo.' : 'No pudimos conservar el PDF para continuar. Probá nuevamente.');
       setSaving(false);
     }
   };
@@ -109,8 +124,8 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
       <div className="relative rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_30px_70px_rgba(15,23,42,0.11)] sm:p-6">
         <div className="flex items-center justify-between gap-3 px-1 pb-4">
           <div>
-            <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">Empezá con tu archivo</p>
-            <p className="mt-1 text-sm font-bold text-slate-950">Primero elegís el PDF. Después creás tu cuenta.</p>
+            <p className="text-[10px] font-black tracking-[0.14em] text-blue-700 uppercase">{isInternational ? 'Empieza con tu archivo' : 'Empezá con tu archivo'}</p>
+            <p className="mt-1 text-sm font-bold text-slate-950">{isInternational ? 'Primero eliges el PDF. Después creas tu cuenta.' : 'Primero elegís el PDF. Después creás tu cuenta.'}</p>
           </div>
           <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -138,8 +153,8 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
             <span className="from-brand to-brand-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r text-white shadow-[0_14px_30px_rgba(37,99,235,0.22)]">
               <UploadCloud className="h-6 w-6" aria-hidden="true" />
             </span>
-            <span className="mt-4 text-base font-bold text-slate-950">Elegí el PDF que vas a estudiar</span>
-            <span className="mt-1.5 text-xs leading-5 text-slate-500">Tocá para buscar el archivo · PDF · máximo 20 MB</span>
+            <span className="mt-4 text-base font-bold text-slate-950">{isInternational ? 'Elige el PDF que vas a estudiar' : 'Elegí el PDF que vas a estudiar'}</span>
+            <span className="mt-1.5 text-xs leading-5 text-slate-500">{isInternational ? 'Selecciona un archivo · PDF · máximo 20 MB' : 'Tocá para buscar el archivo · PDF · máximo 20 MB'}</span>
           </button>
         ) : (
           <div>
@@ -194,11 +209,11 @@ export function PdfFirstLandingUploader({ trackingLocation = 'estudiar_pdf_con_i
         <div className="mt-4 grid gap-2 border-t border-slate-100 pt-4 text-[11px] leading-5 text-slate-500 sm:grid-cols-2">
           <span className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
-            No necesitás registrarte para elegir el archivo.
+            {isInternational ? 'No necesitas registrarte para elegir el archivo.' : 'No necesitás registrarte para elegir el archivo.'}
           </span>
           <span className="flex items-start gap-2">
             <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
-            Tu cuenta se pide recién al crear el material.
+            {isInternational ? 'La cuenta se solicita al crear el material.' : 'Tu cuenta se pide recién al crear el material.'}
           </span>
         </div>
       </div>
