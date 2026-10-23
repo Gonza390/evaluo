@@ -244,7 +244,7 @@ export function UnlamIngresoToolkit() {
           <div className="mt-8 flex flex-col gap-4 rounded-2xl bg-[#0f1b3d] p-5 text-white sm:flex-row sm:items-center sm:justify-between sm:p-7">
             <div>
               <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-blue-200">Del manual a la práctica</p>
-              <h3 className="mt-2 text-xl font-bold">¿Ya tenés tus apuntes o el manual en PDF?</h3>
+              <h3 className="mt-2 text-xl font-bold text-white">¿Ya tenés tus apuntes o el manual en PDF?</h3>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
                 Elegí el archivo primero. En Evaluo vas a poder generar materiales de estudio
                 y preguntas sobre el contenido que realmente necesitás rendir.
