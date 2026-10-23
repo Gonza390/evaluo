@@ -5,14 +5,14 @@ import { toAbsoluteUrl } from '@/lib/site';
 const path = '/estudiar-pdf-con-ia';
 
 export const metadata: Metadata = {
-  title: 'Estudiar un PDF con IA: resumen, flashcards y práctica',
+  title: 'Estudiar PDF con IA: resumen, flashcards y ejercicios',
   description:
-    'Estudiá un PDF con IA en Evaluo: convertí el mismo material en resumen, glosario, mapa mental, flashcards y ejercicios para entender y practicar.',
+    'Estudiá un PDF con IA: elegí tus apuntes, creá resumen, mapa mental y flashcards y practicá ejercicios sobre el mismo documento en Evaluo.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Estudiar un PDF con IA: resumen, flashcards y práctica | Evaluo',
+    title: 'Estudiar PDF con IA: resumen, flashcards y ejercicios | Evaluo',
     description:
       'Usá un mismo PDF como fuente para resumir, organizar conceptos, repasar con flashcards y practicar sin perder el contexto.',
     url: toAbsoluteUrl(path),
