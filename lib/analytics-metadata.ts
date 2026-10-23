@@ -55,6 +55,7 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
     'landing_path',
     'entry_page_type',
   ],
+  pdf_lifecycle_email_landing_viewed: ['material_id', 'campaign_key', 'content'],
   session_ping: ['engagement_ms', 'engagement_version', 'attribution', 'anonymous_id', 'page_type'],
   client_error: ['message', 'source', 'line', 'attribution', 'anonymous_id', 'page_type'],
   // Datos técnicos de diseño; no enviar texto visible ni contenido del PDF.
