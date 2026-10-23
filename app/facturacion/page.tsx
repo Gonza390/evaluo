@@ -26,7 +26,7 @@ const sections = [
     title: '2. Modalidades de pago',
     body: [
       'Evaluo puede ofrecer suscripciones con renovación automática, como el plan Premium mensual, y también accesos por un período fijo abonados mediante un pago único, como una oferta de seis meses. El precio, la duración y las características aplicables son los publicados en el momento de la contratación.',
-      'Las suscripciones recurrentes se renuevan automáticamente al finalizar cada período, salvo que el Usuario las cancele antes de la fecha de renovación. El cobro se procesa a través de la pasarela de pagos (por ejemplo, Mercado Pago) con el medio de pago registrado.',
+      'Las suscripciones recurrentes se renuevan automáticamente al finalizar cada período, salvo que el Usuario las cancele antes de la fecha de renovación. Para Argentina, el cobro se procesa mediante Mercado Pago. Para compras internacionales se prevé habilitar Paddle como vendedor registrado (Merchant of Record), sujeto a aprobación y a la activación del checkout. Hasta entonces no se ofrecen cobros internacionales por Paddle.',
       'Los accesos por período fijo no se renuevan automáticamente. Una vez aprobado el pago, el acceso permanece habilitado hasta la fecha de vencimiento informada al Usuario, salvo que el pago sea posteriormente anulado, reembolsado o desconocido conforme a la normativa y a las reglas de la pasarela de pagos.',
     ],
   },
@@ -41,9 +41,9 @@ const sections = [
   {
     title: '4. Política de reembolsos',
     body: [
-      'Por tratarse de un producto digital de acceso inmediato, los pagos realizados por planes de Evaluo no generan automáticamente un reembolso por falta de uso, cambio de opinión o resultados académicos distintos de los esperados.',
+      'Las solicitudes de devolución se examinan según las condiciones mostradas antes de la compra, los derechos obligatorios del consumidor y las reglas del proveedor identificado en el recibo. No se garantizan resultados académicos, sin limitar las devoluciones o derechos legalmente exigibles.',
       'La cancelación de una suscripción recurrente no genera por sí sola un reembolso proporcional del período ya abonado. En las compras por período fijo, el acceso se mantiene hasta la fecha de vencimiento correspondiente mientras el pago permanezca válido.',
-      'En todos los casos se respetarán los derechos y excepciones que resulten obligatorios conforme a la normativa aplicable de protección al consumidor. Cuando corresponda un reembolso, se procesará por el medio disponible de acuerdo con las reglas y plazos de la pasarela de pagos.',
+      'Para compras con Mercado Pago podés solicitar asistencia a facturacion@evaluo.com.ar. Cuando Paddle esté habilitado y figure como vendedor registrado, sus condiciones y canales de reembolso también regirán la compra. Evaluo brindará soporte al estudiante. Consultá /reembolsos para más información.',
     ],
   },
   {
@@ -64,7 +64,7 @@ const sections = [
   {
     title: '7. Impuestos y medios de pago',
     body: [
-      'Los precios publicados incluyen los impuestos, tributos y percepciones que correspondan según la legislación vigente, salvo que se informe expresamente lo contrario. Evaluo no gestiona medios de pago directamente: las transacciones se procesan a través de pasarelas de pago autorizadas (por ejemplo, Mercado Pago), cuyos términos propios también pueden aplicar al Usuario.',
+      'Antes de pagar se mostrará el importe total, moneda, impuestos aplicables, periodicidad y vendedor o procesador. Los pagos actualmente disponibles en Argentina se procesan con Mercado Pago. El checkout internacional con Paddle se ofrecerá sólo cuando esté aprobado y habilitado, con precios internacionales públicos que coincidan con su catálogo. Los precios argentinos publicados no constituyen una oferta internacional mediante Paddle.',
       'En las suscripciones recurrentes, si un cobro no puede procesarse, Evaluo podrá informar la situación por los canales del servicio y suspender el acceso hasta que el pago se regularice.',
     ],
   },
@@ -96,7 +96,7 @@ export default function FacturacionPage() {
                 Términos de facturación
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-muted-foreground">
-                Última actualización: agosto de 2026. Estos términos regulan las suscripciones
+                Última actualización: octubre de 2026. Estos términos regulan las suscripciones
                 recurrentes, las compras por período fijo, los períodos de prueba, los reembolsos y
                 el tratamiento de disputas de pago de Evaluo.
               </p>
