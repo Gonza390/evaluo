@@ -295,7 +295,7 @@ export default function AnalyticsTracker() {
     const sessionKey = getAnalyticsSessionKey();
     const deviceType = getAnalyticsDeviceType();
     let sent = false;
-    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+    let resizeTimer: number | undefined;
 
     const checkHorizontalOverflow = () => {
       if (sent || document.visibilityState === 'hidden') return;
