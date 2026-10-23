@@ -321,6 +321,72 @@ export function IaParaEstudiantesExperience() {
           </div>
         </section>
 
+        <section aria-labelledby="ia-elegir-uso" className="border-b border-slate-100 bg-slate-50/60 py-16 sm:py-20">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Guía práctica para universitarios</p>
+            <h2 id="ia-elegir-uso" className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              ¿Qué IA usar para estudiar? Primero identificá qué te está costando.
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+              No es lo mismo necesitar entender un capítulo que comprobar si podrías explicarlo en un examen. Elegí la tarea según tu situación y usá el PDF como referencia para revisar lo que produce la IA.
+            </p>
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {[
+                {
+                  problem: 'Tengo un capítulo largo y no sé por dónde empezar',
+                  tool: 'Resumen y glosario',
+                  action: 'Identificá la idea central, los apartados y los términos que necesitás comprender. Compará el resumen con los subtítulos del PDF.',
+                  href: '/funciones/resumir-pdf-con-ia',
+                  label: 'Cómo resumir un PDF con IA',
+                },
+                {
+                  problem: 'Recuerdo términos, pero no cómo se relacionan',
+                  tool: 'Mapa mental',
+                  action: 'Partí de un concepto principal y organizá ramas para causas, clasificaciones o etapas. Comprobá que cada relación esté respaldada por el material.',
+                  href: '/funciones/crear-mapa-mental-desde-pdf',
+                  label: 'Crear un mapa mental desde PDF',
+                },
+                {
+                  problem: 'Entiendo al leer, pero me olvido al cerrar los apuntes',
+                  tool: 'Flashcards y recuerdo activo',
+                  action: 'Intentá contestar antes de dar vuelta la tarjeta. Si fallás, volvé al concepto en el PDF y repetí el repaso otro día.',
+                  href: '/funciones/crear-flashcards-desde-pdf',
+                  label: 'Aprender a estudiar con flashcards',
+                },
+                {
+                  problem: 'Se acerca el parcial y no sé si estoy listo',
+                  tool: 'Preguntas de práctica',
+                  action: 'Resolvé ejercicios sin mirar el resumen. Revisá cada error, buscá el fundamento en los apuntes y volvé a intentarlo.',
+                  href: '/estudiar-pdf-con-ia',
+                  label: 'Estudiar y practicar con tu PDF',
+                },
+              ].map((item) => (
+                <article key={item.problem} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6">
+                  <h3 className="text-base font-bold text-slate-950">{item.problem}</h3>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-wide text-blue-700">{item.tool}</p>
+                  <p className="mt-2 flex-1 text-sm leading-7 text-slate-600">{item.action}</p>
+                  <Link href={item.href} className="mt-4 text-sm font-bold text-blue-700 underline underline-offset-4">{item.label} →</Link>
+                </article>
+              ))}
+            </div>
+            <div className="mt-8 rounded-2xl border border-blue-100 bg-white p-6">
+              <h3 className="text-lg font-bold text-slate-950">Tres consignas que podés probar con una IA al estudiar</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Son ejemplos de instrucciones para herramientas que permiten escribir consignas; no necesitás escribirlas en Evaluo para usar sus vistas de estudio.
+              </p>
+              <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm leading-7 text-slate-700">
+                <li><strong>Comprender:</strong> «Explicá la idea principal de este fragmento con palabras sencillas. Distinguí lo que dice el autor de cualquier ejemplo agregado».</li>
+                <li><strong>Comprobar:</strong> «Haceme tres preguntas que no se respondan copiando una frase. Esperá mi respuesta antes de corregirme».</li>
+                <li><strong>Verificar:</strong> «Indicá qué afirmaciones de este resumen debería revisar en el texto original porque podrían haber perdido contexto».</li>
+              </ol>
+              <p className="mt-4 text-xs leading-6 text-slate-500">
+                Revisá fechas, definiciones, citas y datos contra el material original. Si tu universidad tiene reglas sobre IA o datos personales, respetalas antes de compartir documentos.
+                {' '}<a className="font-semibold text-blue-700 underline underline-offset-4" href="https://www.ox.ac.uk/students/life/it/genai-tools/guidance-on-safe-and-responsible-use-of-genai" target="_blank" rel="noopener noreferrer">Orientación de la Universidad de Oxford sobre IA y estudio</a>.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="py-16 sm:py-24">
           <div className="mx-auto grid w-full max-w-[1240px] gap-12 px-4 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-10">
             <SectionIntro
@@ -560,6 +626,50 @@ export function EstudiarPdfExperience() {
           </div>
         </section>
 
+        <section aria-labelledby="metodo-estudiar-pdf" className="border-y border-slate-100 bg-slate-50/70 py-16 sm:py-20">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Ejemplo de rutina, adaptable a tu materia</p>
+            <h2 id="metodo-estudiar-pdf" className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Cómo estudiar un PDF con IA en una sesión de 35 minutos
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+              Trabajá con un capítulo o unidad concreta en lugar de intentar memorizar todo un archivo largo. Esta rutina combina lectura, organización de conceptos y práctica sin depender solamente del resumen.
+            </p>
+            <ol className="mt-8 grid gap-4 md:grid-cols-2">
+              {[
+                ['5 min', 'Definí el objetivo', 'Leé el título y los subtítulos del capítulo. Escribí una pregunta que deberías poder responder al terminar.'],
+                ['10 min', 'Leé y contrastá', 'Usá el resumen para orientarte, pero volvé a los párrafos del PDF cuando aparezcan conceptos, argumentos o datos importantes.'],
+                ['10 min', 'Recordá sin mirar', 'Elegí dos o tres flashcards. Intentá explicar cada respuesta en voz alta antes de descubrirla.'],
+                ['10 min', 'Resolvé y corregí', 'Respondé una pregunta de aplicación, revisá en qué te equivocaste y anotá qué sección del PDF vas a repasar.'],
+              ].map(([time, title, detail]) => (
+                <li key={title} className="rounded-2xl border border-slate-200 bg-white p-6">
+                  <span className="text-xs font-bold text-blue-700">{time}</span>
+                  <h3 className="mt-2 text-lg font-bold text-slate-950">{title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{detail}</p>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-8 grid gap-6 rounded-2xl border border-blue-100 bg-white p-6 md:grid-cols-[0.95fr_1.05fr]">
+              <div>
+                <h3 className="text-lg font-bold text-slate-950">Ejemplo con un apunte de Marketing</h3>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
+                  Si el capítulo trata sobre segmentación de mercados, leer su definición no alcanza. Cerrá el PDF e intentá resolver: «Una empresa vende el mismo producto a públicos con necesidades distintas. ¿Por qué le convendría segmentar antes de diseñar su mensaje?».
+                </p>
+              </div>
+              <div className="rounded-xl bg-blue-50 p-5">
+                <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Cómo evaluar tu respuesta</p>
+                <p className="mt-2 text-sm leading-7 text-slate-700">
+                  Una respuesta útil debería relacionar la identificación de grupos, sus necesidades y la adaptación de la propuesta o comunicación. Si sólo repetís la definición, todavía falta aplicarla a la situación.
+                </p>
+              </div>
+            </div>
+            <p className="mt-5 text-sm leading-7 text-slate-600">
+              <strong className="text-slate-900">Antes de dar un tema por aprendido:</strong> comprobá que el texto extraído coincida con tu PDF, especialmente en tablas, fórmulas o material escaneado. Usá el documento para verificar las respuestas importantes.
+              {' '}<a href="https://www.nature.com/articles/s44159-022-00089-1" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline underline-offset-4">Investigación sobre práctica de recuperación y estudio espaciado</a>.
+            </p>
+          </div>
+        </section>
+
         <section className="border-y border-slate-100 bg-slate-50/50 py-16 sm:py-20">
           <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
             <SectionIntro
@@ -732,6 +842,55 @@ export function ResumirPdfExperience() {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section aria-labelledby="resumen-fiel" className="border-y border-slate-100 bg-slate-50/60 py-16 sm:py-20">
+          <div className="mx-auto w-full max-w-[1180px] px-4 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Ejemplo práctico</p>
+            <h2 id="resumen-fiel" className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Cómo saber si el resumen de un PDF realmente sirve para estudiar
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+              Un resumen fiel conserva la idea principal, las relaciones necesarias y las condiciones que cambian el significado. No alcanza con que sea corto o suene claro. Mirá este ejemplo didáctico, redactado para explicar el criterio y no extraído de un PDF real.
+            </p>
+            <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              <article className="rounded-2xl border border-slate-200 bg-white p-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Texto de origen · ejemplo</p>
+                <h3 className="mt-3 text-lg font-bold text-slate-950">Segmentación de mercados</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-700">
+                  Una empresa puede dividir un mercado en grupos de consumidores con necesidades o características similares. Luego evalúa esos grupos y decide a cuáles dirigir una propuesta de valor específica.
+                </p>
+              </article>
+              <article className="rounded-2xl border border-rose-200 bg-rose-50/50 p-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-rose-700">Resumen incompleto</p>
+                <h3 className="mt-3 text-lg font-bold text-slate-950">«Segmentar es vender a grupos»</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-700">
+                  Pierde dos ideas: el criterio para formar los grupos y la decisión sobre cuáles atender. Puede llevarte a repetir una definición insuficiente en un examen.
+                </p>
+              </article>
+              <article className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-6">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Resumen más fiel</p>
+                <h3 className="mt-3 text-lg font-bold text-slate-950">«Agrupar, evaluar y elegir»</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-700">
+                  La segmentación agrupa consumidores con necesidades similares; después se evalúan los segmentos y se seleccionan aquellos a los que se dirigirá una propuesta adaptada.
+                </p>
+              </article>
+            </div>
+            <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6">
+              <h3 className="text-lg font-bold text-slate-950">Lista de revisión antes de estudiar con un resumen generado por IA</h3>
+              <ul className="mt-4 grid gap-3 text-sm leading-7 text-slate-700 md:grid-cols-2">
+                <li><strong>1. Cobertura:</strong> compará los subtítulos del capítulo con las secciones del resumen. ¿Falta algún eje importante?</li>
+                <li><strong>2. Precisión:</strong> revisá nombres, fechas, fórmulas, definiciones y excepciones contra el texto de origen.</li>
+                <li><strong>3. Relaciones:</strong> comprobá que no confunda causa con consecuencia, ejemplo con regla o hipótesis con conclusión.</li>
+                <li><strong>4. Comprensión:</strong> cerrá el resumen y explicá una idea con tus palabras. Si no podés, volvé al apartado original.</li>
+              </ul>
+            </div>
+            <p className="mt-5 text-xs leading-6 text-slate-500">
+              Este criterio se relaciona con la recomendación de conservar las afirmaciones centrales del texto al resumir.
+              {' '}<a className="font-semibold text-blue-700 underline underline-offset-4" href="https://writing.ku.edu/paraphrase-and-summary" target="_blank" rel="noopener noreferrer">Guía del Centro de Escritura de la Universidad de Kansas</a>.
+              Un resumen automático puede omitir matices: verificá las ideas decisivas directamente en el PDF.
+            </p>
           </div>
         </section>
 
