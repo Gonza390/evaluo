@@ -21,7 +21,7 @@ const collectedDataItems = [
   'Actividad dentro de Evaluo, incluyendo uso del dashboard, simuladores, recursos abiertos, respuestas registradas, favoritos y progreso de estudio.',
   'Actividad de enlaces compartidos, incluyendo quién comparte cuando tiene una cuenta, qué materia y parcial comparte, y cuántas visitas, prácticas o registros se originan desde ese enlace.',
   'Datos técnicos necesarios para operar la web, como navegador, dispositivo, dirección IP aproximada, idioma y eventos de sesión.',
-  'Datos de pago procesados por terceros (por ejemplo, Mercado Pago), como estado de la suscripción y referencia de la transacción. Evaluo no almacena datos de tarjetas de crédito ni claves de pago.',
+  'Datos de pago procesados por terceros (Mercado Pago y, cuando se habilite para compras internacionales, Paddle), como estado de la suscripción y referencia de la transacción. Evaluo no almacena datos de tarjetas de crédito ni claves de pago.',
 ];
 
 const usageItems = [
@@ -44,7 +44,7 @@ const sharingItems = [
   'Proveedores tecnológicos que operan la infraestructura de la plataforma (hosting, base de datos y servicios en la nube).',
   'Proveedores de analítica (por ejemplo, Google Analytics 4) que nos ayudan a comprender el uso agregado del sitio.',
   'Proveedores de inteligencia artificial (por ejemplo, Gemini y Groq) que procesan el contenido académico que nos compartís para generar explicaciones, resúmenes y preguntas. Este procesamiento está orientado a prestar el servicio y a mejorar la calidad de las respuestas.',
-  'Procesadores de pago (por ejemplo, Mercado Pago) que gestionan los cobros de las suscripciones. Solo compartimos con ellos la información mínima necesaria para completar la transacción.',
+  'Mercado Pago para Argentina y, cuando se habilite, Paddle para compras internacionales. Paddle podrá actuar como vendedor registrado (Merchant of Record) y procesar datos necesarios para cobrar, facturar, prevenir fraudes y gestionar devoluciones bajo sus propias políticas. Evaluo comparte los datos necesarios para efectuar la compra y conserva las referencias y estados necesarios para gestionar el acceso.',
   'Autoridades competentes, cuando exista una obligación legal de revelar información o un requerimiento válido de una autoridad judicial o administrativa.',
 ];
 
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
                 Política de privacidad
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
-                Última actualización: agosto de 2026. En Evaluo tratamos la información personal con
+                Última actualización: octubre de 2026. En Evaluo tratamos la información personal con
                 un criterio de necesidad, confidencialidad y respeto por tus derechos, de acuerdo
                 con la Ley N° 25.326 de Protección de los Datos Personales de la República Argentina
                 y sus normas complementarias.
