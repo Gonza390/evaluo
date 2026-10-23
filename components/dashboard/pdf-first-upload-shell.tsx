@@ -293,7 +293,7 @@ export function PdfFirstUploadShell({
           error: null,
         });
         window.setTimeout(() => {
-          if (!active) return;
+          // La sesión visual puede cambiar de estado; el retry pertenece al job.
           void processStudentMaterialAction(state.materialId)
             .catch(() => {
               // El resultado definitivo se consulta por polling y es recuperable.
