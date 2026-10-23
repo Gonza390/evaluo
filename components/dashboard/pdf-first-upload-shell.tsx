@@ -455,12 +455,14 @@ export function PdfFirstUploadShell({
       if (!prepared.success || !prepared.filePath || !prepared.token) {
         throw new Error(prepared.message);
       }
-      preparedPath = prepared.filePath;
+      const preparedFilePath = prepared.filePath;
+      const preparedToken = prepared.token;
+      preparedPath = preparedFilePath;
 
       const supabase = getSupabaseBrowserClient();
       const pdfUploadPromise = supabase.storage
         .from('biblioteca')
-        .uploadToSignedUrl(prepared.filePath, prepared.token, activeFile, {
+        .uploadToSignedUrl(preparedFilePath, preparedToken, activeFile, {
           contentType: fileMetadata.mimeType,
         });
 
@@ -476,7 +478,7 @@ export function PdfFirstUploadShell({
           if (!plan.shouldPreRender || plan.pageNumbers.length === 0) return;
 
           const preparedVision = await preparePdfClientVisionUploadsAction({
-            filePath: prepared.filePath,
+            filePath: preparedFilePath,
             pageNumbers: plan.pageNumbers,
           });
           if (!preparedVision.success || !preparedVision.uploads?.length) return;
@@ -519,7 +521,7 @@ export function PdfFirstUploadShell({
       const result = await finalizePdfFirstUploadAction({
         metadata,
         file: fileMetadata,
-        filePath: prepared.filePath,
+        filePath: preparedFilePath,
       });
       if (!result.success || !result.materialId) {
         if (result.errorCode === 'page_limit' && result.maxPages) {
