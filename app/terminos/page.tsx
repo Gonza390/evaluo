@@ -126,7 +126,15 @@ const sections: LegalSection[] = [
     ],
   },
   {
-    title: '10. Modificaciones de estos términos',
+    title: '10. Cobros y planes internacionales',
+    body: [
+      'La página de precios y el checkout informan el importe, moneda, duración y renovación del plan antes de contratar.',
+      'Actualmente los pagos en Argentina se procesan mediante Mercado Pago. Evaluo prevé utilizar Paddle como vendedor registrado (Merchant of Record) para compras internacionales, únicamente después de su aprobación y habilitación efectiva. Mientras tanto no se ofrecen pagos internacionales por Paddle.',
+      'Cuando Paddle actúe como vendedor de la transacción, se aplicarán además los términos y reglas de facturación y devolución informados por Paddle durante la compra, sin perjuicio de los derechos obligatorios del consumidor. Consultá las páginas de Facturación y Reembolsos de Evaluo.',
+    ],
+  },
+  {
+    title: '10 bis. Modificaciones de estos términos',
     body: [
       'Podemos modificar estos Términos cuando sea necesario para reflejar cambios en el producto, la normativa o el funcionamiento del servicio. Las modificaciones se publicarán en esta página con su fecha de entrada en vigencia. El uso continuado de la Plataforma después de la publicación de cambios constituye aceptación de los nuevos términos.',
     ],
@@ -166,7 +174,7 @@ export default function TermsPage() {
                 Términos y condiciones
               </h1>
               <p className="mt-5 max-w-4xl text-[15px] leading-8 text-slate-600">
-                Última actualización: agosto de 2026. Estos términos regulan el uso de la plataforma
+                Última actualización: octubre de 2026. Estos términos regulan el uso de la plataforma
                 Evaluo, las responsabilidades del contenido cargado por los usuarios, el alcance de
                 las herramientas de inteligencia artificial y las condiciones generales del servicio.
               </p>

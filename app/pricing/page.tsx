@@ -104,8 +104,17 @@ export default async function PricingPage({
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
-              Pago seguro con Mercado Pago
+              Pago disponible en Argentina con Mercado Pago
             </p>
+          </div>
+        </section>
+
+        <section aria-label="Precio internacional de Evaluo" className="border-b border-blue-100 bg-blue-50/50 px-4 py-8 sm:px-6">
+          <div className="mx-auto max-w-4xl rounded-2xl border border-blue-100 bg-white px-5 py-6 text-center shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-700">Premium internacional</p>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-slate-950">US$ 9,99 <span className="text-base font-medium text-slate-500">/ mes</span></p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Precio previsto para estudiantes fuera de Argentina. Cobro mediante Paddle, sujeto a aprobación y habilitación del checkout internacional. Todavía no disponible para comprar.</p>
+            <p className="mt-2 text-xs text-slate-500">En Argentina se mantienen los planes en pesos y los pagos con Mercado Pago.</p>
           </div>
         </section>
 
@@ -172,7 +181,7 @@ export default async function PricingPage({
             </p>
 
             <div className="mt-12 text-center text-sm text-slate-600">
-              <p>Los pagos se procesan de forma segura con Mercado Pago.</p>
+              <p>Los pagos disponibles en Argentina se procesan con Mercado Pago. Los cobros internacionales con Paddle están en preparación y se habilitarán con precios propios cuando estén aprobados.</p>
               <p className="mt-2">
                 Al comprar aceptás los{' '}
                 <Link href="/facturacion" className="font-semibold text-blue-700 hover:underline">
