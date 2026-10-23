@@ -210,7 +210,7 @@ export function UnlamEditorialGuide() {
             <div className="mt-8 rounded-2xl bg-[#0f1b3d] p-5 text-white sm:flex sm:items-center sm:justify-between sm:gap-7 sm:p-7">
               <div className="max-w-xl">
                 <p className="text-xs font-bold uppercase tracking-[0.13em] text-blue-200">Convertí tu material en práctica</p>
-                <h3 className="mt-2 text-xl font-bold">Empezá con el PDF de tu curso</h3>
+                <h3 className="mt-2 text-xl font-bold text-white">Empezá con el PDF de tu curso</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-200">
                   Elegí tu archivo antes de registrarte. Practicá con tus apuntes y compará los resultados con el manual.
                 </p>
