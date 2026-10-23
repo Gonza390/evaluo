@@ -11,23 +11,24 @@ import {
 import { FooterHome } from '@/components/footer-home';
 import { MarketingAnalyticsSlot } from '@/components/MarketingAnalyticsSlot';
 import { PublicSiteHeader } from '@/components/marketing/public-site-header';
+import { PdfFirstLandingUploader } from '@/components/marketing/pdf-first-landing-uploader';
 import { TrackedLink } from '@/components/marketing/tracked-link';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { buildBreadcrumbJsonLd } from '@/lib/seo';
 import { toAbsoluteUrl } from '@/lib/site';
 
 const path = '/funciones/crear-mapa-mental-desde-pdf';
-const uploadHref = '/login?mode=signup&next=%2Fdashboard%3FopenUpload%3D1';
+const uploadHref = '/estudiar-pdf-con-ia?source=seo-mapa-mental-pdf';
 
 export const metadata: Metadata = {
-  title: 'Crear un mapa mental desde un PDF con IA',
+  title: 'Crear mapa mental desde PDF con IA | Evaluo',
   description:
-    'Transformá un PDF en un mapa mental para visualizar temas, conceptos y relaciones del material que estás estudiando con IA en Evaluo.',
+    'Creá un mapa mental desde PDF con IA. Elegí tus apuntes, visualizá temas, ramas y conceptos, y seguí repasando con el mismo documento en Evaluo.',
   alternates: { canonical: toAbsoluteUrl(path) },
   robots: { index: true, follow: true },
   openGraph: {
     type: 'website',
-    title: 'Crear un mapa mental desde un PDF con IA | Evaluo',
+    title: 'Crear mapa mental desde PDF con IA | Evaluo',
     description:
       'Organizá visualmente los conceptos de tu PDF y conectalos con el resto de tu recorrido de estudio.',
     url: toAbsoluteUrl(path),
@@ -75,22 +76,22 @@ export default function CrearMapaMentalDesdePdfPage() {
                 <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Organización visual desde tu material
               </span>
               <h1 className="mt-5 text-[2.5rem] leading-[1] font-bold tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-[66px]">
-                Convertí tu PDF en un{' '}
+                Creá un{' '}
                 <span className="from-brand to-brand-2 bg-gradient-to-r bg-clip-text text-transparent">
-                  mapa mental con IA
+                  mapa mental desde PDF con IA
                 </span>
               </h1>
               <p className="mt-5 max-w-xl text-[14px] leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                Pasá de un documento lineal a una vista visual de temas, conceptos y relaciones para entender mejor cómo se conecta el contenido que estás estudiando.
+                Elegí un PDF de tus apuntes y organizá sus temas, subtemas y conceptos en un mapa mental con IA. Visualizá relaciones entre ideas y después volvé al documento o seguí practicando en Evaluo.
               </p>
               <div className="mt-8">
                 <TrackedLink
-                  href={uploadHref}
+                  href="#elegir-pdf-mapa-mental"
                   eventName="cta_click"
                   payload={{
                     location: 'seo_mapa_mental_pdf_hero',
-                    cta_name: 'subir_pdf',
-                    destination: uploadHref,
+                    cta_name: 'elegir_pdf',
+                    destination: '#elegir-pdf-mapa-mental',
                   }}
                   className="from-brand to-brand-2 inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-[0_14px_30px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(37,99,235,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 >
@@ -164,6 +165,22 @@ export default function CrearMapaMentalDesdePdfPage() {
           </div>
         </section>
 
+        <section id="elegir-pdf-mapa-mental" className="scroll-mt-24 border-b border-slate-100 bg-white py-16 sm:py-20">
+          <div className="mx-auto grid w-full max-w-[1120px] items-center gap-10 px-4 sm:px-8 lg:grid-cols-[0.85fr_1.15fr]">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Convertí PDF a mapa mental</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Cómo hacer un mapa mental a partir de un PDF</h2>
+              <ol className="mt-6 space-y-4 text-sm leading-7 text-slate-600">
+                <li><strong className="text-slate-900">1. Elegí tu PDF.</strong> Seleccioná un capítulo, apunte o material que estés estudiando.</li>
+                <li><strong className="text-slate-900">2. Creá el material.</strong> Registrate cuando decidas procesarlo y accedé a las vistas de estudio.</li>
+                <li><strong className="text-slate-900">3. Consultá el mapa mental.</strong> Ubicá el tema principal, las ramas y las relaciones; después comprobá lo aprendido con ejercicios.</li>
+              </ol>
+              <p className="mt-5 text-xs leading-6 text-slate-500">El mapa visual es parte del estudio sobre tu PDF; no reemplaza la lectura de la fuente original.</p>
+            </div>
+            <PdfFirstLandingUploader trackingLocation="seo_mapa_mental_pdf" sourceKey="mapa-mental-desde-pdf" />
+          </div>
+        </section>
+
         <section className="py-16 sm:py-24">
           <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
             <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Para qué sirve</p>
@@ -222,6 +239,7 @@ export default function CrearMapaMentalDesdePdfPage() {
             <div className="divide-y divide-slate-200 border-y border-slate-200">
               {[
                 ['¿El mapa mental parte del PDF que subo?', 'Sí. La función usa el material que elegís como fuente para organizar visualmente los temas y conceptos del contenido.'],
+                ['¿Cómo crear un mapa mental desde un PDF?', 'Seleccioná el PDF en esta página, continuá con la creación del material y abrí su mapa mental para explorar las relaciones entre temas y subtemas.'],
                 ['¿El mapa mental reemplaza al resumen?', 'No. Son formas distintas de recorrer el mismo material: el resumen mantiene una lectura estructurada y el mapa mental ayuda a visualizar relaciones.'],
                 ['¿Puedo seguir estudiando después de ver el mapa?', 'Sí. El mapa mental forma parte del recorrido sobre el mismo material y podés continuar con otras herramientas de Evaluo.'],
               ].map(([question, answer]) => (
