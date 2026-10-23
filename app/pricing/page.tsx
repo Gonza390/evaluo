@@ -104,7 +104,7 @@ export default async function PricingPage({
             </p>
             <p className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-600">
               <ShieldCheck className="h-4 w-4 text-blue-700" aria-hidden="true" />
-              Pago seguro con Mercado Pago
+              Pago disponible en Argentina con Mercado Pago
             </p>
           </div>
         </section>
@@ -172,7 +172,7 @@ export default async function PricingPage({
             </p>
 
             <div className="mt-12 text-center text-sm text-slate-600">
-              <p>Los pagos se procesan de forma segura con Mercado Pago.</p>
+              <p>Los pagos disponibles en Argentina se procesan con Mercado Pago. Los cobros internacionales con Paddle están en preparación y se habilitarán con precios propios cuando estén aprobados.</p>
               <p className="mt-2">
                 Al comprar aceptás los{' '}
                 <Link href="/facturacion" className="font-semibold text-blue-700 hover:underline">
