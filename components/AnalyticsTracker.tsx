@@ -287,5 +287,74 @@ export default function AnalyticsTracker() {
     };
   }, [pathname]);
 
+  // Reportar sólo un desborde horizontal real del documento por ruta/ancho/sesión.
+  // No se capturan contenidos, títulos de PDF, campos de texto ni screenshots.
+  useEffect(() => {
+    if (loading) return;
+
+    const sessionKey = getAnalyticsSessionKey();
+    const deviceType = getAnalyticsDeviceType();
+    let sent = false;
+    let resizeTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const checkHorizontalOverflow = () => {
+      if (sent || document.visibilityState === 'hidden') return;
+      const viewportWidth = window.innerWidth;
+      const scrollWidth = document.documentElement.scrollWidth;
+      const overflowPixels = Math.ceil(scrollWidth - viewportWidth);
+      if (overflowPixels <= 2) return;
+
+      const storageKey = ['evaluo_visual_overflow', sessionKey, pathname, viewportWidth].join(':');
+      try {
+        if (window.sessionStorage.getItem(storageKey)) return;
+        window.sessionStorage.setItem(storageKey, '1');
+      } catch {
+        // El almacenamiento bloqueado no impide reportar el problema.
+      }
+
+      sent = true;
+      const offender = Array.from(document.body.querySelectorAll('*')).find((element) => {
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 8 || rect.right <= viewportWidth + 2) return false;
+        const style = window.getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      });
+      const safeClasses = Array.from(offender?.classList ?? [])
+        .filter((name) => /^[a-zA-Z0-9_-]+$/.test(name))
+        .slice(0, 4)
+        .join(' ');
+
+      void track('ui_horizontal_overflow_detected', {
+        session_key: sessionKey,
+        path: pathname,
+        device_type: deviceType,
+        metadata: {
+          anonymous_id: getAnalyticsAnonymousId(),
+          page_type: getAnalyticsPageType(pathname),
+          viewport_width: viewportWidth,
+          scroll_width: scrollWidth,
+          overflow_pixels: overflowPixels,
+          offender_tag: offender?.tagName.toLowerCase() ?? 'unknown',
+          offender_class: safeClasses,
+        },
+      });
+    };
+
+    const scheduleResizeCheck = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(checkHorizontalOverflow, 400);
+    };
+    const initialCheck = window.setTimeout(checkHorizontalOverflow, 850);
+    const loadedCheck = window.setTimeout(checkHorizontalOverflow, 2500);
+    window.addEventListener('resize', scheduleResizeCheck, { passive: true });
+
+    return () => {
+      window.clearTimeout(initialCheck);
+      window.clearTimeout(loadedCheck);
+      window.clearTimeout(resizeTimer);
+      window.removeEventListener('resize', scheduleResizeCheck);
+    };
+  }, [loading, pathname]);
+
   return null;
 }
