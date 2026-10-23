@@ -181,6 +181,62 @@ export default function CrearMapaMentalDesdePdfPage() {
           </div>
         </section>
 
+        <section aria-labelledby="ejemplo-mapa-mental" className="border-b border-slate-100 bg-slate-50/70 py-16 sm:py-20">
+          <div className="mx-auto w-full max-w-[1120px] px-4 sm:px-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-blue-700">Ejemplo explicado, no generado desde un archivo</p>
+            <h2 id="ejemplo-mapa-mental" className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              Cómo hacer un mapa mental desde un PDF sin perder el significado
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+              Un mapa mental parte de un tema central y abre ramas con ideas relacionadas. No es una lista de palabras sueltas: cada rama debe ayudarte a recuperar una clasificación, un paso del proceso o una conexión del contenido. Este ejemplo de Marketing es didáctico y te muestra cómo revisar el resultado.
+            </p>
+            <div className="mt-8 rounded-3xl border border-blue-200 bg-white p-6 shadow-sm sm:p-8">
+              <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Tema central</p>
+              <p className="mx-auto mt-3 max-w-md rounded-2xl bg-blue-700 px-5 py-4 text-center text-lg font-bold text-white">Segmentación de mercados</p>
+              <div className="mt-4 flex justify-center" aria-hidden="true"><span className="h-6 w-px bg-blue-200" /></div>
+              <div className="grid gap-3 md:grid-cols-3">
+                {[
+                  { title: '¿Con qué criterios?', label: 'Agrupar', detail: 'Necesidades y características compartidas; por ejemplo, aspectos geográficos o demográficos.' },
+                  { title: '¿Qué se hace después?', label: 'Evaluar', detail: 'Comparar los segmentos identificados para decidir cuáles resultan relevantes.' },
+                  { title: '¿Para qué?', label: 'Adaptar', detail: 'Elegir a qué grupos dirigirse y ajustar la propuesta de valor a sus necesidades.' },
+                ].map((branch) => (
+                  <article key={branch.label} className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-blue-700">{branch.label}</p>
+                    <h3 className="mt-2 text-base font-bold text-slate-950">{branch.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-700">{branch.detail}</p>
+                  </article>
+                ))}
+              </div>
+              <p className="mt-5 text-center text-xs leading-6 text-slate-500">
+                En tus apuntes pueden aparecer otros criterios y ejemplos: revisá las ramas contra el documento antes de memorizarlas.
+              </p>
+            </div>
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              <article className="rounded-2xl border border-slate-200 bg-white p-6">
+                <h3 className="text-lg font-bold text-slate-950">Qué revisar en el mapa que genera una IA</h3>
+                <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-7 text-slate-600">
+                  <li>Que el centro represente una unidad concreta y no una palabra demasiado amplia.</li>
+                  <li>Que cada rama tenga una relación comprensible con ese centro.</li>
+                  <li>Que una secuencia de pasos conserve su orden y no se convierta en una clasificación incorrecta.</li>
+                  <li>Que no falten excepciones, condiciones ni conceptos relevantes del PDF.</li>
+                </ul>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-6">
+                <h3 className="text-lg font-bold text-slate-950">Cómo usarlo para preparar el parcial</h3>
+                <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-600">
+                  <li>Observá el tema central y tratá de recordar las ramas sin mirar.</li>
+                  <li>Elegí una rama y explicala en una oración completa, no sólo con una palabra.</li>
+                  <li>Comprobá en el PDF si tu explicación conserva el significado original.</li>
+                  <li>Pasá a flashcards o ejercicios para revisar los conceptos que te costaron.</li>
+                </ol>
+                <Link href="/funciones/crear-flashcards-desde-pdf" className="mt-5 inline-block text-sm font-bold text-blue-700 underline underline-offset-4">
+                  Repasar conceptos con flashcards →
+                </Link>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section className="py-16 sm:py-24">
           <div className="mx-auto w-full max-w-[1240px] px-4 sm:px-8 lg:px-10">
             <p className="text-[11px] font-bold tracking-[0.16em] text-blue-700 uppercase">Para qué sirve</p>
