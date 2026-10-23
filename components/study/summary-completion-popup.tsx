@@ -10,7 +10,6 @@ import {
   SquareLibrary,
   X,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type ReviewTab = 'tarjetas' | 'glosario' | 'mapa';
 
