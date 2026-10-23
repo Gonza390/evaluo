@@ -57,6 +57,11 @@ const EVENT_METADATA_WHITELIST: Record<AnalyticsEventName, string[]> = {
   ],
   session_ping: ['engagement_ms', 'engagement_version', 'attribution', 'anonymous_id', 'page_type'],
   client_error: ['message', 'source', 'line', 'attribution', 'anonymous_id', 'page_type'],
+  // Datos técnicos de diseño; no enviar texto visible ni contenido del PDF.
+  ui_horizontal_overflow_detected: [
+    'anonymous_id', 'page_type', 'viewport_width', 'scroll_width',
+    'overflow_pixels', 'offender_tag', 'offender_class',
+  ],
   cta_click: [
     'attribution',
     'anonymous_id',
