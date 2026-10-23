@@ -110,12 +110,16 @@ export function buildStudyReturnD1Message(input: {
   materialTitle: string;
   action: Pick<DashboardNextStudyAction, 'kind' | 'title' | 'description' | 'cta'>;
   returnUrl: string;
+  pendingTopics?: string[];
 }) {
   const title = truncate(input.materialTitle);
   const safeFirstName = escapeHtml(input.firstname);
   const safeTitle = escapeHtml(title);
   const safeUrl = escapeHtml(input.returnUrl);
   const safeCta = escapeHtml(input.action.cta);
+  const safeNextStep = escapeHtml(input.action.description);
+  const topics = [...new Set((input.pendingTopics ?? []).map((topic) => topic.trim()).filter(Boolean))].slice(0, 2);
+  const topicsHtml = topics.length ? `<p style="margin:0 0 10px;font-weight:700;font-size:14px;color:#0F1B3D;">Temas para reforzar</p><ul style="padding-left:20px;margin:0 0 12px;color:#334155;">${topics.map((topic) => `<li>${escapeHtml(topic)}</li>`).join('')}</ul>` : '';
 
   const copyByKind: Record<
     DashboardNextStudyAction['kind'],
@@ -165,7 +169,8 @@ export function buildStudyReturnD1Message(input: {
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeTitle}</p>
-                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
+                <p style="margin:0 0 16px;font-size:16px;line-height:1.65;color:#475569;">${safeParagraph}</p>
+                <div style="padding:14px 18px;border:1px solid #DCE6F9;border-radius:12px;background:#F4F7FF;margin:0 0 22px;">${topicsHtml}<p style="margin:0;font-size:14px;line-height:1.5;color:#334155;">${safeNextStep}</p></div>
                 <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">${safeCta}</a>
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te enviamos este mensaje porque estudiaste este material recientemente en Evaluo y todavía tenés un próximo paso disponible.</p>
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
@@ -423,12 +428,18 @@ export async function runStudyReturnD1Dispatch(options?: { dryRun?: boolean }) {
       profile?.nombre ||
       (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : null) ||
       (typeof user.user_metadata?.name === 'string' ? user.user_metadata.name : null);
+    const pendingTopics = action.kind === 'reinforce'
+      ? await db.from('study_errors').select('topic').eq('user_id', candidate.userId)
+          .eq('student_material_id', material.id).eq('status', 'pending').limit(50)
+      : { data: [], error: null };
+    if (pendingTopics.error) logError('studyReturnD1.pendingTopics', pendingTopics.error, { userId: candidate.userId });
     const returnUrl = buildTrackedReturnUrl(action);
     const message = buildStudyReturnD1Message({
       firstname: firstName(displayName),
       materialTitle: materialTitle(material),
       action,
       returnUrl,
+      pendingTopics: (pendingTopics.data ?? []).map((x: { topic: string | null }) => x.topic ?? '').filter(Boolean),
     });
     const uniqueCampaignKey = `${CAMPAIGN_KEY}:${candidate.lastStudyAt}`;
 
