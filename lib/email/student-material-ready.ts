@@ -52,22 +52,19 @@ export function buildStudentMaterialReadyMessage(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="font-size:22px;font-weight:800;letter-spacing:-0.02em;margin-bottom:28px;">
-                  <span style="color:#032269;">evalu</span><span style="color:#0546f3;">o</span>
-                </div>
+                <div style="margin-bottom:28px;"><img src="https://evaluo.com.ar/evaluo-logo-icono.svg" width="44" height="44" alt="" style="display:inline-block;width:44px;height:44px;vertical-align:middle;border:0;margin-right:10px;" /><span style="display:inline-block;vertical-align:middle;font-size:24px;line-height:44px;font-weight:800;letter-spacing:-0.03em;color:#174BBD;">Evaluo</span></div>
 
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">Tu PDF ya está listo para estudiar</h1>
                 <p style="margin:0 0 8px;font-size:16px;line-height:1.65;color:#475569;">${safeIntro}</p>
-                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">Ya podés entrar y empezar a estudiar con tu material.</p>
+                <p style="margin:0 0 24px;font-size:16px;line-height:1.65;color:#475569;">Tu resumen, flashcards, ejercicios y seguimiento del progreso ya están disponibles para empezar a trabajar con tus apuntes.</p>
 
-                <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">Empezar a estudiar</a>
+                <a href="${safeUrl}" style="display:inline-block;background:#2563EB;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:15px;padding:13px 20px;border-radius:12px;">Empezar con mi PDF</a>
 
                 <p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:#94A3B8;">Te avisamos porque el PDF que subiste terminó de procesarse.</p>
 
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
-                  <img src="https://evaluo.com.ar/evaluo-logo-icono.svg" width="52" height="52" alt="Evaluo" style="display:block;width:52px;height:52px;margin:0 auto 10px;object-fit:contain;border:0;" />
-                  <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+<p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
                 </div>
               </td>
             </tr>
