@@ -47,7 +47,7 @@ export function UnlamUnifiedPractice() {
         <div className="mt-6">
           {mode === 'modelo_seminario' ? <UnlamExamFormatSample /> : <UnlamIngresoPractice />}
         </div>
-        <p className="mt-4 text-xs leading-6 text-slate-500">
+        <p className="mt-4 text-xs leading-6 text-slate-700">
           El modelo de Seminario permite revisar tu propia respuesta escrita, no calificarla automáticamente.
           Las preguntas breves corrigen únicamente la opción elegida. Contrastá siempre con tu manual vigente.
         </p>
