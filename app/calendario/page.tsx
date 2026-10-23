@@ -449,17 +449,6 @@ export default function CalendarioPage() {
     );
   }, [careerMateriaOptions, formState.selectedMateriaId, formState.subjectName]);
 
-
-    setFormState((current) => ({
-      type: current.type,
-      subjectName: '',
-      selectedMateriaId: null,
-      examInstance: current.type === 'exam' ? current.examInstance : '1',
-      assignmentTitle: '',
-      reminderDays: current.type === 'exam' ? [7, 3, 1] : [],
-    }));
-  };
-
   const resetForm = () => {
     setFormState((current) => ({
       type: current.type,
