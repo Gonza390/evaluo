@@ -20,6 +20,14 @@ en una pregunta diferente. El cierre propone volver a practicar más adelante.
 - Subtítulos divididos en grupos breves con sincronización aproximada por duración de voz.
 - Las fuentes son del sistema; no se requiere una descarga al renderizar.
 
+## Archivo de producción audiovisual independiente
+
+Estas composiciones se conservan como **material histórico editable**. Remotion y
+su CLI ya no forman parte de las dependencias, del build ni del CI de Evaluo.
+Los comandos que siguen **no funcionan con la instalación web actual**; son
+referencia para una futura herramienta audiovisual separada, donde habrá que
+instalar Remotion y su CLI con versiones compatibles y auditadas.
+
 ## Edición y reproducción
 
 Guion y tiempos: `video/study-loop-script.json`.
@@ -29,7 +37,7 @@ Capturas y audio: `public/video/study-loop/`.
 Abrir Remotion:
 
 ```sh
-npm run video:studio
+npx remotion studio video/index.ts
 ```
 
 Seleccionar `EvaluoStudyLoop` para revisar la composición.
