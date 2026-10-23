@@ -126,7 +126,9 @@ export async function renderPdfPagesToPngs(
       1,
       Math.floor(options?.batchSize ?? DEFAULT_RENDER_BATCH_SIZE)
     );
-    const scale = Math.min(3, Math.max(1, options?.scale ?? RENDER_SCALE));
+    // Thumbnails can explicitly request a sub-1 scale; OCR callers keep their
+    // existing 1.6/2.2 scales and therefore preserve visual extraction quality.
+    const scale = Math.min(3, Math.max(0.5, options?.scale ?? RENDER_SCALE));
 
     const requestedPages = normalizeRequestedPages(
       options?.pageNumbers,
