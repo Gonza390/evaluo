@@ -74,6 +74,7 @@ function buildReactivationMessage(input: {
                 <div style="margin-top:30px;padding-top:24px;border-top:1px solid #E7EBF4;text-align:center;">
 
                   <p style="margin:0;font-size:14px;line-height:1.5;font-weight:700;color:#0F1B3D;">Equipo Evaluo</p>
+                  <img src="https://evaluo.com.ar/evaluo-logo-landing-email.png" width="36" height="36" alt="Evaluo" style="display:block;width:36px;height:36px;margin:12px auto 0;border:0;" />
                 </div>
               </td>
             </tr>
