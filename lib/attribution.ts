@@ -11,6 +11,7 @@ export type AttributionSnapshot = {
   share_id?: string;
   referrer?: string;
   landing_path?: string;
+  landing_market?: string;
   captured_at?: string;
 };
 
@@ -101,6 +102,8 @@ export function captureAttributionFromLocation(
 
   const params = new URLSearchParams(search);
   const source = detectAcquisitionSource(search, referrer);
+  // Region is the page's intended audience, not a geolocation claim.
+  const landingMarket = /^\/(es|es-mx|es-co|es-es)\/estudiar-pdf-con-ia\/?$/.exec(pathname)?.[1];
   const snapshot: AttributionSnapshot = {
     source,
     utm_source: normalizeSource(params.get('utm_source')),
@@ -112,6 +115,7 @@ export function captureAttributionFromLocation(
     share_id: normalizeValue(params.get('share_id')),
     referrer: normalizeValue(referrer),
     landing_path: pathname,
+    landing_market: landingMarket,
     captured_at: new Date().toISOString(),
   };
 
@@ -120,7 +124,7 @@ export function captureAttributionFromLocation(
       key !== 'landing_path' && key !== 'captured_at' && key !== 'referrer' && Boolean(value)
   );
 
-  if (!hasAttribution) return;
+  if (!hasAttribution && !landingMarket) return;
 
   const currentFirstTouch = readStoredSnapshot(STORAGE_KEYS.firstTouch);
   if (!currentFirstTouch) {
@@ -150,6 +154,7 @@ export function getAttributionSnapshot(): AttributionSnapshot | null {
     latest_share_id: latestTouch?.share_id,
     latest_referrer: latestTouch?.referrer,
     latest_landing_path: latestTouch?.landing_path,
+    latest_landing_market: latestTouch?.landing_market,
     latest_captured_at: latestTouch?.captured_at,
   } as AttributionSnapshot & Record<string, string | undefined>;
 }

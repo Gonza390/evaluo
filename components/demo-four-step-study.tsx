@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { trackMarketingEvent } from '@/lib/marketing-analytics';
 import { PdfProgressPanel } from '@/components/dashboard/pdf-progress-panel';
 import {
   MaterialStudyWorkspace,
@@ -111,13 +112,18 @@ export function DemoFourStepStudy({
   summary,
   glossary,
   pageCount,
+  initialTab = 'resumen',
+  internationalSource,
 }: {
   guided?: boolean;
   summary: StudentMaterialSummary;
   glossary: StudyGlossaryItem[];
   pageCount: number;
+  initialTab?: StudyTabId;
+  internationalSource?: string;
 }) {
-  const [activeTab, setActiveTab] = useState<StudyTabId>('resumen');
+  const [activeTab, setActiveTab] = useState<StudyTabId>(initialTab);
+  const market = internationalSource?.replace('international-study-', '');
   const [viewerVisible, setViewerVisible] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const [demoAnswers, setDemoAnswers] = useState<Record<string, DemoAnswer>>({});
@@ -161,6 +167,13 @@ export function DemoFourStepStudy({
             guided
             demo
             onDemoAnswer={(question, selected) => {
+              if (internationalSource) {
+                trackMarketingEvent('international_study_demo_pdf_answered', {
+                  source: internationalSource,
+                  market,
+                  demo_only: true,
+                });
+              }
               setDemoAnswers((previous) => ({
                 ...previous,
                 [question.id]: { question, selected, answeredAt: new Date().toISOString() },
@@ -168,6 +181,14 @@ export function DemoFourStepStudy({
             }}
             onExit={() => setActiveTab('resumen')}
             onReviewTopics={() => {
+              if (internationalSource) {
+                trackMarketingEvent('international_study_demo_pdf_progress_viewed', {
+                  source: internationalSource,
+                  market,
+                  demo_only: true,
+                  answered_count: Object.keys(demoAnswers).length,
+                });
+              }
               setProgressOpen(true);
             }}
             onReinforce={() => setProgressOpen(true)}

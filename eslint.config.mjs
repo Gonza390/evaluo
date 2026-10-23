@@ -11,6 +11,7 @@ export default tseslint.config(
       'tmp/**',
       'output/**',
       'backups/**',
+      'video/**',
       '.tmp*/**',
       '**/.tmp*/**',
       '*.log',
