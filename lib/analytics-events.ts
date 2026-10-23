@@ -3,6 +3,7 @@ const ANALYTICS_EVENT_NAMES = [
   'acquisition_touch',
   'session_ping',
   'client_error',
+  'ui_horizontal_overflow_detected',
   'cta_click',
   'dashboard_next_action_viewed',
   'home_viewed',
