@@ -14,13 +14,21 @@ export const metadata: Metadata = {
 const SUMMARY = demoArtifacts.summary as StudentMaterialSummary;
 const GLOSSARY = demoArtifacts.glossary as StudyGlossaryItem[];
 const UPLOAD_HREF = '/dashboard?openUpload=1&source=demo_four_step';
+const INTERNATIONAL_SOURCES = [
+  'international-study-es', 'international-study-es-mx',
+  'international-study-es-co', 'international-study-es-es',
+] as const;
 
 export default async function DemoMaterialEstudioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tour?: string }>;
+  searchParams: Promise<{ tour?: string; start?: string; source?: string }>;
 }) {
-  const { tour } = await searchParams;
+  const { tour, start, source } = await searchParams;
+  const internationalSource = INTERNATIONAL_SOURCES.find((value) => value === source);
+  const uploadHref = internationalSource
+    ? `/dashboard?openUpload=1&source=${encodeURIComponent(internationalSource)}`
+    : UPLOAD_HREF;
   // Un único tutorial principal, también en la muestra. Permitir exploración libre al terminarlo
   // o desde un enlace explícito ?tour=0.
   const guided = tour !== '0';
@@ -34,7 +42,9 @@ export default async function DemoMaterialEstudioPage({
               PDF de muestra · Recorrido de cuatro pasos
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
-              Conocé el mismo recorrido que vas a ver al estudiar tu primer PDF.
+              {internationalSource
+                ? 'Prueba los ejercicios y el progreso de un PDF de muestra antes de usar tus apuntes.'
+                : 'Conocé el mismo recorrido que vas a ver al estudiar tu primer PDF.'}
             </p>
             <p className="mt-1 text-xs text-slate-500">
               Es una demostración: tus respuestas y tu progreso reales no se modifican.
@@ -42,18 +52,18 @@ export default async function DemoMaterialEstudioPage({
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
             <TrackedLink
-              href={UPLOAD_HREF}
+              href={uploadHref}
               eventName="cta_click"
               payload={{
                 location: 'demo_material_header',
                 cta_name: 'convertir_mi_pdf',
-                destination: UPLOAD_HREF,
+                destination: uploadHref,
               }}
               className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#2563EB] to-[#6366F1] px-4 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(37,99,235,0.18)] transition hover:opacity-95"
             >
               Subir mi propio PDF
             </TrackedLink>
-            <TrackedLink
+            {!internationalSource ? <TrackedLink
               href="/pricing?source=demo_material#elegir-plan"
               eventName="cta_click"
               payload={{
@@ -64,13 +74,15 @@ export default async function DemoMaterialEstudioPage({
               className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:border-slate-300"
             >
               Ver Evaluo Premium
-            </TrackedLink>
+            </TrackedLink> : null}
           </div>
         </div>
       </div>
       <AppShellProviders>
         <DemoFourStepStudy
           guided={guided}
+          initialTab={!guided && start === 'ejercicios' ? 'ejercicios' : 'resumen'}
+          internationalSource={internationalSource}
           summary={SUMMARY}
           glossary={GLOSSARY}
           pageCount={demoArtifacts.pageCount}
