@@ -166,7 +166,7 @@ export function buildStudyReturnD1Message(input: {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#FFFFFF;border:1px solid #E7EBF4;border-radius:20px;">
             <tr>
               <td style="padding:32px;">
-                <div style="margin-bottom:28px;"><img src="https://evaluo.com.ar/evaluo-logo-icono.svg" width="44" height="44" alt="" style="display:inline-block;width:44px;height:44px;vertical-align:middle;border:0;margin-right:10px;" /><span style="display:inline-block;vertical-align:middle;font-size:24px;line-height:44px;font-weight:800;letter-spacing:-0.03em;color:#174BBD;">Evaluo</span></div>
+                <div style="margin:0 0 28px;padding:14px 18px;background:#174BBD;border-radius:14px;"><img src="https://cdn.sender.net/email_images/455373/images/0/evaluo_logo_blanco_email.png" width="176" height="64" alt="Evaluo" style="display:block;width:176px;height:64px;border:0;" /></div>
                 <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Hola ${safeFirstName},</p>
                 <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;letter-spacing:-0.02em;color:#0F1B3D;">${safeHeading}</h1>
                 <p style="margin:0 0 8px;font-size:13px;line-height:1.5;font-weight:700;color:#6366F1;">${safeTitle}</p>
